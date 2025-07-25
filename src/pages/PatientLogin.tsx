@@ -11,7 +11,7 @@ const PatientLogin = () => {
   };
 
   const handleSignUp = () => {
-    toast.info("Redirecionando para cadastro de paciente...");
+    navigate('/patient-signup');
   };
 
   return (

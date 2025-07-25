@@ -11,7 +11,7 @@ const PsychologistLogin = () => {
   };
 
   const handleSignUp = () => {
-    toast.info("Redirecionando para cadastro de psicólogo...");
+    navigate('/psychologist-signup');
   };
 
   return (

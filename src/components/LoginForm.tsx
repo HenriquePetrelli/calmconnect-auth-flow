@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Eye, EyeOff } from "lucide-react";
+import { toast } from "sonner";
 
 interface LoginFormProps {
   userType: "patient" | "psychologist";
@@ -14,6 +15,7 @@ interface LoginFormProps {
 const LoginForm = ({ userType, onForgotPassword, onSignUp }: LoginFormProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const isPatient = userType === "patient";
@@ -24,10 +26,42 @@ const LoginForm = ({ userType, onForgotPassword, onSignUp }: LoginFormProps) => 
     ? "Não tem uma conta? Cadastre-se como Paciente"
     : "Ainda não é parceiro? Cadastre-se como Psicólogo";
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Aqui você implementaria a lógica de login
-    console.log("Login attempt:", { email, password, userType });
+    setIsLoading(true);
+
+    // Simulação de autenticação
+    try {
+      // Validação básica
+      if (!email || !password) {
+        toast.error("Por favor, preencha todos os campos");
+        return;
+      }
+
+      if (password.length < 6) {
+        toast.error("A senha deve ter pelo menos 6 caracteres");
+        return;
+      }
+
+      // Simular delay de API
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      // Simular sucesso no login
+      toast.success(`Login realizado com sucesso! Bem-vindo${isPatient ? '' : ' Dr.(a)'}!`);
+      
+      // Aqui você redirecionaria para o dashboard apropriado
+      console.log("Login successful:", { email, userType });
+      
+      // Limpar formulário
+      setEmail("");
+      setPassword("");
+      
+    } catch (error) {
+      toast.error("Erro ao fazer login. Tente novamente.");
+      console.error("Login error:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -86,9 +120,10 @@ const LoginForm = ({ userType, onForgotPassword, onSignUp }: LoginFormProps) => 
 
           <Button
             type="submit"
-            className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-medium shadow-calm-sm transition-all duration-300 hover:shadow-calm"
+            disabled={isLoading}
+            className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-medium shadow-calm-sm transition-all duration-300 hover:shadow-calm disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Entrar
+            {isLoading ? "Entrando..." : "Entrar"}
           </Button>
 
           <div className="text-center space-y-3">
