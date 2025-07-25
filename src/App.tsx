@@ -8,6 +8,13 @@ import PatientLogin from "./pages/PatientLogin";
 import PsychologistLogin from "./pages/PsychologistLogin";
 import PatientSignUp from "./pages/PatientSignUp";
 import PsychologistSignUp from "./pages/PsychologistSignUp";
+import Home from "./pages/Home";
+import SoundsLibrary from "./pages/SoundsLibrary";
+import GuidedBreathing from "./pages/GuidedBreathing";
+import SOS from "./pages/SOS";
+import Profile from "./pages/Profile";
+import Appointments from "./pages/Appointments";
+import Statistics from "./pages/Statistics";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +31,13 @@ const App = () => (
           <Route path="/psychologist-login" element={<PsychologistLogin />} />
           <Route path="/patient-signup" element={<PatientSignUp />} />
           <Route path="/psychologist-signup" element={<PsychologistSignUp />} />
+          <Route path="/home" element={<Home />} />
+          <Route path="/sounds" element={<SoundsLibrary />} />
+          <Route path="/breathing" element={<GuidedBreathing />} />
+          <Route path="/sos" element={<SOS />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/appointments" element={<Appointments />} />
+          <Route path="/statistics" element={<Statistics />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

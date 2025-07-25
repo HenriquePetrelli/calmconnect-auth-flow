@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +14,7 @@ interface LoginFormProps {
 }
 
 const LoginForm = ({ userType, onForgotPassword, onSignUp }: LoginFormProps) => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -49,8 +51,13 @@ const LoginForm = ({ userType, onForgotPassword, onSignUp }: LoginFormProps) => 
       // Simular sucesso no login
       toast.success(`Login realizado com sucesso! Bem-vindo${isPatient ? '' : ' Dr.(a)'}!`);
       
-      // Aqui você redirecionaria para o dashboard apropriado
-      console.log("Login successful:", { email, userType });
+      // Redirecionar para a página apropriada
+      if (isPatient) {
+        navigate('/home');
+      } else {
+        // TODO: Create psychologist dashboard
+        console.log("Psychologist login - dashboard not implemented yet");
+      }
       
       // Limpar formulário
       setEmail("");
