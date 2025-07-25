@@ -8,35 +8,42 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* CalmConnect Design System - Paleta Azul Acolhedora */
+    --background: 208 100% 90%; /* #D0E8FF - Azul claro acolhedor */
+    --foreground: 213 37% 20%; /* Azul escuro para texto */
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%; /* Branco para cards */
+    --card-foreground: 213 37% 20%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 213 37% 20%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 213 49% 32%; /* #2B4F81 - Azul escuro dos botões */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 0 0% 100%; /* Branco para elementos secundários */
+    --secondary-foreground: 213 37% 20%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 213 25% 55%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 208 85% 85%; /* Azul mais claro para acentos */
+    --accent-foreground: 213 37% 20%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 208 50% 85%; /* Bordas suaves em azul claro */
+    --input: 0 0% 100%; /* Inputs brancos para contraste */
+    --ring: 213 49% 32%; /* Ring igual ao primary */
 
-    --radius: 0.5rem;
+    --radius: 1rem; /* Bordas mais arredondadas para suavidade */
+
+    /* Variáveis customizadas para o CalmConnect */
+    --calm-blue-light: 208 100% 90%; /* #D0E8FF */
+    --calm-blue-dark: 213 49% 32%; /* #2B4F81 */
+    --calm-shadow: 213 49% 32% / 0.1; /* Sombras sutis */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     --sidebar-background: 0 0% 98%;
 
