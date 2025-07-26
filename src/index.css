@@ -44,6 +44,20 @@ All colors MUST be HSL.
     --calm-blue-dark: 213 49% 32%; /* #2B4F81 */
     --calm-shadow: 213 49% 32% / 0.1; /* Sombras sutis */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* Cores específicas para os botões da home */
+    --breathing-primary: 200 70% 65%; /* Azul calmante */
+    --breathing-secondary: 200 70% 85%; /* Azul claro */
+    --sounds-primary: 35 40% 60%; /* Marrom terroso */
+    --sounds-secondary: 35 30% 80%; /* Bege claro */
+    --evolution-primary: 280 70% 65%; /* Roxo */
+    --evolution-secondary: 320 70% 75%; /* Rosa */
+    --yoga-disabled: 0 0% 85%; /* Cinza claro */
+    
+    /* SOS Button - cores vibrantes */
+    --sos-primary: 350 85% 55%; /* Vermelho vibrante */
+    --sos-secondary: 340 80% 70%; /* Rosa vibrante */
+    --sos-glow: 350 85% 55% / 0.3; /* Brilho do SOS */
 
     --sidebar-background: 0 0% 98%;
 
