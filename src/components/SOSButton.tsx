@@ -9,7 +9,7 @@ const SOSButton = () => {
     <div className="fixed bottom-20 right-6 z-50">
       <Button
         onClick={() => navigate('/sos')}
-        className="w-16 h-16 rounded-full bg-sos-primary hover:bg-sos-secondary text-white shadow-2xl border-4 border-white hover:scale-110 transition-all duration-300 animate-pulse-gentle"
+        className="w-16 h-16 rounded-full bg-sos-primary hover:bg-sos-secondary text-white shadow-2xl border-4 border-white hover:scale-110 transition-all duration-900 animate-pulse-gentle"
         style={{
           background: 'linear-gradient(135deg, hsl(var(--sos-primary)), hsl(var(--sos-secondary)))',
           boxShadow: '0 0 30px hsl(var(--sos-glow)), 0 8px 32px rgba(0,0,0,0.3)'
