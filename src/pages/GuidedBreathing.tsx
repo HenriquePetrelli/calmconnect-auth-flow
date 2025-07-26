@@ -1,54 +1,130 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Play, Pause, RotateCcw } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import BreathingTechniques from "@/components/breathing/BreathingTechniques";
+import PracticeScreen from "@/components/breathing/PracticeScreen";
+import CompletionScreen from "@/components/breathing/CompletionScreen";
+
+interface Technique {
+  id: string;
+  name: string;
+  description: string;
+  duration: string;
+  difficulty: 'basic' | 'advanced' | 'emergency';
+  category: string;
+  icon: string;
+  instructions?: string;
+}
+
+const breathingTechniques: Technique[] = [
+  {
+    id: '1',
+    name: 'Respiração 4-7-8',
+    description: 'Técnica calmante que ajuda a reduzir a ansiedade e promover o relaxamento.',
+    duration: '5-10 min',
+    difficulty: 'basic',
+    category: 'Relaxamento',
+    icon: '🌿',
+    instructions: 'Inspire por 4 segundos, segure por 7 segundos, expire por 8 segundos.'
+  },
+  {
+    id: '2',
+    name: 'Respiração Tática',
+    description: 'Usada por militares e profissionais de emergência para manter a calma sob pressão.',
+    duration: '3-5 min',
+    difficulty: 'advanced',
+    category: 'Foco',
+    icon: '🎯',
+    instructions: 'Inspire por 4, segure por 4, expire por 4, segure por 4 segundos.'
+  },
+  {
+    id: '3',
+    name: 'Respiração Profunda',
+    description: 'Respiração diafragmática simples para iniciantes.',
+    duration: '5-15 min',
+    difficulty: 'basic',
+    category: 'Básico',
+    icon: '💚',
+    instructions: 'Respire profundamente pelo nariz, expandindo o abdômen.'
+  },
+  {
+    id: '4',
+    name: 'Respiração de Emergência',
+    description: 'Para momentos de crise, pânico ou estresse extremo.',
+    duration: '2-3 min',
+    difficulty: 'emergency',
+    category: 'Crise',
+    icon: '🚨',
+    instructions: 'Respiração rápida e controlada para estabilizar em momentos críticos.'
+  },
+  {
+    id: '5',
+    name: 'Respiração Coerente',
+    description: 'Equaliza inspiração e expiração para harmonia mental.',
+    duration: '10-20 min',
+    difficulty: 'advanced',
+    category: 'Meditação',
+    icon: '⚖️',
+    instructions: 'Inspire e expire por igual tempo, geralmente 5-6 segundos cada.'
+  },
+  {
+    id: '6',
+    name: 'Respiração Alternada',
+    description: 'Técnica de yoga que equilibra os hemisférios cerebrais.',
+    duration: '5-10 min',
+    difficulty: 'advanced',
+    category: 'Yoga',
+    icon: '🧘',
+    instructions: 'Alterne as narinas durante a respiração usando os dedos.'
+  }
+];
 
 const GuidedBreathing = () => {
   const navigate = useNavigate();
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [phase, setPhase] = useState<'inhale' | 'exhale'>('inhale');
-  const [cycleCount, setCycleCount] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeFilter, setActiveFilter] = useState("all");
+  const [currentScreen, setCurrentScreen] = useState<'main' | 'practice' | 'completion'>('main');
+  const [selectedTechnique, setSelectedTechnique] = useState<Technique | null>(null);
 
-  const phrases = [
-    "Inspire... Isso vai passar",
-    "Expire... Você está seguro",
-    "Inspire... Você é forte",
-    "Expire... Deixe a tensão ir embora",
-    "Inspire... Um momento de cada vez",
-    "Expire... Você consegue superar isso",
-  ];
-
-  const [currentPhrase, setCurrentPhrase] = useState(phrases[0]);
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    
-    if (isPlaying) {
-      interval = setInterval(() => {
-        setPhase(prev => {
-          const newPhase = prev === 'inhale' ? 'exhale' : 'inhale';
-          if (newPhase === 'inhale') {
-            setCycleCount(c => c + 1);
-            setCurrentPhrase(phrases[Math.floor(Math.random() * phrases.length)]);
-          }
-          return newPhase;
-        });
-      }, 4000); // 4 seconds for each phase
-    }
-
-    return () => clearInterval(interval);
-  }, [isPlaying]);
-
-  const toggleBreathing = () => {
-    setIsPlaying(!isPlaying);
+  const handleSelectTechnique = (technique: Technique) => {
+    setSelectedTechnique(technique);
+    setCurrentScreen('practice');
   };
 
-  const resetBreathing = () => {
-    setIsPlaying(false);
-    setPhase('inhale');
-    setCycleCount(0);
-    setCurrentPhrase(phrases[0]);
+  const handleBackToMain = () => {
+    setCurrentScreen('main');
+    setSelectedTechnique(null);
   };
+
+  const handleComplete = () => {
+    setCurrentScreen('completion');
+  };
+
+  const handleBackToHome = () => {
+    navigate('/home');
+  };
+
+  if (currentScreen === 'completion') {
+    return (
+      <CompletionScreen 
+        onViewOtherOptions={handleBackToMain}
+        onBackToHome={handleBackToHome}
+      />
+    );
+  }
+
+  if (currentScreen === 'practice' && selectedTechnique) {
+    return (
+      <PracticeScreen 
+        technique={selectedTechnique}
+        onBack={handleBackToMain}
+        onComplete={handleComplete}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -61,62 +137,44 @@ const GuidedBreathing = () => {
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-8">
-        {/* Breathing Circle Animation */}
-        <div className="relative flex items-center justify-center">
-          <div
-            className={`w-48 h-48 rounded-full bg-primary/20 border-4 border-primary transition-all duration-4000 ease-in-out ${
-              isPlaying
-                ? phase === 'inhale'
-                  ? 'scale-150'
-                  : 'scale-100'
-                : 'scale-100'
-            }`}
-          >
-            <div className="absolute inset-4 rounded-full bg-primary/30 flex items-center justify-center">
-              <div className="text-center">
-                <div className="text-lg font-medium text-primary">
-                  {isPlaying ? (phase === 'inhale' ? 'Inspire' : 'Expire') : 'Pronto?'}
-                </div>
-                <div className="text-sm text-muted-foreground mt-1">
-                  {cycleCount} ciclos
-                </div>
-              </div>
-            </div>
-          </div>
+      <div className="p-4 space-y-6">
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={20} />
+          <Input
+            placeholder="Busque uma técnica para relaxar"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
         </div>
 
-        {/* Motivational Phrase */}
-        <div className="text-center max-w-sm">
-          <p className="text-lg text-foreground font-medium leading-relaxed">
-            {currentPhrase}
-          </p>
-        </div>
-
-        {/* Controls */}
-        <div className="flex gap-4">
-          <Button
-            onClick={toggleBreathing}
-            className="flex items-center gap-2 px-8 py-3 text-lg"
-          >
-            {isPlaying ? <Pause size={20} /> : <Play size={20} />}
-            {isPlaying ? 'Pausar' : 'Começar'}
-          </Button>
+        {/* Filter Tabs */}
+        <Tabs value={activeFilter} onValueChange={setActiveFilter} className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="all" className="text-xs">
+              Todas
+            </TabsTrigger>
+            <TabsTrigger value="basic" className="text-xs">
+              🌿 Básica
+            </TabsTrigger>
+            <TabsTrigger value="advanced" className="text-xs">
+              🌀 Avançada
+            </TabsTrigger>
+            <TabsTrigger value="emergency" className="text-xs">
+              ⚠️ Emergencial
+            </TabsTrigger>
+          </TabsList>
           
-          <Button
-            variant="outline"
-            onClick={resetBreathing}
-            className="flex items-center gap-2 px-4 py-3"
-          >
-            <RotateCcw size={18} />
-            Reiniciar
-          </Button>
-        </div>
-
-        {/* Instructions */}
-        <div className="text-center text-sm text-muted-foreground max-w-md">
-          <p>Siga o ritmo do círculo. Inspire quando ele cresce, expire quando ele diminui.</p>
-        </div>
+          <TabsContent value={activeFilter} className="mt-6">
+            <BreathingTechniques 
+              techniques={breathingTechniques}
+              onSelectTechnique={handleSelectTechnique}
+              searchQuery={searchQuery}
+              activeFilter={activeFilter}
+            />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
