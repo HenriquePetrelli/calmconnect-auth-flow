@@ -96,25 +96,26 @@ const PracticeScreen = ({ technique, onBack, onComplete }: PracticeScreenProps) 
     
     if (currentPhase === 'exercise' && isPlaying) {
       interval = setInterval(() => {
-        setCycleProgress(prev => {
-          const totalCycleTime = inhaleTime + exhaleTime;
-          const currentTime = Date.now() / 1000;
-          const cycleTime = currentTime % totalCycleTime;
-          
-          if (cycleTime < inhaleTime) {
-            // Durante inspiração: flor fechada (progresso 0)
-            setCyclePhase('inhale');
-            const progress = (cycleTime / inhaleTime) * 100;
-            updateLottieAnimation(0);
-            return progress;
-          } else {
-            // Durante expiração: flor abre gradualmente
-            setCyclePhase('exhale');
-            const exhaleProgress = (cycleTime - inhaleTime) / exhaleTime;
-            updateLottieAnimation(exhaleProgress);
-            return 100; // Barra completa durante expiração
-          }
-        });
+        const currentTime = Date.now() / 1000;
+        const totalCycleTime = inhaleTime + exhaleTime;
+        const cycleTime = currentTime % totalCycleTime;
+        
+        if (cycleTime < inhaleTime) {
+          // Durante inspiração: flor abre (0 a 1), barra 0 a 100
+          setCyclePhase('inhale');
+          const progress = (cycleTime / inhaleTime) * 100;
+          const lottieProgress = cycleTime / inhaleTime; // 0 a 1 (flor abre)
+          updateLottieAnimation(lottieProgress);
+          setCycleProgress(progress);
+        } else {
+          // Durante expiração: flor fecha (1 a 0), barra 100 a 0
+          setCyclePhase('exhale');
+          const exhaleElapsed = cycleTime - inhaleTime;
+          const progress = 100 - ((exhaleElapsed / exhaleTime) * 100);
+          const lottieProgress = 1 - (exhaleElapsed / exhaleTime); // 1 a 0 (flor fecha)
+          updateLottieAnimation(lottieProgress);
+          setCycleProgress(progress);
+        }
       }, 100);
     }
 
@@ -238,18 +239,12 @@ const PracticeScreen = ({ technique, onBack, onComplete }: PracticeScreenProps) 
                 <div 
                   className="h-full bg-breathing-primary transition-all duration-300 ease-out flex items-center justify-center"
                   style={{ width: `${cycleProgress}%` }}
-                >
-                  <span className="text-sm font-medium text-white">
+                />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-sm font-medium text-white mix-blend-difference">
                     {cyclePhase === 'inhale' ? 'Inspirar' : 'Expirar'}
                   </span>
                 </div>
-                {cycleProgress < 50 && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-sm font-medium text-muted-foreground">
-                      {cyclePhase === 'inhale' ? 'Inspirar' : 'Expirar'}
-                    </span>
-                  </div>
-                )}
               </div>
             </div>
           </div>
