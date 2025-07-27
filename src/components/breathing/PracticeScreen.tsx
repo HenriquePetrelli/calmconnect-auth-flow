@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Play, Pause, RotateCcw } from "lucide-react";
+import Lottie from "lottie-react";
+import lotusAnimation from "@/assets/lotus-animation.json";
 
 interface Technique {
   id: string;
@@ -47,7 +49,12 @@ const PracticeScreen = ({ technique, onBack, onComplete }: PracticeScreenProps) 
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [cyclePhase, setCyclePhase] = useState<'inhale' | 'exhale'>('inhale');
   const [preparationTime, setPreparationTime] = useState(5);
+  const [cycleProgress, setCycleProgress] = useState(0);
+  const [inhaleTime] = useState(4); // Tempo de inspiração em segundos
+  const [exhaleTime] = useState(6); // Tempo de expiração em segundos
+  const lottieRef = useRef<any>(null);
 
+  // Timer principal da sessão
   useEffect(() => {
     let interval: NodeJS.Timeout;
 
@@ -58,6 +65,8 @@ const PracticeScreen = ({ technique, onBack, onComplete }: PracticeScreenProps) 
             setCurrentPhase('exercise');
             setTimeRemaining(duration[0] * 60);
             setIsPlaying(true);
+            setCycleProgress(0);
+            setCyclePhase('inhale');
             return 0;
           }
           return prev - 1;
@@ -81,17 +90,44 @@ const PracticeScreen = ({ technique, onBack, onComplete }: PracticeScreenProps) 
     return () => clearInterval(interval);
   }, [currentPhase, preparationTime, timeRemaining, isPlaying, duration, onComplete]);
 
+  // Controle do ciclo de respiração
   useEffect(() => {
     let interval: NodeJS.Timeout;
     
     if (currentPhase === 'exercise' && isPlaying) {
       interval = setInterval(() => {
-        setCyclePhase(prev => prev === 'inhale' ? 'exhale' : 'inhale');
-      }, 4000);
+        setCycleProgress(prev => {
+          const totalCycleTime = inhaleTime + exhaleTime;
+          const currentTime = Date.now() / 1000;
+          const cycleTime = currentTime % totalCycleTime;
+          
+          if (cycleTime < inhaleTime) {
+            // Durante inspiração: flor fechada (progresso 0)
+            setCyclePhase('inhale');
+            const progress = (cycleTime / inhaleTime) * 100;
+            updateLottieAnimation(0);
+            return progress;
+          } else {
+            // Durante expiração: flor abre gradualmente
+            setCyclePhase('exhale');
+            const exhaleProgress = (cycleTime - inhaleTime) / exhaleTime;
+            updateLottieAnimation(exhaleProgress);
+            return 100; // Barra completa durante expiração
+          }
+        });
+      }, 100);
     }
 
     return () => clearInterval(interval);
-  }, [currentPhase, isPlaying]);
+  }, [currentPhase, isPlaying, inhaleTime, exhaleTime]);
+
+  const updateLottieAnimation = (progress: number) => {
+    if (lottieRef.current && selectedAnimation.id === 'lotus') {
+      const totalFrames = lottieRef.current.getDuration(true);
+      const frame = progress * totalFrames;
+      lottieRef.current.goToAndStop(frame, true);
+    }
+  };
 
   const handleStart = () => {
     setCurrentPhase('preparation');
@@ -148,8 +184,6 @@ const PracticeScreen = ({ technique, onBack, onComplete }: PracticeScreenProps) 
   }
 
   if (currentPhase === 'exercise') {
-    const progress = ((duration[0] * 60 - timeRemaining) / (duration[0] * 60)) * 100;
-    
     return (
       <div className="min-h-screen bg-background">
         {/* Header */}
@@ -158,26 +192,36 @@ const PracticeScreen = ({ technique, onBack, onComplete }: PracticeScreenProps) 
             <ArrowLeft size={20} />
           </Button>
           <h1 className="text-lg font-semibold text-foreground">{technique.name}</h1>
-          <div className="text-sm font-mono text-foreground">
-            {formatTime(timeRemaining)}
-          </div>
+          <div className="w-8"></div> {/* Spacer para centralizar o título */}
         </div>
 
         {/* Animation Area */}
         <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-8">
+          {/* Lottie Animation */}
           <div className="relative flex items-center justify-center">
-            <div
-              className={`w-48 h-48 rounded-full bg-breathing-primary/20 border-4 border-breathing-primary transition-all duration-4000 ease-in-out ${getAnimationClass()}`}
-            >
-              <div className="absolute inset-4 rounded-full bg-breathing-primary/30 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-2xl mb-2">{selectedAnimation.icon}</div>
-                  <div className="text-lg font-medium text-breathing-primary">
-                    {cyclePhase === 'inhale' ? 'Inspire' : 'Expire'}
+            {selectedAnimation.id === 'lotus' ? (
+              <div className="w-64 h-64">
+                <Lottie
+                  lottieRef={lottieRef}
+                  animationData={lotusAnimation}
+                  loop={false}
+                  autoplay={false}
+                  className="w-full h-full"
+                />
+              </div>
+            ) : (
+              <div className="w-64 h-64 flex items-center justify-center">
+                <div
+                  className={`w-48 h-48 rounded-full bg-breathing-primary/20 border-4 border-breathing-primary transition-all duration-[4000ms] ease-in-out ${getAnimationClass()}`}
+                >
+                  <div className="absolute inset-4 rounded-full bg-breathing-primary/30 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="text-4xl mb-2">{selectedAnimation.icon}</div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Motivational Phrase */}
@@ -187,13 +231,35 @@ const PracticeScreen = ({ technique, onBack, onComplete }: PracticeScreenProps) 
             </p>
           </div>
 
-          {/* Progress Bar */}
-          <div className="w-full max-w-sm space-y-2">
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>Inspirar</span>
-              <span>Expirar</span>
+          {/* Enhanced Progress Bar with Internal Labels */}
+          <div className="w-full max-w-sm space-y-4">
+            <div className="relative">
+              <div className="relative h-16 bg-secondary rounded-lg overflow-hidden">
+                <div 
+                  className="h-full bg-breathing-primary transition-all duration-300 ease-out flex items-center justify-center"
+                  style={{ width: `${cycleProgress}%` }}
+                >
+                  <span className="text-sm font-medium text-white">
+                    {cyclePhase === 'inhale' ? 'Inspirar' : 'Expirar'}
+                  </span>
+                </div>
+                {cycleProgress < 50 && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-sm font-medium text-muted-foreground">
+                      {cyclePhase === 'inhale' ? 'Inspirar' : 'Expirar'}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
-            <Progress value={progress} className="h-2" />
+          </div>
+
+          {/* Timer */}
+          <div className="text-center">
+            <div className="text-2xl font-mono text-foreground">
+              {formatTime(timeRemaining)}
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">Tempo restante</p>
           </div>
 
           {/* Controls */}
