@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface LoginFormProps {
   userType: "patient" | "psychologist";
@@ -32,7 +33,6 @@ const LoginForm = ({ userType, onForgotPassword, onSignUp }: LoginFormProps) => 
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulação de autenticação
     try {
       // Validação básica
       if (!email || !password) {
@@ -45,19 +45,55 @@ const LoginForm = ({ userType, onForgotPassword, onSignUp }: LoginFormProps) => 
         return;
       }
 
-      // Simular delay de API
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Autenticação com Supabase
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-      // Simular sucesso no login
-      toast.success(`Login realizado com sucesso! Bem-vindo${isPatient ? '' : ' Dr.(a)'}!`);
+      if (error) {
+        if (error.message.includes("Invalid login credentials")) {
+          toast.error("Email ou senha incorretos");
+        } else if (error.message.includes("Email not confirmed")) {
+          toast.error("Por favor, confirme seu email antes de fazer login");
+        } else {
+          toast.error("Erro ao fazer login. Tente novamente.");
+        }
+        console.error("Login error:", error);
+        return;
+      }
+
+      if (!data.user) {
+        toast.error("Erro ao fazer login. Tente novamente.");
+        return;
+      }
+
+      // Verificar o perfil do usuário para garantir que está logando no tipo correto
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('user_type, full_name')
+        .eq('user_id', data.user.id)
+        .single();
+
+      if (profileError || !profile) {
+        toast.error("Erro ao carregar perfil do usuário");
+        console.error("Profile error:", profileError);
+        return;
+      }
+
+      // Verificar se o tipo de usuário corresponde ao esperado
+      if (profile.user_type !== userType) {
+        const expectedType = userType === "patient" ? "paciente" : "psicólogo";
+        const actualType = profile.user_type === "patient" ? "paciente" : "psicólogo";
+        toast.error(`Esta conta é de ${actualType}. Use o login de ${expectedType}.`);
+        await supabase.auth.signOut();
+        return;
+      }
+
+      toast.success(`Login realizado com sucesso! Bem-vindo${isPatient ? '' : ' Dr.(a)'} ${profile.full_name}!`);
       
       // Redirecionar para a página apropriada
-      if (isPatient) {
-        navigate('/home');
-      } else {
-        // TODO: Create psychologist dashboard
-        console.log("Psychologist login - dashboard not implemented yet");
-      }
+      navigate('/home');
       
       // Limpar formulário
       setEmail("");

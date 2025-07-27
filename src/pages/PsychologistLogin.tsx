@@ -2,12 +2,25 @@ import { useNavigate } from "react-router-dom";
 import Logo from "@/components/Logo";
 import LoginForm from "@/components/LoginForm";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const PsychologistLogin = () => {
   const navigate = useNavigate();
 
-  const handleForgotPassword = () => {
-    toast.info("Link de recuperação enviado para seu email profissional!");
+  const handleForgotPassword = async () => {
+    const email = prompt("Digite seu email profissional para recuperação de senha:");
+    if (!email) return;
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+
+    if (error) {
+      toast.error("Erro ao enviar email de recuperação");
+      console.error("Reset password error:", error);
+    } else {
+      toast.success("Link de recuperação enviado para seu email profissional!");
+    }
   };
 
   const handleSignUp = () => {

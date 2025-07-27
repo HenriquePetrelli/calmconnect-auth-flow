@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SignUpFormProps {
   userType: "patient" | "psychologist";
@@ -57,15 +58,48 @@ const SignUpForm = ({ userType }: SignUpFormProps) => {
         return;
       }
 
-      // Simular delay de API
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Registro com Supabase
+      const redirectUrl = `${window.location.origin}/`;
+      
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            user_type: userType,
+            full_name: formData.name,
+            crp: !isPatient ? formData.crp : null,
+          }
+        }
+      });
+
+      if (error) {
+        if (error.message.includes("User already registered")) {
+          toast.error("Este email já está cadastrado. Tente fazer login.");
+        } else if (error.message.includes("Password should be at least")) {
+          toast.error("A senha deve ter pelo menos 6 caracteres");
+        } else if (error.message.includes("Unable to validate email address")) {
+          toast.error("Email inválido. Verifique o endereço informado.");
+        } else {
+          toast.error("Erro ao criar conta. Tente novamente.");
+        }
+        console.error("SignUp error:", error);
+        return;
+      }
+
+      if (!data.user) {
+        toast.error("Erro ao criar conta. Tente novamente.");
+        return;
+      }
 
       toast.success(`Cadastro realizado com sucesso! Bem-vindo${!isPatient ? ' Dr.(a)' : ''} ${formData.name}!`);
+      toast.info("Verifique seu email para confirmar a conta antes de fazer login.");
       
       // Redirecionar para login após cadastro
       setTimeout(() => {
         navigate(isPatient ? '/patient-login' : '/psychologist-login');
-      }, 1500);
+      }, 2000);
 
     } catch (error) {
       toast.error("Erro ao criar conta. Tente novamente.");
