@@ -1,110 +1,119 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Play, Pause, Clock, ArrowLeft } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ArrowLeft, Search, Moon, Brain, Target, Leaf, Music, Waves, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import CategoryCard from "@/components/sounds/CategoryCard";
 
 const SoundsLibrary = () => {
   const navigate = useNavigate();
-  const [playingTrack, setPlayingTrack] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const soundData = {
-    nature: [
-      { id: "1", name: "Chuva Suave", duration: "15:00" },
-      { id: "2", name: "Ondas do Mar", duration: "20:00" },
-      { id: "3", name: "Floresta Tropical", duration: "18:00" },
-      { id: "4", name: "Vento nas Árvores", duration: "12:00" },
-    ],
-    music: [
-      { id: "5", name: "Piano Relaxante", duration: "25:00" },
-      { id: "6", name: "Música Ambiente", duration: "30:00" },
-      { id: "7", name: "Sons Tibetanos", duration: "22:00" },
-      { id: "8", name: "Harpa Celestial", duration: "28:00" },
-    ],
-    frequencies: [
-      { id: "9", name: "432Hz - Harmonia", duration: "60:00" },
-      { id: "10", name: "528Hz - Amor", duration: "45:00" },
-      { id: "11", name: "741Hz - Limpeza", duration: "40:00" },
-      { id: "12", name: "963Hz - Despertar", duration: "50:00" },
-    ],
-  };
-
-  const togglePlay = (trackId: string) => {
-    if (playingTrack === trackId) {
-      setPlayingTrack(null);
-    } else {
-      setPlayingTrack(trackId);
+  const mainCategories = [
+    {
+      id: "sleep",
+      icon: <Moon className="w-8 h-8" />,
+      title: "Para Dormir",
+      description: "Sons que induzem relaxamento profundo e sono reparador",
+      gradient: "from-blue-500 to-purple-600",
+      sounds: 12
+    },
+    {
+      id: "meditate", 
+      icon: <Brain className="w-8 h-8" />,
+      title: "Para Meditar",
+      description: "Paisagens sonoras para meditação e mindfulness",
+      gradient: "from-green-500 to-teal-600",
+      sounds: 8
+    },
+    {
+      id: "focus",
+      icon: <Target className="w-8 h-8" />,
+      title: "Para Focar",
+      description: "Ambiente sonoro ideal para concentração e produtividade",
+      gradient: "from-orange-500 to-red-600", 
+      sounds: 6
     }
-  };
+  ];
 
-  const SoundCard = ({ sound }: { sound: { id: string; name: string; duration: string } }) => (
-    <Card className="mb-3">
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <h3 className="font-medium text-card-foreground">{sound.name}</h3>
-            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-              <Clock size={14} />
-              <span>{sound.duration}</span>
-            </div>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => togglePlay(sound.id)}
-            className="text-primary hover:text-primary/80"
-          >
-            {playingTrack === sound.id ? <Pause size={20} /> : <Play size={20} />}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
+  const subCategories = [
+    {
+      id: "nature",
+      icon: <Leaf className="w-6 h-6" />,
+      title: "Sons da Natureza",
+      count: 15
+    },
+    {
+      id: "instrumental",
+      icon: <Music className="w-6 h-6" />,
+      title: "Músicas Instrumentais", 
+      count: 12
+    },
+    {
+      id: "therapeutic",
+      icon: <Waves className="w-6 h-6" />,
+      title: "Tons Terapêuticos",
+      count: 8
+    },
+    {
+      id: "meditation",
+      icon: <Heart className="w-6 h-6" />,
+      title: "Meditação e Mantras",
+      count: 10
+    }
+  ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-background to-blue-50/30">
       {/* Header */}
-      <div className="flex items-center gap-4 p-4 border-b border-border">
+      <div className="flex items-center gap-4 p-4 bg-white/80 backdrop-blur-sm border-b border-border">
         <Button variant="ghost" size="sm" onClick={() => navigate('/home')}>
-          <ArrowLeft size={20} />
+          <ArrowLeft className="w-5 h-5" />
         </Button>
         <h1 className="text-xl font-semibold text-foreground">Biblioteca de Sons</h1>
       </div>
 
-      {/* Content */}
-      <div className="p-4">
-        <Tabs defaultValue="nature" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="nature">Natureza</TabsTrigger>
-            <TabsTrigger value="music">Música</TabsTrigger>
-            <TabsTrigger value="frequencies">Frequências</TabsTrigger>
-          </TabsList>
+      <div className="p-6 space-y-8">
+        {/* Search Input */}
+        <div className="relative max-w-md mx-auto">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+          <Input
+            placeholder="Busque um som (ex.: chuva, 432 Hz)..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 bg-white/80 border-border"
+          />
+        </div>
 
-          <TabsContent value="nature" className="mt-6">
-            <div className="space-y-1">
-              {soundData.nature.map((sound) => (
-                <SoundCard key={sound.id} sound={sound} />
-              ))}
-            </div>
-          </TabsContent>
+        {/* Main Categories */}
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold text-foreground">Categorias Principais</h2>
+          <div className="grid gap-4">
+            {mainCategories.map((category) => (
+              <CategoryCard
+                key={category.id}
+                category={category}
+                type="main"
+                onClick={() => navigate(`/sounds/category/${category.id}`)}
+              />
+            ))}
+          </div>
+        </div>
 
-          <TabsContent value="music" className="mt-6">
-            <div className="space-y-1">
-              {soundData.music.map((sound) => (
-                <SoundCard key={sound.id} sound={sound} />
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="frequencies" className="mt-6">
-            <div className="space-y-1">
-              {soundData.frequencies.map((sound) => (
-                <SoundCard key={sound.id} sound={sound} />
-              ))}
-            </div>
-          </TabsContent>
-        </Tabs>
+        {/* Sub Categories */}
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold text-foreground">Explorar por Tipo</h2>
+          <div className="grid grid-cols-2 gap-3">
+            {subCategories.map((category) => (
+              <CategoryCard
+                key={category.id}
+                category={category}
+                type="sub"
+                onClick={() => navigate(`/sounds/subcategory/${category.id}`)}
+              />
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

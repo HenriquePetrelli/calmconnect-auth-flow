@@ -10,6 +10,9 @@ import PatientSignUp from "./pages/PatientSignUp";
 import PsychologistSignUp from "./pages/PsychologistSignUp";
 import Home from "./pages/Home";
 import SoundsLibrary from "./pages/SoundsLibrary";
+import SoundCategory from "./pages/SoundCategory";
+import SoundPlayer from "./pages/SoundPlayer";
+import SoundFeedback from "./pages/SoundFeedback";
 import GuidedBreathing from "./pages/GuidedBreathing";
 import SOS from "./pages/SOS";
 import Profile from "./pages/Profile";
@@ -33,6 +36,11 @@ const App = () => (
           <Route path="/psychologist-signup" element={<PsychologistSignUp />} />
           <Route path="/home" element={<Home />} />
           <Route path="/sounds" element={<SoundsLibrary />} />
+          <Route path="/sounds/category/:categoryId" element={<SoundCategory />} />
+          <Route path="/sounds/subcategory/:subcategoryId" element={<SoundCategory />} />
+          <Route path="/sounds/player/:soundId" element={<SoundPlayer />} />
+          <Route path="/sounds/player/playlist/:playlistId" element={<SoundPlayer />} />
+          <Route path="/sounds/feedback" element={<SoundFeedback />} />
           <Route path="/breathing" element={<GuidedBreathing />} />
           <Route path="/sos" element={<SOS />} />
           <Route path="/profile" element={<Profile />} />
