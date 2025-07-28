@@ -21,87 +21,45 @@ export const soundsData = {
       sounds: [
         {
           id: "sleep-1",
-          name: "Chuva Suave",
-          duration: "45:00",
-          category: "Sons da Natureza",
-          file: "/sounds/sleep/chuva_suave.wav"
+          name: "432 Hz",
+          duration: "60:00",
+          category: "Tons Terapêuticos",
+          file: "/sounds/sleep/432hz.wav"
         },
         {
           id: "sleep-2", 
-          name: "Ondas do Mar",
-          duration: "60:00",
-          category: "Sons da Natureza",
-          file: "/sounds/sleep/ondas_mar.wav"
+          name: "Piano Relaxante",
+          duration: "35:00",
+          category: "Música Instrumental",
+          file: "/sounds/sleep/piano.mp3"
         },
         {
           id: "sleep-3",
-          name: "Floresta Noturna",
-          duration: "40:00",
-          category: "Sons da Natureza",
-          file: "/sounds/sleep/floresta_noturna.wav"
+          name: "Ruído Rosa",
+          duration: "60:00",
+          category: "Tons Terapêuticos",
+          file: "/sounds/sleep/pink_noise.wav"
         },
         {
           id: "sleep-4",
-          name: "Piano Suave",
-          duration: "35:00",
-          category: "Música Instrumental",
-          file: "/sounds/sleep/piano_suave.wav"
+          name: "Chuva Suave",
+          duration: "45:00",
+          category: "Sons da Natureza",
+          file: "/sounds/sleep/rain.wav"
         },
         {
           id: "sleep-5",
-          name: "432 Hz Relaxamento",
+          name: "Ondas do Mar",
           duration: "60:00",
-          category: "Tons Terapêuticos",
-          file: "/sounds/sleep/432hz_relaxamento.wav"
+          category: "Sons da Natureza",
+          file: "/sounds/sleep/wave.wav"
         },
         {
           id: "sleep-6",
-          name: "Harpa Celestial",
-          duration: "38:00",
-          category: "Música Instrumental",
-          file: "/sounds/sleep/harpa_celestial.wav"
-        },
-        {
-          id: "sleep-7",
           name: "Ruído Branco",
           duration: "60:00",
           category: "Tons Terapêuticos",
-          file: "/sounds/sleep/ruido_branco.wav"
-        },
-        {
-          id: "sleep-8",
-          name: "Vento Suave",
-          duration: "50:00",
-          category: "Sons da Natureza",
-          file: "/sounds/sleep/vento_suave.wav"
-        },
-        {
-          id: "sleep-9",
-          name: "Sino Tibetano",
-          duration: "25:00",
-          category: "Meditação e Mantras",
-          file: "/sounds/sleep/sino_tibetano.wav"
-        },
-        {
-          id: "sleep-10",
-          name: "Fogo na Lareira",
-          duration: "45:00",
-          category: "Sons da Natureza",
-          file: "/sounds/sleep/fogo_lareira.wav"
-        },
-        {
-          id: "sleep-11",
-          name: "528 Hz Cura",
-          duration: "60:00",
-          category: "Tons Terapêuticos",
-          file: "/sounds/sleep/528hz_cura.wav"
-        },
-        {
-          id: "sleep-12",
-          name: "Mantra Om",
-          duration: "30:00",
-          category: "Meditação e Mantras",
-          file: "/sounds/sleep/mantra_om.wav"
+          file: "/sounds/sleep/white_noise.ogg"
         }
       ]
     },
@@ -111,59 +69,38 @@ export const soundsData = {
       sounds: [
         {
           id: "meditate-1",
-          name: "Singing Bowl",
+          name: "Om Mantra",
           duration: "20:00",
           category: "Meditação e Mantras",
-          file: "/sounds/meditate/singing_bowl.wav"
+          file: "/sounds/meditate/aum.wav"
         },
         {
           id: "meditate-2",
-          name: "Floresta Zen",
+          name: "Binaural Beats",
           duration: "30:00",
-          category: "Sons da Natureza",
-          file: "/sounds/meditate/floresta_zen.wav"
+          category: "Tons Terapêuticos",
+          file: "/sounds/meditate/binaural.mp3"
         },
         {
           id: "meditate-3",
-          name: "741 Hz Limpeza",
-          duration: "40:00",
-          category: "Tons Terapêuticos",
-          file: "/sounds/meditate/741hz_limpeza.wav"
+          name: "Canto Gregoriano",
+          duration: "25:00",
+          category: "Meditação e Mantras",
+          file: "/sounds/meditate/gregorian.wav"
         },
         {
           id: "meditate-4",
-          name: "Flauta Meditativa",
-          duration: "25:00",
-          category: "Música Instrumental",
-          file: "/sounds/meditate/flauta_meditativa.wav"
+          name: "Sino Tibetano",
+          duration: "18:00",
+          category: "Meditação e Mantras",
+          file: "/sounds/meditate/tibetan.wav"
         },
         {
           id: "meditate-5",
-          name: "Água Corrente",
+          name: "Cachoeira",
           duration: "35:00",
           category: "Sons da Natureza",
-          file: "/sounds/meditate/agua_corrente.wav"
-        },
-        {
-          id: "meditate-6",
-          name: "Mantra So Hum",
-          duration: "18:00",
-          category: "Meditação e Mantras",
-          file: "/sounds/meditate/mantra_so_hum.wav"
-        },
-        {
-          id: "meditate-7",
-          name: "Violão Fingerstyle",
-          duration: "28:00",
-          category: "Música Instrumental",
-          file: "/sounds/meditate/violao_fingerstyle.wav"
-        },
-        {
-          id: "meditate-8",
-          name: "963 Hz Despertar",
-          duration: "45:00",
-          category: "Tons Terapêuticos",
-          file: "/sounds/meditate/963hz_despertar.wav"
+          file: "/sounds/meditate/waterfall.wav"
         }
       ]
     },
@@ -173,45 +110,38 @@ export const soundsData = {
       sounds: [
         {
           id: "focus-1",
-          name: "Café com Chuva",
+          name: "528 Hz Frequência",
           duration: "60:00",
-          category: "Sons da Natureza",
-          file: "/sounds/focus/cafe_chuva.wav"
+          category: "Tons Terapêuticos",
+          file: "/sounds/focus/528hz.wav"
         },
         {
           id: "focus-2",
-          name: "Lo-fi Instrumental",
+          name: "Canto dos Pássaros",
           duration: "45:00",
-          category: "Música Instrumental",
-          file: "/sounds/focus/lofi_instrumental.wav"
+          category: "Sons da Natureza",
+          file: "/sounds/focus/birds.wav"
         },
         {
           id: "focus-3",
-          name: "Ruído Rosa",
+          name: "Ruído Marrom",
           duration: "60:00",
           category: "Tons Terapêuticos",
-          file: "/sounds/focus/ruido_rosa.wav"
+          file: "/sounds/focus/brown_noise.mp3"
         },
         {
           id: "focus-4",
-          name: "Biblioteca Silenciosa",
-          duration: "90:00",
-          category: "Sons da Natureza",
-          file: "/sounds/focus/biblioteca_silenciosa.wav"
+          name: "Música Clássica",
+          duration: "50:00",
+          category: "Música Instrumental",
+          file: "/sounds/focus/classical.mp3"
         },
         {
           id: "focus-5",
-          name: "Piano Ambient",
-          duration: "50:00",
+          name: "Harpa Relaxante",
+          duration: "35:00",
           category: "Música Instrumental",
-          file: "/sounds/focus/piano_ambient.wav"
-        },
-        {
-          id: "focus-6",
-          name: "40 Hz Concentração",
-          duration: "60:00",
-          category: "Tons Terapêuticos",
-          file: "/sounds/focus/40hz_concentracao.wav"
+          file: "/sounds/focus/harp.wav"
         }
       ]
     }

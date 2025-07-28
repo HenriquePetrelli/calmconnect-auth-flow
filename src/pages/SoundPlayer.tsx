@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -18,6 +18,7 @@ const SoundPlayer = () => {
   const [selectedDuration, setSelectedDuration] = useState("10");
   const [selectedAnimation, setSelectedAnimation] = useState("waves");
   const [currentSoundIndex, setCurrentSoundIndex] = useState(0);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Get sound data
   const isPlaylist = playlistId !== undefined;
@@ -49,6 +50,15 @@ const SoundPlayer = () => {
     }
   }
 
+  // Initialize audio when sound changes
+  useEffect(() => {
+    if (currentSound && audioRef.current) {
+      audioRef.current.src = currentSound.file;
+      audioRef.current.loop = true;
+      audioRef.current.volume = 0.7;
+    }
+  }, [currentSound]);
+
   useEffect(() => {
     setDuration(parseInt(selectedDuration) * 60); // Convert minutes to seconds
   }, [selectedDuration]);
@@ -61,6 +71,9 @@ const SoundPlayer = () => {
       }, 1000);
     } else if (currentTime >= duration) {
       // Session completed
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
       navigate('/sounds/feedback', { 
         state: { 
           sound: currentSound,
@@ -73,12 +86,23 @@ const SoundPlayer = () => {
   }, [isPlaying, currentTime, duration, navigate, currentSound, selectedDuration, isPlaylist]);
 
   const togglePlay = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play().catch(console.error);
+      }
+    }
     setIsPlaying(!isPlaying);
   };
 
   const resetTimer = () => {
     setCurrentTime(0);
     setIsPlaying(false);
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
   };
 
   const nextTrack = () => {
@@ -239,6 +263,9 @@ const SoundPlayer = () => {
           Reiniciar Sessão
         </Button>
       </div>
+
+      {/* Hidden Audio Element */}
+      <audio ref={audioRef} preload="auto" />
     </div>
   );
 };
