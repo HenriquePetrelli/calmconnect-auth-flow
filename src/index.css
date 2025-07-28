@@ -115,6 +115,23 @@ All colors MUST be HSL.
   }
 }
 
+@layer utilities {
+  .animate-pulse-gentle {
+    animation: pulse-gentle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  @keyframes pulse-gentle {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.9;
+      transform: scale(1.02);
+    }
+  }
+}
+
 @layer base {
   * {
     @apply border-border;
