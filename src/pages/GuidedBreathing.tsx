@@ -35,10 +35,10 @@ const breathingTechniques: Technique[] = [
     name: 'Respiração Tática',
     description: 'Usada por militares e profissionais de emergência para manter a calma sob pressão.',
     duration: '3-5 min',
-    difficulty: 'advanced',
+    difficulty: 'emergency',
     category: 'Foco',
     icon: '🎯',
-    instructions: 'Inspire por 4, segure por 4, expire por 4, segure por 4 segundos.'
+    instructions: 'Inspire por 4, segure por 4, expire por 4 segundos.'
   },
   {
     id: '3',
@@ -48,7 +48,7 @@ const breathingTechniques: Technique[] = [
     difficulty: 'basic',
     category: 'Básico',
     icon: '💚',
-    instructions: 'Respire profundamente pelo nariz, expandindo o abdômen.'
+    instructions: 'Inspire por 4 segundos, expire por 6 segundos (sem pausa).'
   },
   {
     id: '4',
@@ -58,7 +58,7 @@ const breathingTechniques: Technique[] = [
     difficulty: 'emergency',
     category: 'Crise',
     icon: '🚨',
-    instructions: 'Respiração rápida e controlada para estabilizar em momentos críticos.'
+    instructions: 'Inspire por 2, segure por 1, expire por 3 segundos.'
   },
   {
     id: '5',
@@ -68,7 +68,7 @@ const breathingTechniques: Technique[] = [
     difficulty: 'advanced',
     category: 'Meditação',
     icon: '⚖️',
-    instructions: 'Inspire e expire por igual tempo, geralmente 5-6 segundos cada.'
+    instructions: 'Inspire e expire por 5 segundos cada (sem pausas).'
   },
   {
     id: '6',
@@ -78,7 +78,37 @@ const breathingTechniques: Technique[] = [
     difficulty: 'advanced',
     category: 'Yoga',
     icon: '🧘',
-    instructions: 'Alterne as narinas durante a respiração usando os dedos.'
+    instructions: 'Inspire por 4, pause por 2, expire por 4 segundos.'
+  },
+  {
+    id: '7',
+    name: 'Respiração Caixa',
+    description: 'Box breathing com 4 fases iguais para controle total.',
+    duration: '5-15 min',
+    difficulty: 'emergency',
+    category: 'Controle',
+    icon: '⬜',
+    instructions: 'Inspire 4s, segure 4s, expire 4s, pause 4s.'
+  },
+  {
+    id: '8',
+    name: 'Respiração Equilibrada',
+    description: 'Padrão 4-2-4 para relaxamento suave.',
+    duration: '5-10 min',
+    difficulty: 'basic',
+    category: 'Equilíbrio',
+    icon: '🌸',
+    instructions: 'Inspire por 4, pause por 2, expire por 4 segundos.'
+  },
+  {
+    id: '9',
+    name: '4-7-8 Profundo',
+    description: 'Versão intensificada da técnica 4-7-8.',
+    duration: '5-15 min',
+    difficulty: 'advanced',
+    category: 'Relaxamento',
+    icon: '🌙',
+    instructions: 'Inspire por 6, segure por 9, expire por 12 segundos.'
   }
 ];
 
