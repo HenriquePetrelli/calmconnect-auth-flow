@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAdmin } from '@/contexts/AdminContext';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,7 +16,8 @@ import {
   FileText, 
   IdCard,
   Loader2,
-  UserCheck
+  UserCheck,
+  Shield
 } from 'lucide-react';
 import AdminProfile from '@/components/AdminProfile';
 import RejectModal from '@/components/RejectModal';
@@ -38,8 +39,48 @@ const AdminDashboard = () => {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [psychologistToReject, setPsychologistToReject] = useState<string | null>(null);
-  const { admin } = useAdmin();
+  const [user, setUser] = useState<any>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    checkAdminAccess();
+  }, []);
+
+  const checkAdminAccess = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        navigate('/patient-login');
+        return;
+      }
+
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .single();
+
+      if (error || !profile || profile.user_type !== 'admin') {
+        toast({
+          title: "Acesso negado",
+          description: "Você não tem permissão para acessar esta área.",
+          variant: "destructive",
+        });
+        navigate('/');
+        return;
+      }
+
+      setUser(session.user);
+      setIsAdmin(true);
+      fetchPendingPsychologists();
+    } catch (error) {
+      console.error('Error checking admin access:', error);
+      navigate('/patient-login');
+    }
+  };
 
   const fetchPendingPsychologists = async () => {
     try {
@@ -60,10 +101,6 @@ const AdminDashboard = () => {
     }
   };
 
-  useEffect(() => {
-    fetchPendingPsychologists();
-  }, []);
-
   const handleApprove = async (profileId: string) => {
     setActionLoading(profileId);
     try {
@@ -78,7 +115,6 @@ const AdminDashboard = () => {
         description: "O cadastro foi aprovado e o email de confirmação foi enviado.",
       });
 
-      // Remove from list
       setPsychologists(prev => prev.filter(p => p.id !== profileId));
     } catch (error) {
       console.error('Error approving psychologist:', error);
@@ -111,7 +147,6 @@ const AdminDashboard = () => {
         description: "O cadastro foi recusado e o email foi enviado.",
       });
 
-      // Remove from list
       setPsychologists(prev => prev.filter(p => p.id !== psychologistToReject));
       setRejectModalOpen(false);
       setPsychologistToReject(null);
@@ -146,6 +181,17 @@ const AdminDashboard = () => {
       minute: '2-digit'
     });
   };
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex items-center gap-2">
+          <Loader2 className="h-8 w-8 animate-spin" />
+          <span>Verificando permissões...</span>
+        </div>
+      </div>
+    );
+  }
 
   if (selectedPsychologist) {
     return (
@@ -262,9 +308,12 @@ const AdminDashboard = () => {
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto p-4">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground">Painel Administrativo</h1>
+          <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
+            <Shield className="h-8 w-8" />
+            Painel Administrativo
+          </h1>
           <p className="text-muted-foreground mt-2">
-            Bem-vindo, {admin?.email}
+            Bem-vindo, {user?.email}
           </p>
         </div>
 

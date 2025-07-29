@@ -14,30 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      admin_users: {
-        Row: {
-          created_at: string
-          email: string
-          id: string
-          password_hash: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          id?: string
-          password_hash: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          id?: string
-          password_hash?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           cpf: string | null
@@ -130,7 +106,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      user_type: "patient" | "psychologist"
+      user_type: "patient" | "psychologist" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -258,7 +234,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      user_type: ["patient", "psychologist"],
+      user_type: ["patient", "psychologist", "admin"],
     },
   },
 } as const

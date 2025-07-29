@@ -4,7 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
-import { AdminProvider } from "@/contexts/AdminContext";
 import Index from "./pages/Index";
 import PatientLogin from "./pages/PatientLogin";
 import PsychologistLogin from "./pages/PsychologistLogin";
@@ -24,9 +23,7 @@ import Statistics from "./pages/Statistics";
 import SubscriptionPlans from "./pages/SubscriptionPlans";
 import SubscriptionSuccess from "./pages/SubscriptionSuccess";
 import SubscriptionCancel from "./pages/SubscriptionCancel";
-import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
-import AdminRoute from "./components/AdminRoute";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,8 +31,7 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <AdminProvider>
-        <SubscriptionProvider>
+      <SubscriptionProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
@@ -61,14 +57,12 @@ const App = () => (
            <Route path="/subscription-plans" element={<SubscriptionPlans />} />
            <Route path="/subscription-success" element={<SubscriptionSuccess />} />
            <Route path="/subscription-cancel" element={<SubscriptionCancel />} />
-           <Route path="/admin/login" element={<AdminLogin />} />
-           <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+           <Route path="/admin" element={<AdminDashboard />} />
            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
-        </SubscriptionProvider>
-      </AdminProvider>
+      </SubscriptionProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

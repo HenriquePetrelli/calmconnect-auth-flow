@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useAdmin } from '@/contexts/AdminContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,27 +7,30 @@ import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 import { LogOut, Mail, Key, Save, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
 const AdminProfile = () => {
-  const { admin, logout, updateAdmin } = useAdmin();
   const { toast } = useToast();
   const navigate = useNavigate();
   
   const [isUpdating, setIsUpdating] = useState(false);
   const [formData, setFormData] = useState({
-    email: admin?.email || '',
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
 
-  const handleLogout = () => {
-    logout();
-    navigate('/admin/login');
-    toast({
-      title: "Logout realizado",
-      description: "Você foi desconectado com sucesso.",
-    });
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate('/');
+      toast({
+        title: "Logout realizado",
+        description: "Você foi desconectado com sucesso.",
+      });
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
   };
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
@@ -36,7 +38,7 @@ const AdminProfile = () => {
     setIsUpdating(true);
 
     try {
-      // Validate passwords if they are being changed
+      // Validate passwords
       if (formData.newPassword) {
         if (formData.newPassword !== formData.confirmPassword) {
           throw new Error('As senhas não coincidem');
@@ -49,20 +51,8 @@ const AdminProfile = () => {
         }
       }
 
-      // Prepare update data
-      const updateData: any = {};
-      
-      if (formData.email !== admin?.email) {
-        updateData.email = formData.email;
-      }
-      
-      if (formData.newPassword) {
-        updateData.currentPassword = formData.currentPassword;
-        updateData.newPassword = formData.newPassword;
-      }
-
       // Only update if there are changes
-      if (Object.keys(updateData).length === 0) {
+      if (!formData.newPassword) {
         toast({
           title: "Nenhuma alteração",
           description: "Não há alterações para salvar.",
@@ -70,20 +60,24 @@ const AdminProfile = () => {
         return;
       }
 
-      await updateAdmin(updateData);
+      // Update password in Supabase Auth
+      const { error } = await supabase.auth.updateUser({
+        password: formData.newPassword
+      });
+
+      if (error) throw error;
 
       toast({
-        title: "Perfil atualizado",
-        description: "Suas informações foram atualizadas com sucesso.",
+        title: "Senha atualizada",
+        description: "Sua senha foi alterada com sucesso.",
       });
 
       // Clear password fields
-      setFormData(prev => ({
-        ...prev,
+      setFormData({
         currentPassword: '',
         newPassword: '',
         confirmPassword: ''
-      }));
+      });
 
     } catch (error) {
       toast({
@@ -101,71 +95,49 @@ const AdminProfile = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Mail className="h-5 w-5" />
-            Informações da Conta
+            <Key className="h-5 w-5" />
+            Alterar Senha
           </CardTitle>
           <CardDescription>
-            Gerencie suas informações de acesso ao painel administrativo
+            Altere sua senha de acesso ao painel administrativo
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleUpdateProfile} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="currentPassword">Senha Atual</Label>
               <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                placeholder="admin@exemplo.com"
-                required
+                id="currentPassword"
+                type="password"
+                value={formData.currentPassword}
+                onChange={(e) => setFormData(prev => ({ ...prev, currentPassword: e.target.value }))}
+                placeholder="••••••••"
                 disabled={isUpdating}
               />
             </div>
 
-            <Separator className="my-6" />
+            <div className="space-y-2">
+              <Label htmlFor="newPassword">Nova Senha</Label>
+              <Input
+                id="newPassword"
+                type="password"
+                value={formData.newPassword}
+                onChange={(e) => setFormData(prev => ({ ...prev, newPassword: e.target.value }))}
+                placeholder="••••••••"
+                disabled={isUpdating}
+              />
+            </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 mb-4">
-                <Key className="h-4 w-4" />
-                <Label className="text-base font-medium">Alterar Senha</Label>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="currentPassword">Senha Atual</Label>
-                <Input
-                  id="currentPassword"
-                  type="password"
-                  value={formData.currentPassword}
-                  onChange={(e) => setFormData(prev => ({ ...prev, currentPassword: e.target.value }))}
-                  placeholder="••••••••"
-                  disabled={isUpdating}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="newPassword">Nova Senha</Label>
-                <Input
-                  id="newPassword"
-                  type="password"
-                  value={formData.newPassword}
-                  onChange={(e) => setFormData(prev => ({ ...prev, newPassword: e.target.value }))}
-                  placeholder="••••••••"
-                  disabled={isUpdating}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirmar Nova Senha</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  value={formData.confirmPassword}
-                  onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                  placeholder="••••••••"
-                  disabled={isUpdating}
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirmar Nova Senha</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={formData.confirmPassword}
+                onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                placeholder="••••••••"
+                disabled={isUpdating}
+              />
             </div>
 
             <div className="flex gap-3 pt-4">
@@ -193,9 +165,9 @@ const AdminProfile = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-destructive">Zona de Perigo</CardTitle>
+          <CardTitle className="text-destructive">Sair do Painel</CardTitle>
           <CardDescription>
-            Ações irreversíveis relacionadas à sua conta
+            Fazer logout do painel administrativo
           </CardDescription>
         </CardHeader>
         <CardContent>
