@@ -66,10 +66,10 @@ export const AppointmentHistory = () => {
   };
 
   const filteredAppointments = appointments.filter((appointment) => {
-    const matchesPsychologist = !filterPsychologist || 
+    const matchesPsychologist = filterPsychologist === 'all' || !filterPsychologist || 
       appointment.psychologist.full_name.toLowerCase().includes(filterPsychologist.toLowerCase());
     
-    const matchesMonth = !filterMonth || 
+    const matchesMonth = filterMonth === 'all' || !filterMonth || 
       format(new Date(appointment.scheduled_at), 'yyyy-MM') === filterMonth;
 
     return matchesPsychologist && matchesMonth;
@@ -104,7 +104,7 @@ export const AppointmentHistory = () => {
                   <SelectValue placeholder="Filtrar por psicólogo" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="all">Todos</SelectItem>
                   {psychologists.map((psy) => (
                     <SelectItem key={psy.user_id} value={psy.full_name}>
                       {psy.full_name}
@@ -118,7 +118,7 @@ export const AppointmentHistory = () => {
                   <SelectValue placeholder="Mês" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="2024-01">Jan 2024</SelectItem>
                   <SelectItem value="2024-02">Fev 2024</SelectItem>
                   <SelectItem value="2024-03">Mar 2024</SelectItem>
