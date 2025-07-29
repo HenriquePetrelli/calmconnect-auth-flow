@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -16,6 +17,9 @@ const SignUpForm = ({ userType }: SignUpFormProps) => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    cpf: "", // Para pacientes
+    phone: "", // Para pacientes
+    reason: "", // Para pacientes
     password: "",
     confirmPassword: "",
     crp: "", // Apenas para psicólogos
@@ -40,6 +44,11 @@ const SignUpForm = ({ userType }: SignUpFormProps) => {
       // Validações
       if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
         toast.error("Por favor, preencha todos os campos");
+        return;
+      }
+
+      if (isPatient && (!formData.cpf || !formData.phone || !formData.reason)) {
+        toast.error("Por favor, preencha todos os campos obrigatórios");
         return;
       }
 
@@ -69,6 +78,9 @@ const SignUpForm = ({ userType }: SignUpFormProps) => {
           data: {
             user_type: userType,
             full_name: formData.name,
+            cpf: isPatient ? formData.cpf : null,
+            phone: isPatient ? formData.phone : null,
+            reason: isPatient ? formData.reason : null,
             crp: !isPatient ? formData.crp : null,
           }
         }
@@ -152,6 +164,59 @@ const SignUpForm = ({ userType }: SignUpFormProps) => {
                 className="h-12 rounded-xl border-border focus:ring-primary"
               />
             </div>
+
+            {isPatient && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="cpf" className="text-foreground font-medium">
+                    CPF
+                  </Label>
+                  <Input
+                    id="cpf"
+                    type="text"
+                    value={formData.cpf}
+                    onChange={(e) => handleInputChange("cpf", e.target.value)}
+                    placeholder="000.000.000-00"
+                    required
+                    className="h-12 rounded-xl border-border focus:ring-primary"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="phone" className="text-foreground font-medium">
+                    Telefone
+                  </Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => handleInputChange("phone", e.target.value)}
+                    placeholder="(11) 99999-9999"
+                    required
+                    className="h-12 rounded-xl border-border focus:ring-primary"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="reason" className="text-foreground font-medium">
+                    Motivo para usar o app
+                  </Label>
+                  <Select value={formData.reason} onValueChange={(value) => handleInputChange("reason", value)}>
+                    <SelectTrigger className="h-12 rounded-xl border-border focus:ring-primary">
+                      <SelectValue placeholder="Selecione o motivo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ansiedade">Ansiedade</SelectItem>
+                      <SelectItem value="estresse">Estresse</SelectItem>
+                      <SelectItem value="panico">Pânico</SelectItem>
+                      <SelectItem value="inseguranca">Insegurança</SelectItem>
+                      <SelectItem value="meditacao">Meditação</SelectItem>
+                      <SelectItem value="outros">Outros</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
+            )}
 
             {!isPatient && (
               <div className="space-y-2">
