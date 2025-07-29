@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import Index from "./pages/Index";
 import PatientLogin from "./pages/PatientLogin";
 import PsychologistLogin from "./pages/PsychologistLogin";
@@ -18,6 +19,9 @@ import SOS from "./pages/SOS";
 import Profile from "./pages/Profile";
 import Appointments from "./pages/Appointments";
 import Statistics from "./pages/Statistics";
+import SubscriptionPlans from "./pages/SubscriptionPlans";
+import SubscriptionSuccess from "./pages/SubscriptionSuccess";
+import SubscriptionCancel from "./pages/SubscriptionCancel";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,10 +29,11 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
+      <SubscriptionProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/patient-login" element={<PatientLogin />} />
           <Route path="/psychologist-login" element={<PsychologistLogin />} />
@@ -46,10 +51,14 @@ const App = () => (
           <Route path="/profile" element={<Profile />} />
           <Route path="/appointments" element={<Appointments />} />
           <Route path="/statistics" element={<Statistics />} />
+          <Route path="/subscription-plans" element={<SubscriptionPlans />} />
+          <Route path="/subscription-success" element={<SubscriptionSuccess />} />
+          <Route path="/subscription-cancel" element={<SubscriptionCancel />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
+      </SubscriptionProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
