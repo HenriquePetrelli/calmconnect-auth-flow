@@ -20,6 +20,7 @@ import Profile from "./pages/Profile";
 import AccountSettings from "./pages/AccountSettings";
 import Appointments from "./pages/Appointments";
 import Statistics from "./pages/Statistics";
+import Progress from "./pages/Progress";
 import SubscriptionPlans from "./pages/SubscriptionPlans";
 import SubscriptionSuccess from "./pages/SubscriptionSuccess";
 import SubscriptionCancel from "./pages/SubscriptionCancel";
@@ -54,6 +55,7 @@ const App = () => (
            <Route path="/account-settings" element={<AccountSettings />} />
            <Route path="/appointments" element={<Appointments />} />
            <Route path="/statistics" element={<Statistics />} />
+           <Route path="/progress" element={<Progress />} />
            <Route path="/subscription-plans" element={<SubscriptionPlans />} />
            <Route path="/subscription-success" element={<SubscriptionSuccess />} />
            <Route path="/subscription-cancel" element={<SubscriptionCancel />} />

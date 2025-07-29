@@ -14,6 +14,120 @@ export type Database = {
   }
   public: {
     Tables: {
+      appointments: {
+        Row: {
+          appointment_type: string
+          created_at: string
+          id: string
+          notes: string | null
+          patient_id: string
+          psychologist_id: string
+          scheduled_at: string
+          session_summary: string | null
+          status: string
+          updated_at: string
+          video_room_id: string | null
+        }
+        Insert: {
+          appointment_type?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          patient_id: string
+          psychologist_id: string
+          scheduled_at: string
+          session_summary?: string | null
+          status?: string
+          updated_at?: string
+          video_room_id?: string | null
+        }
+        Update: {
+          appointment_type?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          psychologist_id?: string
+          scheduled_at?: string
+          session_summary?: string | null
+          status?: string
+          updated_at?: string
+          video_room_id?: string | null
+        }
+        Relationships: []
+      }
+      emergency_requests: {
+        Row: {
+          accepted_at: string | null
+          accepted_by: string | null
+          created_at: string
+          id: string
+          patient_id: string
+          status: string
+          updated_at: string
+          video_room_id: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          created_at?: string
+          id?: string
+          patient_id: string
+          status?: string
+          updated_at?: string
+          video_room_id?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          created_at?: string
+          id?: string
+          patient_id?: string
+          status?: string
+          updated_at?: string
+          video_room_id?: string | null
+        }
+        Relationships: []
+      }
+      patient_progress: {
+        Row: {
+          anxiety_level: number | null
+          created_at: string
+          id: string
+          mood_rating: number | null
+          notes: string | null
+          patient_id: string
+          session_date: string
+          session_duration: number | null
+          stress_level: number | null
+          technique_used: string | null
+        }
+        Insert: {
+          anxiety_level?: number | null
+          created_at?: string
+          id?: string
+          mood_rating?: number | null
+          notes?: string | null
+          patient_id: string
+          session_date?: string
+          session_duration?: number | null
+          stress_level?: number | null
+          technique_used?: string | null
+        }
+        Update: {
+          anxiety_level?: number | null
+          created_at?: string
+          id?: string
+          mood_rating?: number | null
+          notes?: string | null
+          patient_id?: string
+          session_date?: string
+          session_duration?: number | null
+          stress_level?: number | null
+          technique_used?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           cpf: string | null
@@ -53,6 +167,39 @@ export type Database = {
           updated_at?: string
           user_id?: string
           user_type?: Database["public"]["Enums"]["user_type"]
+        }
+        Relationships: []
+      }
+      psychologist_availability: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          end_time: string
+          id: string
+          is_available: boolean
+          psychologist_id: string
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          end_time: string
+          id?: string
+          is_available?: boolean
+          psychologist_id: string
+          start_time: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          is_available?: boolean
+          psychologist_id?: string
+          start_time?: string
+          updated_at?: string
         }
         Relationships: []
       }

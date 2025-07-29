@@ -5,6 +5,7 @@ import ConfirmationModal from "./sos/ConfirmationModal";
 import { useNavigate } from "react-router-dom";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useToast } from "@/hooks/use-toast";
+import { useEmergencySOS } from "@/hooks/useEmergencySOS";
 
 const SOSButton = () => {
   const [showModal, setShowModal] = useState(false);
@@ -12,6 +13,7 @@ const SOSButton = () => {
   const navigate = useNavigate();
   const { canUseFeature, incrementUsage } = useSubscription();
   const { toast } = useToast();
+  const { createEmergencyRequest, loading } = useEmergencySOS();
 
   useEffect(() => {
     checkCanUse();
@@ -39,8 +41,13 @@ const SOSButton = () => {
 
   const handleConfirm = async () => {
     setShowModal(false);
-    await incrementUsage('sos_uses');
-    navigate('/sos');
+    try {
+      await incrementUsage('sos_uses');
+      await createEmergencyRequest();
+      navigate('/sos');
+    } catch (error) {
+      console.error('Error creating emergency request:', error);
+    }
   };
 
   return (
@@ -48,7 +55,7 @@ const SOSButton = () => {
       <div className="fixed bottom-20 right-6 z-50">
         <Button
           onClick={handleButtonClick}
-          disabled={!canUse}
+          disabled={!canUse || loading}
           className="w-16 h-16 rounded-full bg-destructive hover:bg-destructive/90 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
           aria-label="Botão SOS - Emergência"
         >
