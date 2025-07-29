@@ -24,6 +24,8 @@ const SignUpForm = ({ userType }: SignUpFormProps) => {
     password: "",
     confirmPassword: "",
     crp: "", // Apenas para psicólogos
+    specialty: "", // Para psicólogos
+    professionalEmail: "", // Para psicólogos
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -125,6 +127,8 @@ const SignUpForm = ({ userType }: SignUpFormProps) => {
         }
       } else {
         if (!formData.crp) newErrors.crp = true;
+        if (!formData.specialty) newErrors.specialty = true;
+        if (!formData.professionalEmail) newErrors.professionalEmail = true;
       }
 
       // Se há erros, mostrar alert e marcar campos
@@ -157,10 +161,12 @@ const SignUpForm = ({ userType }: SignUpFormProps) => {
           data: {
             user_type: userType,
             full_name: formData.name,
-            cpf: isPatient ? formData.cpf : null,
+            cpf: isPatient ? formData.cpf : formData.cpf,
             phone: isPatient ? formData.phone : null,
             reason: isPatient ? formData.reason : null,
             crp: !isPatient ? formData.crp : null,
+            specialty: !isPatient ? formData.specialty : null,
+            professional_email: !isPatient ? formData.professionalEmail : null,
           }
         }
       });
@@ -307,20 +313,67 @@ const SignUpForm = ({ userType }: SignUpFormProps) => {
             )}
 
             {!isPatient && (
-              <div className="space-y-2">
-                <Label htmlFor="crp" className="text-foreground font-medium">
-                  Número do CRP
-                </Label>
-                <Input
-                  id="crp"
-                  type="text"
-                  value={formData.crp}
-                  onChange={(e) => handleInputChange("crp", e.target.value)}
-                  placeholder="Ex: CRP 01/12345"
-                  required
-                  className={`h-12 rounded-xl border-border focus:ring-primary ${errors.crp ? 'border-destructive' : ''}`}
-                />
-              </div>
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="cpf" className="text-foreground font-medium">
+                    CPF
+                  </Label>
+                  <Input
+                    id="cpf"
+                    type="text"
+                    value={formData.cpf}
+                    onChange={(e) => handleInputChange("cpf", e.target.value)}
+                    placeholder="000.000.000-00"
+                    required
+                    className={`h-12 rounded-xl border-border focus:ring-primary ${errors.cpf ? 'border-destructive' : ''}`}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="crp" className="text-foreground font-medium">
+                    Número do CRP
+                  </Label>
+                  <Input
+                    id="crp"
+                    type="text"
+                    value={formData.crp}
+                    onChange={(e) => handleInputChange("crp", e.target.value)}
+                    placeholder="Ex: CRP 01/12345"
+                    required
+                    className={`h-12 rounded-xl border-border focus:ring-primary ${errors.crp ? 'border-destructive' : ''}`}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="specialty" className="text-foreground font-medium">
+                    Especialidade(s)
+                  </Label>
+                  <Input
+                    id="specialty"
+                    type="text"
+                    value={formData.specialty}
+                    onChange={(e) => handleInputChange("specialty", e.target.value)}
+                    placeholder="Ex: Psicologia Clínica, Neuropsicologia"
+                    required
+                    className={`h-12 rounded-xl border-border focus:ring-primary ${errors.specialty ? 'border-destructive' : ''}`}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="professionalEmail" className="text-foreground font-medium">
+                    Email Profissional Adicional
+                  </Label>
+                  <Input
+                    id="professionalEmail"
+                    type="email"
+                    value={formData.professionalEmail}
+                    onChange={(e) => handleInputChange("professionalEmail", e.target.value)}
+                    placeholder="contato@consultorio.com"
+                    required
+                    className={`h-12 rounded-xl border-border focus:ring-primary ${errors.professionalEmail ? 'border-destructive' : ''}`}
+                  />
+                </div>
+              </>
             )}
 
             <div className="space-y-2">

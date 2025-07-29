@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
+import { AdminProvider } from "@/contexts/AdminContext";
 import Index from "./pages/Index";
 import PatientLogin from "./pages/PatientLogin";
 import PsychologistLogin from "./pages/PsychologistLogin";
@@ -23,6 +24,9 @@ import Statistics from "./pages/Statistics";
 import SubscriptionPlans from "./pages/SubscriptionPlans";
 import SubscriptionSuccess from "./pages/SubscriptionSuccess";
 import SubscriptionCancel from "./pages/SubscriptionCancel";
+import AdminLogin from "./pages/AdminLogin";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminRoute from "./components/AdminRoute";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,7 +34,8 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <SubscriptionProvider>
+      <AdminProvider>
+        <SubscriptionProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
@@ -53,14 +58,17 @@ const App = () => (
            <Route path="/account-settings" element={<AccountSettings />} />
            <Route path="/appointments" element={<Appointments />} />
            <Route path="/statistics" element={<Statistics />} />
-          <Route path="/subscription-plans" element={<SubscriptionPlans />} />
-          <Route path="/subscription-success" element={<SubscriptionSuccess />} />
-          <Route path="/subscription-cancel" element={<SubscriptionCancel />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+           <Route path="/subscription-plans" element={<SubscriptionPlans />} />
+           <Route path="/subscription-success" element={<SubscriptionSuccess />} />
+           <Route path="/subscription-cancel" element={<SubscriptionCancel />} />
+           <Route path="/admin/login" element={<AdminLogin />} />
+           <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
-      </SubscriptionProvider>
+        </SubscriptionProvider>
+      </AdminProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

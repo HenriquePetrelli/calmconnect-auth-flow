@@ -14,30 +14,66 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_users: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          password_hash: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          password_hash: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          password_hash?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
+          cpf: string | null
           created_at: string
           crp: string | null
           full_name: string
           id: string
+          professional_email: string | null
+          registration_status: string | null
+          specialty: string | null
           updated_at: string
           user_id: string
           user_type: Database["public"]["Enums"]["user_type"]
         }
         Insert: {
+          cpf?: string | null
           created_at?: string
           crp?: string | null
           full_name: string
           id?: string
+          professional_email?: string | null
+          registration_status?: string | null
+          specialty?: string | null
           updated_at?: string
           user_id: string
           user_type: Database["public"]["Enums"]["user_type"]
         }
         Update: {
+          cpf?: string | null
           created_at?: string
           crp?: string | null
           full_name?: string
           id?: string
+          professional_email?: string | null
+          registration_status?: string | null
+          specialty?: string | null
           updated_at?: string
           user_id?: string
           user_type?: Database["public"]["Enums"]["user_type"]
