@@ -123,28 +123,44 @@ const Appointments = () => {
           </CardContent>
         </Card>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-4">
-          <Card className="cursor-pointer hover:shadow-calm transition-all">
-            <CardContent className="p-4 text-center">
-              <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-destructive/20 flex items-center justify-center">
-                <Plus className="text-destructive" size={20} />
+        {/* Consultation History */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="text-primary" size={20} />
+              Histórico de Consultas
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {/* Histórico mockado - será integrado com dados reais */}
+            <div className="flex items-center justify-between p-3 rounded-lg bg-accent/50">
+              <div className="flex-1">
+                <div className="font-medium text-foreground">Dr. Ana Silva</div>
+                <div className="text-sm text-muted-foreground">Emergência</div>
               </div>
-              <div className="font-medium text-sm">Emergência</div>
-              <div className="text-xs text-muted-foreground">Consulta imediata</div>
-            </CardContent>
-          </Card>
-
-          <Card className="cursor-pointer hover:shadow-calm transition-all">
-            <CardContent className="p-4 text-center">
-              <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-primary/20 flex items-center justify-center">
-                <Calendar className="text-primary" size={20} />
+              <div className="text-right text-sm">
+                <div className="text-foreground">20/01/2024</div>
+                <div className="text-muted-foreground flex items-center gap-1">
+                  <Clock size={12} />
+                  14:00 • 50 min
+                </div>
               </div>
-              <div className="font-medium text-sm">Rotina</div>
-              <div className="text-xs text-muted-foreground">Consulta agendada</div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+            <div className="flex items-center justify-between p-3 rounded-lg bg-accent/50">
+              <div className="flex-1">
+                <div className="font-medium text-foreground">Dr. Carlos Santos</div>
+                <div className="text-sm text-muted-foreground">Consulta Regular</div>
+              </div>
+              <div className="text-right text-sm">
+                <div className="text-foreground">15/01/2024</div>
+                <div className="text-muted-foreground flex items-center gap-1">
+                  <Clock size={12} />
+                  10:00 • 45 min
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

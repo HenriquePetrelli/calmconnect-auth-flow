@@ -1,37 +1,127 @@
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Crown, Calendar, Clock, User as UserIcon } from "lucide-react";
+import { ArrowLeft, Crown, LogOut, Settings, User as UserIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useSubscription } from "@/contexts/SubscriptionContext";
+import { useToast } from "@/hooks/use-toast";
 
 const Profile = () => {
   const navigate = useNavigate();
+  const { subscribed, subscriptionTier } = useSubscription();
+  const { toast } = useToast();
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  const consultationHistory = [
-    {
-      id: 1,
-      psychologist: "Dr. Ana Silva",
-      date: "2024-01-20",
-      time: "14:00",
-      duration: "50 min",
-      type: "Emergência"
-    },
-    {
-      id: 2,
-      psychologist: "Dr. Carlos Santos",
-      date: "2024-01-15",
-      time: "10:00",
-      duration: "45 min",
-      type: "Consulta Regular"
-    },
-    {
-      id: 3,
-      psychologist: "Dra. Maria Oliveira",
-      date: "2024-01-10",
-      time: "16:30",
-      duration: "60 min",
-      type: "Consulta Regular"
-    },
-  ];
+  useEffect(() => {
+    fetchUserData();
+  }, []);
+
+  const fetchUserData = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+        
+        setUser({
+          ...user,
+          profile
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate('/patient-login');
+      toast({
+        title: "Logout realizado",
+        description: "Você foi desconectado com sucesso."
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao fazer logout.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleManageSubscription = () => {
+    navigate('/subscription-plans');
+  };
+
+  const getPlanInfo = () => {
+    if (!subscribed) {
+      return {
+        name: "Plano Grátis",
+        price: "R$ 0",
+        features: [
+          "• 1 consulta de emergência por mês",
+          "• Acesso limitado aos recursos"
+        ]
+      };
+    }
+    
+    if (subscriptionTier === "Plus") {
+      return {
+        name: "Plano Plus",
+        price: "R$ 14,99",
+        features: [
+          "• 1 consulta por mês",
+          "• 1 uso do botão SOS por mês",
+          "• Acesso à biblioteca de sons",
+          "• Exercícios de respiração"
+        ]
+      };
+    }
+    
+    if (subscriptionTier === "Premium") {
+      return {
+        name: "Plano Premium",
+        price: "R$ 24,99",
+        features: [
+          "• 2 consultas por mês",
+          "• 2 usos do botão SOS por mês",
+          "• Acesso à biblioteca de sons",
+          "• Exercícios de respiração",
+          "• Suporte prioritário"
+        ]
+      };
+    }
+    
+    return {
+      name: "Plano Grátis",
+      price: "R$ 0",
+      features: [
+        "• 1 consulta de emergência por mês",
+        "• Acesso limitado aos recursos"
+      ]
+    };
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+          <p className="mt-4 text-muted-foreground">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const planInfo = getPlanInfo();
 
   return (
     <div className="min-h-screen bg-background">
@@ -52,10 +142,15 @@ const Profile = () => {
               <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
                 <UserIcon className="text-primary" size={32} />
               </div>
-              <div>
-                <h2 className="text-xl font-semibold text-foreground">João Silva</h2>
-                <p className="text-muted-foreground">joao.silva@email.com</p>
+              <div className="flex-1">
+                <h2 className="text-xl font-semibold text-foreground">
+                  {user?.profile?.full_name || 'Usuário'}
+                </h2>
+                <p className="text-muted-foreground">{user?.email}</p>
               </div>
+              <Button variant="ghost" size="sm" onClick={() => navigate('/account-settings')}>
+                <Settings size={16} />
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -71,73 +166,59 @@ const Profile = () => {
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <div className="font-semibold text-foreground">Plano Grátis</div>
-                <div className="text-sm text-muted-foreground">
-                  • 1 consulta de emergência por mês
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  • Acesso limitado aos recursos
-                </div>
+                <div className="font-semibold text-foreground">{planInfo.name}</div>
+                {planInfo.features.map((feature, index) => (
+                  <div key={index} className="text-sm text-muted-foreground">
+                    {feature}
+                  </div>
+                ))}
               </div>
               <div className="text-right">
-                <div className="text-2xl font-bold text-foreground">R$ 0</div>
+                <div className="text-2xl font-bold text-foreground">{planInfo.price}</div>
                 <div className="text-sm text-muted-foreground">/mês</div>
               </div>
             </div>
             
-            <Button className="w-full" onClick={() => {/* TODO: implement upgrade */}}>
-              <Crown size={16} className="mr-2" />
-              Fazer Upgrade
-            </Button>
-            
-            <div className="text-xs text-muted-foreground text-center">
-              Plano Premium: R$ 49,90/mês
-              <br />
-              • Consultas ilimitadas • Acesso completo aos recursos
-            </div>
+            {!subscribed ? (
+              <Button className="w-full" onClick={handleManageSubscription}>
+                <Crown size={16} className="mr-2" />
+                Fazer Upgrade
+              </Button>
+            ) : (
+              <div className="space-y-2">
+                <Button className="w-full" onClick={handleManageSubscription}>
+                  Gerenciar Assinatura
+                </Button>
+                {subscriptionTier !== "Plus" && (
+                  <Button variant="outline" className="w-full" onClick={handleManageSubscription}>
+                    Fazer Downgrade
+                  </Button>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Consultation History */}
+        {/* Account Actions */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="text-primary" size={20} />
-              Histórico de Consultas
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {consultationHistory.map((consultation) => (
-              <div
-                key={consultation.id}
-                className="flex items-center justify-between p-3 rounded-lg bg-accent/50"
-              >
-                <div className="flex-1">
-                  <div className="font-medium text-foreground">
-                    {consultation.psychologist}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {consultation.type}
-                  </div>
-                </div>
-                <div className="text-right text-sm">
-                  <div className="text-foreground">
-                    {new Date(consultation.date).toLocaleDateString('pt-BR')}
-                  </div>
-                  <div className="text-muted-foreground flex items-center gap-1">
-                    <Clock size={12} />
-                    {consultation.time} • {consultation.duration}
-                  </div>
-                </div>
-              </div>
-            ))}
+          <CardContent className="p-6 space-y-3">
+            <Button 
+              variant="outline" 
+              className="w-full justify-start" 
+              onClick={() => navigate('/account-settings')}
+            >
+              <Settings size={16} className="mr-2" />
+              Alterar Dados da Conta
+            </Button>
             
-            {consultationHistory.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                <Calendar size={32} className="mx-auto mb-2 opacity-50" />
-                <p>Nenhuma consulta realizada ainda</p>
-              </div>
-            )}
+            <Button 
+              variant="destructive" 
+              className="w-full justify-start" 
+              onClick={handleLogout}
+            >
+              <LogOut size={16} className="mr-2" />
+              Sair da Conta
+            </Button>
           </CardContent>
         </Card>
       </div>

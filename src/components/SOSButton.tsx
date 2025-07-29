@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Heart, Phone, Lock } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import ConfirmationModal from "./sos/ConfirmationModal";
 import { useNavigate } from "react-router-dom";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -8,30 +8,32 @@ import { useToast } from "@/hooks/use-toast";
 
 const SOSButton = () => {
   const [showModal, setShowModal] = useState(false);
+  const [canUse, setCanUse] = useState(false);
   const navigate = useNavigate();
-  const { canUseFeature, incrementUsage, subscribed } = useSubscription();
+  const { canUseFeature, incrementUsage } = useSubscription();
   const { toast } = useToast();
 
-  const handleButtonClick = () => {
-    if (!subscribed) {
+  useEffect(() => {
+    checkCanUse();
+  }, [canUseFeature]);
+
+  const checkCanUse = async () => {
+    const result = await canUseFeature('sos_uses');
+    setCanUse(result);
+  };
+
+  const handleButtonClick = async () => {
+    const canUseSOS = await canUseFeature('sos_uses');
+    
+    if (!canUseSOS) {
       toast({
-        title: "Assinatura Necessária",
-        description: "Você precisa de uma assinatura ativa para usar o botão SOS.",
+        title: "Limite atingido",
+        description: "Você já utilizou todas as consultas de emergência disponíveis neste mês. Considere fazer upgrade do seu plano.",
         variant: "destructive",
       });
-      navigate('/subscription-plans');
       return;
     }
-
-    if (!canUseFeature('sos_uses')) {
-      toast({
-        title: "Limite Atingido",
-        description: "Você atingiu o limite de usos do SOS para este mês.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+    
     setShowModal(true);
   };
 
@@ -46,17 +48,11 @@ const SOSButton = () => {
       <div className="fixed bottom-20 right-6 z-50">
         <Button
           onClick={handleButtonClick}
-          className="w-16 h-16 rounded-full bg-sos-primary hover:bg-sos-secondary text-white shadow-2xl border-4 border-white hover:scale-110 transition-all duration-300 animate-pulse"
-          style={{
-            background: 'linear-gradient(135deg, hsl(var(--sos-primary)), hsl(var(--sos-secondary)))',
-            boxShadow: '0 0 30px hsl(var(--sos-glow)), 0 8px 32px rgba(0,0,0,0.3)'
-          }}
+          disabled={!canUse}
+          className="w-16 h-16 rounded-full bg-destructive hover:bg-destructive/90 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
           aria-label="Botão SOS - Emergência"
         >
-          <div className="relative flex items-center justify-center">
-            <Heart className="absolute w-6 h-6" fill="currentColor" />
-            <Phone className="w-4 h-4 translate-x-1 translate-y-1" />
-          </div>
+          <AlertTriangle className="w-8 h-8 text-white" />
         </Button>
       </div>
 

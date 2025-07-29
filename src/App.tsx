@@ -17,6 +17,7 @@ import SoundFeedback from "./pages/SoundFeedback";
 import GuidedBreathing from "./pages/GuidedBreathing";
 import SOS from "./pages/SOS";
 import Profile from "./pages/Profile";
+import AccountSettings from "./pages/AccountSettings";
 import Appointments from "./pages/Appointments";
 import Statistics from "./pages/Statistics";
 import SubscriptionPlans from "./pages/SubscriptionPlans";
@@ -48,9 +49,10 @@ const App = () => (
           <Route path="/sounds/feedback" element={<SoundFeedback />} />
           <Route path="/breathing" element={<GuidedBreathing />} />
           <Route path="/sos" element={<SOS />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/appointments" element={<Appointments />} />
-          <Route path="/statistics" element={<Statistics />} />
+           <Route path="/profile" element={<Profile />} />
+           <Route path="/account-settings" element={<AccountSettings />} />
+           <Route path="/appointments" element={<Appointments />} />
+           <Route path="/statistics" element={<Statistics />} />
           <Route path="/subscription-plans" element={<SubscriptionPlans />} />
           <Route path="/subscription-success" element={<SubscriptionSuccess />} />
           <Route path="/subscription-cancel" element={<SubscriptionCancel />} />

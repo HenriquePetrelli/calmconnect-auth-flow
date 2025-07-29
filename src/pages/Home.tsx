@@ -23,7 +23,7 @@ const HomePage = () => {
           <div className="grid grid-cols-1 gap-5">
             {/* Respiração Guiada */}
             <FeatureCard
-              icon={<Waves className="text-white animate-breathing" size={28} />}
+              icon={<Waves className="text-white" size={28} />}
               title="Respiração Guiada"
               description="Respiração consciente, respiração tática, respiração 4-7-8, respiração coerente e respiração alternada"
               iconClassName="bg-breathing-primary hover:bg-breathing-secondary"
@@ -32,7 +32,7 @@ const HomePage = () => {
 
             {/* Sons Relaxantes */}
             <FeatureCard
-              icon={<Volume2 className="text-white animate-sound-wave" size={28} />}
+              icon={<Volume2 className="text-white" size={28} />}
               title="Sons Relaxantes"
               description="Sons de natureza, música instrumental, frequências, tons terapêuticos, meditação e mantras"
               iconClassName="bg-sounds-primary hover:bg-sounds-secondary"
