@@ -4,7 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Eye, EyeOff } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Eye, EyeOff, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,43 +28,121 @@ const SignUpForm = ({ userType }: SignUpFormProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
+  const [showErrorAlert, setShowErrorAlert] = useState(false);
   const navigate = useNavigate();
 
   const isPatient = userType === "patient";
   const title = isPatient ? "Cadastro do Paciente" : "Cadastro do Psicólogo";
 
+  // Função para aplicar máscara no CPF
+  const formatCPF = (value: string) => {
+    const cpf = value.replace(/\D/g, '');
+    return cpf
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d{1,2})/, '$1-$2')
+      .replace(/(-\d{2})\d+?$/, '$1');
+  };
+
+  // Função para aplicar máscara no telefone
+  const formatPhone = (value: string) => {
+    const phone = value.replace(/\D/g, '');
+    return phone
+      .replace(/(\d{2})(\d)/, '($1) $2')
+      .replace(/(\d{5})(\d)/, '$1-$2')
+      .replace(/(-\d{4})\d+?$/, '$1');
+  };
+
+  // Função para validar CPF
+  const validateCPF = (cpf: string) => {
+    const cleanCPF = cpf.replace(/\D/g, '');
+    
+    if (cleanCPF.length !== 11) return false;
+    if (/^(\d)\1{10}$/.test(cleanCPF)) return false;
+
+    let sum = 0;
+    for (let i = 0; i < 9; i++) {
+      sum += parseInt(cleanCPF.charAt(i)) * (10 - i);
+    }
+    let remainder = (sum * 10) % 11;
+    if (remainder === 10 || remainder === 11) remainder = 0;
+    if (remainder !== parseInt(cleanCPF.charAt(9))) return false;
+
+    sum = 0;
+    for (let i = 0; i < 10; i++) {
+      sum += parseInt(cleanCPF.charAt(i)) * (11 - i);
+    }
+    remainder = (sum * 10) % 11;
+    if (remainder === 10 || remainder === 11) remainder = 0;
+    if (remainder !== parseInt(cleanCPF.charAt(10))) return false;
+
+    return true;
+  };
+
   const handleInputChange = (field: string, value: string) => {
+    // Aplicar máscaras
+    if (field === 'cpf') {
+      value = formatCPF(value);
+    } else if (field === 'phone') {
+      value = formatPhone(value);
+    }
+    
     setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Limpar erro do campo quando o usuário começar a digitar
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: false }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
+    setShowErrorAlert(false);
+    
     try {
-      // Validações
-      if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
-        toast.error("Por favor, preencha todos os campos");
-        return;
+      const newErrors: { [key: string]: boolean } = {};
+      
+      // Validar campos obrigatórios
+      if (!formData.name) newErrors.name = true;
+      if (!formData.email) newErrors.email = true;
+      if (!formData.password) newErrors.password = true;
+      if (!formData.confirmPassword) newErrors.confirmPassword = true;
+      
+      if (isPatient) {
+        if (!formData.cpf) newErrors.cpf = true;
+        if (!formData.phone) newErrors.phone = true;
+        if (!formData.reason) newErrors.reason = true;
+        
+        // Validar CPF se preenchido
+        if (formData.cpf && !validateCPF(formData.cpf)) {
+          newErrors.cpf = true;
+          toast.error("CPF inválido");
+          setErrors(newErrors);
+          setShowErrorAlert(true);
+          return;
+        }
+      } else {
+        if (!formData.crp) newErrors.crp = true;
       }
 
-      if (isPatient && (!formData.cpf || !formData.phone || !formData.reason)) {
-        toast.error("Por favor, preencha todos os campos obrigatórios");
+      // Se há erros, mostrar alert e marcar campos
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors);
+        setShowErrorAlert(true);
         return;
       }
 
       if (formData.password !== formData.confirmPassword) {
         toast.error("As senhas não coincidem");
+        setErrors({ password: true, confirmPassword: true });
         return;
       }
 
       if (formData.password.length < 6) {
         toast.error("A senha deve ter pelo menos 6 caracteres");
-        return;
-      }
-
-      if (!isPatient && !formData.crp) {
-        toast.error("Por favor, informe seu número do CRP");
+        setErrors({ password: true });
         return;
       }
 
@@ -134,6 +213,15 @@ const SignUpForm = ({ userType }: SignUpFormProps) => {
             </p>
           </div>
 
+          {showErrorAlert && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Por favor, preencha todos os campos obrigatórios corretamente.
+              </AlertDescription>
+            </Alert>
+          )}
+
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name" className="text-foreground font-medium">
@@ -146,7 +234,7 @@ const SignUpForm = ({ userType }: SignUpFormProps) => {
                 onChange={(e) => handleInputChange("name", e.target.value)}
                 placeholder="Digite seu nome completo"
                 required
-                className="h-12 rounded-xl border-border focus:ring-primary"
+                className={`h-12 rounded-xl border-border focus:ring-primary ${errors.name ? 'border-destructive' : ''}`}
               />
             </div>
 
@@ -161,7 +249,7 @@ const SignUpForm = ({ userType }: SignUpFormProps) => {
                 onChange={(e) => handleInputChange("email", e.target.value)}
                 placeholder={isPatient ? "seu@email.com" : "profissional@email.com"}
                 required
-                className="h-12 rounded-xl border-border focus:ring-primary"
+                className={`h-12 rounded-xl border-border focus:ring-primary ${errors.email ? 'border-destructive' : ''}`}
               />
             </div>
 
@@ -178,7 +266,7 @@ const SignUpForm = ({ userType }: SignUpFormProps) => {
                     onChange={(e) => handleInputChange("cpf", e.target.value)}
                     placeholder="000.000.000-00"
                     required
-                    className="h-12 rounded-xl border-border focus:ring-primary"
+                    className={`h-12 rounded-xl border-border focus:ring-primary ${errors.cpf ? 'border-destructive' : ''}`}
                   />
                 </div>
 
@@ -193,7 +281,7 @@ const SignUpForm = ({ userType }: SignUpFormProps) => {
                     onChange={(e) => handleInputChange("phone", e.target.value)}
                     placeholder="(11) 99999-9999"
                     required
-                    className="h-12 rounded-xl border-border focus:ring-primary"
+                    className={`h-12 rounded-xl border-border focus:ring-primary ${errors.phone ? 'border-destructive' : ''}`}
                   />
                 </div>
 
@@ -202,7 +290,7 @@ const SignUpForm = ({ userType }: SignUpFormProps) => {
                     Motivo para usar o app
                   </Label>
                   <Select value={formData.reason} onValueChange={(value) => handleInputChange("reason", value)}>
-                    <SelectTrigger className="h-12 rounded-xl border-border focus:ring-primary">
+                    <SelectTrigger className={`h-12 rounded-xl border-border focus:ring-primary ${errors.reason ? 'border-destructive' : ''}`}>
                       <SelectValue placeholder="Selecione o motivo" />
                     </SelectTrigger>
                     <SelectContent>
@@ -230,7 +318,7 @@ const SignUpForm = ({ userType }: SignUpFormProps) => {
                   onChange={(e) => handleInputChange("crp", e.target.value)}
                   placeholder="Ex: CRP 01/12345"
                   required
-                  className="h-12 rounded-xl border-border focus:ring-primary"
+                  className={`h-12 rounded-xl border-border focus:ring-primary ${errors.crp ? 'border-destructive' : ''}`}
                 />
               </div>
             )}
@@ -247,7 +335,7 @@ const SignUpForm = ({ userType }: SignUpFormProps) => {
                   onChange={(e) => handleInputChange("password", e.target.value)}
                   placeholder="Digite sua senha"
                   required
-                  className="h-12 rounded-xl border-border focus:ring-primary pr-12"
+                  className={`h-12 rounded-xl border-border focus:ring-primary pr-12 ${errors.password ? 'border-destructive' : ''}`}
                 />
                 <button
                   type="button"
@@ -271,7 +359,7 @@ const SignUpForm = ({ userType }: SignUpFormProps) => {
                   onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
                   placeholder="Digite sua senha novamente"
                   required
-                  className="h-12 rounded-xl border-border focus:ring-primary pr-12"
+                  className={`h-12 rounded-xl border-border focus:ring-primary pr-12 ${errors.confirmPassword ? 'border-destructive' : ''}`}
                 />
                 <button
                   type="button"
