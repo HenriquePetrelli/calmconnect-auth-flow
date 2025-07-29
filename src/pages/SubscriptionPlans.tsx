@@ -20,7 +20,7 @@ const SubscriptionPlans = () => {
       name: "Plus",
       price: "R$ 14,99",
       period: "/mês",
-      priceId: "prod_SlYJKzH70jAWC6",
+      priceId: "SUBSTITUA_PELO_PRICE_ID_CORRETO", // Ex: price_1234567890
       features: [
         "1 consulta por mês",
         "1 uso do botão SOS por mês",
@@ -35,7 +35,7 @@ const SubscriptionPlans = () => {
       name: "Premium",
       price: "R$ 24,99",
       period: "/mês",
-      priceId: "prod_SlYOe4FFI4UVZJ",
+      priceId: "SUBSTITUA_PELO_PRICE_ID_CORRETO", // Ex: price_1234567890
       features: [
         "2 consultas por mês",
         "2 usos do botão SOS por mês",
