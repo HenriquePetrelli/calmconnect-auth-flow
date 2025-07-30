@@ -376,17 +376,7 @@ export type Database = {
       }
     }
     Views: {
-      admin_metrics: {
-        Row: {
-          active_psychologists: number | null
-          active_subscribers: number | null
-          appointments_last_30_days: number | null
-          pending_psychologists: number | null
-          sos_requests_last_30_days: number | null
-          total_patients: number | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       create_admin_account: {
@@ -396,6 +386,17 @@ export type Database = {
           admin_name: string
         }
         Returns: Json
+      }
+      get_admin_metrics: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          total_patients: number
+          active_psychologists: number
+          pending_psychologists: number
+          active_subscribers: number
+          appointments_last_30_days: number
+          sos_requests_last_30_days: number
+        }[]
       }
       get_user_type: {
         Args: { user_id_param: string }
@@ -407,6 +408,14 @@ export type Database = {
       }
       promote_to_admin: {
         Args: { target_user_email: string }
+        Returns: boolean
+      }
+      validate_cpf: {
+        Args: { cpf_input: string }
+        Returns: boolean
+      }
+      validate_crp: {
+        Args: { crp_input: string }
         Returns: boolean
       }
       validate_route_access: {
