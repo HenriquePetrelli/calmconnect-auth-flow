@@ -7,6 +7,7 @@ export interface Appointment {
   scheduled_at: string;
   status: string;
   appointment_type: string;
+  duration?: number;
   notes?: string;
   session_summary?: string;
   psychologist: {
@@ -78,6 +79,8 @@ export const useAppointments = () => {
   const createAppointment = async (
     psychologist_id: string, 
     scheduled_at: string, 
+    duration = 60,
+    type = 'online',
     notes?: string
   ) => {
     try {
@@ -86,6 +89,8 @@ export const useAppointments = () => {
         body: {
           psychologist_id,
           scheduled_at,
+          duration,
+          appointment_type: type,
           notes,
         },
       });

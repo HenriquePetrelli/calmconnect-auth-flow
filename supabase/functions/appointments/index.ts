@@ -114,7 +114,7 @@ serve(async (req) => {
 
     if (req.method === 'POST') {
       // Create new appointment
-      const { psychologist_id, scheduled_at, notes } = await req.json();
+      const { psychologist_id, scheduled_at, duration, appointment_type, notes } = await req.json();
 
       if (!psychologist_id || !scheduled_at) {
         throw new Error('Psychologist ID and scheduled time are required');
@@ -126,6 +126,8 @@ serve(async (req) => {
           patient_id: user.id,
           psychologist_id,
           scheduled_at,
+          duration: duration || 60,
+          appointment_type: appointment_type || 'online',
           notes,
           status: 'scheduled'
         })

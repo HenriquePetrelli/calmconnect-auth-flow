@@ -40,6 +40,8 @@ export const AppointmentScheduleModal = ({
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedTime, setSelectedTime] = useState<string>();
   const [selectedPsychologist, setSelectedPsychologist] = useState<string>();
+  const [selectedDuration, setSelectedDuration] = useState<number>(60);
+  const [selectedType, setSelectedType] = useState<string>('online');
   const [notes, setNotes] = useState('');
 
   const handleSchedule = async () => {
@@ -54,6 +56,8 @@ export const AppointmentScheduleModal = ({
       await createAppointment(
         selectedPsychologist,
         scheduledAt.toISOString(),
+        selectedDuration,
+        selectedType,
         notes
       );
       
@@ -61,6 +65,8 @@ export const AppointmentScheduleModal = ({
       setSelectedDate(undefined);
       setSelectedTime(undefined);
       setSelectedPsychologist(undefined);
+      setSelectedDuration(60);
+      setSelectedType('online');
       setNotes('');
       onOpenChange(false);
     } catch (error) {
@@ -151,6 +157,38 @@ export const AppointmentScheduleModal = ({
           </Card>
         </div>
 
+        {/* Duration and Type Selection */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Duração da Consulta</label>
+            <Select value={selectedDuration.toString()} onValueChange={(value) => setSelectedDuration(Number(value))}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="30">30 minutos</SelectItem>
+                <SelectItem value="45">45 minutos</SelectItem>
+                <SelectItem value="60">60 minutos</SelectItem>
+                <SelectItem value="90">90 minutos</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Tipo de Consulta</label>
+            <Select value={selectedType} onValueChange={setSelectedType}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="online">Online</SelectItem>
+                <SelectItem value="presencial">Presencial</SelectItem>
+                <SelectItem value="emergencia">Emergência</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
         {/* Notes */}
         <div className="space-y-2">
           <label className="text-sm font-medium">Observações (opcional)</label>
@@ -178,6 +216,12 @@ export const AppointmentScheduleModal = ({
                 </p>
                 <p>
                   <strong>Horário:</strong> {selectedTime}
+                </p>
+                <p>
+                  <strong>Duração:</strong> {selectedDuration} minutos
+                </p>
+                <p>
+                  <strong>Tipo:</strong> {selectedType === 'online' ? 'Online' : selectedType === 'presencial' ? 'Presencial' : 'Emergência'}
                 </p>
               </div>
             </CardContent>
