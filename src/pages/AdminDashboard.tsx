@@ -157,6 +157,7 @@ const AdminDashboard = () => {
       });
 
       setPsychologists(prev => prev.filter(p => p.id !== profileId));
+      fetchMetrics(); // Refresh metrics
     } catch (error) {
       console.error('Error approving psychologist:', error);
       toast({
@@ -191,6 +192,7 @@ const AdminDashboard = () => {
       setPsychologists(prev => prev.filter(p => p.id !== psychologistToReject));
       setRejectModalOpen(false);
       setPsychologistToReject(null);
+      fetchMetrics(); // Refresh metrics
     } catch (error) {
       console.error('Error rejecting psychologist:', error);
       toast({
