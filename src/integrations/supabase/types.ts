@@ -45,6 +45,7 @@ export type Database = {
         Row: {
           appointment_type: string
           created_at: string
+          duration: number | null
           id: string
           notes: string | null
           patient_id: string
@@ -58,6 +59,7 @@ export type Database = {
         Insert: {
           appointment_type?: string
           created_at?: string
+          duration?: number | null
           id?: string
           notes?: string | null
           patient_id: string
@@ -71,6 +73,7 @@ export type Database = {
         Update: {
           appointment_type?: string
           created_at?: string
+          duration?: number | null
           id?: string
           notes?: string | null
           patient_id?: string
