@@ -49,5 +49,29 @@ verify_jwt = true
 [functions.admin-psychologist-management]
 verify_jwt = false
 
+[functions.appointments]
+verify_jwt = true
+
+[functions.emergency-sos]
+verify_jwt = true
+
+[functions.patient-progress]
+verify_jwt = true
+
+[functions.psychologist-schedule]
+verify_jwt = true
+
+[functions.psychologist-emergency]
+verify_jwt = true
+
+[functions.psychologist-availability]
+verify_jwt = true
+
+[functions.plan-cancel]
+verify_jwt = true
+
+[functions.firebase-notifications]
+verify_jwt = true
+
 [analytics]
 enabled = false
