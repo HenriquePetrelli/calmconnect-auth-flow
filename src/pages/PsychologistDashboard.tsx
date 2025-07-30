@@ -33,14 +33,38 @@ const PsychologistDashboard = () => {
         return;
       }
 
+      // Verify user is psychologist and not admin
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', user.id)
         .single();
 
-      if (error || !profile || profile.user_type !== 'psychologist') {
+      if (error || !profile) {
         navigate('/psychologist-login');
+        return;
+      }
+
+      // Check if user is admin - if so, redirect to admin area
+      const { data: adminData } = await supabase
+        .from('admin_users')
+        .select('is_active')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .single();
+
+      if (adminData) {
+        navigate('/admin-dashboard');
+        return;
+      }
+
+      // Only allow psychologists
+      if (profile.user_type !== 'psychologist') {
+        if (profile.user_type === 'patient') {
+          navigate('/');
+        } else {
+          navigate('/psychologist-login');
+        }
         return;
       }
 

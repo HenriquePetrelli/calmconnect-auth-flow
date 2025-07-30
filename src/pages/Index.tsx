@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Shield, Settings } from "lucide-react";
 import Logo from "@/components/Logo";
 
 const Index = () => {
@@ -29,6 +30,31 @@ const Index = () => {
               className="w-full h-14 rounded-xl border-primary text-primary hover:bg-primary hover:text-primary-foreground font-medium transition-all duration-300"
             >
               Sou Psicólogo
+            </Button>
+          </div>
+        </div>
+
+        {/* Administrative Access */}
+        <div className="border-t border-border pt-6 mt-8">
+          <div className="flex flex-col gap-2">
+            <Button
+              onClick={() => navigate('/admin-login')}
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <Shield className="h-4 w-4 mr-2" />
+              Acesso Administrativo
+            </Button>
+            
+            <Button
+              onClick={() => navigate('/create-admin-account')}
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              Criar Conta Admin
             </Button>
           </div>
         </div>

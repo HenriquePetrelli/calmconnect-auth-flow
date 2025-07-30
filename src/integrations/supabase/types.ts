@@ -389,12 +389,28 @@ export type Database = {
       }
     }
     Functions: {
+      create_admin_account: {
+        Args: {
+          admin_email: string
+          admin_password: string
+          admin_name: string
+        }
+        Returns: Json
+      }
+      get_user_type: {
+        Args: { user_id_param: string }
+        Returns: string
+      }
       is_admin: {
         Args: { user_id_param?: string }
         Returns: boolean
       }
       promote_to_admin: {
         Args: { target_user_email: string }
+        Returns: boolean
+      }
+      validate_route_access: {
+        Args: { user_id_param: string; route_path: string }
         Returns: boolean
       }
     }
