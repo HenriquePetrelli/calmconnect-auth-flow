@@ -93,7 +93,11 @@ const LoginForm = ({ userType, onForgotPassword, onSignUp }: LoginFormProps) => 
       toast.success(`Login realizado com sucesso! Bem-vindo${isPatient ? '' : ' Dr.(a)'} ${profile.full_name}!`);
       
       // Redirecionar para a página apropriada
-      navigate('/home');
+      if (profile.user_type === 'psychologist') {
+        navigate('/psychologist-dashboard');
+      } else {
+        navigate('/home');
+      }
       
       // Limpar formulário
       setEmail("");
