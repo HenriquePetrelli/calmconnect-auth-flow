@@ -128,6 +128,49 @@ const generateRejectionEmailTemplate = (psychologistName: string, reason: string
 </html>
 `;
 
+const validateInput = (data: any, requiredFields: string[]): string | null => {
+  for (const field of requiredFields) {
+    if (!data[field] || (typeof data[field] === 'string' && data[field].trim() === '')) {
+      return `Missing required field: ${field}`;
+    }
+  }
+  return null;
+};
+
+const validateUUID = (id: string): boolean => {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(id);
+};
+
+const checkAdminPermission = async (req: Request): Promise<{ authorized: boolean; userId?: string }> => {
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) {
+    return { authorized: false };
+  }
+
+  try {
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    
+    if (error || !user) {
+      return { authorized: false };
+    }
+
+    // Check if user is admin using the secure function
+    const { data: isAdmin, error: adminError } = await supabase
+      .rpc('is_admin', { user_id_param: user.id });
+
+    if (adminError || !isAdmin) {
+      return { authorized: false };
+    }
+
+    return { authorized: true, userId: user.id };
+  } catch (error) {
+    console.error('Error checking admin permission:', error);
+    return { authorized: false };
+  }
+};
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -136,6 +179,18 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const url = new URL(req.url);
     const path = url.pathname.split("/").pop();
+
+    // Check admin permission for all operations
+    const { authorized } = await checkAdminPermission(req);
+    if (!authorized) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized - Admin access required" }),
+        {
+          status: 403,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
 
     // Get pending psychologists
     if (req.method === "GET" && path === "pending") {
@@ -167,7 +222,32 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Approve psychologist
     if (req.method === "POST" && path === "approve") {
-      const { profileId }: ApproveRequest = await req.json();
+      let requestData;
+      try {
+        requestData = await req.json();
+      } catch {
+        return new Response(
+          JSON.stringify({ error: "Invalid JSON in request body" }),
+          { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+
+      const validationError = validateInput(requestData, ['profileId']);
+      if (validationError) {
+        return new Response(
+          JSON.stringify({ error: validationError }),
+          { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+
+      const { profileId } = requestData;
+
+      if (!validateUUID(profileId)) {
+        return new Response(
+          JSON.stringify({ error: "Invalid profile ID format" }),
+          { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
 
       // Get psychologist details
       const { data: psychologist, error: fetchError } = await supabase
@@ -227,7 +307,39 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Reject psychologist
     if (req.method === "POST" && path === "reject") {
-      const { profileId, reason }: RejectRequest = await req.json();
+      let requestData;
+      try {
+        requestData = await req.json();
+      } catch {
+        return new Response(
+          JSON.stringify({ error: "Invalid JSON in request body" }),
+          { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+
+      const validationError = validateInput(requestData, ['profileId', 'reason']);
+      if (validationError) {
+        return new Response(
+          JSON.stringify({ error: validationError }),
+          { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+
+      const { profileId, reason } = requestData;
+
+      if (!validateUUID(profileId)) {
+        return new Response(
+          JSON.stringify({ error: "Invalid profile ID format" }),
+          { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+
+      if (reason.length > 1000) {
+        return new Response(
+          JSON.stringify({ error: "Reason text is too long (max 1000 characters)" }),
+          { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
 
       // Get psychologist details
       const { data: psychologist, error: fetchError } = await supabase

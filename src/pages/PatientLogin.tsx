@@ -1,26 +1,15 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Logo from "@/components/Logo";
 import LoginForm from "@/components/LoginForm";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import PasswordResetModal from "@/components/PasswordResetModal";
 
 const PatientLogin = () => {
   const navigate = useNavigate();
+  const [isPasswordResetOpen, setIsPasswordResetOpen] = useState(false);
 
-  const handleForgotPassword = async () => {
-    const email = prompt("Digite seu email para recuperação de senha:");
-    if (!email) return;
-
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-
-    if (error) {
-      toast.error("Erro ao enviar email de recuperação");
-      console.error("Reset password error:", error);
-    } else {
-      toast.success("Link de recuperação enviado para seu email!");
-    }
+  const handleForgotPassword = () => {
+    setIsPasswordResetOpen(true);
   };
 
   const handleSignUp = () => {
@@ -47,6 +36,11 @@ const PatientLogin = () => {
           </button>
         </div>
       </div>
+
+      <PasswordResetModal 
+        open={isPasswordResetOpen}
+        onOpenChange={setIsPasswordResetOpen}
+      />
     </div>
   );
 };

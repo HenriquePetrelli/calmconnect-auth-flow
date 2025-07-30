@@ -75,16 +75,25 @@ const AdminDashboard = () => {
         return;
       }
 
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .single();
+      // Check if user is admin using the new secure admin system
+      const { data: isAdminResult, error: adminError } = await supabase
+        .rpc('is_admin');
 
-      if (error || !profile || profile.user_type !== 'admin') {
+      if (adminError) {
+        console.error('Error checking admin status:', adminError);
+        toast({
+          title: "Erro",
+          description: "Erro ao verificar permissões",
+          variant: "destructive",
+        });
+        navigate('/');
+        return;
+      }
+
+      if (!isAdminResult) {
         toast({
           title: "Acesso negado",
-          description: "Você não tem permissão para acessar esta área.",
+          description: "Apenas administradores podem acessar esta área.",
           variant: "destructive",
         });
         navigate('/');
