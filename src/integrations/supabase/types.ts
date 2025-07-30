@@ -89,6 +89,69 @@ export type Database = {
         }
         Relationships: []
       }
+      fcm_tokens: {
+        Row: {
+          created_at: string
+          device_info: Json | null
+          id: string
+          is_active: boolean | null
+          token: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_info?: Json | null
+          id?: string
+          is_active?: boolean | null
+          token: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_info?: Json | null
+          id?: string
+          is_active?: boolean | null
+          token?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notification_logs: {
+        Row: {
+          body: string
+          created_at: string
+          fcm_response: Json | null
+          id: string
+          recipient_count: number | null
+          title: string
+          topic: string | null
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          fcm_response?: Json | null
+          id?: string
+          recipient_count?: number | null
+          title: string
+          topic?: string | null
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          fcm_response?: Json | null
+          id?: string
+          recipient_count?: number | null
+          title?: string
+          topic?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       patient_progress: {
         Row: {
           anxiety_level: number | null
