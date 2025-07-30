@@ -247,7 +247,17 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      admin_metrics: {
+        Row: {
+          active_psychologists: number | null
+          active_subscribers: number | null
+          appointments_last_30_days: number | null
+          pending_psychologists: number | null
+          sos_requests_last_30_days: number | null
+          total_patients: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
