@@ -80,7 +80,7 @@ const AdminDashboard = () => {
         .rpc('is_admin');
 
       if (adminError) {
-        console.error('Error checking admin status:', adminError);
+        console.error('Error checking admin status:', adminError.message);
         toast({
           title: "Erro",
           description: "Erro ao verificar permissões",
@@ -105,7 +105,7 @@ const AdminDashboard = () => {
       fetchPendingPsychologists();
       fetchMetrics();
     } catch (error) {
-      console.error('Error checking admin access:', error);
+      console.error('Error checking admin access:', error.message);
       navigate('/patient-login');
     }
   };
@@ -118,7 +118,7 @@ const AdminDashboard = () => {
       
       setPsychologists(data.psychologists || []);
     } catch (error) {
-      console.error('Error fetching psychologists:', error);
+      console.error('Error fetching psychologists:', error.message);
       toast({
         title: "Erro",
         description: "Falha ao carregar psicólogos pendentes",
@@ -132,15 +132,15 @@ const AdminDashboard = () => {
   const fetchMetrics = async () => {
     try {
       const { data, error } = await supabase
-        .from('admin_metrics')
-        .select('*')
-        .single();
+        .rpc('get_admin_metrics');
       
       if (error) throw error;
       
-      setMetrics(data);
+      if (data && data.length > 0) {
+        setMetrics(data[0]);
+      }
     } catch (error) {
-      console.error('Error fetching metrics:', error);
+      console.error('Error fetching metrics:', error.message);
       toast({
         title: "Erro",
         description: "Falha ao carregar métricas do sistema",
@@ -168,7 +168,7 @@ const AdminDashboard = () => {
       setPsychologists(prev => prev.filter(p => p.id !== profileId));
       fetchMetrics(); // Refresh metrics
     } catch (error) {
-      console.error('Error approving psychologist:', error);
+      console.error('Error approving psychologist:', error.message);
       toast({
         title: "Erro",
         description: "Falha ao aprovar psicólogo",
@@ -203,7 +203,7 @@ const AdminDashboard = () => {
       setPsychologistToReject(null);
       fetchMetrics(); // Refresh metrics
     } catch (error) {
-      console.error('Error rejecting psychologist:', error);
+      console.error('Error rejecting psychologist:', error.message);
       toast({
         title: "Erro",
         description: "Falha ao recusar psicólogo",

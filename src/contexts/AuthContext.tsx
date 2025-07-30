@@ -74,7 +74,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const handleAuthStateChange = async (event: string, session: Session | null) => {
-    console.log('Auth state changed:', event, session?.user?.email);
+    // Auth state changed (removed sensitive logging)
     
     setSession(session);
     setUser(session?.user ?? null);
@@ -130,17 +130,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Define redirect rules based on user type and current path
       if (userType === 'admin') {
         if (!currentPath.startsWith('/admin')) {
-          console.log('Admin user redirected to admin dashboard');
+          // Admin user redirected to admin dashboard
           window.location.href = '/admin-dashboard';
         }
       } else if (userType === 'psychologist') {
         if (currentPath.startsWith('/admin')) {
-          console.log('Psychologist user blocked from admin area');
+          // Psychologist user blocked from admin area
           window.location.href = '/psychologist-dashboard';
         }
       } else if (userType === 'patient') {
         if (currentPath.startsWith('/admin') || currentPath.startsWith('/psychologist')) {
-          console.log('Patient user blocked from restricted area');
+          // Patient user blocked from restricted area
           window.location.href = '/';
         }
       }

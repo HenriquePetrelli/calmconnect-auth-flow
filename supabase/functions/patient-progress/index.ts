@@ -32,6 +32,17 @@ serve(async (req) => {
       throw new Error('Invalid authentication');
     }
 
+    // Verify user is a patient - only patients can access progress tracking
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('user_type')
+      .eq('user_id', user.id)
+      .single();
+
+    if (!profile || profile.user_type !== 'patient') {
+      throw new Error('Access denied. Patient access required.');
+    }
+
     if (req.method === 'GET') {
       const url = new URL(req.url);
       const period = url.searchParams.get('period') || '30'; // days
@@ -118,7 +129,7 @@ serve(async (req) => {
     return new Response('Method not allowed', { status: 405, headers: corsHeaders });
 
   } catch (error: any) {
-    console.error('Error in patient-progress function:', error);
+    console.error('Error in patient-progress function:', error.message);
     return new Response(
       JSON.stringify({ error: error.message }),
       {

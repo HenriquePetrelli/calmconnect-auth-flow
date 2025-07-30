@@ -32,6 +32,17 @@ serve(async (req) => {
       throw new Error('Invalid authentication');
     }
 
+    // Verify user type from profile - only patients and psychologists can access appointments
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('user_type')
+      .eq('user_id', user.id)
+      .single();
+
+    if (!profile || (profile.user_type !== 'patient' && profile.user_type !== 'psychologist')) {
+      throw new Error('Access denied. Invalid user type.');
+    }
+
     if (req.method === 'GET') {
       const url = new URL(req.url);
       const action = url.searchParams.get('action');
@@ -127,7 +138,7 @@ serve(async (req) => {
       if (error) throw error;
 
       // TODO: Send confirmation email/SMS
-      console.log('Appointment created:', appointment.id);
+      // Removed sensitive logging for security
 
       return new Response(
         JSON.stringify({
@@ -144,7 +155,8 @@ serve(async (req) => {
     return new Response('Method not allowed', { status: 405, headers: corsHeaders });
 
   } catch (error: any) {
-    console.error('Error in appointments function:', error);
+    // Log error without sensitive data
+    console.error('Error in appointments function:', error.message);
     return new Response(
       JSON.stringify({ error: error.message }),
       {

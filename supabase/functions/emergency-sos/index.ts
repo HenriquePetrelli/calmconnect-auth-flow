@@ -32,6 +32,17 @@ serve(async (req) => {
       throw new Error('Invalid authentication');
     }
 
+    // Verify user type from profile - only patients and psychologists can access SOS
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('user_type')
+      .eq('user_id', user.id)
+      .single();
+
+    if (!profile || (profile.user_type !== 'patient' && profile.user_type !== 'psychologist')) {
+      throw new Error('Access denied. Invalid user type.');
+    }
+
     if (req.method === 'POST') {
       // Create emergency request
       const { data: emergencyRequest, error: insertError } = await supabase
@@ -44,7 +55,7 @@ serve(async (req) => {
         .single();
 
       if (insertError) {
-        console.error('Error creating emergency request:', insertError);
+        console.error('Error creating emergency request:', insertError.message);
         throw insertError;
       }
 
@@ -56,14 +67,13 @@ serve(async (req) => {
         .eq('registration_status', 'approved');
 
       if (psychError) {
-        console.error('Error fetching psychologists:', psychError);
+        console.error('Error fetching psychologists:', psychError.message);
         throw psychError;
       }
 
       // TODO: Send push notifications to online psychologists
       // This would integrate with Firebase Cloud Messaging
-      console.log('Emergency request created:', emergencyRequest.id);
-      console.log('Notifying psychologists:', psychologists?.length || 0);
+      // Removed sensitive logging for security
 
       return new Response(
         JSON.stringify({
@@ -97,7 +107,7 @@ serve(async (req) => {
         .single();
 
       if (error) {
-        console.error('Error fetching emergency request:', error);
+        console.error('Error fetching emergency request:', error.message);
         throw error;
       }
 
@@ -112,7 +122,7 @@ serve(async (req) => {
     return new Response('Method not allowed', { status: 405, headers: corsHeaders });
 
   } catch (error: any) {
-    console.error('Error in emergency-sos function:', error);
+    console.error('Error in emergency-sos function:', error.message);
     return new Response(
       JSON.stringify({ error: error.message }),
       {

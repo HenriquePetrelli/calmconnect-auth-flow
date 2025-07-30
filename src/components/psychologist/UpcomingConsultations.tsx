@@ -24,7 +24,7 @@ const UpcomingConsultations = () => {
     try {
       await updateAppointment(appointmentId, { status: 'in_progress' });
       // TODO: Integrate with video call system
-      console.log('Starting consultation:', appointmentId);
+      // Starting consultation (removed sensitive logging)
     } catch (error) {
       console.error('Error starting consultation:', error);
     } finally {

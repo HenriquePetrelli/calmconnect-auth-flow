@@ -16,7 +16,7 @@ const EmergencyNotifications = () => {
     try {
       const acceptedRequest = await acceptEmergencyRequest(requestId);
       // Here you would typically redirect to a video call interface
-      console.log('Emergency accepted:', acceptedRequest);
+      // Emergency accepted (removed sensitive logging)
       // TODO: Integrate with video call system
     } catch (error) {
       console.error('Error accepting emergency:', error);
