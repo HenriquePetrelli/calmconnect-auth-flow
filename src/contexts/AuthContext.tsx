@@ -90,16 +90,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const handleAuthStateChange = async (event: string, session: Session | null) => {
-    // Auth state changed (removed sensitive logging)
+    console.log('Auth state changed:', event, session?.user?.id);
     
     setSession(session);
     setUser(session?.user ?? null);
 
     if (session?.user) {
+      console.log('User metadata:', session.user.user_metadata);
+      
+      // Check if super admin immediately from metadata
+      if (session.user.user_metadata?.is_super_admin === true) {
+        console.log('User is super admin, setting userType to admin');
+        setUserType('admin');
+        setLoading(false);
+        return;
+      }
+
       // Defer user type determination to prevent deadlocks
       setTimeout(async () => {
         try {
           const type = await getUserType(session.user.id);
+          console.log('Determined user type:', type);
           setUserType(type);
         } catch (error) {
           console.error('Error getting user type:', error);
