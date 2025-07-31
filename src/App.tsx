@@ -9,7 +9,7 @@ import Index from "./pages/Index";
 import PatientLogin from "./pages/PatientLogin";
 import PsychologistLogin from "./pages/PsychologistLogin";
 import PatientSignUp from "./pages/PatientSignUp";
-import PsychologistSignUp from "./pages/PsychologistSignUp";
+import PsychologistSignUpPublic from "./pages/PsychologistSignUpPublic";
 import Home from "./pages/Home";
 import SoundsLibrary from "./pages/SoundsLibrary";
 import SoundCategory from "./pages/SoundCategory";
@@ -46,7 +46,7 @@ const App = () => (
           <Route path="/patient-login" element={<PatientLogin />} />
           <Route path="/psychologist-login" element={<PsychologistLogin />} />
           <Route path="/patient-signup" element={<PatientSignUp />} />
-          <Route path="/psychologist-signup" element={<PsychologistSignUp />} />
+          <Route path="/psychologist-signup" element={<PsychologistSignUpPublic />} />
           <Route path="/home" element={<Home />} />
           <Route path="/sounds" element={<SoundsLibrary />} />
           <Route path="/sounds/category/:categoryId" element={<SoundCategory />} />
