@@ -305,6 +305,60 @@ export type Database = {
         }
         Relationships: []
       }
+      psychologists: {
+        Row: {
+          approval_status: string | null
+          approved: boolean | null
+          bio: string | null
+          created_at: string | null
+          crp_number: string
+          documents: string[] | null
+          email: string
+          full_name: string
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          specialization: string | null
+          submitted_at: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          approval_status?: string | null
+          approved?: boolean | null
+          bio?: string | null
+          created_at?: string | null
+          crp_number: string
+          documents?: string[] | null
+          email: string
+          full_name: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          specialization?: string | null
+          submitted_at?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          approval_status?: string | null
+          approved?: boolean | null
+          bio?: string | null
+          created_at?: string | null
+          crp_number?: string
+          documents?: string[] | null
+          email?: string
+          full_name?: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          specialization?: string | null
+          submitted_at?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       security_audit_log: {
         Row: {
           action: string
@@ -432,6 +486,10 @@ export type Database = {
       }
       validate_route_access: {
         Args: { user_id_param: string; route_path: string }
+        Returns: boolean
+      }
+      validate_unique_crp: {
+        Args: { crp_input: string; exclude_id?: string }
         Returns: boolean
       }
     }
