@@ -65,7 +65,7 @@ export const usePsychologistManagement = () => {
   const getPendingPsychologists = async () => {
     setLoading(true);
     try {
-      const response = await fetch('https://ihrrgmmsfuvlasmzdmwf.supabase.co/functions/v1/psychologist-management?action=pending', {
+      const response = await fetch('https://ihrrgmmsfuvlasmzdmwf.supabase.co/functions/v1/psychologist-management?action=all', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
@@ -83,8 +83,8 @@ export const usePsychologistManagement = () => {
         throw new Error(result.error || 'Erro ao buscar psicólogos');
       }
     } catch (error: any) {
-      console.error('Erro ao buscar psicólogos pendentes:', error);
-      toast.error(error.message || 'Erro ao carregar psicólogos pendentes');
+      console.error('Erro ao buscar psicólogos:', error);
+      toast.error(error.message || 'Erro ao carregar psicólogos');
       return [];
     } finally {
       setLoading(false);
@@ -194,20 +194,32 @@ export const usePsychologistManagement = () => {
 
   const checkPsychologistApproval = async (userId: string) => {
     try {
-      const { data, error } = await supabase
+      // Verificar tabela psychologists
+      const { data: psychologist, error: psychError } = await supabase
         .from('psychologists')
-        .select('approval_status, approved')
+        .select('approval_status, approved, id')
         .eq('user_id', userId)
         .single();
 
-      if (error) {
+      if (psychError) {
         // Se não existe registro, usuário não é psicólogo
         return { isApproved: false, status: 'not_registered' };
       }
 
+      // Verificar tabela psychologist_registrations
+      const { data: registration, error: regError } = await supabase
+        .from('psychologist_registrations')
+        .select('status')
+        .eq('user_id', userId)
+        .single();
+
+      // Para aprovação, ambas as tabelas devem ter status 'approved'
+      const isPsychApproved = psychologist.approved && psychologist.approval_status === 'approved';
+      const isRegApproved = registration && !regError && registration.status === 'approved';
+
       return {
-        isApproved: data.approved && data.approval_status === 'approved',
-        status: data.approval_status
+        isApproved: isPsychApproved && isRegApproved,
+        status: psychologist.approval_status
       };
     } catch (error: any) {
       console.error('Erro ao verificar aprovação:', error);

@@ -92,10 +92,10 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
 
       <Tabs value={filter} onValueChange={(value) => setFilter(value as any)} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="pending">Pendentes ({filteredPsychologists.filter(p => p.approval_status === 'pending').length})</TabsTrigger>
-          <TabsTrigger value="approved">Aprovados</TabsTrigger>
-          <TabsTrigger value="rejected">Rejeitados</TabsTrigger>
-          <TabsTrigger value="all">Todos</TabsTrigger>
+          <TabsTrigger value="pending">Pendentes ({pendingPsychologists.filter(p => p.approval_status === 'pending').length})</TabsTrigger>
+          <TabsTrigger value="approved">Aprovados ({pendingPsychologists.filter(p => p.approval_status === 'approved').length})</TabsTrigger>
+          <TabsTrigger value="rejected">Rejeitados ({pendingPsychologists.filter(p => p.approval_status === 'rejected').length})</TabsTrigger>
+          <TabsTrigger value="all">Todos ({pendingPsychologists.length})</TabsTrigger>
         </TabsList>
       </Tabs>
 

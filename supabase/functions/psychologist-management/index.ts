@@ -199,6 +199,20 @@ const handler = async (req: Request): Promise<Response> => {
         .single();
       
       if (error) throw error;
+
+      // Criar entrada na tabela psychologist_registrations
+      const { error: regError } = await supabase
+        .from('psychologist_registrations')
+        .insert({
+          user_id: registrationData.user_id,
+          status: 'pending',
+          submitted_at: new Date().toISOString()
+        });
+
+      if (regError) {
+        console.error('Erro ao criar registro de aprovação:', regError);
+        // Não vamos falhar a operação por isso, apenas logar
+      }
       
       // Enviar email de confirmação
       await resend.emails.send({
@@ -238,10 +252,35 @@ const handler = async (req: Request): Promise<Response> => {
           specialization,
           bio,
           submitted_at,
-          documents
+          documents,
+          approval_status
         `)
         .eq('approval_status', 'pending')
         .order('submitted_at', { ascending: true });
+      
+      if (error) throw error;
+      
+      return new Response(JSON.stringify({ success: true, data }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Buscar todos os psicólogos
+    if (req.method === 'GET' && action === 'all') {
+      const { data, error } = await supabase
+        .from('psychologists')
+        .select(`
+          id,
+          full_name,
+          email,
+          crp_number,
+          specialization,
+          bio,
+          submitted_at,
+          documents,
+          approval_status
+        `)
+        .order('submitted_at', { ascending: false });
       
       if (error) throw error;
       
@@ -273,7 +312,7 @@ const handler = async (req: Request): Promise<Response> => {
       
       validateInput({ psychologist_id, admin_user_id }, ['psychologist_id', 'admin_user_id']);
       
-      // Buscar dados do psicólogo
+      // Buscar dados do psicólogo antes da aprovação
       const { data: psychologist, error: fetchError } = await supabase
         .from('psychologists')
         .select('*')
@@ -284,45 +323,13 @@ const handler = async (req: Request): Promise<Response> => {
         throw new Error('Psicólogo não encontrado');
       }
       
-      // Atualizar status na tabela psychologists
-      const { error: updateError } = await supabase
-        .from('psychologists')
-        .update({
-          approved: true,
-          approval_status: 'approved',
-          reviewed_at: new Date().toISOString(),
-          reviewed_by: admin_user_id
-        })
-        .eq('id', psychologist_id);
+      // Usar função RPC para aprovação
+      const { error: approvalError } = await supabase.rpc('handle_psychologist_approval', {
+        psychologist_id: psychologist_id,
+        admin_id: admin_user_id
+      });
       
-      if (updateError) throw updateError;
-      
-      // Atualizar ou criar perfil na tabela profiles
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-          user_id: psychologist.user_id,
-          user_type: 'psychologist',
-          full_name: psychologist.full_name,
-          crp: psychologist.crp_number
-        });
-      
-      if (profileError) throw profileError;
-      
-      // Atualizar metadata do usuário no auth
-      const { error: authError } = await supabase.auth.admin.updateUserById(
-        psychologist.user_id,
-        { 
-          user_metadata: { 
-            account_type: 'psychologist', 
-            account_status: 'approved',
-            full_name: psychologist.full_name,
-            crp: psychologist.crp_number
-          } 
-        }
-      );
-      
-      if (authError) console.error('Erro ao atualizar metadata:', authError);
+      if (approvalError) throw approvalError;
       
       // Enviar email de aprovação
       await resend.emails.send({
@@ -348,7 +355,7 @@ const handler = async (req: Request): Promise<Response> => {
       
       validateInput({ psychologist_id, admin_user_id }, ['psychologist_id', 'admin_user_id']);
       
-      // Buscar dados do psicólogo
+      // Buscar dados do psicólogo antes da rejeição
       const { data: psychologist, error: fetchError } = await supabase
         .from('psychologists')
         .select('*')
@@ -359,18 +366,14 @@ const handler = async (req: Request): Promise<Response> => {
         throw new Error('Psicólogo não encontrado');
       }
       
-      // Atualizar status na tabela psychologists
-      const { error: updateError } = await supabase
-        .from('psychologists')
-        .update({
-          approval_status: 'rejected',
-          reviewed_at: new Date().toISOString(),
-          reviewed_by: admin_user_id,
-          rejection_reason
-        })
-        .eq('id', psychologist_id);
+      // Usar função RPC para rejeição
+      const { error: rejectionError } = await supabase.rpc('handle_psychologist_rejection', {
+        psychologist_id: psychologist_id,
+        admin_id: admin_user_id,
+        rejection_reason: rejection_reason || null
+      });
       
-      if (updateError) throw updateError;
+      if (rejectionError) throw rejectionError;
       
       // Enviar email de rejeição
       await resend.emails.send({
