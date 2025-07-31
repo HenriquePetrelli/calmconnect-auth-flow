@@ -14,33 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      admin_users: {
-        Row: {
-          created_at: string
-          granted_at: string
-          granted_by: string | null
-          id: string
-          is_active: boolean
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          granted_at?: string
-          granted_by?: string | null
-          id?: string
-          is_active?: boolean
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          granted_at?: string
-          granted_by?: string | null
-          id?: string
-          is_active?: boolean
-          user_id?: string
-        }
-        Relationships: []
-      }
       appointments: {
         Row: {
           appointment_type: string
@@ -296,6 +269,42 @@ export type Database = {
         }
         Relationships: []
       }
+      psychologist_registrations: {
+        Row: {
+          created_at: string
+          id: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["registration_status"]
+          submitted_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["registration_status"]
+          submitted_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["registration_status"]
+          submitted_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       security_audit_log: {
         Row: {
           action: string
@@ -405,7 +414,7 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: string
       }
-      is_admin: {
+      is_super_admin: {
         Args: { user_id_param?: string }
         Returns: boolean
       }
@@ -427,6 +436,7 @@ export type Database = {
       }
     }
     Enums: {
+      registration_status: "pending" | "approved" | "rejected"
       user_type: "patient" | "psychologist" | "admin"
     }
     CompositeTypes: {
@@ -555,6 +565,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      registration_status: ["pending", "approved", "rejected"],
       user_type: ["patient", "psychologist", "admin"],
     },
   },
