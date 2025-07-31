@@ -468,6 +468,18 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: string
       }
+      handle_psychologist_approval: {
+        Args: { psychologist_id: string; admin_id: string }
+        Returns: undefined
+      }
+      handle_psychologist_rejection: {
+        Args: {
+          psychologist_id: string
+          admin_id: string
+          rejection_reason?: string
+        }
+        Returns: undefined
+      }
       is_super_admin: {
         Args: { user_id_param?: string }
         Returns: boolean
