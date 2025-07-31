@@ -2,13 +2,19 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { PsychologistRegistrationForm } from "@/components/psychologist/PsychologistRegistrationForm";
 import Logo from "@/components/Logo";
+import { useEffect } from "react";
 
 const PsychologistSignUp = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  useEffect(() => {
+    if (!user) {
+      navigate('/patient-login');
+    }
+  }, [user, navigate]);
+
   if (!user) {
-    navigate('/patient-login');
     return null;
   }
 
