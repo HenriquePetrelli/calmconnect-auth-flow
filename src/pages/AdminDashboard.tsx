@@ -75,9 +75,9 @@ const AdminDashboard = () => {
         return;
       }
 
-      // Check if user is admin using the new secure admin system
+      // Check if user is super admin using the new system
       const { data: isAdminResult, error: adminError } = await supabase
-        .rpc('is_admin');
+        .rpc('is_super_admin', { user_id_param: session.user.id });
 
       if (adminError) {
         console.error('Error checking admin status:', adminError.message);
@@ -112,12 +112,36 @@ const AdminDashboard = () => {
 
   const fetchPendingPsychologists = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('admin-psychologist-management/pending');
+      const response = await fetch(`https://ihrrgmmsfuvlasmzdmwf.supabase.co/functions/v1/psychologist-registration-management?action=pending`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          'Content-Type': 'application/json',
+        },
+      });
       
-      if (error) throw error;
+      const data = await response.json();
       
-      setPsychologists(data.psychologists || []);
-    } catch (error) {
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao buscar registros');
+      }
+      
+      if (data.success) {
+        // Transform the data to match the expected format
+        const transformedData = data.data.map((reg: any) => ({
+          id: reg.user_id,
+          full_name: reg.profiles.full_name,
+          professional_email: reg.profiles.professional_email,
+          cpf: reg.profiles.cpf,
+          crp: reg.profiles.crp,
+          specialty: reg.profiles.specialty,
+          created_at: reg.submitted_at,
+        }));
+        setPsychologists(transformedData);
+      } else {
+        throw new Error(data.error || 'Erro ao buscar registros');
+      }
+    } catch (error: any) {
       console.error('Error fetching psychologists:', error.message);
       toast({
         title: "Erro",
@@ -154,20 +178,33 @@ const AdminDashboard = () => {
   const handleApprove = async (profileId: string) => {
     setActionLoading(profileId);
     try {
-      const { error } = await supabase.functions.invoke('admin-psychologist-management/approve', {
-        body: { profileId }
+      const response = await fetch(`https://ihrrgmmsfuvlasmzdmwf.supabase.co/functions/v1/psychologist-registration-management?action=approve`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId: profileId }),
       });
 
-      if (error) throw error;
+      const data = await response.json();
 
-      toast({
-        title: "Psicólogo aprovado",
-        description: "O cadastro foi aprovado e o email de confirmação foi enviado.",
-      });
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao aprovar psicólogo');
+      }
 
-      setPsychologists(prev => prev.filter(p => p.id !== profileId));
-      fetchMetrics(); // Refresh metrics
-    } catch (error) {
+      if (data.success) {
+        toast({
+          title: "Psicólogo aprovado",
+          description: "O cadastro foi aprovado e o email de confirmação foi enviado.",
+        });
+
+        setPsychologists(prev => prev.filter(p => p.id !== profileId));
+        fetchMetrics(); // Refresh metrics
+      } else {
+        throw new Error(data.error || 'Erro ao aprovar psicólogo');
+      }
+    } catch (error: any) {
       console.error('Error approving psychologist:', error.message);
       toast({
         title: "Erro",
@@ -184,25 +221,38 @@ const AdminDashboard = () => {
 
     setActionLoading(psychologistToReject);
     try {
-      const { error } = await supabase.functions.invoke('admin-psychologist-management/reject', {
-        body: { 
-          profileId: psychologistToReject,
+      const response = await fetch(`https://ihrrgmmsfuvlasmzdmwf.supabase.co/functions/v1/psychologist-registration-management?action=reject`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          userId: psychologistToReject,
           reason 
-        }
+        }),
       });
 
-      if (error) throw error;
+      const data = await response.json();
 
-      toast({
-        title: "Psicólogo recusado",
-        description: "O cadastro foi recusado e o email foi enviado.",
-      });
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao rejeitar psicólogo');
+      }
 
-      setPsychologists(prev => prev.filter(p => p.id !== psychologistToReject));
-      setRejectModalOpen(false);
-      setPsychologistToReject(null);
-      fetchMetrics(); // Refresh metrics
-    } catch (error) {
+      if (data.success) {
+        toast({
+          title: "Psicólogo recusado",
+          description: "O cadastro foi recusado e o email foi enviado.",
+        });
+
+        setPsychologists(prev => prev.filter(p => p.id !== psychologistToReject));
+        setRejectModalOpen(false);
+        setPsychologistToReject(null);
+        fetchMetrics(); // Refresh metrics
+      } else {
+        throw new Error(data.error || 'Erro ao rejeitar psicólogo');
+      }
+    } catch (error: any) {
       console.error('Error rejecting psychologist:', error.message);
       toast({
         title: "Erro",

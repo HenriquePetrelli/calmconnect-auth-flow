@@ -45,17 +45,27 @@ const PsychologistDashboard = () => {
         return;
       }
 
-      // Check if user is admin - if so, redirect to admin area
-      const { data: adminData } = await supabase
-        .from('admin_users')
-        .select('is_active')
-        .eq('user_id', user.id)
-        .eq('is_active', true)
-        .single();
-
-      if (adminData) {
+      // Check if user is super admin - if so, redirect to admin area
+      if (user.user_metadata?.is_super_admin === true) {
         navigate('/admin-dashboard');
         return;
+      }
+
+      // Check if psychologist is approved
+      if (profile.user_type === 'psychologist') {
+        const { data: registrationData } = await supabase
+          .from('psychologist_registrations')
+          .select('status')
+          .eq('user_id', user.id)
+          .single();
+
+        if (!registrationData || registrationData.status !== 'approved') {
+          // Check user metadata for approval status
+          if (user.user_metadata?.account_status !== 'approved') {
+            navigate('/psychologist-login?error=not_approved');
+            return;
+          }
+        }
       }
 
       // Only allow psychologists

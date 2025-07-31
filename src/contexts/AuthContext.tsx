@@ -39,15 +39,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const getUserType = async (userId: string): Promise<UserType> => {
     try {
-      // Check if admin
-      const { data: adminData } = await supabase
-        .from('admin_users')
-        .select('is_active')
-        .eq('user_id', userId)
-        .eq('is_active', true)
-        .single();
+      // Get user data to check metadata
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        return 'unknown';
+      }
 
-      if (adminData) return 'admin';
+      // Check if super admin
+      if (user.user_metadata?.is_super_admin === true) {
+        return 'admin';
+      }
 
       // Check profile for psychologist/patient
       const { data: profileData } = await supabase
@@ -56,7 +58,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('user_id', userId)
         .single();
 
-      if (profileData?.user_type === 'psychologist') return 'psychologist';
+      if (profileData?.user_type === 'psychologist') {
+        // For psychologists, check if approved
+        const { data: registrationData } = await supabase
+          .from('psychologist_registrations')
+          .select('status')
+          .eq('user_id', userId)
+          .single();
+
+        if (registrationData?.status === 'approved' || user.user_metadata?.account_status === 'approved') {
+          return 'psychologist';
+        }
+        
+        return 'unknown'; // Not approved yet
+      }
+
       if (profileData?.user_type === 'patient') return 'patient';
 
       return 'unknown';

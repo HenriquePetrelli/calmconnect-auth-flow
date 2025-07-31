@@ -90,6 +90,25 @@ const LoginForm = ({ userType, onForgotPassword, onSignUp }: LoginFormProps) => 
         return;
       }
 
+      // Para psicólogos, verificar se o cadastro foi aprovado
+      if (profile.user_type === 'psychologist') {
+        // Check user metadata first
+        if (data.user.user_metadata?.account_status !== 'approved') {
+          // Check registration table as fallback
+          const { data: registrationData } = await supabase
+            .from('psychologist_registrations')
+            .select('status')
+            .eq('user_id', data.user.id)
+            .single();
+
+          if (!registrationData || registrationData.status !== 'approved') {
+            toast.error("Seu cadastro ainda está sendo analisado. Aguarde a aprovação.");
+            await supabase.auth.signOut();
+            return;
+          }
+        }
+      }
+
       toast.success(`Login realizado com sucesso! Bem-vindo${isPatient ? '' : ' Dr.(a)'} ${profile.full_name}!`);
       
       // Redirecionar para a página apropriada

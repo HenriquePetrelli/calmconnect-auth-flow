@@ -46,17 +46,11 @@ export const createDefaultAdminAccount = async (): Promise<AdminCredentials> => 
   }
 };
 
-// Function to validate admin access
+// Function to validate super admin access
 export const validateAdminAccess = async (userId: string): Promise<boolean> => {
   try {
-    const { data } = await supabase
-      .from('admin_users')
-      .select('is_active')
-      .eq('user_id', userId)
-      .eq('is_active', true)
-      .single();
-
-    return !!data;
+    const { data, error } = await supabase.rpc('is_super_admin', { user_id_param: userId });
+    return !error && data === true;
   } catch {
     return false;
   }
@@ -65,7 +59,7 @@ export const validateAdminAccess = async (userId: string): Promise<boolean> => {
 // Function to get user session type
 export const getUserSessionType = async (userId: string): Promise<'admin' | 'psychologist' | 'patient' | 'unknown'> => {
   try {
-    // Check admin first
+    // Check super admin first
     const isAdmin = await validateAdminAccess(userId);
     if (isAdmin) return 'admin';
 

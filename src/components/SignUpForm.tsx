@@ -190,8 +190,33 @@ const SignUpForm = ({ userType }: SignUpFormProps) => {
         return;
       }
 
-      toast.success(`Cadastro realizado com sucesso! Bem-vindo${!isPatient ? ' Dr.(a)' : ''} ${formData.name}!`);
-      toast.info("Verifique seu email para confirmar a conta antes de fazer login.");
+      // For psychologists, create a registration record
+      if (!isPatient) {
+        try {
+          const { error: registrationError } = await supabase
+            .from('psychologist_registrations')
+            .insert({
+              user_id: data.user.id,
+              status: 'pending',
+            });
+
+          if (registrationError) {
+            console.error('Error creating psychologist registration:', registrationError);
+            // Don't fail the signup if registration record creation fails
+          }
+        } catch (regError) {
+          console.error('Error creating psychologist registration:', regError);
+          // Don't fail the signup if registration record creation fails
+        }
+      }
+
+      if (isPatient) {
+        toast.success(`Cadastro realizado com sucesso! Bem-vindo ${formData.name}!`);
+        toast.info("Verifique seu email para confirmar a conta antes de fazer login.");
+      } else {
+        toast.success(`Cadastro realizado com sucesso! Dr.(a) ${formData.name}!`);
+        toast.info("Seu cadastro foi enviado para análise. Você receberá um email quando for aprovado.");
+      }
       
       // Redirecionar para login após cadastro
       setTimeout(() => {
