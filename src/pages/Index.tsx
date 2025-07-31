@@ -31,6 +31,15 @@ const Index = () => {
             >
               Sou Psicólogo
             </Button>
+            
+            <Button
+              onClick={() => navigate('/psychologist-signup')}
+              variant="outline"
+              size="sm"
+              className="w-full text-sm text-muted-foreground hover:text-foreground border-dashed"
+            >
+              Cadastrar como Psicólogo
+            </Button>
           </div>
         </div>
 

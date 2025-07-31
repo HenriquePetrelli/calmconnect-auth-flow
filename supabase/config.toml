@@ -73,5 +73,8 @@ verify_jwt = true
 [functions.firebase-notifications]
 verify_jwt = true
 
+[functions.psychologist-management]
+verify_jwt = true
+
 [analytics]
 enabled = false
