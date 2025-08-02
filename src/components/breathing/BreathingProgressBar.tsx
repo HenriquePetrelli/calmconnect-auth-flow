@@ -6,7 +6,9 @@ interface BreathingProgressBarProps {
   currentTime: number;
 }
 
-const getProgressValue = (phase: string, elapsedTime: number, phaseDuration: number): number => {
+const getProgressValue = (phase: string, remainingTime: number, phaseDuration: number): number => {
+  const elapsedTime = phaseDuration - remainingTime;
+  
   switch(phase) {
     case 'inhale':
       return Math.min(elapsedTime / phaseDuration, 1); // 0% → 100%
@@ -38,8 +40,7 @@ const getPhaseColor = (phase: string): string => {
 
 const BreathingProgressBar = ({ phase, duration, currentTime }: BreathingProgressBarProps) => {
   const progress = useMemo(() => {
-    const elapsed = duration - currentTime;
-    return getProgressValue(phase, elapsed, duration);
+    return getProgressValue(phase, currentTime, duration);
   }, [phase, duration, currentTime]);
 
   return (
