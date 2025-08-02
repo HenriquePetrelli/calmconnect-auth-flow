@@ -6,37 +6,43 @@ interface BreathingStepsProps {
 }
 
 const BreathingSteps = ({ pattern, currentPhase }: BreathingStepsProps) => {
+  // Always show all phases in order: inhale -> hold -> exhale -> pause
   const phases = [
     { phase: 'inhale', duration: pattern.inhale, label: 'Inspirar' },
-    ...(pattern.hold > 0 ? [{ phase: 'hold', duration: pattern.hold, label: 'Segurar' }] : []),
+    { phase: 'hold', duration: pattern.hold, label: 'Segurar' },
     { phase: 'exhale', duration: pattern.exhale, label: 'Expirar' },
-    ...(pattern.pause > 0 ? [{ phase: 'pause', duration: pattern.pause, label: 'Pausa' }] : [])
+    { phase: 'pause', duration: pattern.pause, label: 'Pausa' }
   ];
 
   return (
     <div className="breathing-steps-container">
-      {phases.map((step, index) => (
-        <div 
-          key={index}
-          className={`breathing-step ${step.phase === currentPhase ? 'active' : ''}`}
-        >
+      {phases.map((step, index) => {
+        // Only show phases that have duration > 0
+        if (step.duration === 0) return null;
+        
+        return (
           <div 
-            className="breathing-step-duration"
-            style={{
-              color: step.phase === currentPhase ? 
-                step.phase === 'inhale' ? 'hsl(var(--breathing-inhale))' :
-                step.phase === 'hold' ? 'hsl(var(--breathing-hold))' :
-                step.phase === 'exhale' ? 'hsl(var(--breathing-exhale))' :
-                'hsl(var(--breathing-pause))' : 'hsl(var(--muted-foreground))'
-            }}
+            key={index}
+            className={`breathing-step ${step.phase === currentPhase ? 'active' : ''}`}
           >
-            {step.duration}s
+            <div 
+              className="breathing-step-duration"
+              style={{
+                color: step.phase === currentPhase ? 
+                  step.phase === 'inhale' ? 'hsl(var(--breathing-inhale))' :
+                  step.phase === 'hold' ? 'hsl(var(--breathing-hold))' :
+                  step.phase === 'exhale' ? 'hsl(var(--breathing-exhale))' :
+                  'hsl(var(--breathing-pause))' : 'hsl(var(--muted-foreground))'
+              }}
+            >
+              {step.duration}s
+            </div>
+            <div className="breathing-step-label">
+              {step.label}
+            </div>
           </div>
-          <div className="breathing-step-label">
-            {step.label}
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 };
