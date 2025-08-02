@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, Search, Moon, Brain, Target, Leaf, Music, Waves, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import CategoryCard from "@/components/sounds/CategoryCard";
+import PlaylistCard from "@/components/sounds/PlaylistCard";
 
 const SoundsLibrary = () => {
   const navigate = useNavigate();
@@ -63,6 +64,16 @@ const SoundsLibrary = () => {
     }
   ];
 
+  const getPlaylistImage = (categoryId: string) => {
+    const images = {
+      nature: "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=400&h=300&fit=crop",
+      instrumental: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=400&h=300&fit=crop", 
+      therapeutic: "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?w=400&h=300&fit=crop",
+      meditation: "https://images.unsplash.com/photo-1472396961693-142e6e269027?w=400&h=300&fit=crop"
+    };
+    return images[categoryId as keyof typeof images] || images.nature;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-blue-50/30">
       {/* Header */}
@@ -100,15 +111,16 @@ const SoundsLibrary = () => {
           </div>
         </div>
 
-        {/* Sub Categories */}
+        {/* Playlists Section */}
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-foreground">Explorar por Tipo</h2>
-          <div className="grid grid-cols-2 gap-3">
+          <h2 className="text-2xl font-semibold text-foreground">Playlists</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {subCategories.map((category) => (
-              <CategoryCard
+              <PlaylistCard
                 key={category.id}
-                category={category}
-                type="sub"
+                title={category.title}
+                count={`${category.count} opções`}
+                image={getPlaylistImage(category.id)}
                 onClick={() => navigate(`/sounds/subcategory/${category.id}`)}
               />
             ))}

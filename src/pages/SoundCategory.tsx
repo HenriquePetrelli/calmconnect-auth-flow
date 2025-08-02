@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Play, Clock, ListMusic } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
-import SoundCard from "@/components/sounds/SoundCard";
+import SoundItem from "@/components/sounds/SoundItem";
 import { soundsData } from "@/data/soundsData";
 
 const SoundCategory = () => {
@@ -73,15 +73,13 @@ const SoundCategory = () => {
       </div>
 
       {/* Sound List */}
-      <div className="p-4">
-        <div className="space-y-3">
+      <div className="bg-card border-t border-border">
+        <div className="divide-y divide-border">
           {category.sounds.map((sound) => (
-            <SoundCard
+            <SoundItem
               key={sound.id}
               sound={sound}
-              isPlaying={playingTrack === sound.id}
-              onTogglePlay={() => togglePlay(sound.id)}
-              onSoundClick={() => navigate(`/sounds/player/${sound.id}`)}
+              onClick={() => navigate(`/sounds/player/${sound.id}`)}
             />
           ))}
         </div>

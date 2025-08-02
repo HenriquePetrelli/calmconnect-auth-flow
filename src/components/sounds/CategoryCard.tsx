@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Category {
@@ -22,34 +23,35 @@ const CategoryCard = ({ category, type, onClick }: CategoryCardProps) => {
   if (type === "main") {
     return (
       <Card 
-        className="cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-[1.02] overflow-hidden"
+        className="cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] overflow-hidden"
         onClick={onClick}
       >
         <CardContent className="p-0 relative">
-          <div className={cn(
-            "absolute inset-0 bg-gradient-to-r opacity-10",
-            category.gradient
-          )} />
+          <div className="absolute inset-0 bg-gradient-to-br from-muted/50 to-background opacity-80" />
           
           <div className="p-6 relative z-10">
-            <div className="flex items-center gap-4">
-              <div className={cn(
-                "w-16 h-16 rounded-2xl bg-gradient-to-r flex items-center justify-center text-white shadow-md",
-                category.gradient
-              )}>
-                {category.icon}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4 flex-1">
+                <div className={cn(
+                  "w-16 h-16 rounded-2xl bg-gradient-to-br flex items-center justify-center text-white shadow-lg",
+                  category.gradient
+                )}>
+                  {category.icon}
+                </div>
+                
+                <div className="flex-1">
+                  <h3 className="text-xl font-semibold text-foreground mb-1">{category.title}</h3>
+                  <p className="text-sm text-muted-foreground font-medium mb-2">
+                    {category.sounds} sons
+                  </p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {category.description}
+                  </p>
+                </div>
               </div>
               
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <h3 className="text-lg font-semibold text-foreground">{category.title}</h3>
-                  <Badge variant="secondary" className="text-xs">
-                    {category.sounds} sons
-                  </Badge>
-                </div>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {category.description}
-                </p>
+              <div className="ml-4">
+                <ArrowRight className="w-6 h-6 text-primary" />
               </div>
             </div>
           </div>
