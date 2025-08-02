@@ -10,6 +10,7 @@ export interface Appointment {
   duration?: number;
   notes?: string;
   session_summary?: string;
+  rating?: number;
   psychologist: {
     full_name: string;
     specialty?: string;
