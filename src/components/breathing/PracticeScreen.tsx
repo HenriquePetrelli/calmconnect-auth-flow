@@ -1,11 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Play, Pause, RotateCcw, Waves, Wind, Heart } from "lucide-react";
+import { ArrowLeft, Play, Pause, RotateCcw } from "lucide-react";
 import Lottie from "lottie-react";
 import lotusAnimation from "@/assets/lotus-animation.json";
+import BreathingTimer from "./BreathingTimer";
+import PatternSelector from "./PatternSelector";
+import ContextualPhrases from "./ContextualPhrases";
+import { BreathingPattern, getPatternByTechniqueId } from "./BreathingPatterns";
 
 interface Technique {
   id: string;
@@ -24,15 +27,6 @@ interface PracticeScreenProps {
   onComplete: () => void;
 }
 
-const motivationalPhrases = [
-  "Um passo de cada vez",
-  "Você não está sozinho(a)",
-  "Isso vai passar",
-  "Você é mais forte do que imagina",
-  "Respire e encontre a calma",
-  "Este momento é temporário"
-];
-
 const animations = [
   { id: 'lotus', name: 'Flor de Lótus', icon: '🪷' },
   { id: 'waves', name: 'Ondas do Mar', icon: '🌊' },
@@ -40,89 +34,18 @@ const animations = [
   { id: 'circle', name: 'Círculo Suave', icon: '⭕' }
 ];
 
-// Padrões de respiração por técnica
-const breathingPatterns = {
-  '1': { // Respiração 4-7-8
-    inhale: 4,
-    hold: 7,
-    exhale: 8,
-    pause: 0,
-    type: 'hold-breathing'
-  },
-  '2': { // Respiração Tática
-    inhale: 4,
-    hold: 4,
-    exhale: 4,
-    pause: 0,
-    type: 'tactical-breathing'
-  },
-  '3': { // Respiração Profunda
-    inhale: 4,
-    hold: 0,
-    exhale: 6,
-    pause: 0,
-    type: 'deep-breathing'
-  },
-  '4': { // Respiração de Emergência
-    inhale: 2,
-    hold: 1,
-    exhale: 3,
-    pause: 0,
-    type: 'emergency-breathing'
-  },
-  '5': { // Respiração Coerente
-    inhale: 5,
-    hold: 0,
-    exhale: 5,
-    pause: 0,
-    type: 'coherent-breathing'
-  },
-  '6': { // Respiração Alternada
-    inhale: 4,
-    hold: 2,
-    exhale: 4,
-    pause: 0,
-    type: 'alternate-breathing'
-  },
-  '7': { // Respiração Caixa (Box Breathing)
-    inhale: 4,
-    hold: 4,
-    exhale: 4,
-    pause: 4,
-    type: 'box-breathing'
-  },
-  '8': { // Respiração Equilibrada
-    inhale: 4,
-    hold: 2,
-    exhale: 4,
-    pause: 0,
-    type: 'balanced-breathing'
-  },
-  '9': { // 4-7-8 Profundo
-    inhale: 6,
-    hold: 9,
-    exhale: 12,
-    pause: 0,
-    type: 'deep-478-breathing'
-  }
-};
-
 const PracticeScreen = ({ technique, onBack, onComplete }: PracticeScreenProps) => {
   const [duration, setDuration] = useState([5]);
-  const [selectedPhrase, setSelectedPhrase] = useState(motivationalPhrases[0]);
   const [selectedAnimation, setSelectedAnimation] = useState(animations[0]);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentPhase, setCurrentPhase] = useState<'setup' | 'preparation' | 'exercise' | 'completed'>('setup');
+  const [currentPhase, setCurrentPhase] = useState<'setup' | 'pattern-selection' | 'preparation' | 'exercise' | 'completed'>('setup');
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [cyclePhase, setCyclePhase] = useState<'inhale' | 'hold' | 'exhale' | 'pause'>('inhale');
   const [preparationTime, setPreparationTime] = useState(5);
-  const [cycleProgress, setCycleProgress] = useState(0);
-  const [cycleStartTime, setCycleStartTime] = useState(0);
+  const [cycleCount, setCycleCount] = useState(0);
+  const [breathingPattern, setBreathingPattern] = useState<BreathingPattern>(getPatternByTechniqueId(technique.id));
+  const [selectedPatternKey, setSelectedPatternKey] = useState<string>('');
   const lottieRef = useRef<any>(null);
-  
-  // Obter padrão de respiração da técnica atual
-  const breathingPattern = breathingPatterns[technique.id as keyof typeof breathingPatterns] || breathingPatterns['1'];
-  const totalCycleTime = breathingPattern.inhale + breathingPattern.hold + breathingPattern.exhale + breathingPattern.pause;
 
   // Timer principal da sessão
   useEffect(() => {
@@ -135,8 +58,8 @@ const PracticeScreen = ({ technique, onBack, onComplete }: PracticeScreenProps) 
             setCurrentPhase('exercise');
             setTimeRemaining(duration[0] * 60);
             setIsPlaying(true);
-            setCycleProgress(0);
             setCyclePhase('inhale');
+            setCycleCount(0);
             return 0;
           }
           return prev - 1;
@@ -160,62 +83,22 @@ const PracticeScreen = ({ technique, onBack, onComplete }: PracticeScreenProps) 
     return () => clearInterval(interval);
   }, [currentPhase, preparationTime, timeRemaining, isPlaying, duration, onComplete]);
 
-  // Controle do ciclo de respiração
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    
-    if (currentPhase === 'exercise' && isPlaying) {
-      if (cycleStartTime === 0) {
-        setCycleStartTime(Date.now());
-      }
-      
-      interval = setInterval(() => {
-        const currentTime = Date.now();
-        const elapsedCycleTime = ((currentTime - (cycleStartTime || currentTime)) / 1000) % totalCycleTime;
-        
-        let currentCyclePhase: 'inhale' | 'hold' | 'exhale' | 'pause' = 'inhale';
-        let progress = 0;
-        let lottieProgress = 0;
-        
-        // Determinar fase atual e progresso
-        if (elapsedCycleTime < breathingPattern.inhale) {
-          // Fase: Inspiração (0% -> 100%)
-          currentCyclePhase = 'inhale';
-          progress = (elapsedCycleTime / breathingPattern.inhale) * 100;
-          lottieProgress = elapsedCycleTime / breathingPattern.inhale;
-        } else if (elapsedCycleTime < breathingPattern.inhale + breathingPattern.hold) {
-          // Fase: Segurar (100% estático)
-          currentCyclePhase = 'hold';
-          progress = 100;
-          lottieProgress = 1;
-        } else if (elapsedCycleTime < breathingPattern.inhale + breathingPattern.hold + breathingPattern.exhale) {
-          // Fase: Expiração (100% -> 0%)
-          currentCyclePhase = 'exhale';
-          const exhaleElapsed = elapsedCycleTime - breathingPattern.inhale - breathingPattern.hold;
-          progress = 100 - ((exhaleElapsed / breathingPattern.exhale) * 100);
-          lottieProgress = 1 - (exhaleElapsed / breathingPattern.exhale);
-        } else {
-          // Fase: Pausa (0% estático) - apenas para Box Breathing
-          currentCyclePhase = 'pause';
-          progress = 0;
-          lottieProgress = 0;
-        }
-        
-        setCyclePhase(currentCyclePhase);
-        setCycleProgress(Math.max(0, Math.min(100, progress)));
-        updateLottieAnimation(lottieProgress);
-      }, 100);
-    }
-
-    return () => clearInterval(interval);
-  }, [currentPhase, isPlaying, cycleStartTime, totalCycleTime, breathingPattern]);
-
   const updateLottieAnimation = (progress: number) => {
     if (lottieRef.current && selectedAnimation.id === 'lotus') {
       const totalFrames = lottieRef.current.getDuration(true);
       const frame = progress * totalFrames;
       lottieRef.current.goToAndStop(frame, true);
     }
+  };
+
+  const handlePatternSelect = (pattern: BreathingPattern, patternKey: string) => {
+    setBreathingPattern(pattern);
+    setSelectedPatternKey(patternKey);
+    setCurrentPhase('setup');
+  };
+
+  const handleShowPatternSelector = () => {
+    setCurrentPhase('pattern-selection');
   };
 
   const handleStart = () => {
@@ -233,7 +116,7 @@ const PracticeScreen = ({ technique, onBack, onComplete }: PracticeScreenProps) 
     setTimeRemaining(duration[0] * 60);
     setCyclePhase('inhale');
     setPreparationTime(5);
-    setCycleStartTime(0);
+    setCycleCount(0);
   };
 
   const formatTime = (seconds: number) => {
@@ -257,6 +140,36 @@ const PracticeScreen = ({ technique, onBack, onComplete }: PracticeScreenProps) 
     }
   };
 
+  const handlePhaseChange = (phase: 'inhale' | 'hold' | 'exhale' | 'pause') => {
+    setCyclePhase(phase);
+  };
+
+  const handleCycleComplete = () => {
+    setCycleCount(prev => prev + 1);
+  };
+
+  // Pattern Selection Screen
+  if (currentPhase === 'pattern-selection') {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="flex items-center gap-4 p-4 border-b border-border">
+          <Button variant="ghost" size="sm" onClick={() => setCurrentPhase('setup')}>
+            <ArrowLeft size={20} />
+          </Button>
+          <h1 className="text-xl font-semibold text-foreground">Escolher Padrão</h1>
+        </div>
+        
+        <div className="p-6">
+          <PatternSelector 
+            onSelect={handlePatternSelect}
+            currentPattern={selectedPatternKey}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Preparation Screen
   if (currentPhase === 'preparation') {
     return (
       <div className="min-h-screen bg-background relative overflow-hidden">
@@ -273,6 +186,7 @@ const PracticeScreen = ({ technique, onBack, onComplete }: PracticeScreenProps) 
     );
   }
 
+  // Exercise Screen  
   if (currentPhase === 'exercise') {
     return (
       <div className="min-h-screen bg-background">
@@ -281,8 +195,8 @@ const PracticeScreen = ({ technique, onBack, onComplete }: PracticeScreenProps) 
           <Button variant="ghost" size="sm" onClick={onBack}>
             <ArrowLeft size={20} />
           </Button>
-          <h1 className="text-lg font-semibold text-foreground">{technique.name}</h1>
-          <div className="w-8"></div> {/* Spacer para centralizar o título */}
+          <h1 className="text-lg font-semibold text-foreground">{breathingPattern.name}</h1>
+          <div className="w-8"></div>
         </div>
 
         {/* Animation Area */}
@@ -314,96 +228,22 @@ const PracticeScreen = ({ technique, onBack, onComplete }: PracticeScreenProps) 
             )}
           </div>
 
-          {/* Motivational Phrase */}
-          <div className="text-center max-w-sm">
-            <p className="text-lg text-foreground font-medium leading-relaxed">
-              {selectedPhrase}
-            </p>
-          </div>
+          {/* Contextual Phrases */}
+          <ContextualPhrases 
+            currentPhase={cyclePhase}
+            patternType={breathingPattern.type}
+            cycleCount={cycleCount}
+          />
 
-          {/* Enhanced Visual Progress Bar */}
-          <div className="w-full max-w-sm space-y-6">
-            {/* Phase Indicator */}
-            <div className="flex items-center justify-center gap-3 mb-4">
-              {cyclePhase === 'inhale' && (
-                <>
-                  <Wind className="w-6 h-6 text-blue-500 animate-pulse" />
-                  <span className="text-lg font-semibold text-blue-600">Inspirar</span>
-                </>
-              )}
-              {cyclePhase === 'hold' && (
-                <>
-                  <Heart className="w-6 h-6 text-green-500 animate-pulse" />
-                  <span className="text-lg font-semibold text-green-600">Segurar</span>
-                </>
-              )}
-              {cyclePhase === 'exhale' && (
-                <>
-                  <Waves className="w-6 h-6 text-orange-500 animate-pulse" />
-                  <span className="text-lg font-semibold text-orange-600">Expirar</span>
-                </>
-              )}
-              {cyclePhase === 'pause' && (
-                <>
-                  <div className="w-6 h-6 rounded-full border-2 border-gray-400 animate-pulse" />
-                  <span className="text-lg font-semibold text-gray-600">Pausa</span>
-                </>
-              )}
-            </div>
+          {/* Breathing Timer */}
+          <BreathingTimer 
+            pattern={breathingPattern}
+            isActive={isPlaying}
+            onPhaseChange={handlePhaseChange}
+            onCycleComplete={handleCycleComplete}
+          />
 
-            {/* Visual Progress Bar */}
-            <div className="relative">
-              {/* Background Track */}
-              <div className="h-6 bg-gray-200/50 rounded-full overflow-hidden backdrop-blur-sm border border-white/20">
-                {/* Animated Progress Fill */}
-                <div 
-                  className={`h-full transition-all duration-300 ease-out relative overflow-hidden ${
-                    cyclePhase === 'inhale' ? 'bg-gradient-to-r from-blue-400 to-blue-600' :
-                    cyclePhase === 'hold' ? 'bg-gradient-to-r from-green-400 to-green-600' :
-                    cyclePhase === 'exhale' ? 'bg-gradient-to-r from-orange-400 to-orange-600' :
-                    'bg-gradient-to-r from-gray-300 to-gray-500'
-                  }`}
-                  style={{ width: `${cycleProgress}%` }}
-                >
-                  {/* Shimmer Effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse" />
-                </div>
-              </div>
-              
-              {/* Progress Percentage */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-xs font-bold text-white drop-shadow-lg">
-                  {Math.round(cycleProgress)}%
-                </span>
-              </div>
-            </div>
-
-            {/* Breathing Pattern Info */}
-            <div className="flex justify-center gap-2 text-center text-xs flex-wrap">
-              <div className={`p-2 rounded-lg flex-1 min-w-[60px] ${cyclePhase === 'inhale' ? 'bg-blue-500/20 text-blue-700 border border-blue-300' : 'bg-gray-100 text-gray-500'}`}>
-                <div className="font-semibold">{breathingPattern.inhale}s</div>
-                <div>Inspirar</div>
-              </div>
-              {breathingPattern.hold > 0 && (
-                <div className={`p-2 rounded-lg flex-1 min-w-[60px] ${cyclePhase === 'hold' ? 'bg-green-500/20 text-green-700 border border-green-300' : 'bg-gray-100 text-gray-500'}`}>
-                  <div className="font-semibold">{breathingPattern.hold}s</div>
-                  <div>Segurar</div>
-                </div>
-              )}
-              <div className={`p-2 rounded-lg flex-1 min-w-[60px] ${cyclePhase === 'exhale' ? 'bg-orange-500/20 text-orange-700 border border-orange-300' : 'bg-gray-100 text-gray-500'}`}>
-                <div className="font-semibold">{breathingPattern.exhale}s</div>
-                <div>Expirar</div>
-              </div>
-              {breathingPattern.pause > 0 && (
-                <div className={`p-2 rounded-lg flex-1 min-w-[60px] ${cyclePhase === 'pause' ? 'bg-gray-500/20 text-gray-700 border border-gray-300' : 'bg-gray-100 text-gray-500'}`}>
-                  <div className="font-semibold">{breathingPattern.pause}s</div>
-                  <div>Pausa</div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Timer */}
+          {/* Session Timer */}
           <div className="text-center">
             <div className="text-2xl font-mono text-foreground">
               {formatTime(timeRemaining)}
@@ -435,6 +275,7 @@ const PracticeScreen = ({ technique, onBack, onComplete }: PracticeScreenProps) 
     );
   }
 
+  // Setup Screen
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -461,6 +302,44 @@ const PracticeScreen = ({ technique, onBack, onComplete }: PracticeScreenProps) 
           </div>
         </div>
 
+        {/* Pattern Display */}
+        <div className="bg-muted p-4 rounded-lg">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-medium text-foreground">Padrão de Respiração</h3>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleShowPatternSelector}
+            >
+              Alterar
+            </Button>
+          </div>
+          <div className="text-lg font-semibold text-foreground mb-2">{breathingPattern.name}</div>
+          <div className="text-sm text-muted-foreground mb-3">{breathingPattern.description}</div>
+          <div className="flex gap-2 text-xs">
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded bg-blue-400"></div>
+              <span>Inspirar {breathingPattern.inhale}s</span>
+            </div>
+            {breathingPattern.hold > 0 && (
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded bg-green-400"></div>
+                <span>Segurar {breathingPattern.hold}s</span>
+              </div>
+            )}
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded bg-orange-400"></div>
+              <span>Expirar {breathingPattern.exhale}s</span>
+            </div>
+            {breathingPattern.pause > 0 && (
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded bg-gray-400"></div>
+                <span>Pausar {breathingPattern.pause}s</span>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Controls */}
         <div className="space-y-6">
           {/* Duration */}
@@ -476,23 +355,6 @@ const PracticeScreen = ({ technique, onBack, onComplete }: PracticeScreenProps) 
               step={1}
               className="w-full"
             />
-          </div>
-
-          {/* Motivational Phrase */}
-          <div className="space-y-3">
-            <label className="text-sm font-medium text-foreground">Frase Motivacional</label>
-            <Select value={selectedPhrase} onValueChange={setSelectedPhrase}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {motivationalPhrases.map((phrase) => (
-                  <SelectItem key={phrase} value={phrase}>
-                    {phrase}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
 
           {/* Animation */}
