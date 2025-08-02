@@ -57,7 +57,15 @@ export type Database = {
           updated_at?: string
           video_room_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_appointments_psychologist"
+            columns: ["psychologist_id"]
+            isOneToOne: false
+            referencedRelation: "psychologists"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       emergency_requests: {
         Row: {
