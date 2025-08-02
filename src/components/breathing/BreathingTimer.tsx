@@ -12,14 +12,14 @@ interface BreathingTimerProps {
 const BreathingTimer = ({ pattern, isActive, onPhaseChange, onCycleComplete }: BreathingTimerProps) => {
   const [currentPhase, setCurrentPhase] = useState<'inhale' | 'hold' | 'exhale' | 'pause'>('inhale');
   const [remainingTime, setRemainingTime] = useState(pattern.inhale);
-  const [cycleProgress, setCycleProgress] = useState(0);
+  const [progress, setProgress] = useState(0);
 
   const totalCycleTime = pattern.inhale + pattern.hold + pattern.exhale + pattern.pause;
 
   useEffect(() => {
     setCurrentPhase('inhale');
     setRemainingTime(pattern.inhale);
-    setCycleProgress(0);
+    setProgress(0);
   }, [pattern]);
 
   useEffect(() => {
@@ -42,10 +42,24 @@ const BreathingTimer = ({ pattern, isActive, onPhaseChange, onCycleComplete }: B
           return prev - 1;
         });
 
-        // Update progress
-        const elapsed = pattern[currentPhase] - remainingTime + 1;
-        const phaseProgress = (elapsed / pattern[currentPhase]) * 100;
-        setCycleProgress(phaseProgress);
+        // Update progress based on phase
+        setProgress(prev => {
+          const elapsed = pattern[currentPhase] - remainingTime + 1;
+          
+          if (currentPhase === 'inhale') {
+            // Inspirar: 0% a 100%
+            return (elapsed / pattern[currentPhase]) * 100;
+          } else if (currentPhase === 'exhale') {
+            // Expirar: 100% a 0%
+            return 100 - ((elapsed / pattern[currentPhase]) * 100);
+          } else if (currentPhase === 'hold') {
+            // Segurar: mantém em 100%
+            return 100;
+          } else {
+            // Pausar: mantém em 0%
+            return 0;
+          }
+        });
       }, 1000);
     }
 
@@ -163,8 +177,8 @@ const BreathingTimer = ({ pattern, isActive, onPhaseChange, onCycleComplete }: B
       <div className="relative">
         <div className="h-4 bg-gray-200 rounded-full overflow-hidden">
           <div 
-            className={`h-full transition-all duration-300 bg-gradient-to-r ${getPhaseColor(currentPhase)}`}
-            style={{ width: `${cycleProgress}%` }}
+            className={`h-full transition-all duration-1000 ease-linear bg-gradient-to-r ${getPhaseColor(currentPhase)}`}
+            style={{ width: `${Math.max(0, Math.min(100, progress))}%` }}
           />
         </div>
       </div>
