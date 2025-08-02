@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { BreathingPattern } from "./BreathingPatterns";
 import { Wind, Heart, Waves } from "lucide-react";
+import BreathingProgressBar from "./BreathingProgressBar";
+import BreathingSteps from "./BreathingSteps";
 
 interface BreathingTimerProps {
   pattern: BreathingPattern;
@@ -12,14 +14,10 @@ interface BreathingTimerProps {
 const BreathingTimer = ({ pattern, isActive, onPhaseChange, onCycleComplete }: BreathingTimerProps) => {
   const [currentPhase, setCurrentPhase] = useState<'inhale' | 'hold' | 'exhale' | 'pause'>('inhale');
   const [remainingTime, setRemainingTime] = useState(pattern.inhale);
-  const [progress, setProgress] = useState(0);
-
-  const totalCycleTime = pattern.inhale + pattern.hold + pattern.exhale + pattern.pause;
 
   useEffect(() => {
     setCurrentPhase('inhale');
     setRemainingTime(pattern.inhale);
-    setProgress(0);
   }, [pattern]);
 
   useEffect(() => {
@@ -42,24 +40,6 @@ const BreathingTimer = ({ pattern, isActive, onPhaseChange, onCycleComplete }: B
           return prev - 1;
         });
 
-        // Update progress based on phase
-        setProgress(prev => {
-          const elapsed = pattern[currentPhase] - remainingTime + 1;
-          
-          if (currentPhase === 'inhale') {
-            // Inspirar: 0% a 100%
-            return (elapsed / pattern[currentPhase]) * 100;
-          } else if (currentPhase === 'exhale') {
-            // Expirar: 100% a 0%
-            return 100 - ((elapsed / pattern[currentPhase]) * 100);
-          } else if (currentPhase === 'hold') {
-            // Segurar: mantém em 100%
-            return 100;
-          } else {
-            // Pausar: mantém em 0%
-            return 0;
-          }
-        });
       }, 1000);
     }
 
@@ -81,33 +61,19 @@ const BreathingTimer = ({ pattern, isActive, onPhaseChange, onCycleComplete }: B
     }
   };
 
-  const getPhaseColor = (phase: string) => {
-    switch (phase) {
-      case 'inhale':
-        return 'from-blue-400 to-blue-600';
-      case 'hold':
-        return 'from-green-400 to-green-600';
-      case 'exhale':
-        return 'from-orange-400 to-orange-600';
-      case 'pause':
-        return 'from-gray-400 to-gray-600';
-      default:
-        return 'from-blue-400 to-blue-600';
-    }
-  };
 
   const getPhaseIcon = (phase: string) => {
     switch (phase) {
       case 'inhale':
-        return <Wind className="w-6 h-6 text-blue-500 animate-pulse" />;
+        return <Wind className="w-6 h-6 animate-pulse" style={{ color: 'hsl(var(--breathing-inhale))' }} />;
       case 'hold':
-        return <Heart className="w-6 h-6 text-green-500 animate-pulse" />;
+        return <Heart className="w-6 h-6 animate-pulse" style={{ color: 'hsl(var(--breathing-hold))' }} />;
       case 'exhale':
-        return <Waves className="w-6 h-6 text-orange-500 animate-pulse" />;
+        return <Waves className="w-6 h-6 animate-pulse" style={{ color: 'hsl(var(--breathing-exhale))' }} />;
       case 'pause':
-        return <div className="w-6 h-6 rounded-full border-2 border-gray-400 animate-pulse" />;
+        return <div className="w-6 h-6 rounded-full border-2 animate-pulse" style={{ borderColor: 'hsl(var(--breathing-pause))' }} />;
       default:
-        return <Wind className="w-6 h-6 text-blue-500 animate-pulse" />;
+        return <Wind className="w-6 h-6 animate-pulse" style={{ color: 'hsl(var(--breathing-inhale))' }} />;
     }
   };
 
@@ -151,9 +117,9 @@ const BreathingTimer = ({ pattern, isActive, onPhaseChange, onCycleComplete }: B
       <div className="flex items-center justify-center gap-3 mb-4">
         {getPhaseIcon(currentPhase)}
         <span className="text-lg font-semibold" style={{
-          color: currentPhase === 'inhale' ? '#2563eb' :
-                 currentPhase === 'hold' ? '#059669' :
-                 currentPhase === 'exhale' ? '#d97706' : '#4b5563'
+          color: currentPhase === 'inhale' ? 'hsl(var(--breathing-inhale))' :
+                 currentPhase === 'hold' ? 'hsl(var(--breathing-hold))' :
+                 currentPhase === 'exhale' ? 'hsl(var(--breathing-exhale))' : 'hsl(var(--breathing-pause))'
         }}>
           {getPhaseLabel(currentPhase)}
         </span>
@@ -165,55 +131,23 @@ const BreathingTimer = ({ pattern, isActive, onPhaseChange, onCycleComplete }: B
       {/* Time Display */}
       <div className="text-center">
         <div className="text-3xl font-bold mb-2" style={{
-          color: currentPhase === 'inhale' ? '#2563eb' :
-                 currentPhase === 'hold' ? '#059669' :
-                 currentPhase === 'exhale' ? '#d97706' : '#4b5563'
+          color: currentPhase === 'inhale' ? 'hsl(var(--breathing-inhale))' :
+                 currentPhase === 'hold' ? 'hsl(var(--breathing-hold))' :
+                 currentPhase === 'exhale' ? 'hsl(var(--breathing-exhale))' : 'hsl(var(--breathing-pause))'
         }}>
           {remainingTime}s
         </div>
       </div>
 
       {/* Progress Bar */}
-      <div className="relative">
-        <div className="h-4 bg-gray-200 rounded-full overflow-hidden">
-          <div 
-            className={`h-full transition-all duration-1000 ease-linear bg-gradient-to-r ${getPhaseColor(currentPhase)}`}
-            style={{ width: `${Math.max(0, Math.min(100, progress))}%` }}
-          />
-        </div>
-      </div>
+      <BreathingProgressBar 
+        phase={currentPhase}
+        duration={pattern[currentPhase]}
+        currentTime={remainingTime}
+      />
 
-      {/* Pattern Info */}
-      <div className="flex justify-center gap-2 text-center text-xs flex-wrap">
-        <div className={`p-2 rounded-lg flex-1 min-w-[60px] ${
-          currentPhase === 'inhale' ? 'bg-blue-500/20 text-blue-700 border border-blue-300' : 'bg-gray-100 text-gray-500'
-        }`}>
-          <div className="font-semibold">{pattern.inhale}s</div>
-          <div>Inspirar</div>
-        </div>
-        {pattern.hold > 0 && (
-          <div className={`p-2 rounded-lg flex-1 min-w-[60px] ${
-            currentPhase === 'hold' ? 'bg-green-500/20 text-green-700 border border-green-300' : 'bg-gray-100 text-gray-500'
-          }`}>
-            <div className="font-semibold">{pattern.hold}s</div>
-            <div>Segurar</div>
-          </div>
-        )}
-        <div className={`p-2 rounded-lg flex-1 min-w-[60px] ${
-          currentPhase === 'exhale' ? 'bg-orange-500/20 text-orange-700 border border-orange-300' : 'bg-gray-100 text-gray-500'
-        }`}>
-          <div className="font-semibold">{pattern.exhale}s</div>
-          <div>Expirar</div>
-        </div>
-        {pattern.pause > 0 && (
-          <div className={`p-2 rounded-lg flex-1 min-w-[60px] ${
-            currentPhase === 'pause' ? 'bg-gray-500/20 text-gray-700 border border-gray-300' : 'bg-gray-100 text-gray-500'
-          }`}>
-            <div className="font-semibold">{pattern.pause}s</div>
-            <div>Pausa</div>
-          </div>
-        )}
-      </div>
+      {/* Breathing Steps */}
+      <BreathingSteps pattern={pattern} currentPhase={currentPhase} />
     </div>
   );
 };

@@ -59,6 +59,12 @@ All colors MUST be HSL.
     --sos-secondary: 340 80% 70%; /* Rosa vibrante */
     --sos-glow: 350 85% 55% / 0.3; /* Brilho do SOS */
 
+    /* Breathing exercise colors */
+    --breathing-inhale: 215 100% 70%;
+    --breathing-hold: 215 100% 65%;
+    --breathing-exhale: 125 60% 65%;
+    --breathing-pause: 220 10% 75%;
+
     --sidebar-background: 0 0% 98%;
 
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -98,8 +104,14 @@ All colors MUST be HSL.
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+
+  /* Breathing exercise colors - dark mode */
+  --breathing-inhale: 215 80% 65%;
+  --breathing-hold: 215 80% 60%;
+  --breathing-exhale: 125 50% 60%;
+  --breathing-pause: 220 15% 65%;
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
@@ -140,4 +152,52 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Breathing exercise styles */
+.breathing-progress-container {
+  width: 100%;
+  height: 8px;
+  background-color: hsl(var(--muted));
+  border-radius: 4px;
+  margin: 20px 0;
+  overflow: hidden;
+}
+
+.breathing-progress-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition-timing-function: linear;
+}
+
+.breathing-steps-container {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+  gap: 8px;
+}
+
+.breathing-step {
+  text-align: center;
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+  flex: 1;
+}
+
+.breathing-step.active {
+  opacity: 1;
+  font-weight: bold;
+}
+
+.breathing-step-duration {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.breathing-step-label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: hsl(var(--muted-foreground));
 }
