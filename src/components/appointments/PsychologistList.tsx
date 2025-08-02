@@ -86,6 +86,11 @@ export const PsychologistList: React.FC<PsychologistListProps> = ({
                   <p className="text-sm text-muted-foreground truncate">
                     {psychologist.specialty || psychologist.specialization || 'Psicologia Geral'}
                   </p>
+                  {psychologist.crp_number && (
+                    <p className="text-xs text-muted-foreground">
+                      CRP: {psychologist.crp_number}
+                    </p>
+                  )}
                   {psychologist.city && (
                     <div className="flex items-center gap-1 mt-1">
                       <MapPin size={12} className="text-muted-foreground" />
@@ -94,6 +99,15 @@ export const PsychologistList: React.FC<PsychologistListProps> = ({
                       </span>
                     </div>
                   )}
+                  {/* Rating display - placeholder for future implementation */}
+                  <div className="flex items-center gap-1 mt-1">
+                    {[...Array(5)].map((_, i) => (
+                      <span key={i} className="text-yellow-400 text-xs">
+                        {i < 4 ? '★' : '☆'}
+                      </span>
+                    ))}
+                    <span className="text-xs text-muted-foreground ml-1">(4.0)</span>
+                  </div>
                 </div>
               </div>
               <ChevronRight size={20} className="text-muted-foreground flex-shrink-0" />

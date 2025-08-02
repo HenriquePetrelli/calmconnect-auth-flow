@@ -19,7 +19,8 @@ export const PsychologistSelection: React.FC<PsychologistSelectionProps> = ({
   
   // Filters
   const [onlyMyCity, setOnlyMyCity] = useState(false);
-  const [specialty, setSpecialty] = useState('');
+  const [specialty, setSpecialty] = useState('all');
+  const [appointmentType, setAppointmentType] = useState('all');
   const [specialties, setSpecialties] = useState<string[]>([]);
   
   const { toast } = useToast();
@@ -40,7 +41,8 @@ export const PsychologistSelection: React.FC<PsychologistSelectionProps> = ({
       const { data: psychologistsData, error: psychologistsError } = await supabase
         .from('psychologists')
         .select('*')
-        .eq('approval_status', 'approved');
+        .eq('approval_status', 'approved')
+        .eq('approved', true);
 
       if (psychologistsError) throw psychologistsError;
 
@@ -100,8 +102,13 @@ export const PsychologistSelection: React.FC<PsychologistSelectionProps> = ({
       // In a real app, you'd filter by the user's city
     }
 
+    if (appointmentType && appointmentType !== 'all') {
+      // For now, this doesn't filter anything since we don't have this data in the database
+      // In a real app, you'd filter by accepts_presential field
+    }
+
     setFilteredPsychologists(filtered);
-  }, [psychologists, specialty, onlyMyCity]);
+  }, [psychologists, specialty, onlyMyCity, appointmentType]);
 
   useEffect(() => {
     fetchPsychologists();
@@ -129,6 +136,8 @@ export const PsychologistSelection: React.FC<PsychologistSelectionProps> = ({
         setOnlyMyCity={setOnlyMyCity}
         specialty={specialty}
         setSpecialty={setSpecialty}
+        appointmentType={appointmentType}
+        setAppointmentType={setAppointmentType}
         specialties={specialties}
       />
 
