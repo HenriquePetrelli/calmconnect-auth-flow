@@ -65,11 +65,11 @@ export const PsychologistSelection: React.FC<PsychologistSelectionProps> = ({
 
       setPsychologists(mergedData);
       
-      // Extract unique specialties for filter
+      // Extract unique specialties for filter - use specialization from psychologists table
       const uniqueSpecialties = Array.from(
         new Set(
           mergedData
-            .map(p => p.specialty || p.specialization)
+            .map(p => p.specialization || p.specialty)
             .filter(Boolean)
         )
       );
