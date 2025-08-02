@@ -60,16 +60,6 @@ const SoundCategory = () => {
           </div>
         </div>
 
-        {/* Playlist Button */}
-        <div className="px-4 pb-4">
-          <Button 
-            onClick={playPlaylist}
-            className="w-full bg-gradient-to-r from-sounds-primary to-sounds-secondary hover:from-sounds-primary/90 hover:to-sounds-secondary/90 text-white"
-          >
-            <ListMusic className="w-4 h-4 mr-2" />
-            Escutar Playlist ({category.sounds.length} sons)
-          </Button>
-        </div>
       </div>
 
       {/* Sound List */}

@@ -1,5 +1,4 @@
-import { ArrowRight, Clock } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Clock } from "lucide-react";
 
 interface Sound {
   id: string;
@@ -17,15 +16,13 @@ interface SoundItemProps {
 const SoundItem = ({ sound, onClick }: SoundItemProps) => {
   return (
     <div 
-      className="flex items-center justify-between p-4 border-b border-border cursor-pointer transition-all duration-200 hover:bg-muted/30"
+      className="flex items-center justify-between p-4 border-b border-border cursor-pointer"
       onClick={onClick}
     >
       <div className="flex-1">
         <h4 className="font-medium text-foreground mb-1">{sound.name}</h4>
         <div className="flex items-center gap-3 text-sm text-muted-foreground">
-          <Badge variant="outline" className="text-xs">
-            {sound.category}
-          </Badge>
+          <span>{sound.category}</span>
           <div className="flex items-center gap-1">
             <Clock className="w-3 h-3" />
             <span>{sound.duration}</span>
@@ -33,7 +30,7 @@ const SoundItem = ({ sound, onClick }: SoundItemProps) => {
         </div>
       </div>
       
-      <ArrowRight className="w-5 h-5 text-muted-foreground ml-4" />
+      <span className="text-lg text-muted-foreground ml-4">→</span>
     </div>
   );
 };
