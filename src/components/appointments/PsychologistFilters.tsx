@@ -42,7 +42,7 @@ export const PsychologistFilters: React.FC<PsychologistFiltersProps> = ({
               <SelectValue placeholder="Filtrar por especialidade" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todas as especialidades</SelectItem>
+              <SelectItem value="all">Todas as especialidades</SelectItem>
               {specialties.map((spec) => (
                 <SelectItem key={spec} value={spec}>
                   {spec}

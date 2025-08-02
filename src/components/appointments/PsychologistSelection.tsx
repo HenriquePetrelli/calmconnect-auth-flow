@@ -89,7 +89,7 @@ export const PsychologistSelection: React.FC<PsychologistSelectionProps> = ({
   useEffect(() => {
     let filtered = [...psychologists];
 
-    if (specialty) {
+    if (specialty && specialty !== 'all') {
       filtered = filtered.filter(p => 
         p.specialty === specialty || p.specialization === specialty
       );
