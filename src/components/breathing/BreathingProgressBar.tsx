@@ -3,58 +3,54 @@ import { useMemo } from "react";
 interface BreathingProgressBarProps {
   phase: 'inhale' | 'hold' | 'exhale' | 'pause';
   duration: number;
-  currentTime: number;
+  elapsed: number;
 }
 
-const getProgressValue = (phase: string, remainingTime: number, phaseDuration: number): number => {
-  const elapsedTime = phaseDuration - remainingTime;
-  
-  switch(phase) {
-    case 'inhale':
-      return Math.min(elapsedTime / phaseDuration, 1); // 0% → 100%
-    case 'hold':
-      return 1; // Mantém 100%
-    case 'pause':
-      return 0; // Mantém 0%
-    case 'exhale':
-      return 1 - Math.min(elapsedTime / phaseDuration, 1); // 100% → 0%
-    default:
-      return 0;
-  }
-};
-
-const getPhaseColor = (phase: string): string => {
-  switch (phase) {
-    case 'inhale':
-      return 'hsl(var(--breathing-inhale))';
-    case 'hold':
-      return 'hsl(var(--breathing-hold))';
-    case 'exhale':
-      return 'hsl(var(--breathing-exhale))';
-    case 'pause':
-      return 'hsl(var(--breathing-pause))';
-    default:
-      return 'hsl(var(--breathing-inhale))';
-  }
-};
-
-const BreathingProgressBar = ({ phase, duration, currentTime }: BreathingProgressBarProps) => {
+const SmoothProgressBar = ({ phase, duration, elapsed }: BreathingProgressBarProps) => {
   const progress = useMemo(() => {
-    return getProgressValue(phase, currentTime, duration);
-  }, [phase, duration, currentTime]);
+    const normalizedElapsed = Math.min(elapsed, duration);
+    
+    switch(phase) {
+      case 'inhale':
+        return normalizedElapsed / duration; // 0% → 100%
+      case 'hold':
+        return 1; // Mantém 100%
+      case 'exhale':
+        return 1 - (normalizedElapsed / duration); // 100% → 0%
+      case 'pause':
+        return 0; // Mantém 0%
+      default:
+        return 0;
+    }
+  }, [phase, duration, elapsed]);
+
+  const getPhaseColor = (phase: string): string => {
+    switch (phase) {
+      case 'inhale':
+        return 'hsl(var(--breathing-inhale))';
+      case 'hold':
+        return 'hsl(var(--breathing-hold))';
+      case 'exhale':
+        return 'hsl(var(--breathing-exhale))';
+      case 'pause':
+        return 'hsl(var(--breathing-pause))';
+      default:
+        return 'hsl(var(--breathing-inhale))';
+    }
+  };
 
   return (
-    <div className="breathing-progress-container">
+    <div className="smooth-progress-container">
       <div 
-        className="breathing-progress-bar"
+        className={`smooth-progress-bar ${phase}`}
         style={{
           width: `${Math.max(0, Math.min(100, progress * 100))}%`,
           backgroundColor: getPhaseColor(phase),
-          transition: 'width 0.1s linear'
+          transition: 'width 1s linear'
         }}
       />
     </div>
   );
 };
 
-export default BreathingProgressBar;
+export default SmoothProgressBar;

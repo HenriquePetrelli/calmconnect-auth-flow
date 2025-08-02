@@ -14,6 +14,9 @@ interface BreathingTimerProps {
 const BreathingTimer = ({ pattern, isActive, onPhaseChange, onCycleComplete }: BreathingTimerProps) => {
   const [currentPhase, setCurrentPhase] = useState<'inhale' | 'hold' | 'exhale' | 'pause'>('inhale');
   const [remainingTime, setRemainingTime] = useState(pattern.inhale);
+  
+  // Calculate active step for visual feedback
+  const activeStep = pattern[currentPhase] - remainingTime;
 
   useEffect(() => {
     setCurrentPhase('inhale');
@@ -143,11 +146,11 @@ const BreathingTimer = ({ pattern, isActive, onPhaseChange, onCycleComplete }: B
       <BreathingProgressBar 
         phase={currentPhase}
         duration={pattern[currentPhase]}
-        currentTime={remainingTime}
+        elapsed={pattern[currentPhase] - remainingTime}
       />
 
       {/* Breathing Steps */}
-      <BreathingSteps pattern={pattern} currentPhase={currentPhase} />
+      <BreathingSteps pattern={pattern} currentPhase={currentPhase} activeStep={activeStep} />
     </div>
   );
 };
