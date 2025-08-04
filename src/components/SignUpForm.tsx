@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Eye, EyeOff, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -14,19 +15,34 @@ interface SignUpFormProps {
   userType: "patient" | "psychologist";
 }
 
+interface State {
+  abbreviation: string;
+  name: string;
+}
+
+interface City {
+  name: string;
+}
+
 const SignUpForm = ({ userType }: SignUpFormProps) => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    cpf: "", // Para pacientes
-    phone: "", // Para pacientes
-    reason: "", // Para pacientes
+    cpf: "",
+    state: "",
+    city: "",
+    phone: "",
+    reason: "",
     password: "",
     confirmPassword: "",
-    crp: "", // Apenas para psicólogos
-    specialty: "", // Para psicólogos
-    professionalEmail: "", // Para psicólogos
+    // Psychologist fields
+    crp: "",
+    specialty: "",
+    professionalEmail: "",
   });
+
+  const [states, setStates] = useState<State[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -36,6 +52,56 @@ const SignUpForm = ({ userType }: SignUpFormProps) => {
 
   const isPatient = userType === "patient";
   const title = isPatient ? "Cadastro do Paciente" : "Cadastro do Psicólogo";
+
+  // Fetch Brazilian states on component mount
+  useEffect(() => {
+    const fetchStates = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('brazilian_states')
+          .select('abbreviation, name')
+          .order('name');
+        
+        if (error) throw error;
+        setStates(data || []);
+      } catch (error) {
+        console.error('Error fetching states:', error);
+        toast.error('Erro ao carregar estados');
+      }
+    };
+
+    if (isPatient) {
+      fetchStates();
+    }
+  }, [isPatient]);
+
+  // Fetch cities when state changes
+  useEffect(() => {
+    const fetchCities = async () => {
+      if (!formData.state) {
+        setCities([]);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('brazilian_cities')
+          .select('name')
+          .eq('state', formData.state)
+          .order('name');
+        
+        if (error) throw error;
+        setCities(data || []);
+      } catch (error) {
+        console.error('Error fetching cities:', error);
+        toast.error('Erro ao carregar cidades');
+      }
+    };
+
+    if (isPatient && formData.state) {
+      fetchCities();
+    }
+  }, [formData.state, isPatient]);
 
   // Função para aplicar máscara no CPF
   const formatCPF = (value: string) => {
@@ -92,6 +158,11 @@ const SignUpForm = ({ userType }: SignUpFormProps) => {
     
     setFormData(prev => ({ ...prev, [field]: value }));
     
+    // Reset city when state changes
+    if (field === 'state') {
+      setFormData(prev => ({ ...prev, city: '' }));
+    }
+    
     // Limpar erro do campo quando o usuário começar a digitar
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: false }));
@@ -114,6 +185,8 @@ const SignUpForm = ({ userType }: SignUpFormProps) => {
       
       if (isPatient) {
         if (!formData.cpf) newErrors.cpf = true;
+        if (!formData.state) newErrors.state = true;
+        if (!formData.city) newErrors.city = true;
         if (!formData.phone) newErrors.phone = true;
         if (!formData.reason) newErrors.reason = true;
         
@@ -126,6 +199,7 @@ const SignUpForm = ({ userType }: SignUpFormProps) => {
           return;
         }
       } else {
+        if (!formData.cpf) newErrors.cpf = true;
         if (!formData.crp) newErrors.crp = true;
         if (!formData.specialty) newErrors.specialty = true;
         if (!formData.professionalEmail) newErrors.professionalEmail = true;
@@ -150,7 +224,7 @@ const SignUpForm = ({ userType }: SignUpFormProps) => {
         return;
       }
 
-      // Registro com Supabase
+      // Registro com Supabase Auth
       const redirectUrl = `${window.location.origin}/`;
       
       const { data, error } = await supabase.auth.signUp({
@@ -161,12 +235,6 @@ const SignUpForm = ({ userType }: SignUpFormProps) => {
           data: {
             user_type: userType,
             full_name: formData.name,
-            cpf: isPatient ? formData.cpf : formData.cpf,
-            phone: isPatient ? formData.phone : null,
-            reason: isPatient ? formData.reason : null,
-            crp: !isPatient ? formData.crp : null,
-            specialty: !isPatient ? formData.specialty : null,
-            professional_email: !isPatient ? formData.professionalEmail : null,
           }
         }
       });
@@ -190,8 +258,44 @@ const SignUpForm = ({ userType }: SignUpFormProps) => {
         return;
       }
 
-      // For psychologists, create a registration record
-      if (!isPatient) {
+      // Save additional data to specific table
+      if (isPatient) {
+        // Save to patients table
+        const { error: patientError } = await supabase
+          .from('patients')
+          .insert({
+            user_id: data.user.id,
+            full_name: formData.name,
+            email: formData.email,
+            cpf: formData.cpf.replace(/\D/g, ''),
+            state: formData.state,
+            city: formData.city,
+            phone: formData.phone.replace(/\D/g, ''),
+            reason: formData.reason
+          });
+
+        if (patientError) {
+          console.error('Error saving patient data:', patientError);
+          toast.error("Erro ao salvar dados adicionais. Tente novamente.");
+          return;
+        }
+
+        // Also create profile
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            user_id: data.user.id,
+            user_type: 'patient',
+            full_name: formData.name,
+            cpf: formData.cpf.replace(/\D/g, ''),
+          });
+
+        if (profileError) {
+          console.error('Error creating profile:', profileError);
+          // Don't fail if profile creation fails - it may already exist
+        }
+      } else {
+        // For psychologists, create a registration record
         try {
           const { error: registrationError } = await supabase
             .from('psychologist_registrations')
@@ -202,11 +306,26 @@ const SignUpForm = ({ userType }: SignUpFormProps) => {
 
           if (registrationError) {
             console.error('Error creating psychologist registration:', registrationError);
-            // Don't fail the signup if registration record creation fails
+          }
+
+          // Create profile for psychologist
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+              user_id: data.user.id,
+              user_type: 'psychologist',
+              full_name: formData.name,
+              cpf: formData.cpf.replace(/\D/g, ''),
+              crp: formData.crp,
+              specialty: formData.specialty,
+              professional_email: formData.professionalEmail,
+            });
+
+          if (profileError) {
+            console.error('Error creating psychologist profile:', profileError);
           }
         } catch (regError) {
           console.error('Error creating psychologist registration:', regError);
-          // Don't fail the signup if registration record creation fails
         }
       }
 
@@ -271,7 +390,7 @@ const SignUpForm = ({ userType }: SignUpFormProps) => {
 
             <div className="space-y-2">
               <Label htmlFor="email" className="text-foreground font-medium">
-                {isPatient ? "Email" : "Email profissional"}
+                {isPatient ? "Email" : "Email principal"}
               </Label>
               <Input
                 id="email"
@@ -284,21 +403,61 @@ const SignUpForm = ({ userType }: SignUpFormProps) => {
               />
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="cpf" className="text-foreground font-medium">
+                CPF
+              </Label>
+              <Input
+                id="cpf"
+                type="text"
+                value={formData.cpf}
+                onChange={(e) => handleInputChange("cpf", e.target.value)}
+                placeholder="000.000.000-00"
+                required
+                className={`h-12 rounded-xl border-border focus:ring-primary ${errors.cpf ? 'border-destructive' : ''}`}
+              />
+            </div>
+
             {isPatient && (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="cpf" className="text-foreground font-medium">
-                    CPF
+                  <Label htmlFor="state" className="text-foreground font-medium">
+                    Estado
                   </Label>
-                  <Input
-                    id="cpf"
-                    type="text"
-                    value={formData.cpf}
-                    onChange={(e) => handleInputChange("cpf", e.target.value)}
-                    placeholder="000.000.000-00"
-                    required
-                    className={`h-12 rounded-xl border-border focus:ring-primary ${errors.cpf ? 'border-destructive' : ''}`}
-                  />
+                  <Select value={formData.state} onValueChange={(value) => handleInputChange("state", value)}>
+                    <SelectTrigger className={`h-12 rounded-xl border-border focus:ring-primary ${errors.state ? 'border-destructive' : ''}`}>
+                      <SelectValue placeholder="Selecione seu estado" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {states.map((state) => (
+                        <SelectItem key={state.abbreviation} value={state.abbreviation}>
+                          {state.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="city" className="text-foreground font-medium">
+                    Cidade
+                  </Label>
+                  <Select 
+                    value={formData.city} 
+                    onValueChange={(value) => handleInputChange("city", value)}
+                    disabled={!formData.state}
+                  >
+                    <SelectTrigger className={`h-12 rounded-xl border-border focus:ring-primary ${errors.city ? 'border-destructive' : ''}`}>
+                      <SelectValue placeholder={formData.state ? "Selecione sua cidade" : "Primeiro selecione o estado"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {cities.map((city, index) => (
+                        <SelectItem key={index} value={city.name}>
+                          {city.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
@@ -320,40 +479,20 @@ const SignUpForm = ({ userType }: SignUpFormProps) => {
                   <Label htmlFor="reason" className="text-foreground font-medium">
                     Motivo para usar o app
                   </Label>
-                  <Select value={formData.reason} onValueChange={(value) => handleInputChange("reason", value)}>
-                    <SelectTrigger className={`h-12 rounded-xl border-border focus:ring-primary ${errors.reason ? 'border-destructive' : ''}`}>
-                      <SelectValue placeholder="Selecione o motivo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ansiedade">Ansiedade</SelectItem>
-                      <SelectItem value="estresse">Estresse</SelectItem>
-                      <SelectItem value="panico">Pânico</SelectItem>
-                      <SelectItem value="inseguranca">Insegurança</SelectItem>
-                      <SelectItem value="meditacao">Meditação</SelectItem>
-                      <SelectItem value="outros">Outros</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Textarea
+                    id="reason"
+                    value={formData.reason}
+                    onChange={(e) => handleInputChange("reason", e.target.value)}
+                    placeholder="Conte-nos brevemente o que te trouxe até aqui..."
+                    required
+                    className={`rounded-xl border-border focus:ring-primary min-h-[80px] ${errors.reason ? 'border-destructive' : ''}`}
+                  />
                 </div>
               </>
             )}
 
             {!isPatient && (
               <>
-                <div className="space-y-2">
-                  <Label htmlFor="cpf" className="text-foreground font-medium">
-                    CPF
-                  </Label>
-                  <Input
-                    id="cpf"
-                    type="text"
-                    value={formData.cpf}
-                    onChange={(e) => handleInputChange("cpf", e.target.value)}
-                    placeholder="000.000.000-00"
-                    required
-                    className={`h-12 rounded-xl border-border focus:ring-primary ${errors.cpf ? 'border-destructive' : ''}`}
-                  />
-                </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="crp" className="text-foreground font-medium">
                     Número do CRP
@@ -411,7 +550,7 @@ const SignUpForm = ({ userType }: SignUpFormProps) => {
                   type={showPassword ? "text" : "password"}
                   value={formData.password}
                   onChange={(e) => handleInputChange("password", e.target.value)}
-                  placeholder="Digite sua senha"
+                  placeholder="Digite sua senha (mín. 6 caracteres)"
                   required
                   className={`h-12 rounded-xl border-border focus:ring-primary pr-12 ${errors.password ? 'border-destructive' : ''}`}
                 />

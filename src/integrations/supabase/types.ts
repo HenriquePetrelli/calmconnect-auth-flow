@@ -67,6 +67,47 @@ export type Database = {
           },
         ]
       }
+      brazilian_cities: {
+        Row: {
+          id: number
+          name: string
+          state: string | null
+        }
+        Insert: {
+          id?: number
+          name: string
+          state?: string | null
+        }
+        Update: {
+          id?: number
+          name?: string
+          state?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brazilian_cities_state_fkey"
+            columns: ["state"]
+            isOneToOne: false
+            referencedRelation: "brazilian_states"
+            referencedColumns: ["abbreviation"]
+          },
+        ]
+      }
+      brazilian_states: {
+        Row: {
+          abbreviation: string
+          name: string
+        }
+        Insert: {
+          abbreviation: string
+          name: string
+        }
+        Update: {
+          abbreviation?: string
+          name?: string
+        }
+        Relationships: []
+      }
       emergency_requests: {
         Row: {
           accepted_at: string | null
@@ -199,6 +240,48 @@ export type Database = {
           session_duration?: number | null
           stress_level?: number | null
           technique_used?: string | null
+        }
+        Relationships: []
+      }
+      patients: {
+        Row: {
+          city: string
+          cpf: string
+          created_at: string | null
+          email: string
+          full_name: string
+          id: string
+          phone: string | null
+          reason: string | null
+          state: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          city: string
+          cpf: string
+          created_at?: string | null
+          email: string
+          full_name: string
+          id?: string
+          phone?: string | null
+          reason?: string | null
+          state: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          city?: string
+          cpf?: string
+          created_at?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+          reason?: string | null
+          state?: string
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
