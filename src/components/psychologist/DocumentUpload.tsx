@@ -42,44 +42,36 @@ export const DocumentUpload = ({
     }
 
     setUploading(true);
-    try {
-      // Get current user or create temp user for the session
-      const { data: { user } } = await supabase.auth.getUser();
-      let currentUserId = userId;
+    
+    // Store file temporarily in browser to be uploaded after auth
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string;
+      // Store file data temporarily
+      const fileData = {
+        dataUrl,
+        name: file.name,
+        type: file.type,
+        size: file.size
+      };
       
-      if (!user && !userId) {
-        // If no user is authenticated, we'll need to handle this during form submission
-        currentUserId = 'temp-' + crypto.randomUUID();
-      } else if (user) {
-        currentUserId = user.id;
-      }
-
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${currentUserId}/document_${crypto.randomUUID()}.${fileExt}`;
+      // Store in session storage temporarily
+      sessionStorage.setItem('temp_document', JSON.stringify(fileData));
       
-      const { data, error } = await supabase.storage
-        .from('psychologist-documents')
-        .upload(fileName, file);
-
-      if (error) throw error;
-      
-      const { data: { publicUrl } } = supabase.storage
-        .from('psychologist-documents')
-        .getPublicUrl(data.path);
-
-      onFileChange(publicUrl);
+      // For now, use a placeholder URL that indicates file is ready
+      const tempUrl = `temp://document-${crypto.randomUUID()}`;
+      onFileChange(tempUrl);
       setFileName(file.name);
-      toast.success('Documento enviado com sucesso');
-    } catch (error: any) {
-      console.error('Erro no upload:', error);
-      if (error.message?.includes('Unauthorized') || error.message?.includes('403')) {
-        toast.error('Erro de autorização. Tente fazer login primeiro.');
-      } else {
-        toast.error('Erro ao enviar documento');
-      }
-    } finally {
+      toast.success('Documento carregado temporariamente. Será enviado após o cadastro.');
       setUploading(false);
-    }
+    };
+    
+    reader.onerror = () => {
+      toast.error('Erro ao processar arquivo');
+      setUploading(false);
+    };
+    
+    reader.readAsDataURL(file);
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {

@@ -118,6 +118,46 @@ const PsychologistSignUpPublic = () => {
         // Wait a moment for auth state to stabilize
         await new Promise(resolve => setTimeout(resolve, 500));
 
+        // Upload document if there's one stored temporarily
+        let finalDocumentUrl = data.document_url;
+        
+        if (data.document_url.startsWith('temp://')) {
+          const tempDocumentData = sessionStorage.getItem('temp_document');
+          if (tempDocumentData) {
+            try {
+              const fileData = JSON.parse(tempDocumentData);
+              
+              // Convert data URL back to file
+              const response = await fetch(fileData.dataUrl);
+              const blob = await response.blob();
+              const file = new File([blob], fileData.name, { type: fileData.type });
+              
+              // Upload to Supabase storage
+              const fileExt = fileData.name.split('.').pop();
+              const fileName = `${authData.user.id}/document_${crypto.randomUUID()}.${fileExt}`;
+              
+              const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('psychologist-documents')
+                .upload(fileName, file);
+
+              if (uploadError) throw uploadError;
+              
+              const { data: { publicUrl } } = supabase.storage
+                .from('psychologist-documents')
+                .getPublicUrl(uploadData.path);
+
+              finalDocumentUrl = publicUrl;
+              
+              // Clear temporary storage
+              sessionStorage.removeItem('temp_document');
+            } catch (uploadError) {
+              console.error('Erro no upload do documento:', uploadError);
+              toast.error('Erro ao enviar documento. Tente novamente.');
+              throw uploadError;
+            }
+          }
+        }
+
         // Create psychologist registration entry
         const { error: psychError } = await supabase.from('psychologists').insert({
           user_id: authData.user.id,
@@ -130,7 +170,7 @@ const PsychologistSignUpPublic = () => {
           city: data.city,
           accepts_presential: data.accepts_presential,
           address: data.accepts_presential ? data.address : null,
-          document_url: data.document_url,
+          document_url: finalDocumentUrl,
           approval_status: 'pending',
         });
 
