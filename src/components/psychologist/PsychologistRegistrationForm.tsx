@@ -2,24 +2,40 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import InputMask from 'react-input-mask';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Upload, X, CheckCircle } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 import { usePsychologistManagement } from '@/hooks/usePsychologistManagement';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { LocationFields } from './LocationFields';
+import { DocumentUpload } from './DocumentUpload';
 
 const formSchema = z.object({
   full_name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
   email: z.string().email('Email inválido'),
   crp_number: z.string().min(5, 'CRP deve ter pelo menos 5 caracteres'),
-  specialization: z.string().optional(),
+  specialization: z.string().min(1, 'Especialização é obrigatória'),
   bio: z.string().min(50, 'Biografia deve ter pelo menos 50 caracteres').max(500, 'Biografia deve ter no máximo 500 caracteres'),
+  state: z.string().min(1, 'Estado é obrigatório'),
+  city: z.string().min(1, 'Cidade é obrigatória'),
+  accepts_presential: z.boolean(),
+  address: z.string().optional(),
+  document_url: z.string().min(1, 'Documento é obrigatório'),
+}).refine((data) => {
+  if (data.accepts_presential && !data.address) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Endereço é obrigatório quando atende presencialmente",
+  path: ["address"],
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -51,9 +67,8 @@ export const PsychologistRegistrationForm = ({
   userEmail, 
   onSuccess 
 }: PsychologistRegistrationFormProps) => {
-  const [documents, setDocuments] = useState<string[]>([]);
-  const [uploading, setUploading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [documentUrl, setDocumentUrl] = useState<string | null>(null);
   
   const { registerPsychologist, loading, validateCrpUnique } = usePsychologistManagement();
 
@@ -65,46 +80,15 @@ export const PsychologistRegistrationForm = ({
       crp_number: '',
       specialization: '',
       bio: '',
+      state: '',
+      city: '',
+      accepts_presential: false,
+      address: '',
+      document_url: '',
     },
   });
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files) return;
-
-    setUploading(true);
-    try {
-      const uploadPromises = Array.from(files).map(async (file) => {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${userId}/${Date.now()}.${fileExt}`;
-        
-        const { data, error } = await supabase.storage
-          .from('documents')
-          .upload(fileName, file);
-
-        if (error) throw error;
-        
-        const { data: { publicUrl } } = supabase.storage
-          .from('documents')
-          .getPublicUrl(data.path);
-
-        return publicUrl;
-      });
-
-      const urls = await Promise.all(uploadPromises);
-      setDocuments([...documents, ...urls]);
-      toast.success(`${files.length} documento(s) enviado(s) com sucesso`);
-    } catch (error: any) {
-      console.error('Erro no upload:', error);
-      toast.error('Erro ao enviar documentos');
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const removeDocument = (index: number) => {
-    setDocuments(documents.filter((_, i) => i !== index));
-  };
+  const acceptsPresential = form.watch('accepts_presential');
 
   const onSubmit = async (data: FormData) => {
     // Validar CRP único
@@ -121,7 +105,11 @@ export const PsychologistRegistrationForm = ({
       crp_number: data.crp_number,
       specialization: data.specialization,
       bio: data.bio,
-      documents: documents
+      state: data.state,
+      city: data.city,
+      accepts_presential: data.accepts_presential,
+      address: data.accepts_presential ? data.address : null,
+      document_url: data.document_url
     };
 
     const result = await registerPsychologist(registrationData);
@@ -198,9 +186,15 @@ export const PsychologistRegistrationForm = ({
               name="crp_number"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Número do CRP</FormLabel>
+                  <FormLabel>Número do CRP *</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ex: 12/345678" {...field} />
+                    <InputMask
+                      mask="99/999999"
+                      value={field.value}
+                      onChange={field.onChange}
+                    >
+                      {(inputProps: any) => <Input placeholder="XX/XXXXXX" {...inputProps} />}
+                    </InputMask>
                   </FormControl>
                   <FormDescription>
                     Informe seu número de registro no Conselho Regional de Psicologia
@@ -210,12 +204,14 @@ export const PsychologistRegistrationForm = ({
               )}
             />
 
+            <LocationFields form={form} />
+
             <FormField
               control={form.control}
               name="specialization"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Especialização (Opcional)</FormLabel>
+                  <FormLabel>Especialização *</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
@@ -234,6 +230,51 @@ export const PsychologistRegistrationForm = ({
                 </FormItem>
               )}
             />
+
+            <FormField
+              control={form.control}
+              name="accepts_presential"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>
+                      Atender presencialmente?
+                    </FormLabel>
+                    <FormDescription>
+                      Marque se você oferece atendimento presencial em consultório
+                    </FormDescription>
+                  </div>
+                </FormItem>
+              )}
+            />
+
+            {acceptsPresential && (
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Endereço do Consultório *</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Rua, número, bairro, CEP"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Endereço completo onde você atende presencialmente
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <FormField
               control={form.control}
@@ -256,54 +297,15 @@ export const PsychologistRegistrationForm = ({
               )}
             />
 
-            <div>
-              <FormLabel>Documentos Comprobatórios</FormLabel>
-              <div className="mt-2 space-y-4">
-                <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
-                  <FileText className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Envie seus documentos (diploma, CRP, certificados)
-                  </p>
-                  <Input
-                    type="file"
-                    multiple
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    onChange={handleFileUpload}
-                    disabled={uploading}
-                    className="hidden"
-                    id="documents"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => document.getElementById('documents')?.click()}
-                    disabled={uploading}
-                  >
-                    <Upload className="h-4 w-4 mr-2" />
-                    {uploading ? 'Enviando...' : 'Escolher Arquivos'}
-                  </Button>
-                </div>
-
-                {documents.length > 0 && (
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium">Documentos enviados:</p>
-                    {documents.map((doc, index) => (
-                      <div key={index} className="flex items-center justify-between bg-muted p-2 rounded">
-                        <span className="text-sm truncate">Documento {index + 1}</span>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeDocument(index)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
+            <DocumentUpload
+              userId={userId}
+              onFileChange={(url) => {
+                setDocumentUrl(url);
+                form.setValue('document_url', url || '');
+              }}
+              documentUrl={documentUrl}
+              error={!!form.formState.errors.document_url}
+            />
 
             <div className="bg-muted p-4 rounded-lg">
               <h4 className="font-semibold mb-2">Importante:</h4>
@@ -315,7 +317,7 @@ export const PsychologistRegistrationForm = ({
               </ul>
             </div>
 
-            <Button type="submit" className="w-full" disabled={loading || uploading}>
+            <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Enviando...' : 'Enviar Cadastro'}
             </Button>
           </form>

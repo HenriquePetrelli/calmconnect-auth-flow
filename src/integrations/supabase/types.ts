@@ -398,11 +398,15 @@ export type Database = {
       }
       psychologists: {
         Row: {
+          accepts_presential: boolean | null
+          address: string | null
           approval_status: string | null
           approved: boolean | null
           bio: string | null
+          city: string | null
           created_at: string | null
           crp_number: string
+          document_url: string | null
           documents: string[] | null
           email: string
           full_name: string
@@ -410,16 +414,21 @@ export type Database = {
           reviewed_at: string | null
           reviewed_by: string | null
           specialization: string | null
+          state: string | null
           submitted_at: string | null
           updated_at: string | null
           user_id: string | null
         }
         Insert: {
+          accepts_presential?: boolean | null
+          address?: string | null
           approval_status?: string | null
           approved?: boolean | null
           bio?: string | null
+          city?: string | null
           created_at?: string | null
           crp_number: string
+          document_url?: string | null
           documents?: string[] | null
           email: string
           full_name: string
@@ -427,16 +436,21 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           specialization?: string | null
+          state?: string | null
           submitted_at?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
         Update: {
+          accepts_presential?: boolean | null
+          address?: string | null
           approval_status?: string | null
           approved?: boolean | null
           bio?: string | null
+          city?: string | null
           created_at?: string | null
           crp_number?: string
+          document_url?: string | null
           documents?: string[] | null
           email?: string
           full_name?: string
@@ -444,6 +458,7 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           specialization?: string | null
+          state?: string | null
           submitted_at?: string | null
           updated_at?: string | null
           user_id?: string | null

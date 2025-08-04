@@ -22,9 +22,13 @@ export interface PsychologistRegistration {
   full_name: string;
   email: string;
   crp_number: string;
-  specialization?: string;
-  bio?: string;
-  documents?: string[];
+  specialization: string;
+  bio: string;
+  state: string;
+  city: string;
+  accepts_presential: boolean;
+  address?: string | null;
+  document_url: string;
 }
 
 export const usePsychologistManagement = () => {
