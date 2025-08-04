@@ -95,7 +95,7 @@ const PsychologistSignUpPublic = () => {
     setIsSubmitting(true);
     
     try {
-      // Create account with user metadata
+      // First, sign up with auto-confirm to get user authenticated immediately for document upload
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -107,13 +107,17 @@ const PsychologistSignUpPublic = () => {
             crp: data.crp,
             professional_email: data.professionalEmail,
             specialty: data.specialty,
-          }
+          },
+          emailRedirectTo: `${window.location.origin}/psychologist-login`
         }
       });
 
       if (authError) throw authError;
 
       if (authData.user) {
+        // Wait a moment for auth state to stabilize
+        await new Promise(resolve => setTimeout(resolve, 500));
+
         // Create psychologist registration entry
         const { error: psychError } = await supabase.from('psychologists').insert({
           user_id: authData.user.id,
@@ -130,14 +134,21 @@ const PsychologistSignUpPublic = () => {
           approval_status: 'pending',
         });
 
-        if (psychError) throw psychError;
+        if (psychError) {
+          console.error('Erro ao inserir psicólogo:', psychError);
+          throw psychError;
+        }
 
         setIsSuccess(true);
         toast.success("Cadastro realizado com sucesso! Verifique seu email para confirmar a conta.");
       }
     } catch (error: any) {
       console.error('Erro no cadastro:', error);
-      toast.error(error.message || "Erro ao criar conta");
+      if (error.message?.includes('violates row-level security')) {
+        toast.error("Erro de permissão. Tente fazer login primeiro ou contate o suporte.");
+      } else {
+        toast.error(error.message || "Erro ao criar conta");
+      }
     } finally {
       setIsSubmitting(false);
     }

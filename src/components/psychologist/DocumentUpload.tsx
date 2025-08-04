@@ -28,19 +28,43 @@ export const DocumentUpload = ({
   const handleFileUpload = async (file: File) => {
     if (!file) return;
 
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Arquivo muito grande. Máximo 5MB.');
+      return;
+    }
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Tipo de arquivo não permitido. Use apenas imagens ou PDF.');
+      return;
+    }
+
     setUploading(true);
     try {
+      // Get current user or create temp user for the session
+      const { data: { user } } = await supabase.auth.getUser();
+      let currentUserId = userId;
+      
+      if (!user && !userId) {
+        // If no user is authenticated, we'll need to handle this during form submission
+        currentUserId = 'temp-' + crypto.randomUUID();
+      } else if (user) {
+        currentUserId = user.id;
+      }
+
       const fileExt = file.name.split('.').pop();
-      const fileName = `${userId}/document_${Date.now()}.${fileExt}`;
+      const fileName = `${currentUserId}/document_${crypto.randomUUID()}.${fileExt}`;
       
       const { data, error } = await supabase.storage
-        .from('documents')
+        .from('psychologist-documents')
         .upload(fileName, file);
 
       if (error) throw error;
       
       const { data: { publicUrl } } = supabase.storage
-        .from('documents')
+        .from('psychologist-documents')
         .getPublicUrl(data.path);
 
       onFileChange(publicUrl);
@@ -48,7 +72,11 @@ export const DocumentUpload = ({
       toast.success('Documento enviado com sucesso');
     } catch (error: any) {
       console.error('Erro no upload:', error);
-      toast.error('Erro ao enviar documento');
+      if (error.message?.includes('Unauthorized') || error.message?.includes('403')) {
+        toast.error('Erro de autorização. Tente fazer login primeiro.');
+      } else {
+        toast.error('Erro ao enviar documento');
+      }
     } finally {
       setUploading(false);
     }
