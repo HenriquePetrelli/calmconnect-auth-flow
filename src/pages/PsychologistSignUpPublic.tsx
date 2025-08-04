@@ -1,17 +1,37 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import InputMask from 'react-input-mask';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import Logo from "@/components/Logo";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { LocationFields } from "@/components/psychologist/LocationFields";
+import { DocumentUpload } from "@/components/psychologist/DocumentUpload";
+
+const specializations = [
+  'Psicologia Clínica',
+  'Psicologia Organizacional',
+  'Psicologia Escolar',
+  'Neuropsicologia',
+  'Psicologia Social',
+  'Psicologia Hospitalar',
+  'Psicologia do Esporte',
+  'Psicologia Jurídica',
+  'Psicanálise',
+  'Terapia Cognitivo-Comportamental',
+  'Gestalt-terapia',
+  'Psicoterapia Humanística',
+  'Outras'
+];
 
 const formSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -21,11 +41,24 @@ const formSchema = z.object({
   cpf: z.string().min(11, "CPF é obrigatório"),
   crp: z.string().min(5, "CRP é obrigatório"),
   professionalEmail: z.string().email("Email profissional inválido"),
-  specialty: z.string().min(2, "Especialidade é obrigatória"),
+  specialty: z.string().min(1, "Especialidade é obrigatória"),
   bio: z.string().min(50, "A biografia deve ter pelo menos 50 caracteres"),
+  state: z.string().min(1, "Estado é obrigatório"),
+  city: z.string().min(1, "Cidade é obrigatória"),
+  accepts_presential: z.boolean(),
+  address: z.string().optional(),
+  document_url: z.string().min(1, "Documento é obrigatório"),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "As senhas não coincidem",
   path: ["confirmPassword"],
+}).refine((data) => {
+  if (data.accepts_presential && !data.address) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Endereço é obrigatório quando atende presencialmente",
+  path: ["address"],
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -34,6 +67,7 @@ const PsychologistSignUpPublic = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [documentUrl, setDocumentUrl] = useState<string | null>(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -47,8 +81,15 @@ const PsychologistSignUpPublic = () => {
       professionalEmail: "",
       specialty: "",
       bio: "",
+      state: "",
+      city: "",
+      accepts_presential: false,
+      address: "",
+      document_url: "",
     },
   });
+
+  const acceptsPresential = form.watch('accepts_presential');
 
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
@@ -81,6 +122,11 @@ const PsychologistSignUpPublic = () => {
           crp_number: data.crp,
           specialization: data.specialty,
           bio: data.bio,
+          state: data.state,
+          city: data.city,
+          accepts_presential: data.accepts_presential,
+          address: data.accepts_presential ? data.address : null,
+          document_url: data.document_url,
           approval_status: 'pending',
         });
 
@@ -152,7 +198,7 @@ const PsychologistSignUpPublic = () => {
                     name="fullName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Nome Completo</FormLabel>
+                        <FormLabel>Nome Completo *</FormLabel>
                         <FormControl>
                           <Input {...field} />
                         </FormControl>
@@ -166,9 +212,15 @@ const PsychologistSignUpPublic = () => {
                     name="cpf"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>CPF</FormLabel>
+                        <FormLabel>CPF *</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="000.000.000-00" />
+                          <InputMask
+                            mask="999.999.999-99"
+                            value={field.value}
+                            onChange={field.onChange}
+                          >
+                            {(inputProps: any) => <Input placeholder="000.000.000-00" {...inputProps} />}
+                          </InputMask>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -180,7 +232,7 @@ const PsychologistSignUpPublic = () => {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email</FormLabel>
+                        <FormLabel>Email *</FormLabel>
                         <FormControl>
                           <Input type="email" {...field} />
                         </FormControl>
@@ -194,7 +246,7 @@ const PsychologistSignUpPublic = () => {
                     name="professionalEmail"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email Profissional</FormLabel>
+                        <FormLabel>Email Profissional *</FormLabel>
                         <FormControl>
                           <Input type="email" {...field} />
                         </FormControl>
@@ -208,7 +260,7 @@ const PsychologistSignUpPublic = () => {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Senha</FormLabel>
+                        <FormLabel>Senha *</FormLabel>
                         <FormControl>
                           <Input type="password" {...field} />
                         </FormControl>
@@ -222,7 +274,7 @@ const PsychologistSignUpPublic = () => {
                     name="confirmPassword"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Confirmar Senha</FormLabel>
+                        <FormLabel>Confirmar Senha *</FormLabel>
                         <FormControl>
                           <Input type="password" {...field} />
                         </FormControl>
@@ -236,9 +288,15 @@ const PsychologistSignUpPublic = () => {
                     name="crp"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>CRP</FormLabel>
+                        <FormLabel>CRP *</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="XX/XXXXXX" />
+                          <InputMask
+                            mask="99/999999"
+                            value={field.value}
+                            onChange={field.onChange}
+                          >
+                            {(inputProps: any) => <Input placeholder="XX/XXXXXX" {...inputProps} />}
+                          </InputMask>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -250,22 +308,90 @@ const PsychologistSignUpPublic = () => {
                     name="specialty"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Especialidade</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
+                        <FormLabel>Especialidade *</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione sua especialização" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {specializations.map((spec) => (
+                              <SelectItem key={spec} value={spec}>
+                                {spec}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
 
+                <LocationFields form={form} />
+
+                <FormField
+                  control={form.control}
+                  name="accepts_presential"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>
+                          Atender presencialmente?
+                        </FormLabel>
+                        <FormDescription>
+                          Marque se você oferece atendimento presencial em consultório
+                        </FormDescription>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+
+                {acceptsPresential && (
+                  <FormField
+                    control={form.control}
+                    name="address"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Endereço do Consultório *</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Rua, número, bairro, CEP"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Endereço completo onde você atende presencialmente
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
+                <DocumentUpload
+                  userId="temp-user-id"
+                  onFileChange={(url) => {
+                    setDocumentUrl(url);
+                    form.setValue('document_url', url || '');
+                  }}
+                  documentUrl={documentUrl}
+                  error={!!form.formState.errors.document_url}
+                />
+
                 <FormField
                   control={form.control}
                   name="bio"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Biografia Profissional</FormLabel>
+                      <FormLabel>Biografia Profissional *</FormLabel>
                       <FormControl>
                         <Textarea 
                           {...field} 
@@ -273,6 +399,9 @@ const PsychologistSignUpPublic = () => {
                           placeholder="Descreva sua experiência, formação e abordagem terapêutica..."
                         />
                       </FormControl>
+                      <FormDescription>
+                        Entre 50 e 500 caracteres. Esta informação será exibida em seu perfil.
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
