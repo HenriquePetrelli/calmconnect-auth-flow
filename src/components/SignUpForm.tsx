@@ -4,9 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Eye, EyeOff, AlertCircle } from "lucide-react";
+import ReasonSelect from "@/components/ReasonSelect";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -188,7 +188,7 @@ const SignUpForm = ({ userType }: SignUpFormProps) => {
         if (!formData.state) newErrors.state = true;
         if (!formData.city) newErrors.city = true;
         if (!formData.phone) newErrors.phone = true;
-        if (!formData.reason) newErrors.reason = true;
+        if (!formData.reason || (formData.reason === "Outros")) newErrors.reason = true;
         
         // Validar CPF se preenchido
         if (formData.cpf && !validateCPF(formData.cpf)) {
@@ -475,19 +475,11 @@ const SignUpForm = ({ userType }: SignUpFormProps) => {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="reason" className="text-foreground font-medium">
-                    Motivo para usar o app
-                  </Label>
-                  <Textarea
-                    id="reason"
-                    value={formData.reason}
-                    onChange={(e) => handleInputChange("reason", e.target.value)}
-                    placeholder="Conte-nos brevemente o que te trouxe até aqui..."
-                    required
-                    className={`rounded-xl border-border focus:ring-primary min-h-[80px] ${errors.reason ? 'border-destructive' : ''}`}
-                  />
-                </div>
+                <ReasonSelect
+                  value={formData.reason}
+                  onChange={(value) => handleInputChange("reason", value)}
+                  error={errors.reason}
+                />
               </>
             )}
 
