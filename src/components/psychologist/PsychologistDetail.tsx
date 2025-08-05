@@ -9,6 +9,8 @@ interface PsychologistDetailProps {
     id: string;
     full_name: string;
     email: string;
+    professional_email?: string;
+    cpf?: string;
     crp_number: string;
     specialization: string;
     bio?: string;
@@ -129,8 +131,16 @@ export const PsychologistDetail = ({ psychologist }: PsychologistDetailProps) =>
               value={psychologist.full_name} 
             />
             <DetailField 
-              label="Email" 
+              label="CPF" 
+              value={psychologist.cpf} 
+            />
+            <DetailField 
+              label="Email Pessoal" 
               value={psychologist.email} 
+            />
+            <DetailField 
+              label="Email Profissional" 
+              value={psychologist.professional_email} 
             />
           </div>
         </CardContent>
@@ -167,38 +177,36 @@ export const PsychologistDetail = ({ psychologist }: PsychologistDetailProps) =>
         </CardContent>
       </Card>
 
-      {/* Seção de Localização - Só aparece se aceita presencial */}
-      {psychologist.accepts_presential && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MapPin className="h-5 w-5" />
-              Localização do Consultório
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Seção de Localização */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MapPin className="h-5 w-5" />
+            Localização
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <DetailField 
+              label="Estado" 
+              value={psychologist.state} 
+            />
+            <DetailField 
+              label="Cidade" 
+              value={psychologist.city} 
+            />
+          </div>
+          {psychologist.accepts_presential && psychologist.address && (
+            <div className="mt-4">
               <DetailField 
-                label="Estado" 
-                value={psychologist.state} 
-              />
-              <DetailField 
-                label="Cidade" 
-                value={psychologist.city} 
+                label="Endereço do Consultório" 
+                value={psychologist.address} 
+                fullWidth
               />
             </div>
-            {psychologist.address && (
-              <div className="mt-4">
-                <DetailField 
-                  label="Endereço" 
-                  value={psychologist.address} 
-                  fullWidth
-                />
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </CardContent>
+      </Card>
 
       {/* Seção de Biografia e Documentos */}
       <Card>
