@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 export const useSignedDocumentUrl = (documentPath?: string) => {
   const [signedUrl, setSignedUrl] = useState<string>('');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchSignedUrl = async () => {
@@ -15,21 +15,27 @@ export const useSignedDocumentUrl = (documentPath?: string) => {
 
       try {
         setLoading(true);
-        setError(false);
+        setError(null);
 
-        const { data, error } = await supabase.storage
+        // Tentar criar URL assinada com tempo de expiração de 1 hora
+        const { data, error: urlError } = await supabase.storage
           .from('psychologist-documents')
-          .createSignedUrl(documentPath, 3600); // Expira em 1 hora
+          .createSignedUrl(documentPath, 3600);
 
-        if (error) {
-          console.error('Error creating signed URL:', error);
-          throw error;
+        if (urlError) {
+          console.error('Storage error creating signed URL:', urlError);
+          throw new Error(`Erro ao acessar documento: ${urlError.message}`);
+        }
+
+        if (!data?.signedUrl) {
+          throw new Error('URL assinada não foi gerada');
         }
 
         setSignedUrl(data.signedUrl);
       } catch (err) {
         console.error('Error generating signed URL:', err);
-        setError(true);
+        const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido ao carregar documento';
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -38,5 +44,31 @@ export const useSignedDocumentUrl = (documentPath?: string) => {
     fetchSignedUrl();
   }, [documentPath]);
 
-  return { signedUrl, loading, error };
+  const retry = () => {
+    if (documentPath) {
+      setError(null);
+      setLoading(true);
+      // Trigger useEffect again by updating the dependency
+      const fetchAgain = async () => {
+        try {
+          const { data, error: urlError } = await supabase.storage
+            .from('psychologist-documents')
+            .createSignedUrl(documentPath, 3600);
+
+          if (urlError) throw new Error(`Erro ao acessar documento: ${urlError.message}`);
+          if (!data?.signedUrl) throw new Error('URL assinada não foi gerada');
+
+          setSignedUrl(data.signedUrl);
+        } catch (err) {
+          const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido ao carregar documento';
+          setError(errorMessage);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchAgain();
+    }
+  };
+
+  return { signedUrl, loading, error, retry };
 };

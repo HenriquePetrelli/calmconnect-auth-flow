@@ -9,7 +9,7 @@ interface DocumentViewerProps {
 }
 
 export const DocumentViewer = ({ documentPath }: DocumentViewerProps) => {
-  const { signedUrl, loading, error } = useSignedDocumentUrl(documentPath);
+  const { signedUrl, loading, error, retry } = useSignedDocumentUrl(documentPath);
 
   const handleDownload = async () => {
     if (!signedUrl || !documentPath) return;
@@ -68,13 +68,18 @@ export const DocumentViewer = ({ documentPath }: DocumentViewerProps) => {
       <div className="border rounded-lg p-8 bg-muted/30">
         <div className="text-center">
           <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-sm text-muted-foreground mb-4">
-            Erro ao carregar documento
+          <p className="text-sm text-muted-foreground mb-2">
+            {error || 'Erro ao carregar documento'}
           </p>
+          {error && error.includes('403') && (
+            <p className="text-xs text-red-600 mb-4">
+              Erro de permissão - verifique se você tem acesso a este documento
+            </p>
+          )}
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={() => window.location.reload()}
+            onClick={retry}
             className="gap-2"
           >
             <ExternalLink className="h-3 w-3" />
