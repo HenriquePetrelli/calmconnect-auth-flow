@@ -27,20 +27,6 @@ const PatientLogin = () => {
           onSignUp={handleSignUp}
         />
 
-        <div className="text-center mt-8 space-y-2">
-          <button
-            onClick={() => navigate('/psychologist-login')}
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors block"
-          >
-            É um psicólogo? Faça login aqui
-          </button>
-          <button
-            onClick={() => navigate('/psychologist-signup')}
-            className="text-sm text-primary hover:text-primary/80 transition-colors block font-medium"
-          >
-            Cadastrar como Psicólogo
-          </button>
-        </div>
       </div>
 
       <PasswordResetModal 
