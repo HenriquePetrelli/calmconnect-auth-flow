@@ -576,6 +576,10 @@ export type Database = {
           sos_requests_last_30_days: number
         }[]
       }
+      get_psychologist_document_url: {
+        Args: { document_path: string }
+        Returns: string
+      }
       get_user_type: {
         Args: { user_id_param: string }
         Returns: string
