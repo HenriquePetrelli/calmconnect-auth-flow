@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DetailField } from './DetailField';
 import { DocumentViewer } from './DocumentViewer';
-import { MapPin, UserCheck } from 'lucide-react';
+import { MapPin, UserCheck, Clock, CheckCircle, XCircle } from 'lucide-react';
 
 interface PsychologistDetailProps {
   psychologist: {
@@ -18,17 +18,102 @@ interface PsychologistDetailProps {
     accepts_presential: boolean;
     document_url?: string;
     user_id: string;
+    approval_status?: string;
+    approved?: boolean;
+    submitted_at?: string;
+    reviewed_at?: string;
+    reviewed_by?: string;
+    rejection_reason?: string;
   };
 }
 
-const maskCPF = (cpf?: string) => {
-  if (!cpf) return 'Não informado';
-  return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-XX');
+const getStatusIcon = (status?: string) => {
+  switch (status) {
+    case 'approved':
+      return <CheckCircle className="h-4 w-4 text-green-500" />;
+    case 'rejected':
+      return <XCircle className="h-4 w-4 text-red-500" />;
+    default:
+      return <Clock className="h-4 w-4 text-yellow-500" />;
+  }
+};
+
+const getStatusBadge = (status?: string, approved?: boolean) => {
+  if (approved || status === 'approved') {
+    return <Badge variant="default" className="bg-green-100 text-green-800">Aprovado</Badge>;
+  }
+  if (status === 'rejected') {
+    return <Badge variant="destructive">Rejeitado</Badge>;
+  }
+  return <Badge variant="secondary">Pendente</Badge>;
+};
+
+const formatDate = (dateString?: string) => {
+  if (!dateString) return 'Não informado';
+  return new Date(dateString).toLocaleString('pt-BR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
 };
 
 export const PsychologistDetail = ({ psychologist }: PsychologistDetailProps) => {
   return (
     <div className="max-w-4xl mx-auto space-y-6 p-6">
+      {/* Seção de Status da Aprovação */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            {getStatusIcon(psychologist.approval_status)}
+            Status da Aprovação
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                Status Atual
+              </label>
+              <div className="flex items-center gap-2">
+                {getStatusBadge(psychologist.approval_status, psychologist.approved)}
+              </div>
+            </div>
+            
+            <DetailField 
+              label="Data de Submissão" 
+              value={formatDate(psychologist.submitted_at)} 
+            />
+            
+            {psychologist.reviewed_at && (
+              <DetailField 
+                label="Data de Revisão" 
+                value={formatDate(psychologist.reviewed_at)} 
+              />
+            )}
+            
+            {psychologist.reviewed_by && (
+              <DetailField 
+                label="Revisado por (ID)" 
+                value={psychologist.reviewed_by} 
+              />
+            )}
+          </div>
+          
+          {psychologist.rejection_reason && (
+            <div className="mt-4">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                Motivo da Rejeição
+              </label>
+              <div className="text-sm p-3 bg-red-50 border border-red-200 rounded-md mt-1">
+                {psychologist.rejection_reason}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Seção de Informações Básicas */}
       <Card>
         <CardHeader>
