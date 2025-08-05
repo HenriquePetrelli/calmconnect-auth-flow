@@ -21,12 +21,14 @@ const PatientLogin = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8">
-        
-        <Button variant="ghost" size="sm" onClick={() => navigate('/')}>
-          <ArrowLeft size={20} />
-        </Button>
-        
-        <Logo className="mb-12" />
+
+        <div className="mb-12">
+          <Button variant="ghost" size="sm" onClick={() => navigate('/')}>
+            <ArrowLeft size={20} />
+          </Button>
+          
+          <Logo  />
+        </div>
         
         <LoginForm 
           userType="patient"
