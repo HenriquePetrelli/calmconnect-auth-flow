@@ -38,14 +38,6 @@ const PsychologistLogin = () => {
           onSignUp={handleSignUp}
         />
 
-        <div className="text-center mt-8">
-          <button
-            onClick={() => navigate('/patient-login')}
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            É um paciente? Faça login aqui
-          </button>
-        </div>
       </div>
     </div>
   );
