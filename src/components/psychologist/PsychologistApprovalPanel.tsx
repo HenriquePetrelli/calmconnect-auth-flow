@@ -8,7 +8,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Eye, CheckCircle, XCircle, Mail, User, FileText, Calendar, Download } from 'lucide-react';
+import { Eye, CheckCircle, XCircle, Mail, User, FileText, Calendar, Download, MapPin, UserCheck } from 'lucide-react';
 import { usePsychologistManagement, PsychologistData } from '@/hooks/usePsychologistManagement';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -163,58 +163,166 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
                     </DialogHeader>
                     {selectedPsychologist && (
                       <div className="space-y-6">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="text-sm font-medium">Nome Completo</label>
-                            <p className="text-sm text-muted-foreground">{selectedPsychologist.full_name}</p>
+                        {/* Seção de Status da Aprovação */}
+                        <div className="border rounded-lg p-4 bg-muted/20">
+                          <div className="flex items-center gap-2 mb-3">
+                            <CheckCircle className="h-4 w-4" />
+                            <span className="text-sm font-medium">Status da Aprovação</span>
                           </div>
-                          <div>
-                            <label className="text-sm font-medium">Email</label>
-                            <p className="text-sm text-muted-foreground">{selectedPsychologist.email}</p>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Status Atual</label>
+                              <div className="mt-1">{getStatusBadge(selectedPsychologist.approval_status)}</div>
+                            </div>
+                            <div>
+                              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Data de Submissão</label>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {selectedPsychologist.submitted_at ? new Date(selectedPsychologist.submitted_at).toLocaleString('pt-BR') : 'Não informado'}
+                              </p>
+                            </div>
+                            {selectedPsychologist.reviewed_at && (
+                              <div>
+                                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Data de Revisão</label>
+                                <p className="text-sm text-muted-foreground mt-1">
+                                  {new Date(selectedPsychologist.reviewed_at).toLocaleString('pt-BR')}
+                                </p>
+                              </div>
+                            )}
+                            {selectedPsychologist.reviewed_by && (
+                              <div>
+                                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Revisado por</label>
+                                <p className="text-sm text-muted-foreground mt-1">{selectedPsychologist.reviewed_by}</p>
+                              </div>
+                            )}
                           </div>
-                          <div>
-                            <label className="text-sm font-medium">CRP</label>
-                            <p className="text-sm text-muted-foreground">{selectedPsychologist.crp_number}</p>
+                          {selectedPsychologist.rejection_reason && (
+                            <div className="mt-4">
+                              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Motivo da Rejeição</label>
+                              <div className="text-sm p-3 bg-red-50 border border-red-200 rounded-md mt-1">
+                                {selectedPsychologist.rejection_reason}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Seção de Informações Básicas */}
+                        <div className="border rounded-lg p-4">
+                          <div className="flex items-center gap-2 mb-3">
+                            <UserCheck className="h-4 w-4" />
+                            <span className="text-sm font-medium">Informações Básicas</span>
                           </div>
-                          <div>
-                            <label className="text-sm font-medium">Especialização</label>
-                            <p className="text-sm text-muted-foreground">
-                              {selectedPsychologist.specialization || 'Não informado'}
-                            </p>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Nome Completo</label>
+                              <p className="text-sm text-muted-foreground mt-1">{selectedPsychologist.full_name}</p>
+                            </div>
+                            <div>
+                              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">CPF</label>
+                              <p className="text-sm text-muted-foreground mt-1">{selectedPsychologist.cpf || 'Não informado'}</p>
+                            </div>
+                            <div>
+                              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Email Pessoal</label>
+                              <p className="text-sm text-muted-foreground mt-1">{selectedPsychologist.email}</p>
+                            </div>
+                            <div>
+                              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Email Profissional</label>
+                              <p className="text-sm text-muted-foreground mt-1">{selectedPsychologist.professional_email || 'Não informado'}</p>
+                            </div>
                           </div>
                         </div>
 
-                        {selectedPsychologist.bio && (
-                          <div>
-                            <label className="text-sm font-medium">Biografia Profissional</label>
-                            <ScrollArea className="h-24 mt-2">
-                              <p className="text-sm text-muted-foreground">{selectedPsychologist.bio}</p>
-                            </ScrollArea>
+                        {/* Seção de Dados Profissionais */}
+                        <div className="border rounded-lg p-4">
+                          <div className="flex items-center gap-2 mb-3">
+                            <User className="h-4 w-4" />
+                            <span className="text-sm font-medium">Dados Profissionais</span>
                           </div>
-                        )}
-
-                        {selectedPsychologist.documents && selectedPsychologist.documents.length > 0 && (
-                          <div>
-                            <label className="text-sm font-medium mb-2 block">Documentos</label>
-                            <div className="space-y-2">
-                              {selectedPsychologist.documents.map((doc, index) => (
-                                <div key={index} className="flex items-center justify-between p-2 border rounded">
-                                  <div className="flex items-center space-x-2">
-                                    <FileText className="h-4 w-4" />
-                                    <span className="text-sm">Documento {index + 1}</span>
-                                  </div>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => window.open(doc, '_blank')}
-                                  >
-                                    <Download className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              ))}
+                          <div className="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">CRP</label>
+                              <p className="text-sm text-muted-foreground mt-1">{selectedPsychologist.crp_number}</p>
+                            </div>
+                            <div>
+                              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Especialização</label>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {selectedPsychologist.specialization || 'Não informado'}
+                              </p>
                             </div>
                           </div>
-                        )}
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                              Tipo de Atendimento:
+                            </span>
+                            <Badge 
+                              variant={selectedPsychologist.accepts_presential ? "default" : "secondary"}
+                              className="text-xs"
+                            >
+                              {selectedPsychologist.accepts_presential ? 'Online e Presencial' : 'Apenas Online'}
+                            </Badge>
+                          </div>
+                        </div>
+
+                        {/* Seção de Localização */}
+                        <div className="border rounded-lg p-4">
+                          <div className="flex items-center gap-2 mb-3">
+                            <MapPin className="h-4 w-4" />
+                            <span className="text-sm font-medium">Localização</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Estado</label>
+                              <p className="text-sm text-muted-foreground mt-1">{selectedPsychologist.state || 'Não informado'}</p>
+                            </div>
+                            <div>
+                              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Cidade</label>
+                              <p className="text-sm text-muted-foreground mt-1">{selectedPsychologist.city || 'Não informado'}</p>
+                            </div>
+                          </div>
+                          {selectedPsychologist.accepts_presential && selectedPsychologist.address && (
+                            <div className="mt-4">
+                              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Endereço do Consultório</label>
+                              <p className="text-sm text-muted-foreground mt-1">{selectedPsychologist.address}</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Seção de Biografia */}
+                        <div className="border rounded-lg p-4">
+                          <div className="flex items-center gap-2 mb-3">
+                            <FileText className="h-4 w-4" />
+                            <span className="text-sm font-medium">Biografia Profissional</span>
+                          </div>
+                          <div className="bg-muted/50 rounded-lg p-3 text-sm">
+                            {selectedPsychologist.bio || 'Nenhuma biografia fornecida'}
+                          </div>
+                        </div>
+
+                        {/* Seção de Documentos */}
+                        <div className="border rounded-lg p-4">
+                          <div className="flex items-center gap-2 mb-3">
+                            <FileText className="h-4 w-4" />
+                            <span className="text-sm font-medium">Documentos</span>
+                          </div>
+                          {selectedPsychologist.document_url ? (
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between p-3 border rounded bg-muted/20">
+                                <div className="flex items-center space-x-2">
+                                  <FileText className="h-4 w-4" />
+                                  <span className="text-sm">Documento Profissional</span>
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => window.open(selectedPsychologist.document_url, '_blank')}
+                                >
+                                  <Download className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <p className="text-sm text-muted-foreground">Nenhum documento anexado</p>
+                          )}
+                        </div>
 
                         {selectedPsychologist.approval_status === 'pending' && (
                           <div className="flex space-x-2 pt-4 border-t">

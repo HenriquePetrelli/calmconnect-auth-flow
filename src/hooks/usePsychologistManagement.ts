@@ -6,9 +6,16 @@ export interface PsychologistData {
   id: string;
   full_name: string;
   email: string;
+  professional_email?: string;
+  cpf?: string;
   crp_number: string;
   specialization?: string;
   bio?: string;
+  state?: string;
+  city?: string;
+  address?: string;
+  accepts_presential: boolean;
+  document_url?: string;
   submitted_at: string;
   documents?: string[];
   approval_status: 'pending' | 'approved' | 'rejected';
@@ -21,6 +28,8 @@ export interface PsychologistRegistration {
   user_id: string;
   full_name: string;
   email: string;
+  professional_email?: string;
+  cpf?: string;
   crp_number: string;
   specialization: string;
   bio: string;
