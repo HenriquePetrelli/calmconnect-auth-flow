@@ -29,14 +29,6 @@ const PsychologistSignUp = () => {
           onSuccess={() => navigate('/home')}
         />
 
-        <div className="text-center mt-8">
-          <button
-            onClick={() => navigate('/patient-signup')}
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            É um paciente? Cadastre-se aqui
-          </button>
-        </div>
       </div>
     </div>
   );

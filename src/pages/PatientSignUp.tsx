@@ -12,14 +12,6 @@ const PatientSignUp = () => {
         
         <SignUpForm userType="patient" />
 
-        <div className="text-center mt-8">
-          <button
-            onClick={() => navigate('/psychologist-signup')}
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            É um psicólogo? Cadastre-se aqui
-          </button>
-        </div>
       </div>
     </div>
   );
