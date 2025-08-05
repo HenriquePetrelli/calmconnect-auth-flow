@@ -19,7 +19,9 @@ import { DocumentUpload } from './DocumentUpload';
 
 const formSchema = z.object({
   full_name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
+  cpf: z.string().min(11, 'CPF inválido'),
   email: z.string().email('Email inválido'),
+  professional_email: z.string().email('Email profissional inválido'),
   crp_number: z.string().min(5, 'CRP deve ter pelo menos 5 caracteres'),
   specialization: z.string().min(1, 'Especialização é obrigatória'),
   bio: z.string().min(50, 'Biografia deve ter pelo menos 50 caracteres').max(500, 'Biografia deve ter no máximo 500 caracteres'),
@@ -76,7 +78,9 @@ export const PsychologistRegistrationForm = ({
     resolver: zodResolver(formSchema),
     defaultValues: {
       full_name: '',
+      cpf: '',
       email: userEmail,
+      professional_email: '',
       crp_number: '',
       specialization: '',
       bio: '',
@@ -101,7 +105,9 @@ export const PsychologistRegistrationForm = ({
     const registrationData = {
       user_id: userId,
       full_name: data.full_name,
+      cpf: data.cpf,
       email: data.email,
+      professional_email: data.professional_email,
       crp_number: data.crp_number,
       specialization: data.specialization,
       bio: data.bio,
@@ -166,15 +172,52 @@ export const PsychologistRegistrationForm = ({
 
             <FormField
               control={form.control}
+              name="cpf"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>CPF</FormLabel>
+                  <FormControl>
+                    <InputMask
+                      mask="999.999.999-99"
+                      value={field.value}
+                      onChange={field.onChange}
+                    >
+                      {(inputProps: any) => <Input placeholder="000.000.000-00" {...inputProps} />}
+                    </InputMask>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email Profissional</FormLabel>
+                  <FormLabel>Email Pessoal</FormLabel>
                   <FormControl>
                     <Input type="email" {...field} disabled />
                   </FormControl>
                   <FormDescription>
                     O email da sua conta será usado para comunicações oficiais
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="professional_email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email Profissional</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="email@profissional.com" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    Email profissional para contato com pacientes
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

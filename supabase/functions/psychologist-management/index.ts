@@ -17,10 +17,17 @@ const resend = new Resend(resendKey);
 interface PsychologistRegistration {
   user_id: string;
   full_name: string;
+  cpf?: string;
   email: string;
+  professional_email?: string;
   crp_number: string;
   specialization?: string;
   bio?: string;
+  state?: string;
+  city?: string;
+  accepts_presential?: boolean;
+  address?: string;
+  document_url?: string;
   documents?: string[];
 }
 
@@ -190,6 +197,19 @@ const handler = async (req: Request): Promise<Response> => {
       if (existingEmail) {
         throw new Error('Email já cadastrado no sistema');
       }
+
+      // Verificar duplicidade de CPF se fornecido
+      if (registrationData.cpf) {
+        const { data: existingCpf } = await supabase
+          .from('psychologists')
+          .select('id')
+          .eq('cpf', registrationData.cpf)
+          .single();
+        
+        if (existingCpf) {
+          throw new Error('CPF já cadastrado no sistema');
+        }
+      }
       
       // Inserir registro
       const { data, error } = await supabase
@@ -273,9 +293,16 @@ const handler = async (req: Request): Promise<Response> => {
           id,
           full_name,
           email,
+          cpf,
+          professional_email,
           crp_number,
           specialization,
           bio,
+          state,
+          city,
+          accepts_presential,
+          address,
+          document_url,
           submitted_at,
           documents,
           approval_status

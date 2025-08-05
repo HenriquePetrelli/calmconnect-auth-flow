@@ -13,6 +13,7 @@ import { usePsychologistManagement, PsychologistData } from '@/hooks/usePsycholo
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { DocumentViewer } from './DocumentViewer';
 
 interface PsychologistApprovalPanelProps {
   adminUserId: string;
@@ -218,7 +219,12 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
                             </div>
                             <div>
                               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">CPF</label>
-                              <p className="text-sm text-muted-foreground mt-1">{selectedPsychologist.cpf || 'Não informado'}</p>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {selectedPsychologist.cpf ? 
+                                  selectedPsychologist.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : 
+                                  'Não informado'
+                                }
+                              </p>
                             </div>
                             <div>
                               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Email Pessoal</label>
@@ -304,20 +310,31 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
                             <span className="text-sm font-medium">Documentos</span>
                           </div>
                           {selectedPsychologist.document_url ? (
-                            <div className="space-y-2">
+                            <div className="space-y-4">
                               <div className="flex items-center justify-between p-3 border rounded bg-muted/20">
                                 <div className="flex items-center space-x-2">
                                   <FileText className="h-4 w-4" />
                                   <span className="text-sm">Documento Profissional</span>
                                 </div>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => window.open(selectedPsychologist.document_url, '_blank')}
-                                >
-                                  <Download className="h-4 w-4" />
-                                </Button>
+                                <div className="flex gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => window.open(selectedPsychologist.document_url, '_blank')}
+                                  >
+                                    <Eye className="h-4 w-4 mr-1" />
+                                    Visualizar
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => window.open(selectedPsychologist.document_url, '_blank')}
+                                  >
+                                    <Download className="h-4 w-4" />
+                                  </Button>
+                                </div>
                               </div>
+                              <DocumentViewer url={selectedPsychologist.document_url} />
                             </div>
                           ) : (
                             <p className="text-sm text-muted-foreground">Nenhum documento anexado</p>

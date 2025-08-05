@@ -404,6 +404,7 @@ export type Database = {
           approved: boolean | null
           bio: string | null
           city: string | null
+          cpf: string | null
           created_at: string | null
           crp_number: string
           document_url: string | null
@@ -411,6 +412,7 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          professional_email: string | null
           reviewed_at: string | null
           reviewed_by: string | null
           specialization: string | null
@@ -426,6 +428,7 @@ export type Database = {
           approved?: boolean | null
           bio?: string | null
           city?: string | null
+          cpf?: string | null
           created_at?: string | null
           crp_number: string
           document_url?: string | null
@@ -433,6 +436,7 @@ export type Database = {
           email: string
           full_name: string
           id?: string
+          professional_email?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           specialization?: string | null
@@ -448,6 +452,7 @@ export type Database = {
           approved?: boolean | null
           bio?: string | null
           city?: string | null
+          cpf?: string | null
           created_at?: string | null
           crp_number?: string
           document_url?: string | null
@@ -455,6 +460,7 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          professional_email?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           specialization?: string | null
