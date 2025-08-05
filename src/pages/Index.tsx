@@ -31,40 +31,6 @@ const Index = () => {
             >
               Sou Psicólogo
             </Button>
-            
-            <Button
-              onClick={() => navigate('/psychologist-signup')}
-              variant="outline"
-              size="sm"
-              className="w-full text-sm text-muted-foreground hover:text-foreground border-dashed"
-            >
-              Cadastrar como Psicólogo
-            </Button>
-          </div>
-        </div>
-
-        {/* Administrative Access */}
-        <div className="border-t border-border pt-6 mt-8">
-          <div className="flex flex-col gap-2">
-            <Button
-              onClick={() => navigate('/admin-login')}
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <Shield className="h-4 w-4 mr-2" />
-              Acesso Administrativo
-            </Button>
-            
-            <Button
-              onClick={() => navigate('/create-admin-account')}
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <Settings className="h-4 w-4 mr-2" />
-              Criar Conta Admin
-            </Button>
           </div>
         </div>
 
