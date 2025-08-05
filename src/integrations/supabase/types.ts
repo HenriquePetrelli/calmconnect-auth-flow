@@ -413,6 +413,7 @@ export type Database = {
           full_name: string
           id: string
           professional_email: string | null
+          rejection_reason: string | null
           reviewed_at: string | null
           reviewed_by: string | null
           specialization: string | null
@@ -437,6 +438,7 @@ export type Database = {
           full_name: string
           id?: string
           professional_email?: string | null
+          rejection_reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           specialization?: string | null
@@ -461,6 +463,7 @@ export type Database = {
           full_name?: string
           id?: string
           professional_email?: string | null
+          rejection_reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           specialization?: string | null

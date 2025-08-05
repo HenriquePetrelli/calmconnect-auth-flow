@@ -15,6 +15,24 @@ import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { DocumentViewer } from './DocumentViewer';
 
+// Função para extrair o path do documento da URL do Supabase Storage
+const extractDocumentPath = (url?: string): string | undefined => {
+  if (!url) return undefined;
+  
+  // Se a URL contém o bucket name, extrair o path após o bucket
+  const bucketMatch = url.match(/\/storage\/v1\/object\/public\/psychologist-documents\/(.+)$/);
+  if (bucketMatch) {
+    return bucketMatch[1];
+  }
+  
+  // Se a URL é apenas o path, retornar como está
+  if (!url.startsWith('http')) {
+    return url;
+  }
+  
+  return undefined;
+};
+
 interface PsychologistApprovalPanelProps {
   adminUserId: string;
 }
@@ -334,7 +352,7 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
                                   </Button>
                                 </div>
                               </div>
-                              <DocumentViewer url={selectedPsychologist.document_url} />
+                              <DocumentViewer documentPath={extractDocumentPath(selectedPsychologist.document_url)} />
                             </div>
                           ) : (
                             <p className="text-sm text-muted-foreground">Nenhum documento anexado</p>

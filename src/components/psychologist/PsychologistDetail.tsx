@@ -4,6 +4,24 @@ import { DetailField } from './DetailField';
 import { DocumentViewer } from './DocumentViewer';
 import { MapPin, UserCheck, Clock, CheckCircle, XCircle } from 'lucide-react';
 
+// Função para extrair o path do documento da URL do Supabase Storage
+const extractDocumentPath = (url?: string): string | undefined => {
+  if (!url) return undefined;
+  
+  // Se a URL contém o bucket name, extrair o path após o bucket
+  const bucketMatch = url.match(/\/storage\/v1\/object\/public\/psychologist-documents\/(.+)$/);
+  if (bucketMatch) {
+    return bucketMatch[1];
+  }
+  
+  // Se a URL é apenas o path, retornar como está
+  if (!url.startsWith('http')) {
+    return url;
+  }
+  
+  return undefined;
+};
+
 interface PsychologistDetailProps {
   psychologist: {
     id: string;
@@ -225,7 +243,7 @@ export const PsychologistDetail = ({ psychologist }: PsychologistDetailProps) =>
           <CardTitle>Documento Anexado</CardTitle>
         </CardHeader>
         <CardContent>
-          <DocumentViewer url={psychologist.document_url} />
+          <DocumentViewer documentPath={extractDocumentPath(psychologist.document_url)} />
         </CardContent>
       </Card>
     </div>
