@@ -148,9 +148,6 @@ const Profile = () => {
                 </h2>
                 <p className="text-muted-foreground">{user?.email}</p>
               </div>
-              <Button variant="ghost" size="sm" onClick={() => navigate('/account-settings')}>
-                <Settings size={16} />
-              </Button>
             </div>
           </CardContent>
         </Card>
