@@ -17,6 +17,7 @@ export interface PsychologistData {
   accepts_presential?: boolean;
   document_url?: string;
   professional_email?: string;
+  total_appointments?: number;
 }
 
 interface PsychologistListProps {
@@ -140,10 +141,16 @@ export const PsychologistList: React.FC<PsychologistListProps> = ({
           <CardContent className="p-8 text-center">
             <User className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium text-foreground mb-2">
-              Nenhum psicólogo aprovado no momento
+              {onlineOnly ? 
+                'Nenhum psicólogo aprovado no momento' : 
+                'Nenhum psicólogo disponível na sua região'
+              }
             </h3>
             <p className="text-muted-foreground">
-              Estamos analisando os cadastros dos profissionais. Por favor, verifique novamente mais tarde.
+              {onlineOnly ?
+                'Estamos analisando os cadastros dos profissionais. Por favor, verifique novamente mais tarde.' :
+                'Nenhum psicólogo disponível na sua região. Marque "Atendimento Online" para ver outros profissionais.'
+              }
             </p>
           </CardContent>
         </Card>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import { PsychologistFilters } from './PsychologistFilters';
 import { PsychologistList, PsychologistData } from './PsychologistList';
 import { PsychologistModal } from './PsychologistModal';
@@ -16,13 +17,36 @@ export const PsychologistSelection: React.FC<PsychologistSelectionProps> = ({
   const [filteredPsychologists, setFilteredPsychologists] = useState<PsychologistData[]>([]);
   const [selectedPsychologist, setSelectedPsychologist] = useState<PsychologistData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [patientLocation, setPatientLocation] = useState<{ city: string; state: string } | null>(null);
   
   // Filters
   const [specialty, setSpecialty] = useState('all');
-  const [onlineOnly, setOnlineOnly] = useState(false);
+  const [onlineOnly, setOnlineOnly] = useState(true); // Default to true (online)
   const [specialties, setSpecialties] = useState<string[]>([]);
   
   const { toast } = useToast();
+  const { user } = useAuth();
+
+  const fetchPatientLocation = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('patients')
+        .select('city, state')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching patient location:', error);
+        return;
+      }
+      
+      setPatientLocation({ city: data.city, state: data.state });
+    } catch (error) {
+      console.error('Error fetching patient location:', error);
+    }
+  };
 
   const fetchPsychologists = async () => {
     try {
@@ -31,7 +55,7 @@ export const PsychologistSelection: React.FC<PsychologistSelectionProps> = ({
       // Buscar diretamente da tabela psychologists com approved = true
       const { data, error } = await supabase
         .from('psychologists')
-        .select('*')
+        .select('*, total_appointments')
         .eq('approved', true)
         .order('full_name', { ascending: true });
   
@@ -53,7 +77,8 @@ export const PsychologistSelection: React.FC<PsychologistSelectionProps> = ({
         state: psych.state,
         accepts_presential: psych.accepts_presential,
         document_url: psych.document_url,
-        professional_email: psych.professional_email
+        professional_email: psych.professional_email,
+        total_appointments: psych.total_appointments || 0
       })) || [];
   
       setPsychologists(formattedData);
@@ -90,14 +115,22 @@ export const PsychologistSelection: React.FC<PsychologistSelectionProps> = ({
       );
     }
 
-    // No additional filtering needed for onlineOnly since it affects display, not data filtering
+    // Filter for presential appointments when onlineOnly is false
+    if (!onlineOnly && patientLocation) {
+      filtered = filtered.filter(p => 
+        p.accepts_presential === true &&
+        p.city === patientLocation.city &&
+        p.state === patientLocation.state
+      );
+    }
 
     setFilteredPsychologists(filtered);
-  }, [psychologists, specialty]);
+  }, [psychologists, specialty, onlineOnly, patientLocation]);
 
   useEffect(() => {
     fetchPsychologists();
-  }, []);
+    fetchPatientLocation();
+  }, [user?.id]);
 
   const handlePsychologistSelect = (psychologist: PsychologistData) => {
     setSelectedPsychologist(psychologist);
@@ -135,6 +168,7 @@ export const PsychologistSelection: React.FC<PsychologistSelectionProps> = ({
         psychologist={selectedPsychologist}
         onClose={handleCloseModal}
         onSchedule={handleSchedule}
+        showLocationInfo={!onlineOnly}
       />
     </div>
   );

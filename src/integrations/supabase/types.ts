@@ -419,6 +419,7 @@ export type Database = {
           specialization: string | null
           state: string | null
           submitted_at: string | null
+          total_appointments: number | null
           updated_at: string | null
           user_id: string | null
         }
@@ -444,6 +445,7 @@ export type Database = {
           specialization?: string | null
           state?: string | null
           submitted_at?: string | null
+          total_appointments?: number | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -469,6 +471,7 @@ export type Database = {
           specialization?: string | null
           state?: string | null
           submitted_at?: string | null
+          total_appointments?: number | null
           updated_at?: string | null
           user_id?: string | null
         }
