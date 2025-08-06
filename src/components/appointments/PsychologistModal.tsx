@@ -37,23 +37,15 @@ export const PsychologistModal: React.FC<PsychologistModalProps> = ({
 
         <div className="space-y-6">
           {/* Basic Info */}
-          <div className="grid grid-cols-2 gap-4">
-            {psychologist.age && (
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-muted-foreground">Idade</label>
-                <p className="text-foreground">{psychologist.age} anos</p>
-              </div>
-            )}
-            {psychologist.crp_number && (
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-                  <IdCard size={14} />
-                  CRP
-                </label>
-                <p className="text-foreground">{psychologist.crp_number}</p>
-              </div>
-            )}
-          </div>
+          {psychologist.crp_number && (
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                <IdCard size={14} />
+                CRP
+              </label>
+              <p className="text-foreground">{psychologist.crp_number}</p>
+            </div>
+          )}
 
           {/* Specialty Badge */}
           {(psychologist.specialty || psychologist.specialization) && (

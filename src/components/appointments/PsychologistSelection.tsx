@@ -18,9 +18,8 @@ export const PsychologistSelection: React.FC<PsychologistSelectionProps> = ({
   const [loading, setLoading] = useState(false);
   
   // Filters
-  const [onlyMyCity, setOnlyMyCity] = useState(false);
   const [specialty, setSpecialty] = useState('all');
-  const [appointmentType, setAppointmentType] = useState('all');
+  const [onlineOnly, setOnlineOnly] = useState(false);
   const [specialties, setSpecialties] = useState<string[]>([]);
   
   const { toast } = useToast();
@@ -49,12 +48,12 @@ export const PsychologistSelection: React.FC<PsychologistSelectionProps> = ({
         crp_number: psych.crp_number,
         city: psych.city,
         address: psych.address,
-        age: psych.age,
         approved: psych.approved,
         // Adicionar outros campos necessários
         state: psych.state,
         accepts_presential: psych.accepts_presential,
-        document_url: psych.document_url
+        document_url: psych.document_url,
+        professional_email: psych.professional_email
       })) || [];
   
       setPsychologists(formattedData);
@@ -91,18 +90,10 @@ export const PsychologistSelection: React.FC<PsychologistSelectionProps> = ({
       );
     }
 
-    if (onlyMyCity) {
-      // For now, this doesn't filter anything since we don't have real city data
-      // In a real app, you'd filter by the user's city
-    }
-
-    if (appointmentType && appointmentType !== 'all') {
-      // For now, this doesn't filter anything since we don't have this data in the database
-      // In a real app, you'd filter by accepts_presential field
-    }
+    // No additional filtering needed for onlineOnly since it affects display, not data filtering
 
     setFilteredPsychologists(filtered);
-  }, [psychologists, specialty, onlyMyCity, appointmentType]);
+  }, [psychologists, specialty]);
 
   useEffect(() => {
     fetchPsychologists();
@@ -126,12 +117,10 @@ export const PsychologistSelection: React.FC<PsychologistSelectionProps> = ({
   return (
     <div className="space-y-6">
       <PsychologistFilters
-        onlyMyCity={onlyMyCity}
-        setOnlyMyCity={setOnlyMyCity}
         specialty={specialty}
         setSpecialty={setSpecialty}
-        appointmentType={appointmentType}
-        setAppointmentType={setAppointmentType}
+        onlineOnly={onlineOnly}
+        setOnlineOnly={setOnlineOnly}
         specialties={specialties}
       />
 
@@ -139,6 +128,7 @@ export const PsychologistSelection: React.FC<PsychologistSelectionProps> = ({
         psychologists={filteredPsychologists}
         onSelect={handlePsychologistSelect}
         loading={loading}
+        onlineOnly={onlineOnly}
       />
 
       <PsychologistModal

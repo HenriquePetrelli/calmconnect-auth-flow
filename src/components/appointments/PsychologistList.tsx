@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { ChevronRight, MapPin, User } from 'lucide-react';
+import { ChevronRight, MapPin, User, CheckCircle, Mail } from 'lucide-react';
 
 export interface PsychologistData {
   id: string;
@@ -11,24 +11,26 @@ export interface PsychologistData {
   city?: string;
   bio?: string;
   crp_number?: string;
-  age?: number;
   address?: string;
   approved: boolean;
   state?: string;
   accepts_presential?: boolean;
   document_url?: string;
+  professional_email?: string;
 }
 
 interface PsychologistListProps {
   psychologists: PsychologistData[];
   onSelect: (psychologist: PsychologistData) => void;
   loading?: boolean;
+  onlineOnly?: boolean;
 }
 
 export const PsychologistList: React.FC<PsychologistListProps> = ({
   psychologists,
   onSelect,
-  loading = false
+  loading = false,
+  onlineOnly = false
 }) => {
   // Filtrar apenas psicólogos aprovados
   const approvedPsychologists = psychologists.filter(psych => psych.approved === true);
@@ -81,9 +83,7 @@ export const PsychologistList: React.FC<PsychologistListProps> = ({
                         {psychologist.full_name}
                       </h4>
                       {psychologist.approved && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                          Verificado
-                        </span>
+                        <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground truncate">
@@ -94,13 +94,30 @@ export const PsychologistList: React.FC<PsychologistListProps> = ({
                         CRP: {psychologist.crp_number}
                       </p>
                     )}
-                    {psychologist.city && (
+                    {psychologist.professional_email && (
                       <div className="flex items-center gap-1 mt-1">
-                        <MapPin size={12} className="text-muted-foreground" />
+                        <Mail size={12} className="text-muted-foreground" />
                         <span className="text-xs text-muted-foreground truncate">
-                          {psychologist.city}
+                          {psychologist.professional_email}
                         </span>
                       </div>
+                    )}
+                    {!onlineOnly && (
+                      <>
+                        {psychologist.city && (
+                          <div className="flex items-center gap-1 mt-1">
+                            <MapPin size={12} className="text-muted-foreground" />
+                            <span className="text-xs text-muted-foreground truncate">
+                              {psychologist.city}{psychologist.state && `, ${psychologist.state}`}
+                            </span>
+                          </div>
+                        )}
+                        {psychologist.address && (
+                          <p className="text-xs text-muted-foreground mt-1 truncate">
+                            Endereço: {psychologist.address}
+                          </p>
+                        )}
+                      </>
                     )}
                     {/* Rating display - placeholder for future implementation */}
                     <div className="flex items-center gap-1 mt-1">
