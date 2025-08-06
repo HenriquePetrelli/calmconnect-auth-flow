@@ -19,15 +19,20 @@ import { DocumentViewer } from './DocumentViewer';
 const extractDocumentPath = (url?: string): string | undefined => {
   if (!url) return undefined;
   
-  // Se a URL contém o bucket name, extrair o path após o bucket
-  const bucketMatch = url.match(/\/storage\/v1\/object\/public\/psychologist-documents\/(.+)$/);
-  if (bucketMatch) {
-    return bucketMatch[1];
+  // Remove parâmetros de query se existirem
+  const cleanUrl = url.split('?')[0];
+  
+  // Padrão para URL do Supabase Storage
+  const supabasePattern = /\/storage\/v1\/object\/public\/([^/]+\/.+)$/;
+  const supabaseMatch = cleanUrl.match(supabasePattern);
+  
+  if (supabaseMatch) {
+    return supabaseMatch[1];
   }
   
-  // Se a URL é apenas o path, retornar como está
-  if (!url.startsWith('http')) {
-    return url;
+  // Se já for um path simples (sem http)
+  if (!cleanUrl.startsWith('http')) {
+    return cleanUrl;
   }
   
   return undefined;
@@ -352,8 +357,16 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
                                   </Button>
                                 </div>
                               </div>
-                              <DocumentViewer documentPath={extractDocumentPath(selectedPsychologist.document_url)} />
-                            </div>
+                             {selectedPsychologist.document_url ? (
+                                <div className="space-y-4">
+                                  <DocumentViewer 
+                                    documentPath={extractDocumentPath(selectedPsychologist.document_url)} 
+                                  />
+                                </div>
+                              ) : (
+                                <p className="text-sm text-muted-foreground">Nenhum documento anexado</p>
+                                )}
+                                </div>
                           ) : (
                             <p className="text-sm text-muted-foreground">Nenhum documento anexado</p>
                           )}
