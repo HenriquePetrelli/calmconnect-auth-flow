@@ -26,59 +26,60 @@ export const PsychologistSelection: React.FC<PsychologistSelectionProps> = ({
   const { toast } = useToast();
 
   const fetchPsychologists = async () => {
-  try {
-    setLoading(true);
-    
-    // Buscar diretamente da tabela psychologists com approved = true
-    const { data, error } = await supabase
-      .from('psychologists')
-      .select('*')
-      .eq('approved', true)
-      .order('full_name', { ascending: true });
-
-    if (error) throw error;
-
-    // Mapear para o formato PsychologistData
-    const formattedData: PsychologistData[] = data?.map(psych => ({
-      id: psych.id,
-      user_id: psych.user_id,
-      full_name: psych.full_name,
-      specialty: psych.specialization, // Usar specialization como specialty
-      specialization: psych.specialization,
-      bio: psych.bio,
-      crp_number: psych.crp_number,
-      city: psych.city,
-      address: psych.address,
-      age: psych.age,
-      approved: psych.approved,
-      // Adicionar outros campos necessários
-      state: psych.state,
-      accepts_presential: psych.accepts_presential,
-      document_url: psych.document_url
-    })) || [];
-
-    setPsychologists(formattedData);
-    
-    // Extrair especialidades únicas para filtro
-    const uniqueSpecialties = Array.from(
-      new Set(
-        formattedData
-          .map(p => p.specialization)
-          .filter(Boolean)
-      )
-    );
-    setSpecialties(uniqueSpecialties);
-    
-  } catch (error: any) {
-    console.error('Error fetching psychologists:', error);
-    toast({
-      title: 'Erro',
-      description: 'Erro ao carregar psicólogos',
-      variant: 'destructive',
-    });
-  } finally {
-    setLoading(false);
-  }
+    try {
+      setLoading(true);
+      
+      // Buscar diretamente da tabela psychologists com approved = true
+      const { data, error } = await supabase
+        .from('psychologists')
+        .select('*')
+        .eq('approved', true)
+        .order('full_name', { ascending: true });
+  
+      if (error) throw error;
+  
+      // Mapear para o formato PsychologistData
+      const formattedData: PsychologistData[] = data?.map(psych => ({
+        id: psych.id,
+        user_id: psych.user_id,
+        full_name: psych.full_name,
+        specialty: psych.specialization, // Usar specialization como specialty
+        specialization: psych.specialization,
+        bio: psych.bio,
+        crp_number: psych.crp_number,
+        city: psych.city,
+        address: psych.address,
+        age: psych.age,
+        approved: psych.approved,
+        // Adicionar outros campos necessários
+        state: psych.state,
+        accepts_presential: psych.accepts_presential,
+        document_url: psych.document_url
+      })) || [];
+  
+      setPsychologists(formattedData);
+      
+      // Extrair especialidades únicas para filtro
+      const uniqueSpecialties = Array.from(
+        new Set(
+          formattedData
+            .map(p => p.specialization)
+            .filter(Boolean)
+        )
+      );
+      setSpecialties(uniqueSpecialties);
+      
+    } catch (error: any) {
+      console.error('Error fetching psychologists:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao carregar psicólogos',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Apply filters
   useEffect(() => {
