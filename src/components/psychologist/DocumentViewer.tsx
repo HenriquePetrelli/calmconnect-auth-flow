@@ -21,12 +21,11 @@ export const DocumentViewer = ({ documentPath }: DocumentViewerProps) => {
     if (!signedUrl || !documentPath) return;
     
     try {
-      // Usamos fetch com credentials: 'include' para garantir que cookies sejam enviados
       const response = await fetch(signedUrl, {
         credentials: 'include'
       });
       
-      if (!response.ok) throw new Error(`Falha ao baixar arquivo: ${response.statusText}`);
+      if (!response.ok) throw new Error(`Falha ao baixar: ${response.statusText}`);
       
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
@@ -37,7 +36,6 @@ export const DocumentViewer = ({ documentPath }: DocumentViewerProps) => {
       document.body.appendChild(a);
       a.click();
       
-      // Limpeza
       setTimeout(() => {
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
@@ -45,15 +43,14 @@ export const DocumentViewer = ({ documentPath }: DocumentViewerProps) => {
       
       toast.success('Download iniciado');
     } catch (err) {
-      console.error('Error downloading file:', err);
-      toast.error('Erro ao fazer download do arquivo');
+      console.error('Erro no download:', err);
+      toast.error('Falha ao baixar documento');
     }
   };
 
   const openInNewTab = () => {
     if (!signedUrl) return;
     
-    // Abre em nova aba com noopener por segurança
     const newWindow = window.open('', '_blank', 'noopener,noreferrer');
     if (newWindow) {
       newWindow.location.href = signedUrl;
@@ -88,11 +85,11 @@ export const DocumentViewer = ({ documentPath }: DocumentViewerProps) => {
         <div className="text-center">
           <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <p className="text-sm text-muted-foreground mb-2">
-            {error?.message || error || 'Erro ao carregar documento'}
+            {error?.message || 'Erro ao carregar documento'}
           </p>
-          {error && (error.includes('403') || error.message?.includes('403')) && (
+          {error?.message?.includes('403') && (
             <p className="text-xs text-red-600 mb-4">
-              Erro de permissão - verifique se você tem acesso a este documento
+              Erro de permissão - verifique se você tem acesso
             </p>
           )}
           <Button 
@@ -114,7 +111,6 @@ export const DocumentViewer = ({ documentPath }: DocumentViewerProps) => {
   const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension);
   const isPDF = extension === 'pdf';
 
-  // Só renderiza o visualizador no client-side
   if (!isClient) {
     return (
       <div className="border rounded-lg p-8 bg-muted/30">
@@ -127,7 +123,6 @@ export const DocumentViewer = ({ documentPath }: DocumentViewerProps) => {
 
   return (
     <div className="border rounded-lg overflow-hidden bg-muted/30">
-      {/* Barra de ações */}
       <div className="p-3 border-b bg-background/50 flex justify-between items-center">
         <span className="text-sm font-medium text-muted-foreground truncate max-w-[200px]">
           Documento: {filename}
@@ -149,18 +144,17 @@ export const DocumentViewer = ({ documentPath }: DocumentViewerProps) => {
             className="gap-2"
           >
             <ExternalLink className="h-3 w-3" />
-            Abrir em nova aba
+            Abrir
           </Button>
         </div>
       </div>
 
-      {/* Visualização do documento */}
       <div className="w-full min-h-[400px] max-h-[600px] overflow-auto">
         {isImage && (
           <div className="p-4 flex items-center justify-center bg-muted/10">
             <img 
               src={signedUrl} 
-              alt="Documento do psicólogo"
+              alt="Documento"
               className="max-w-full max-h-[500px] object-contain rounded shadow-sm"
               onError={(e) => {
                 (e.target as HTMLImageElement).style.display = 'none';
@@ -174,7 +168,7 @@ export const DocumentViewer = ({ documentPath }: DocumentViewerProps) => {
             <iframe 
               src={`${signedUrl}#toolbar=0&navpanes=0&scrollbar=0`}
               className="w-full h-full border-none"
-              title="Visualização do documento PDF"
+              title="Visualização do PDF"
               sandbox="allow-same-origin"
             />
           </div>
@@ -186,9 +180,15 @@ export const DocumentViewer = ({ documentPath }: DocumentViewerProps) => {
             <p className="text-sm text-muted-foreground mb-4">
               Tipo de documento não suportado para visualização
             </p>
-            <p className="text-xs text-muted-foreground">
-              Use o botão "Download" acima para baixar o arquivo
-            </p>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleDownload}
+              className="gap-2"
+            >
+              <Download className="h-3 w-3" />
+              Baixar arquivo
+            </Button>
           </div>
         )}
       </div>
