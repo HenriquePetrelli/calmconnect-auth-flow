@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 interface PsychologistFiltersProps {
   specialty: string;
   setSpecialty: (value: string) => void;
-  onlineOnly: boolean = true;
+  onlineOnly: boolean;
   setOnlineOnly: (value: boolean) => void;
   specialties: string[];
 }
