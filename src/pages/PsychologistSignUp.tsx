@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { PsychologistRegistrationForm } from "@/components/psychologist/PsychologistRegistrationForm";
 import Logo from "@/components/Logo";
+import BackButton from "@/components/BackButton";
 import { useEffect } from "react";
 
 const PsychologistSignUp = () => {
@@ -21,6 +22,9 @@ const PsychologistSignUp = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-4xl space-y-8">
+        <div className="flex items-center gap-4 mb-8">
+          <BackButton />
+        </div>
         <Logo className="mb-12" />
         
         <PsychologistRegistrationForm 

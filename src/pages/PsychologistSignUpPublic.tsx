@@ -12,6 +12,7 @@ import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import Logo from "@/components/Logo";
+import BackButton from "@/components/BackButton";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LocationFields } from "@/components/psychologist/LocationFields";
@@ -231,6 +232,9 @@ const PsychologistSignUpPublic = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-2xl space-y-8">
+        <div className="flex items-center gap-4 mb-8">
+          <BackButton />
+        </div>
         <Logo className="mb-12" />
         
         <Card>
