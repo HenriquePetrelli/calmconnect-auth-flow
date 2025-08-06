@@ -60,6 +60,7 @@ export const PsychologistSelection: React.FC<PsychologistSelectionProps> = ({
           city: 'São Paulo', // Mock data - you can get from user's profile later
           address: 'Endereço disponível para consultas presenciais', // Mock data
           age: Math.floor(Math.random() * 20) + 30, // Mock data
+          approved: psychData?.approved || false,
         };
       }) || [];
 

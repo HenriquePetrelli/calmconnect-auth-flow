@@ -13,6 +13,7 @@ export interface PsychologistData {
   crp_number?: string;
   age?: number;
   address?: string;
+  approved: boolean;
 }
 
 interface PsychologistListProps {
@@ -26,6 +27,9 @@ export const PsychologistList: React.FC<PsychologistListProps> = ({
   onSelect,
   loading = false
 }) => {
+  // Filtrar apenas psicólogos aprovados
+  const approvedPsychologists = psychologists.filter(psych => psych.approved === true);
+
   if (loading) {
     return (
       <div className="space-y-3">
@@ -49,16 +53,16 @@ export const PsychologistList: React.FC<PsychologistListProps> = ({
     );
   }
 
-  if (psychologists.length === 0) {
+  if (approvedPsychologists.length === 0) {
     return (
       <Card>
         <CardContent className="p-8 text-center">
           <User className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">
-            Nenhum psicólogo encontrado
+            Nenhum psicólogo disponível no momento
           </h3>
           <p className="text-muted-foreground">
-            Tente ajustar os filtros para encontrar um profissional.
+            Todos os nossos profissionais estão em atendimento ou não há cadastros aprovados.
           </p>
         </CardContent>
       </Card>
@@ -67,7 +71,7 @@ export const PsychologistList: React.FC<PsychologistListProps> = ({
 
   return (
     <div className="space-y-3">
-      {psychologists.map((psychologist) => (
+      {approvedPsychologists.map((psychologist) => (
         <Card 
           key={psychologist.id} 
           className="cursor-pointer hover:shadow-md transition-shadow"
