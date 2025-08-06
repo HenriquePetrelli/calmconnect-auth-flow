@@ -15,22 +15,21 @@ import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { DocumentViewer } from './DocumentViewer';
 
-// Função para extrair o path do documento da URL do Supabase Storage
 const extractDocumentPath = (url?: string): string | undefined => {
   if (!url) return undefined;
   
-  // Remove parâmetros de query se existirem
+  // Remove query parameters if any
   const cleanUrl = url.split('?')[0];
   
-  // Padrão para URL do Supabase Storage
-  const supabasePattern = /\/storage\/v1\/object\/public\/([^/]+\/.+)$/;
+  // Supabase storage pattern
+  const supabasePattern = /\/storage\/v1\/object\/public\/psychologist-documents\/(.+)$/;
   const supabaseMatch = cleanUrl.match(supabasePattern);
   
   if (supabaseMatch) {
     return supabaseMatch[1];
   }
   
-  // Se já for um path simples (sem http)
+  // If it's already a simple path (without http)
   if (!cleanUrl.startsWith('http')) {
     return cleanUrl;
   }
