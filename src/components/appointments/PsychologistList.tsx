@@ -14,6 +14,9 @@ export interface PsychologistData {
   age?: number;
   address?: string;
   approved: boolean;
+  state?: string;
+  accepts_presential?: boolean;
+  document_url?: string;
 }
 
 interface PsychologistListProps {
@@ -29,6 +32,7 @@ export const PsychologistList: React.FC<PsychologistListProps> = ({
 }) => {
   // Filtrar apenas psicólogos aprovados
   const approvedPsychologists = psychologists.filter(psych => psych.approved === true);
+  console.log('Approved psychologists:', approvedPsychologists);
 
   if (loading) {
     return (
