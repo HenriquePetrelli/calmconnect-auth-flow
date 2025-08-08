@@ -94,10 +94,11 @@ const PsychologistSignUpPublic = () => {
 
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
+    let authData: any = null;
     
     try {
       // First, sign up with auto-confirm to get user authenticated immediately for document upload
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      const authResponse = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
@@ -113,11 +114,12 @@ const PsychologistSignUpPublic = () => {
         }
       });
 
-      if (authError) throw authError;
+      if (authResponse.error) throw authResponse.error;
+      authData = authResponse.data;
 
       if (authData.user) {
         // Wait a moment for auth state to stabilize
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
         // Upload document if there's one stored temporarily
         let finalDocumentUrl = data.document_url;
@@ -139,7 +141,10 @@ const PsychologistSignUpPublic = () => {
               
               const { data: uploadData, error: uploadError } = await supabase.storage
                 .from('psychologist-documents')
-                .upload(fileName, file);
+                .upload(fileName, file, {
+                  cacheControl: '3600',
+                  upsert: false
+                });
 
               if (uploadError) throw uploadError;
               
@@ -159,25 +164,32 @@ const PsychologistSignUpPublic = () => {
           }
         }
 
-        // Create psychologist registration entry
-        const { error: psychError } = await supabase.from('psychologists').insert({
-          user_id: authData.user.id,
-          full_name: data.fullName,
-          email: data.email,
-          crp_number: data.crp,
-          specialization: data.specialty,
-          bio: data.bio,
-          state: data.state,
-          city: data.city,
-          accepts_presential: data.accepts_presential,
-          address: data.accepts_presential ? data.address : null,
-          document_url: finalDocumentUrl,
-          approval_status: 'pending',
+        // Use the atomic stored procedure to create both psychologist and registration records
+        const { data: profileResult, error: profileError } = await supabase.rpc('create_psychologist_profile', {
+          p_user_id: authData.user.id,
+          p_full_name: data.fullName,
+          p_email: data.email,
+          p_crp_number: data.crp,
+          p_specialization: data.specialty,
+          p_bio: data.bio,
+          p_state: data.state,
+          p_city: data.city,
+          p_accepts_presential: data.accepts_presential,
+          p_address: data.accepts_presential ? data.address : null,
+          p_document_url: finalDocumentUrl,
+          p_cpf: data.cpf,
+          p_professional_email: data.professionalEmail
         });
 
-        if (psychError) {
-          console.error('Erro ao inserir psicólogo:', psychError);
-          throw psychError;
+        if (profileError) {
+          console.error('Erro na stored procedure:', profileError);
+          throw profileError;
+        }
+
+        // Type assertion for the stored procedure result
+        const result = profileResult as { success?: boolean; error?: string };
+        if (!result?.success) {
+          throw new Error(result?.error || 'Falha ao criar perfil de psicólogo');
         }
 
         setIsSuccess(true);
@@ -185,10 +197,24 @@ const PsychologistSignUpPublic = () => {
       }
     } catch (error: any) {
       console.error('Erro no cadastro:', error);
+      
+      // Rollback user creation if profile creation fails
+      if (authData?.user && error.message?.includes('perfil')) {
+        try {
+          // Note: In a real application, this would require admin privileges
+          // For now, we'll just log the issue
+          console.warn('User created but profile failed. Manual cleanup may be required for user:', authData.user.id);
+        } catch (cleanupError) {
+          console.error('Cleanup error:', cleanupError);
+        }
+      }
+      
       if (error.message?.includes('violates row-level security')) {
-        toast.error("Erro de permissão. Tente fazer login primeiro ou contate o suporte.");
+        toast.error("Erro de permissão. Tente novamente em alguns segundos.");
+      } else if (error.message?.includes('duplicate key')) {
+        toast.error("Email ou CRP já cadastrado. Use dados diferentes.");
       } else {
-        toast.error(error.message || "Erro ao criar conta");
+        toast.error(error.message || "Erro ao criar conta. Tente novamente.");
       }
     } finally {
       setIsSubmitting(false);

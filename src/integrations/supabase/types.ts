@@ -70,41 +70,54 @@ export type Database = {
       brazilian_cities: {
         Row: {
           id: number
+          latitude: number | null
+          longitude: number | null
           name: string
-          state: string | null
+          state: string
         }
         Insert: {
           id?: number
+          latitude?: number | null
+          longitude?: number | null
           name: string
-          state?: string | null
+          state: string
         }
         Update: {
           id?: number
+          latitude?: number | null
+          longitude?: number | null
           name?: string
-          state?: string | null
+          state?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "brazilian_cities_state_fkey"
-            columns: ["state"]
-            isOneToOne: false
-            referencedRelation: "brazilian_states"
-            referencedColumns: ["abbreviation"]
-          },
-        ]
+        Relationships: []
       }
       brazilian_states: {
         Row: {
           abbreviation: string
+          id: number
+          latitude: number
+          longitude: number
           name: string
+          region: string
+          uf_code: number
         }
         Insert: {
           abbreviation: string
+          id?: number
+          latitude: number
+          longitude: number
           name: string
+          region: string
+          uf_code: number
         }
         Update: {
           abbreviation?: string
+          id?: number
+          latitude?: number
+          longitude?: number
           name?: string
+          region?: string
+          uf_code?: number
         }
         Relationships: []
       }
@@ -568,6 +581,24 @@ export type Database = {
           admin_email: string
           admin_password: string
           admin_name: string
+        }
+        Returns: Json
+      }
+      create_psychologist_profile: {
+        Args: {
+          p_user_id: string
+          p_full_name: string
+          p_email: string
+          p_crp_number: string
+          p_specialization: string
+          p_bio: string
+          p_state: string
+          p_city: string
+          p_accepts_presential: boolean
+          p_address?: string
+          p_document_url?: string
+          p_cpf?: string
+          p_professional_email?: string
         }
         Returns: Json
       }
