@@ -84,14 +84,14 @@ export const DocumentViewer = ({ documentPath }: DocumentViewerProps) => {
       <div className="border rounded-lg p-8 bg-muted/30">
         <div className="text-center">
           <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-sm text-muted-foreground mb-2">
-            {error?.message || 'Erro ao carregar documento'}
-          </p>
-          {error?.message?.includes('403') && (
-            <p className="text-xs text-red-600 mb-4">
-              Erro de permissão - verifique se você tem acesso
-            </p>
-          )}
+           <p className="text-sm text-muted-foreground mb-2">
+             {error?.message || 'Erro ao carregar documento'}
+           </p>
+           {error?.message?.includes('403') && (
+             <p className="text-xs text-red-600 mb-4">
+               Erro de permissão - verifique se você tem acesso
+             </p>
+           )}
           <Button 
             variant="outline" 
             size="sm" 
