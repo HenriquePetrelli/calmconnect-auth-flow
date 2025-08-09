@@ -9,14 +9,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import Logo from "@/components/Logo";
 import BackButton from "@/components/BackButton";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LocationFields } from "@/components/psychologist/LocationFields";
-import { DocumentUpload } from "@/components/psychologist/DocumentUpload";
+import { PsychologistService } from "@/services/psychologist.service";
 
 const specializations = [
   'Psicologia Clínica',
@@ -48,7 +47,6 @@ const formSchema = z.object({
   city: z.string().min(1, "Cidade é obrigatória"),
   accepts_presential: z.boolean(),
   address: z.string().optional(),
-  document_url: z.string().min(1, "Documento é obrigatório"),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "As senhas não coincidem",
   path: ["confirmPassword"],
@@ -68,7 +66,7 @@ const PsychologistSignUpPublic = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [documentUrl, setDocumentUrl] = useState<string | null>(null);
+  const [documentFile, setDocumentFile] = useState<File | null>(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -86,138 +84,59 @@ const PsychologistSignUpPublic = () => {
       city: "",
       accepts_presential: false,
       address: "",
-      document_url: "",
     },
   });
 
   const acceptsPresential = form.watch('accepts_presential');
 
   const onSubmit = async (data: FormData) => {
+    if (!documentFile) {
+      toast.error("Por favor, envie um documento comprovante.");
+      return;
+    }
+
     setIsSubmitting(true);
-    let authData: any = null;
-    
-    try {
-      // First, sign up with auto-confirm to get user authenticated immediately for document upload
-      const authResponse = await supabase.auth.signUp({
+
+    const result = await PsychologistService.signUpPsychologist(
+      {
         email: data.email,
         password: data.password,
-        options: {
-          data: {
-            user_type: 'psychologist',
-            full_name: data.fullName,
-            cpf: data.cpf,
-            crp: data.crp,
-            professional_email: data.professionalEmail,
-            specialty: data.specialty,
-          },
-          emailRedirectTo: `${window.location.origin}/psychologist-login`
-        }
-      });
+        fullName: data.fullName,
+        cpf: data.cpf,
+        crp: data.crp,
+        professionalEmail: data.professionalEmail,
+        specialty: data.specialty,
+        bio: data.bio,
+        state: data.state,
+        city: data.city,
+        accepts_presential: data.accepts_presential,
+        address: data.address,
+      },
+      documentFile
+    );
 
-      if (authResponse.error) throw authResponse.error;
-      authData = authResponse.data;
+    setIsSubmitting(false);
 
-      if (authData.user) {
-        // Wait a moment for auth state to stabilize
-        await new Promise(resolve => setTimeout(resolve, 1000));
+    if (result.success) {
+      setIsSuccess(true);
+      toast.success("Cadastro realizado com sucesso! Verifique seu email para confirmar a conta.");
+    } else {
+      toast.error(result.error || "Erro ao criar conta. Tente novamente.");
+    }
+  };
 
-        // Upload document if there's one stored temporarily
-        let finalDocumentUrl = data.document_url;
-        
-        if (data.document_url.startsWith('temp://')) {
-          const tempDocumentData = sessionStorage.getItem('temp_document');
-          if (tempDocumentData) {
-            try {
-              const fileData = JSON.parse(tempDocumentData);
-              
-              // Convert data URL back to file
-              const response = await fetch(fileData.dataUrl);
-              const blob = await response.blob();
-              const file = new File([blob], fileData.name, { type: fileData.type });
-              
-              // Upload to Supabase storage
-              const fileExt = fileData.name.split('.').pop();
-              const fileName = `${authData.user.id}/document_${crypto.randomUUID()}.${fileExt}`;
-              
-              const { data: uploadData, error: uploadError } = await supabase.storage
-                .from('psychologist-documents')
-                .upload(fileName, file, {
-                  cacheControl: '3600',
-                  upsert: false
-                });
-
-              if (uploadError) throw uploadError;
-              
-              const { data: { publicUrl } } = supabase.storage
-                .from('psychologist-documents')
-                .getPublicUrl(uploadData.path);
-
-              finalDocumentUrl = publicUrl;
-              
-              // Clear temporary storage
-              sessionStorage.removeItem('temp_document');
-            } catch (uploadError) {
-              console.error('Erro no upload do documento:', uploadError);
-              toast.error('Erro ao enviar documento. Tente novamente.');
-              throw uploadError;
-            }
-          }
-        }
-
-        // Use the atomic stored procedure to create both psychologist and registration records
-        const { data: profileResult, error: profileError } = await supabase.rpc('create_psychologist_profile', {
-          p_user_id: authData.user.id,
-          p_full_name: data.fullName,
-          p_email: data.email,
-          p_crp_number: data.crp,
-          p_specialization: data.specialty,
-          p_bio: data.bio,
-          p_state: data.state,
-          p_city: data.city,
-          p_accepts_presential: data.accepts_presential,
-          p_address: data.accepts_presential ? data.address : null,
-          p_document_url: finalDocumentUrl,
-          p_cpf: data.cpf,
-          p_professional_email: data.professionalEmail
-        });
-
-        if (profileError) {
-          console.error('Erro na stored procedure:', profileError);
-          throw profileError;
-        }
-
-        // Type assertion for the stored procedure result
-        const result = profileResult as { success?: boolean; error?: string };
-        if (!result?.success) {
-          throw new Error(result?.error || 'Falha ao criar perfil de psicólogo');
-        }
-
-        setIsSuccess(true);
-        toast.success("Cadastro realizado com sucesso! Verifique seu email para confirmar a conta.");
-      }
-    } catch (error: any) {
-      console.error('Erro no cadastro:', error);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
       
-      // Rollback user creation if profile creation fails
-      if (authData?.user && error.message?.includes('perfil')) {
-        try {
-          // Note: In a real application, this would require admin privileges
-          // For now, we'll just log the issue
-          console.warn('User created but profile failed. Manual cleanup may be required for user:', authData.user.id);
-        } catch (cleanupError) {
-          console.error('Cleanup error:', cleanupError);
-        }
+      // Validar arquivo
+      const validation = PsychologistService.validateFile(file);
+      if (!validation.valid) {
+        toast.error(validation.error || "Arquivo inválido");
+        return;
       }
       
-      if (error.message?.includes('violates row-level security')) {
-        toast.error("Erro de permissão. Tente novamente em alguns segundos.");
-      } else if (error.message?.includes('duplicate key')) {
-        toast.error("Email ou CRP já cadastrado. Use dados diferentes.");
-      } else {
-        toast.error(error.message || "Erro ao criar conta. Tente novamente.");
-      }
-    } finally {
-      setIsSubmitting(false);
+      setDocumentFile(file);
     }
   };
 
@@ -457,15 +376,24 @@ const PsychologistSignUpPublic = () => {
                   />
                 )}
 
-                <DocumentUpload
-                  userId="temp-user-id"
-                  onFileChange={(url) => {
-                    setDocumentUrl(url);
-                    form.setValue('document_url', url || '');
-                  }}
-                  documentUrl={documentUrl}
-                  error={!!form.formState.errors.document_url}
-                />
+                <div className="space-y-2">
+                  <FormLabel>Documento Comprovante (CRP) *</FormLabel>
+                  <Input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={handleFileChange}
+                    required
+                    className="w-full"
+                  />
+                  <FormDescription>
+                    Envie um PDF ou imagem do seu CRP (máx. 5MB)
+                  </FormDescription>
+                  {documentFile && (
+                    <p className="text-sm text-green-600">
+                      Arquivo selecionado: {documentFile.name}
+                    </p>
+                  )}
+                </div>
 
                 <FormField
                   control={form.control}
