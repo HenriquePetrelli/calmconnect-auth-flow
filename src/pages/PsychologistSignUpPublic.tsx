@@ -382,7 +382,7 @@ const PsychologistSignUpPublic = () => {
                 )}
 
                 <div className="space-y-2">
-                  <FormLabel>Documento Comprovante (CRP) *</FormLabel>
+                  <FormLabel>Documento de Identificação *</FormLabel>
                   <Input
                     type="file"
                     accept=".pdf,.jpg,.jpeg,.png"
@@ -391,7 +391,7 @@ const PsychologistSignUpPublic = () => {
                     className="w-full"
                   />
                   <FormDescription>
-                    Envie um PDF ou imagem do seu CRP (máx. 5MB)
+                    Envie documento de identidade, CNH ou CRP (PDF, JPG ou PNG - máx. 5MB)
                   </FormDescription>
                   {documentFile && (
                     <p className="text-sm text-green-600">

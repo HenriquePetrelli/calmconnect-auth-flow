@@ -22,6 +22,7 @@ export class PsychologistService {
     documentFile?: File
   ): Promise<{ success: boolean; error?: string }> {
     let userId: string | null = null;
+    let documentUrl = '';
     
     try {
       // 1. Validar dados antes de qualquer operação
@@ -30,7 +31,25 @@ export class PsychologistService {
         return { success: false, error: validationError };
       }
 
-      // 2. Criar usuário no Auth
+      // 2. Validar documento antes de criar usuário
+      if (!documentFile) {
+        return { success: false, error: 'Documento é obrigatório' };
+      }
+
+      const documentValidation = this.validateFile(documentFile);
+      if (!documentValidation.valid) {
+        return { success: false, error: documentValidation.error };
+      }
+
+      // 3. Upload do documento ANTES de criar usuário para evitar dados órfãos
+      const tempUserId = uuidv4(); // Usar ID temporário para upload
+      const uploadResult = await this.uploadDocument(documentFile, tempUserId);
+      if (!uploadResult.success) {
+        return { success: false, error: uploadResult.error };
+      }
+      documentUrl = uploadResult.url || '';
+
+      // 4. Criar usuário no Auth somente após validações
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -48,22 +67,17 @@ export class PsychologistService {
       });
 
       if (authError || !authData.user) {
+        // Limpar documento se falhou na criação do usuário
+        await this.cleanupTempDocument(tempUserId);
         throw new Error(authError?.message || 'Falha ao criar usuário');
       }
 
       userId = authData.user.id;
 
-      // 3. Upload do documento (se existir)
-      let documentUrl = '';
-      if (documentFile) {
-        const uploadResult = await this.uploadDocument(documentFile, userId);
-        if (!uploadResult.success) {
-          throw new Error(uploadResult.error);
-        }
-        documentUrl = uploadResult.url || '';
-      }
+      // 5. Mover documento para pasta do usuário real
+      const finalDocumentUrl = await this.moveDocumentToUserFolder(documentUrl, tempUserId, userId);
 
-      // 4. Criar perfil completo em transação
+      // 6. Criar perfil completo em transação
       const { data: profileResult, error: dbError } = await supabase.rpc('create_psychologist_profile', {
         p_user_id: userId,
         p_full_name: formData.fullName,
@@ -75,7 +89,7 @@ export class PsychologistService {
         p_city: formData.city,
         p_accepts_presential: formData.accepts_presential,
         p_address: formData.accepts_presential ? formData.address : null,
-        p_document_url: documentUrl,
+        p_document_url: finalDocumentUrl,
         p_cpf: formData.cpf,
         p_professional_email: formData.professionalEmail
       });
@@ -166,11 +180,71 @@ export class PsychologistService {
         .delete()
         .eq('user_id', userId);
 
-      // 3. Note: Cannot remove user from Auth with client-side code
-      // This would require admin privileges or edge function
-      console.warn('User cleanup incomplete - auth user remains:', userId);
     } catch (cleanupError) {
       console.error('Erro no cleanup:', cleanupError);
+    }
+  }
+
+  private static async cleanupTempDocument(tempUserId: string): Promise<void> {
+    try {
+      const { data: files } = await supabase.storage
+        .from('psychologist-documents')
+        .list(tempUserId);
+      
+      if (files && files.length > 0) {
+        const filesToRemove = files.map(f => `${tempUserId}/${f.name}`);
+        await supabase.storage
+          .from('psychologist-documents')
+          .remove(filesToRemove);
+      }
+    } catch (error) {
+      console.error('Erro ao limpar documento temporário:', error);
+    }
+  }
+
+  private static async moveDocumentToUserFolder(
+    documentUrl: string, 
+    tempUserId: string, 
+    realUserId: string
+  ): Promise<string> {
+    try {
+      // Extrair o nome do arquivo da URL
+      const urlParts = documentUrl.split('/');
+      const fileName = urlParts[urlParts.length - 1];
+      const tempPath = `${tempUserId}/${fileName}`;
+      const newPath = `${realUserId}/${fileName}`;
+
+      // Baixar o arquivo da pasta temporária
+      const { data: fileData, error: downloadError } = await supabase.storage
+        .from('psychologist-documents')
+        .download(tempPath);
+
+      if (downloadError) throw downloadError;
+
+      // Upload para a pasta do usuário real
+      const { error: uploadError } = await supabase.storage
+        .from('psychologist-documents')
+        .upload(newPath, fileData, {
+          cacheControl: '3600',
+          upsert: false,
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Remover arquivo temporário
+      await supabase.storage
+        .from('psychologist-documents')
+        .remove([tempPath]);
+
+      // Retornar nova URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('psychologist-documents')
+        .getPublicUrl(newPath);
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Erro ao mover documento:', error);
+      return documentUrl; // Retornar URL original em caso de erro
     }
   }
 
@@ -222,7 +296,7 @@ export class PsychologistService {
   }
 
   static validateFile(file: File): { valid: boolean; error?: string } {
-    const validTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+    const validTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
     const maxSize = 5 * 1024 * 1024; // 5MB
     
     if (!validTypes.includes(file.type)) {
