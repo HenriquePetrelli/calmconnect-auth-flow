@@ -96,11 +96,25 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   };
 
   useEffect(() => {
-    checkSubscription();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+    // Primeiro, verificar se há sessão inicial
+    const initializeSubscription = async () => {
+      const { data: session } = await supabase.auth.getSession();
+      if (session?.session?.user) {
+        // Só fazer a verificação se o usuário estiver logado
         checkSubscription();
+      } else {
+        setLoading(false);
+      }
+    };
+
+    initializeSubscription();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        // Usar setTimeout para evitar problemas de concorrência
+        setTimeout(() => {
+          checkSubscription();
+        }, 0);
       } else if (event === 'SIGNED_OUT') {
         setSubscribed(false);
         setSubscriptionTier(null);
