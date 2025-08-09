@@ -576,6 +576,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_access_document: {
+        Args: { bucket_name: string; object_name: string }
+        Returns: boolean
+      }
+      can_upload_document: {
+        Args: { bucket_name: string; object_name: string }
+        Returns: boolean
+      }
       create_admin_account: {
         Args: {
           admin_email: string

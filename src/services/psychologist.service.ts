@@ -128,7 +128,7 @@ export class PsychologistService {
       const filePath = `${userId}/${fileName}`;
 
       const { error } = await supabase.storage
-        .from('psychologist-documents')
+        .from('documents')
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: false,
@@ -138,7 +138,7 @@ export class PsychologistService {
       if (error) throw error;
 
       const { data: { publicUrl } } = supabase.storage
-        .from('psychologist-documents')
+        .from('documents')
         .getPublicUrl(filePath);
 
       return { success: true, url: publicUrl };
@@ -154,13 +154,13 @@ export class PsychologistService {
     try {
       // 1. Remover do storage se existir
       const { data: files } = await supabase.storage
-        .from('psychologist-documents')
+        .from('documents')
         .list(userId);
       
       if (files && files.length > 0) {
         const filesToRemove = files.map(f => `${userId}/${f.name}`);
         await supabase.storage
-          .from('psychologist-documents')
+          .from('documents')
           .remove(filesToRemove);
       }
 
@@ -188,13 +188,13 @@ export class PsychologistService {
   private static async cleanupTempDocument(tempUserId: string): Promise<void> {
     try {
       const { data: files } = await supabase.storage
-        .from('psychologist-documents')
+        .from('documents')
         .list(tempUserId);
       
       if (files && files.length > 0) {
         const filesToRemove = files.map(f => `${tempUserId}/${f.name}`);
         await supabase.storage
-          .from('psychologist-documents')
+          .from('documents')
           .remove(filesToRemove);
       }
     } catch (error) {
@@ -216,14 +216,14 @@ export class PsychologistService {
 
       // Baixar o arquivo da pasta temporária
       const { data: fileData, error: downloadError } = await supabase.storage
-        .from('psychologist-documents')
+        .from('documents')
         .download(tempPath);
 
       if (downloadError) throw downloadError;
 
       // Upload para a pasta do usuário real
       const { error: uploadError } = await supabase.storage
-        .from('psychologist-documents')
+        .from('documents')
         .upload(newPath, fileData, {
           cacheControl: '3600',
           upsert: false,
@@ -233,12 +233,12 @@ export class PsychologistService {
 
       // Remover arquivo temporário
       await supabase.storage
-        .from('psychologist-documents')
+        .from('documents')
         .remove([tempPath]);
 
       // Retornar nova URL
       const { data: { publicUrl } } = supabase.storage
-        .from('psychologist-documents')
+        .from('documents')
         .getPublicUrl(newPath);
 
       return publicUrl;
