@@ -97,31 +97,36 @@ const PsychologistSignUpPublic = () => {
 
     setIsSubmitting(true);
 
-    const result = await PsychologistService.signUpPsychologist(
-      {
-        email: data.email,
-        password: data.password,
-        fullName: data.fullName,
-        cpf: data.cpf,
-        crp: data.crp,
-        professionalEmail: data.professionalEmail,
-        specialty: data.specialty,
-        bio: data.bio,
-        state: data.state,
-        city: data.city,
-        accepts_presential: data.accepts_presential,
-        address: data.address,
-      },
-      documentFile
-    );
+    try {
+      const result = await PsychologistService.signUpPsychologist(
+        {
+          email: data.email,
+          password: data.password,
+          fullName: data.fullName,
+          cpf: data.cpf.replace(/\D/g, ''), // Remove formatação
+          crp: data.crp,
+          professionalEmail: data.professionalEmail,
+          specialty: data.specialty,
+          bio: data.bio,
+          state: data.state,
+          city: data.city,
+          accepts_presential: data.accepts_presential,
+          address: data.address,
+        },
+        documentFile
+      );
 
-    setIsSubmitting(false);
-
-    if (result.success) {
-      setIsSuccess(true);
-      toast.success("Cadastro realizado com sucesso! Verifique seu email para confirmar a conta.");
-    } else {
-      toast.error(result.error || "Erro ao criar conta. Tente novamente.");
+      if (result.success) {
+        setIsSuccess(true);
+        toast.success("Cadastro realizado com sucesso! Verifique seu email para confirmar a conta.");
+      } else {
+        toast.error(result.error || "Erro ao criar conta. Tente novamente.");
+      }
+    } catch (error) {
+      console.error('Erro no submit:', error);
+      toast.error("Erro inesperado. Por favor, tente novamente.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
