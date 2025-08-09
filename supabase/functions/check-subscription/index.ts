@@ -31,16 +31,40 @@ serve(async (req) => {
     logStep("Stripe key verified");
 
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
+    if (!authHeader) {
+      logStep("No authorization header");
+      return new Response(JSON.stringify({ 
+        subscribed: false,
+        subscription_tier: null,
+        plan_limits: { appointments: 0, sos_uses: 0 },
+        current_usage: { appointments: 0, sos_uses: 0 }
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
     logStep("Authorization header found");
 
     const token = authHeader.replace("Bearer ", "");
     logStep("Authenticating user with token");
     
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
+    
+    if (userError || !userData.user?.email) {
+      logStep("Authentication failed or user not found", { error: userError?.message });
+      // Retornar resposta padrão para usuários não autenticados ao invés de erro
+      return new Response(JSON.stringify({ 
+        subscribed: false,
+        subscription_tier: null,
+        plan_limits: { appointments: 0, sos_uses: 0 },
+        current_usage: { appointments: 0, sos_uses: 0 }
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+    
     const user = userData.user;
-    if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
