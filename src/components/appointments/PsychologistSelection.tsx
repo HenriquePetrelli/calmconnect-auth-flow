@@ -115,7 +115,7 @@ export const PsychologistSelection: React.FC<PsychologistSelectionProps> = ({
 
 
     setFilteredPsychologists(filtered);
-  }, [psychologists, specialty, onlineOnly, patientLocation]);
+  }, [psychologists, specialty, patientLocation]);
 
   useEffect(() => {
     fetchPsychologists();

@@ -282,27 +282,6 @@ export const PsychologistRegistrationForm = ({
               )}
             />
 
-            {acceptsPresential && (
-              <FormField
-                control={form.control}
-                name="address"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Endereço do Consultório *</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Rua, número, bairro, CEP"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Endereço completo onde você atende presencialmente
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
 
             <FormField
               control={form.control}

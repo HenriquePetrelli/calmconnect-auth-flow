@@ -411,7 +411,6 @@ export type Database = {
       }
       psychologists: {
         Row: {
-          accepts_presential: boolean | null
           address: string | null
           approval_status: string | null
           approved: boolean | null
@@ -437,7 +436,6 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
-          accepts_presential?: boolean | null
           address?: string | null
           approval_status?: string | null
           approved?: boolean | null
@@ -463,7 +461,6 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
-          accepts_presential?: boolean | null
           address?: string | null
           approval_status?: string | null
           approved?: boolean | null
@@ -593,21 +590,36 @@ export type Database = {
         Returns: Json
       }
       create_psychologist_profile: {
-        Args: {
-          p_user_id: string
-          p_full_name: string
-          p_email: string
-          p_crp_number: string
-          p_specialization: string
-          p_bio: string
-          p_state: string
-          p_city: string
-          p_accepts_presential: boolean
-          p_address?: string
-          p_document_url?: string
-          p_cpf?: string
-          p_professional_email?: string
-        }
+        Args:
+          | {
+              p_user_id: string
+              p_full_name: string
+              p_email: string
+              p_crp_number: string
+              p_specialization: string
+              p_bio: string
+              p_state: string
+              p_city: string
+              p_accepts_presential: boolean
+              p_address?: string
+              p_document_url?: string
+              p_cpf?: string
+              p_professional_email?: string
+            }
+          | {
+              p_user_id: string
+              p_full_name: string
+              p_email: string
+              p_crp_number: string
+              p_specialization: string
+              p_bio: string
+              p_state: string
+              p_city: string
+              p_address?: string
+              p_document_url?: string
+              p_cpf?: string
+              p_professional_email?: string
+            }
         Returns: Json
       }
       get_admin_metrics: {

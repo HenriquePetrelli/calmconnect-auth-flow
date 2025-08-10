@@ -9,6 +9,7 @@ export interface PsychologistData {
   specialty?: string;
   specialization?: string;
   city?: string;
+  state?: string;
   bio?: string;
   crp_number?: string;
   address?: string;
