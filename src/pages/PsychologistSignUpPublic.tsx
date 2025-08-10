@@ -45,6 +45,7 @@ const formSchema = z.object({
   bio: z.string().min(50, "A biografia deve ter pelo menos 50 caracteres"),
   state: z.string().min(1, "Estado é obrigatório"),
   city: z.string().min(1, "Cidade é obrigatória"),
+  accepts_presential: z.boolean().default(false),
   address: z.string().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "As senhas não coincidem",
@@ -73,6 +74,7 @@ const PsychologistSignUpPublic = () => {
       bio: "",
       state: "",
       city: "",
+      accepts_presential: false,
       address: "",
     },
   });
@@ -98,6 +100,7 @@ const PsychologistSignUpPublic = () => {
           bio: data.bio,
           state: data.state,
           city: data.city,
+          accepts_presential: data.accepts_presential,
           address: data.address,
         },
         documentFile
@@ -322,6 +325,24 @@ const PsychologistSignUpPublic = () => {
                 </div>
 
                 <LocationFields form={form} />
+
+                <FormField
+                  control={form.control}
+                  name="accepts_presential"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormControl>
+                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>Atende presencialmente</FormLabel>
+                        <FormDescription>
+                          Marque se você oferece atendimento presencial. Endereço será necessário.
+                        </FormDescription>
+                      </div>
+                    </FormItem>
+                  )}
+                />
 
                 <div className="space-y-2">
                   <FormLabel>Documento de Identificação *</FormLabel>
