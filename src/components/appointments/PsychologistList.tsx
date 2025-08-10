@@ -141,16 +141,10 @@ export const PsychologistList: React.FC<PsychologistListProps> = ({
           <CardContent className="p-8 text-center">
             <User className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium text-foreground mb-2">
-              {onlineOnly ? 
-                'Nenhum psicólogo aprovado no momento' : 
-                'Nenhum psicólogo disponível na sua região'
-              }
+                Nenhum psicólogo disponível no momento
             </h3>
             <p className="text-muted-foreground">
-              {onlineOnly ?
-                'Estamos analisando os cadastros dos profissionais. Por favor, verifique novamente mais tarde.' :
-                'Nenhum psicólogo disponível na sua região. Marque "Atendimento Online" para ver outros profissionais.'
-              }
+                Por favor, verifique novamente mais tarde.
             </p>
           </CardContent>
         </Card>
