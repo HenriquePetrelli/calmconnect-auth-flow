@@ -38,19 +38,7 @@ export const PsychologistFilters: React.FC<PsychologistFiltersProps> = ({
           </Select>
         </div>
 
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="onlineOnly"
-            checked={onlineOnly}
-            onCheckedChange={setOnlineOnly}
-          />
-          <label
-            htmlFor="onlineOnly"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-          >
-            Atendimento Online
-          </label>
-        </div>
+      
       </CardContent>
     </Card>
   );
