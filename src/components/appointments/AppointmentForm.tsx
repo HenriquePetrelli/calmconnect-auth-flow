@@ -25,7 +25,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
 }) => {
   const [date, setDate] = useState<Date>();
   const [time, setTime] = useState('');
-  const [duration, setDuration] = useState('60');
+  const [duration, setDuration] = useState('50');
   const [appointmentType, setAppointmentType] = useState('online');
   const [notes, setNotes] = useState('');
   
@@ -65,7 +65,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
     }
   };
 
-  const isFormValid = date && time && duration;
+  const isFormValid = date && time;
 
   return (
     <div className="space-y-6">
@@ -94,6 +94,25 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
               <p className="text-sm text-muted-foreground">
                 {psychologist.specialty || psychologist.specialization || 'Psicologia Geral'}
               </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Detalhes Fixos da Consulta */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Detalhes da Consulta</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <div className="text-sm text-muted-foreground">Duração</div>
+              <div className="flex items-center gap-2 font-medium"><Clock size={18} /> 50 minutos</div>
+            </div>
+            <div className="space-y-1">
+              <div className="text-sm text-muted-foreground">Tipo</div>
+              <div className="font-medium">Online</div>
             </div>
           </div>
         </CardContent>
@@ -159,46 +178,6 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
         </CardContent>
       </Card>
 
-      {/* Duration and Type */}
-      <div className="grid grid-cols-2 gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Clock size={18} />
-              Duração
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Select value={duration} onValueChange={setDuration}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="30">30 minutos</SelectItem>
-                <SelectItem value="45">45 minutos</SelectItem>
-                <SelectItem value="60">60 minutos</SelectItem>
-              </SelectContent>
-            </Select>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Tipo</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Select value={appointmentType} onValueChange={setAppointmentType}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="online">Online</SelectItem>
-                <SelectItem value="presencial">Presencial</SelectItem>
-              </SelectContent>
-            </Select>
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Notes */}
       <Card>
