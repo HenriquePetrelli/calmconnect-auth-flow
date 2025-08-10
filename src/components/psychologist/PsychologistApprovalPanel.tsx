@@ -277,17 +277,6 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
                               </p>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                              Tipo de Atendimento:
-                            </span>
-                            <Badge 
-                              variant={selectedPsychologist.accepts_presential ? "default" : "secondary"}
-                              className="text-xs"
-                            >
-                              {selectedPsychologist.accepts_presential ? 'Online e Presencial' : 'Apenas Online'}
-                            </Badge>
-                          </div>
                         </div>
 
                         {/* Seção de Localização */}
@@ -306,7 +295,7 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
                               <p className="text-sm text-muted-foreground mt-1">{selectedPsychologist.city || 'Não informado'}</p>
                             </div>
                           </div>
-                          {selectedPsychologist.accepts_presential && selectedPsychologist.address && (
+                          {selectedPsychologist.address && (
                             <div className="mt-4">
                               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Endereço do Consultório</label>
                               <p className="text-sm text-muted-foreground mt-1">{selectedPsychologist.address}</p>

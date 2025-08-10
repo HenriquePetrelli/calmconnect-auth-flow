@@ -25,7 +25,6 @@ interface PsychologistRegistration {
   bio?: string;
   state?: string;
   city?: string;
-  accepts_presential?: boolean;
   address?: string;
   document_url?: string;
   documents?: string[];
@@ -299,9 +298,6 @@ const handler = async (req: Request): Promise<Response> => {
           specialization,
           bio,
           state,
-          city,
-          accepts_presential,
-          address,
           document_url,
           submitted_at,
           documents,

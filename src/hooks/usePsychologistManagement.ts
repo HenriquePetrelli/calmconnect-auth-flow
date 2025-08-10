@@ -14,7 +14,6 @@ export interface PsychologistData {
   state?: string;
   city?: string;
   address?: string;
-  accepts_presential: boolean;
   document_url?: string;
   submitted_at: string;
   documents?: string[];
@@ -35,7 +34,6 @@ export interface PsychologistRegistration {
   bio: string;
   state: string;
   city: string;
-  accepts_presential: boolean;
   address?: string | null;
   document_url: string;
 }

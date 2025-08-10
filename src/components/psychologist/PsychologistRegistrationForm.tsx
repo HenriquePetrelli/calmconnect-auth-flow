@@ -6,7 +6,7 @@ import InputMask from 'react-input-mask';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -27,17 +27,8 @@ const formSchema = z.object({
   bio: z.string().min(50, 'Biografia deve ter pelo menos 50 caracteres').max(500, 'Biografia deve ter no máximo 500 caracteres'),
   state: z.string().min(1, 'Estado é obrigatório'),
   city: z.string().min(1, 'Cidade é obrigatória'),
-  accepts_presential: z.boolean(),
   address: z.string().optional(),
   document_url: z.string().min(1, 'Documento é obrigatório'),
-}).refine((data) => {
-  if (data.accepts_presential && !data.address) {
-    return false;
-  }
-  return true;
-}, {
-  message: "Endereço é obrigatório quando atende presencialmente",
-  path: ["address"],
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -86,13 +77,11 @@ export const PsychologistRegistrationForm = ({
       bio: '',
       state: '',
       city: '',
-      accepts_presential: false,
       address: '',
       document_url: '',
     },
   });
 
-  const acceptsPresential = form.watch('accepts_presential');
 
   const onSubmit = async (data: FormData) => {
     // Validar CRP único
@@ -113,8 +102,7 @@ export const PsychologistRegistrationForm = ({
       bio: data.bio,
       state: data.state,
       city: data.city,
-      accepts_presential: data.accepts_presential,
-      address: data.accepts_presential ? data.address : null,
+      address: data.address,
       document_url: data.document_url
     };
 
@@ -276,23 +264,20 @@ export const PsychologistRegistrationForm = ({
 
             <FormField
               control={form.control}
-              name="accepts_presential"
+              name="address"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                <FormItem>
+                  <FormLabel>Endereço do Consultório</FormLabel>
                   <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
+                    <Input
+                      placeholder="Rua, número, bairro, CEP"
+                      {...field}
                     />
                   </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>
-                      Atender presencialmente?
-                    </FormLabel>
-                    <FormDescription>
-                      Marque se você oferece atendimento presencial em consultório
-                    </FormDescription>
-                  </div>
+                  <FormDescription>
+                    Opcional. Informe se desejar exibir um endereço de atendimento.
+                  </FormDescription>
+                  <FormMessage />
                 </FormItem>
               )}
             />

@@ -21,7 +21,6 @@ export const PsychologistSelection: React.FC<PsychologistSelectionProps> = ({
   
   // Filters
   const [specialty, setSpecialty] = useState('all');
-  const [onlineOnly, setOnlineOnly] = useState(true); // Default to true (online)
   const [specialties, setSpecialties] = useState<string[]>([]);
   
   const { toast } = useToast();
@@ -75,7 +74,6 @@ export const PsychologistSelection: React.FC<PsychologistSelectionProps> = ({
         approved: psych.approved,
         // Adicionar outros campos necessários
         state: psych.state,
-        accepts_presential: psych.accepts_presential,
         document_url: psych.document_url,
         professional_email: psych.professional_email,
         total_appointments: psych.total_appointments || 0
@@ -115,21 +113,12 @@ export const PsychologistSelection: React.FC<PsychologistSelectionProps> = ({
       );
     }
 
-    // Filter for presential appointments when onlineOnly is false
-    if (!onlineOnly && patientLocation) {
-      filtered = filtered.filter(p => 
-        p.accepts_presential === true &&
-        p.city === patientLocation.city &&
-        p.state === patientLocation.state
-      );
-    }
 
     setFilteredPsychologists(filtered);
   }, [psychologists, specialty, onlineOnly, patientLocation]);
 
   useEffect(() => {
     fetchPsychologists();
-    fetchPatientLocation();
   }, [user?.id]);
 
   const handlePsychologistSelect = (psychologist: PsychologistData) => {
@@ -152,8 +141,6 @@ export const PsychologistSelection: React.FC<PsychologistSelectionProps> = ({
       <PsychologistFilters
         specialty={specialty}
         setSpecialty={setSpecialty}
-        onlineOnly={onlineOnly}
-        setOnlineOnly={setOnlineOnly}
         specialties={specialties}
       />
 
@@ -161,14 +148,12 @@ export const PsychologistSelection: React.FC<PsychologistSelectionProps> = ({
         psychologists={filteredPsychologists}
         onSelect={handlePsychologistSelect}
         loading={loading}
-        onlineOnly={onlineOnly}
       />
 
       <PsychologistModal
         psychologist={selectedPsychologist}
         onClose={handleCloseModal}
         onSchedule={handleSchedule}
-        showLocationInfo={!onlineOnly}
       />
     </div>
   );

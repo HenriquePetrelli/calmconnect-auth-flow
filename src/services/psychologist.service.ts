@@ -12,7 +12,6 @@ export interface PsychologistFormData {
   bio: string;
   state: string;
   city: string;
-  accepts_presential: boolean;
   address?: string;
 }
 
@@ -87,12 +86,11 @@ export class PsychologistService {
         p_bio: formData.bio,
         p_state: formData.state,
         p_city: formData.city,
-        p_accepts_presential: formData.accepts_presential,
-        p_address: formData.accepts_presential ? formData.address : null,
+        p_address: formData.address || null,
         p_document_url: finalDocumentUrl,
         p_cpf: formData.cpf,
         p_professional_email: formData.professionalEmail
-      });
+      } as any);
 
       if (dbError) throw new Error(dbError.message);
 
@@ -255,9 +253,6 @@ export class PsychologistService {
     if (!formData.crp) return 'CRP é obrigatório';
     if (!formData.specialty) return 'Especialidade é obrigatória';
     if (!formData.bio || formData.bio.length < 50) return 'Biografia deve ter pelo menos 50 caracteres';
-    if (!formData.state) return 'Estado é obrigatório';
-    if (!formData.city) return 'Cidade é obrigatória';
-    if (formData.accepts_presential && !formData.address) return 'Endereço é obrigatório quando atende presencialmente';
     return null;
   }
 

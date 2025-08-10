@@ -13,8 +13,6 @@ export interface PsychologistData {
   crp_number?: string;
   address?: string;
   approved: boolean;
-  state?: string;
-  accepts_presential?: boolean;
   document_url?: string;
   professional_email?: string;
   total_appointments?: number;

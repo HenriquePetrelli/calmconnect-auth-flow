@@ -6,16 +6,12 @@ import { Card, CardContent } from '@/components/ui/card';
 interface PsychologistFiltersProps {
   specialty: string;
   setSpecialty: (value: string) => void;
-  onlineOnly: boolean;
-  setOnlineOnly: (value: boolean) => void;
   specialties: string[];
 }
 
 export const PsychologistFilters: React.FC<PsychologistFiltersProps> = ({
   specialty,
   setSpecialty,
-  onlineOnly,
-  setOnlineOnly,
   specialties
 }) => {
   return (

@@ -35,7 +35,6 @@ interface PsychologistDetailProps {
     state?: string;
     city?: string;
     address?: string;
-    accepts_presential: boolean;
     document_url?: string;
     user_id: string;
     approval_status?: string;
@@ -181,17 +180,6 @@ export const PsychologistDetail = ({ psychologist }: PsychologistDetailProps) =>
             />
           </div>
           
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-muted-foreground">
-              Tipo de Atendimento:
-            </span>
-            <Badge 
-              variant={psychologist.accepts_presential ? "default" : "secondary"}
-              className="text-xs"
-            >
-              {psychologist.accepts_presential ? 'Online e Presencial' : 'Apenas Online'}
-            </Badge>
-          </div>
         </CardContent>
       </Card>
 
@@ -214,7 +202,7 @@ export const PsychologistDetail = ({ psychologist }: PsychologistDetailProps) =>
               value={psychologist.city} 
             />
           </div>
-          {psychologist.accepts_presential && psychologist.address && (
+          {psychologist.address && (
             <div className="mt-4">
               <DetailField 
                 label="Endereço do Consultório" 
