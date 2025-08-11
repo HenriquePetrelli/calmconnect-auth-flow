@@ -92,9 +92,8 @@ const PsychologistSignUpPublic = () => {
           email: data.email,
           password: data.password,
           fullName: data.fullName,
-          cpf: data.cpf.replace(/\D/g, ''), // Remove formatação
+          cpf: data.cpf.replace(/\D/g, ''),
           crp: data.crp,
-          professionalEmail: data.professionalEmail,
           specialty: data.specialty,
           bio: data.bio,
           state: data.state,
@@ -227,20 +226,6 @@ const PsychologistSignUpPublic = () => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Email *</FormLabel>
-                        <FormControl>
-                          <Input type="email" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="professionalEmail"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email Profissional *</FormLabel>
                         <FormControl>
                           <Input type="email" {...field} />
                         </FormControl>
