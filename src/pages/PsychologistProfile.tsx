@@ -171,9 +171,6 @@ const PsychologistProfile = () => {
           <BackButton to="/psychologist-dashboard" label="Voltar" />
           <h1 className="text-2xl font-semibold">Perfil do Psicólogo</h1>
         </div>
-        <Button variant="outline" onClick={handleLogout}>
-          <LogOut className="w-4 h-4 mr-2" /> Sair da Conta
-        </Button>
       </header>
 
       <Card>
@@ -268,6 +265,15 @@ const PsychologistProfile = () => {
           </div>
         </CardContent>
       </Card>
+
+      <Button 
+        variant="destructive" 
+        className="w-full justify-start" 
+        onClick={handleLogout}
+       >
+         <LogOut size={16} className="mr-2" />
+            Sair da Conta
+      </Button>
 
       <PasswordChangeModal open={pwdOpen} onOpenChange={setPwdOpen} currentEmail={email} />
     </div>
