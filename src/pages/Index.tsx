@@ -8,8 +8,8 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background p-4">
-      <div className="w-full max-w-md text-center mb-3">
-        <Logo className="mt-4 mb-2" />
+      <div className="w-full max-w-md text-center mt-6 mb-3">
+        <Logo className="mt-6 mb-2" />
 
         <h1 className="text-3xl md:text-4xl font-bold text-primary animate-fade-in">soliv</h1>
 
