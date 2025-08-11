@@ -1,32 +1,45 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { LogOut, Mail, Lock, User, FileText } from 'lucide-react';
-
-const DEBOUNCE_MS = 600;
+import { LogOut, Mail, Lock, User, FileText, Pencil, Check } from 'lucide-react';
+import BackButton from '@/components/BackButton';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SPECIALIZATIONS } from '@/data/specializations';
+import { PasswordChangeModal } from '@/components/psychologist/PasswordChangeModal';
 
 const PsychologistProfile = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
 
   // Account
   const [email, setEmail] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [tempEmail, setTempEmail] = useState('');
+  const [pendingEmail, setPendingEmail] = useState(false);
+  const pollRef = useRef<number | null>(null);
+
+  // Password modal
+  const [pwdOpen, setPwdOpen] = useState(false);
 
   // Professional profile
   const [fullName, setFullName] = useState('');
   const [specialization, setSpecialization] = useState('');
   const [bio, setBio] = useState('');
 
-  const debounceRef = useRef<number | null>(null);
-  const canSaveProfile = useMemo(() => fullName.trim().length > 1, [fullName]);
+  // Inline edit states
+  const [editName, setEditName] = useState(false);
+  const [editSpec, setEditSpec] = useState(false);
+  const [editBio, setEditBio] = useState(false);
+  const [editEmail, setEditEmail] = useState(false);
+
+  // Temp values for editing
+  const [tempName, setTempName] = useState('');
+  const [tempSpec, setTempSpec] = useState('');
+  const [tempBio, setTempBio] = useState('');
 
   useEffect(() => {
     document.title = 'Perfil do Psicólogo | CalmConnect';
@@ -39,8 +52,8 @@ const PsychologistProfile = () => {
         if (!user) return;
         setUserId(user.id);
         setEmail(user.email || '');
+        setTempEmail(user.email || '');
 
-        // Load psychologist profile
         const { data: psych } = await supabase
           .from('psychologists')
           .select('full_name, specialization, bio, email')
@@ -49,78 +62,87 @@ const PsychologistProfile = () => {
 
         if (psych) {
           setFullName(psych.full_name || '');
+          setTempName(psych.full_name || '');
           setSpecialization(psych.specialization || '');
+          setTempSpec(psych.specialization || '');
           setBio(psych.bio || '');
-          if (psych.email) setEmail(psych.email);
+          setTempBio(psych.bio || '');
         }
       } finally {
         setLoading(false);
       }
     };
     load();
+
+    return () => {
+      if (pollRef.current) window.clearInterval(pollRef.current);
+    };
   }, []);
 
-  const scheduleSave = () => {
-    if (debounceRef.current) window.clearTimeout(debounceRef.current);
-    debounceRef.current = window.setTimeout(saveProfile, DEBOUNCE_MS);
+  const updatePsych = async (values: Record<string, any>) => {
+    if (!userId) return;
+    const { error } = await supabase.from('psychologists').update(values).eq('user_id', userId);
+    if (error) throw error;
   };
 
-  const saveProfile = async () => {
-    if (!userId || !canSaveProfile) return;
+  const handleSaveName = async () => {
     try {
-      setSaving(true);
-      const { error } = await supabase
-        .from('psychologists')
-        .update({ full_name: fullName.trim(), specialization: specialization.trim(), bio: bio.trim(), email })
-        .eq('user_id', userId);
-
-      if (error) throw error;
-
-      // Keep profiles table in sync for specialty and name
-      await supabase
-        .from('profiles')
-        .update({ full_name: fullName.trim(), specialty: specialization.trim() })
-        .eq('user_id', userId);
-
-      toast({ title: 'Salvo', description: 'Perfil atualizado com sucesso.' });
+      await updatePsych({ full_name: tempName.trim() });
+      await supabase.from('profiles').update({ full_name: tempName.trim() }).eq('user_id', userId!);
+      setFullName(tempName.trim());
+      setEditName(false);
+      toast({ title: 'Salvo', description: 'Nome atualizado com sucesso.' });
     } catch (e: any) {
       toast({ title: 'Erro ao salvar', description: e.message || 'Tente novamente', variant: 'destructive' });
-    } finally {
-      setSaving(false);
     }
   };
 
-  const handleEmailBlur = async () => {
-    if (!email || !userId) return;
+  const handleSaveSpec = async () => {
     try {
-      const { error } = await supabase.auth.updateUser({ email });
-      if (error) throw error;
-      toast({ title: 'Email atualizado', description: 'Confirme a alteração pelo link enviado ao email.' });
+      await updatePsych({ specialization: tempSpec });
+      await supabase.from('profiles').update({ specialty: tempSpec }).eq('user_id', userId!);
+      setSpecialization(tempSpec);
+      setEditSpec(false);
+      toast({ title: 'Salvo', description: 'Especialização atualizada.' });
+    } catch (e: any) {
+      toast({ title: 'Erro', description: e.message || 'Tente novamente', variant: 'destructive' });
+    }
+  };
 
-      // Reflect in psychologists table
-      await supabase.from('psychologists').update({ email }).eq('user_id', userId);
+  const handleSaveBio = async () => {
+    try {
+      await updatePsych({ bio: tempBio.trim() });
+      setBio(tempBio.trim());
+      setEditBio(false);
+      toast({ title: 'Salvo', description: 'Biografia atualizada.' });
+    } catch (e: any) {
+      toast({ title: 'Erro', description: e.message || 'Tente novamente', variant: 'destructive' });
+    }
+  };
+
+  const handleEmailSave = async () => {
+    if (!tempEmail || tempEmail === email) { setEditEmail(false); return; }
+    try {
+      const { error } = await supabase.auth.updateUser({ email: tempEmail });
+      if (error) throw error;
+      setPendingEmail(true);
+      setEditEmail(false);
+      toast({ title: 'Confirmação enviada', description: 'Verifique seu email para confirmar a alteração.' });
+
+      if (pollRef.current) window.clearInterval(pollRef.current);
+      pollRef.current = window.setInterval(async () => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.email === tempEmail) {
+          try {
+            await updatePsych({ email: tempEmail });
+          } catch {}
+          setEmail(tempEmail);
+          setPendingEmail(false);
+          if (pollRef.current) window.clearInterval(pollRef.current);
+        }
+      }, 8000);
     } catch (e: any) {
       toast({ title: 'Erro ao atualizar email', description: e.message || 'Verifique o endereço informado.', variant: 'destructive' });
-    }
-  };
-
-  const handleChangePassword = async () => {
-    if (!newPassword || newPassword.length < 6) {
-      toast({ title: 'Senha inválida', description: 'A senha deve ter pelo menos 6 caracteres.', variant: 'destructive' });
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      toast({ title: 'As senhas não coincidem', description: 'Verifique e tente novamente.', variant: 'destructive' });
-      return;
-    }
-    try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
-      if (error) throw error;
-      setNewPassword('');
-      setConfirmPassword('');
-      toast({ title: 'Senha atualizada', description: 'Sua senha foi alterada com sucesso.' });
-    } catch (e: any) {
-      toast({ title: 'Erro ao alterar senha', description: e.message || 'Tente novamente.', variant: 'destructive' });
     }
   };
 
@@ -145,7 +167,10 @@ const PsychologistProfile = () => {
   return (
     <div className="max-w-3xl mx-auto p-4 space-y-6">
       <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Perfil do Psicólogo</h1>
+        <div className="flex items-center gap-2">
+          <BackButton to="/psychologist-dashboard" label="dashboard do psicólogo" />
+          <h1 className="text-2xl font-semibold">Perfil do Psicólogo</h1>
+        </div>
         <Button variant="outline" onClick={handleLogout}>
           <LogOut className="w-4 h-4 mr-2" /> Sair da Conta
         </Button>
@@ -156,30 +181,33 @@ const PsychologistProfile = () => {
           <CardTitle className="flex items-center gap-2"><User className="w-4 h-4" /> Informações da Conta</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Email */}
           <div>
             <label className="text-sm text-muted-foreground">Email</label>
-            <div className="flex gap-2 mt-1">
-              <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} onBlur={handleEmailBlur} />
-              <Mail className="w-4 h-4 mt-3 text-muted-foreground" />
+            <div className="flex gap-2 mt-1 items-center">
+              <Mail className="w-4 h-4 text-muted-foreground" />
+              <Input type="email" value={tempEmail} onChange={(e) => setTempEmail(e.target.value)} disabled={!editEmail} />
+              {editEmail ? (
+                <Button size="sm" onClick={handleEmailSave} className="shrink-0"><Check className="w-4 h-4 mr-1" />Salvar</Button>
+              ) : (
+                <Button size="sm" variant="ghost" onClick={() => setEditEmail(true)} className="shrink-0"><Pencil className="w-4 h-4" /></Button>
+              )}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">A alteração envia um link de confirmação para o novo email.</p>
+            {pendingEmail && (
+              <p className="text-xs text-muted-foreground mt-1">Confirmação pendente. Verifique sua caixa de entrada.</p>
+            )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="md:col-span-1">
-              <label className="text-sm text-muted-foreground">Nova senha</label>
-              <div className="flex gap-2 mt-1">
-                <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
-                <Lock className="w-4 h-4 mt-3 text-muted-foreground" />
+          {/* Password */}
+          <div className="flex items-end justify-between gap-4">
+            <div className="flex-1">
+              <label className="text-sm text-muted-foreground">Senha</label>
+              <div className="flex gap-2 mt-1 items-center">
+                <Lock className="w-4 h-4 text-muted-foreground" />
+                <Input type="password" value="********" disabled className="select-none" />
               </div>
             </div>
-            <div className="md:col-span-1">
-              <label className="text-sm text-muted-foreground">Confirmar senha</label>
-              <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
-            </div>
-            <div className="md:col-span-1 flex items-end">
-              <Button onClick={handleChangePassword} className="w-full">Atualizar Senha</Button>
-            </div>
+            <Button onClick={() => setPwdOpen(true)} className="shrink-0">Alterar Senha</Button>
           </div>
         </CardContent>
       </Card>
@@ -189,22 +217,59 @@ const PsychologistProfile = () => {
           <CardTitle className="flex items-center gap-2"><FileText className="w-4 h-4" /> Perfil Profissional</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Nome completo */}
           <div>
             <label className="text-sm text-muted-foreground">Nome completo</label>
-            <Input value={fullName} onChange={(e) => { setFullName(e.target.value); scheduleSave(); }} />
+            <div className="flex gap-2 mt-1 items-center">
+              <Input value={tempName} onChange={(e) => setTempName(e.target.value)} disabled={!editName} />
+              {editName ? (
+                <Button size="sm" onClick={handleSaveName} className="shrink-0"><Check className="w-4 h-4 mr-1" />Salvar</Button>
+              ) : (
+                <Button size="sm" variant="ghost" onClick={() => setEditName(true)} className="shrink-0"><Pencil className="w-4 h-4" /></Button>
+              )}
+            </div>
           </div>
+
+          {/* Especialização */}
           <div>
             <label className="text-sm text-muted-foreground">Especialização</label>
-            <Input value={specialization} onChange={(e) => { setSpecialization(e.target.value); scheduleSave(); }} />
+            <div className="flex gap-2 mt-1 items-center">
+              {editSpec ? (
+                <Select value={tempSpec} onValueChange={setTempSpec}>
+                  <SelectTrigger className="min-w-[260px]"><SelectValue placeholder="Selecione sua especialização" /></SelectTrigger>
+                  <SelectContent>
+                    {SPECIALIZATIONS.map((spec) => (
+                      <SelectItem key={spec} value={spec}>{spec}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input value={specialization || ''} disabled />
+              )}
+              {editSpec ? (
+                <Button size="sm" onClick={handleSaveSpec} className="shrink-0"><Check className="w-4 h-4 mr-1" />Salvar</Button>
+              ) : (
+                <Button size="sm" variant="ghost" onClick={() => setEditSpec(true)} className="shrink-0"><Pencil className="w-4 h-4" /></Button>
+              )}
+            </div>
           </div>
+
+          {/* Biografia */}
           <div>
             <label className="text-sm text-muted-foreground">Biografia</label>
-            <Textarea className="min-h-[120px]" value={bio} onChange={(e) => { setBio(e.target.value); scheduleSave(); }} />
-            <p className="text-xs text-muted-foreground mt-1">As alterações são salvas automaticamente.</p>
+            <div className="flex gap-2 mt-1 items-start">
+              <Textarea className="min-h-[120px]" value={tempBio} onChange={(e) => setTempBio(e.target.value)} disabled={!editBio} />
+              {editBio ? (
+                <Button size="sm" onClick={handleSaveBio} className="shrink-0 mt-1"><Check className="w-4 h-4 mr-1" />Salvar</Button>
+              ) : (
+                <Button size="sm" variant="ghost" onClick={() => setEditBio(true)} className="shrink-0 mt-1"><Pencil className="w-4 h-4" /></Button>
+              )}
+            </div>
           </div>
-          {saving && <p className="text-xs text-muted-foreground">Salvando...</p>}
         </CardContent>
       </Card>
+
+      <PasswordChangeModal open={pwdOpen} onOpenChange={setPwdOpen} currentEmail={email} />
     </div>
   );
 };
