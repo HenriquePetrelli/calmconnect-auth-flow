@@ -7,7 +7,7 @@ const Index = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-background py-8 p-4">
+    <div className="min-h-screen bg-background  flex flex-col items-center justify-center py-8 p-4">
       <div className="w-full max-w-md text-center mt-6 mb-3">
         <Logo className="mt-6 mb-2" />
 
