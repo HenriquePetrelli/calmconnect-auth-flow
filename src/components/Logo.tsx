@@ -11,7 +11,7 @@ const Logo = ({ className = "" }: LogoProps) => {
       <img
         src={logoImg}
         alt="Logotipo Soliv - bem-estar emocional"
-        className="mx-auto h-12 w-auto md:h-14 animate-fade-in"
+        className="mx-auto h-16 w-auto animate-fade-in"
         loading="lazy"
       />
     </div>
