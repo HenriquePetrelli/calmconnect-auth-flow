@@ -7,15 +7,15 @@ const Index = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-background  flex flex-col items-center justify-center py-8 p-4">
-      <div className="w-full max-w-md text-center mt-6 mb-3">
-        <Logo className="mt-6 mb-2" />
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-md text-center space-y-8">
+        <Logo />
 
-        <h1 className="text-3xl md:text-4xl font-bold text-primary animate-fade-in">soliv</h1>
+     <h1 className="mt-6 text-3xl md:text-4xl font-bold text-primary animate-fade-in">soliv</h1>
 
-        <div className="w-16 h-1 bg-primary mx-auto mt-1 mb-8 rounded-full"></div>
+         <div className="w-16 h-1 bg-primary mx-auto mt-2 rounded-full"></div>
         
-        <div className="space-y-4 mt-6">
+        <div className="space-y-4">
           <h2 className="text-xl font-medium text-foreground">
             Como você gostaria de acessar?
           </h2>
