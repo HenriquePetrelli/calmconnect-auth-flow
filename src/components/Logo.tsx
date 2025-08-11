@@ -7,7 +7,7 @@ interface LogoProps {
 const Logo = ({ className = "" }: LogoProps) => {
   return (
     <div className={`text-center ${className}`}>
-      <h1 className="sr-only">Soliv</h1>
+      <h1 className="sr-only">soliv</h1>
       <img
         src={logoImg}
         alt="Logotipo Soliv - bem-estar emocional"
