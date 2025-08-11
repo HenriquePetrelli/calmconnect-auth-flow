@@ -1,4 +1,4 @@
-import logoImg from '@/assets/soliv-logo.png';
+import logoImg from '@/assets/soliv-logo.svg';
 
 interface LogoProps {
   className?: string;
