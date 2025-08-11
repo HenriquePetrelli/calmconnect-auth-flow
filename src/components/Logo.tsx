@@ -14,7 +14,6 @@ const Logo = ({ className = "" }: LogoProps) => {
         className="mx-auto h-12 w-auto md:h-14 animate-fade-in"
         loading="lazy"
       />
-      <div className="w-16 h-1 bg-primary mx-auto mt-2 rounded-full"></div>
     </div>
   );
 };
