@@ -135,7 +135,7 @@ const registrationData = {
       <CardHeader>
         <CardTitle>Cadastro de Psicólogo</CardTitle>
         <CardDescription>
-          Preencha as informações abaixo para se cadastrar como psicólogo na plataforma CalmConnect
+          Preencha as informações abaixo para se cadastrar como psicólogo na plataforma Soliv
         </CardDescription>
       </CardHeader>
       <CardContent>

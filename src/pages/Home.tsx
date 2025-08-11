@@ -15,7 +15,7 @@ const HomePage = () => {
         <div className="max-w-md mx-auto space-y-6">
           {/* Header */}
           <div className="text-center py-6">
-            <h1 className="text-3xl font-bold text-foreground mb-2 animate-fade-in">CalmConnect</h1>
+            <h1 className="text-3xl font-bold text-foreground mb-2 animate-fade-in">Soliv</h1>
             <p className="text-muted-foreground">Bem-vindo de volta</p>
           </div>
 

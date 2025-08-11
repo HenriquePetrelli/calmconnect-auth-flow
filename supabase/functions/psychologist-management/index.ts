@@ -43,7 +43,7 @@ const generateApprovalEmail = (name: string) => `
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Cadastro Aprovado - CalmConnect</title>
+  <title>Cadastro Aprovado - Soliv</title>
 </head>
 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
   <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -51,7 +51,7 @@ const generateApprovalEmail = (name: string) => `
     
     <p>Olá, ${name}!</p>
     
-    <p>Temos o prazer de informar que seu cadastro como psicólogo na plataforma CalmConnect foi <strong>aprovado</strong>!</p>
+    <p>Temos o prazer de informar que seu cadastro como psicólogo na plataforma Soliv foi <strong>aprovado</strong>!</p>
     
     <p>Agora você pode:</p>
     <ul>
@@ -63,7 +63,7 @@ const generateApprovalEmail = (name: string) => `
     
     <p>Seja bem-vindo à nossa equipe!</p>
     
-    <p>Atenciosamente,<br>Equipe CalmConnect</p>
+    <p>Atenciosamente,<br>Equipe Soliv</p>
   </div>
 </body>
 </html>
@@ -74,7 +74,7 @@ const generateRejectionEmail = (name: string, reason?: string) => `
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Cadastro não aprovado - CalmConnect</title>
+  <title>Cadastro não aprovado - Soliv</title>
 </head>
 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
   <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -82,7 +82,7 @@ const generateRejectionEmail = (name: string, reason?: string) => `
     
     <p>Olá, ${name}!</p>
     
-    <p>Infelizmente, seu cadastro como psicólogo na plataforma CalmConnect não foi aprovado neste momento.</p>
+    <p>Infelizmente, seu cadastro como psicólogo na plataforma Soliv não foi aprovado neste momento.</p>
     
     ${reason ? `<p><strong>Motivo:</strong> ${reason}</p>` : ''}
     
@@ -90,7 +90,7 @@ const generateRejectionEmail = (name: string, reason?: string) => `
     
     <p>Se tiver dúvidas, entre em contato conosco.</p>
     
-    <p>Atenciosamente,<br>Equipe CalmConnect</p>
+    <p>Atenciosamente,<br>Equipe Soliv</p>
   </div>
 </body>
 </html>
@@ -101,7 +101,7 @@ const generatePendingEmail = (name: string) => `
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Cadastro recebido - CalmConnect</title>
+  <title>Cadastro recebido - Soliv</title>
 </head>
 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
   <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -109,13 +109,13 @@ const generatePendingEmail = (name: string) => `
     
     <p>Olá, ${name}!</p>
     
-    <p>Recebemos seu cadastro como psicólogo na plataforma CalmConnect.</p>
+    <p>Recebemos seu cadastro como psicólogo na plataforma Soliv.</p>
     
     <p>Seus dados estão sendo analisados por nossa equipe. Você receberá uma resposta em até 48 horas.</p>
     
     <p>Obrigado por seu interesse em fazer parte da nossa plataforma!</p>
     
-    <p>Atenciosamente,<br>Equipe CalmConnect</p>
+    <p>Atenciosamente,<br>Equipe Soliv</p>
   </div>
 </body>
 </html>
@@ -235,9 +235,9 @@ const handler = async (req: Request): Promise<Response> => {
       
       // Enviar email de confirmação
       await resend.emails.send({
-        from: 'CalmConnect <onboarding@resend.dev>',
+        from: 'Soliv <onboarding@resend.dev>',
         to: [registrationData.email],
-        subject: 'Cadastro recebido - CalmConnect',
+        subject: 'Cadastro recebido - Soliv',
         html: generatePendingEmail(registrationData.full_name),
       });
       
@@ -355,9 +355,9 @@ const handler = async (req: Request): Promise<Response> => {
       
       // Enviar email de aprovação
       await resend.emails.send({
-        from: 'CalmConnect <onboarding@resend.dev>',
+        from: 'Soliv <onboarding@resend.dev>',
         to: [psychologist.email],
-        subject: 'Cadastro aprovado - CalmConnect',
+        subject: 'Cadastro aprovado - Soliv',
         html: generateApprovalEmail(psychologist.full_name),
       });
       
@@ -399,9 +399,9 @@ const handler = async (req: Request): Promise<Response> => {
       
       // Enviar email de rejeição
       await resend.emails.send({
-        from: 'CalmConnect <onboarding@resend.dev>',
+        from: 'Soliv <onboarding@resend.dev>',
         to: [psychologist.email],
-        subject: 'Cadastro não aprovado - CalmConnect',
+        subject: 'Cadastro não aprovado - Soliv',
         html: generateRejectionEmail(psychologist.full_name, rejection_reason),
       });
       

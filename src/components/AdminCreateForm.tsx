@@ -12,7 +12,7 @@ interface AdminCreateFormProps {
 }
 
 const AdminCreateForm: React.FC<AdminCreateFormProps> = ({ onSuccess }) => {
-  const [email, setEmail] = useState('admin@calmconnect.com');
+  const [email, setEmail] = useState('admin@soliv.com');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('Administrador do Sistema');
   const [loading, setLoading] = useState(false);

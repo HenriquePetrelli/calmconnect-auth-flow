@@ -8,7 +8,7 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* CalmConnect Design System - Paleta Azul Acolhedora */
+    /* Soliv Design System - Paleta Azul Acolhedora */
     --background: 208 100% 90%; /* #D0E8FF - Azul claro acolhedor */
     --foreground: 213 37% 20%; /* Azul escuro para texto */
 
@@ -39,7 +39,7 @@ All colors MUST be HSL.
 
     --radius: 1rem; /* Bordas mais arredondadas para suavidade */
 
-    /* Variáveis customizadas para o CalmConnect */
+    /* Variáveis customizadas para o Soliv */
     --calm-blue-light: 208 100% 90%; /* #D0E8FF */
     --calm-blue-dark: 213 49% 32%; /* #2B4F81 */
     --calm-shadow: 213 49% 32% / 0.1; /* Sombras sutis */

@@ -33,9 +33,9 @@ interface RejectRequest {
 // Email templates
 const generateApprovalEmailTemplate = (fullName: string) => `
   <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-    <h2 style="color: #10b981;">✅ Cadastro Aprovado - CalmConnect</h2>
+    <h2 style="color: #10b981;">✅ Cadastro Aprovado - Soliv</h2>
     <p>Olá <strong>${fullName}</strong>,</p>
-    <p>Temos o prazer de informar que seu cadastro como psicólogo(a) na plataforma CalmConnect foi <strong>aprovado</strong>!</p>
+    <p>Temos o prazer de informar que seu cadastro como psicólogo(a) na plataforma Soliv foi <strong>aprovado</strong>!</p>
     <p>Agora você pode fazer login e começar a atender pacientes através da nossa plataforma.</p>
     <div style="margin: 20px 0; padding: 15px; background-color: #f0fdf4; border-left: 4px solid #10b981;">
       <p><strong>Próximos passos:</strong></p>
@@ -47,21 +47,21 @@ const generateApprovalEmailTemplate = (fullName: string) => `
       </ol>
     </div>
     <p>Bem-vindo(a) à nossa equipe!</p>
-    <p>Atenciosamente,<br>Equipe CalmConnect</p>
+    <p>Atenciosamente,<br>Equipe Soliv</p>
   </div>
 `;
 
 const generateRejectionEmailTemplate = (fullName: string, reason: string) => `
   <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-    <h2 style="color: #ef4444;">❌ Cadastro Não Aprovado - CalmConnect</h2>
+    <h2 style="color: #ef4444;">❌ Cadastro Não Aprovado - Soliv</h2>
     <p>Olá <strong>${fullName}</strong>,</p>
-    <p>Infelizmente, não foi possível aprovar seu cadastro como psicólogo(a) na plataforma CalmConnect.</p>
+    <p>Infelizmente, não foi possível aprovar seu cadastro como psicólogo(a) na plataforma Soliv.</p>
     <div style="margin: 20px 0; padding: 15px; background-color: #fef2f2; border-left: 4px solid #ef4444;">
       <p><strong>Motivo:</strong></p>
       <p>${reason}</p>
     </div>
     <p>Caso tenha dúvidas ou deseje esclarecer informações, entre em contato conosco.</p>
-    <p>Atenciosamente,<br>Equipe CalmConnect</p>
+    <p>Atenciosamente,<br>Equipe Soliv</p>
   </div>
 `;
 
@@ -230,9 +230,9 @@ const handler = async (req: Request): Promise<Response> => {
       // Send approval email
       try {
         await resend.emails.send({
-          from: 'CalmConnect <onboarding@resend.dev>',
+          from: 'Soliv <onboarding@resend.dev>',
           to: [registration.profiles.professional_email],
-          subject: '✅ Cadastro Aprovado - CalmConnect',
+          subject: '✅ Cadastro Aprovado - Soliv',
           html: generateApprovalEmailTemplate(registration.profiles.full_name),
         });
       } catch (emailError) {
@@ -279,9 +279,9 @@ const handler = async (req: Request): Promise<Response> => {
       // Send rejection email before deletion
       try {
         await resend.emails.send({
-          from: 'CalmConnect <onboarding@resend.dev>',
+          from: 'Soliv <onboarding@resend.dev>',
           to: [registration.profiles.professional_email],
-          subject: '❌ Cadastro Não Aprovado - CalmConnect',
+          subject: '❌ Cadastro Não Aprovado - Soliv',
           html: generateRejectionEmailTemplate(registration.profiles.full_name, requestData.reason),
         });
       } catch (emailError) {

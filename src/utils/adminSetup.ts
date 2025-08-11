@@ -20,9 +20,9 @@ export const createDefaultAdminAccount = async (): Promise<AdminCredentials> => 
   };
 
   const credentials: AdminCredentials = {
-    email: 'admin@calmconnect.com',
+    email: 'admin@soliv.com',
     password: generateSecurePassword(),
-    fullName: 'Administrador do Sistema CalmConnect'
+    fullName: 'Administrador do Sistema Soliv'
   };
 
   try {

@@ -42,7 +42,7 @@ const PsychologistProfile = () => {
   const [tempBio, setTempBio] = useState('');
 
   useEffect(() => {
-    document.title = 'Perfil do Psicólogo | CalmConnect';
+    document.title = 'Perfil do Psicólogo | Soliv';
   }, []);
 
   useEffect(() => {
