@@ -13,7 +13,7 @@ const Index = () => {
 
         <h1 className="text-3xl md:text-4xl font-bold text-primary animate-fade-in">soliv</h1>
 
-        <div className="w-16 h-1 bg-primary mx-auto mt-1 rounded-full"></div>
+        <div className="w-16 h-1 bg-primary mx-auto mt-1 mb-3 rounded-full"></div>
         
         <div className="space-y-4">
           <h2 className="text-xl font-medium text-foreground">
