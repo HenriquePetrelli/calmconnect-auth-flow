@@ -168,7 +168,7 @@ const PsychologistProfile = () => {
     <div className="max-w-3xl mx-auto p-4 space-y-6">
       <header className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <BackButton to="/psychologist-dashboard" label="dashboard do psicólogo" />
+          <BackButton to="/psychologist-dashboard" label="Voltar" />
           <h1 className="text-2xl font-semibold">Perfil do Psicólogo</h1>
         </div>
         <Button variant="outline" onClick={handleLogout}>
