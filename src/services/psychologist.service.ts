@@ -7,7 +7,6 @@ export interface PsychologistFormData {
   fullName: string;
   cpf: string;
   crp: string;
-  professionalEmail: string;
   specialty: string;
   bio: string;
   state: string;
@@ -58,7 +57,6 @@ export class PsychologistService {
             full_name: formData.fullName,
             cpf: formData.cpf,
             crp: formData.crp,
-            professional_email: formData.professionalEmail,
             specialty: formData.specialty,
           },
           emailRedirectTo: `${window.location.origin}/psychologist-login`
@@ -88,8 +86,7 @@ export class PsychologistService {
         p_city: formData.city,
         p_address: formData.address || null,
         p_document_url: finalDocumentUrl,
-        p_cpf: formData.cpf,
-        p_professional_email: formData.professionalEmail
+        p_cpf: formData.cpf
       } as any);
 
       if (dbError) throw new Error(dbError.message);

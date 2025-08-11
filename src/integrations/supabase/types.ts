@@ -305,7 +305,6 @@ export type Database = {
           crp: string | null
           full_name: string
           id: string
-          professional_email: string | null
           registration_status: string | null
           specialty: string | null
           updated_at: string
@@ -318,7 +317,6 @@ export type Database = {
           crp?: string | null
           full_name: string
           id?: string
-          professional_email?: string | null
           registration_status?: string | null
           specialty?: string | null
           updated_at?: string
@@ -331,7 +329,6 @@ export type Database = {
           crp?: string | null
           full_name?: string
           id?: string
-          professional_email?: string | null
           registration_status?: string | null
           specialty?: string | null
           updated_at?: string
@@ -424,7 +421,6 @@ export type Database = {
           email: string
           full_name: string
           id: string
-          professional_email: string | null
           rejection_reason: string | null
           reviewed_at: string | null
           reviewed_by: string | null
@@ -449,7 +445,6 @@ export type Database = {
           email: string
           full_name: string
           id?: string
-          professional_email?: string | null
           rejection_reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -474,7 +469,6 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
-          professional_email?: string | null
           rejection_reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -605,6 +599,19 @@ export type Database = {
               p_document_url?: string
               p_cpf?: string
               p_professional_email?: string
+            }
+          | {
+              p_user_id: string
+              p_full_name: string
+              p_email: string
+              p_crp_number: string
+              p_specialization: string
+              p_bio: string
+              p_state: string
+              p_city: string
+              p_address?: string
+              p_document_url?: string
+              p_cpf?: string
             }
           | {
               p_user_id: string

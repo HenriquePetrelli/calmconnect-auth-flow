@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { ChevronRight, MapPin, User, CheckCircle, Mail } from 'lucide-react';
+import { ChevronRight, MapPin, User, CheckCircle } from 'lucide-react';
 
 export interface PsychologistData {
   id: string;
@@ -15,7 +15,6 @@ export interface PsychologistData {
   address?: string;
   approved: boolean;
   document_url?: string;
-  professional_email?: string;
   total_appointments?: number;
 }
 
@@ -93,14 +92,6 @@ export const PsychologistList: React.FC<PsychologistListProps> = ({
                       <p className="text-xs text-muted-foreground">
                         CRP: {psychologist.crp_number}
                       </p>
-                    )}
-                    {psychologist.professional_email && (
-                      <div className="flex items-center gap-1 mt-1">
-                        <Mail size={12} className="text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground truncate">
-                          {psychologist.professional_email}
-                        </span>
-                      </div>
                     )}
                     {!onlineOnly && (
                       <>

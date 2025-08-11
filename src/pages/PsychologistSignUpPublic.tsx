@@ -40,7 +40,7 @@ const formSchema = z.object({
   fullName: z.string().min(2, "Nome completo é obrigatório"),
   cpf: z.string().min(11, "CPF é obrigatório"),
   crp: z.string().min(5, "CRP é obrigatório"),
-  professionalEmail: z.string().email("Email profissional inválido"),
+  
   specialty: z.string().min(1, "Especialidade é obrigatória"),
   bio: z.string().min(50, "A biografia deve ter pelo menos 50 caracteres"),
   state: z.string().min(1, "Estado é obrigatório"),
@@ -69,7 +69,6 @@ const PsychologistSignUpPublic = () => {
       fullName: "",
       cpf: "",
       crp: "",
-      professionalEmail: "",
       specialty: "",
       bio: "",
       state: "",

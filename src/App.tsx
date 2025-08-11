@@ -27,6 +27,7 @@ import SubscriptionSuccess from "./pages/SubscriptionSuccess";
 import SubscriptionCancel from "./pages/SubscriptionCancel";
 import AdminDashboard from "./pages/AdminDashboard";
 import PsychologistDashboard from "./pages/PsychologistDashboard";
+import PsychologistProfile from "./pages/PsychologistProfile";
 
 import CreateAdminAccount from "./pages/CreateAdminAccount";
 import NotFound from "./pages/NotFound";
@@ -69,6 +70,7 @@ const App = () => (
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/psychologist-dashboard" element={<PsychologistDashboard />} />
+            <Route path="/psychologist-profile" element={<PsychologistProfile />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

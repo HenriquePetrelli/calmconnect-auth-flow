@@ -252,10 +252,6 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
                               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Email Pessoal</label>
                               <p className="text-sm text-muted-foreground mt-1">{selectedPsychologist.email}</p>
                             </div>
-                            <div>
-                              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Email Profissional</label>
-                              <p className="text-sm text-muted-foreground mt-1">{selectedPsychologist.professional_email || 'Não informado'}</p>
-                            </div>
                           </div>
                         </div>
 

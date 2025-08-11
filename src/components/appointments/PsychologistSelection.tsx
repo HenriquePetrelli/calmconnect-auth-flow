@@ -75,7 +75,6 @@ export const PsychologistSelection: React.FC<PsychologistSelectionProps> = ({
         // Adicionar outros campos necessários
         state: psych.state,
         document_url: psych.document_url,
-        professional_email: psych.professional_email,
         total_appointments: psych.total_appointments || 0
       })) || [];
   

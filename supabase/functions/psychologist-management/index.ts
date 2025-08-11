@@ -19,7 +19,6 @@ interface PsychologistRegistration {
   full_name: string;
   cpf?: string;
   email: string;
-  professional_email?: string;
   crp_number: string;
   specialization?: string;
   bio?: string;
@@ -211,9 +210,10 @@ const handler = async (req: Request): Promise<Response> => {
       }
       
       // Inserir registro
+      const { professional_email, ...insertData } = registrationData as any;
       const { data, error } = await supabase
         .from('psychologists')
-        .insert([registrationData])
+        .insert([insertData])
         .select()
         .single();
       
@@ -293,7 +293,6 @@ const handler = async (req: Request): Promise<Response> => {
           full_name,
           email,
           cpf,
-          professional_email,
           crp_number,
           specialization,
           bio,

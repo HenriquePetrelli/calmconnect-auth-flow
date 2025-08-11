@@ -25,21 +25,20 @@ interface City {
 }
 
 const SignUpForm = ({ userType }: SignUpFormProps) => {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    cpf: "",
-    state: "",
-    city: "",
-    phone: "",
-    reason: "",
-    password: "",
-    confirmPassword: "",
-    // Psychologist fields
-    crp: "",
-    specialty: "",
-    professionalEmail: "",
-  });
+const [formData, setFormData] = useState({
+  name: "",
+  email: "",
+  cpf: "",
+  state: "",
+  city: "",
+  phone: "",
+  reason: "",
+  password: "",
+  confirmPassword: "",
+  // Psychologist fields
+  crp: "",
+  specialty: "",
+});
 
   const [states, setStates] = useState<State[]>([]);
   const [cities, setCities] = useState<City[]>([]);
@@ -202,7 +201,6 @@ const SignUpForm = ({ userType }: SignUpFormProps) => {
         if (!formData.cpf) newErrors.cpf = true;
         if (!formData.crp) newErrors.crp = true;
         if (!formData.specialty) newErrors.specialty = true;
-        if (!formData.professionalEmail) newErrors.professionalEmail = true;
       }
 
       // Se há erros, mostrar alert e marcar campos
@@ -308,18 +306,17 @@ const SignUpForm = ({ userType }: SignUpFormProps) => {
             console.error('Error creating psychologist registration:', registrationError);
           }
 
-          // Create profile for psychologist
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .insert({
-              user_id: data.user.id,
-              user_type: 'psychologist',
-              full_name: formData.name,
-              cpf: formData.cpf.replace(/\D/g, ''),
-              crp: formData.crp,
-              specialty: formData.specialty,
-              professional_email: formData.professionalEmail,
-            });
+// Create profile for psychologist
+const { error: profileError } = await supabase
+  .from('profiles')
+  .insert({
+    user_id: data.user.id,
+    user_type: 'psychologist',
+    full_name: formData.name,
+    cpf: formData.cpf.replace(/\D/g, ''),
+    crp: formData.crp,
+    specialty: formData.specialty,
+  });
 
           if (profileError) {
             console.error('Error creating psychologist profile:', profileError);
@@ -515,20 +512,6 @@ const SignUpForm = ({ userType }: SignUpFormProps) => {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="professionalEmail" className="text-foreground font-medium">
-                    Email Profissional Adicional
-                  </Label>
-                  <Input
-                    id="professionalEmail"
-                    type="email"
-                    value={formData.professionalEmail}
-                    onChange={(e) => handleInputChange("professionalEmail", e.target.value)}
-                    placeholder="contato@consultorio.com"
-                    required
-                    className={`h-12 rounded-xl border-border focus:ring-primary ${errors.professionalEmail ? 'border-destructive' : ''}`}
-                  />
-                </div>
               </>
             )}
 

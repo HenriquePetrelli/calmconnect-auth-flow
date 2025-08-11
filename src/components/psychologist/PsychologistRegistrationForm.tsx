@@ -21,7 +21,6 @@ const formSchema = z.object({
   full_name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
   cpf: z.string().min(11, 'CPF inválido'),
   email: z.string().email('Email inválido'),
-  professional_email: z.string().email('Email profissional inválido'),
   crp_number: z.string().min(5, 'CRP deve ter pelo menos 5 caracteres'),
   specialization: z.string().min(1, 'Especialização é obrigatória'),
   bio: z.string().min(50, 'Biografia deve ter pelo menos 50 caracteres').max(500, 'Biografia deve ter no máximo 500 caracteres'),
@@ -65,22 +64,21 @@ export const PsychologistRegistrationForm = ({
   
   const { registerPsychologist, loading, validateCrpUnique } = usePsychologistManagement();
 
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      full_name: '',
-      cpf: '',
-      email: userEmail,
-      professional_email: '',
-      crp_number: '',
-      specialization: '',
-      bio: '',
-      state: '',
-      city: '',
-      address: '',
-      document_url: '',
-    },
-  });
+const form = useForm<FormData>({
+  resolver: zodResolver(formSchema),
+  defaultValues: {
+    full_name: '',
+    cpf: '',
+    email: userEmail,
+    crp_number: '',
+    specialization: '',
+    bio: '',
+    state: '',
+    city: '',
+    address: '',
+    document_url: '',
+  },
+});
 
 
   const onSubmit = async (data: FormData) => {
@@ -91,20 +89,19 @@ export const PsychologistRegistrationForm = ({
       return;
     }
 
-    const registrationData = {
-      user_id: userId,
-      full_name: data.full_name,
-      cpf: data.cpf,
-      email: data.email,
-      professional_email: data.professional_email,
-      crp_number: data.crp_number,
-      specialization: data.specialization,
-      bio: data.bio,
-      state: data.state,
-      city: data.city,
-      address: data.address,
-      document_url: data.document_url
-    };
+const registrationData = {
+  user_id: userId,
+  full_name: data.full_name,
+  cpf: data.cpf,
+  email: data.email,
+  crp_number: data.crp_number,
+  specialization: data.specialization,
+  bio: data.bio,
+  state: data.state,
+  city: data.city,
+  address: data.address,
+  document_url: data.document_url
+};
 
     const result = await registerPsychologist(registrationData);
     
@@ -195,22 +192,6 @@ export const PsychologistRegistrationForm = ({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="professional_email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email Profissional</FormLabel>
-                  <FormControl>
-                    <Input type="email" placeholder="email@profissional.com" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    Email profissional para contato com pacientes
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
             <FormField
               control={form.control}

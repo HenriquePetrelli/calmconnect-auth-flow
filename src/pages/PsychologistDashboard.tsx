@@ -124,7 +124,7 @@ const PsychologistDashboard = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => navigate('/profile')}
+              onClick={() => navigate('/psychologist-profile')}
             >
               <User className="w-4 h-4 mr-2" />
               Perfil

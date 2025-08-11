@@ -27,7 +27,6 @@ interface PsychologistDetailProps {
     id: string;
     full_name: string;
     email: string;
-    professional_email?: string;
     cpf?: string;
     crp_number: string;
     specialization: string;
@@ -154,10 +153,6 @@ export const PsychologistDetail = ({ psychologist }: PsychologistDetailProps) =>
             <DetailField 
               label="Email Pessoal" 
               value={psychologist.email} 
-            />
-            <DetailField 
-              label="Email Profissional" 
-              value={psychologist.professional_email} 
             />
           </div>
         </CardContent>

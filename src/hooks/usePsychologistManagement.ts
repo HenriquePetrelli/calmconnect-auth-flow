@@ -6,7 +6,6 @@ export interface PsychologistData {
   id: string;
   full_name: string;
   email: string;
-  professional_email?: string;
   cpf?: string;
   crp_number: string;
   specialization?: string;
@@ -27,7 +26,6 @@ export interface PsychologistRegistration {
   user_id: string;
   full_name: string;
   email: string;
-  professional_email?: string;
   cpf?: string;
   crp_number: string;
   specialization: string;
