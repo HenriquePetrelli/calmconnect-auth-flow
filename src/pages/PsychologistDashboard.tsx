@@ -11,6 +11,7 @@ import { usePsychologistSchedule } from '@/hooks/usePsychologistSchedule';
 import EmergencyNotifications from '@/components/psychologist/EmergencyNotifications';
 import UpcomingConsultations from '@/components/psychologist/UpcomingConsultations';
 import ConsultationHistory from '@/components/psychologist/ConsultationHistory';
+import OnlineStatusToggle from '@/components/psychologist/OnlineStatusToggle';
 
 const PsychologistDashboard = () => {
   const navigate = useNavigate();
@@ -121,6 +122,7 @@ const PsychologistDashboard = () => {
             </p>
           </div>
           <div className="flex items-center gap-4">
+            <OnlineStatusToggle />
             <Button
               variant="outline"
               size="sm"

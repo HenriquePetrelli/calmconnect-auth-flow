@@ -58,6 +58,13 @@ export const usePsychologistEmergency = () => {
         description: data.message,
       });
 
+      // Increment accepted counter for current psychologist
+      const { data: authUser } = await supabase.auth.getUser();
+      const currentUserId = authUser.user?.id;
+      if (currentUserId) {
+        await supabase.rpc('increment_emergency_accepted', { p_psychologist_id: currentUserId });
+      }
+
       // Refresh the list
       fetchEmergencyRequests();
       
@@ -90,6 +97,13 @@ export const usePsychologistEmergency = () => {
         title: 'Informação',
         description: data.message,
       });
+
+      // Increment rejected counter for current psychologist
+      const { data: authUser } = await supabase.auth.getUser();
+      const currentUserId = authUser.user?.id;
+      if (currentUserId) {
+        await supabase.rpc('increment_emergency_rejected', { p_psychologist_id: currentUserId });
+      }
 
       // Refresh the list
       fetchEmergencyRequests();
