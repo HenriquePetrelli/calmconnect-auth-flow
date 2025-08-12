@@ -127,6 +127,7 @@ export type Database = {
           accepted_by: string | null
           created_at: string
           id: string
+          patient_details: Json
           patient_id: string
           status: string
           updated_at: string
@@ -137,6 +138,7 @@ export type Database = {
           accepted_by?: string | null
           created_at?: string
           id?: string
+          patient_details?: Json
           patient_id: string
           status?: string
           updated_at?: string
@@ -147,6 +149,7 @@ export type Database = {
           accepted_by?: string | null
           created_at?: string
           id?: string
+          patient_details?: Json
           patient_id?: string
           status?: string
           updated_at?: string
@@ -369,6 +372,44 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      psychologist_presence: {
+        Row: {
+          created_at: string
+          emergency_accepted_count: number
+          emergency_rejected_count: number
+          is_online: boolean
+          last_online: string | null
+          psychologist_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          emergency_accepted_count?: number
+          emergency_rejected_count?: number
+          is_online?: boolean
+          last_online?: string | null
+          psychologist_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          emergency_accepted_count?: number
+          emergency_rejected_count?: number
+          is_online?: boolean
+          last_online?: string | null
+          psychologist_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psychologist_presence_psychologist_id_fkey"
+            columns: ["psychologist_id"]
+            isOneToOne: true
+            referencedRelation: "psychologists"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       psychologist_registrations: {
         Row: {
@@ -658,6 +699,14 @@ export type Database = {
           admin_id: string
           rejection_reason?: string
         }
+        Returns: undefined
+      }
+      increment_emergency_accepted: {
+        Args: { p_psychologist_id: string }
+        Returns: undefined
+      }
+      increment_emergency_rejected: {
+        Args: { p_psychologist_id: string }
         Returns: undefined
       }
       is_super_admin: {
