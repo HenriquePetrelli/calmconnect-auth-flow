@@ -23,7 +23,9 @@ export const usePsychologistEmergency = () => {
   const fetchEmergencyRequests = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase.functions.invoke('psychologist-emergency');
+      const { data, error } = await supabase.functions.invoke('psychologist-emergency', {
+        method: 'GET'
+      });
       
       if (error) throw error;
       
