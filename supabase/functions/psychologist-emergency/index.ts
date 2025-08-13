@@ -43,8 +43,8 @@ serve(async (req) => {
       throw new Error('Access denied. Psychologist access required.');
     }
 
-    if (req.method === 'GET') {
-      // Get pending emergency requests
+    if (req.method === 'GET' || req.method === 'POST') {
+      // Get pending emergency requests (supporting GET and POST)
       const { data: emergencyRequests, error } = await supabase
         .from('emergency_requests')
         .select(`
