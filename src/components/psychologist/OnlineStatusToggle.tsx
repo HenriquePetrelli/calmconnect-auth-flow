@@ -34,15 +34,26 @@ export const OnlineStatusToggle = () => {
       if (!userId) throw new Error('Usuário não autenticado');
 
       const next = !isOnline;
-      const { error } = await supabase
-        .from('psychologist_presence')
-        .upsert({
-          psychologist_id: userId,
-          is_online: next,
-          last_online: new Date().toISOString(),
-        });
+      let opError: any = null;
 
-      if (error) throw error;
+      if (next) {
+        const { error: upsertError } = await supabase
+          .from('psychologist_presence')
+          .upsert({
+            psychologist_id: userId,
+            is_online: true,
+            last_online: new Date().toISOString(),
+          });
+        opError = upsertError;
+      } else {
+        const { error: deleteError } = await supabase
+          .from('psychologist_presence')
+          .delete()
+          .eq('psychologist_id', userId);
+        opError = deleteError;
+      }
+
+      if (opError) throw opError;
 
       setIsOnline(next);
       toast({

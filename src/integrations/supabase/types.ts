@@ -388,6 +388,7 @@ export type Database = {
       psychologist_presence: {
         Row: {
           created_at: string
+          current_emergency_id: string | null
           emergency_accepted_count: number
           emergency_rejected_count: number
           is_online: boolean
@@ -397,6 +398,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          current_emergency_id?: string | null
           emergency_accepted_count?: number
           emergency_rejected_count?: number
           is_online?: boolean
@@ -406,6 +408,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          current_emergency_id?: string | null
           emergency_accepted_count?: number
           emergency_rejected_count?: number
           is_online?: boolean
@@ -414,6 +417,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "psychologist_presence_current_emergency_id_fkey"
+            columns: ["current_emergency_id"]
+            isOneToOne: false
+            referencedRelation: "emergency_requests"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "psychologist_presence_psychologist_id_fkey"
             columns: ["psychologist_id"]
