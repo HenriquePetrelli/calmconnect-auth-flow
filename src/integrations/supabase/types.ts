@@ -126,9 +126,13 @@ export type Database = {
           accepted_at: string | null
           accepted_by: string | null
           created_at: string
+          duration: number | null
+          ended_at: string | null
           id: string
           patient_details: Json
           patient_id: string
+          room_url: string | null
+          started_at: string | null
           status: string
           updated_at: string
           video_room_id: string | null
@@ -137,9 +141,13 @@ export type Database = {
           accepted_at?: string | null
           accepted_by?: string | null
           created_at?: string
+          duration?: number | null
+          ended_at?: string | null
           id?: string
           patient_details?: Json
           patient_id: string
+          room_url?: string | null
+          started_at?: string | null
           status?: string
           updated_at?: string
           video_room_id?: string | null
@@ -148,9 +156,13 @@ export type Database = {
           accepted_at?: string | null
           accepted_by?: string | null
           created_at?: string
+          duration?: number | null
+          ended_at?: string | null
           id?: string
           patient_details?: Json
           patient_id?: string
+          room_url?: string | null
+          started_at?: string | null
           status?: string
           updated_at?: string
           video_room_id?: string | null
