@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.52.1";
 
@@ -44,13 +45,10 @@ serve(async (req) => {
     }
 
     if (req.method === 'GET' || req.method === 'POST') {
-      // Get pending emergency requests (supporting GET and POST)
+      // Get pending emergency requests without the problematic join
       const { data: emergencyRequests, error } = await supabase
         .from('emergency_requests')
-        .select(`
-          *,
-          patient:patient_id(full_name)
-        `)
+        .select('*')
         .eq('status', 'pending')
         .order('created_at', { ascending: true });
 
@@ -59,8 +57,24 @@ serve(async (req) => {
         throw error;
       }
 
+      // Get patient details separately for each request
+      const requestsWithPatients = await Promise.all(
+        (emergencyRequests || []).map(async (request) => {
+          const { data: patient, error: patientError } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('user_id', request.patient_id)
+            .single();
+
+          return {
+            ...request,
+            patient: patient ? { full_name: patient.full_name } : { full_name: 'Paciente' }
+          };
+        })
+      );
+
       return new Response(
-        JSON.stringify(emergencyRequests),
+        JSON.stringify(requestsWithPatients),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         }
