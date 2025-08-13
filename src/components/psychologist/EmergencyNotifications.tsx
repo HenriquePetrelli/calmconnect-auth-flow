@@ -6,18 +6,23 @@ import { AlertTriangle, Clock, User, Phone, MessageSquare } from 'lucide-react';
 import { usePsychologistEmergency } from '@/hooks/usePsychologistEmergency';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
 const EmergencyNotifications = () => {
   const { emergencyRequests, loading, acceptEmergencyRequest, declineEmergencyRequest } = usePsychologistEmergency();
   const [processingRequests, setProcessingRequests] = useState<Set<string>>(new Set());
+  const navigate = useNavigate();
 
   const handleAccept = async (requestId: string) => {
     setProcessingRequests(prev => new Set(prev).add(requestId));
     try {
       const acceptedRequest = await acceptEmergencyRequest(requestId);
-      // Here you would typically redirect to a video call interface
-      // Emergency accepted (removed sensitive logging)
-      // TODO: Integrate with video call system
+      // Create or fetch room URL
+      const { data, error } = await supabase.functions.invoke('create-call-room', { body: { requestId } });
+      if (!error && (data as any)?.room_url) {
+        navigate(`/emergency/call/${requestId}`);
+      }
     } catch (error) {
       console.error('Error accepting emergency:', error);
     } finally {

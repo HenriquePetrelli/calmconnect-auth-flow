@@ -1,116 +1,174 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Phone } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import CancelConfirmationModal from "@/components/sos/CancelConfirmationModal";
 import SupportiveMessages from "@/components/sos/SupportiveMessages";
-import VideoCall from "@/components/sos/VideoCall";
+import { supabase } from "@/integrations/supabase/client";
 
 const SOS = () => {
   const navigate = useNavigate();
-  const [step, setStep] = useState(1); // 1: searching, 2: connected
-  const [availableProfessionals, setAvailableProfessionals] = useState(3);
+  const [availableProfessionals, setAvailableProfessionals] = useState(0);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [requestId, setRequestId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Simular busca de profissionais
+  // Fetch latest emergency request for current user and subscribe for acceptance
   useEffect(() => {
-    if (step === 1) {
-      const searchTimer = setTimeout(() => {
-        setStep(2);
-      }, 5000); // 5 segundos de busca
+    let reqChannel: any = null;
+    const init = async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      const userId = auth.user?.id;
+      if (!userId) {
+        navigate('/home');
+        return;
+      }
 
-      // Simular mudança no número de profissionais disponíveis
-      const professionalInterval = setInterval(() => {
-        setAvailableProfessionals(prev => Math.max(1, Math.min(5, prev + (Math.random() > 0.5 ? 1 : -1))));
-      }, 2000);
+      // Get the most recent request from this user
+      const { data } = await supabase
+        .from('emergency_requests')
+        .select('id, status, room_url, created_at')
+        .eq('patient_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-      return () => {
-        clearTimeout(searchTimer);
-        clearInterval(professionalInterval);
-      };
-    }
-  }, [step]);
+      if (data) {
+        const id = (data as any).id as string;
+        setRequestId(id);
 
-  const handleCancelConfirm = () => {
+        // Navigate to call when accepted and we have a room
+        if ((data as any).status === 'accepted' && (data as any).room_url) {
+          navigate(`/emergency/call/${id}`);
+        }
+
+        // Subscribe to updates for this request
+        reqChannel = supabase
+          .channel(`emergency_watch_${id}`)
+          .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'emergency_requests', filter: `id=eq.${id}` }, (payload) => {
+            const n = payload.new as any;
+            if (n.status === 'accepted' && n.room_url) {
+              navigate(`/emergency/call/${id}`);
+              if (reqChannel) supabase.removeChannel(reqChannel);
+            }
+          })
+          .subscribe();
+      }
+      setLoading(false);
+    };
+
+    init();
+
+    return () => {
+      if (reqChannel) supabase.removeChannel(reqChannel);
+    };
+  }, [navigate]);
+
+  // Track online professionals
+  useEffect(() => {
+    const fetchOnline = async () => {
+      const { count } = await supabase
+        .from('psychologist_presence')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_online', true);
+      setAvailableProfessionals(count ?? 0);
+    };
+    fetchOnline();
+
+    const channel = supabase
+      .channel('presence_watch')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'psychologist_presence' }, () => {
+        fetchOnline();
+      });
+
+    // Subscribe without returning the Promise to React
+    channel.subscribe();
+
+    return () => {
+      // Cleanup without returning a Promise
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const handleCancelConfirm = async () => {
     setShowCancelModal(false);
+    if (requestId) {
+      await supabase.from('emergency_requests').update({ status: 'cancelled' }).eq('id', requestId);
+    }
     navigate('/home');
   };
 
-  const handleEndCall = () => {
-    navigate('/home');
-  };
-
-  if (step === 1) {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-background flex flex-col">
-        {/* Header */}
-        <div className="flex items-center gap-4 p-4 border-b border-border">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => setShowCancelModal(true)}
-          >
-            <ArrowLeft size={20} />
-          </Button>
-          <h1 className="text-xl font-semibold text-foreground">Solicitar ajuda</h1>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-8">
-          {/* Status da busca */}
-          <Card className="w-full max-w-md">
-            <CardContent className="p-8 text-center space-y-6">
-              {/* Loader animado */}
-              <div className="w-20 h-20 mx-auto">
-                <div className="relative w-full h-full">
-                  <div className="absolute inset-0 rounded-full border-4 border-primary/20"></div>
-                  <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
-                  <div className="absolute inset-2 rounded-full border-2 border-primary/40 border-b-transparent animate-spin" style={{ animationDuration: '2s', animationDirection: 'reverse' }}></div>
-                </div>
-              </div>
-              
-              <div className="space-y-3">
-                <h2 className="text-2xl font-semibold text-foreground">
-                  Buscando profissional...
-                </h2>
-                <p className="text-primary font-medium">
-                  Profissionais disponíveis: {availableProfessionals}
-                </p>
-                <p className="text-muted-foreground text-sm">
-                  Estamos conectando você com um especialista. Aguarde alguns instantes.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Mensagens de apoio */}
-          <SupportiveMessages />
-
-          {/* Botão cancelar */}
-          <Button
-            variant="outline"
-            onClick={() => setShowCancelModal(true)}
-            className="px-8"
-          >
-            Cancelar
-          </Button>
-        </div>
-
-        <CancelConfirmationModal
-          open={showCancelModal}
-          onOpenChange={setShowCancelModal}
-          onConfirm={handleCancelConfirm}
-        />
+      <div className="min-h-screen bg-background flex items-center justify-center text-muted-foreground">
+        Preparando sua solicitação...
       </div>
     );
   }
 
-  if (step === 2) {
-    return <VideoCall onEndCall={handleEndCall} />;
-  }
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Header */}
+      <div className="flex items-center gap-4 p-4 border-b border-border">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => setShowCancelModal(true)}
+        >
+          <ArrowLeft size={20} />
+        </Button>
+        <h1 className="text-xl font-semibold text-foreground">Solicitar ajuda</h1>
+      </div>
 
-  return null;
+      {/* Content */}
+      <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-8">
+        {/* Status da busca */}
+        <Card className="w-full max-w-md">
+          <CardContent className="p-8 text-center space-y-6">
+            {/* Loader animado */}
+            <div className="w-20 h-20 mx-auto">
+              <div className="relative w-full h-full">
+                <div className="absolute inset-0 rounded-full border-4 border-primary/20"></div>
+                <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+                <div className="absolute inset-2 rounded-full border-2 border-primary/40 border-b-transparent animate-spin" style={{ animationDuration: '2s', animationDirection: 'reverse' }}></div>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              <h2 className="text-2xl font-semibold text-foreground">
+                Buscando profissional...
+              </h2>
+              <p className="text-primary font-medium">
+                Profissionais online: {availableProfessionals}
+              </p>
+              <p className="text-muted-foreground text-sm">
+                Assim que um psicólogo aceitar, abriremos a sala de vídeo automaticamente.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Mensagens de apoio */}
+        <SupportiveMessages />
+
+        {/* Botão cancelar */}
+        <Button
+          variant="outline"
+          onClick={() => setShowCancelModal(true)}
+          className="px-8"
+        >
+          Cancelar
+        </Button>
+      </div>
+
+      <CancelConfirmationModal
+        open={showCancelModal}
+        onOpenChange={setShowCancelModal}
+        onConfirm={handleCancelConfirm}
+      />
+    </div>
+  );
 };
 
 export default SOS;

@@ -4,10 +4,11 @@ import { useToast } from '@/hooks/use-toast';
 
 export interface EmergencyRequest {
   id: string;
-  status: 'pending' | 'accepted' | 'completed' | 'cancelled';
+  status: 'pending' | 'accepted' | 'in_progress' | 'completed' | 'cancelled' | 'rejected' | 'waiting';
   accepted_by?: string;
   accepted_at?: string;
   video_room_id?: string;
+  room_url?: string;
   psychologist?: {
     full_name: string;
   };
@@ -52,13 +53,11 @@ export const useEmergencySOS = () => {
 
   const checkRequestStatus = async (requestId: string) => {
     try {
-      const { data, error } = await supabase.functions.invoke('emergency-sos', {
+      const { data, error } = await supabase.functions.invoke('emergency-sos?requestId=' + encodeURIComponent(requestId), {
         body: null,
         method: 'GET',
       });
-      
       if (error) throw error;
-      
       setCurrentRequest(data);
       return data;
     } catch (error: any) {

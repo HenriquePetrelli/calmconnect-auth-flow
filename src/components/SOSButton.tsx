@@ -43,8 +43,10 @@ const SOSButton = () => {
     setShowModal(false);
     try {
       await incrementUsage('sos_uses');
-      await createEmergencyRequest();
-      navigate('/sos');
+      const requestId = await createEmergencyRequest();
+      if (requestId) {
+        navigate('/sos');
+      }
     } catch (error) {
       console.error('Error creating emergency request:', error);
     }
