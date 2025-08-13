@@ -58,7 +58,7 @@ export const OnlineStatusToggle = () => {
 
   return (
     <div className="flex items-center gap-2">
-      <Switch checked={isOnline} onCheckedChange={handleToggle} disabled={loading} className="bg-primary"/>
+      <Switch checked={isOnline} onCheckedChange={handleToggle} disabled={loading} />
       <span className="text-sm">{isOnline ? 'Online' : 'Offline'}</span>
     </div>
   );
