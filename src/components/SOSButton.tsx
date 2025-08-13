@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
 import ConfirmationModal from "./sos/ConfirmationModal";
 import { useNavigate } from "react-router-dom";
-import { useSubscription } from "@/contexts/SubscriptionContext";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useEmergencySOS } from "@/hooks/useEmergencySOS";
 
@@ -11,38 +11,42 @@ const SOSButton = () => {
   const [showModal, setShowModal] = useState(false);
   const [canUse, setCanUse] = useState(false);
   const navigate = useNavigate();
-  const { canUseFeature, incrementUsage } = useSubscription();
   const { toast } = useToast();
   const { createEmergencyRequest, loading } = useEmergencySOS();
 
   useEffect(() => {
     checkCanUse();
-  }, [canUseFeature]);
+  }, []);
 
   const checkCanUse = async () => {
-    const result = await canUseFeature('sos_uses');
-    setCanUse(result);
+    const { data, error } = await supabase.functions.invoke('check-subscription');
+    if (error) {
+      setCanUse(false);
+      return;
+    }
+    setCanUse(Boolean(data?.can_use_sos));
+    if (data && data.can_use_sos === false && data.reason) {
+      toast({ title: "Aviso", description: data.reason });
+    }
   };
 
   const handleButtonClick = async () => {
-    const canUseSOS = await canUseFeature('sos_uses');
-    
-    if (!canUseSOS) {
+    const { data } = await supabase.functions.invoke('check-subscription');
+    const allowed = Boolean(data?.can_use_sos);
+    if (!allowed) {
       toast({
         title: "Limite atingido",
-        description: "Você já utilizou todas as consultas de emergência disponíveis neste mês. Considere fazer upgrade do seu plano.",
+        description: data?.reason || "Seu plano não permite SOS.",
         variant: "destructive",
       });
       return;
     }
-    
     setShowModal(true);
   };
 
   const handleConfirm = async () => {
     setShowModal(false);
     try {
-      await incrementUsage('sos_uses');
       const requestId = await createEmergencyRequest();
       if (requestId) {
         navigate('/sos');

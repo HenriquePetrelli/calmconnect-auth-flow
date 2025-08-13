@@ -590,6 +590,8 @@ export type Database = {
           email: string
           id: string
           plan_limits: Json | null
+          sos_last_used: string | null
+          sos_used_this_month: boolean
           stripe_customer_id: string | null
           subscribed: boolean
           subscription_end: string | null
@@ -603,6 +605,8 @@ export type Database = {
           email: string
           id?: string
           plan_limits?: Json | null
+          sos_last_used?: string | null
+          sos_used_this_month?: boolean
           stripe_customer_id?: string | null
           subscribed?: boolean
           subscription_end?: string | null
@@ -616,6 +620,8 @@ export type Database = {
           email?: string
           id?: string
           plan_limits?: Json | null
+          sos_last_used?: string | null
+          sos_used_this_month?: boolean
           stripe_customer_id?: string | null
           subscribed?: boolean
           subscription_end?: string | null
@@ -637,6 +643,14 @@ export type Database = {
       can_upload_document: {
         Args: { bucket_name: string; object_name: string }
         Returns: boolean
+      }
+      can_use_sos: {
+        Args: { p_user_id: string }
+        Returns: {
+          can_use: boolean
+          reason: string
+          plan_type: string
+        }[]
       }
       create_admin_account: {
         Args: {

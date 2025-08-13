@@ -68,6 +68,8 @@ const EmergencyCall = () => {
           .from('emergency_requests')
           .update({ started_at: new Date().toISOString(), status: 'in_progress' })
           .eq('id', requestId);
+        // Mark SOS usage for Plus plans when call actually connects
+        await supabase.functions.invoke('mark-sos-used', { body: { request_id: requestId } });
       }
     };
 

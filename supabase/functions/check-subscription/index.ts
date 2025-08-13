@@ -139,14 +139,52 @@ serve(async (req) => {
       logStep("No active subscription found");
     }
 
-    // Get current usage from database
-    const { data: existingSubscriber } = await supabaseClient
+    // Get current usage and SOS flags from database
+    const { data: existingSubscriberRow } = await supabaseClient
       .from("subscribers")
-      .select("current_usage")
+      .select("current_usage, sos_used_this_month, sos_last_used, subscribed, subscription_tier, user_id")
       .eq("email", user.email)
-      .single();
+      .maybeSingle();
 
-    const currentUsage = existingSubscriber?.current_usage || { appointments: 0, sos_uses: 0 };
+    const currentUsage = existingSubscriberRow?.current_usage || { appointments: 0, sos_uses: 0 };
+    let sosUsedThisMonth = existingSubscriberRow?.sos_used_this_month ?? false;
+    let sosLastUsed = existingSubscriberRow?.sos_last_used ?? null as string | null;
+
+    // Compute SOS availability based on plan rules
+    let canUseSOS = false;
+    let sosReason = "Sem assinatura ativa";
+    const now = new Date();
+    const sameMonth = sosLastUsed
+      ? (new Date(sosLastUsed)).getUTCFullYear() === now.getUTCFullYear() && (new Date(sosLastUsed)).getUTCMonth() === now.getUTCMonth()
+      : false;
+
+    if (!hasActiveSub || !subscriptionTier) {
+      canUseSOS = false;
+      sosReason = "Usuário não possui assinatura ativa";
+    } else if (subscriptionTier === "Plus") {
+      // Reset monthly flag when month changed
+      if (sosUsedThisMonth && sosLastUsed && !sameMonth) {
+        await supabaseClient
+          .from("subscribers")
+          .update({ sos_used_this_month: false, sos_last_used: null, updated_at: new Date().toISOString() })
+          .eq("email", user.email);
+        sosUsedThisMonth = false;
+        sosLastUsed = null;
+      }
+      if (sosUsedThisMonth) {
+        canUseSOS = false;
+        sosReason = "Limite mensal de SOS já utilizado (PLUS: 1x/mês)";
+      } else {
+        canUseSOS = true;
+        sosReason = "Pode usar SOS (PLUS: 1x/mês)";
+      }
+    } else if (subscriptionTier === "Premium") {
+      canUseSOS = true;
+      sosReason = "Pode usar SOS (PREMIUM: ilimitado)";
+    } else {
+      canUseSOS = false;
+      sosReason = "Plano não permite uso de SOS";
+    }
 
     await supabaseClient.from("subscribers").upsert({
       email: user.email,
@@ -157,6 +195,8 @@ serve(async (req) => {
       subscription_end: subscriptionEnd,
       plan_limits: planLimits,
       current_usage: currentUsage,
+      sos_used_this_month: sosUsedThisMonth,
+      sos_last_used: sosLastUsed,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'email' });
 
@@ -166,7 +206,10 @@ serve(async (req) => {
       subscription_tier: subscriptionTier,
       subscription_end: subscriptionEnd,
       plan_limits: planLimits,
-      current_usage: currentUsage
+      current_usage: currentUsage,
+      can_use_sos: canUseSOS,
+      reason: sosReason,
+      plan_type: subscriptionTier
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
