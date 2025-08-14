@@ -24,7 +24,54 @@ export const OnlineStatusToggle = () => {
     };
 
     fetchStatus();
-  }, []);
+
+    // Set up real-time subscription for status changes
+    const channel = supabase
+      .channel('psychologist_presence_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'psychologist_presence'
+        },
+        async (payload) => {
+          const { data: auth } = await supabase.auth.getUser();
+          if (auth.user?.id && payload.new && 
+              (payload.new as any).psychologist_id === auth.user.id) {
+            setIsOnline((payload.new as any).is_online);
+          } else if (payload.eventType === 'DELETE' && 
+                    (payload.old as any).psychologist_id === auth.user?.id) {
+            setIsOnline(false);
+          }
+        }
+      )
+      .subscribe();
+
+    // Handle connection state changes
+    const handleConnectionChange = async () => {
+      if (navigator.onLine && isOnline) {
+        const { data: auth } = await supabase.auth.getUser();
+        const userId = auth.user?.id;
+        if (userId) {
+          await supabase
+            .from('psychologist_presence')
+            .upsert({
+              psychologist_id: userId,
+              is_online: true,
+              last_online: new Date().toISOString(),
+            });
+        }
+      }
+    };
+
+    window.addEventListener('online', handleConnectionChange);
+
+    return () => {
+      supabase.removeChannel(channel);
+      window.removeEventListener('online', handleConnectionChange);
+    };
+  }, [isOnline]);
 
   const handleToggle = async () => {
     setLoading(true);
@@ -33,44 +80,60 @@ export const OnlineStatusToggle = () => {
       const userId = auth.user?.id;
       if (!userId) throw new Error('Usuário não autenticado');
 
-      const next = !isOnline;
-      let opError: any = null;
+      const nextStatus = !isOnline;
 
-      if (next) {
-        const { error: upsertError } = await supabase
+      if (nextStatus) {
+        // Insert/Update presence record when going online
+        const { error } = await supabase
           .from('psychologist_presence')
           .upsert({
             psychologist_id: userId,
             is_online: true,
             last_online: new Date().toISOString(),
           });
-        opError = upsertError;
+        if (error) throw error;
       } else {
-        const { error: deleteError } = await supabase
+        // Delete presence record when going offline
+        const { error } = await supabase
           .from('psychologist_presence')
           .delete()
           .eq('psychologist_id', userId);
-        opError = deleteError;
+        if (error) throw error;
       }
 
-      if (opError) throw opError;
-
-      setIsOnline(next);
+      setIsOnline(nextStatus);
       toast({
         title: 'Status atualizado',
-        description: `Você está agora ${next ? 'online' : 'offline'}`,
+        description: `Você está agora ${nextStatus ? 'online' : 'offline'}`,
       });
     } catch (err: any) {
-      toast({ title: 'Erro', description: 'Não foi possível atualizar seu status.', variant: 'destructive' });
+      console.error('Error updating status:', err);
+      toast({ 
+        title: 'Erro', 
+        description: 'Não foi possível atualizar seu status.', 
+        variant: 'destructive' 
+      });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center gap-2">
-      <Switch checked={isOnline} onCheckedChange={handleToggle} disabled={loading} />
-      <span className="text-sm">{isOnline ? 'Online' : 'Offline'}</span>
+    <div className="flex items-center gap-3 p-4 border border-border rounded-lg bg-card">
+      <div className="flex-1">
+        <p className="font-medium text-foreground">Status de Disponibilidade</p>
+        <p className="text-sm text-muted-foreground">
+          {isOnline ? 'Visível para pacientes' : 'Não visível para pacientes'}
+        </p>
+      </div>
+      <Switch
+        checked={isOnline}
+        onCheckedChange={handleToggle}
+        disabled={loading}
+      />
+      <span className={`w-20 text-sm font-medium ${isOnline ? 'text-primary' : 'text-muted-foreground'}`}>
+        {isOnline ? 'Online' : 'Offline'}
+      </span>
     </div>
   );
 };
