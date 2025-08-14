@@ -394,7 +394,6 @@ export type Database = {
           current_emergency_id: string | null
           emergency_accepted_count: number
           emergency_rejected_count: number
-          is_online: boolean
           last_online: string | null
           psychologist_id: string
           updated_at: string
@@ -404,7 +403,6 @@ export type Database = {
           current_emergency_id?: string | null
           emergency_accepted_count?: number
           emergency_rejected_count?: number
-          is_online?: boolean
           last_online?: string | null
           psychologist_id: string
           updated_at?: string
@@ -414,7 +412,6 @@ export type Database = {
           current_emergency_id?: string | null
           emergency_accepted_count?: number
           emergency_rejected_count?: number
-          is_online?: boolean
           last_online?: string | null
           psychologist_id?: string
           updated_at?: string
