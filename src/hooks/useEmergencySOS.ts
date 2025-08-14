@@ -92,10 +92,10 @@ export const useEmergencySOS = () => {
   const cancelRequest = async (requestId: string) => {
     try {
       setLoading(true);
-      // Update request status to cancelled
+      // Delete the emergency request instead of just updating status
       const { error } = await supabase
         .from('emergency_requests')
-        .update({ status: 'cancelled' })
+        .delete()
         .eq('id', requestId);
       
       if (error) throw error;

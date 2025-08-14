@@ -128,6 +128,7 @@ export type Database = {
           created_at: string
           duration: number | null
           ended_at: string | null
+          expires_at: string | null
           id: string
           patient_details: Json
           patient_id: string
@@ -143,6 +144,7 @@ export type Database = {
           created_at?: string
           duration?: number | null
           ended_at?: string | null
+          expires_at?: string | null
           id?: string
           patient_details?: Json
           patient_id: string
@@ -158,6 +160,7 @@ export type Database = {
           created_at?: string
           duration?: number | null
           ended_at?: string | null
+          expires_at?: string | null
           id?: string
           patient_details?: Json
           patient_id?: string

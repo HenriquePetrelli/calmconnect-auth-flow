@@ -6,6 +6,8 @@ import { useNavigate } from "react-router-dom";
 import CancelConfirmationModal from "@/components/sos/CancelConfirmationModal";
 import SupportiveMessages from "@/components/sos/SupportiveMessages";
 import { supabase } from "@/integrations/supabase/client";
+import { useBeforeUnload } from "@/hooks/useBeforeUnload";
+import { useEmergencySOS } from "@/hooks/useEmergencySOS";
 
 const SOS = () => {
   const navigate = useNavigate();
@@ -13,23 +15,30 @@ const SOS = () => {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [requestId, setRequestId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string>('');
+  const { cancelRequest } = useEmergencySOS();
+
+  // Enable automatic cleanup on browser close/tab switch
+  useBeforeUnload(requestId, userId);
 
   // Fetch latest emergency request for current user and subscribe for acceptance
   useEffect(() => {
     let reqChannel: any = null;
     const init = async () => {
       const { data: auth } = await supabase.auth.getUser();
-      const userId = auth.user?.id;
-      if (!userId) {
+      const currentUserId = auth.user?.id;
+      if (!currentUserId) {
         navigate('/home');
         return;
       }
+      
+      setUserId(currentUserId);
 
       // Get the most recent request from this user
       const { data } = await supabase
         .from('emergency_requests')
         .select('id, status, room_url, created_at')
-        .eq('patient_id', userId)
+        .eq('patient_id', currentUserId)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -94,7 +103,11 @@ const SOS = () => {
   const handleCancelConfirm = async () => {
     setShowCancelModal(false);
     if (requestId) {
-      await supabase.from('emergency_requests').update({ status: 'cancelled' }).eq('id', requestId);
+      try {
+        await cancelRequest(requestId);
+      } catch (error) {
+        console.error('Error cancelling request:', error);
+      }
     }
     navigate('/home');
   };
