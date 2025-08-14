@@ -14,13 +14,18 @@ export const OnlineStatusToggle = () => {
       const userId = auth.user?.id;
       if (!userId) return;
 
+      // Check if record exists in psychologist_presence (existence = online)
       const { data, error } = await supabase
         .from('psychologist_presence')
-        .select('is_online')
+        .select('psychologist_id')
         .eq('psychologist_id', userId)
         .maybeSingle();
 
-      if (!error && data) setIsOnline(data.is_online);
+      if (!error && data) {
+        setIsOnline(true);
+      } else {
+        setIsOnline(false);
+      }
     };
 
     fetchStatus();
@@ -39,7 +44,7 @@ export const OnlineStatusToggle = () => {
           const { data: auth } = await supabase.auth.getUser();
           if (auth.user?.id && payload.new && 
               (payload.new as any).psychologist_id === auth.user.id) {
-            setIsOnline((payload.new as any).is_online);
+            setIsOnline(true);
           } else if (payload.eventType === 'DELETE' && 
                     (payload.old as any).psychologist_id === auth.user?.id) {
             setIsOnline(false);
@@ -48,30 +53,10 @@ export const OnlineStatusToggle = () => {
       )
       .subscribe();
 
-    // Handle connection state changes
-    const handleConnectionChange = async () => {
-      if (navigator.onLine && isOnline) {
-        const { data: auth } = await supabase.auth.getUser();
-        const userId = auth.user?.id;
-        if (userId) {
-          await supabase
-            .from('psychologist_presence')
-            .upsert({
-              psychologist_id: userId,
-              is_online: true,
-              last_online: new Date().toISOString(),
-            });
-        }
-      }
-    };
-
-    window.addEventListener('online', handleConnectionChange);
-
     return () => {
       supabase.removeChannel(channel);
-      window.removeEventListener('online', handleConnectionChange);
     };
-  }, [isOnline]);
+  }, []);
 
   const handleToggle = async () => {
     setLoading(true);
@@ -83,17 +68,18 @@ export const OnlineStatusToggle = () => {
       const nextStatus = !isOnline;
 
       if (nextStatus) {
-        // Insert/Update presence record when going online
+        // Insert record when going online
         const { error } = await supabase
           .from('psychologist_presence')
           .upsert({
             psychologist_id: userId,
-            is_online: true,
             last_online: new Date().toISOString(),
+            emergency_accepted_count: 0,
+            emergency_rejected_count: 0,
           });
         if (error) throw error;
       } else {
-        // Delete presence record when going offline
+        // Delete record when going offline
         const { error } = await supabase
           .from('psychologist_presence')
           .delete()
@@ -132,7 +118,7 @@ export const OnlineStatusToggle = () => {
         disabled={loading}
       />
       <span className={`w-20 text-sm font-medium ${isOnline ? 'text-primary' : 'text-muted-foreground'}`}>
-        {isOnline ? 'Online' : 'Offline'}
+        {loading ? '...' : isOnline ? 'Online' : 'Offline'}
       </span>
     </div>
   );

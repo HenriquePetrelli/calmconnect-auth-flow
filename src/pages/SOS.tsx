@@ -79,8 +79,7 @@ const SOS = () => {
     const fetchOnline = async () => {
       const { count } = await supabase
         .from('psychologist_presence')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_online', true);
+        .select('*', { count: 'exact', head: true });
       setAvailableProfessionals(count ?? 0);
     };
     fetchOnline();
