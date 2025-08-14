@@ -65,11 +65,15 @@ export const OnlineStatusToggle = () => {
       const userId = auth.user?.id;
       if (!userId) throw new Error('Usuário não autenticado');
 
+      console.log('Attempting to toggle status for user:', userId);
+      console.log('Current status:', isOnline, 'Target status:', !isOnline);
+
       const nextStatus = !isOnline;
 
       if (nextStatus) {
         // Insert record when going online
-        const { error } = await supabase
+        console.log('Attempting to insert presence record...');
+        const { data, error } = await supabase
           .from('psychologist_presence')
           .upsert({
             psychologist_id: userId,
@@ -77,14 +81,25 @@ export const OnlineStatusToggle = () => {
             emergency_accepted_count: 0,
             emergency_rejected_count: 0,
           });
-        if (error) throw error;
+        
+        if (error) {
+          console.error('Insert error details:', error);
+          throw error;
+        }
+        console.log('Insert successful:', data);
       } else {
         // Delete record when going offline
-        const { error } = await supabase
+        console.log('Attempting to delete presence record...');
+        const { data, error } = await supabase
           .from('psychologist_presence')
           .delete()
           .eq('psychologist_id', userId);
-        if (error) throw error;
+        
+        if (error) {
+          console.error('Delete error details:', error);
+          throw error;
+        }
+        console.log('Delete successful:', data);
       }
 
       setIsOnline(nextStatus);
@@ -94,9 +109,11 @@ export const OnlineStatusToggle = () => {
       });
     } catch (err: any) {
       console.error('Error updating status:', err);
+      console.error('Error message:', err.message);
+      console.error('Error details:', err.details);
       toast({ 
         title: 'Erro', 
-        description: 'Não foi possível atualizar seu status.', 
+        description: `Não foi possível atualizar seu status: ${err.message}`, 
         variant: 'destructive' 
       });
     } finally {
