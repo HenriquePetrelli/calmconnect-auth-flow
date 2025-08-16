@@ -4,6 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 serve(async (req) => {
@@ -104,8 +105,26 @@ serve(async (req) => {
 
     if (!dailyResp.ok) {
       const errTxt = await dailyResp.text();
-      console.error("Daily room creation failed:", errTxt);
-      return new Response(JSON.stringify({ error: "Failed to create Daily room" }), {
+      console.error(`Daily room creation failed [${dailyResp.status}]:`, errTxt);
+      
+      // Try to parse error details
+      let errorMessage = "Failed to create Daily room";
+      try {
+        const errorData = JSON.parse(errTxt);
+        if (errorData.error === "authentication-error") {
+          errorMessage = "Daily.co API authentication failed - check DAILY_API_KEY";
+        } else {
+          errorMessage = `Daily.co error: ${errorData.error || errorData.message || errTxt}`;
+        }
+      } catch {
+        errorMessage = `Daily.co API error (${dailyResp.status}): ${errTxt}`;
+      }
+      
+      return new Response(JSON.stringify({ 
+        error: errorMessage,
+        status: dailyResp.status,
+        details: errTxt 
+      }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
