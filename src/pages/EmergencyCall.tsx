@@ -1,119 +1,175 @@
-import { useEffect, useMemo, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { WebRTCVideoCall } from "@/components/sos/WebRTCVideoCall";
 
 const EmergencyCall = () => {
   const { requestId } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [roomUrl, setRoomUrl] = useState<string | null>(null);
-  const [startedAt, setStartedAt] = useState<string | null>(null);
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [userType, setUserType] = useState<'psychologist' | 'patient'>('patient');
 
   useEffect(() => {
     document.title = "Chamada de Emergência | Soliv";
   }, []);
 
-  // Fetch and subscribe to request changes
   useEffect(() => {
-    const load = async () => {
+    const initializeCall = async () => {
       if (!requestId) return;
-      setLoading(true);
-      const { data } = await supabase
-        .from("emergency_requests")
-        .select("id, room_url, started_at, ended_at, status")
-        .eq("id", requestId)
-        .maybeSingle();
 
-      if (data) {
-        setRoomUrl((data as any).room_url ?? null);
-        setStartedAt((data as any).started_at ?? null);
-      }
-      setLoading(false);
+      try {
+        // Get session ID from URL params or create new session
+        const sessionIdFromParams = searchParams.get('sessionId');
+        const userTypeFromParams = searchParams.get('userType') as 'psychologist' | 'patient' || 'patient';
+        
+        setUserType(userTypeFromParams);
 
-      // Subscribe to row updates
-      const channel = supabase
-        .channel(`emergency_call_${requestId}`)
-        .on(
-          'postgres_changes',
-          { event: 'UPDATE', schema: 'public', table: 'emergency_requests', filter: `id=eq.${requestId}` },
-          (payload) => {
-            const n = payload.new as any;
-            setRoomUrl(n.room_url ?? null);
-            setStartedAt(n.started_at ?? null);
-          }
-        )
-        .subscribe();
+        if (sessionIdFromParams) {
+          setSessionId(sessionIdFromParams);
+        } else {
+          // Create new WebRTC session for patient
+          const { data: userData } = await supabase.auth.getUser();
+          if (!userData.user) throw new Error('User not authenticated');
 
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    };
+          const { data: webrtcData, error: webrtcError } = await supabase.functions.invoke('initiate-webrtc', {
+            body: {
+              emergency_request_id: requestId,
+              user_id: userData.user.id,
+              user_type: userTypeFromParams
+            }
+          });
 
-    load();
-  }, [requestId]);
+          if (webrtcError) throw webrtcError;
+          setSessionId(webrtcData.session_id);
+        }
 
-  // Mark call as started
-  useEffect(() => {
-    const markStarted = async () => {
-      if (!requestId) return;
-      const { data } = await supabase
-        .from('emergency_requests')
-        .select('started_at')
-        .eq('id', requestId)
-        .maybeSingle();
-
-      if (data && !(data as any).started_at) {
-        await supabase
-          .from('emergency_requests')
-          .update({ started_at: new Date().toISOString(), status: 'in_progress' })
-          .eq('id', requestId);
-        // Mark SOS usage for Plus plans when call actually connects
-        await supabase.functions.invoke('mark-sos-used', { body: { request_id: requestId } });
+      } catch (error) {
+        console.error("Error initializing call:", error);
+        toast({
+          title: "Erro",
+          description: "Erro ao inicializar chamada",
+          variant: "destructive",
+        });
+        navigate("/home");
+      } finally {
+        setLoading(false);
       }
     };
 
-    markStarted();
-  }, [requestId]);
+    initializeCall();
+  }, [requestId, searchParams, navigate, toast]);
+
+  // Mark emergency call as started when component mounts
+  useEffect(() => {
+    const markCallAsStarted = async () => {
+      if (!requestId || !sessionId) return;
+
+      try {
+        const { error } = await supabase
+          .from("emergency_requests")
+          .update({
+            started_at: new Date().toISOString(),
+            status: "in_progress"
+          })
+          .eq("id", requestId);
+
+        if (error) throw error;
+
+        // Mark SOS as used for patients
+        if (userType === 'patient') {
+          await supabase.functions.invoke("mark-sos-used");
+        }
+      } catch (error) {
+        console.error("Error marking call as started:", error);
+      }
+    };
+
+    markCallAsStarted();
+  }, [requestId, sessionId, userType]);
 
   const endCall = async () => {
     if (!requestId) return;
-    const end = new Date();
-    let duration: number | null = null;
-    if (startedAt) {
-      duration = Math.max(0, Math.floor((end.getTime() - new Date(startedAt).getTime()) / 1000));
+
+    try {
+      const endTime = new Date().toISOString();
+      
+      // Get current emergency request data
+      const { data: emergencyData } = await supabase
+        .from("emergency_requests")
+        .select("started_at")
+        .eq("id", requestId)
+        .single();
+
+      const duration = emergencyData?.started_at 
+        ? Math.floor((new Date(endTime).getTime() - new Date(emergencyData.started_at).getTime()) / 1000)
+        : 0;
+
+      // Update emergency request status
+      const { error } = await supabase
+        .from("emergency_requests")
+        .update({
+          ended_at: endTime,
+          status: "completed",
+          duration
+        })
+        .eq("id", requestId);
+
+      if (error) throw error;
+
+      // Update WebRTC session status
+      if (sessionId) {
+        await supabase
+          .from("webrtc_sessions")
+          .update({ status: "completed" })
+          .eq("id", sessionId);
+      }
+
+      navigate("/home");
+    } catch (error) {
+      console.error("Error ending call:", error);
+      toast({
+        title: "Erro",
+        description: "Erro ao finalizar chamada",
+        variant: "destructive",
+      });
     }
-    await supabase
-      .from('emergency_requests')
-      .update({ ended_at: end.toISOString(), status: 'completed', duration })
-      .eq('id', requestId);
-    navigate('/home');
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-muted-foreground">Carregando chamada...</div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-lg">Carregando chamada...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!sessionId) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg">Erro ao carregar sessão de vídeo</p>
+          <Button onClick={() => navigate("/home")} className="mt-4">
+            Voltar ao início
+          </Button>
+        </div>
+      </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="p-4 border-b">
-        <h1 className="text-xl font-semibold">Chamada de Emergência</h1>
-      </header>
-      <main className="flex-1">
-        {roomUrl ? (
-          <iframe src={roomUrl} title="Daily Call" className="w-full h-[calc(100vh-9rem)] border-0" allow="camera; microphone; display-capture; autoplay" />
-        ) : (
-          <div className="h-full flex items-center justify-center text-center p-8 text-muted-foreground">
-            Aguardando link da sala...
-          </div>
-        )}
-      </main>
-      <footer className="p-4 border-t flex justify-center">
-        <Button variant="destructive" onClick={endCall}>Encerrar Chamada</Button>
-      </footer>
-    </div>
+    <WebRTCVideoCall 
+      sessionId={sessionId} 
+      userType={userType} 
+      onEndCall={endCall} 
+    />
   );
 };
 

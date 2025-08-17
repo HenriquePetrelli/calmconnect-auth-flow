@@ -45,8 +45,8 @@ export const usePsychologistEmergency = () => {
   // Accept emergency request
   const acceptEmergencyRequest = async (requestId: string) => {
     try {
+      // Accept the emergency request
       const { data, error } = await supabase.functions.invoke('psychologist-emergency', {
-        method: 'PUT',
         body: {
           requestId,
           action: 'accept'
@@ -67,10 +67,27 @@ export const usePsychologistEmergency = () => {
         await supabase.rpc('increment_emergency_accepted', { p_psychologist_id: currentUserId });
       }
 
+      // Create WebRTC session
+      const { data: webrtcData, error: webrtcError } = await supabase.functions.invoke('initiate-webrtc', {
+        body: {
+          emergency_request_id: requestId,
+          user_id: currentUserId,
+          user_type: 'psychologist'
+        }
+      });
+
+      if (webrtcError) {
+        console.error('Error creating WebRTC session:', webrtcError);
+        throw new Error('Falha ao criar sessão de vídeo');
+      }
+
       // Refresh the list
       fetchEmergencyRequests();
       
-      return data.emergency_request;
+      return {
+        emergency_request: data.emergency_request,
+        session_id: webrtcData.session_id
+      };
     } catch (error: any) {
       console.error('Error accepting emergency request:', error);
       toast({

@@ -17,12 +17,10 @@ const EmergencyNotifications = () => {
   const handleAccept = async (requestId: string) => {
     setProcessingRequests(prev => new Set(prev).add(requestId));
     try {
-      const acceptedRequest = await acceptEmergencyRequest(requestId);
-      // Create or fetch room URL
-      const { data, error } = await supabase.functions.invoke('create-call-room', { body: { requestId } });
-      if (!error && (data as any)?.room_url) {
-        navigate(`/emergency/call/${requestId}`);
-      }
+      const result = await acceptEmergencyRequest(requestId);
+      
+      // Navigate to WebRTC video call with session ID
+      navigate(`/emergency-call/${requestId}?sessionId=${result.session_id}&userType=psychologist`);
     } catch (error) {
       console.error('Error accepting emergency:', error);
     } finally {

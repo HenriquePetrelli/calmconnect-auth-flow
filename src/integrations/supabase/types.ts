@@ -631,6 +631,53 @@ export type Database = {
         }
         Relationships: []
       }
+      webrtc_sessions: {
+        Row: {
+          answer: Json | null
+          created_at: string
+          emergency_request_id: string | null
+          expires_at: string | null
+          ice_candidates: Json[] | null
+          id: string
+          offer: Json | null
+          patient_id: string | null
+          psychologist_id: string | null
+          status: string | null
+        }
+        Insert: {
+          answer?: Json | null
+          created_at?: string
+          emergency_request_id?: string | null
+          expires_at?: string | null
+          ice_candidates?: Json[] | null
+          id?: string
+          offer?: Json | null
+          patient_id?: string | null
+          psychologist_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          answer?: Json | null
+          created_at?: string
+          emergency_request_id?: string | null
+          expires_at?: string | null
+          ice_candidates?: Json[] | null
+          id?: string
+          offer?: Json | null
+          patient_id?: string | null
+          psychologist_id?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webrtc_sessions_emergency_request_id_fkey"
+            columns: ["emergency_request_id"]
+            isOneToOne: false
+            referencedRelation: "emergency_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
