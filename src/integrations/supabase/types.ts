@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.12 (cd3cf9e)"
@@ -648,73 +648,73 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: {
           can_use: boolean
-          reason: string
           plan_type: string
+          reason: string
         }[]
       }
       create_admin_account: {
         Args: {
           admin_email: string
-          admin_password: string
           admin_name: string
+          admin_password: string
         }
         Returns: Json
       }
       create_psychologist_profile: {
         Args:
           | {
-              p_user_id: string
-              p_full_name: string
-              p_email: string
-              p_crp_number: string
-              p_specialization: string
-              p_bio: string
-              p_state: string
-              p_city: string
               p_accepts_presential: boolean
               p_address?: string
-              p_document_url?: string
+              p_bio: string
+              p_city: string
               p_cpf?: string
+              p_crp_number: string
+              p_document_url?: string
+              p_email: string
+              p_full_name: string
               p_professional_email?: string
+              p_specialization: string
+              p_state: string
+              p_user_id: string
             }
           | {
-              p_user_id: string
-              p_full_name: string
-              p_email: string
-              p_crp_number: string
-              p_specialization: string
-              p_bio: string
-              p_state: string
-              p_city: string
               p_address?: string
-              p_document_url?: string
+              p_bio: string
+              p_city: string
               p_cpf?: string
+              p_crp_number: string
+              p_document_url?: string
+              p_email: string
+              p_full_name: string
+              p_professional_email?: string
+              p_specialization: string
+              p_state: string
+              p_user_id: string
             }
           | {
-              p_user_id: string
-              p_full_name: string
-              p_email: string
-              p_crp_number: string
-              p_specialization: string
-              p_bio: string
-              p_state: string
-              p_city: string
               p_address?: string
-              p_document_url?: string
+              p_bio: string
+              p_city: string
               p_cpf?: string
-              p_professional_email?: string
+              p_crp_number: string
+              p_document_url?: string
+              p_email: string
+              p_full_name: string
+              p_specialization: string
+              p_state: string
+              p_user_id: string
             }
         Returns: Json
       }
       get_admin_metrics: {
         Args: Record<PropertyKey, never>
         Returns: {
-          total_patients: number
           active_psychologists: number
-          pending_psychologists: number
           active_subscribers: number
           appointments_last_30_days: number
+          pending_psychologists: number
           sos_requests_last_30_days: number
+          total_patients: number
         }[]
       }
       get_psychologist_document_url: {
@@ -726,13 +726,13 @@ export type Database = {
         Returns: string
       }
       handle_psychologist_approval: {
-        Args: { psychologist_id: string; admin_id: string }
+        Args: { admin_id: string; psychologist_id: string }
         Returns: undefined
       }
       handle_psychologist_rejection: {
         Args: {
-          psychologist_id: string
           admin_id: string
+          psychologist_id: string
           rejection_reason?: string
         }
         Returns: undefined
@@ -762,7 +762,7 @@ export type Database = {
         Returns: boolean
       }
       validate_route_access: {
-        Args: { user_id_param: string; route_path: string }
+        Args: { route_path: string; user_id_param: string }
         Returns: boolean
       }
       validate_unique_crp: {
