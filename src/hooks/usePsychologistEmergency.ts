@@ -68,11 +68,15 @@ export const usePsychologistEmergency = () => {
       }
 
       // Create WebRTC session
+      const { data: sessionData } = await supabase.auth.getSession();
       const { data: webrtcData, error: webrtcError } = await supabase.functions.invoke('initiate-webrtc', {
         body: {
           emergency_request_id: requestId,
           user_id: currentUserId,
           user_type: 'psychologist'
+        },
+        headers: {
+          'Authorization': `Bearer ${sessionData.session?.access_token}`
         }
       });
 

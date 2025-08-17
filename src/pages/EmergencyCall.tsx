@@ -36,11 +36,15 @@ const EmergencyCall = () => {
           const { data: userData } = await supabase.auth.getUser();
           if (!userData.user) throw new Error('User not authenticated');
 
+          const { data: sessionData } = await supabase.auth.getSession();
           const { data: webrtcData, error: webrtcError } = await supabase.functions.invoke('initiate-webrtc', {
             body: {
               emergency_request_id: requestId,
               user_id: userData.user.id,
               user_type: userTypeFromParams
+            },
+            headers: {
+              'Authorization': `Bearer ${sessionData.session?.access_token}`
             }
           });
 
