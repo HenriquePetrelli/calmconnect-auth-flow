@@ -68,15 +68,20 @@ export const usePsychologistEmergency = () => {
       }
 
       // Create WebRTC session
-      const { data: sessionData } = await supabase.auth.getSession();
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !sessionData.session) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      console.log('Creating WebRTC session with token:', sessionData.session.access_token ? 'Token present' : 'No token');
+      
       const { data: webrtcData, error: webrtcError } = await supabase.functions.invoke('initiate-webrtc', {
         body: {
           emergency_request_id: requestId,
-          user_id: currentUserId,
           user_type: 'psychologist'
         },
         headers: {
-          'Authorization': `Bearer ${sessionData.session?.access_token}`
+          'Authorization': `Bearer ${sessionData.session.access_token}`
         }
       });
 

@@ -23,26 +23,36 @@ serve(async (req) => {
       });
     }
 
+    // Extract and validate JWT token
     const authHeader = req.headers.get("Authorization") ?? "";
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Authorization header missing" }), {
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Token de autenticação ausente ou mal formatado" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-      global: { headers: { Authorization: authHeader } },
+    const token = authHeader.split(" ")[1];
+    
+    // Validate token with Supabase Admin client
+    const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false
+      }
     });
 
-    // Verify authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: "Invalid or expired token" }), {
+      console.error("Auth error:", authError);
+      return new Response(JSON.stringify({ error: "Token inválido ou expirado" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    console.log("Authenticated user:", user.id);
 
     if (req.method !== "POST") {
       return new Response(JSON.stringify({ error: "Method not allowed" }), {
@@ -51,23 +61,31 @@ serve(async (req) => {
       });
     }
 
-    const { emergency_request_id, user_id, user_type } = await req.json();
+    const { emergency_request_id, user_type } = await req.json();
 
-    if (!emergency_request_id || !user_id || !user_type) {
+    if (!emergency_request_id || !user_type) {
       return new Response(JSON.stringify({ error: "Missing required parameters" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    // Create client with user's token for RLS
+    const supabaseClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: {
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    });
+
     // Verify the emergency request exists and user has permission
-    const { data: emergencyRequest, error: emergencyError } = await supabase
+    const { data: emergencyRequest, error: emergencyError } = await supabaseClient
       .from("emergency_requests")
       .select("id, status, patient_id, accepted_by")
       .eq("id", emergency_request_id)
       .single();
 
     if (emergencyError || !emergencyRequest) {
+      console.error("Emergency request error:", emergencyError);
       return new Response(JSON.stringify({ error: "Emergency request not found" }), {
         status: 404,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -75,8 +93,8 @@ serve(async (req) => {
     }
 
     // Verify user has access to this emergency request
-    const hasAccess = (user_type === "patient" && emergencyRequest.patient_id === user_id) ||
-                     (user_type === "psychologist" && emergencyRequest.accepted_by === user_id);
+    const hasAccess = (user_type === "patient" && emergencyRequest.patient_id === user.id) ||
+                     (user_type === "psychologist" && emergencyRequest.accepted_by === user.id);
 
     if (!hasAccess) {
       return new Response(JSON.stringify({ error: "Unauthorized access" }), {
@@ -86,7 +104,7 @@ serve(async (req) => {
     }
 
     // Create or get existing WebRTC session
-    const { data: existingSession } = await supabase
+    const { data: existingSession } = await supabaseClient
       .from("webrtc_sessions")
       .select("*")
       .eq("emergency_request_id", emergency_request_id)
@@ -94,8 +112,9 @@ serve(async (req) => {
 
     if (existingSession) {
       return new Response(JSON.stringify({
+        success: true,
         session_id: existingSession.id,
-        stun_servers: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"]
+        stun_servers: ["stun:stun.l.google.com:19302", "stun:global.stun.twilio.com:3478"]
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -108,12 +127,12 @@ serve(async (req) => {
     };
 
     if (user_type === "psychologist") {
-      sessionData.psychologist_id = user_id;
+      sessionData.psychologist_id = user.id;
     } else {
-      sessionData.patient_id = user_id;
+      sessionData.patient_id = user.id;
     }
 
-    const { data: session, error: sessionError } = await supabase
+    const { data: session, error: sessionError } = await supabaseClient
       .from("webrtc_sessions")
       .insert(sessionData)
       .select()
@@ -121,24 +140,28 @@ serve(async (req) => {
 
     if (sessionError) {
       console.error("Error creating WebRTC session:", sessionError);
-      return new Response(JSON.stringify({ error: "Failed to create session" }), {
+      return new Response(JSON.stringify({ error: "Failed to create session", details: sessionError.message }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    console.log("WebRTC session created:", session.id, "for user:", user_id);
+    console.log("WebRTC session created:", session.id, "for user:", user.id);
 
     return new Response(JSON.stringify({
+      success: true,
       session_id: session.id,
-      stun_servers: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"]
+      stun_servers: ["stun:stun.l.google.com:19302", "stun:global.stun.twilio.com:3478"]
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
   } catch (error) {
     console.error("Error in initiate-webrtc:", error);
-    return new Response(JSON.stringify({ error: "Internal server error" }), {
+    return new Response(JSON.stringify({ 
+      error: "Erro interno no servidor", 
+      details: error.message 
+    }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
