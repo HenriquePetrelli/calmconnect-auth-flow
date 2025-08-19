@@ -33,27 +33,76 @@ const EmergencyCall = () => {
           setSessionId(sessionIdFromParams);
         } else {
           // Create new WebRTC session for patient
+          console.log('Creating new WebRTC session for patient...');
+          
           const { data: userData } = await supabase.auth.getUser();
-          if (!userData.user) throw new Error('User not authenticated');
+          if (!userData.user) {
+            console.error('No authenticated user found');
+            throw new Error('User not authenticated');
+          }
 
           const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
           if (sessionError || !sessionData.session) {
-            throw new Error('Usuário não autenticado');
+            console.error('Session error:', sessionError);
+            throw new Error('Usuário não autenticado - faça login novamente');
           }
 
-          console.log('Creating WebRTC session with token:', sessionData.session.access_token ? 'Token present' : 'No token');
+          console.log('Patient session check:', {
+            hasSession: !!sessionData.session,
+            hasToken: !!sessionData.session?.access_token,
+            userEmail: sessionData.session?.user?.email,
+            userType: userTypeFromParams
+          });
+
+          // Check token expiry and refresh if needed
+          const now = Math.floor(Date.now() / 1000);
+          const expiresAt = sessionData.session.expires_at || 0;
+          if (expiresAt - now < 300) {
+            console.log('Token expires soon, refreshing...');
+            const { data: refreshedSession, error: refreshError } = await supabase.auth.refreshSession();
+            if (refreshError || !refreshedSession.session) {
+              console.error('Token refresh failed:', refreshError);
+              throw new Error('Falha ao renovar autenticação');
+            }
+            sessionData.session = refreshedSession.session;
+          }
           
+          console.log('Calling initiate-webrtc function...');
           const { data: webrtcData, error: webrtcError } = await supabase.functions.invoke('initiate-webrtc', {
             body: {
               emergency_request_id: requestId,
               user_type: userTypeFromParams
             },
             headers: {
-              'Authorization': `Bearer ${sessionData.session.access_token}`
+              'Authorization': `Bearer ${sessionData.session.access_token}`,
+              'Content-Type': 'application/json'
             }
           });
 
-          if (webrtcError) throw webrtcError;
+          console.log('WebRTC response:', {
+            data: webrtcData,
+            error: webrtcError,
+            hasSessionId: !!webrtcData?.session_id
+          });
+
+          if (webrtcError) {
+            console.error('WebRTC function error:', webrtcError);
+            
+            // Provide user-friendly error messages
+            if (webrtcError.message?.includes('403') || webrtcError.message?.includes('Unauthorized')) {
+              throw new Error('Acesso negado - verifique se você tem permissão para esta chamada');
+            } else if (webrtcError.message?.includes('404')) {
+              throw new Error('Solicitação de emergência não encontrada ou expirada');
+            } else {
+              throw new Error(`Erro ao inicializar chamada: ${webrtcError.message || 'Erro desconhecido'}`);
+            }
+          }
+
+          if (!webrtcData?.session_id) {
+            console.error('Invalid response from WebRTC function:', webrtcData);
+            throw new Error('Falha ao obter ID da sessão de vídeo');
+          }
+
           setSessionId(webrtcData.session_id);
         }
 
