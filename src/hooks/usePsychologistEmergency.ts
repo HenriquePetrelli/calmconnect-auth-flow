@@ -118,14 +118,28 @@ export const usePsychologistEmergency = () => {
       if (webrtcError) {
         console.error('WebRTC session creation failed:', webrtcError);
         
-        // Provide more specific error message
-        if (webrtcError.message?.includes('403') || webrtcError.message?.includes('Unauthorized')) {
-          throw new Error('Acesso negado - verifique suas permissões');
+        // Handle specific error codes from the updated edge function
+        let errorMessage = 'Falha ao criar sessão de vídeo';
+        
+        if (webrtcError.message?.includes('EMPTY_BODY') || webrtcError.message?.includes('Corpo da requisição inválido')) {
+          errorMessage = 'Erro de comunicação: dados não enviados corretamente';
+        } else if (webrtcError.message?.includes('INVALID_JSON')) {
+          errorMessage = 'Erro de formato de dados na comunicação';
+        } else if (webrtcError.message?.includes('MISSING_REQUIRED_FIELDS') || webrtcError.message?.includes('Campos obrigatórios ausentes')) {
+          errorMessage = 'Dados obrigatórios não foram enviados';
+        } else if (webrtcError.message?.includes('INVALID_USER_TYPE') || webrtcError.message?.includes('deve ser \'psychologist\' ou \'patient\'')) {
+          errorMessage = 'Tipo de usuário inválido';
+        } else if (webrtcError.message?.includes('Token inválido') || webrtcError.message?.includes('expirado')) {
+          errorMessage = 'Sessão expirada - faça login novamente';
+        } else if (webrtcError.message?.includes('403') || webrtcError.message?.includes('Unauthorized')) {
+          errorMessage = 'Acesso negado - verifique suas permissões';
         } else if (webrtcError.message?.includes('404')) {
-          throw new Error('Solicitação de emergência não encontrada');
-        } else {
-          throw new Error(`Falha ao criar sessão de vídeo: ${webrtcError.message || 'Erro desconhecido'}`);
+          errorMessage = 'Solicitação de emergência não encontrada';
+        } else if (webrtcError.message) {
+          errorMessage = `Falha ao criar sessão de vídeo: ${webrtcError.message}`;
         }
+        
+        throw new Error(errorMessage);
       }
 
       if (!webrtcData?.session_id) {

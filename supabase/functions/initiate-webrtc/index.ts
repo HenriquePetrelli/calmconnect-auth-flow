@@ -85,18 +85,109 @@ serve(async (req) => {
       });
     }
 
-    const requestBody = await req.json();
-    console.log("Request body received:", requestBody);
+    // Safe JSON parsing with detailed validation
+    let requestBody;
+    let rawBody;
     
-    const { emergency_request_id, user_type } = requestBody;
+    try {
+      rawBody = await req.text();
+      console.log("Raw request body:", rawBody, "Length:", rawBody.length);
+      
+      if (!rawBody || rawBody.trim() === '') {
+        console.error("Empty request body received");
+        return new Response(JSON.stringify({ 
+          error: "Corpo da requisição inválido ou ausente",
+          code: "EMPTY_BODY",
+          details: "Request body is empty or missing"
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
-    if (!emergency_request_id || !user_type) {
-      console.error("Missing parameters:", { emergency_request_id, user_type });
-      return new Response(JSON.stringify({ error: "Missing required parameters" }), {
+      requestBody = JSON.parse(rawBody);
+      console.log("Parsed request body:", requestBody);
+    } catch (parseError) {
+      console.error("JSON parsing failed:", {
+        error: parseError.message,
+        rawBody: rawBody?.substring(0, 200) + (rawBody?.length > 200 ? '...' : ''),
+        contentType: req.headers.get("content-type")
+      });
+      return new Response(JSON.stringify({ 
+        error: "Corpo da requisição inválido ou ausente",
+        code: "INVALID_JSON",
+        details: `JSON parsing failed: ${parseError.message}`
+      }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    
+    const { emergency_request_id, user_type } = requestBody;
+
+    // Validate required fields
+    if (!emergency_request_id && !user_type) {
+      console.error("Both required fields missing");
+      return new Response(JSON.stringify({ 
+        error: "Campos obrigatórios ausentes: emergency_request_id e user_type",
+        code: "MISSING_REQUIRED_FIELDS",
+        details: "Both emergency_request_id and user_type are required"
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (!emergency_request_id) {
+      console.error("Missing emergency_request_id");
+      return new Response(JSON.stringify({ 
+        error: "Campo obrigatório ausente: emergency_request_id",
+        code: "MISSING_EMERGENCY_REQUEST_ID",
+        details: "emergency_request_id is required"
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (!user_type) {
+      console.error("Missing user_type");
+      return new Response(JSON.stringify({ 
+        error: "Campo obrigatório ausente: user_type",
+        code: "MISSING_USER_TYPE",
+        details: "user_type is required"
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Validate field types and values
+    if (typeof emergency_request_id !== 'string' && typeof emergency_request_id !== 'number') {
+      console.error("Invalid emergency_request_id type:", typeof emergency_request_id);
+      return new Response(JSON.stringify({ 
+        error: "emergency_request_id deve ser string ou número",
+        code: "INVALID_EMERGENCY_REQUEST_ID_TYPE",
+        details: `Expected string or number, got ${typeof emergency_request_id}`
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (!['psychologist', 'patient'].includes(user_type)) {
+      console.error("Invalid user_type:", user_type);
+      return new Response(JSON.stringify({ 
+        error: "user_type deve ser 'psychologist' ou 'patient'",
+        code: "INVALID_USER_TYPE",
+        details: `Expected 'psychologist' or 'patient', got '${user_type}'`
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    console.log("Validation successful:", { emergency_request_id, user_type });
 
     // Create client with user's token for RLS
     const supabaseClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
