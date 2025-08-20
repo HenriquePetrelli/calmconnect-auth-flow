@@ -134,13 +134,17 @@ serve(async (req) => {
 
     // Verify user has access to this emergency request
     const hasAccess = (user_type === "patient" && emergencyRequest.patient_id === user.id) ||
-                     (user_type === "psychologist" && emergencyRequest.accepted_by === user.id);
+                     (user_type === "psychologist" && (
+                       emergencyRequest.accepted_by === user.id || 
+                       (emergencyRequest.status === 'pending' && emergencyRequest.accepted_by === null)
+                     ));
 
     console.log("Access check:", {
       userType: user_type,
       userId: user.id,
       patientId: emergencyRequest.patient_id,
       acceptedBy: emergencyRequest.accepted_by,
+      status: emergencyRequest.status,
       hasAccess
     });
 
