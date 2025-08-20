@@ -97,23 +97,72 @@ export const usePsychologistEmergency = () => {
         sessionData.session = refreshedSession.session;
       }
       
-      console.log('Invoking initiate-webrtc function...');
-      const { data: webrtcData, error: webrtcError } = await supabase.functions.invoke('initiate-webrtc', {
-        body: {
-          emergency_request_id: requestId,
-          user_type: 'psychologist'
-        },
-        headers: {
-          'Authorization': `Bearer ${sessionData.session.access_token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      // DEBUG: Log all data being sent
+      const requestBody = {
+        emergency_request_id: requestId,
+        user_type: 'psychologist'
+      };
+      
+      console.log('🚀 PSYCHOLOGIST DEBUG - About to call initiate-webrtc function with:');
+      console.log('📦 Request body:', JSON.stringify(requestBody, null, 2));
+      console.log('🔑 Token (first 20 chars):', sessionData.session.access_token?.substring(0, 20) + '...');
+      console.log('📋 Request ID:', requestId);
+      console.log('👤 User type: psychologist');
+      console.log('✅ Body is valid JSON:', !!JSON.stringify(requestBody));
+      
+      // First try with direct fetch for better debugging
+      let webrtcData;
+      let webrtcError = null;
+      
+      try {
+        console.log('Attempting direct fetch call...');
+        const fetchResponse = await fetch(
+          'https://ihrrgmmsfuvlasmzdmwf.supabase.co/functions/v1/initiate-webrtc',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${sessionData.session.access_token}`,
+              'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlocnJnbW1zZnV2bGFzbXpkbXdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1NDMzMDcsImV4cCI6MjA2OTExOTMwN30.6hRDCL5alu-Bs4kT4jKYJW3G3zmeBJDZB5udruQzOFU'
+            },
+            body: JSON.stringify(requestBody)
+          }
+        );
 
-      console.log('WebRTC function response:', {
-        hasData: !!webrtcData,
-        error: webrtcError,
-        data: webrtcData
-      });
+        console.log('📈 Fetch response status:', fetchResponse.status);
+        console.log('📋 Fetch response headers:', Object.fromEntries(fetchResponse.headers.entries()));
+
+        if (!fetchResponse.ok) {
+          const errorText = await fetchResponse.text();
+          console.error('❌ Fetch error response:', errorText);
+          throw new Error(`HTTP ${fetchResponse.status}: ${errorText}`);
+        }
+
+        webrtcData = await fetchResponse.json();
+        console.log('✅ Direct fetch successful:', webrtcData);
+
+      } catch (fetchError) {
+        console.error('❌ Direct fetch failed:', fetchError);
+        console.log('🔄 Falling back to supabase.functions.invoke...');
+        
+        // Fallback to supabase.functions.invoke
+        const { data: supabaseData, error } = await supabase.functions.invoke('initiate-webrtc', {
+          body: requestBody,
+          headers: {
+            'Authorization': `Bearer ${sessionData.session.access_token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        console.log('📊 Psychologist Supabase invoke response:', {
+          data: supabaseData,
+          error: error,
+          hasSessionId: !!supabaseData?.session_id
+        });
+        
+        webrtcData = supabaseData;
+        webrtcError = error;
+      }
 
       if (webrtcError) {
         console.error('WebRTC session creation failed:', webrtcError);
