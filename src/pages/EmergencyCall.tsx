@@ -4,21 +4,35 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { WebRTCVideoCall } from "@/components/sos/WebRTCVideoCall";
+import EmergencyVideoCall from "@/components/EmergencyVideoCall";
 
 const EmergencyCall = () => {
-  const { requestId } = useParams();
+  const { requestId, sessionId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
-  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [sessionIdState, setSessionIdState] = useState<string | null>(null);
   const [userType, setUserType] = useState<'psychologist' | 'patient'>('patient');
+
+  // Check if this is a direct session ID route
+  const isDirectSessionRoute = !!sessionId;
 
   useEffect(() => {
     document.title = "Chamada de Emergência | Soliv";
   }, []);
 
   useEffect(() => {
+    // If this is a direct session route, use the new component
+    if (isDirectSessionRoute && sessionId) {
+      setSessionIdState(sessionId);
+      const userTypeParam = searchParams.get('userType') as 'psychologist' | 'patient' || 'patient';
+      setUserType(userTypeParam);
+      setLoading(false);
+      return;
+    }
+
+    // Otherwise use the legacy emergency request flow
     const initializeCall = async () => {
       if (!requestId) return;
 
@@ -30,7 +44,7 @@ const EmergencyCall = () => {
         setUserType(userTypeFromParams);
 
         if (sessionIdFromParams) {
-          setSessionId(sessionIdFromParams);
+          setSessionIdState(sessionIdFromParams);
         } else {
           // Create new WebRTC session for patient
           console.log('Creating new WebRTC session for patient...');
@@ -159,7 +173,7 @@ const EmergencyCall = () => {
             throw new Error('Falha ao obter ID da sessão de vídeo');
           }
 
-          setSessionId(webrtcData.session_id);
+          setSessionIdState(webrtcData.session_id);
         }
 
       } catch (error) {
@@ -176,12 +190,12 @@ const EmergencyCall = () => {
     };
 
     initializeCall();
-  }, [requestId, searchParams, navigate, toast]);
+  }, [requestId, sessionId, searchParams, navigate, toast, isDirectSessionRoute]);
 
   // Mark emergency call as started when component mounts
   useEffect(() => {
     const markCallAsStarted = async () => {
-      if (!requestId || !sessionId) return;
+      if (!requestId || !sessionIdState) return;
 
       try {
         const { error } = await supabase
@@ -204,7 +218,7 @@ const EmergencyCall = () => {
     };
 
     markCallAsStarted();
-  }, [requestId, sessionId, userType]);
+  }, [requestId, sessionIdState, userType]);
 
   const endCall = async () => {
     if (!requestId) return;
@@ -236,11 +250,11 @@ const EmergencyCall = () => {
       if (error) throw error;
 
       // Update WebRTC session status
-      if (sessionId) {
+      if (sessionIdState) {
         await supabase
           .from("webrtc_sessions")
           .update({ status: "completed" })
-          .eq("id", sessionId);
+          .eq("id", sessionIdState);
       }
 
       navigate("/home");
@@ -265,7 +279,7 @@ const EmergencyCall = () => {
     );
   }
 
-  if (!sessionId) {
+  if (!sessionIdState) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -278,9 +292,21 @@ const EmergencyCall = () => {
     );
   }
 
+  // Use the new component for direct session routes
+  if (isDirectSessionRoute) {
+    return (
+      <EmergencyVideoCall
+        sessionId={sessionIdState}
+        userType={userType}
+        onEndCall={endCall}
+      />
+    );
+  }
+
+  // Legacy component for emergency request routes
   return (
     <WebRTCVideoCall 
-      sessionId={sessionId} 
+      sessionId={sessionIdState} 
       userType={userType} 
       onEndCall={endCall} 
     />

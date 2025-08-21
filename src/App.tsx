@@ -85,6 +85,7 @@ const App = () => {
                   <Route path="/psychologist-dashboard" element={<PsychologistDashboard />} />
                   <Route path="/psychologist-profile" element={<PsychologistProfile />} />
                   <Route path="/emergency/call/:requestId" element={<EmergencyCall />} />
+                  <Route path="/emergency-call/:sessionId" element={<EmergencyCall />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
