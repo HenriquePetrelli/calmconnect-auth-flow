@@ -30,6 +30,7 @@ export class WebRTCManager {
     try {
       console.log(`🔍 Fetching session config for: ${this.sessionId}`);
       
+      // Use maybeSingle to prevent PGRST116 errors
       const { data: session, error } = await supabase
         .from('webrtc_sessions')
         .select(`
@@ -41,16 +42,22 @@ export class WebRTCManager {
           patient_id
         `)
         .eq('id', this.sessionId)
-        .single();
+        .maybeSingle(); // Returns null instead of throwing when no rows found
 
       if (error) {
-        console.error('❌ Error fetching session:', error);
+        console.error('❌ Database error fetching session:', error);
+        return null;
+      }
+
+      // Session not found
+      if (!session) {
+        console.warn(`⚠️ Session not found: ${this.sessionId}`);
         return null;
       }
 
       // Check if session is expired
       if (session.expires_at && new Date(session.expires_at) < new Date()) {
-        console.warn('⏰ Session expired');
+        console.warn(`⏰ Session expired: ${this.sessionId}`);
         return null;
       }
 
@@ -67,7 +74,7 @@ export class WebRTCManager {
         timeLimit: 1200 // 20 minutes default
       };
     } catch (error) {
-      console.error('❌ Error in fetchSessionConfig:', error);
+      console.error('❌ Unexpected error in fetchSessionConfig:', error);
       return null;
     }
   }

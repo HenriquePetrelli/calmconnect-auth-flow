@@ -67,51 +67,66 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
       }
 
       try {
-        const { data: session, error } = await supabase
-          .from('webrtc_sessions')
-          .select(`
-            id,
-            emergency_request_id,
-            psychologist_id,
-            patient_id,
-            status,
-            expires_at
-          `)
-          .eq('id', sessionId)
-          .single();
-
-        if (error) throw error;
-
-        // Check if session is expired
-        if (session.expires_at && new Date(session.expires_at) < new Date()) {
-          toast({
-            title: 'Sessão Expirada',
-            description: 'Esta sessão de videochamada já expirou.',
-            variant: 'destructive',
-          });
-          navigate('/home');
-          return;
+        const { validateWebRTCSession, getUserTypeForSession, SessionValidationError } = await import('@/utils/session-validation');
+        
+        console.log(`🔍 Starting validation for session: ${sessionId}`);
+        const session = await validateWebRTCSession(sessionId);
+        
+        // Get current user
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError || !user) {
+          throw new SessionValidationError('Usuário não autenticado', 'NOT_AUTHENTICATED');
         }
 
-        // Determine user type based on session data
-        const user = await supabase.auth.getUser();
-        const userId = user.data.user?.id;
-
-        if (session.psychologist_id === userId) {
-          setUserType('psychologist');
-        } else if (session.patient_id === userId) {
-          setUserType('patient');
+        // Determine user type
+        const detectedUserType = getUserTypeForSession(session, user.id);
+        if (detectedUserType) {
+          setUserType(detectedUserType);
         }
 
         setSessionValid(true);
         setIsLoading(false);
+        
+        console.log('✅ Session validation completed successfully');
       } catch (error) {
-        console.error('Error validating session:', error);
+        console.error('❌ Session validation failed:', error);
+        
+        let title = 'Sessão Inválida';
+        let description = 'Não foi possível validar a sessão de videochamada.';
+        
+        if (error instanceof Error) {
+          const { SessionValidationError } = await import('@/utils/session-validation');
+          
+          if (error instanceof SessionValidationError) {
+            switch (error.code) {
+              case 'SESSION_NOT_FOUND':
+                title = 'Sessão Não Encontrada';
+                description = 'A sessão de videochamada não foi encontrada. Ela pode ter sido removida ou o link está incorreto.';
+                break;
+              case 'SESSION_EXPIRED':
+                title = 'Sessão Expirada';
+                description = error.message;
+                break;
+              case 'ACCESS_DENIED':
+                title = 'Acesso Negado';
+                description = error.message;
+                break;
+              case 'INVALID_SESSION_ID':
+                title = 'ID de Sessão Inválido';
+                description = error.message;
+                break;
+              default:
+                description = error.message;
+            }
+          }
+        }
+        
         toast({
-          title: 'Sessão Inválida',
-          description: 'Não foi possível validar a sessão de videochamada.',
+          title,
+          description,
           variant: 'destructive',
         });
+        
         navigate('/home');
       }
     };
