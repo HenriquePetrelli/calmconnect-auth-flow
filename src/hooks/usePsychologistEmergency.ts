@@ -196,6 +196,49 @@ export const usePsychologistEmergency = () => {
         throw new Error('Resposta inválida do servidor de vídeo');
       }
 
+      // Wait and verify session is available before returning
+      console.log('⏳ Waiting for session to be available in database...');
+      
+      let sessionVerified = false;
+      let attempts = 0;
+      const maxAttempts = 5;
+      
+      while (!sessionVerified && attempts < maxAttempts) {
+        try {
+          attempts++;
+          console.log(`🔍 Session verification attempt ${attempts}/${maxAttempts}`);
+          
+          const { data: sessionCheck, error: sessionError } = await supabase
+            .from('webrtc_sessions')
+            .select('id, psychologist_id, status')
+            .eq('id', webrtcData.session_id)
+            .eq('psychologist_id', (await supabase.auth.getUser()).data.user?.id)
+            .maybeSingle();
+
+          if (sessionCheck && !sessionError) {
+            console.log('✅ Session verified and accessible:', sessionCheck);
+            sessionVerified = true;
+          } else {
+            console.log(`⏳ Session not ready yet (attempt ${attempts}), waiting...`);
+            if (attempts < maxAttempts) {
+              await new Promise(resolve => setTimeout(resolve, 1000 * attempts)); // Exponential backoff
+            }
+          }
+        } catch (error) {
+          console.warn(`⚠️ Session verification error (attempt ${attempts}):`, error);
+          if (attempts < maxAttempts) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempts));
+          }
+        }
+      }
+
+      if (!sessionVerified) {
+        console.error('❌ Session not verified after all attempts');
+        throw new Error('Sessão criada mas não está acessível. Tente novamente em alguns segundos.');
+      }
+
+      console.log('🎉 Session successfully created and verified!');
+
       // Refresh the list
       fetchEmergencyRequests();
       

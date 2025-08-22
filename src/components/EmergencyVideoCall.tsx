@@ -58,7 +58,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     }
   });
 
-  // Validate session on mount
+  // Validate session on mount with retry capability
   useEffect(() => {
     const validateSession = async () => {
       if (!sessionId) {
@@ -91,6 +91,18 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
       } catch (error) {
         console.error('❌ Session validation failed:', error);
         
+        // If session not found, show retry handler instead of immediate error
+        if (error instanceof Error) {
+          const { SessionValidationError } = await import('@/utils/session-validation');
+          
+          if (error instanceof SessionValidationError && error.code === 'SESSION_NOT_FOUND') {
+            console.log('🔄 Session not found, will show retry handler');
+            setIsLoading(false);
+            // Don't navigate away - let the retry handler manage this
+            return;
+          }
+        }
+        
         let title = 'Sessão Inválida';
         let description = 'Não foi possível validar a sessão de videochamada.';
         
@@ -99,10 +111,6 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
           
           if (error instanceof SessionValidationError) {
             switch (error.code) {
-              case 'SESSION_NOT_FOUND':
-                title = 'Sessão Não Encontrada';
-                description = 'A sessão de videochamada não foi encontrada. Ela pode ter sido removida ou o link está incorreto.';
-                break;
               case 'SESSION_EXPIRED':
                 title = 'Sessão Expirada';
                 description = error.message;
@@ -212,14 +220,14 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
 
   const status = getConnectionStatus();
 
-  if (isLoading || !sessionValid) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="w-full max-w-md mx-4">
           <CardContent className="p-8 text-center space-y-4">
             <Loader2 className="w-12 h-12 mx-auto animate-spin text-primary" />
             <h3 className="text-xl font-semibold">
-              {isLoading ? 'Carregando sessão...' : 'Validando sessão...'}
+              Carregando sessão...
             </h3>
             <p className="text-muted-foreground">
               Aguarde enquanto preparamos sua videochamada.
@@ -227,6 +235,35 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
           </CardContent>
         </Card>
       </div>
+    );
+  }
+
+  // If session is not valid, show retry handler for SESSION_NOT_FOUND errors
+  if (!sessionValid && sessionId) {
+    const SessionRetryHandler = React.lazy(() => 
+      import('@/components/SessionRetryHandler').then(module => ({ 
+        default: module.SessionRetryHandler 
+      }))
+    );
+    
+    return (
+      <React.Suspense fallback={
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <Loader2 className="w-12 h-12 animate-spin text-primary" />
+        </div>
+      }>
+        <SessionRetryHandler
+          sessionId={sessionId}
+          onSessionReady={(session) => {
+            setSessionValid(true);
+            console.log('🎉 Session ready after retry:', session);
+          }}
+          onGiveUp={() => {
+            console.log('👋 User gave up on session retry');
+            navigate('/home');
+          }}
+        />
+      </React.Suspense>
     );
   }
 
