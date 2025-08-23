@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getWebRTCConnectionManager } from '@/utils/webrtc-manager';
 
 interface WebRTCSession {
   id: string;
@@ -27,10 +28,13 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [session, setSession] = useState<WebRTCSession | null>(null);
+  const [isInitializing, setIsInitializing] = useState(false);
   
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
+  const initializationRef = useRef<boolean>(false);
   const { toast } = useToast();
+  const connectionManager = getWebRTCConnectionManager();
 
   const initializeMedia = useCallback(async () => {
     try {
@@ -70,65 +74,91 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
   }, [toast]);
 
   const createPeerConnection = useCallback(async (stream: MediaStream) => {
-    console.log('🔗 Creating peer connection...');
+    console.log('🔗 Creating managed peer connection...');
     
-    const pc = new RTCPeerConnection({
-      iceServers: [
-        { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' },
-        { urls: 'stun:stun2.l.google.com:19302' }
-      ],
-      iceCandidatePoolSize: 10
-    });
+    try {
+      // Use the singleton connection manager
+      const pc = await connectionManager.getConnection(sessionId, {
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
+          { urls: 'stun:stun2.l.google.com:19302' }
+        ],
+        iceCandidatePoolSize: 10
+      });
 
-    // Add local stream tracks
-    stream.getTracks().forEach(track => {
-      console.log(`📡 Adding ${track.kind} track to peer connection`);
-      pc.addTrack(track, stream);
-    });
+      // Add local stream tracks
+      stream.getTracks().forEach(track => {
+        console.log(`📡 Adding ${track.kind} track to peer connection`);
+        pc.addTrack(track, stream);
+      });
 
-    // Handle connection state changes
-    pc.onconnectionstatechange = () => {
-      const state = pc.connectionState;
-      console.log(`🔄 Connection state changed: ${state}`);
-      setConnectionState(state);
-      setIsConnected(state === 'connected');
-      onConnectionStateChange?.(state);
+      // Handle connection state changes
+      pc.onconnectionstatechange = () => {
+        const state = pc.connectionState;
+        console.log(`🔄 Connection state changed: ${state}`);
+        setConnectionState(state);
+        setIsConnected(state === 'connected');
+        onConnectionStateChange?.(state);
 
-      if (state === 'failed' || state === 'disconnected') {
-        setError('Conexão perdida. Tentando reconectar...');
-      } else if (state === 'connected') {
-        setError(null);
-        toast({
-          title: 'Conectado!',
-          description: 'Videochamada estabelecida com sucesso.',
-        });
-      }
-    };
+        if (state === 'failed' || state === 'disconnected') {
+          setError('Conexão perdida. Tentando reconectar...');
+        } else if (state === 'connected') {
+          setError(null);
+          toast({
+            title: 'Conectado!',
+            description: 'Videochamada estabelecida com sucesso.',
+          });
+        }
+      };
 
-    // Handle ICE candidates
-    pc.onicecandidate = (event) => {
-      if (event.candidate) {
-        console.log('🧊 New ICE candidate:', event.candidate);
-        handleIceCandidate(event.candidate);
-      }
-    };
+      // Handle ICE candidates
+      pc.onicecandidate = (event) => {
+        if (event.candidate) {
+          console.log('🧊 New ICE candidate:', event.candidate);
+          handleIceCandidate(event.candidate);
+        }
+      };
 
-    // Handle remote stream
-    pc.ontrack = (event) => {
-      console.log('📺 Received remote stream');
-      const remoteStream = event.streams[0];
-      setRemoteStream(remoteStream);
+      // Handle remote stream
+      pc.ontrack = (event) => {
+        console.log('📺 Received remote stream');
+        const remoteStream = event.streams[0];
+        setRemoteStream(remoteStream);
+        
+        if (remoteVideoRef.current) {
+          remoteVideoRef.current.srcObject = remoteStream;
+        }
+      };
+
+      setPeerConnection(pc);
+      console.log('✅ Managed peer connection created successfully');
+      return pc;
+    } catch (error) {
+      console.error('❌ Failed to create managed peer connection:', error);
       
-      if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = remoteStream;
+      if (error instanceof Error) {
+        if (error.message.includes('WEBRTC_TOO_MANY_CONNECTIONS')) {
+          setError('Muitas conexões ativas. Recarregue a página e tente novamente.');
+          toast({
+            title: 'Erro de Conexão',
+            description: 'Muitas conexões WebRTC ativas. Recarregue a página.',
+            variant: 'destructive',
+          });
+        } else if (error.message.includes('Cannot create so many PeerConnections')) {
+          setError('Limite de conexões atingido. Aguarde alguns segundos e tente novamente.');
+          toast({
+            title: 'Limite de Conexões',
+            description: 'Muitas conexões simultâneas. Aguarde e tente novamente.',
+            variant: 'destructive',
+          });
+        } else {
+          setError('Erro ao criar conexão WebRTC');
+        }
       }
-    };
-
-    setPeerConnection(pc);
-    console.log('✅ Peer connection created successfully');
-    return pc;
-  }, [onConnectionStateChange, toast]);
+      throw error;
+    }
+  }, [sessionId, connectionManager, onConnectionStateChange, toast]);
 
   const handleIceCandidate = async (candidate: RTCIceCandidate) => {
     try {
@@ -270,9 +300,9 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
       });
     }
     
-    if (peerConnection) {
-      peerConnection.close();
-      console.log('🔒 Peer connection closed');
+    // Use connection manager for proper cleanup
+    if (sessionId) {
+      connectionManager.cleanupConnection(sessionId);
     }
     
     setLocalStream(null);
@@ -280,19 +310,32 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     setPeerConnection(null);
     setIsConnected(false);
     setConnectionState('closed');
-  }, [localStream, peerConnection]);
+    setIsInitializing(false);
+  }, [localStream, sessionId, connectionManager]);
 
-  // Initialize WebRTC when hook is used
+  // Initialize WebRTC with singleton pattern
   useEffect(() => {
     let isMounted = true;
     
     const initialize = async () => {
-      try {
-        if (!sessionId) {
-          throw new Error('Session ID is required');
-        }
+      // Prevent multiple initializations
+      if (isInitializing || initializationRef.current) {
+        console.log('⚠️ WebRTC initialization already in progress, skipping...');
+        return;
+      }
 
-        console.log(`🚀 Initializing WebRTC for session: ${sessionId}`);
+      if (!sessionId) {
+        throw new Error('Session ID is required');
+      }
+
+      try {
+        console.log(`🚀 Initializing managed WebRTC for session: ${sessionId}`);
+        setIsInitializing(true);
+        initializationRef.current = true;
+        
+        // Show connection stats
+        const stats = connectionManager.getStats();
+        console.log(`📊 Connection Manager Stats:`, stats);
         
         const stream = await initializeMedia();
         if (!isMounted) return;
@@ -351,6 +394,8 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
         console.error('❌ WebRTC initialization failed:', error);
         if (isMounted) {
           setError(error instanceof Error ? error.message : 'Erro ao inicializar videochamada');
+          setIsInitializing(false);
+          initializationRef.current = false;
         }
       }
     };
@@ -359,6 +404,8 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
 
     return () => {
       isMounted = false;
+      initializationRef.current = false;
+      setIsInitializing(false);
       cleanup();
     };
   }, [sessionId, userType, initializeMedia, createPeerConnection, cleanup]);
@@ -372,6 +419,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     isConnected,
     error,
     session,
+    isInitializing,
     toggleAudio,
     toggleVideo,
     cleanup

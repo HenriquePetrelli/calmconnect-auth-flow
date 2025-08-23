@@ -14,16 +14,241 @@ export interface SessionParticipant {
   isOnline: boolean;
 }
 
+// Singleton WebRTC Connection Manager
+class WebRTCConnectionManager {
+  private static instance: WebRTCConnectionManager;
+  private activeConnections: Map<string, RTCPeerConnection> = new Map();
+  private initializingConnections: Set<string> = new Set();
+  private connectionQueues: Map<string, Promise<RTCPeerConnection>> = new Map();
+  private lastCleanup: number = 0;
+  private readonly CLEANUP_INTERVAL = 5 * 60 * 1000; // 5 minutes
+  private readonly MAX_CONNECTIONS = 5; // Browser limit safety
+
+  static getInstance(): WebRTCConnectionManager {
+    if (!WebRTCConnectionManager.instance) {
+      WebRTCConnectionManager.instance = new WebRTCConnectionManager();
+    }
+    return WebRTCConnectionManager.instance;
+  }
+
+  private constructor() {
+    // Auto cleanup old connections periodically
+    setInterval(() => {
+      this.cleanupOldConnections();
+    }, 30 * 1000); // Every 30 seconds
+  }
+
+  async getConnection(sessionId: string, config?: RTCConfiguration): Promise<RTCPeerConnection> {
+    // Check if connection already exists and is usable
+    const existing = this.activeConnections.get(sessionId);
+    if (existing && this.isConnectionUsable(existing)) {
+      console.log(`♻️ Reusing existing connection for session: ${sessionId}`);
+      return existing;
+    }
+
+    // If already initializing, wait for that process
+    if (this.connectionQueues.has(sessionId)) {
+      console.log(`⏳ Waiting for existing initialization of session: ${sessionId}`);
+      return this.connectionQueues.get(sessionId)!;
+    }
+
+    // Prevent too many connections
+    if (this.activeConnections.size >= this.MAX_CONNECTIONS) {
+      console.log('⚠️ Too many connections, cleaning up old ones...');
+      this.cleanupOldConnections(2 * 60 * 1000); // Cleanup connections older than 2 minutes
+    }
+
+    // Create new connection with queuing
+    const connectionPromise = this.createNewConnection(sessionId, config);
+    this.connectionQueues.set(sessionId, connectionPromise);
+
+    try {
+      const connection = await connectionPromise;
+      return connection;
+    } finally {
+      this.connectionQueues.delete(sessionId);
+    }
+  }
+
+  private async createNewConnection(sessionId: string, config?: RTCConfiguration): Promise<RTCPeerConnection> {
+    console.log(`🔗 Creating new WebRTC connection for session: ${sessionId}`);
+    
+    // Mark as initializing
+    this.initializingConnections.add(sessionId);
+
+    try {
+      // Clean up any existing connection for this session
+      await this.cleanupConnection(sessionId);
+
+      const defaultConfig: RTCConfiguration = {
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
+          { urls: 'stun:stun2.l.google.com:19302' }
+        ],
+        iceCandidatePoolSize: 10
+      };
+
+      const connection = new RTCPeerConnection(config || defaultConfig);
+      
+      // Set up connection monitoring
+      this.setupConnectionMonitoring(connection, sessionId);
+      
+      // Store the connection
+      this.activeConnections.set(sessionId, connection);
+      
+      console.log(`✅ WebRTC connection created successfully for session: ${sessionId}`);
+      console.log(`📊 Active connections: ${this.activeConnections.size}/${this.MAX_CONNECTIONS}`);
+      
+      return connection;
+    } catch (error) {
+      console.error(`❌ Failed to create WebRTC connection for session ${sessionId}:`, error);
+      
+      // Handle specific "too many connections" error
+      if (error instanceof Error && error.message.includes('Cannot create so many PeerConnections')) {
+        console.log('🚨 Too many PeerConnections error - forcing cleanup');
+        this.forceCleanupAllConnections();
+        
+        // Wait a bit and retry once
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        try {
+          const retryConnection = new RTCPeerConnection(config || {
+            iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+          });
+          this.setupConnectionMonitoring(retryConnection, sessionId);
+          this.activeConnections.set(sessionId, retryConnection);
+          return retryConnection;
+        } catch (retryError) {
+          throw new Error('WEBRTC_TOO_MANY_CONNECTIONS: Falha ao criar conexão após limpeza. Recarregue a página.');
+        }
+      }
+      
+      throw error;
+    } finally {
+      this.initializingConnections.delete(sessionId);
+    }
+  }
+
+  private setupConnectionMonitoring(connection: RTCPeerConnection, sessionId: string) {
+    connection.onconnectionstatechange = () => {
+      const state = connection.connectionState;
+      console.log(`🔄 Connection ${sessionId} state: ${state}`);
+      
+      if (state === 'failed' || state === 'disconnected' || state === 'closed') {
+        // Auto cleanup failed connections
+        setTimeout(() => {
+          if (this.activeConnections.get(sessionId) === connection) {
+            this.cleanupConnection(sessionId);
+          }
+        }, 5000); // 5 second delay
+      }
+    };
+
+    connection.oniceconnectionstatechange = () => {
+      console.log(`🧊 ICE connection ${sessionId} state: ${connection.iceConnectionState}`);
+    };
+  }
+
+  private isConnectionUsable(connection: RTCPeerConnection): boolean {
+    const usableStates: RTCPeerConnectionState[] = ['new', 'connecting', 'connected'];
+    return usableStates.includes(connection.connectionState);
+  }
+
+  async cleanupConnection(sessionId: string): Promise<void> {
+    const connection = this.activeConnections.get(sessionId);
+    if (connection) {
+      console.log(`🧹 Cleaning up connection for session: ${sessionId}`);
+      
+      try {
+        // Stop all senders
+        connection.getSenders().forEach(sender => {
+          if (sender.track) {
+            sender.track.stop();
+          }
+        });
+
+        // Close connection
+        if (connection.connectionState !== 'closed') {
+          connection.close();
+        }
+      } catch (error) {
+        console.warn(`⚠️ Error during connection cleanup for ${sessionId}:`, error);
+      }
+
+      this.activeConnections.delete(sessionId);
+      console.log(`✅ Connection cleaned up for session: ${sessionId}`);
+    }
+  }
+
+  private cleanupOldConnections(maxAge: number = this.CLEANUP_INTERVAL): void {
+    const now = Date.now();
+    
+    // Prevent too frequent cleanups
+    if (now - this.lastCleanup < 30000) return; // 30 seconds
+    
+    this.lastCleanup = now;
+
+    console.log(`🧹 Running cleanup of old connections (max age: ${maxAge}ms)`);
+    
+    for (const [sessionId, connection] of this.activeConnections.entries()) {
+      const shouldCleanup = 
+        connection.connectionState === 'closed' ||
+        connection.connectionState === 'failed' ||
+        connection.connectionState === 'disconnected';
+
+      if (shouldCleanup) {
+        console.log(`🗑️ Cleaning up stale connection: ${sessionId} (state: ${connection.connectionState})`);
+        this.cleanupConnection(sessionId);
+      }
+    }
+  }
+
+  forceCleanupAllConnections(): void {
+    console.log('🚨 Force cleaning up ALL WebRTC connections');
+    
+    for (const [sessionId] of this.activeConnections.entries()) {
+      this.cleanupConnection(sessionId);
+    }
+
+    // Clear all maps
+    this.activeConnections.clear();
+    this.initializingConnections.clear();
+    this.connectionQueues.clear();
+    
+    console.log('✅ All WebRTC connections force cleaned');
+  }
+
+  hasConnection(sessionId: string): boolean {
+    return this.activeConnections.has(sessionId);
+  }
+
+  getConnectionState(sessionId: string): RTCPeerConnectionState | null {
+    const connection = this.activeConnections.get(sessionId);
+    return connection ? connection.connectionState : null;
+  }
+
+  getStats(): { active: number; initializing: number; queued: number } {
+    return {
+      active: this.activeConnections.size,
+      initializing: this.initializingConnections.size,
+      queued: this.connectionQueues.size
+    };
+  }
+}
+
 export class WebRTCManager {
   private sessionId: string;
   private config: WebRTCSessionConfig;
   private onStatusChange?: (status: string) => void;
   private onParticipantChange?: (participants: SessionParticipant[]) => void;
   private realtimeChannel: any;
+  private connectionManager: WebRTCConnectionManager;
 
   constructor(sessionId: string, config: WebRTCSessionConfig) {
     this.sessionId = sessionId;
     this.config = config;
+    this.connectionManager = WebRTCConnectionManager.getInstance();
   }
 
   async fetchSessionConfig(): Promise<WebRTCSessionConfig | null> {
@@ -273,8 +498,28 @@ export class WebRTCManager {
     console.log(`📊 Network simulation - Latency: ${selected.latency}ms, Loss: ${selected.packetLoss * 100}%`);
   }
 
+  // New method to get managed connection
+  async getManagedConnection(config?: RTCConfiguration): Promise<RTCPeerConnection> {
+    try {
+      return await this.connectionManager.getConnection(this.sessionId, config);
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('WEBRTC_TOO_MANY_CONNECTIONS')) {
+        throw new Error('Muitas conexões ativas. Recarregue a página e tente novamente.');
+      }
+      throw error;
+    }
+  }
+
+  // Get connection stats from manager
+  getConnectionStats(): { active: number; initializing: number; queued: number } {
+    return this.connectionManager.getStats();
+  }
+
   cleanup(): void {
     console.log('🧹 Cleaning up WebRTC Manager...');
+    
+    // Clean up this specific session
+    this.connectionManager.cleanupConnection(this.sessionId);
     
     if (this.realtimeChannel) {
       supabase.removeChannel(this.realtimeChannel);
@@ -285,5 +530,8 @@ export class WebRTCManager {
     this.onParticipantChange = undefined;
   }
 }
+
+// Export singleton manager instance
+export const getWebRTCConnectionManager = () => WebRTCConnectionManager.getInstance();
 
 export default WebRTCManager;
