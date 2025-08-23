@@ -58,18 +58,22 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     }
   });
 
-  // Validate session on mount with retry capability
+  // Enhanced session validation with intelligent delay
   useEffect(() => {
-    const validateSession = async () => {
+    const validateSessionWithDelay = async () => {
       if (!sessionId) {
         setIsLoading(false);
         return;
       }
 
       try {
+        console.log(`🎬 Starting enhanced validation for session: ${sessionId}`);
+        console.log('⏳ Applying initial delay to allow database replication...');
+        
+        // Import validation functions
         const { validateWebRTCSession, getUserTypeForSession, SessionValidationError } = await import('@/utils/session-validation');
         
-        console.log(`🔍 Starting validation for session: ${sessionId}`);
+        // Enhanced validation with built-in delay and retry
         const session = await validateWebRTCSession(sessionId);
         
         // Get current user
@@ -87,16 +91,16 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
         setSessionValid(true);
         setIsLoading(false);
         
-        console.log('✅ Session validation completed successfully');
+        console.log('✅ Enhanced session validation completed successfully');
       } catch (error) {
-        console.error('❌ Session validation failed:', error);
+        console.error('❌ Enhanced session validation failed:', error);
         
         // If session not found, show retry handler instead of immediate error
         if (error instanceof Error) {
           const { SessionValidationError } = await import('@/utils/session-validation');
           
           if (error instanceof SessionValidationError && error.code === 'SESSION_NOT_FOUND') {
-            console.log('🔄 Session not found, will show retry handler');
+            console.log('🔄 Session not found after enhanced validation, will show retry handler');
             setIsLoading(false);
             // Don't navigate away - let the retry handler manage this
             return;
@@ -139,7 +143,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
       }
     };
 
-    validateSession();
+    validateSessionWithDelay();
   }, [sessionId, navigate, toast]);
 
   // Timer countdown
@@ -221,20 +225,35 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   const status = getConnectionStatus();
 
   if (isLoading) {
+    // Show the intelligent initializer with delay and progress
+    const VideoCallInitializer = React.lazy(() => 
+      import('@/components/VideoCallInitializer').then(module => ({ 
+        default: module.VideoCallInitializer 
+      }))
+    );
+    
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Card className="w-full max-w-md mx-4">
-          <CardContent className="p-8 text-center space-y-4">
-            <Loader2 className="w-12 h-12 mx-auto animate-spin text-primary" />
-            <h3 className="text-xl font-semibold">
-              Carregando sessão...
-            </h3>
-            <p className="text-muted-foreground">
-              Aguarde enquanto preparamos sua videochamada.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      <React.Suspense fallback={
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <Loader2 className="w-12 h-12 animate-spin text-primary" />
+        </div>
+      }>
+        <VideoCallInitializer
+          sessionId={sessionId || ''}
+          onReady={() => {
+            console.log('🎉 VideoCallInitializer completed, validation should be done');
+          }}
+          onError={(error) => {
+            console.error('❌ VideoCallInitializer failed:', error);
+            toast({
+              title: 'Erro na Inicialização',
+              description: error,
+              variant: 'destructive',
+            });
+            navigate('/home');
+          }}
+        />
+      </React.Suspense>
     );
   }
 

@@ -24,15 +24,26 @@ export const isValidUUID = (uuid: string): boolean => {
   return uuidRegex.test(uuid);
 };
 
-// Retry mechanism with exponential backoff
+// Enhanced retry mechanism with intelligent delay and backoff
 const withRetry = async <T>(
   operation: () => Promise<T>,
-  options: { retries: number; delay: number } = { retries: 3, delay: 1000 }
+  options: { retries: number; initialDelay: number; useInitialDelay?: boolean } = { 
+    retries: 4, 
+    initialDelay: 2000,
+    useInitialDelay: true 
+  }
 ): Promise<T> => {
   let lastError: Error;
   
+  // Initial delay to allow database replication
+  if (options.useInitialDelay) {
+    console.log(`⏳ Initial delay of ${options.initialDelay}ms to allow session propagation...`);
+    await new Promise(resolve => setTimeout(resolve, options.initialDelay));
+  }
+  
   for (let attempt = 1; attempt <= options.retries; attempt++) {
     try {
+      console.log(`🔍 Validation attempt ${attempt}/${options.retries}`);
       return await operation();
     } catch (error) {
       lastError = error as Error;
@@ -41,8 +52,8 @@ const withRetry = async <T>(
         throw lastError;
       }
       
-      // Exponential backoff: 1s, 2s, 4s
-      const delay = options.delay * Math.pow(2, attempt - 1);
+      // Exponential backoff: 1s, 2s, 4s, 8s
+      const delay = 1000 * Math.pow(2, attempt - 1);
       console.log(`⏳ Attempt ${attempt} failed, retrying in ${delay}ms...`, error);
       await new Promise(resolve => setTimeout(resolve, delay));
     }
@@ -58,10 +69,11 @@ export const validateWebRTCSession = async (sessionId: string): Promise<WebRTCSe
   }
 
   try {
-    console.log(`🔍 Starting validation for session: ${sessionId}`);
+    console.log(`🔍 Starting enhanced validation for session: ${sessionId}`);
+    const startTime = Date.now();
     
     const session = await withRetry(async () => {
-      console.log(`🔍 Validating session attempt: ${sessionId}`);
+      console.log(`🔍 Validating session: ${sessionId}`);
       
       // Use maybeSingle to handle cases where session doesn't exist
       const { data: session, error } = await supabase
@@ -84,12 +96,13 @@ export const validateWebRTCSession = async (sessionId: string): Promise<WebRTCSe
 
       // Session not found - throw error to trigger retry
       if (!session) {
-        console.warn(`⚠️ Session not found on attempt: ${sessionId}`);
+        console.warn(`⚠️ Session not found: ${sessionId}`);
         throw new Error('SESSION_NOT_READY'); // Will trigger retry
       }
 
+      console.log(`✅ Session found: ${sessionId}`, session);
       return session;
-    }, { retries: 3, delay: 1000 });
+    }, { retries: 4, initialDelay: 2500, useInitialDelay: true });
 
     // Check if session is expired
     if (session.expires_at && new Date(session.expires_at) < new Date()) {
@@ -108,7 +121,8 @@ export const validateWebRTCSession = async (sessionId: string): Promise<WebRTCSe
       throw new SessionValidationError('Você não tem permissão para acessar esta sessão', 'ACCESS_DENIED');
     }
 
-    console.log('✅ Session validation completed successfully');
+    const totalTime = Date.now() - startTime;
+    console.log(`✅ Session validation completed successfully in ${totalTime}ms`);
     return session;
 
   } catch (error) {
