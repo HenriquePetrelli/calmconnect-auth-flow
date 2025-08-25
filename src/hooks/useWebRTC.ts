@@ -2,6 +2,9 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { getWebRTCConnectionManager } from '@/utils/webrtc-manager';
+import { flowLock } from '@/utils/flow-lock';
+import { stateMachineRegistry, type WebRTCState } from '@/utils/state-machine';
+import { loopDetector } from '@/utils/loop-detector';
 
 interface WebRTCSession {
   id: string;
@@ -29,12 +32,15 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
   const [error, setError] = useState<string | null>(null);
   const [session, setSession] = useState<WebRTCSession | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
+  const [webrtcState, setWebrtcState] = useState<WebRTCState>('idle');
   
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const initializationRef = useRef<boolean>(false);
+  const cleanupRef = useRef<boolean>(false);
   const { toast } = useToast();
   const connectionManager = getWebRTCConnectionManager();
+  const stateMachine = useRef(stateMachineRegistry.getOrCreate(sessionId));
 
   const initializeMedia = useCallback(async () => {
     try {
@@ -291,6 +297,21 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
   }, [localStream]);
 
   const cleanup = useCallback(() => {
+    // Prevent multiple cleanup calls
+    if (cleanupRef.current) {
+      loopDetector.trace(sessionId, 'cleanup_skip_already_running');
+      return;
+    }
+    
+    cleanupRef.current = true;
+    loopDetector.trace(sessionId, 'cleanup_start');
+    
+    // Transition to cleaning state
+    if (stateMachine.current.canTransitionTo('cleaning')) {
+      stateMachine.current.transitionTo('cleaning');
+      setWebrtcState('cleaning');
+    }
+    
     console.log('🧹 Cleaning up WebRTC resources...');
     
     if (localStream) {
@@ -305,43 +326,80 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
       connectionManager.cleanupConnection(sessionId);
     }
     
+    // Release flow lock
+    flowLock.releaseLock(sessionId);
+    
     setLocalStream(null);
     setRemoteStream(null);
     setPeerConnection(null);
     setIsConnected(false);
     setConnectionState('closed');
     setIsInitializing(false);
+    
+    // Transition back to idle
+    stateMachine.current.transitionTo('idle');
+    setWebrtcState('idle');
+    
+    cleanupRef.current = false;
+    loopDetector.trace(sessionId, 'cleanup_complete');
   }, [localStream, sessionId, connectionManager]);
 
-  // Initialize WebRTC with singleton pattern
+  // Initialize WebRTC with loop protection
   useEffect(() => {
     let isMounted = true;
+    let unsubscribe: (() => void) | undefined;
     
     const initialize = async () => {
-      // Prevent multiple initializations
+      // Only initialize if in idle state
+      if (webrtcState !== 'idle') {
+        loopDetector.trace(sessionId, `initialize_skip_wrong_state_${webrtcState}`);
+        return;
+      }
+
+      // Prevent multiple initializations with flow lock
+      if (!flowLock.acquireLock(sessionId, 'webrtc_initialization')) {
+        loopDetector.trace(sessionId, 'initialize_skip_lock_exists');
+        return;
+      }
+
+      // Prevent duplicate initialization
       if (isInitializing || initializationRef.current) {
-        console.log('⚠️ WebRTC initialization already in progress, skipping...');
+        flowLock.releaseLock(sessionId);
+        loopDetector.trace(sessionId, 'initialize_skip_already_running');
         return;
       }
 
       if (!sessionId) {
+        flowLock.releaseLock(sessionId);
         throw new Error('Session ID is required');
       }
 
       try {
+        loopDetector.trace(sessionId, 'initialize_start');
+        
+        // Transition to initializing state
+        stateMachine.current.transitionTo('initializing');
+        setWebrtcState('initializing');
+        
         console.log(`🚀 Initializing managed WebRTC for session: ${sessionId}`);
         setIsInitializing(true);
         initializationRef.current = true;
         
-        // Show connection stats
-        const stats = connectionManager.getStats();
-        console.log(`📊 Connection Manager Stats:`, stats);
-        
         const stream = await initializeMedia();
-        if (!isMounted) return;
+        if (!isMounted) {
+          flowLock.releaseLock(sessionId);
+          return;
+        }
+        
+        loopDetector.trace(sessionId, 'media_initialized');
         
         const pc = await createPeerConnection(stream);
-        if (!isMounted) return;
+        if (!isMounted) {
+          flowLock.releaseLock(sessionId);
+          return;
+        }
+        
+        loopDetector.trace(sessionId, 'peer_connection_created');
 
         // Set up realtime subscription for session updates
         const channel = supabase
@@ -376,6 +434,11 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
           )
           .subscribe();
 
+        unsubscribe = () => {
+          console.log('🔌 Unsubscribing from realtime channel');
+          supabase.removeChannel(channel);
+        };
+
         // If psychologist, create initial offer
         if (userType === 'psychologist') {
           setTimeout(() => {
@@ -385,30 +448,49 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
           }, 1000);
         }
 
-        return () => {
-          console.log('🔌 Unsubscribing from realtime channel');
-          supabase.removeChannel(channel);
-        };
+        // Transition to connected state
+        stateMachine.current.transitionTo('connected');
+        setWebrtcState('connected');
+        
+        loopDetector.trace(sessionId, 'initialize_complete');
         
       } catch (error) {
         console.error('❌ WebRTC initialization failed:', error);
+        
         if (isMounted) {
+          // Transition to error state
+          stateMachine.current.transitionTo('error');
+          setWebrtcState('error');
+          
           setError(error instanceof Error ? error.message : 'Erro ao inicializar videochamada');
           setIsInitializing(false);
           initializationRef.current = false;
+          
+          loopDetector.trace(sessionId, `initialize_error_${error instanceof Error ? error.message : 'unknown'}`);
         }
+      } finally {
+        flowLock.releaseLock(sessionId);
       }
     };
 
+    // Only initialize once per sessionId
     initialize();
 
     return () => {
       isMounted = false;
       initializationRef.current = false;
       setIsInitializing(false);
-      cleanup();
+      
+      if (unsubscribe) {
+        unsubscribe();
+      }
+      
+      // Only cleanup if not in a valid connected state
+      if (webrtcState !== 'connected') {
+        cleanup();
+      }
     };
-  }, [sessionId, userType, initializeMedia, createPeerConnection, cleanup]);
+  }, [sessionId, userType]); // Minimal dependencies to prevent loop
 
   return {
     localVideoRef,
@@ -420,6 +502,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     error,
     session,
     isInitializing,
+    webrtcState,
     toggleAudio,
     toggleVideo,
     cleanup
