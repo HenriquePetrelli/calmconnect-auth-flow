@@ -89,8 +89,24 @@ serve(async (req) => {
 
     if (req.method === 'GET') {
       // Check status of emergency request
-      const url = new URL(req.url);
-      const requestId = url.searchParams.get('request_id');
+      const body = await req.text();
+      let requestId: string | null = null;
+      
+      // Try to get request_id from body first (JSON)
+      if (body) {
+        try {
+          const parsed = JSON.parse(body);
+          requestId = parsed.request_id;
+        } catch (e) {
+          // If JSON parsing fails, try URL params as fallback
+          const url = new URL(req.url);
+          requestId = url.searchParams.get('request_id');
+        }
+      } else {
+        // Try URL params as fallback
+        const url = new URL(req.url);
+        requestId = url.searchParams.get('request_id');
+      }
 
       if (!requestId) {
         throw new Error('Request ID is required');

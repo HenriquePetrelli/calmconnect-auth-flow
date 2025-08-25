@@ -31,6 +31,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import PsychologistDashboard from "./pages/PsychologistDashboard";
 import PsychologistProfile from "./pages/PsychologistProfile";
 import EmergencyCall from "./pages/EmergencyCall";
+import WebRTCTest from "./pages/WebRTCTest";
 
 import CreateAdminAccount from "./pages/CreateAdminAccount";
 import NotFound from "./pages/NotFound";
@@ -86,6 +87,7 @@ const App = () => {
                   <Route path="/psychologist-profile" element={<PsychologistProfile />} />
                   <Route path="/emergency/call/:requestId" element={<EmergencyCall />} />
                   <Route path="/emergency-call/:sessionId" element={<EmergencyCall />} />
+                  <Route path="/webrtc-test" element={<WebRTCTest />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>

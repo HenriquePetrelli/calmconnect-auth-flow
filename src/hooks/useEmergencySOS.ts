@@ -53,8 +53,8 @@ export const useEmergencySOS = () => {
 
   const checkRequestStatus = async (requestId: string) => {
     try {
-      const { data, error } = await supabase.functions.invoke('emergency-sos?requestId=' + encodeURIComponent(requestId), {
-        body: null,
+      const { data, error } = await supabase.functions.invoke('emergency-sos', {
+        body: { request_id: requestId },
         method: 'GET',
       });
       if (error) throw error;
@@ -62,13 +62,35 @@ export const useEmergencySOS = () => {
       return data;
     } catch (error: any) {
       console.error('Error checking request status:', error);
+      // Stop the polling loop on persistent errors
       return null;
     }
   };
 
   const startStatusPolling = (requestId: string) => {
+    let failureCount = 0;
+    const maxFailures = 3;
+
     const interval = setInterval(async () => {
       const request = await checkRequestStatus(requestId);
+      
+      if (request === null) {
+        failureCount++;
+        console.warn(`Status check failed (${failureCount}/${maxFailures})`);
+        
+        if (failureCount >= maxFailures) {
+          console.error('Max failures reached, stopping status polling');
+          clearInterval(interval);
+          toast({
+            title: 'Erro de Conexão',
+            description: 'Não foi possível verificar o status da solicitação',
+            variant: 'destructive',
+          });
+          return;
+        }
+      } else {
+        failureCount = 0; // Reset failure count on success
+      }
       
       if (request && request.status === 'accepted') {
         clearInterval(interval);
