@@ -104,10 +104,38 @@ export const validateWebRTCSession = async (sessionId: string): Promise<WebRTCSe
       return session;
     }, { retries: 4, initialDelay: 2500, useInitialDelay: true });
 
-    // Check if session is expired
-    if (session.expires_at && new Date(session.expires_at) < new Date()) {
-      console.warn(`⏰ Session expired: ${sessionId}`);
-      throw new SessionValidationError('Esta sessão de videochamada já expirou', 'SESSION_EXPIRED');
+    // Check if session is expired or close to expiring
+    if (session.expires_at) {
+      const now = new Date();
+      const expiresAt = new Date(session.expires_at);
+      const timeUntilExpiry = expiresAt.getTime() - now.getTime();
+      const oneHourInMs = 60 * 60 * 1000; // 1 hour
+      
+      if (timeUntilExpiry < 0) {
+        console.warn(`⏰ Session expired: ${sessionId}`);
+        throw new SessionValidationError('Esta sessão de videochamada já expirou', 'SESSION_EXPIRED');
+      }
+      
+      // Auto-extend session if it's within 1 hour of expiring
+      if (timeUntilExpiry < oneHourInMs) {
+        console.log(`⏰ Session expires soon (${Math.round(timeUntilExpiry / (60 * 1000))}min), extending...`);
+        try {
+          const { error: extendError } = await supabase
+            .from('webrtc_sessions')
+            .update({ 
+              expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // Extend by 24 hours
+            })
+            .eq('id', sessionId);
+          
+          if (!extendError) {
+            console.log(`✅ Session ${sessionId} extended successfully`);
+          } else {
+            console.warn(`⚠️ Failed to extend session ${sessionId}:`, extendError);
+          }
+        } catch (extendError) {
+          console.warn(`⚠️ Error extending session ${sessionId}:`, extendError);
+        }
+      }
     }
 
     // Validate user access

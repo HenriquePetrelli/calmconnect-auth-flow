@@ -272,10 +272,11 @@ serve(async (req) => {
       });
     }
 
-    // Create new WebRTC session
+    // Create new WebRTC session with extended expiration
     const sessionData: any = {
       emergency_request_id,
-      status: "pending"
+      status: "pending",
+      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours from now
     };
 
     if (user_type === "psychologist") {
