@@ -5,21 +5,41 @@ export const useBeforeUnload = (requestId: string | null, patientId: string) => 
   useEffect(() => {
     if (!requestId) return;
 
-    const handleBeforeUnload = () => {
-      // Use sendBeacon for reliable cleanup when user closes browser/tab
+    const handleBeforeUnload = async () => {
       try {
-        const data = JSON.stringify({
-          request_id: requestId,
-          patient_id: patientId
-        });
-
         // Try to delete the emergency request before unload
-        navigator.sendBeacon(
+        const response = await fetch(
           `https://ihrrgmmsfuvlasmzdmwf.supabase.co/functions/v1/emergency-cleanup`,
-          new Blob([data], { type: 'application/json' })
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              request_id: requestId,
+              patient_id: patientId
+            }),
+          }
         );
+        
+        if (!response.ok) {
+          console.error('Emergency cleanup request failed:', response.status);
+        }
       } catch (error) {
-        console.error('Error cleaning up emergency request:', error);
+        // Fallback to sendBeacon if fetch fails
+        try {
+          const data = JSON.stringify({
+            request_id: requestId,
+            patient_id: patientId
+          });
+
+          navigator.sendBeacon(
+            `https://ihrrgmmsfuvlasmzdmwf.supabase.co/functions/v1/emergency-cleanup`,
+            new Blob([data], { type: 'application/json' })
+          );
+        } catch (beaconError) {
+          console.error('Error with sendBeacon cleanup:', beaconError);
+        }
       }
     };
 

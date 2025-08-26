@@ -53,8 +53,8 @@ export const useEmergencySOS = () => {
 
   const checkRequestStatus = async (requestId: string) => {
     try {
-      const { data, error } = await supabase.functions.invoke('emergency-sos', {
-        body: { request_id: requestId },
+      // Use URL params for GET request instead of body
+      const { data, error } = await supabase.functions.invoke(`emergency-sos?request_id=${requestId}`, {
         method: 'GET',
       });
       if (error) throw error;
