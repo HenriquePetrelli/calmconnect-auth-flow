@@ -25,6 +25,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   const navigate = useNavigate();
   const { toast } = useToast();
   
+  // Use the URL parameter as the session ID (this should be the WebRTC session ID, not the emergency request ID)
   const sessionId = propSessionId || paramSessionId;
   const [userType, setUserType] = useState<'psychologist' | 'patient'>(propUserType || 'patient');
   const [timeLeft, setTimeLeft] = useState(timeLimit);

@@ -19,8 +19,8 @@ const EmergencyNotifications = () => {
     try {
       const result = await acceptEmergencyRequest(requestId);
       
-      // Navigate to WebRTC video call with session ID
-      navigate(`/emergency-call/${requestId}?sessionId=${result.session_id}&userType=psychologist`);
+      // Navigate to WebRTC video call with the actual session ID
+      navigate(`/emergency-call/${result.session_id}?requestId=${requestId}&userType=psychologist`);
     } catch (error) {
       console.error('Error accepting emergency:', error);
     } finally {
