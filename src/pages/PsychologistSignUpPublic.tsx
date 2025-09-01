@@ -16,6 +16,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LocationFields } from "@/components/psychologist/LocationFields";
 import { PsychologistService } from "@/services/psychologist.service";
+import { TRANSTORNOS } from "@/data/transtornos";
 
 const specializations = [
   'Psicologia Clínica',
@@ -42,6 +43,7 @@ const formSchema = z.object({
   crp: z.string().min(5, "CRP é obrigatório"),
   
   specialty: z.string().min(1, "Especialidade é obrigatória"),
+  areaAtendimento: z.string().min(1, "Área de atendimento é obrigatória"),
   bio: z.string().min(50, "A biografia deve ter pelo menos 50 caracteres"),
   state: z.string().min(1, "Estado é obrigatório"),
   city: z.string().min(1, "Cidade é obrigatória"),
@@ -70,6 +72,7 @@ const PsychologistSignUpPublic = () => {
       cpf: "",
       crp: "",
       specialty: "",
+      areaAtendimento: "",
       bio: "",
       state: "",
       city: "",
@@ -95,6 +98,7 @@ const PsychologistSignUpPublic = () => {
           cpf: data.cpf.replace(/\D/g, ''),
           crp: data.crp,
           specialty: data.specialty,
+          areaAtendimento: data.areaAtendimento,
           bio: data.bio,
           state: data.state,
           city: data.city,
@@ -298,6 +302,31 @@ const PsychologistSignUpPublic = () => {
                             {specializations.map((spec) => (
                               <SelectItem key={spec} value={spec}>
                                 {spec}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="areaAtendimento"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Áreas de Atendimento *</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione sua área de atendimento" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {TRANSTORNOS.map((transtorno) => (
+                              <SelectItem key={transtorno} value={transtorno}>
+                                {transtorno}
                               </SelectItem>
                             ))}
                           </SelectContent>

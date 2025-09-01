@@ -283,7 +283,7 @@ export type Database = {
           full_name: string
           id: string
           phone: string | null
-          reason: string | null
+          sintomas_selecionados: string[] | null
           state: string
           updated_at: string | null
           user_id: string | null
@@ -296,7 +296,7 @@ export type Database = {
           full_name: string
           id?: string
           phone?: string | null
-          reason?: string | null
+          sintomas_selecionados?: string[] | null
           state: string
           updated_at?: string | null
           user_id?: string | null
@@ -309,7 +309,7 @@ export type Database = {
           full_name?: string
           id?: string
           phone?: string | null
-          reason?: string | null
+          sintomas_selecionados?: string[] | null
           state?: string
           updated_at?: string | null
           user_id?: string | null
@@ -474,6 +474,7 @@ export type Database = {
           address: string | null
           approval_status: string | null
           approved: boolean | null
+          area_atendimento: string | null
           bio: string | null
           city: string | null
           cpf: string | null
@@ -498,6 +499,7 @@ export type Database = {
           address?: string | null
           approval_status?: string | null
           approved?: boolean | null
+          area_atendimento?: string | null
           bio?: string | null
           city?: string | null
           cpf?: string | null
@@ -522,6 +524,7 @@ export type Database = {
           address?: string | null
           approval_status?: string | null
           approved?: boolean | null
+          area_atendimento?: string | null
           bio?: string | null
           city?: string | null
           cpf?: string | null
@@ -628,6 +631,27 @@ export type Database = {
           subscription_tier?: string | null
           updated_at?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      transtornos_sintomas: {
+        Row: {
+          created_at: string
+          id: string
+          sintomas: string[]
+          transtorno: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          sintomas: string[]
+          transtorno: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          sintomas?: string[]
+          transtorno?: string
         }
         Relationships: []
       }

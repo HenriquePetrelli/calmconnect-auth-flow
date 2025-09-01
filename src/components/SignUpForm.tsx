@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Eye, EyeOff, AlertCircle } from "lucide-react";
-import ReasonSelect from "@/components/ReasonSelect";
+import SintomasSelector from "@/components/SintomasSelector";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,7 +32,7 @@ const [formData, setFormData] = useState({
   state: "",
   city: "",
   phone: "",
-  reason: "",
+  sintomas: [] as string[],
   password: "",
   confirmPassword: "",
   // Psychologist fields
@@ -147,12 +147,14 @@ const [formData, setFormData] = useState({
     return true;
   };
 
-  const handleInputChange = (field: string, value: string) => {
-    // Aplicar máscaras
-    if (field === 'cpf') {
-      value = formatCPF(value);
-    } else if (field === 'phone') {
-      value = formatPhone(value);
+  const handleInputChange = (field: string, value: string | string[]) => {
+    // Aplicar máscaras para strings
+    if (typeof value === 'string') {
+      if (field === 'cpf') {
+        value = formatCPF(value);
+      } else if (field === 'phone') {
+        value = formatPhone(value);
+      }
     }
     
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -187,7 +189,7 @@ const [formData, setFormData] = useState({
         if (!formData.state) newErrors.state = true;
         if (!formData.city) newErrors.city = true;
         if (!formData.phone) newErrors.phone = true;
-        if (!formData.reason || (formData.reason === "Outros")) newErrors.reason = true;
+        if (!formData.sintomas || formData.sintomas.length === 0) newErrors.sintomas = true;
         
         // Validar CPF se preenchido
         if (formData.cpf && !validateCPF(formData.cpf)) {
@@ -269,7 +271,7 @@ const [formData, setFormData] = useState({
             state: formData.state,
             city: formData.city,
             phone: formData.phone.replace(/\D/g, ''),
-            reason: formData.reason
+            sintomas_selecionados: formData.sintomas
           });
 
         if (patientError) {
@@ -472,10 +474,10 @@ const { error: profileError } = await supabase
                   />
                 </div>
 
-                <ReasonSelect
-                  value={formData.reason}
-                  onChange={(value) => handleInputChange("reason", value)}
-                  error={errors.reason}
+                <SintomasSelector
+                  value={formData.sintomas}
+                  onChange={(value) => handleInputChange("sintomas", value)}
+                  error={errors.sintomas}
                 />
               </>
             )}

@@ -8,6 +8,7 @@ export interface PsychologistFormData {
   cpf: string;
   crp: string;
   specialty: string;
+  areaAtendimento: string;
   bio: string;
   state: string;
   city: string;
@@ -86,7 +87,8 @@ export class PsychologistService {
         p_city: formData.city,
         p_address: formData.address || null,
         p_document_url: finalDocumentUrl,
-        p_cpf: formData.cpf
+        p_cpf: formData.cpf,
+        p_area_atendimento: formData.areaAtendimento
       } as any);
 
       if (dbError) throw new Error(dbError.message);
