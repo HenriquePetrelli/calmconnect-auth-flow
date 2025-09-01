@@ -19,18 +19,38 @@ import { PsychologistService } from "@/services/psychologist.service";
 import { TRANSTORNOS } from "@/data/transtornos";
 
 const specializations = [
+  // Áreas tradicionais
   'Psicologia Clínica',
-  'Psicologia Organizacional',
-  'Psicologia Escolar',
-  'Neuropsicologia',
+  'Psicologia Escolar/Educacional',
+  'Psicologia Organizacional e do Trabalho',
   'Psicologia Social',
   'Psicologia Hospitalar',
+  'Psicologia Jurídica/Forense',
   'Psicologia do Esporte',
-  'Psicologia Jurídica',
+  'Psicologia Comunitária',
+  'Psicologia da Saúde',
+  'Neuropsicologia',
+
+  // Abordagens psicoterapêuticas
   'Psicanálise',
-  'Terapia Cognitivo-Comportamental',
+  'Terapia Cognitivo-Comportamental (TCC)',
   'Gestalt-terapia',
-  'Psicoterapia Humanística',
+  'Psicoterapia Humanista/Existencial',
+  'Análise do Comportamento',
+  'Psicoterapia Sistêmica/Familiar',
+  'Psicodrama',
+  'Mindfulness e Terapias de Terceira Geração',
+
+  // Áreas específicas de aplicação
+  'Psicologia Infantil',
+  'Psicologia do Adolescente',
+  'Psicologia do Envelhecimento (Gerontopsicologia)',
+  'Psicotraumatologia',
+  'Psicologia da Emergência e Desastres',
+  'Psicologia da Reabilitação',
+  'Psicologia da Dependência Química',
+
+  // Categoria aberta
   'Outras'
 ];
 
