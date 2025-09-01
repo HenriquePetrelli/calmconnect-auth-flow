@@ -750,6 +750,7 @@ export type Database = {
             }
           | {
               p_address?: string
+              p_area_atendimento?: string
               p_bio: string
               p_city: string
               p_cpf?: string
@@ -757,7 +758,6 @@ export type Database = {
               p_document_url?: string
               p_email: string
               p_full_name: string
-              p_professional_email?: string
               p_specialization: string
               p_state: string
               p_user_id: string
