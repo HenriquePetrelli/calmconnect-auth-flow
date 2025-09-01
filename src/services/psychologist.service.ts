@@ -88,7 +88,7 @@ export class PsychologistService {
         p_address: formData.address || null,
         p_document_url: finalDocumentUrl,
         p_cpf: formData.cpf,
-        p_area_atendimento: formData.areaAtendimento
+        p_area_atendimento: JSON.stringify(formData.areaAtendimento),
       } as any);
 
       if (dbError) throw new Error(dbError.message);
