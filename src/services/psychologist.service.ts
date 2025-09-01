@@ -8,7 +8,7 @@ export interface PsychologistFormData {
   cpf: string;
   crp: string;
   specialty: string;
-  areaAtendimento: string;
+  areaAtendimento: string[];
   bio: string;
   state: string;
   city: string;

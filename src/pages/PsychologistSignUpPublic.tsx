@@ -63,7 +63,7 @@ const formSchema = z.object({
   crp: z.string().min(5, "CRP é obrigatório"),
   
   specialty: z.string().min(1, "Especialidade é obrigatória"),
-  areaAtendimento: z.string().min(1, "Área de atendimento é obrigatória"),
+  areaAtendimento: z.array(z.string()).min(1, "Selecione pelo menos uma área de atendimento"),
   bio: z.string().min(50, "A biografia deve ter pelo menos 50 caracteres"),
   state: z.string().min(1, "Estado é obrigatório"),
   city: z.string().min(1, "Cidade é obrigatória"),
@@ -92,7 +92,7 @@ const PsychologistSignUpPublic = () => {
       cpf: "",
       crp: "",
       specialty: "",
-      areaAtendimento: "",
+      areaAtendimento: [],
       bio: "",
       state: "",
       city: "",
@@ -337,20 +337,42 @@ const PsychologistSignUpPublic = () => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Áreas de Atendimento *</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecione sua área de atendimento" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {TRANSTORNOS.map((transtorno) => (
-                              <SelectItem key={transtorno} value={transtorno}>
-                                {transtorno}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <FormControl>
+                          <div className="space-y-2">
+                            <div className="text-sm text-muted-foreground">
+                              Selecione as áreas em que você atende:
+                            </div>
+                            <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto border rounded-md p-3">
+                              {TRANSTORNOS.map((transtorno) => (
+                                <div key={transtorno} className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id={transtorno}
+                                    checked={field.value?.includes(transtorno)}
+                                    onCheckedChange={(checked) => {
+                                      const currentValue = field.value || [];
+                                      if (checked) {
+                                        field.onChange([...currentValue, transtorno]);
+                                      } else {
+                                        field.onChange(currentValue.filter((item: string) => item !== transtorno));
+                                      }
+                                    }}
+                                  />
+                                  <label
+                                    htmlFor={transtorno}
+                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                                  >
+                                    {transtorno}
+                                  </label>
+                                </div>
+                              ))}
+                            </div>
+                            {field.value && field.value.length > 0 && (
+                              <div className="text-sm text-muted-foreground">
+                                {field.value.length} área(s) selecionada(s)
+                              </div>
+                            )}
+                          </div>
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
