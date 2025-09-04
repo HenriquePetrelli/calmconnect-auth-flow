@@ -184,16 +184,19 @@ export class PsychologistService {
         .delete()
         .eq('user_id', userId);
 
-      // 3. IMPORTANTE: Remover usuário do auth (admin only)
+      // 3. IMPORTANTE: Remover usuário do auth usando edge function
       try {
-        const { error: deleteUserError } = await supabase.auth.admin.deleteUser(userId);
-        if (deleteUserError) {
-          console.warn('Não foi possível remover usuário do auth (requer privilégios admin):', deleteUserError);
+        const { error: cleanupError } = await supabase.functions.invoke('cleanup-user', {
+          body: { userId }
+        });
+        
+        if (cleanupError) {
+          console.warn('Erro ao fazer cleanup completo do usuário:', cleanupError);
         } else {
-          console.log('Usuário removido do auth');
+          console.log('Cleanup completo do usuário realizado com sucesso');
         }
       } catch (authError) {
-        console.warn('Erro ao tentar remover usuário do auth:', authError);
+        console.warn('Erro ao chamar função de cleanup:', authError);
       }
 
       console.log('Cleanup concluído para usuário:', userId);
