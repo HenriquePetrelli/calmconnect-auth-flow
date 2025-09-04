@@ -151,27 +151,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Route protection effect
   useEffect(() => {
-    if (!loading && user && userType !== 'unknown') {
-      const currentPath = window.location.pathname;
-      
-      // Define redirect rules based on user type and current path
-      if (userType === 'admin') {
-        if (!currentPath.startsWith('/admin')) {
-          // Admin user redirected to admin dashboard
-          window.location.href = '/admin-dashboard';
-        }
-      } else if (userType === 'psychologist') {
-        if (currentPath.startsWith('/admin')) {
-          // Psychologist user blocked from admin area
-          window.location.href = '/psychologist-dashboard';
-        }
-      } else if (userType === 'patient') {
-        if (currentPath.startsWith('/admin') || currentPath.startsWith('/psychologist')) {
-          // Patient user blocked from restricted area
-          window.location.href = '/';
-        }
-      }
-    }
+    // Route protection is now handled by RouteGuard component
+    // This effect is no longer needed to prevent conflicts
   }, [user, userType, loading]);
 
   const value: AuthContextType = {

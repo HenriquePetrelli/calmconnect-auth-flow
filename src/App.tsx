@@ -7,6 +7,7 @@ import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import SplashScreen from "@/components/SplashScreen";
+import RouteGuard from "@/components/RouteGuard";
 import Index from "./pages/Index";
 import PatientLogin from "./pages/PatientLogin";
 import PsychologistLogin from "./pages/PsychologistLogin";
@@ -33,7 +34,6 @@ import PsychologistProfile from "./pages/PsychologistProfile";
 import EmergencyCall from "./pages/EmergencyCall";
 import WebRTCTest from "./pages/WebRTCTest";
 
-import CreateAdminAccount from "./pages/CreateAdminAccount";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -58,37 +58,167 @@ const App = () => {
             ) : (
               <BrowserRouter>
                 <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/patient-login" element={<PatientLogin />} />
-                  <Route path="/psychologist-login" element={<PsychologistLogin />} />
-                  <Route path="/patient-signup" element={<PatientSignUp />} />
-                  <Route path="/psychologist-signup" element={<PsychologistSignUpPublic />} />
-                  <Route path="/home" element={<Home />} />
-                  <Route path="/sounds" element={<SoundsLibrary />} />
-                  <Route path="/sounds/category/:categoryId" element={<SoundCategory />} />
-                  <Route path="/sounds/subcategory/:subcategoryId" element={<SoundCategory />} />
-                  <Route path="/sounds/player/:soundId" element={<SoundPlayer />} />
-                  <Route path="/sounds/player/playlist/:playlistId" element={<SoundPlayer />} />
-                  <Route path="/sounds/feedback" element={<SoundFeedback />} />
-                  <Route path="/breathing" element={<GuidedBreathing />} />
-                  <Route path="/sos" element={<SOS />} />
-                  <Route path="/profile" element={<Profile />} />
-                  <Route path="/account-settings" element={<AccountSettings />} />
-                  <Route path="/appointments" element={<Appointments />} />
-                  <Route path="/statistics" element={<Statistics />} />
-                  <Route path="/progress" element={<Progress />} />
-                  <Route path="/subscription-plans" element={<SubscriptionPlans />} />
-                  <Route path="/subscription-success" element={<SubscriptionSuccess />} />
-                  <Route path="/subscription-cancel" element={<SubscriptionCancel />} />
-                  <Route path="/create-admin-account" element={<CreateAdminAccount />} />
-                  <Route path="/admin-dashboard" element={<AdminDashboard />} />
-                  <Route path="/admin" element={<AdminDashboard />} />
-                  <Route path="/psychologist-dashboard" element={<PsychologistDashboard />} />
-                  <Route path="/psychologist-profile" element={<PsychologistProfile />} />
-                  <Route path="/emergency/call/:requestId" element={<EmergencyCall />} />
-                  <Route path="/emergency-call/:sessionId" element={<EmergencyCall />} />
-                  <Route path="/webrtc-test" element={<WebRTCTest />} />
-                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  {/* Rotas Públicas */}
+                  <Route path="/" element={
+                    <RouteGuard allowedUserTypes={['public']}>
+                      <Index />
+                    </RouteGuard>
+                  } />
+                  <Route path="/patient-login" element={
+                    <RouteGuard allowedUserTypes={['public']}>
+                      <PatientLogin />
+                    </RouteGuard>
+                  } />
+                  <Route path="/psychologist-login" element={
+                    <RouteGuard allowedUserTypes={['public']}>
+                      <PsychologistLogin />
+                    </RouteGuard>
+                  } />
+                  <Route path="/patient-signup" element={
+                    <RouteGuard allowedUserTypes={['public']}>
+                      <PatientSignUp />
+                    </RouteGuard>
+                  } />
+                  <Route path="/psychologist-signup" element={
+                    <RouteGuard allowedUserTypes={['public']}>
+                      <PsychologistSignUpPublic />
+                    </RouteGuard>
+                  } />
+
+                  {/* Rotas do Paciente */}
+                  <Route path="/home" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <Home />
+                    </RouteGuard>
+                  } />
+                  <Route path="/sounds" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <SoundsLibrary />
+                    </RouteGuard>
+                  } />
+                  <Route path="/sounds/category/:categoryId" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <SoundCategory />
+                    </RouteGuard>
+                  } />
+                  <Route path="/sounds/subcategory/:subcategoryId" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <SoundCategory />
+                    </RouteGuard>
+                  } />
+                  <Route path="/sounds/player/:soundId" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <SoundPlayer />
+                    </RouteGuard>
+                  } />
+                  <Route path="/sounds/player/playlist/:playlistId" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <SoundPlayer />
+                    </RouteGuard>
+                  } />
+                  <Route path="/sounds/feedback" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <SoundFeedback />
+                    </RouteGuard>
+                  } />
+                  <Route path="/breathing" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <GuidedBreathing />
+                    </RouteGuard>
+                  } />
+                  <Route path="/sos" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <SOS />
+                    </RouteGuard>
+                  } />
+                  <Route path="/profile" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <Profile />
+                    </RouteGuard>
+                  } />
+                  <Route path="/account-settings" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <AccountSettings />
+                    </RouteGuard>
+                  } />
+                  <Route path="/appointments" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <Appointments />
+                    </RouteGuard>
+                  } />
+                  <Route path="/statistics" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <Statistics />
+                    </RouteGuard>
+                  } />
+                  <Route path="/progress" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <Progress />
+                    </RouteGuard>
+                  } />
+                  <Route path="/subscription-plans" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <SubscriptionPlans />
+                    </RouteGuard>
+                  } />
+                  <Route path="/subscription-success" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <SubscriptionSuccess />
+                    </RouteGuard>
+                  } />
+                  <Route path="/subscription-cancel" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <SubscriptionCancel />
+                    </RouteGuard>
+                  } />
+                  <Route path="/webrtc-test" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <WebRTCTest />
+                    </RouteGuard>
+                  } />
+                  
+                  {/* Rotas de Emergência - Paciente inicia, Psicólogo atende */}
+                  <Route path="/emergency-call" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <EmergencyCall />
+                    </RouteGuard>
+                  } />
+                  <Route path="/emergency-call/:requestId" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <EmergencyCall />
+                    </RouteGuard>
+                  } />
+                  <Route path="/emergency/call/:requestId" element={
+                    <RouteGuard allowedUserTypes={['psychologist']}>
+                      <EmergencyCall />
+                    </RouteGuard>
+                  } />
+                  <Route path="/emergency-call/:sessionId" element={
+                    <RouteGuard allowedUserTypes={['psychologist']}>
+                      <EmergencyCall />
+                    </RouteGuard>
+                  } />
+
+                  {/* Rotas do Psicólogo */}
+                  <Route path="/psychologist-dashboard" element={
+                    <RouteGuard allowedUserTypes={['psychologist']}>
+                      <PsychologistDashboard />
+                    </RouteGuard>
+                  } />
+                  <Route path="/psychologist-profile" element={
+                    <RouteGuard allowedUserTypes={['psychologist']}>
+                      <PsychologistProfile />
+                    </RouteGuard>
+                  } />
+
+                  {/* Rotas do Admin */}
+                  <Route path="/admin-dashboard" element={
+                    <RouteGuard allowedUserTypes={['admin']}>
+                      <AdminDashboard />
+                    </RouteGuard>
+                  } />
+
+                  {/* Rota 404 */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </BrowserRouter>
