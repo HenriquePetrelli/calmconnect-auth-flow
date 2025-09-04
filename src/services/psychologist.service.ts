@@ -91,11 +91,15 @@ export class PsychologistService {
         p_area_atendimento: JSON.stringify(formData.areaAtendimento),
       } as any);
 
-      if (dbError) throw new Error(dbError.message);
+      if (dbError) {
+        console.error('Erro na função create_psychologist_profile:', dbError);
+        throw new Error(`Erro ao criar perfil: ${dbError.message}`);
+      }
 
       // Type assertion for the stored procedure result
       const result = profileResult as { success?: boolean; error?: string };
       if (!result?.success) {
+        console.error('Função retornou erro:', result?.error);
         throw new Error(result?.error || 'Falha ao criar perfil de psicólogo');
       }
 
@@ -149,6 +153,8 @@ export class PsychologistService {
 
   private static async cleanupFailedSignup(userId: string): Promise<void> {
     try {
+      console.log('Iniciando cleanup para usuário:', userId);
+      
       // 1. Remover do storage se existir
       const { data: files } = await supabase.storage
         .from('documents')
@@ -159,6 +165,7 @@ export class PsychologistService {
         await supabase.storage
           .from('documents')
           .remove(filesToRemove);
+        console.log('Documentos removidos do storage');
       }
 
       // 2. Remover registros do banco
@@ -177,6 +184,19 @@ export class PsychologistService {
         .delete()
         .eq('user_id', userId);
 
+      // 3. IMPORTANTE: Remover usuário do auth (admin only)
+      try {
+        const { error: deleteUserError } = await supabase.auth.admin.deleteUser(userId);
+        if (deleteUserError) {
+          console.warn('Não foi possível remover usuário do auth (requer privilégios admin):', deleteUserError);
+        } else {
+          console.log('Usuário removido do auth');
+        }
+      } catch (authError) {
+        console.warn('Erro ao tentar remover usuário do auth:', authError);
+      }
+
+      console.log('Cleanup concluído para usuário:', userId);
     } catch (cleanupError) {
       console.error('Erro no cleanup:', cleanupError);
     }
