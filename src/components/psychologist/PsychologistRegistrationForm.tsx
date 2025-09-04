@@ -253,7 +253,7 @@ const registrationData = {
               name="areasDeAtendimento"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Áreas de Atendimento *</FormLabel>
+                  <FormLabel className="text-sm font-normal">Áreas de Atendimento *</FormLabel>
                   <FormControl>
                     <MultiSelectModal
                       options={[...TRANSTORNOS]}

@@ -477,7 +477,7 @@ const { error: profileError } = await supabase
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-foreground font-medium">
+                  <Label className="text-sm text-foreground font-normal">
                     Sintomas que você apresenta *
                   </Label>
                   <MultiSelectModal

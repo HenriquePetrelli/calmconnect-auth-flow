@@ -65,22 +65,24 @@ const MultiSelectModal = ({
       </Button>
 
       {selectedValues.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {selectedValues.map((item) => (
-            <div
-              key={item}
-              className="inline-flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm"
-            >
-              <span className="truncate max-w-xs">{item}</span>
-              <button
-                type="button"
-                onClick={() => removeChip(item)}
-                className="hover:bg-primary/20 rounded-full p-0.5 transition-colors"
+        <div className="max-h-32 overflow-y-auto">
+          <div className="flex flex-wrap gap-2 p-1">
+            {selectedValues.map((item) => (
+              <div
+                key={item}
+                className="inline-flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm max-w-full"
               >
-                <X className="h-3 w-3" />
-              </button>
-            </div>
-          ))}
+                <span className="text-xs leading-tight break-words">{item}</span>
+                <button
+                  type="button"
+                  onClick={() => removeChip(item)}
+                  className="hover:bg-primary/20 rounded-full p-0.5 transition-colors flex-shrink-0"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -93,16 +95,16 @@ const MultiSelectModal = ({
           <ScrollArea className="flex-1 pr-4">
             <div className="space-y-3">
               {options.map((option) => (
-                <div key={option} className="flex items-start space-x-3">
+                <div key={option} className="flex items-start space-x-3 py-1">
                   <Checkbox
                     id={option}
                     checked={tempSelection.includes(option)}
                     onCheckedChange={(checked) => handleCheckboxChange(option, checked as boolean)}
-                    className="mt-1"
+                    className="mt-1 flex-shrink-0"
                   />
                   <Label 
                     htmlFor={option} 
-                    className="text-sm cursor-pointer leading-relaxed flex-1"
+                    className="text-sm cursor-pointer leading-relaxed flex-1 break-words whitespace-normal"
                   >
                     {option}
                   </Label>
