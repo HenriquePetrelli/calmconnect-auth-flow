@@ -6,12 +6,12 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 import { LogOut, Mail, Key, Save, Loader2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
 const AdminProfile = () => {
   const { toast } = useToast();
-  const navigate = useNavigate();
+  const { signOut } = useAuth();
   
   const [isUpdating, setIsUpdating] = useState(false);
   const [formData, setFormData] = useState({
@@ -22,12 +22,11 @@ const AdminProfile = () => {
 
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut();
-      navigate('/');
       toast({
         title: "Logout realizado",
         description: "Você foi desconectado com sucesso.",
       });
+      await signOut();
     } catch (error) {
       console.error('Error logging out:', error);
     }
