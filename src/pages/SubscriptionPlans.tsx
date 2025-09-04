@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Check, ArrowLeft, AlertTriangle } from "lucide-react";
+import { Check, ArrowLeft, AlertTriangle, Crown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -144,9 +144,7 @@ const SubscriptionPlans = () => {
   };
 
   const handleDowngrade = () => {
-    if (subscriptionTier === "Premium") {
-      setShowDowngradeModal(true);
-    }
+    setShowDowngradeModal(true);
   };
 
   return (
@@ -164,78 +162,78 @@ const SubscriptionPlans = () => {
           </Button>
         </div>
 
-        <div className="text-center mb-12">
-          <h1 className="text-3xl font-bold mb-4">Escolha seu Plano</h1>
-          <p className="text-muted-foreground">
-            Acesso completo aos nossos serviços de bem-estar mental
-          </p>
+        <div className="text-center mb-16">
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              Escolha seu Plano
+            </h1>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+              Acesso completo aos nossos serviços de bem-estar mental com profissionais qualificados
+            </p>
+          </div>
           
           {subscribed && (
-            <div className="mt-6">
-              <Badge variant="secondary" className="text-lg px-4 py-2">
-                Plano Atual: {subscriptionTier}
-              </Badge>
-              <div className="mt-4 space-y-2">
-                <Button 
-                  onClick={() => navigate('/subscription-plans')}
-                  disabled={loading === "manage"}
-                  variant="outline"
-                  className="w-full"
+            <div className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-2xl p-8 border border-primary/20">
+              <div className="flex flex-col items-center gap-4">
+                <Badge 
+                  variant="secondary" 
+                  className="text-lg px-6 py-3 bg-primary/10 text-primary border border-primary/20"
                 >
-                  {loading === "manage" ? "Carregando..." : "Trocar Plano"}
-                </Button>
+                  <Crown className="w-5 h-5 mr-2" />
+                  Plano Atual: {subscriptionTier}
+                </Badge>
                 
-                {subscriptionTier === "Premium" && (
+                <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
                   <Button 
                     onClick={handleDowngrade}
                     variant="outline"
-                    className="w-full"
+                    className="flex-1 bg-background hover:bg-muted"
                   >
                     Fazer Downgrade
                   </Button>
-                )}
-                
-                <Button 
-                  onClick={() => setShowCancelModal(true)}
-                  disabled={loading === "cancel"}
-                  variant="destructive"
-                  className="w-full"
-                >
-                  {loading === "cancel" ? "Cancelando..." : "Cancelar Assinatura"}
-                </Button>
+                </div>
               </div>
             </div>
           )}
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {plans.map((plan) => (
             <Card 
               key={plan.id} 
-              className={`relative ${plan.popular ? 'border-primary shadow-lg' : ''} ${
-                subscriptionTier === plan.name ? 'ring-2 ring-primary' : ''
+              className={`relative transition-all duration-300 hover:shadow-xl ${
+                plan.popular 
+                  ? 'border-primary shadow-2xl scale-105 bg-gradient-to-b from-primary/5 to-accent/5' 
+                  : 'border-border hover:border-primary/50'
+              } ${
+                subscriptionTier === plan.name ? 'ring-2 ring-primary shadow-primary/25' : ''
               }`}
             >
               {plan.popular && (
-                <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg">
+                  <Crown className="w-4 h-4 mr-1" />
                   Mais Popular
                 </Badge>
               )}
               
-              <CardHeader className="text-center">
-                <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                <CardDescription>
-                  <span className="text-3xl font-bold text-foreground">{plan.price}</span>
-                  <span className="text-muted-foreground">{plan.period}</span>
+              <CardHeader className="text-center pb-8">
+                <CardTitle className="text-3xl font-bold mb-2">{plan.name}</CardTitle>
+                <CardDescription className="mb-4">
+                  <div className="flex items-baseline justify-center gap-1">
+                    <span className="text-4xl font-bold text-foreground">{plan.price}</span>
+                    <span className="text-lg text-muted-foreground">{plan.period}</span>
+                  </div>
                 </CardDescription>
               </CardHeader>
               
-              <CardContent className="space-y-6">
-                <ul className="space-y-3">
+              <CardContent className="space-y-8">
+                <ul className="space-y-4">
                   {plan.features.map((feature, index) => (
-                    <li key={index} className="flex items-center gap-3">
-                      <Check className="w-5 h-5 text-primary flex-shrink-0" />
-                      <span>{feature}</span>
+                    <li key={index} className="flex items-start gap-3">
+                      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Check className="w-4 h-4 text-primary" />
+                      </div>
+                      <span className="text-sm leading-relaxed">{feature}</span>
                     </li>
                   ))}
                 </ul>
@@ -243,13 +241,27 @@ const SubscriptionPlans = () => {
                 <Button
                   onClick={() => handleSubscribe(plan)}
                   disabled={loading === plan.id || (subscribed && subscriptionTier === plan.name)}
-                  className="w-full"
+                  className={`w-full py-6 text-lg font-semibold ${
+                    plan.popular ? 'bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90' : ''
+                  }`}
                   variant={subscriptionTier === plan.name ? "secondary" : "default"}
+                  size="lg"
                 >
-                  {loading === plan.id ? "Processando..." : 
-                   subscriptionTier === plan.name ? "Plano Atual" : 
-                   subscribed ? `Trocar para ${plan.name}` : 
-                   "Assinar Agora"}
+                  {loading === plan.id ? (
+                    <div className="flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Processando...
+                    </div>
+                  ) : subscriptionTier === plan.name ? (
+                    <div className="flex items-center gap-2">
+                      <Crown className="w-5 h-5" />
+                      Plano Atual
+                    </div>
+                  ) : subscribed ? (
+                    `Trocar para ${plan.name}`
+                  ) : (
+                    "Assinar Agora"
+                  )}
                 </Button>
               </CardContent>
             </Card>
@@ -310,43 +322,37 @@ const SubscriptionPlans = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
-            <Card className="p-4">
-              <div className="space-y-2">
-                <h4 className="font-semibold">Plano Plus - R$ 69,99/mês</h4>
-                <ul className="text-sm text-muted-foreground space-y-1">
-                  <li>• 1 chamada emergencial por mês (25 min)</li>
-                  <li>• Acesso à biblioteca de sons</li>
-                  <li>• Exercícios de respiração</li>
-                </ul>
-                <Button 
-                  className="w-full"
-                  onClick={() => {
-                    setShowDowngradeModal(false);
-                    handleSubscribe(plans[0]);
-                  }}
-                >
-                  Trocar para Plus
-                </Button>
-              </div>
-            </Card>
+            {subscriptionTier === "Premium" && (
+              <Card className="p-4">
+                <div className="space-y-2">
+                  <h4 className="font-semibold">Plano Plus - R$ 69,99/mês</h4>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>• 1 chamada emergencial por mês (25 min)</li>
+                    <li>• Acesso à biblioteca de sons</li>
+                    <li>• Exercícios de respiração</li>
+                  </ul>
+                  <Button 
+                    className="w-full"
+                    onClick={() => {
+                      setShowDowngradeModal(false);
+                      handleSubscribe(plans[0]);
+                    }}
+                  >
+                    Trocar para Plus
+                  </Button>
+                </div>
+              </Card>
+            )}
             
             <Button
-              variant="outline"
+              variant="destructive"
               className="w-full"
               onClick={() => {
                 setShowDowngradeModal(false);
                 setShowCancelModal(true);
               }}
             >
-              Cancelar Assinatura Completamente
-            </Button>
-            
-            <Button
-              variant="ghost"
-              className="w-full"
-              onClick={() => setShowDowngradeModal(false)}
-            >
-              Manter Plano Atual
+              Cancelar Assinatura
             </Button>
           </div>
         </DialogContent>

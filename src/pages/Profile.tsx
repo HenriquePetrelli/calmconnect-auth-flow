@@ -183,42 +183,9 @@ const Profile = () => {
                 Fazer Upgrade
               </Button>
             ) : (
-              <div className="space-y-2">
-                <Button className="w-full" onClick={handleManageSubscription}>
-                  Gerenciar Assinatura
-                </Button>
-                {subscriptionTier === "Premium" && (
-                  <Button variant="outline" className="w-full" onClick={handleManageSubscription}>
-                    Fazer Downgrade
-                  </Button>
-                )}
-                <Button 
-                  variant="destructive" 
-                  className="w-full" 
-                  onClick={async () => {
-                    try {
-                      const { data, error } = await supabase.functions.invoke('cancel-subscription');
-                      if (error) throw error;
-                      
-                      toast({
-                        title: "Assinatura cancelada",
-                        description: "Sua assinatura foi cancelada com sucesso.",
-                      });
-                      
-                      navigate('/subscription-cancel');
-                    } catch (error) {
-                      console.error('Error:', error);
-                      toast({
-                        title: "Erro",
-                        description: "Erro ao cancelar assinatura",
-                        variant: "destructive",
-                      });
-                    }
-                  }}
-                >
-                  Cancelar Assinatura
-                </Button>
-              </div>
+              <Button className="w-full" onClick={handleManageSubscription}>
+                Gerenciar Assinatura
+              </Button>
             )}
           </CardContent>
         </Card>
