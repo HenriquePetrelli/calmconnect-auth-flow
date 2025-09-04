@@ -30,7 +30,7 @@ const PsychologistDashboard = () => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        navigate('/psychologist-login');
+        navigate('/');
         return;
       }
 
@@ -42,7 +42,7 @@ const PsychologistDashboard = () => {
         .single();
 
       if (error || !profile) {
-        navigate('/psychologist-login');
+        navigate('/');
         return;
       }
 
@@ -63,7 +63,7 @@ const PsychologistDashboard = () => {
         if (!registrationData || registrationData.status !== 'approved') {
           // Check user metadata for approval status
           if (user.user_metadata?.account_status !== 'approved') {
-            navigate('/psychologist-login?error=not_approved');
+            navigate('/?error=not_approved');
             return;
           }
         }
@@ -74,7 +74,7 @@ const PsychologistDashboard = () => {
         if (profile.user_type === 'patient') {
           navigate('/');
         } else {
-          navigate('/psychologist-login');
+          navigate('/');
         }
         return;
       }
@@ -82,7 +82,7 @@ const PsychologistDashboard = () => {
       setProfile(profile);
     } catch (error) {
       console.error('Error checking profile:', error);
-      navigate('/psychologist-login');
+      navigate('/');
     } finally {
       setLoading(false);
     }
@@ -90,7 +90,7 @@ const PsychologistDashboard = () => {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    navigate('/psychologist-login');
+    navigate('/');
   };
 
   if (loading) {

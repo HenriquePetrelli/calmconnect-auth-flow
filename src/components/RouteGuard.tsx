@@ -12,8 +12,7 @@ interface RouteGuardProps {
 export const ROUTE_PERMISSIONS = {
   public: [
     '/',
-    '/patient-login',
-    '/psychologist-login',
+    '/signup-type',
     '/patient-signup',
     '/psychologist-signup'
   ],
@@ -51,8 +50,8 @@ export const ROUTE_PERMISSIONS = {
 
 // URLs de redirecionamento por tipo de usuário
 const REDIRECT_URLS = {
-  patient: '/patient-login',
-  psychologist: '/psychologist-login',
+  patient: '/',
+  psychologist: '/',
   admin: '/',
   public: '/'
 };
@@ -133,14 +132,8 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
       if (redirectTo) {
         navigate(redirectTo);
       } else {
-        // Determinar redirecionamento baseado na rota atual
-        if (currentPath.startsWith('/psychologist') || currentPath.startsWith('/emergency/call')) {
-          navigate('/psychologist-login');
-        } else if (currentPath.startsWith('/admin')) {
-          navigate('/');
-        } else {
-          navigate('/patient-login');
-        }
+        // Redirecionar para login genérico sempre
+        navigate('/');
       }
       return;
     }

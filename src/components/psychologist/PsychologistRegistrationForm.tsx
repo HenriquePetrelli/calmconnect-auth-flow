@@ -6,7 +6,6 @@ import InputMask from 'react-input-mask';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -16,6 +15,8 @@ import { usePsychologistManagement } from '@/hooks/usePsychologistManagement';
 import { toast } from 'sonner';
 import { LocationFields } from './LocationFields';
 import { DocumentUpload } from './DocumentUpload';
+import { TRANSTORNOS } from '@/data/transtornos';
+import MultiSelectModal from '@/components/ui/multi-select-modal';
 
 const formSchema = z.object({
   full_name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
@@ -23,6 +24,7 @@ const formSchema = z.object({
   email: z.string().email('Email inválido'),
   crp_number: z.string().min(5, 'CRP deve ter pelo menos 5 caracteres'),
   specialization: z.string().min(1, 'Especialização é obrigatória'),
+  areasDeAtendimento: z.array(z.string()).min(1, 'Selecione pelo menos uma área de atendimento'),
   bio: z.string().min(50, 'Biografia deve ter pelo menos 50 caracteres').max(500, 'Biografia deve ter no máximo 500 caracteres'),
   state: z.string().min(1, 'Estado é obrigatório'),
   city: z.string().min(1, 'Cidade é obrigatória'),
@@ -61,6 +63,7 @@ export const PsychologistRegistrationForm = ({
 }: PsychologistRegistrationFormProps) => {
   const [submitted, setSubmitted] = useState(false);
   const [documentUrl, setDocumentUrl] = useState<string | null>(null);
+  const [isAreasModalOpen, setIsAreasModalOpen] = useState(false);
   
   const { registerPsychologist, loading, validateCrpUnique } = usePsychologistManagement();
 
@@ -72,6 +75,7 @@ const form = useForm<FormData>({
     email: userEmail,
     crp_number: '',
     specialization: '',
+    areasDeAtendimento: [],
     bio: '',
     state: '',
     city: '',
@@ -96,6 +100,7 @@ const registrationData = {
   email: data.email,
   crp_number: data.crp_number,
   specialization: data.specialization,
+  areasDeAtendimento: data.areasDeAtendimento,
   bio: data.bio,
   state: data.state,
   city: data.city,
@@ -238,6 +243,28 @@ const registrationData = {
                       ))}
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="areasDeAtendimento"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Áreas de Atendimento *</FormLabel>
+                  <FormControl>
+                    <MultiSelectModal
+                      options={[...TRANSTORNOS]}
+                      selectedValues={field.value || []}
+                      onSelectionChange={field.onChange}
+                      placeholder="Selecione as áreas de atendimento"
+                      title="Selecionar áreas de atendimento"
+                      isOpen={isAreasModalOpen}
+                      onOpenChange={setIsAreasModalOpen}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

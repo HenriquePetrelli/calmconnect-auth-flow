@@ -6,7 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Eye, EyeOff, AlertCircle } from "lucide-react";
-import SintomasSelector from "@/components/SintomasSelector";
+import MultiSelectModal from "./ui/multi-select-modal";
+import { SINTOMAS } from "@/data/sintomas";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,6 +48,7 @@ const [formData, setFormData] = useState({
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
   const [showErrorAlert, setShowErrorAlert] = useState(false);
+  const [isSintomasModalOpen, setIsSintomasModalOpen] = useState(false);
   const navigate = useNavigate();
 
   const isPatient = userType === "patient";
@@ -338,7 +340,7 @@ const { error: profileError } = await supabase
       
       // Redirecionar para login após cadastro
       setTimeout(() => {
-        navigate(isPatient ? '/patient-login' : '/psychologist-login');
+        navigate("/");
       }, 2000);
 
     } catch (error) {
@@ -474,11 +476,25 @@ const { error: profileError } = await supabase
                   />
                 </div>
 
-                <SintomasSelector
-                  value={formData.sintomas}
-                  onChange={(value) => handleInputChange("sintomas", value)}
-                  error={errors.sintomas}
-                />
+                <div className="space-y-2">
+                  <Label className="text-foreground font-medium">
+                    Sintomas que você apresenta *
+                  </Label>
+                  <MultiSelectModal
+                    options={[...SINTOMAS]}
+                    selectedValues={formData.sintomas}
+                    onSelectionChange={(sintomas) => handleInputChange("sintomas", sintomas)}
+                    placeholder="Selecione os sintomas que você apresenta"
+                    title="Selecionar sintomas"
+                    isOpen={isSintomasModalOpen}
+                    onOpenChange={setIsSintomasModalOpen}
+                  />
+                  {errors.sintomas && (
+                    <p className="text-sm text-destructive">
+                      Por favor, selecione pelo menos um sintoma
+                    </p>
+                  )}
+                </div>
               </>
             )}
 
@@ -577,7 +593,7 @@ const { error: profileError } = await supabase
           <div className="text-center">
             <button
               type="button"
-              onClick={() => navigate(isPatient ? '/patient-login' : '/psychologist-login')}
+              onClick={() => navigate("/")}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               Já tem uma conta? Faça login

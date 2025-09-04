@@ -47,7 +47,7 @@ const AdminDashboard = () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        navigate('/patient-login');
+        navigate('/');
         return;
       }
 
@@ -81,7 +81,7 @@ const AdminDashboard = () => {
       fetchMetrics();
     } catch (error: any) {
       console.error('Error checking admin access:', error.message);
-      navigate('/patient-login');
+      navigate('/');
     }
   };
 

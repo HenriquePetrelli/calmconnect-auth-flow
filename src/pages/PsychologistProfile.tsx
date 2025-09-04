@@ -149,7 +149,7 @@ const PsychologistProfile = () => {
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut({ scope: 'global' });
-      window.location.href = '/psychologist-login';
+      window.location.href = '/';
     } catch { }
   };
 

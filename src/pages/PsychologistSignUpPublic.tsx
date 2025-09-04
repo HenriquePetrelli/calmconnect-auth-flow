@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -17,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { LocationFields } from "@/components/psychologist/LocationFields";
 import { PsychologistService } from "@/services/psychologist.service";
 import { TRANSTORNOS } from "@/data/transtornos";
+import MultiSelectModal from "@/components/ui/multi-select-modal";
 
 const specializations = [
   // Áreas tradicionais
@@ -81,6 +81,7 @@ const PsychologistSignUpPublic = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [documentFile, setDocumentFile] = useState<File | null>(null);
+  const [isAreasModalOpen, setIsAreasModalOpen] = useState(false);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -172,7 +173,7 @@ const PsychologistSignUpPublic = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <Button 
-                onClick={() => navigate('/psychologist-login')}
+                onClick={() => navigate('/')}
                 className="w-full"
               >
                 Fazer Login
@@ -331,52 +332,27 @@ const PsychologistSignUpPublic = () => {
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name="areaAtendimento"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Áreas de Atendimento *</FormLabel>
-                        <FormControl>
-                          <div className="space-y-2">
-                            <div className="text-sm text-muted-foreground">
-                              Selecione as áreas em que você atende:
-                            </div>
-                            <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto border rounded-md p-3">
-                              {TRANSTORNOS.map((transtorno) => (
-                                <div key={transtorno} className="flex items-center space-x-2">
-                                  <Checkbox
-                                    id={transtorno}
-                                    checked={field.value?.includes(transtorno)}
-                                    onCheckedChange={(checked) => {
-                                      const currentValue = field.value || [];
-                                      if (checked) {
-                                        field.onChange([...currentValue, transtorno]);
-                                      } else {
-                                        field.onChange(currentValue.filter((item: string) => item !== transtorno));
-                                      }
-                                    }}
-                                  />
-                                  <label
-                                    htmlFor={transtorno}
-                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                                  >
-                                    {transtorno}
-                                  </label>
-                                </div>
-                              ))}
-                            </div>
-                            {field.value && field.value.length > 0 && (
-                              <div className="text-sm text-muted-foreground">
-                                {field.value.length} área(s) selecionada(s)
-                              </div>
-                            )}
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+            <FormField
+              control={form.control}
+              name="areaAtendimento"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Áreas de Atendimento *</FormLabel>
+                  <FormControl>
+                    <MultiSelectModal
+                      options={[...TRANSTORNOS]}
+                      selectedValues={field.value || []}
+                      onSelectionChange={field.onChange}
+                      placeholder="Selecione as áreas de atendimento"
+                      title="Selecionar áreas de atendimento"
+                      isOpen={isAreasModalOpen}
+                      onOpenChange={setIsAreasModalOpen}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
                 </div>
 
                 <LocationFields form={form} />
@@ -446,7 +422,7 @@ const PsychologistSignUpPublic = () => {
 
         <div className="text-center">
           <button
-            onClick={() => navigate('/psychologist-login')}
+            onClick={() => navigate("/")}
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             Já tem uma conta? Faça login aqui

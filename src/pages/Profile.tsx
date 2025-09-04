@@ -43,7 +43,7 @@ const Profile = () => {
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
-      navigate('/patient-login');
+      navigate('/');
       toast({
         title: "Logout realizado",
         description: "Você foi desconectado com sucesso."

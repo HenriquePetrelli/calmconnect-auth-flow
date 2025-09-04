@@ -60,7 +60,7 @@ const SubscriptionPlans = () => {
           description: "Você precisa estar logado para assinar um plano",
           variant: "destructive",
         });
-        navigate("/patient-login");
+        navigate("/");
         return;
       }
 

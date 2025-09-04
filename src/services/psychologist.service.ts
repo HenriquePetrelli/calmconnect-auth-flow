@@ -60,7 +60,7 @@ export class PsychologistService {
             crp: formData.crp,
             specialty: formData.specialty,
           },
-          emailRedirectTo: `${window.location.origin}/psychologist-login`
+          emailRedirectTo: `${window.location.origin}/`
         }
       });
 
