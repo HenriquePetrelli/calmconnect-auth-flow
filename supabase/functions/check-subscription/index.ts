@@ -17,12 +17,6 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const supabaseClient = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-    { auth: { persistSession: false } }
-  );
-
   try {
     logStep("Function started");
 
@@ -30,41 +24,24 @@ serve(async (req) => {
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
     logStep("Stripe key verified");
 
+    // Use the service role key to perform writes (upsert) in Supabase
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
+    );
+
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      logStep("No authorization header");
-      return new Response(JSON.stringify({ 
-        subscribed: false,
-        subscription_tier: null,
-        plan_limits: { appointments: 0, sos_uses: 0 },
-        current_usage: { appointments: 0, sos_uses: 0 }
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
-    }
+    if (!authHeader) throw new Error("No authorization header provided");
     logStep("Authorization header found");
 
     const token = authHeader.replace("Bearer ", "");
     logStep("Authenticating user with token");
     
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    
-    if (userError || !userData.user?.email) {
-      logStep("Authentication failed or user not found", { error: userError?.message });
-      // Retornar resposta padrão para usuários não autenticados ao invés de erro
-      return new Response(JSON.stringify({ 
-        subscribed: false,
-        subscription_tier: null,
-        plan_limits: { appointments: 0, sos_uses: 0 },
-        current_usage: { appointments: 0, sos_uses: 0 }
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
-    }
-    
+    if (userError) throw new Error(`Authentication error: ${userError.message}`);
     const user = userData.user;
+    if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
@@ -85,9 +62,10 @@ serve(async (req) => {
       }, { onConflict: 'email' });
       return new Response(JSON.stringify({ 
         subscribed: false,
-        subscription_tier: null,
         plan_limits: { appointments: 0, sos_uses: 0 },
-        current_usage: { appointments: 0, sos_uses: 0 }
+        current_usage: { appointments: 0, sos_uses: 0 },
+        can_use_sos: false,
+        reason: "Usuário não possui assinatura ativa"
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -116,22 +94,22 @@ serve(async (req) => {
       const priceId = subscription.items.data[0].price.id;
       
       // Check if it's one of our specific price IDs
-      if (priceId === "prod_SlYJKzH70jAWC6") {
+      if (priceId === "price_1Rq1DDPhFwqSktZsLw00oVjj") {
         subscriptionTier = "Plus";
-        planLimits = { appointments: 1, sos_uses: 1 };
-      } else if (priceId === "prod_SlYOe4FFI4UVZJ") {
+        planLimits = { appointments: 0, sos_uses: 1 };
+      } else if (priceId === "price_1Rq1HXPhFwqSktZsnHu3qDIA") {
         subscriptionTier = "Premium";
-        planLimits = { appointments: 2, sos_uses: 2 };
+        planLimits = { appointments: 1, sos_uses: 1 };
       } else {
         // Fallback based on amount
         const price = await stripe.prices.retrieve(priceId);
         const amount = price.unit_amount || 0;
-        if (amount <= 1499) {
+        if (amount <= 6999) {
           subscriptionTier = "Plus";
-          planLimits = { appointments: 1, sos_uses: 1 };
+          planLimits = { appointments: 0, sos_uses: 1 };
         } else {
           subscriptionTier = "Premium";
-          planLimits = { appointments: 2, sos_uses: 2 };
+          planLimits = { appointments: 1, sos_uses: 1 };
         }
       }
       logStep("Determined subscription tier", { priceId, subscriptionTier, planLimits });
@@ -171,21 +149,25 @@ serve(async (req) => {
         sosUsedThisMonth = false;
         sosLastUsed = null;
       }
-      if (sosUsedThisMonth) {
-        canUseSOS = false;
-        sosReason = "Limite mensal de SOS já utilizado (PLUS: 1x/mês)";
-      } else {
-        canUseSOS = true;
-        sosReason = "Pode usar SOS (PLUS: 1x/mês)";
-      }
+      
+      canUseSOS = !sosUsedThisMonth;
+      sosReason = canUseSOS ? "Pode usar SOS (PLUS: 1x/mês)" : "Limite mensal de SOS já utilizado (PLUS: 1x/mês)";
     } else if (subscriptionTier === "Premium") {
-      canUseSOS = true;
-      sosReason = "Pode usar SOS (PREMIUM: ilimitado)";
-    } else {
-      canUseSOS = false;
-      sosReason = "Plano não permite uso de SOS";
+      // Reset monthly flag when month changed
+      if (sosUsedThisMonth && sosLastUsed && !sameMonth) {
+        await supabaseClient
+          .from("subscribers")
+          .update({ sos_used_this_month: false, sos_last_used: null, updated_at: new Date().toISOString() })
+          .eq("email", user.email);
+        sosUsedThisMonth = false;
+        sosLastUsed = null;
+      }
+      
+      canUseSOS = !sosUsedThisMonth;
+      sosReason = canUseSOS ? "Pode usar SOS (PREMIUM: 1x/mês)" : "Limite mensal de SOS já utilizado (PREMIUM: 1x/mês)";
     }
 
+    // Update subscriber in database
     await supabaseClient.from("subscribers").upsert({
       email: user.email,
       user_id: user.id,

@@ -67,8 +67,8 @@ const Profile = () => {
         name: "Plano Grátis",
         price: "R$ 0",
         features: [
-          "• 1 consulta de emergência por mês",
-          "• Acesso limitado aos recursos"
+          "• Acesso à biblioteca de sons",
+          "• Exercícios de respiração básicos"
         ]
       };
     }
@@ -76,10 +76,10 @@ const Profile = () => {
     if (subscriptionTier === "Plus") {
       return {
         name: "Plano Plus",
-        price: "R$ 14,99",
+        price: "R$ 69,99",
         features: [
-          "• 1 consulta por mês",
-          "• 1 uso do botão SOS por mês",
+          "• 1 chamada emergencial por mês",
+          "• Duração: 25 minutos",
           "• Acesso à biblioteca de sons",
           "• Exercícios de respiração"
         ]
@@ -89,10 +89,11 @@ const Profile = () => {
     if (subscriptionTier === "Premium") {
       return {
         name: "Plano Premium",
-        price: "R$ 24,99",
+        price: "R$ 120,00",
         features: [
-          "• 2 consultas por mês",
-          "• 2 usos do botão SOS por mês",
+          "• 1 chamada emergencial por mês",
+          "• 1 consulta agendada por mês",
+          "• Duração: 50 minutos",
           "• Acesso à biblioteca de sons",
           "• Exercícios de respiração",
           "• Suporte prioritário"
@@ -104,8 +105,8 @@ const Profile = () => {
       name: "Plano Grátis",
       price: "R$ 0",
       features: [
-        "• 1 consulta de emergência por mês",
-        "• Acesso limitado aos recursos"
+        "• Acesso à biblioteca de sons",
+        "• Exercícios de respiração básicos"
       ]
     };
   };
@@ -186,11 +187,37 @@ const Profile = () => {
                 <Button className="w-full" onClick={handleManageSubscription}>
                   Gerenciar Assinatura
                 </Button>
-                {subscriptionTier !== "Plus" && (
+                {subscriptionTier === "Premium" && (
                   <Button variant="outline" className="w-full" onClick={handleManageSubscription}>
                     Fazer Downgrade
                   </Button>
                 )}
+                <Button 
+                  variant="destructive" 
+                  className="w-full" 
+                  onClick={async () => {
+                    try {
+                      const { data, error } = await supabase.functions.invoke('cancel-subscription');
+                      if (error) throw error;
+                      
+                      toast({
+                        title: "Assinatura cancelada",
+                        description: "Sua assinatura foi cancelada com sucesso.",
+                      });
+                      
+                      navigate('/subscription-cancel');
+                    } catch (error) {
+                      console.error('Error:', error);
+                      toast({
+                        title: "Erro",
+                        description: "Erro ao cancelar assinatura",
+                        variant: "destructive",
+                      });
+                    }
+                  }}
+                >
+                  Cancelar Assinatura
+                </Button>
               </div>
             )}
           </CardContent>
