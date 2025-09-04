@@ -275,6 +275,31 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
                           </div>
                         </div>
 
+                        {/* Seção de Informações PIX */}
+                        <div className="border rounded-lg p-4">
+                          <div className="flex items-center gap-2 mb-3">
+                            <FileText className="h-4 w-4" />
+                            <span className="text-sm font-medium">Informações PIX</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Tipo da chave PIX</label>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {selectedPsychologist.pix_type ? 
+                                  selectedPsychologist.pix_type.charAt(0).toUpperCase() + selectedPsychologist.pix_type.slice(1) : 
+                                  'Não cadastrado'
+                                }
+                              </p>
+                            </div>
+                            <div>
+                              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Chave PIX</label>
+                              <p className="text-sm text-muted-foreground mt-1 font-mono">
+                                {selectedPsychologist.pix_key || 'Não cadastrado'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
                         {/* Seção de Localização */}
                         <div className="border rounded-lg p-4">
                           <div className="flex items-center gap-2 mb-3">

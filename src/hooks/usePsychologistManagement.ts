@@ -20,6 +20,8 @@ export interface PsychologistData {
   reviewed_at?: string;
   reviewed_by?: string;
   rejection_reason?: string;
+  pix_key?: string;
+  pix_type?: string;
 }
 
 export interface PsychologistRegistration {

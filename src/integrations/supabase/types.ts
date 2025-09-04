@@ -485,6 +485,8 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          pix_key: string | null
+          pix_type: string | null
           rejection_reason: string | null
           reviewed_at: string | null
           reviewed_by: string | null
@@ -510,6 +512,8 @@ export type Database = {
           email: string
           full_name: string
           id?: string
+          pix_key?: string | null
+          pix_type?: string | null
           rejection_reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -535,6 +539,8 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          pix_key?: string | null
+          pix_type?: string | null
           rejection_reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null

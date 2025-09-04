@@ -12,11 +12,14 @@ import EmergencyNotifications from '@/components/psychologist/EmergencyNotificat
 import UpcomingConsultations from '@/components/psychologist/UpcomingConsultations';
 import ConsultationHistory from '@/components/psychologist/ConsultationHistory';
 import OnlineStatusToggle from '@/components/psychologist/OnlineStatusToggle';
+import { PixModal } from '@/components/psychologist/PixModal';
 
 const PsychologistDashboard = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [showPixModal, setShowPixModal] = useState(false);
+  const [psychologistData, setPsychologistData] = useState<any>(null);
   
   const { emergencyRequests } = usePsychologistEmergency();
   const { todayAppointments, upcomingAppointments } = usePsychologistSchedule();
@@ -80,6 +83,20 @@ const PsychologistDashboard = () => {
       }
 
       setProfile(profile);
+
+      // Check PIX information
+      const { data: psychData } = await supabase
+        .from('psychologists')
+        .select('pix_key, pix_type')
+        .eq('user_id', user.id)
+        .single();
+
+      setPsychologistData(psychData);
+
+      // If PIX is not configured, show modal
+      if (!psychData?.pix_key || !psychData?.pix_type) {
+        setShowPixModal(true);
+      }
     } catch (error) {
       console.error('Error checking profile:', error);
       navigate('/');
@@ -229,6 +246,19 @@ const PsychologistDashboard = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* PIX Modal */}
+      {profile && (
+        <PixModal
+          isOpen={showPixModal}
+          onClose={() => {
+            setShowPixModal(false);
+            // Refresh psychologist data
+            checkUserProfile();
+          }}
+          userId={profile.user_id}
+        />
+      )}
     </div>
   );
 };
