@@ -9,8 +9,7 @@ import { useEffect, useState } from "react";
 import SplashScreen from "@/components/SplashScreen";
 import RouteGuard from "@/components/RouteGuard";
 import Index from "./pages/Index";
-import PatientLogin from "./pages/PatientLogin";
-import PsychologistLogin from "./pages/PsychologistLogin";
+import SignupType from "./pages/SignupType";
 import PatientSignUp from "./pages/PatientSignUp";
 import PsychologistSignUpPublic from "./pages/PsychologistSignUpPublic";
 import Home from "./pages/Home";
@@ -64,14 +63,9 @@ const App = () => {
                       <Index />
                     </RouteGuard>
                   } />
-                  <Route path="/patient-login" element={
+                  <Route path="/signup-type" element={
                     <RouteGuard allowedUserTypes={['public']}>
-                      <PatientLogin />
-                    </RouteGuard>
-                  } />
-                  <Route path="/psychologist-login" element={
-                    <RouteGuard allowedUserTypes={['public']}>
-                      <PsychologistLogin />
+                      <SignupType />
                     </RouteGuard>
                   } />
                   <Route path="/patient-signup" element={

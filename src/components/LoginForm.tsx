@@ -9,25 +9,16 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 interface LoginFormProps {
-  userType: "patient" | "psychologist";
   onForgotPassword: () => void;
   onSignUp: () => void;
 }
 
-const LoginForm = ({ userType, onForgotPassword, onSignUp }: LoginFormProps) => {
+const LoginForm = ({ onForgotPassword, onSignUp }: LoginFormProps) => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
-  const isPatient = userType === "patient";
-  
-  const title = isPatient ? "Login do Paciente" : "Login do Psicólogo";
-  const emailLabel = isPatient ? "Email" : "Email profissional";
-  const signUpText = isPatient 
-    ? "Não tem uma conta? Cadastre-se como Paciente"
-    : "Ainda não é parceiro? Cadastre-se como Psicólogo";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,7 +59,7 @@ const LoginForm = ({ userType, onForgotPassword, onSignUp }: LoginFormProps) => 
         return;
       }
 
-      // Verificar o perfil do usuário para garantir que está logando no tipo correto
+      // Verificar o perfil do usuário
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('user_type, full_name')
@@ -78,15 +69,6 @@ const LoginForm = ({ userType, onForgotPassword, onSignUp }: LoginFormProps) => 
       if (profileError || !profile) {
         toast.error("Erro ao carregar perfil do usuário");
         console.error("Profile error:", profileError);
-        return;
-      }
-
-      // Verificar se o tipo de usuário corresponde ao esperado
-      if (profile.user_type !== userType) {
-        const expectedType = userType === "patient" ? "paciente" : "psicólogo";
-        const actualType = profile.user_type === "patient" ? "paciente" : "psicólogo";
-        toast.error(`Esta conta é de ${actualType}. Use o login de ${expectedType}.`);
-        await supabase.auth.signOut();
         return;
       }
 
@@ -109,11 +91,15 @@ const LoginForm = ({ userType, onForgotPassword, onSignUp }: LoginFormProps) => 
         }
       }
 
-      toast.success(`Login realizado com sucesso! Bem-vindo${isPatient ? '' : ' Dr.(a)'} ${profile.full_name}!`);
+      toast.success(`Login realizado com sucesso! Bem-vindo${profile.user_type === 'psychologist' ? ' Dr.(a)' : ''} ${profile.full_name}!`);
       
-      // Redirecionar para a página apropriada
+      // Redirecionar para a página apropriada baseado no userType
       if (profile.user_type === 'psychologist') {
         navigate('/psychologist-dashboard');
+      } else if (profile.user_type === 'patient') {
+        navigate('/home');
+      } else if (data.user.user_metadata?.is_super_admin) {
+        navigate('/admin-dashboard');
       } else {
         navigate('/home');
       }
@@ -136,7 +122,7 @@ const LoginForm = ({ userType, onForgotPassword, onSignUp }: LoginFormProps) => 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-semibold text-foreground mb-2">
-              {title}
+              Login
             </h2>
             <p className="text-muted-foreground text-sm">
               Entre para continuar sua jornada de bem-estar
@@ -146,14 +132,14 @@ const LoginForm = ({ userType, onForgotPassword, onSignUp }: LoginFormProps) => 
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-foreground font-medium">
-                {emailLabel}
+                Email
               </Label>
               <Input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder={isPatient ? "seu@email.com" : "profissional@email.com"}
+                placeholder="seu@email.com"
                 required
                 className="h-12 rounded-xl border-border focus:ring-primary"
               />
@@ -207,7 +193,7 @@ const LoginForm = ({ userType, onForgotPassword, onSignUp }: LoginFormProps) => 
                 onClick={onSignUp}
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
-                {signUpText}
+                Não tem uma conta? Cadastre-se
               </button>
             </div>
           </div>
