@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import AdminProfile from '@/components/AdminProfile';
 import { PsychologistApprovalPanel } from '@/components/psychologist/PsychologistApprovalPanel';
+import { PaymentsPanel } from '@/components/payments/PaymentsPanel';
 import { Button } from '@/components/ui/button';
 
 interface AdminMetrics {
@@ -132,9 +133,10 @@ const AdminDashboard = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full max-w-lg grid-cols-3">
+          <TabsList className="grid w-full max-w-2xl grid-cols-4">
             <TabsTrigger value="overview">Visão Geral</TabsTrigger>
             <TabsTrigger value="psychologists">Psicólogos</TabsTrigger>
+            <TabsTrigger value="payments">Payments</TabsTrigger>
             <TabsTrigger value="profile">Perfil</TabsTrigger>
           </TabsList>
 
@@ -323,6 +325,10 @@ const AdminDashboard = () => {
 
           <TabsContent value="psychologists" className="space-y-6">
             <PsychologistApprovalPanel adminUserId={user?.id} />
+          </TabsContent>
+
+          <TabsContent value="payments" className="space-y-6">
+            <PaymentsPanel />
           </TabsContent>
 
           <TabsContent value="profile">

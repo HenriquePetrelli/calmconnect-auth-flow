@@ -316,6 +316,50 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_logs: {
+        Row: {
+          action: string
+          admin_id: string
+          amount_paid: number | null
+          created_at: string | null
+          details: Json | null
+          emergency_count: number | null
+          id: string
+          psychologist_id: string
+          scheduled_count: number | null
+        }
+        Insert: {
+          action: string
+          admin_id: string
+          amount_paid?: number | null
+          created_at?: string | null
+          details?: Json | null
+          emergency_count?: number | null
+          id?: string
+          psychologist_id: string
+          scheduled_count?: number | null
+        }
+        Update: {
+          action?: string
+          admin_id?: string
+          amount_paid?: number | null
+          created_at?: string | null
+          details?: Json | null
+          emergency_count?: number | null
+          id?: string
+          psychologist_id?: string
+          scheduled_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_logs_psychologist_id_fkey"
+            columns: ["psychologist_id"]
+            isOneToOne: false
+            referencedRelation: "psychologists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           cpf: string | null
@@ -387,6 +431,71 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      psychologist_payments: {
+        Row: {
+          cpf: string | null
+          created_at: string | null
+          crp: string | null
+          email: string
+          emergency_paid_count: number | null
+          emergency_pending_count: number | null
+          id: string
+          name: string
+          pix_key: string | null
+          pix_type: string | null
+          psychologist_id: string
+          scheduled_paid_count: number | null
+          scheduled_pending_count: number | null
+          total_paid_amount: number | null
+          total_pending_amount: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          cpf?: string | null
+          created_at?: string | null
+          crp?: string | null
+          email: string
+          emergency_paid_count?: number | null
+          emergency_pending_count?: number | null
+          id?: string
+          name: string
+          pix_key?: string | null
+          pix_type?: string | null
+          psychologist_id: string
+          scheduled_paid_count?: number | null
+          scheduled_pending_count?: number | null
+          total_paid_amount?: number | null
+          total_pending_amount?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          cpf?: string | null
+          created_at?: string | null
+          crp?: string | null
+          email?: string
+          emergency_paid_count?: number | null
+          emergency_pending_count?: number | null
+          id?: string
+          name?: string
+          pix_key?: string | null
+          pix_type?: string | null
+          psychologist_id?: string
+          scheduled_paid_count?: number | null
+          scheduled_pending_count?: number | null
+          total_paid_amount?: number | null
+          total_pending_amount?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "psychologist_payments_psychologist_id_fkey"
+            columns: ["psychologist_id"]
+            isOneToOne: true
+            referencedRelation: "psychologists"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       psychologist_presence: {
         Row: {
@@ -849,6 +958,10 @@ export type Database = {
       promote_to_admin: {
         Args: { target_user_email: string }
         Returns: boolean
+      }
+      sync_psychologist_payments: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       validate_cpf: {
         Args: { cpf_input: string }
