@@ -21,9 +21,9 @@ const SubscriptionPlans = () => {
     {
       id: "plus",
       name: "Plus",
-      price: "R$ 69,99",
+      price: "R$ 69,90",
       period: "/mês",
-      priceId: "price_1Rq1DDPhFwqSktZsLw00oVjj",
+      priceId: "price_1S3qAKPhFwqSktZsXexQefrx",
       features: [
         "1 chamada emergencial por mês",
         "Duração: 25 minutos",
@@ -39,7 +39,7 @@ const SubscriptionPlans = () => {
       name: "Premium",
       price: "R$ 120,00",
       period: "/mês",
-      priceId: "price_1Rq1HXPhFwqSktZsnHu3qDIA",
+      priceId: "price_1S3q9YPhFwqSktZsejrePGuS",
       features: [
         "1 chamada emergencial por mês",
         "1 consulta agendada por mês",
