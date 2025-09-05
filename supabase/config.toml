@@ -76,6 +76,12 @@ verify_jwt = true
 [functions.psychologist-management]
 verify_jwt = true
 
+[functions.payment-sync]
+verify_jwt = false
+
+[functions.confirm-payment]
+verify_jwt = true
+
 [functions.psychologist-cleanup]
 verify_jwt = false
 
