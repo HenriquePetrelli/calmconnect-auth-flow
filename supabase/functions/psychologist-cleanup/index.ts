@@ -9,15 +9,10 @@ const corsHeaders = {
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-const supabase = createClient(supabaseUrl, supabaseKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
-  }
-});
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log('Psychologist cleanup function called:', req.method);
+  console.log('Psychologist cleanup function called');
   
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -25,49 +20,55 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     // Find rejected psychologists older than 3 days
-    const threeDaysAgo = new Date();
-    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-
-    const { data: rejectedPsychologists, error: fetchError } = await supabase
+    const { data: rejectedPsychologists, error: queryError } = await supabase
       .from('psychologist_registrations')
       .select(`
         user_id,
         rejected_at,
-        psychologists (
-          document_url,
-          full_name,
-          email
-        )
+        rejection_reason
       `)
       .eq('status', 'rejected')
-      .not('rejected_at', 'is', null)
-      .lt('rejected_at', threeDaysAgo.toISOString());
+      .not('rejected_at', 'is', null);
 
-    if (fetchError) {
-      console.error('Error fetching rejected psychologists:', fetchError);
-      throw fetchError;
+    if (queryError) {
+      console.error('Error querying rejected psychologists:', queryError);
+      throw queryError;
     }
 
-    console.log(`Found ${rejectedPsychologists?.length || 0} psychologists to cleanup`);
+    console.log(`Found ${rejectedPsychologists?.length || 0} rejected psychologists`);
 
     let cleanedCount = 0;
-    let errorCount = 0;
+    const now = new Date();
 
-    if (rejectedPsychologists && rejectedPsychologists.length > 0) {
-      for (const psychologist of rejectedPsychologists) {
+    for (const rejected of rejectedPsychologists || []) {
+      const rejectedDate = new Date(rejected.rejected_at);
+      const daysSinceRejection = Math.floor((now.getTime() - rejectedDate.getTime()) / (1000 * 60 * 60 * 24));
+
+      console.log(`Psychologist ${rejected.user_id}: ${daysSinceRejection} days since rejection`);
+
+      if (daysSinceRejection > 3) {
+        console.log(`Cleaning up psychologist ${rejected.user_id}`);
+
         try {
-          console.log(`Cleaning up psychologist: ${psychologist.user_id}`);
+          // Get document path before deletion
+          const { data: psychData } = await supabase
+            .from('psychologists')
+            .select('document_url')
+            .eq('user_id', rejected.user_id)
+            .single();
 
           // Delete documents from storage if they exist
-          if (psychologist.psychologists?.document_url) {
-            const documentPath = extractDocumentPath(psychologist.psychologists.document_url);
+          if (psychData?.document_url) {
+            // Extract filename from URL
+            const documentPath = psychData.document_url.split('/').pop();
+            
             if (documentPath) {
               const { error: storageError } = await supabase.storage
                 .from('psychologist-documents')
                 .remove([documentPath]);
               
               if (storageError) {
-                console.warn(`Error deleting document for ${psychologist.user_id}:`, storageError);
+                console.error(`Error deleting document ${documentPath}:`, storageError);
               } else {
                 console.log(`Deleted document: ${documentPath}`);
               }
@@ -75,104 +76,74 @@ const handler = async (req: Request): Promise<Response> => {
           }
 
           // Delete from database tables
-          const { error: regError } = await supabase
+          const { error: deleteRegError } = await supabase
             .from('psychologist_registrations')
             .delete()
-            .eq('user_id', psychologist.user_id);
+            .eq('user_id', rejected.user_id);
 
-          if (regError) {
-            console.error(`Error deleting registration for ${psychologist.user_id}:`, regError);
-            throw regError;
+          if (deleteRegError) {
+            console.error(`Error deleting registration for ${rejected.user_id}:`, deleteRegError);
+            continue;
           }
 
-          const { error: psychError } = await supabase
+          const { error: deletePsychError } = await supabase
             .from('psychologists')
             .delete()
-            .eq('user_id', psychologist.user_id);
+            .eq('user_id', rejected.user_id);
 
-          if (psychError) {
-            console.error(`Error deleting psychologist for ${psychologist.user_id}:`, psychError);
-            throw psychError;
+          if (deletePsychError) {
+            console.error(`Error deleting psychologist ${rejected.user_id}:`, deletePsychError);
+            continue;
           }
 
-          const { error: profileError } = await supabase
+          const { error: deleteProfileError } = await supabase
             .from('profiles')
             .delete()
-            .eq('user_id', psychologist.user_id)
+            .eq('user_id', rejected.user_id)
             .eq('user_type', 'psychologist');
 
-          if (profileError) {
-            console.error(`Error deleting profile for ${psychologist.user_id}:`, profileError);
-            throw profileError;
+          if (deleteProfileError) {
+            console.error(`Error deleting profile for ${rejected.user_id}:`, deleteProfileError);
           }
 
           // Delete user from auth
-          const { error: authError } = await supabase.auth.admin.deleteUser(psychologist.user_id);
+          const { error: deleteUserError } = await supabase.auth.admin.deleteUser(rejected.user_id);
           
-          if (authError) {
-            console.error(`Error deleting auth user ${psychologist.user_id}:`, authError);
-            throw authError;
+          if (deleteUserError) {
+            console.error(`Error deleting user ${rejected.user_id} from auth:`, deleteUserError);
+          } else {
+            console.log(`Successfully deleted user ${rejected.user_id} from auth`);
           }
 
           cleanedCount++;
-          console.log(`Successfully cleaned up psychologist: ${psychologist.user_id}`);
+          console.log(`Successfully cleaned up psychologist ${rejected.user_id}`);
 
-        } catch (error: any) {
-          console.error(`Error cleaning up psychologist ${psychologist.user_id}:`, error);
-          errorCount++;
+        } catch (error) {
+          console.error(`Error cleaning up psychologist ${rejected.user_id}:`, error);
         }
       }
     }
 
-    const result = {
+    console.log(`Cleanup complete. Cleaned up ${cleanedCount} rejected psychologists.`);
+
+    return new Response(JSON.stringify({ 
       success: true,
-      message: `Cleanup completed. Processed: ${rejectedPsychologists?.length || 0}, Cleaned: ${cleanedCount}, Errors: ${errorCount}`,
-      processed: rejectedPsychologists?.length || 0,
-      cleaned: cleanedCount,
-      errors: errorCount
-    };
-
-    console.log('Cleanup result:', result);
-
-    return new Response(JSON.stringify(result), {
+      message: `Cleanup complete. Cleaned up ${cleanedCount} rejected psychologists.`,
+      cleanedCount
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });
 
   } catch (error: any) {
-    console.error('Cleanup function error:', error);
+    console.error('Error in cleanup function:', error);
     return new Response(JSON.stringify({ 
-      success: false,
-      error: error.message || 'Internal server error',
-      message: 'Falha na limpeza automática'
+      error: error.message || 'Erro interno do servidor' 
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
     });
   }
-};
-
-// Helper function to extract document path from URL
-const extractDocumentPath = (url: string): string | null => {
-  if (!url) return null;
-  
-  // Remove query parameters if any
-  const cleanUrl = url.split('?')[0];
-  
-  // Supabase storage pattern
-  const supabasePattern = /\/storage\/v1\/object\/public\/psychologist-documents\/(.+)$/;
-  const supabaseMatch = cleanUrl.match(supabasePattern);
-  
-  if (supabaseMatch) {
-    return supabaseMatch[1];
-  }
-  
-  // If it's already a simple path (without http)
-  if (!cleanUrl.startsWith('http')) {
-    return cleanUrl;
-  }
-  
-  return null;
 };
 
 serve(handler);

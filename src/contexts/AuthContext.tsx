@@ -51,6 +51,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return 'admin';
       }
 
+      // Check if psychologist is rejected and show specific message
+      const { data: rejectionStatus, error: rejectionError } = await supabase
+        .rpc('get_psychologist_rejection_status', { p_user_id: userId });
+
+      if (!rejectionError && rejectionStatus?.[0]?.is_rejected) {
+        const rejectionData = rejectionStatus[0];
+        
+        if (rejectionData.should_show_rejection_message) {
+          // Show rejection message for 3 days
+          toast.error("Seu cadastro foi recusado. O motivo foi enviado para o seu e-mail.");
+          return 'unknown';
+        }
+        
+        if (rejectionData.should_cleanup) {
+          // User should have been cleaned up by now, but just in case
+          return 'unknown';
+        }
+      }
+
       // Check profile for psychologist/patient
       const { data: profileData } = await supabase
         .from('profiles')
