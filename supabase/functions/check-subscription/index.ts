@@ -94,10 +94,10 @@ serve(async (req) => {
       const priceId = subscription.items.data[0].price.id;
       
       // Check if it's one of our specific price IDs
-      if (priceId === "price_1Rq1DDPhFwqSktZsLw00oVjj") {
+      if (priceId === "price_1S3qAKPhFwqSktZsXexQefrx") {
         subscriptionTier = "Plus";
         planLimits = { appointments: 0, sos_uses: 1 };
-      } else if (priceId === "price_1Rq1HXPhFwqSktZsnHu3qDIA") {
+      } else if (priceId === "price_1S3q9YPhFwqSktZsejrePGuS") {
         subscriptionTier = "Premium";
         planLimits = { appointments: 1, sos_uses: 1 };
       } else {
