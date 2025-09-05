@@ -62,7 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // For psychologists, check if approved
         const { data: registrationData } = await supabase
           .from('psychologist_registrations')
-          .select('status')
+          .select('status, rejected_at')
           .eq('user_id', userId)
           .single();
 
@@ -70,7 +70,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return 'psychologist';
         }
         
-        return 'unknown'; // Not approved yet
+        // Check if rejected and still within 3 days
+        if (registrationData?.status === 'rejected' && registrationData?.rejected_at) {
+          const rejectedDate = new Date(registrationData.rejected_at);
+          const daysSinceRejection = Math.floor((Date.now() - rejectedDate.getTime()) / (1000 * 60 * 60 * 24));
+          
+          if (daysSinceRejection <= 3) {
+            // Still within 3 days, show rejection message
+            return 'unknown';
+          }
+        }
+        
+        return 'unknown'; // Not approved yet or rejected beyond 3 days
       }
 
       if (profileData?.user_type === 'patient') return 'patient';

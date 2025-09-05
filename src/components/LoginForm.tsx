@@ -72,18 +72,46 @@ const LoginForm = ({ onForgotPassword, onSignUp }: LoginFormProps) => {
         return;
       }
 
-      // Para psicólogos, verificar se o cadastro foi aprovado
+      // Para psicólogos, verificar se o cadastro foi aprovado ou rejeitado
       if (profile.user_type === 'psychologist') {
         // Check user metadata first
         if (data.user.user_metadata?.account_status !== 'approved') {
-          // Check registration table as fallback
+          // Check registration table for status and rejection details
           const { data: registrationData } = await supabase
             .from('psychologist_registrations')
-            .select('status')
+            .select('status, rejected_at, rejection_reason')
             .eq('user_id', data.user.id)
             .single();
 
-          if (!registrationData || registrationData.status !== 'approved') {
+          if (!registrationData) {
+            toast.error("Cadastro não encontrado. Entre em contato com o suporte.");
+            await supabase.auth.signOut();
+            return;
+          }
+
+          if (registrationData.status === 'rejected') {
+            // Check if rejection is within 3 days
+            if (registrationData.rejected_at) {
+              const rejectedDate = new Date(registrationData.rejected_at);
+              const daysSinceRejection = Math.floor((Date.now() - rejectedDate.getTime()) / (1000 * 60 * 60 * 24));
+              
+              if (daysSinceRejection <= 3) {
+                // Within 3 days - show rejection message
+                toast.error("Seu cadastro foi recusado. O motivo foi enviado para o seu e-mail.", {
+                  duration: 5000,
+                });
+                await supabase.auth.signOut();
+                return;
+              }
+            }
+            
+            // After 3 days - show generic message (data should be cleaned up)
+            toast.error("Login ou senha incorretos.");
+            await supabase.auth.signOut();
+            return;
+          }
+
+          if (registrationData.status !== 'approved') {
             toast.error("Seu cadastro ainda está sendo analisado. Aguarde a aprovação.");
             await supabase.auth.signOut();
             return;

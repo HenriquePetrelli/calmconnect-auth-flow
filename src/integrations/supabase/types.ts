@@ -437,6 +437,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          rejected_at: string | null
           rejection_reason: string | null
           reviewed_at: string | null
           reviewed_by: string | null
@@ -448,6 +449,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          rejected_at?: string | null
           rejection_reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -459,6 +461,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          rejected_at?: string | null
           rejection_reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -487,6 +490,7 @@ export type Database = {
           id: string
           pix_key: string | null
           pix_type: string | null
+          rejected_at: string | null
           rejection_reason: string | null
           reviewed_at: string | null
           reviewed_by: string | null
@@ -514,6 +518,7 @@ export type Database = {
           id?: string
           pix_key?: string | null
           pix_type?: string | null
+          rejected_at?: string | null
           rejection_reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -541,6 +546,7 @@ export type Database = {
           id?: string
           pix_key?: string | null
           pix_type?: string | null
+          rejected_at?: string | null
           rejection_reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -729,6 +735,10 @@ export type Database = {
           reason: string
         }[]
       }
+      cleanup_rejected_psychologist: {
+        Args: { p_user_id: string }
+        Returns: boolean
+      }
       create_admin_account: {
         Args: {
           admin_email: string
@@ -797,6 +807,16 @@ export type Database = {
       get_psychologist_document_url: {
         Args: { document_path: string }
         Returns: string
+      }
+      get_psychologist_rejection_status: {
+        Args: { p_user_id: string }
+        Returns: {
+          is_rejected: boolean
+          rejected_at: string
+          rejection_reason: string
+          should_cleanup: boolean
+          should_show_rejection_message: boolean
+        }[]
       }
       get_user_type: {
         Args: { user_id_param: string }
