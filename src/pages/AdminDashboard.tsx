@@ -136,7 +136,7 @@ const AdminDashboard = () => {
           <TabsList className="grid w-full max-w-2xl grid-cols-4">
             <TabsTrigger value="overview">Visão Geral</TabsTrigger>
             <TabsTrigger value="psychologists">Psicólogos</TabsTrigger>
-            <TabsTrigger value="payments">Payments</TabsTrigger>
+            <TabsTrigger value="payments">Pagamentos</TabsTrigger>
             <TabsTrigger value="profile">Perfil</TabsTrigger>
           </TabsList>
 
