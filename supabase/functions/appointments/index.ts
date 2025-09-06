@@ -76,7 +76,10 @@ serve(async (req) => {
           .from('appointments')
           .select(`
             *,
-            psychologists!appointments_psychologist_fk(full_name, specialization)
+            psychologists!psychologist_id(
+              full_name, 
+              specialization
+            )
           `)
           .eq('patient_id', user.id)
           .order('scheduled_at', { ascending: false })
@@ -84,8 +87,18 @@ serve(async (req) => {
 
         if (error) throw error;
 
+        // Transform data to ensure psychologist is properly structured
+        const transformedAppointments = appointments?.map(appointment => ({
+          ...appointment,
+          psychologist: appointment.psychologists 
+            ? (Array.isArray(appointment.psychologists) 
+                ? appointment.psychologists[0] 
+                : appointment.psychologists)
+            : null
+        })) || [];
+
         return new Response(
-          JSON.stringify(appointments),
+          JSON.stringify(transformedAppointments),
           {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           }
@@ -107,14 +120,27 @@ serve(async (req) => {
         .order('scheduled_at', { ascending: true });
 
       console.log('Appointments query result:', { appointments, error });
+      console.log('Sample appointment:', appointments?.[0]);
 
       if (error) {
         console.error('Error fetching appointments:', error);
         throw error;
       }
 
+      // Transform data to ensure psychologist is properly structured
+      const transformedAppointments = appointments?.map(appointment => ({
+        ...appointment,
+        psychologist: appointment.psychologists 
+          ? (Array.isArray(appointment.psychologists) 
+              ? appointment.psychologists[0] 
+              : appointment.psychologists)
+          : null
+      })) || [];
+
+      console.log('Transformed appointments:', transformedAppointments);
+
       return new Response(
-        JSON.stringify(appointments),
+        JSON.stringify(transformedAppointments),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         }
@@ -172,11 +198,24 @@ serve(async (req) => {
         })
         .select(`
           *,
-          psychologists!appointments_psychologist_fk(full_name, specialization)
+          psychologists!psychologist_id(
+            full_name, 
+            specialization
+          )
         `)
         .single();
 
       if (error) throw error;
+
+      // Transform appointment to ensure psychologist is properly structured
+      const transformedAppointment = {
+        ...appointment,
+        psychologist: appointment.psychologists 
+          ? (Array.isArray(appointment.psychologists) 
+              ? appointment.psychologists[0] 
+              : appointment.psychologists)
+          : null
+      };
 
       // TODO: Send confirmation email/SMS
       // Removed sensitive logging for security
@@ -184,7 +223,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({
           success: true,
-          appointment,
+          appointment: transformedAppointment,
           message: 'Consulta agendada com sucesso!'
         }),
         {

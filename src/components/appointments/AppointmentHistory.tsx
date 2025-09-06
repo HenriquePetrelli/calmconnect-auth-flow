@@ -67,7 +67,7 @@ export const AppointmentHistory = () => {
 
   const filteredAppointments = appointments.filter((appointment) => {
     const matchesPsychologist = filterPsychologist === 'all' || !filterPsychologist || 
-      appointment.psychologist.full_name.toLowerCase().includes(filterPsychologist.toLowerCase());
+      appointment.psychologist?.full_name?.toLowerCase().includes(filterPsychologist.toLowerCase());
     
     const matchesMonth = filterMonth === 'all' || !filterMonth || 
       format(new Date(appointment.scheduled_at), 'yyyy-MM') === filterMonth;
@@ -164,8 +164,8 @@ export const AppointmentHistory = () => {
                     </TableCell>
                     <TableCell>
                       <div>
-                        <div className="font-medium">{appointment.psychologist.full_name}</div>
-                        {appointment.psychologist.specialty && (
+                        <div className="font-medium">{appointment.psychologist?.full_name || 'Psicólogo não identificado'}</div>
+                        {appointment.psychologist?.specialty && (
                           <div className="text-sm text-muted-foreground">
                             {appointment.psychologist.specialty}
                           </div>
@@ -240,8 +240,8 @@ export const AppointmentHistory = () => {
                 <label className="text-sm font-medium text-muted-foreground">
                   Psicólogo
                 </label>
-                <p className="text-sm">{selectedAppointment.psychologist.full_name}</p>
-                {selectedAppointment.psychologist.specialty && (
+                <p className="text-sm">{selectedAppointment.psychologist?.full_name || 'Psicólogo não identificado'}</p>
+                {selectedAppointment.psychologist?.specialty && (
                   <p className="text-xs text-muted-foreground">
                     {selectedAppointment.psychologist.specialty}
                   </p>
