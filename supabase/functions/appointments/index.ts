@@ -49,12 +49,12 @@ serve(async (req) => {
       const action = url.searchParams.get('action');
 
       if (action === 'psychologists') {
-        // Get available psychologists
+        // Get available psychologists from psychologists table
         const { data: psychologists, error } = await supabase
-          .from('profiles')
-          .select('user_id, full_name, specialty')
-          .eq('user_type', 'psychologist')
-          .eq('registration_status', 'approved');
+          .from('psychologists')
+          .select('user_id, full_name, specialization')
+          .eq('approved', true)
+          .eq('approval_status', 'approved');
 
         if (error) throw error;
 
@@ -76,7 +76,7 @@ serve(async (req) => {
           .from('appointments')
           .select(`
             *,
-            psychologists!appointments_psychologist_id_fkey(full_name, specialization)
+            psychologist:psychologists!inner(full_name, specialization)
           `)
           .eq('patient_id', user.id)
           .order('scheduled_at', { ascending: false })
@@ -97,7 +97,7 @@ serve(async (req) => {
         .from('appointments')
         .select(`
           *,
-          psychologists!appointments_psychologist_id_fkey(full_name, specialization)
+          psychologist:psychologists!inner(full_name, specialization)
         `)
         .eq('patient_id', user.id)
         .gte('scheduled_at', new Date().toISOString())
@@ -146,7 +146,7 @@ serve(async (req) => {
         })
         .select(`
           *,
-          psychologists!appointments_psychologist_id_fkey(full_name, specialization)
+          psychologist:psychologists!inner(full_name, specialization)
         `)
         .single();
 
