@@ -128,10 +128,10 @@ export const AppointmentsList: React.FC<AppointmentsListProps> = ({
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1 min-w-0">
                       <h4 className="font-semibold text-foreground truncate">
-                        {appointment.psychologist.full_name}
+                        {appointment.psychologist?.full_name || 'Psicólogo não identificado'}
                       </h4>
                       <p className="text-sm text-muted-foreground truncate">
-                        {appointment.psychologist.specialty || 'Consulta'}
+                        {appointment.psychologist?.specialty || appointment.psychologist?.specialization || 'Consulta'}
                       </p>
                     </div>
                     {showStatus && (

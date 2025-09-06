@@ -14,6 +14,7 @@ export interface Appointment {
   psychologist: {
     full_name: string;
     specialty?: string;
+    specialization?: string;
     professional_email?: string;
   };
 }
@@ -181,7 +182,10 @@ export const useAppointments = () => {
         .from('appointments')
         .select(`
           *,
-          psychologists!appointments_psychologist_fk(full_name, specialization)
+          psychologists!psychologist_id(
+            full_name, 
+            specialization
+          )
         `)
         .eq('patient_id', (await supabase.auth.getUser()).data.user?.id)
         .order('scheduled_at', { ascending: false })

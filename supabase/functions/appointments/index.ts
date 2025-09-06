@@ -97,13 +97,21 @@ serve(async (req) => {
         .from('appointments')
         .select(`
           *,
-          psychologists!appointments_psychologist_fk(full_name, specialization)
+          psychologists!psychologist_id(
+            full_name, 
+            specialization
+          )
         `)
         .eq('patient_id', user.id)
         .gte('scheduled_at', new Date().toISOString())
         .order('scheduled_at', { ascending: true });
 
-      if (error) throw error;
+      console.log('Appointments query result:', { appointments, error });
+
+      if (error) {
+        console.error('Error fetching appointments:', error);
+        throw error;
+      }
 
       return new Response(
         JSON.stringify(appointments),
