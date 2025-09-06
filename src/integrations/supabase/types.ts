@@ -59,14 +59,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fk_appointments_psychologist"
-            columns: ["psychologist_id"]
-            isOneToOne: false
-            referencedRelation: "psychologists"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "fk_appointments_psychologist_id"
+            foreignKeyName: "appointments_psychologist_fk"
             columns: ["psychologist_id"]
             isOneToOne: false
             referencedRelation: "psychologists"

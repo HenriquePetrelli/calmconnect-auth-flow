@@ -76,7 +76,7 @@ serve(async (req) => {
           .from('appointments')
           .select(`
             *,
-            psychologists:psychologist_id(full_name, specialization)
+            psychologists!appointments_psychologist_fk(full_name, specialization)
           `)
           .eq('patient_id', user.id)
           .order('scheduled_at', { ascending: false })
@@ -97,7 +97,7 @@ serve(async (req) => {
         .from('appointments')
         .select(`
           *,
-          psychologists:psychologist_id(full_name, specialization)
+          psychologists!appointments_psychologist_fk(full_name, specialization)
         `)
         .eq('patient_id', user.id)
         .gte('scheduled_at', new Date().toISOString())
@@ -156,7 +156,7 @@ serve(async (req) => {
         })
         .select(`
           *,
-          psychologists:psychologist_id(full_name, specialization)
+          psychologists!appointments_psychologist_fk(full_name, specialization)
         `)
         .single();
 
