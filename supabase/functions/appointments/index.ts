@@ -76,7 +76,7 @@ serve(async (req) => {
           .from('appointments')
           .select(`
             *,
-            psychologist:psychologists!inner(full_name, specialization)
+            psychologists!fk_appointments_psychologist_id(full_name, specialization)
           `)
           .eq('patient_id', user.id)
           .order('scheduled_at', { ascending: false })
@@ -97,7 +97,7 @@ serve(async (req) => {
         .from('appointments')
         .select(`
           *,
-          psychologist:psychologists!inner(full_name, specialization)
+          psychologists!fk_appointments_psychologist_id(full_name, specialization)
         `)
         .eq('patient_id', user.id)
         .gte('scheduled_at', new Date().toISOString())
@@ -115,16 +115,26 @@ serve(async (req) => {
 
     if (req.method === 'POST') {
       // Create new appointment
-      let requestBody;
+      let requestBody = {};
+      
       try {
         const text = await req.text();
-        if (!text.trim()) {
-          throw new Error('Request body is empty');
+        console.log('Request body text:', text);
+        
+        if (text && text.trim()) {
+          requestBody = JSON.parse(text);
+        } else {
+          console.log('Empty request body');
         }
-        requestBody = JSON.parse(text);
       } catch (parseError) {
         console.error('JSON parse error:', parseError);
-        throw new Error('Invalid JSON in request body');
+        return new Response(
+          JSON.stringify({ error: 'Invalid JSON format in request body' }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
       }
       
       const { psychologist_id, scheduled_at, duration, appointment_type, notes } = requestBody;
@@ -146,7 +156,7 @@ serve(async (req) => {
         })
         .select(`
           *,
-          psychologist:psychologists!inner(full_name, specialization)
+          psychologists!fk_appointments_psychologist_id(full_name, specialization)
         `)
         .single();
 

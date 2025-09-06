@@ -65,6 +65,13 @@ export type Database = {
             referencedRelation: "psychologists"
             referencedColumns: ["user_id"]
           },
+          {
+            foreignKeyName: "fk_appointments_psychologist_id"
+            columns: ["psychologist_id"]
+            isOneToOne: false
+            referencedRelation: "psychologists"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       brazilian_cities: {
