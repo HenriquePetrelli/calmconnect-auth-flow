@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.52.1";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
@@ -75,7 +76,7 @@ serve(async (req) => {
           .from('appointments')
           .select(`
             *,
-            psychologist:psychologists!fk_appointments_psychologist(full_name, specialization)
+            psychologists!appointments_psychologist_id_fkey(full_name, specialization)
           `)
           .eq('patient_id', user.id)
           .order('scheduled_at', { ascending: false })
@@ -96,7 +97,7 @@ serve(async (req) => {
         .from('appointments')
         .select(`
           *,
-          psychologist:psychologists!fk_appointments_psychologist(full_name, specialization)
+          psychologists!appointments_psychologist_id_fkey(full_name, specialization)
         `)
         .eq('patient_id', user.id)
         .gte('scheduled_at', new Date().toISOString())
@@ -114,7 +115,19 @@ serve(async (req) => {
 
     if (req.method === 'POST') {
       // Create new appointment
-      const { psychologist_id, scheduled_at, duration, appointment_type, notes } = await req.json();
+      let requestBody;
+      try {
+        const text = await req.text();
+        if (!text.trim()) {
+          throw new Error('Request body is empty');
+        }
+        requestBody = JSON.parse(text);
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError);
+        throw new Error('Invalid JSON in request body');
+      }
+      
+      const { psychologist_id, scheduled_at, duration, appointment_type, notes } = requestBody;
 
       if (!psychologist_id || !scheduled_at) {
         throw new Error('Psychologist ID and scheduled time are required');
@@ -133,7 +146,7 @@ serve(async (req) => {
         })
         .select(`
           *,
-          psychologist:psychologists!fk_appointments_psychologist(full_name, specialization, professional_email)
+          psychologists!appointments_psychologist_id_fkey(full_name, specialization)
         `)
         .single();
 
