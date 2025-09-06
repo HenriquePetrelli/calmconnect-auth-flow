@@ -105,7 +105,7 @@ export const useAppointments = () => {
     psychologist_id: string, 
     scheduled_at: string, 
     duration = 60,
-    type = 'online',
+    type = 'regular',
     notes?: string
   ) => {
     try {
