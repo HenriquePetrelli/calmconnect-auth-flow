@@ -150,7 +150,7 @@ serve(async (req) => {
           psychologist_id,
           scheduled_at,
           duration: duration || 60,
-          appointment_type: appointment_type || 'online',
+          appointment_type: appointment_type || 'regular',
           notes,
           status: 'scheduled'
         })

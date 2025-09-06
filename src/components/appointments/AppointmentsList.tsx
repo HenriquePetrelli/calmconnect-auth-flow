@@ -158,7 +158,7 @@ export const AppointmentsList: React.FC<AppointmentsListProps> = ({
                   {/* Type badge */}
                   <div className="mb-3">
                     <Badge variant="secondary" className="text-xs">
-                      {appointment.appointment_type === 'online' ? 'Online' : 'Presencial'}
+                      {appointment.appointment_type === 'regular' ? 'Online' : 'Emergência'}
                     </Badge>
                   </div>
 

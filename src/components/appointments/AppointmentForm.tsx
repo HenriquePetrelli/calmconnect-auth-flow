@@ -26,7 +26,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
   const [date, setDate] = useState<Date>();
   const [time, setTime] = useState('');
   const [duration, setDuration] = useState('50');
-  const [appointmentType, setAppointmentType] = useState('online');
+  const [appointmentType, setAppointmentType] = useState('regular');
   const [notes, setNotes] = useState('');
   
   const { createAppointment, loading } = useAppointments();
@@ -213,7 +213,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
             </div>
             <div className="text-sm">
               <span className="font-medium">Tipo:</span>{' '}
-              {appointmentType === 'online' ? 'Online' : 'Presencial'}
+              {appointmentType === 'regular' ? 'Online' : 'Emergência'}
             </div>
           </CardContent>
         </Card>

@@ -41,7 +41,7 @@ export const AppointmentScheduleModal = ({
   const [selectedTime, setSelectedTime] = useState<string>();
   const [selectedPsychologist, setSelectedPsychologist] = useState<string>();
   const [selectedDuration, setSelectedDuration] = useState<number>(60);
-  const [selectedType, setSelectedType] = useState<string>('online');
+  const [selectedType, setSelectedType] = useState<string>('regular');
   const [notes, setNotes] = useState('');
 
   const handleSchedule = async () => {
@@ -66,7 +66,7 @@ export const AppointmentScheduleModal = ({
       setSelectedTime(undefined);
       setSelectedPsychologist(undefined);
       setSelectedDuration(60);
-      setSelectedType('online');
+      setSelectedType('regular');
       setNotes('');
       onOpenChange(false);
     } catch (error) {
@@ -181,9 +181,8 @@ export const AppointmentScheduleModal = ({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="online">Online</SelectItem>
-                <SelectItem value="presencial">Presencial</SelectItem>
-                <SelectItem value="emergencia">Emergência</SelectItem>
+                <SelectItem value="regular">Online</SelectItem>
+                <SelectItem value="emergency">Emergência</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -221,7 +220,7 @@ export const AppointmentScheduleModal = ({
                   <strong>Duração:</strong> {selectedDuration} minutos
                 </p>
                 <p>
-                  <strong>Tipo:</strong> {selectedType === 'online' ? 'Online' : selectedType === 'presencial' ? 'Presencial' : 'Emergência'}
+                  <strong>Tipo:</strong> {selectedType === 'regular' ? 'Online' : 'Emergência'}
                 </p>
               </div>
             </CardContent>
