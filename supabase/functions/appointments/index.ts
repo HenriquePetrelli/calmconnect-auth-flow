@@ -139,9 +139,17 @@ serve(async (req) => {
       
       const { psychologist_id, scheduled_at, duration, appointment_type, notes } = requestBody;
 
+      console.log('Received appointment data:', { psychologist_id, scheduled_at, duration, appointment_type, notes });
+
       if (!psychologist_id || !scheduled_at) {
         throw new Error('Psychologist ID and scheduled time are required');
       }
+
+      // Validate appointment_type
+      const validTypes = ['regular', 'emergency'];
+      const finalAppointmentType = appointment_type && validTypes.includes(appointment_type) ? appointment_type : 'regular';
+      
+      console.log('Final appointment type:', finalAppointmentType);
 
       const { data: appointment, error } = await supabase
         .from('appointments')
@@ -150,7 +158,7 @@ serve(async (req) => {
           psychologist_id,
           scheduled_at,
           duration: duration || 60,
-          appointment_type: appointment_type || 'regular',
+          appointment_type: finalAppointmentType,
           notes,
           status: 'scheduled'
         })
