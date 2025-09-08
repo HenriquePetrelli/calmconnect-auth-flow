@@ -93,6 +93,45 @@ serve(async (req) => {
         );
       }
 
+      if (action === 'pending') {
+        // Get pending appointments awaiting psychologist confirmation
+        const { data: appointments, error } = await supabase
+          .from('appointments')
+          .select('*')
+          .eq('psychologist_id', user.id)
+          .eq('status', 'pending')
+          .order('created_at', { ascending: true });
+
+        if (error) {
+          console.error('Error fetching pending appointments:', error);
+          throw error;
+        }
+
+        // Fetch patient names separately
+        const patientIds = appointments?.map(a => a.patient_id) || [];
+        const { data: patients, error: patientsError } = await supabase
+          .from('profiles')
+          .select('user_id, full_name')
+          .in('user_id', patientIds);
+
+        if (patientsError) {
+          console.error('Error fetching patient profiles:', patientsError);
+        }
+
+        // Map patient names to appointments
+        const appointmentsWithPatients = appointments?.map(appointment => ({
+          ...appointment,
+          patient: patients?.find(p => p.user_id === appointment.patient_id) || { full_name: 'Paciente' }
+        })) || [];
+
+        return new Response(
+          JSON.stringify(appointmentsWithPatients),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
       if (action === 'history') {
         // Get appointment history with pagination
         const page = parseInt(url.searchParams.get('page') || '1');

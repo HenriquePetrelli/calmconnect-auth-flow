@@ -51,6 +51,27 @@ export const usePsychologistSchedule = () => {
     }
   };
 
+  // Fetch pending appointments (awaiting psychologist confirmation)
+  const fetchPendingAppointments = async (): Promise<Appointment[]> => {
+    try {
+      const { data, error } = await supabase.functions.invoke('psychologist-schedule?action=pending', {
+        method: 'GET'
+      });
+      
+      if (error) throw error;
+      
+      return data || [];
+    } catch (error: any) {
+      console.error('Error fetching pending appointments:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao carregar consultas pendentes',
+        variant: 'destructive',
+      });
+      return [];
+    }
+  };
+
   // Fetch upcoming appointments (next 7 days)
   const fetchUpcomingAppointments = async () => {
     try {
@@ -127,6 +148,74 @@ export const usePsychologistSchedule = () => {
     }
   };
 
+  // Accept appointment (change from pending to scheduled)
+  const acceptAppointment = async (appointmentId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('psychologist-schedule', {
+        method: 'PUT',
+        body: {
+          appointmentId,
+          status: 'scheduled'
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Sucesso',
+        description: 'Consulta confirmada com sucesso',
+      });
+
+      // Refresh appointments
+      fetchTodayAppointments();
+      fetchUpcomingAppointments();
+      
+      return data.appointment;
+    } catch (error: any) {
+      console.error('Error accepting appointment:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao confirmar consulta',
+        variant: 'destructive',
+      });
+      throw error;
+    }
+  };
+
+  // Decline appointment (change from pending to declined)
+  const declineAppointment = async (appointmentId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('psychologist-schedule', {
+        method: 'PUT',
+        body: {
+          appointmentId,
+          status: 'declined'
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Sucesso',
+        description: 'Consulta recusada',
+      });
+
+      // Refresh appointments
+      fetchTodayAppointments();
+      fetchUpcomingAppointments();
+      
+      return data.appointment;
+    } catch (error: any) {
+      console.error('Error declining appointment:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao recusar consulta',
+        variant: 'destructive',
+      });
+      throw error;
+    }
+  };
+
   // Check if appointment can be started (15 minutes before scheduled time)
   const canStartAppointment = (scheduledAt: string): boolean => {
     const now = new Date();
@@ -157,8 +246,11 @@ export const usePsychologistSchedule = () => {
     loading,
     fetchTodayAppointments,
     fetchUpcomingAppointments,
+    fetchPendingAppointments,
     fetchAppointmentHistory,
     updateAppointment,
+    acceptAppointment,
+    declineAppointment,
     canStartAppointment
   };
 };

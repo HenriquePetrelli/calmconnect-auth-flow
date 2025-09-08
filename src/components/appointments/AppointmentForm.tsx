@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Clock, User, ArrowLeft } from 'lucide-react';
-import { format } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
+import { ArrowLeft, Clock, Calendar as CalendarIcon, User, AlertTriangle } from 'lucide-react';
+import { format, addDays, setHours, setMinutes, isAfter, isBefore, startOfDay, addHours } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
 import { useAppointments } from '@/hooks/useAppointments';
+import { useToast } from '@/hooks/use-toast';
 import { PsychologistData } from './PsychologistList';
 
 interface AppointmentFormProps {
@@ -23,49 +22,98 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
   onBack,
   onSuccess
 }) => {
-  const [date, setDate] = useState<Date>();
-  const [time, setTime] = useState('');
-  const [duration, setDuration] = useState('50');
-  const [appointmentType, setAppointmentType] = useState('regular');
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const [selectedTime, setSelectedTime] = useState<string>('');
   const [notes, setNotes] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const { createAppointment, loading } = useAppointments();
+  const { createAppointment } = useAppointments();
+  const { toast } = useToast();
 
-  const timeSlots = [
-    '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
-    '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00'
-  ];
+  // Gerar horários disponíveis (7h às 18h - conforme regra)
+  const generateTimeSlots = () => {
+    const slots = [];
+    for (let hour = 7; hour <= 17; hour++) {
+      slots.push(`${hour.toString().padStart(2, '0')}:00`);
+      slots.push(`${hour.toString().padStart(2, '0')}:30`);
+    }
+    return slots;
+  };
 
-  const filterWeekdays = (date: Date) => {
-    const day = date.getDay();
-    return day !== 0 && day !== 6; // Exclude Sunday (0) and Saturday (6)
+  // Verificar se pode agendar (mínimo 48h de antecedência)
+  const canScheduleDate = (date: Date): boolean => {
+    const now = new Date();
+    const minScheduleTime = addHours(now, 48);
+    return isAfter(date, minScheduleTime);
+  };
+
+  // Verificar se horário está no intervalo permitido
+  const isValidTimeSlot = (date: Date, time: string): boolean => {
+    const [hour] = time.split(':').map(Number);
+    return hour >= 7 && hour <= 17;
   };
 
   const handleSubmit = async () => {
-    if (!date || !time) {
+    if (!selectedDate || !selectedTime) {
+      toast({
+        title: 'Campos obrigatórios',
+        description: 'Por favor, selecione data e horário',
+        variant: 'destructive',
+      });
       return;
     }
 
-    try {
-      const [hours, minutes] = time.split(':').map(Number);
-      const scheduledDateTime = new Date(date);
-      scheduledDateTime.setHours(hours, minutes, 0, 0);
+    const [hours, minutes] = selectedTime.split(':').map(Number);
+    const appointmentDateTime = setMinutes(setHours(selectedDate, hours), minutes);
 
+    // Verificar regra de 48h de antecedência
+    if (!canScheduleDate(appointmentDateTime)) {
+      toast({
+        title: 'Antecedência insuficiente',
+        description: 'Consultas devem ser agendadas com pelo menos 48 horas de antecedência',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Verificar horário permitido
+    if (!isValidTimeSlot(appointmentDateTime, selectedTime)) {
+      toast({
+        title: 'Horário inválido',
+        description: 'Consultas só podem ser agendadas entre 07h e 18h',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
       await createAppointment(
         psychologist.user_id,
-        scheduledDateTime.toISOString(),
-        parseInt(duration),
-        appointmentType,
-        notes
+        appointmentDateTime.toISOString(),
+        60, // duração padrão de 60 minutos
+        'regular',
+        notes.trim() || undefined
       );
+
+      toast({
+        title: 'Solicitação enviada!',
+        description: `Sua consulta foi solicitada para ${format(appointmentDateTime, "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}. Aguarde a confirmação do psicólogo.`,
+      });
 
       onSuccess();
     } catch (error) {
-      console.error('Error creating appointment:', error);
+      console.error('Erro ao agendar consulta:', error);
+      toast({
+        title: 'Erro ao agendar',
+        description: 'Não foi possível agendar a consulta. Tente novamente.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
-
-  const isFormValid = date && time;
 
   return (
     <div className="space-y-6">
@@ -75,7 +123,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
           <ArrowLeft size={20} />
         </Button>
         <div>
-          <h2 className="text-xl font-semibold">Agendar Consulta</h2>
+          <h2 className="text-xl font-semibold text-foreground">Agendar Consulta</h2>
           <p className="text-muted-foreground">
             com {psychologist.full_name}
           </p>
@@ -90,7 +138,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
               <User className="text-primary" size={20} />
             </div>
             <div>
-              <h3 className="font-semibold">{psychologist.full_name}</h3>
+              <h3 className="font-semibold text-foreground">{psychologist.full_name}</h3>
               <p className="text-sm text-muted-foreground">
                 {psychologist.specialty || psychologist.specialization || 'Psicologia Geral'}
               </p>
@@ -99,121 +147,127 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
         </CardContent>
       </Card>
 
-      {/* Detalhes Fixos da Consulta */}
-      <Card>
+      {/* Appointment Rules Info */}
+      <Card className="border-blue-200 bg-blue-50/50">
         <CardHeader>
-          <CardTitle className="text-lg">Detalhes da Consulta</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-blue-800">
+            <AlertTriangle className="w-5 h-5" />
+            Regras de Agendamento
+          </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <div className="text-sm text-muted-foreground">Duração</div>
-              <div className="flex items-center gap-2 font-medium"><Clock size={18} /> 50 minutos</div>
-            </div>
-            <div className="space-y-1">
-              <div className="text-sm text-muted-foreground">Tipo</div>
-              <div className="font-medium">Online</div>
-            </div>
-          </div>
+        <CardContent className="space-y-2 text-sm text-blue-700">
+          <p>• Consultas devem ser agendadas com pelo menos <strong>48 horas de antecedência</strong></p>
+          <p>• Horários disponíveis: <strong>07h às 18h</strong></p>
+          <p>• Cancelamentos podem ser feitos até <strong>12h antes</strong> da consulta</p>
+          <p>• O psicólogo tem <strong>24h para confirmar</strong> sua solicitação</p>
         </CardContent>
       </Card>
 
       {/* Date Selection */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Selecione a Data</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <CalendarIcon className="w-5 h-5" />
+            Data da Consulta
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !date && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {date ? (
-                  format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
-                ) : (
-                  <span>Escolha uma data</span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={setDate}
-                disabled={(date) => 
-                  date < new Date() || !filterWeekdays(date)
-                }
-                initialFocus
-                className="pointer-events-auto"
-              />
-            </PopoverContent>
-          </Popover>
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={setSelectedDate}
+            disabled={(date) => {
+              const now = new Date();
+              const minDate = addHours(now, 48);
+              return date < startOfDay(minDate) || date > addDays(new Date(), 30);
+            }}
+            locale={ptBR}
+            className="rounded-md border"
+          />
+          
+          {selectedDate && !canScheduleDate(selectedDate) && (
+            <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg mt-4">
+              <AlertTriangle className="w-4 h-4 text-amber-600" />
+              <p className="text-sm text-amber-800">
+                Consultas devem ser agendadas com pelo menos 48 horas de antecedência
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
       {/* Time Selection */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Horário</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Select value={time} onValueChange={setTime}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione um horário" />
-            </SelectTrigger>
-            <SelectContent>
-              {timeSlots.map((slot) => (
-                <SelectItem key={slot} value={slot}>
-                  {slot}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </CardContent>
-      </Card>
-
+      {selectedDate && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="w-5 h-5" />
+              Horário (07h às 18h)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-2">
+              {generateTimeSlots().map((time) => {
+                const isValidTime = selectedDate ? isValidTimeSlot(selectedDate, time) : true;
+                const canSchedule = selectedDate ? canScheduleDate(selectedDate) : true;
+                
+                return (
+                  <Button
+                    key={time}
+                    variant={selectedTime === time ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSelectedTime(time)}
+                    disabled={!isValidTime || !canSchedule}
+                    className="text-sm"
+                  >
+                    {time}
+                  </Button>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Notes */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Observações (opcional)</CardTitle>
+          <CardTitle>Observações (opcional)</CardTitle>
         </CardHeader>
         <CardContent>
           <Textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Descreva brevemente o motivo da consulta ou alguma informação importante..."
-            rows={3}
+            placeholder="Descreva brevemente o motivo da consulta ou alguma informação importante que o psicólogo deve saber..."
+            rows={4}
+            className="resize-none"
           />
         </CardContent>
       </Card>
 
-      {/* Summary & Actions */}
-      {isFormValid && (
+      {/* Summary */}
+      {selectedDate && selectedTime && (
         <Card className="border-primary/20 bg-primary/5">
           <CardHeader>
-            <CardTitle className="text-lg">Resumo do Agendamento</CardTitle>
+            <CardTitle>Resumo da Solicitação</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="text-sm">
+              <span className="font-medium">Psicólogo:</span> {psychologist.full_name}
+            </div>
+            <div className="text-sm">
               <span className="font-medium">Data:</span>{' '}
-              {format(date!, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+              {format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
             </div>
             <div className="text-sm">
-              <span className="font-medium">Horário:</span> {time}
+              <span className="font-medium">Horário:</span> {selectedTime}
             </div>
             <div className="text-sm">
-              <span className="font-medium">Duração:</span> {duration} minutos
+              <span className="font-medium">Duração:</span> 60 minutos
             </div>
             <div className="text-sm">
-              <span className="font-medium">Tipo:</span>{' '}
-              {appointmentType === 'regular' ? 'Online' : 'Emergência'}
+              <span className="font-medium">Status inicial:</span>{' '}
+              <Badge variant="secondary">Aguardando confirmação do psicólogo</Badge>
             </div>
           </CardContent>
         </Card>
@@ -226,10 +280,17 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
         </Button>
         <Button 
           onClick={handleSubmit} 
-          disabled={!isFormValid || loading}
+          disabled={!selectedDate || !selectedTime || isSubmitting}
           className="flex-1"
         >
-          {loading ? 'Agendando...' : 'Confirmar Agendamento'}
+          {isSubmitting ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              Enviando...
+            </>
+          ) : (
+            'Enviar Solicitação'
+          )}
         </Button>
       </div>
     </div>

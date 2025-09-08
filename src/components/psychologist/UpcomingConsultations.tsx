@@ -3,10 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Clock, User, Video, Calendar, Phone, MessageSquare } from 'lucide-react';
+import { Clock, User, Video, Calendar, Phone, MessageSquare, AlertTriangle } from 'lucide-react';
 import { usePsychologistSchedule } from '@/hooks/usePsychologistSchedule';
 import { format, isToday, isTomorrow, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import PendingAppointments from './PendingAppointments';
 
 const UpcomingConsultations = () => {
   const { 
@@ -170,6 +171,9 @@ const UpcomingConsultations = () => {
 
   return (
     <div className="space-y-6">
+      {/* Pending Appointments */}
+      <PendingAppointments />
+      
       {/* Today's Appointments */}
       <div>
         <Card>
