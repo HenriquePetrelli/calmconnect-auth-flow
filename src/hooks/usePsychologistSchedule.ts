@@ -54,38 +54,13 @@ export const usePsychologistSchedule = () => {
   // Fetch upcoming appointments (next 7 days)
   const fetchUpcomingAppointments = async () => {
     try {
-      // For now, let's use direct query to get upcoming appointments
-      const today = new Date();
-      const nextWeek = new Date();
-      nextWeek.setDate(today.getDate() + 7);
-
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) throw new Error('Not authenticated');
-
-      const { data, error } = await supabase
-        .from('appointments')
-        .select(`
-          id,
-          patient_id,
-          psychologist_id,
-          scheduled_at,
-          status,
-          appointment_type,
-          notes,
-          session_summary,
-          created_at,
-          updated_at,
-          patient:profiles!patient_id(full_name)
-        `)
-        .eq('psychologist_id', user.user.id)
-        .gte('scheduled_at', today.toISOString())
-        .lte('scheduled_at', nextWeek.toISOString())
-        .eq('status', 'scheduled')
-        .order('scheduled_at', { ascending: true });
+      const { data, error } = await supabase.functions.invoke('psychologist-schedule?action=upcoming', {
+        method: 'GET'
+      });
       
       if (error) throw error;
       
-      setUpcomingAppointments((data as any) || []);
+      setUpcomingAppointments(data || []);
     } catch (error: any) {
       console.error('Error fetching upcoming appointments:', error);
       toast({
@@ -99,7 +74,7 @@ export const usePsychologistSchedule = () => {
   // Fetch appointment history with pagination
   const fetchAppointmentHistory = async (page = 1, limit = 10): Promise<AppointmentHistoryResponse | null> => {
     try {
-      const { data, error } = await supabase.functions.invoke('psychologist-schedule', {
+      const { data, error } = await supabase.functions.invoke(`psychologist-schedule?action=history&page=${page}&limit=${limit}`, {
         method: 'GET'
       });
       

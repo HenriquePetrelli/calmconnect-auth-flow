@@ -55,10 +55,7 @@ serve(async (req) => {
 
         const { data: appointments, error } = await supabase
           .from('appointments')
-          .select(`
-            *,
-            patient:patient_id(full_name)
-          `)
+          .select('*')
           .eq('psychologist_id', user.id)
           .gte('scheduled_at', today.toISOString())
           .lte('scheduled_at', nextWeek.toISOString())
@@ -70,8 +67,26 @@ serve(async (req) => {
           throw error;
         }
 
+        // Fetch patient names separately
+        const patientIds = appointments?.map(a => a.patient_id) || [];
+        const { data: patients, error: patientsError } = await supabase
+          .from('profiles')
+          .select('user_id, full_name')
+          .in('user_id', patientIds);
+
+        if (patientsError) {
+          console.error('Error fetching patient profiles:', patientsError);
+          // Continue without patient names rather than failing
+        }
+
+        // Map patient names to appointments
+        const appointmentsWithPatients = appointments?.map(appointment => ({
+          ...appointment,
+          patient: patients?.find(p => p.user_id === appointment.patient_id) || { full_name: 'Paciente' }
+        })) || [];
+
         return new Response(
-          JSON.stringify(appointments),
+          JSON.stringify(appointmentsWithPatients),
           {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           }
@@ -86,10 +101,7 @@ serve(async (req) => {
 
         const { data: appointments, error } = await supabase
           .from('appointments')
-          .select(`
-            *,
-            patient:patient_id(full_name)
-          `)
+          .select('*')
           .eq('psychologist_id', user.id)
           .order('scheduled_at', { ascending: false })
           .range(offset, offset + limit - 1);
@@ -98,6 +110,23 @@ serve(async (req) => {
           console.error('Error fetching appointment history:', error);
           throw error;
         }
+
+        // Fetch patient names separately
+        const patientIds = appointments?.map(a => a.patient_id) || [];
+        const { data: patients, error: patientsError } = await supabase
+          .from('profiles')
+          .select('user_id, full_name')
+          .in('user_id', patientIds);
+
+        if (patientsError) {
+          console.error('Error fetching patient profiles:', patientsError);
+        }
+
+        // Map patient names to appointments
+        const appointmentsWithPatients = appointments?.map(appointment => ({
+          ...appointment,
+          patient: patients?.find(p => p.user_id === appointment.patient_id) || { full_name: 'Paciente' }
+        })) || [];
 
         // Get total count for pagination
         const { count, error: countError } = await supabase
@@ -112,7 +141,7 @@ serve(async (req) => {
 
         return new Response(
           JSON.stringify({
-            appointments,
+            appointments: appointmentsWithPatients,
             totalCount: count,
             currentPage: page,
             totalPages: Math.ceil((count || 0) / limit)
@@ -130,10 +159,7 @@ serve(async (req) => {
 
       const { data: appointments, error } = await supabase
         .from('appointments')
-        .select(`
-          *,
-          patient:patient_id(full_name)
-        `)
+        .select('*')
         .eq('psychologist_id', user.id)
         .gte('scheduled_at', startOfDay.toISOString())
         .lt('scheduled_at', endOfDay.toISOString())
@@ -144,8 +170,25 @@ serve(async (req) => {
         throw error;
       }
 
+      // Fetch patient names separately
+      const patientIds = appointments?.map(a => a.patient_id) || [];
+      const { data: patients, error: patientsError } = await supabase
+        .from('profiles')
+        .select('user_id, full_name')
+        .in('user_id', patientIds);
+
+      if (patientsError) {
+        console.error('Error fetching patient profiles:', patientsError);
+      }
+
+      // Map patient names to appointments
+      const appointmentsWithPatients = appointments?.map(appointment => ({
+        ...appointment,
+        patient: patients?.find(p => p.user_id === appointment.patient_id) || { full_name: 'Paciente' }
+      })) || [];
+
       return new Response(
-        JSON.stringify(appointments),
+        JSON.stringify(appointmentsWithPatients),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         }
