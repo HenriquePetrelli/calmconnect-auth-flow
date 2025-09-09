@@ -7,14 +7,16 @@ import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '@/hooks/useNotifications';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { toast } from 'sonner';
 
 const Notifications = () => {
   const navigate = useNavigate();
   const { notifications, unreadCount, loading, markAsRead, markAllAsRead } = useNotifications();
 
-  const handleNotificationClick = (notification: any) => {
+  const handleNotificationClick = async (notification: any) => {
     if (notification.status === 'unread') {
-      markAsRead(notification.id);
+      await markAsRead(notification.id);
+      toast.success('Notificação marcada como lida');
     }
     
     // If notification is related to an appointment, navigate to appointments

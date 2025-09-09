@@ -33,12 +33,12 @@ serve(async (req) => {
 
     console.log('Sending notification for appointment:', appointment_id, 'status:', status);
 
-    // Get patient email from profiles
+    // Get patient data from profiles
     const { data: patient, error: patientError } = await supabase
       .from('profiles')
       .select('user_id, full_name')
       .eq('user_id', patient_id)
-      .single();
+      .maybeSingle();
 
     if (patientError) {
       console.error('Error fetching patient:', patientError);
@@ -62,7 +62,7 @@ serve(async (req) => {
         emailSubject = 'Consulta confirmada - Soliv';
         emailContent = `
           <h2>Consulta Confirmada</h2>
-          <p>Olá ${patient.full_name},</p>
+           <p>Olá ${patient?.full_name || 'Paciente'},</p>
           <p>Sua consulta foi confirmada!</p>
           <ul>
             <li><strong>Psicólogo:</strong> ${psychologist_name}</li>
@@ -79,7 +79,7 @@ serve(async (req) => {
         emailSubject = 'Consulta recusada - Soliv';
         emailContent = `
           <h2>Consulta Recusada</h2>
-          <p>Olá ${patient.full_name},</p>
+           <p>Olá ${patient?.full_name || 'Paciente'},</p>
           <p>Infelizmente sua consulta agendada para ${appointment_date} com ${psychologist_name} foi recusada.</p>
           <p>Não se preocupe! Você pode agendar uma nova consulta com outro psicólogo disponível em nossa plataforma.</p>
           <p>Atenciosamente,<br>Equipe Soliv</p>
@@ -92,7 +92,7 @@ serve(async (req) => {
         emailSubject = 'Nova proposta de horário - Soliv';
         emailContent = `
           <h2>Nova Proposta de Horário</h2>
-          <p>Olá ${patient.full_name},</p>
+          <p>Olá ${patient?.full_name || 'Paciente'},</p>
           <p>O psicólogo ${psychologist_name} não pôde confirmar sua consulta para ${appointment_date}, mas sugeriu um novo horário:</p>
           <ul>
             <li><strong>Novo horário proposto:</strong> ${proposed_date}</li>
