@@ -136,7 +136,7 @@ export const useAppointments = () => {
       
       toast({
         title: 'Sucesso',
-        description: data.message || 'Consulta agendada com sucesso!',
+        description: data.message || 'Consulta solicitada com sucesso! Aguardando confirmação do psicólogo.',
       });
       
       await fetchAppointments();

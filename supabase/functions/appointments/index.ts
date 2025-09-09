@@ -185,6 +185,38 @@ serve(async (req) => {
       
       console.log('Final appointment type:', finalAppointmentType);
 
+      // Check for scheduling conflicts - prevent booking same psychologist at same time
+      const { data: conflictingAppointments, error: conflictError } = await supabase
+        .from('appointments')
+        .select('id')
+        .eq('psychologist_id', psychologist_id)
+        .eq('scheduled_at', scheduled_at)
+        .in('status', ['pending', 'scheduled']);
+
+      if (conflictError) {
+        console.error('Error checking conflicts:', conflictError);
+        throw new Error('Erro ao verificar conflitos de horário');
+      }
+
+      if (conflictingAppointments && conflictingAppointments.length > 0) {
+        throw new Error('Este horário já está ocupado. Escolha outro horário disponível.');
+      }
+
+      // Validate 48-hour advance booking rule
+      const scheduledDate = new Date(scheduled_at);
+      const now = new Date();
+      const hoursInAdvance = (scheduledDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+      
+      if (hoursInAdvance < 48) {
+        throw new Error('Consultas devem ser agendadas com pelo menos 48 horas de antecedência.');
+      }
+
+      // Validate allowed hours (7 AM to 6 PM)
+      const hour = scheduledDate.getHours();
+      if (hour < 7 || hour >= 18) {
+        throw new Error('Consultas só podem ser agendadas entre 07h e 18h.');
+      }
+
       const { data: appointment, error } = await supabase
         .from('appointments')
         .insert({
@@ -194,7 +226,7 @@ serve(async (req) => {
           duration: duration || 60,
           appointment_type: finalAppointmentType,
           notes,
-          status: 'scheduled'
+          status: 'pending' // Start as pending, waiting for psychologist confirmation
         })
         .select(`
           *,
@@ -224,7 +256,7 @@ serve(async (req) => {
         JSON.stringify({
           success: true,
           appointment: transformedAppointment,
-          message: 'Consulta agendada com sucesso!'
+          message: 'Consulta solicitada com sucesso! Aguardando confirmação do psicólogo.'
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },

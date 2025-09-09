@@ -9,7 +9,7 @@ export const UpcomingAppointments: React.FC = () => {
   const [upcomingAppointments, setUpcomingAppointments] = useState<Appointment[]>([]);
 
   useEffect(() => {
-    // Filter for upcoming appointments
+    // Filter for upcoming appointments (including pending ones)
     const now = new Date();
     const upcoming = appointments.filter(appointment => {
       const appointmentDate = new Date(appointment.scheduled_at);
