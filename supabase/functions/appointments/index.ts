@@ -211,10 +211,16 @@ serve(async (req) => {
         throw new Error('Consultas devem ser agendadas com pelo menos 48 horas de antecedência.');
       }
 
-      // Validate allowed hours (7 AM to 6 PM)
+      // Validate allowed hours (7 AM to 6 PM) and only full hours
       const hour = scheduledDate.getHours();
+      const minutes = scheduledDate.getMinutes();
+      
       if (hour < 7 || hour >= 18) {
         throw new Error('Consultas só podem ser agendadas entre 07h e 18h.');
+      }
+      
+      if (minutes !== 0) {
+        throw new Error('Consultas só podem ser agendadas em horários inteiros (ex: 08:00, 09:00, etc.).');
       }
 
       const { data: appointment, error } = await supabase
@@ -223,7 +229,7 @@ serve(async (req) => {
           patient_id: user.id,
           psychologist_id,
           scheduled_at,
-          duration: duration || 60,
+          duration: 50, // Fixed 50-minute duration
           appointment_type: finalAppointmentType,
           notes,
           status: 'pending' // Start as pending, waiting for psychologist confirmation
