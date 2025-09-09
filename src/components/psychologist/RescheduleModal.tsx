@@ -63,9 +63,11 @@ export const RescheduleModal: React.FC<RescheduleModalProps> = ({
 
   // Calculate date range: from original date to 7 days later
   const originalAppointmentDate = new Date(originalDate);
-  const minDate = format(originalAppointmentDate, 'yyyy-MM-dd');
+  const isValidDate = originalDate && !isNaN(originalAppointmentDate.getTime());
   
-  const maxAppointmentDate = new Date(originalAppointmentDate);
+  const minDate = isValidDate ? format(originalAppointmentDate, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');
+  
+  const maxAppointmentDate = new Date(isValidDate ? originalAppointmentDate : new Date());
   maxAppointmentDate.setDate(maxAppointmentDate.getDate() + 7);
   const maxDate = format(maxAppointmentDate, 'yyyy-MM-dd');
 
