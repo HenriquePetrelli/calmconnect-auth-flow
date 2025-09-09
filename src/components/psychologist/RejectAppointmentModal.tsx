@@ -16,6 +16,7 @@ interface RejectAppointmentModalProps {
   onReject: () => void;
   onReschedule: (scheduledAt: string, notes: string) => void;
   loading?: boolean;
+  originalDate: string;
 }
 
 export const RejectAppointmentModal: React.FC<RejectAppointmentModalProps> = ({
@@ -23,7 +24,8 @@ export const RejectAppointmentModal: React.FC<RejectAppointmentModalProps> = ({
   onClose,
   onReject,
   onReschedule,
-  loading = false
+  loading = false,
+  originalDate
 }) => {
   const [showRescheduleModal, setShowRescheduleModal] = useState(false);
 
@@ -127,6 +129,7 @@ export const RejectAppointmentModal: React.FC<RejectAppointmentModalProps> = ({
         onClose={handleRescheduleClose}
         onConfirm={handleRescheduleConfirm}
         loading={loading}
+        originalDate={originalDate}
       />
     </>
   );

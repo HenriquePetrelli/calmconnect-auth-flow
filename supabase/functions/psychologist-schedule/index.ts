@@ -235,8 +235,8 @@ serve(async (req) => {
       );
     }
 
-  if (req.method === 'PUT') {
-    // Update appointment status or add session summary
+  if (req.method === 'POST' || req.method === 'PUT') {
+    // Handle both POST (for rescheduling) and PUT (for other updates)
     const { 
       appointmentId, 
       status, 

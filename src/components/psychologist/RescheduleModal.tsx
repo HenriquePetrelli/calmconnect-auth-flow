@@ -18,13 +18,15 @@ interface RescheduleModalProps {
   onClose: () => void;
   onConfirm: (scheduledAt: string, notes: string) => void;
   loading?: boolean;
+  originalDate: string; // Original appointment date to calculate 7-day range
 }
 
 export const RescheduleModal: React.FC<RescheduleModalProps> = ({
   isOpen,
   onClose,
   onConfirm,
-  loading = false
+  loading = false,
+  originalDate
 }) => {
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
@@ -59,10 +61,13 @@ export const RescheduleModal: React.FC<RescheduleModalProps> = ({
     timeOptions.push(`${hour.toString().padStart(2, '0')}:00`);
   }
 
-  // Get minimum date (tomorrow)
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const minDate = format(tomorrow, 'yyyy-MM-dd');
+  // Calculate date range: from original date to 7 days later
+  const originalAppointmentDate = new Date(originalDate);
+  const minDate = format(originalAppointmentDate, 'yyyy-MM-dd');
+  
+  const maxAppointmentDate = new Date(originalAppointmentDate);
+  maxAppointmentDate.setDate(maxAppointmentDate.getDate() + 7);
+  const maxDate = format(maxAppointmentDate, 'yyyy-MM-dd');
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -90,6 +95,7 @@ export const RescheduleModal: React.FC<RescheduleModalProps> = ({
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
               min={minDate}
+              max={maxDate}
               required
             />
           </div>

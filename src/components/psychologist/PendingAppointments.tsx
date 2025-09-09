@@ -98,7 +98,7 @@ const PendingAppointments = () => {
     
     setProcessingAppointments(prev => new Set(prev).add(selectedAppointmentId));
     try {
-      const response = await supabase.functions.invoke('psychologist-schedule', {
+      const { data, error } = await supabase.functions.invoke('psychologist-schedule', {
         body: {
           appointmentId: selectedAppointmentId,
           status: 'reschedule_proposed',
@@ -107,7 +107,7 @@ const PendingAppointments = () => {
         }
       });
 
-      if (response.error) throw response.error;
+      if (error) throw error;
 
       setPendingAppointments(prev => prev.filter(a => a.id !== selectedAppointmentId));
       setSelectedAppointmentId(null);
@@ -295,6 +295,7 @@ const PendingAppointments = () => {
         onReject={handleRejectOnly}
         onReschedule={handleRescheduleProposal}
         loading={selectedAppointmentId ? processingAppointments.has(selectedAppointmentId) : false}
+        originalDate={selectedAppointmentId ? pendingAppointments.find(a => a.id === selectedAppointmentId)?.scheduled_at || '' : ''}
       />
     </>
   );
