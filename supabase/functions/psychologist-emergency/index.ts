@@ -111,42 +111,40 @@ serve(async (req) => {
         throw error;
       }
 
-      // Filter requests based on psychologist-patient symptom matching
-      const matchingRequests = [];
+      console.log(`Found ${emergencyRequests?.length || 0} pending emergency requests`);
+
+      // Enhance requests with patient information - show ALL emergency requests
+      const enhancedRequests = [];
       
       for (const request of emergencyRequests || []) {
-        // Get patient symptoms
-        const { data: patient, error: patientError } = await supabase
+        // Get patient profile for display
+        const { data: patientProfile, error: profileError } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('user_id', request.patient_id)
+          .maybeSingle();
+
+        // Get patient symptoms for additional context (optional)
+        const { data: patient } = await supabase
           .from('patients')
           .select('sintomas_selecionados')
           .eq('user_id', request.patient_id)
-          .single();
+          .maybeSingle();
 
-        if (patientError || !patient?.sintomas_selecionados || patient.sintomas_selecionados.length === 0) {
-          console.log(`No symptoms found for patient ${request.patient_id}, skipping matching`);
-          continue;
-        }
-
-        // Check if this psychologist can help with patient's symptoms
-        const canHelp = await canPsychologistHelp(supabase, user.id, patient.sintomas_selecionados);
-        
-        if (canHelp) {
-          // Get patient profile for display
-          const { data: patientProfile, error: profileError } = await supabase
-            .from('profiles')
-            .select('full_name')
-            .eq('user_id', request.patient_id)
-            .single();
-
-          matchingRequests.push({
-            ...request,
-            patient: patientProfile ? { full_name: patientProfile.full_name } : { full_name: 'Paciente' }
-          });
-        }
+        // Always include the emergency request - in emergency situations, any psychologist should be able to help
+        enhancedRequests.push({
+          ...request,
+          patient: {
+            full_name: patientProfile?.full_name || 'Paciente',
+            symptoms: patient?.sintomas_selecionados || []
+          }
+        });
       }
 
+      console.log(`Returning ${enhancedRequests.length} emergency requests to psychologist`);
+
       return new Response(
-        JSON.stringify(matchingRequests),
+        JSON.stringify(enhancedRequests),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         }

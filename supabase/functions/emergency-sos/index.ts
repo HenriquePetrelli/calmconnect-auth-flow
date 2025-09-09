@@ -112,10 +112,7 @@ serve(async (req) => {
 
       const { data: request, error } = await supabase
         .from('emergency_requests')
-        .select(`
-          *,
-          psychologist:accepted_by(full_name)
-        `)
+        .select('*')
         .eq('id', requestId)
         .eq('patient_id', user.id)
         .single();
