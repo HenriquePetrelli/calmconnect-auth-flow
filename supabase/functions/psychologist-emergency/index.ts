@@ -2,11 +2,20 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.52.1";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://id-preview--82bda655-81e5-448f-832e-ea464e8925dc.lovable.app',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, PUT, GET, OPTIONS, DELETE',
-  'Access-Control-Allow-Credentials': 'true'
+const getCorsHeaders = (origin: string | null) => {
+  // Check if origin is from Lovable domains or localhost
+  const isLovableOrigin = origin && (
+    origin.includes('sandbox.lovable.dev') ||
+    origin.includes('lovable.app') ||
+    origin.startsWith('http://localhost')
+  );
+  
+  return {
+    'Access-Control-Allow-Origin': isLovableOrigin ? origin : '*',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, PUT, GET, OPTIONS, DELETE',
+    'Access-Control-Allow-Credentials': 'true'
+  };
 };
 
 // Helper function to check if psychologist can help with patient symptoms
@@ -50,6 +59,9 @@ async function canPsychologistHelp(supabase, psychologistId, patientSymptoms) {
 }
 
 serve(async (req) => {
+  const origin = req.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
