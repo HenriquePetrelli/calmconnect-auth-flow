@@ -21,18 +21,44 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { 
-      patient_id, 
-      appointment_id, 
-      status, 
-      psychologist_name,
-      appointment_date,
-      proposed_date = null,
-      proposal_notes = null 
-    } = await req.json();
+  const { 
+    patient_id, 
+    psychologist_id, 
+    appointment_id, 
+    status, 
+    psychologist_name,
+    appointment_date,
+    proposed_date = null,
+    proposal_notes = null,
+    patient_response = null
+  } = await req.json();
 
-    console.log('Sending notification for appointment:', appointment_id, 'status:', status);
+  console.log('Sending notification for appointment:', appointment_id, 'status:', status);
 
+  let recipientId, recipientProfile, recipientEmail;
+
+  // Determine who should receive the notification
+  if (psychologist_id) {
+    // Notification for psychologist
+    recipientId = psychologist_id;
+    
+    // Get psychologist data from profiles
+    const { data: psychologist, error: psychologistError } = await supabase
+      .from('profiles')
+      .select('user_id, full_name')
+      .eq('user_id', psychologist_id)
+      .maybeSingle();
+
+    if (psychologistError) {
+      console.error('Error fetching psychologist:', psychologistError);
+      throw psychologistError;
+    }
+    
+    recipientProfile = psychologist;
+  } else {
+    // Notification for patient
+    recipientId = patient_id;
+    
     // Get patient data from profiles
     const { data: patient, error: patientError } = await supabase
       .from('profiles')
@@ -44,17 +70,59 @@ serve(async (req) => {
       console.error('Error fetching patient:', patientError);
       throw patientError;
     }
-
-    // Get user email from auth.users
-    const { data: user, error: userError } = await supabase.auth.admin.getUserById(patient_id);
     
-    if (userError) {
-      console.error('Error fetching user:', userError);
-      throw userError;
+    recipientProfile = patient;
+  }
+
+  // Get user email from auth.users
+  const { data: user, error: userError } = await supabase.auth.admin.getUserById(recipientId);
+  
+  if (userError) {
+    console.error('Error fetching user:', userError);
+    throw userError;
+  }
+
+  recipientEmail = user.user.email;
+
+  let title, message, emailSubject, emailContent;
+
+  if (psychologist_id) {
+    // Notifications for psychologist
+    switch (status) {
+      case 'scheduled':
+        title = 'Reagendamento Aceito';
+        message = `O paciente aceitou sua proposta de reagendamento para ${proposed_date}.`;
+        emailSubject = 'Reagendamento aceito - Soliv';
+        emailContent = `
+          <h2>Reagendamento Aceito</h2>
+          <p>Olá ${recipientProfile?.full_name || 'Doutor(a)'},</p>
+          <p>O paciente aceitou sua proposta de reagendamento.</p>
+          <ul>
+            <li><strong>Nova data confirmada:</strong> ${proposed_date}</li>
+          </ul>
+          <p>A consulta está confirmada para o novo horário.</p>
+          <p>Atenciosamente,<br>Equipe Soliv</p>
+        `;
+        break;
+      
+      case 'declined':
+        title = 'Reagendamento Recusado';
+        message = `O paciente recusou sua proposta de reagendamento.`;
+        emailSubject = 'Reagendamento recusado - Soliv';
+        emailContent = `
+          <h2>Reagendamento Recusado</h2>
+          <p>Olá ${recipientProfile?.full_name || 'Doutor(a)'},</p>
+          <p>Infelizmente o paciente recusou sua proposta de reagendamento para ${proposed_date}.</p>
+          <p>A consulta foi cancelada definitivamente.</p>
+          <p>Atenciosamente,<br>Equipe Soliv</p>
+        `;
+        break;
+      
+      default:
+        throw new Error('Invalid status for psychologist notification');
     }
-
-    let title, message, emailSubject, emailContent;
-
+  } else {
+    // Notifications for patient
     switch (status) {
       case 'scheduled':
         title = 'Consulta Confirmada';
@@ -62,7 +130,7 @@ serve(async (req) => {
         emailSubject = 'Consulta confirmada - Soliv';
         emailContent = `
           <h2>Consulta Confirmada</h2>
-           <p>Olá ${patient?.full_name || 'Paciente'},</p>
+           <p>Olá ${recipientProfile?.full_name || 'Paciente'},</p>
           <p>Sua consulta foi confirmada!</p>
           <ul>
             <li><strong>Psicólogo:</strong> ${psychologist_name}</li>
@@ -79,7 +147,7 @@ serve(async (req) => {
         emailSubject = 'Consulta recusada - Soliv';
         emailContent = `
           <h2>Consulta Recusada</h2>
-           <p>Olá ${patient?.full_name || 'Paciente'},</p>
+           <p>Olá ${recipientProfile?.full_name || 'Paciente'},</p>
           <p>Infelizmente sua consulta agendada para ${appointment_date} com ${psychologist_name} foi recusada.</p>
           <p>Não se preocupe! Você pode agendar uma nova consulta com outro psicólogo disponível em nossa plataforma.</p>
           <p>Atenciosamente,<br>Equipe Soliv</p>
@@ -92,7 +160,7 @@ serve(async (req) => {
         emailSubject = 'Nova proposta de horário - Soliv';
         emailContent = `
           <h2>Nova Proposta de Horário</h2>
-          <p>Olá ${patient?.full_name || 'Paciente'},</p>
+          <p>Olá ${recipientProfile?.full_name || 'Paciente'},</p>
           <p>O psicólogo ${psychologist_name} não pôde confirmar sua consulta para ${appointment_date}, mas sugeriu um novo horário:</p>
           <ul>
             <li><strong>Novo horário proposto:</strong> ${proposed_date}</li>
@@ -104,32 +172,43 @@ serve(async (req) => {
         break;
       
       default:
-        throw new Error('Invalid status for notification');
+        throw new Error('Invalid status for patient notification');
     }
+  }
 
-    // Create in-app notification
+  // Create in-app notification
+  const notificationData: any = {
+    appointment_id,
+    title,
+    message,
+    status: 'unread'
+  };
+
+  // Add recipient based on who should receive the notification
+  if (psychologist_id) {
+    // For psychologists, we need to add psychologist_id field or use a different table
+    // Since notifications table is for patients, we'll skip in-app notification for psychologists for now
+    // and just send email
+  } else {
+    notificationData.patient_id = patient_id;
+    
     const { error: notificationError } = await supabase
       .from('notifications')
-      .insert({
-        patient_id,
-        appointment_id,
-        title,
-        message,
-        status: 'unread'
-      });
+      .insert(notificationData);
 
     if (notificationError) {
       console.error('Error creating notification:', notificationError);
       throw notificationError;
     }
+  }
 
-    // Send email notification
-    const { error: emailError } = await resend.emails.send({
-      from: 'Soliv <notifications@soliv.app>',
-      to: [user.user.email],
-      subject: emailSubject,
-      html: emailContent,
-    });
+  // Send email notification
+  const { error: emailError } = await resend.emails.send({
+    from: 'Soliv <notifications@soliv.app>',
+    to: [recipientEmail],
+    subject: emailSubject,
+    html: emailContent,
+  });
 
     if (emailError) {
       console.error('Error sending email:', emailError);

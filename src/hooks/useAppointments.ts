@@ -209,6 +209,49 @@ export const useAppointments = () => {
     }
   };
 
+  const respondToReschedule = async (appointmentId: string, accept: boolean) => {
+    try {
+      setLoading(true);
+      const status = accept ? 'scheduled' : 'declined';
+      
+      const { data, error } = await supabase.functions.invoke('psychologist-schedule', {
+        body: {
+          appointmentId,
+          status,
+          action: 'respond_reschedule'
+        }
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: 'Sucesso',
+        description: data.message || (accept ? 'Reagendamento aceito com sucesso!' : 'Reagendamento recusado com sucesso!'),
+      });
+      
+      await fetchAppointments();
+      return data.appointment;
+    } catch (error: any) {
+      console.error('Error responding to reschedule:', error);
+      toast({
+        title: 'Erro',
+        description: error.message || 'Erro ao responder reagendamento',
+        variant: 'destructive',
+      });
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const acceptRescheduleProposal = async (appointmentId: string) => {
+    return respondToReschedule(appointmentId, true);
+  };
+
+  const declineRescheduleProposal = async (appointmentId: string) => {
+    return respondToReschedule(appointmentId, false);
+  };
+
   useEffect(() => {
     fetchAppointments();
     fetchPsychologists();
@@ -222,5 +265,7 @@ export const useAppointments = () => {
     fetchPsychologists,
     createAppointment,
     fetchAppointmentHistory,
+    acceptRescheduleProposal,
+    declineRescheduleProposal,
   };
 };

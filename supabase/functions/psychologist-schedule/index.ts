@@ -33,18 +33,24 @@ serve(async (req) => {
       throw new Error('Invalid authentication');
     }
 
-    // Verify user is a psychologist
+    // Get user profile to check user type
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('user_type')
       .eq('user_id', user.id)
       .single();
 
-    if (profileError || !profile || profile.user_type !== 'psychologist') {
-      throw new Error('Access denied. Psychologist access required.');
+    if (profileError || !profile) {
+      throw new Error('User profile not found.');
     }
 
+    const userType = profile.user_type;
+
+    // Only psychologists can access GET endpoints (view appointments)
     if (req.method === 'GET') {
+      if (userType !== 'psychologist') {
+        throw new Error('Access denied. Psychologist access required for viewing appointments.');
+      }
       const url = new URL(req.url);
       const action = url.searchParams.get('action');
 
@@ -243,23 +249,47 @@ serve(async (req) => {
       sessionSummary, 
       proposedScheduledAt, 
       proposalNotes,
-      rescheduleResponse 
+      rescheduleResponse,
+      action // New field to identify the action type
     } = await req.json();
 
     if (!appointmentId) {
       throw new Error('Appointment ID is required');
     }
 
+    // Check permissions based on user type and action
+    if (userType === 'patient') {
+      // Patients can only respond to reschedule proposals
+      if (action !== 'respond_reschedule') {
+        throw new Error('Access denied. Patients can only respond to reschedule proposals.');
+      }
+      if (!['scheduled', 'declined'].includes(status)) {
+        throw new Error('Invalid status for patient response. Must be "scheduled" or "declined".');
+      }
+    } else if (userType === 'psychologist') {
+      // Psychologists can perform all actions
+      // No additional validation needed
+    } else {
+      throw new Error('Access denied. Invalid user type.');
+    }
+
     // Get appointment details for notifications
-    const { data: appointment, error: appointmentError } = await supabase
+    let appointmentQuery = supabase
       .from('appointments')
       .select(`
         *,
         psychologists!inner(full_name)
       `)
-      .eq('id', appointmentId)
-      .eq('psychologist_id', user.id)
-      .single();
+      .eq('id', appointmentId);
+
+    // Add user-specific filtering
+    if (userType === 'psychologist') {
+      appointmentQuery = appointmentQuery.eq('psychologist_id', user.id);
+    } else if (userType === 'patient') {
+      appointmentQuery = appointmentQuery.eq('patient_id', user.id);
+    }
+
+    const { data: appointment, error: appointmentError } = await appointmentQuery.single();
 
     if (appointmentError) {
       console.error('Error fetching appointment:', appointmentError);
@@ -272,11 +302,20 @@ serve(async (req) => {
     if (proposedScheduledAt) updateData.proposed_scheduled_at = proposedScheduledAt;
     if (proposalNotes) updateData.proposal_notes = proposalNotes;
 
-    const { data: updatedAppointment, error } = await supabase
+    // Build update query with appropriate user filtering
+    let updateQuery = supabase
       .from('appointments')
       .update(updateData)
-      .eq('id', appointmentId)
-      .eq('psychologist_id', user.id) // Ensure psychologist can only update their own appointments
+      .eq('id', appointmentId);
+
+    // Add user-specific filtering
+    if (userType === 'psychologist') {
+      updateQuery = updateQuery.eq('psychologist_id', user.id);
+    } else if (userType === 'patient') {
+      updateQuery = updateQuery.eq('patient_id', user.id);
+    }
+
+    const { data: updatedAppointment, error } = await updateQuery
       .select()
       .single();
 
@@ -285,25 +324,60 @@ serve(async (req) => {
       throw error;
     }
 
-    // Send notification to patient if status changed (but not for reschedule responses)
-    if (status && !rescheduleResponse && ['scheduled', 'declined', 'reschedule_proposed'].includes(status)) {
+    // Send notifications based on who made the change
+    if (status && ['scheduled', 'declined', 'reschedule_proposed'].includes(status)) {
       try {
-        const notificationData = {
-          patient_id: appointment.patient_id,
-          appointment_id: appointmentId,
-          status: status,
-          psychologist_name: appointment.psychologists.full_name,
-          appointment_date: new Date(appointment.scheduled_at).toLocaleString('pt-BR'),
-          proposed_date: proposedScheduledAt ? new Date(proposedScheduledAt).toLocaleString('pt-BR') : null,
-          proposal_notes: proposalNotes
-        };
+        let notificationData;
+        
+        if (userType === 'psychologist' && !rescheduleResponse) {
+          // Psychologist action - notify patient
+          notificationData = {
+            patient_id: appointment.patient_id,
+            appointment_id: appointmentId,
+            status: status,
+            psychologist_name: appointment.psychologists.full_name,
+            appointment_date: new Date(appointment.scheduled_at).toLocaleString('pt-BR'),
+            proposed_date: proposedScheduledAt ? new Date(proposedScheduledAt).toLocaleString('pt-BR') : null,
+            proposal_notes: proposalNotes
+          };
+        } else if (userType === 'patient' && action === 'respond_reschedule') {
+          // Patient response - notify psychologist
+          notificationData = {
+            psychologist_id: appointment.psychologist_id,
+            appointment_id: appointmentId,
+            status: status,
+            patient_response: status === 'scheduled' ? 'accepted' : 'declined',
+            appointment_date: new Date(appointment.scheduled_at).toLocaleString('pt-BR'),
+            proposed_date: appointment.proposed_scheduled_at ? new Date(appointment.proposed_scheduled_at).toLocaleString('pt-BR') : null
+          };
+        }
 
-        await supabase.functions.invoke('send-appointment-notification', {
-          body: notificationData
-        });
+        if (notificationData) {
+          await supabase.functions.invoke('send-appointment-notification', {
+            body: notificationData
+          });
+        }
       } catch (notificationError) {
         console.error('Error sending notification:', notificationError);
         // Don't fail the request if notification fails
+      }
+    }
+
+    // Generate appropriate success message
+    let message = 'Consulta atualizada com sucesso';
+    if (userType === 'psychologist') {
+      if (status === 'reschedule_proposed') {
+        message = 'Proposta de reagendamento enviada com sucesso';
+      } else if (status === 'scheduled') {
+        message = 'Consulta confirmada com sucesso';
+      } else if (status === 'declined') {
+        message = 'Consulta recusada com sucesso';
+      }
+    } else if (userType === 'patient' && action === 'respond_reschedule') {
+      if (status === 'scheduled') {
+        message = 'Reagendamento aceito com sucesso';
+      } else if (status === 'declined') {
+        message = 'Reagendamento recusado com sucesso';
       }
     }
 
@@ -311,9 +385,7 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         appointment: updatedAppointment,
-        message: status === 'reschedule_proposed' 
-          ? 'Proposta de reagendamento enviada com sucesso'
-          : 'Consulta atualizada com sucesso'
+        message: message
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

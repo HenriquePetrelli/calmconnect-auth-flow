@@ -68,11 +68,11 @@ export const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = (
 
   const handleRescheduleResponse = async (accept: boolean) => {
     try {
-      const { error } = await supabase.functions.invoke('psychologist-schedule', {
+      const { data, error } = await supabase.functions.invoke('psychologist-schedule', {
         body: {
           appointmentId: appointment.id,
           status: accept ? 'scheduled' : 'declined',
-          rescheduleResponse: true
+          action: 'respond_reschedule'
         }
       });
 
