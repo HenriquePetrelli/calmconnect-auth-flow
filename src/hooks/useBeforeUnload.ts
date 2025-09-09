@@ -7,6 +7,10 @@ export const useBeforeUnload = (requestId: string | null, patientId: string) => 
 
     const handleBeforeUnload = async () => {
       try {
+        // Get current session for authorization
+        const { data: session } = await supabase.auth.getSession();
+        const token = session.session?.access_token;
+
         // Try to delete the emergency request before unload
         const response = await fetch(
           `https://ihrrgmmsfuvlasmzdmwf.supabase.co/functions/v1/emergency-cleanup`,
@@ -14,6 +18,8 @@ export const useBeforeUnload = (requestId: string | null, patientId: string) => 
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
+              'Authorization': token ? `Bearer ${token}` : '',
+              'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlocnJnbW1zZnV2bGFzbXpkbXdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1NDMzMDcsImV4cCI6MjA2OTExOTMwN30.6hRDCL5alu-Bs4kT4jKYJW3G3zmeBJDZB5udruQzOFU'
             },
             body: JSON.stringify({
               request_id: requestId,
@@ -28,9 +34,14 @@ export const useBeforeUnload = (requestId: string | null, patientId: string) => 
       } catch (error) {
         // Fallback to sendBeacon if fetch fails
         try {
+          // Get session for sendBeacon fallback
+          const { data: session } = await supabase.auth.getSession();
+          const token = session.session?.access_token;
+          
           const data = JSON.stringify({
             request_id: requestId,
-            patient_id: patientId
+            patient_id: patientId,
+            authorization: token
           });
 
           navigator.sendBeacon(

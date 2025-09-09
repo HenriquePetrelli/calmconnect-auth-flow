@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import CancelConfirmationModal from "@/components/sos/CancelConfirmationModal";
 import SupportiveMessages from "@/components/sos/SupportiveMessages";
 import { supabase } from "@/integrations/supabase/client";
-import { useBeforeUnload } from "@/hooks/useBeforeUnload";
+import { useSOSCleanup } from "@/hooks/useSOSCleanup";
 import { useEmergencySOS } from "@/hooks/useEmergencySOS";
 
 const SOS = () => {
@@ -18,8 +18,8 @@ const SOS = () => {
   const [userId, setUserId] = useState<string>('');
   const { cancelRequest } = useEmergencySOS();
 
-  // Enable automatic cleanup on browser close/tab switch
-  useBeforeUnload(requestId, userId);
+  // Enable automatic cleanup on browser close/tab switch/navigation
+  useSOSCleanup({ requestId, enabled: !!requestId });
 
   // Fetch latest emergency request for current user and subscribe for acceptance
   useEffect(() => {

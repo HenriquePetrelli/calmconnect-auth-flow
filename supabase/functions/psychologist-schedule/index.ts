@@ -243,6 +243,18 @@ serve(async (req) => {
 
   if (req.method === 'POST' || req.method === 'PUT') {
     // Handle both POST (for rescheduling) and PUT (for other updates)
+    let requestBody;
+    try {
+      const rawBody = await req.text();
+      if (!rawBody || rawBody.trim() === '') {
+        throw new Error('Empty request body');
+      }
+      requestBody = JSON.parse(rawBody);
+    } catch (parseError) {
+      console.error('JSON parsing failed:', parseError);
+      throw new Error(`Invalid request body: ${parseError.message}`);
+    }
+
     const { 
       appointmentId, 
       status, 
@@ -251,7 +263,7 @@ serve(async (req) => {
       proposalNotes,
       rescheduleResponse,
       action // New field to identify the action type
-    } = await req.json();
+    } = requestBody;
 
     if (!appointmentId) {
       throw new Error('Appointment ID is required');

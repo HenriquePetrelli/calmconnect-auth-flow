@@ -153,13 +153,69 @@ serve(async (req) => {
 
     if (req.method === 'PUT') {
       // Accept/decline emergency request
-      const { requestId, action } = await req.json();
+      let requestBody;
+      try {
+        const rawBody = await req.text();
+        if (!rawBody || rawBody.trim() === '') {
+          throw new Error('Empty request body');
+        }
+        requestBody = JSON.parse(rawBody);
+      } catch (parseError) {
+        console.error('JSON parsing failed:', parseError);
+        throw new Error(`Invalid request body: ${parseError.message}`);
+      }
+
+      const { requestId, action } = requestBody;
 
       if (!requestId || !action || !['accept', 'decline'].includes(action)) {
         throw new Error('Invalid request parameters');
       }
 
       if (action === 'accept') {
+        // First check if the request still exists and is pending
+        const { data: existingRequest, error: checkError } = await supabase
+          .from('emergency_requests')
+          .select('id, status, accepted_by')
+          .eq('id', requestId)
+          .maybeSingle();
+
+        if (checkError) {
+          console.error('Error checking emergency request:', checkError);
+          throw new Error('Erro ao verificar solicitação de emergência');
+        }
+
+        if (!existingRequest) {
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: 'Esta solicitação de emergência não existe mais ou foi cancelada pelo paciente',
+              code: 'REQUEST_NOT_FOUND'
+            }),
+            {
+              status: 404,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            }
+          );
+        }
+
+        if (existingRequest.status !== 'pending') {
+          const statusMessage = existingRequest.status === 'accepted' 
+            ? 'Esta solicitação já foi aceita por outro psicólogo'
+            : `Esta solicitação não está mais disponível (status: ${existingRequest.status})`;
+          
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: statusMessage,
+              code: 'REQUEST_NOT_AVAILABLE'
+            }),
+            {
+              status: 409,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            }
+          );
+        }
+
         // Accept the emergency request
         const { data: updatedRequest, error } = await supabase
           .from('emergency_requests')
@@ -175,11 +231,37 @@ serve(async (req) => {
 
         if (error) {
           console.error('Error accepting emergency request:', error);
+          
+          // Handle specific database errors
+          if (error.code === 'PGRST116') {
+            return new Response(
+              JSON.stringify({
+                success: false,
+                error: 'Esta solicitação não está mais disponível - pode ter sido aceita por outro psicólogo',
+                code: 'REQUEST_ALREADY_TAKEN'
+              }),
+              {
+                status: 409,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              }
+            );
+          }
+          
           throw error;
         }
 
         if (!updatedRequest) {
-          throw new Error('Emergency request no longer available');
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: 'Solicitação não pôde ser aceita - pode ter sido cancelada pelo paciente',
+              code: 'REQUEST_UNAVAILABLE'
+            }),
+            {
+              status: 409,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            }
+          );
         }
 
         return new Response(

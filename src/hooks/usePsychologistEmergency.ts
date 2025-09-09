@@ -55,6 +55,36 @@ export const usePsychologistEmergency = () => {
 
       if (error) throw error;
 
+      // Check for specific error codes from the updated function
+      if (data && !data.success) {
+        let errorMessage = data.error || 'Erro ao aceitar solicitação';
+        
+        switch (data.code) {
+          case 'REQUEST_NOT_FOUND':
+            errorMessage = 'Esta solicitação foi cancelada pelo paciente';
+            break;
+          case 'REQUEST_NOT_AVAILABLE':
+            errorMessage = 'Esta solicitação já foi aceita por outro psicólogo';
+            break;
+          case 'REQUEST_ALREADY_TAKEN':
+            errorMessage = 'Outro psicólogo já aceitou esta solicitação';
+            break;
+          case 'REQUEST_UNAVAILABLE':
+            errorMessage = 'Esta solicitação não está mais disponível';
+            break;
+        }
+        
+        toast({
+          title: 'Informação',
+          description: errorMessage,
+          variant: 'destructive',
+        });
+        
+        // Refresh the list to show current state
+        fetchEmergencyRequests();
+        return null;
+      }
+
       toast({
         title: 'Sucesso',
         description: data.message,
