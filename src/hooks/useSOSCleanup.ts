@@ -20,7 +20,7 @@ export const useSOSCleanup = ({ requestId, enabled = true }: SOSCleanupOptions) 
     let isCleanedUp = false;
 
     const performCleanup = async () => {
-      if (isCleanedUp) return;
+      if (isCleanedUp || !requestId) return;
       
       try {
         isCleanedUp = true;
@@ -49,11 +49,12 @@ export const useSOSCleanup = ({ requestId, enabled = true }: SOSCleanupOptions) 
       }
     };
 
-    // Cleanup when page loses focus
+    // Cleanup when page loses focus (with debouncing)
+    let blurTimeoutId: ReturnType<typeof setTimeout>;
     const handlePageBlur = () => {
-      // Small delay to avoid false positives from dropdown menus, etc.
-      setTimeout(() => {
-        if (!document.hasFocus() && document.visibilityState === 'hidden') {
+      clearTimeout(blurTimeoutId);
+      blurTimeoutId = setTimeout(() => {
+        if (!document.hasFocus() && document.visibilityState === 'hidden' && !isCleanedUp) {
           performCleanup();
         }
       }, 1000);

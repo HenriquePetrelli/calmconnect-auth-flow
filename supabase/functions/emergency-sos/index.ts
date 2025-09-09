@@ -58,6 +58,28 @@ serve(async (req) => {
     }
 
     if (req.method === 'POST') {
+      // Check if user already has pending emergency request
+      const { data: existingRequest } = await supabase
+        .from('emergency_requests')
+        .select('id')
+        .eq('patient_id', user.id)
+        .in('status', ['pending', 'waiting'])
+        .limit(1)
+        .maybeSingle();
+
+      if (existingRequest) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            emergency_request_id: existingRequest.id,
+            message: 'Você já tem uma solicitação de emergência ativa. Aguardando resposta dos psicólogos.'
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
       // Create emergency request
       const { data: emergencyRequest, error: insertError } = await supabase
         .from('emergency_requests')
@@ -69,9 +91,11 @@ serve(async (req) => {
         .single();
 
       if (insertError) {
-        console.error('Error creating emergency request:', insertError.message);
-        throw insertError;
+        console.error('Error creating emergency request:', insertError);
+        throw new Error(`Erro ao criar solicitação: ${insertError.message}`);
       }
+
+      console.log('Emergency request created successfully:', emergencyRequest.id);
 
       // Get online psychologists (for now, we'll get all psychologists)
       const { data: psychologists, error: psychError } = await supabase

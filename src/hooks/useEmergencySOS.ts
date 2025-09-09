@@ -23,15 +23,29 @@ export const useEmergencySOS = () => {
   const createEmergencyRequest = async () => {
     try {
       setLoading(true);
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+
       const { data, error } = await supabase.functions.invoke('emergency-sos', {
-        body: {},
+        body: { patient_id: user.id },
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Edge function error:', error);
+        throw error;
+      }
+      
+      if (!data?.success || !data?.emergency_request_id) {
+        throw new Error(data?.message || 'Erro ao criar solicitação de emergência');
+      }
       
       toast({
         title: 'SOS Ativado',
         description: data.message || 'Solicitação de emergência enviada',
+        duration: 4000,
       });
       
       // Start polling for status updates
@@ -40,11 +54,16 @@ export const useEmergencySOS = () => {
       return data.emergency_request_id;
     } catch (error: any) {
       console.error('Error creating emergency request:', error);
+      
+      const errorMessage = error.message || 'Erro ao enviar solicitação de emergência';
+      
       toast({
-        title: 'Erro',
-        description: error.message || 'Erro ao enviar solicitação de emergência',
+        title: 'Erro na Solicitação',
+        description: errorMessage,
         variant: 'destructive',
+        duration: 5000,
       });
+      
       throw error;
     } finally {
       setLoading(false);
