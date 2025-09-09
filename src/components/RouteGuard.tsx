@@ -28,6 +28,7 @@ export const ROUTE_PERMISSIONS = {
     '/profile',
     '/account-settings',
     '/appointments',
+    '/notifications',
     '/statistics',
     '/progress',
     '/subscription-plans',
