@@ -30,6 +30,8 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
         return 'bg-red-100 text-red-800 border-red-200';
       case 'declined':
         return 'bg-red-100 text-red-800 border-red-200';
+      case 'reschedule_proposed':
+        return 'bg-purple-100 text-purple-800 border-purple-200';
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200';
     }
@@ -49,6 +51,8 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
         return 'Cancelado';
       case 'declined':
         return 'Recusado';
+      case 'reschedule_proposed':
+        return 'Reagendamento proposto';
       default:
         return status;
     }

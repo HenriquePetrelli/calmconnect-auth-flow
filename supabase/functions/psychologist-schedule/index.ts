@@ -235,42 +235,91 @@ serve(async (req) => {
       );
     }
 
-    if (req.method === 'PUT') {
-      // Update appointment status or add session summary
-      const { appointmentId, status, sessionSummary } = await req.json();
+  if (req.method === 'PUT') {
+    // Update appointment status or add session summary
+    const { 
+      appointmentId, 
+      status, 
+      sessionSummary, 
+      proposedScheduledAt, 
+      proposalNotes,
+      rescheduleResponse 
+    } = await req.json();
 
-      if (!appointmentId) {
-        throw new Error('Appointment ID is required');
-      }
-
-      const updateData: any = {};
-      if (status) updateData.status = status;
-      if (sessionSummary) updateData.session_summary = sessionSummary;
-
-      const { data: updatedAppointment, error } = await supabase
-        .from('appointments')
-        .update(updateData)
-        .eq('id', appointmentId)
-        .eq('psychologist_id', user.id) // Ensure psychologist can only update their own appointments
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error updating appointment:', error);
-        throw error;
-      }
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          appointment: updatedAppointment,
-          message: 'Consulta atualizada com sucesso'
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
+    if (!appointmentId) {
+      throw new Error('Appointment ID is required');
     }
+
+    // Get appointment details for notifications
+    const { data: appointment, error: appointmentError } = await supabase
+      .from('appointments')
+      .select(`
+        *,
+        psychologists!inner(full_name)
+      `)
+      .eq('id', appointmentId)
+      .eq('psychologist_id', user.id)
+      .single();
+
+    if (appointmentError) {
+      console.error('Error fetching appointment:', appointmentError);
+      throw appointmentError;
+    }
+
+    const updateData: any = {};
+    if (status) updateData.status = status;
+    if (sessionSummary) updateData.session_summary = sessionSummary;
+    if (proposedScheduledAt) updateData.proposed_scheduled_at = proposedScheduledAt;
+    if (proposalNotes) updateData.proposal_notes = proposalNotes;
+
+    const { data: updatedAppointment, error } = await supabase
+      .from('appointments')
+      .update(updateData)
+      .eq('id', appointmentId)
+      .eq('psychologist_id', user.id) // Ensure psychologist can only update their own appointments
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating appointment:', error);
+      throw error;
+    }
+
+    // Send notification to patient if status changed (but not for reschedule responses)
+    if (status && !rescheduleResponse && ['scheduled', 'declined', 'reschedule_proposed'].includes(status)) {
+      try {
+        const notificationData = {
+          patient_id: appointment.patient_id,
+          appointment_id: appointmentId,
+          status: status,
+          psychologist_name: appointment.psychologists.full_name,
+          appointment_date: new Date(appointment.scheduled_at).toLocaleString('pt-BR'),
+          proposed_date: proposedScheduledAt ? new Date(proposedScheduledAt).toLocaleString('pt-BR') : null,
+          proposal_notes: proposalNotes
+        };
+
+        await supabase.functions.invoke('send-appointment-notification', {
+          body: notificationData
+        });
+      } catch (notificationError) {
+        console.error('Error sending notification:', notificationError);
+        // Don't fail the request if notification fails
+      }
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        appointment: updatedAppointment,
+        message: status === 'reschedule_proposed' 
+          ? 'Proposta de reagendamento enviada com sucesso'
+          : 'Consulta atualizada com sucesso'
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
+  }
 
     return new Response('Method not allowed', { status: 405, headers: corsHeaders });
 

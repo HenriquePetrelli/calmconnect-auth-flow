@@ -9,6 +9,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
+import { RejectAppointmentModal } from './RejectAppointmentModal';
+
 interface Appointment {
   id: string;
   patient_id: string;
@@ -28,6 +30,7 @@ const PendingAppointments = () => {
   const [pendingAppointments, setPendingAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingAppointments, setProcessingAppointments] = useState<Set<string>>(new Set());
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null);
 
   // Fetch pending appointments that are properly connected to the hook
   const fetchPendingAppointments = async () => {
@@ -68,17 +71,52 @@ const PendingAppointments = () => {
   };
 
   const handleDecline = async (appointmentId: string) => {
-    setProcessingAppointments(prev => new Set(prev).add(appointmentId));
+    setSelectedAppointmentId(appointmentId);
+  };
+
+  const handleRejectOnly = async () => {
+    if (!selectedAppointmentId) return;
+    
+    setProcessingAppointments(prev => new Set(prev).add(selectedAppointmentId));
     try {
-      await declineAppointment(appointmentId);
-      // Remove from pending list
-      setPendingAppointments(prev => prev.filter(a => a.id !== appointmentId));
+      await declineAppointment(selectedAppointmentId);
+      setPendingAppointments(prev => prev.filter(a => a.id !== selectedAppointmentId));
+      setSelectedAppointmentId(null);
     } catch (error) {
       console.error('Error declining appointment:', error);
     } finally {
       setProcessingAppointments(prev => {
         const newSet = new Set(prev);
-        newSet.delete(appointmentId);
+        newSet.delete(selectedAppointmentId);
+        return newSet;
+      });
+    }
+  };
+
+  const handleRescheduleProposal = async (scheduledAt: string, notes: string) => {
+    if (!selectedAppointmentId) return;
+    
+    setProcessingAppointments(prev => new Set(prev).add(selectedAppointmentId));
+    try {
+      const response = await supabase.functions.invoke('psychologist-schedule', {
+        body: {
+          appointmentId: selectedAppointmentId,
+          status: 'reschedule_proposed',
+          proposedScheduledAt: scheduledAt,
+          proposalNotes: notes
+        }
+      });
+
+      if (response.error) throw response.error;
+
+      setPendingAppointments(prev => prev.filter(a => a.id !== selectedAppointmentId));
+      setSelectedAppointmentId(null);
+    } catch (error) {
+      console.error('Error proposing reschedule:', error);
+    } finally {
+      setProcessingAppointments(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(selectedAppointmentId);
         return newSet;
       });
     }
@@ -214,41 +252,51 @@ const PendingAppointments = () => {
   }
 
   return (
-    <div>
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-amber-600" />
-            Consultas Pendentes de Confirmação
-            {pendingAppointments.length > 0 && (
-              <Badge variant="secondary" className="ml-auto bg-amber-100 text-amber-800">
-                {pendingAppointments.length}
-              </Badge>
-            )}
-          </CardTitle>
-        </CardHeader>
-      </Card>
-
-      {pendingAppointments.length === 0 ? (
+    <>
+      <div>
         <Card>
-          <CardContent className="p-6 text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-8 h-8 text-green-600" />
-            </div>
-            <h3 className="text-lg font-medium text-foreground mb-2">
-              Nenhuma consulta pendente
-            </h3>
-            <p className="text-muted-foreground">
-              Todas as suas consultas foram confirmadas ou você não tem solicitações aguardando resposta.
-            </p>
-          </CardContent>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-600" />
+              Consultas Pendentes de Confirmação
+              {pendingAppointments.length > 0 && (
+                <Badge variant="secondary" className="ml-auto bg-amber-100 text-amber-800">
+                  {pendingAppointments.length}
+                </Badge>
+              )}
+            </CardTitle>
+          </CardHeader>
         </Card>
-      ) : (
-        <div className="space-y-3">
-          {pendingAppointments.map((appointment) => renderPendingCard(appointment))}
-        </div>
-      )}
-    </div>
+
+        {pendingAppointments.length === 0 ? (
+          <Card>
+            <CardContent className="p-6 text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-8 h-8 text-green-600" />
+              </div>
+              <h3 className="text-lg font-medium text-foreground mb-2">
+                Nenhuma consulta pendente
+              </h3>
+              <p className="text-muted-foreground">
+                Todas as suas consultas foram confirmadas ou você não tem solicitações aguardando resposta.
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {pendingAppointments.map((appointment) => renderPendingCard(appointment))}
+          </div>
+        )}
+      </div>
+
+      <RejectAppointmentModal
+        isOpen={!!selectedAppointmentId}
+        onClose={() => setSelectedAppointmentId(null)}
+        onReject={handleRejectOnly}
+        onReschedule={handleRescheduleProposal}
+        loading={selectedAppointmentId ? processingAppointments.has(selectedAppointmentId) : false}
+      />
+    </>
   );
 };
 

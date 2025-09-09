@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Calendar } from 'lucide-react';
 import { AppointmentsList } from './AppointmentsList';
+import { AppointmentDetailsModal } from './AppointmentDetailsModal';
 import { useAppointments, Appointment } from '@/hooks/useAppointments';
 
 export const UpcomingAppointments: React.FC = () => {
@@ -14,7 +15,7 @@ export const UpcomingAppointments: React.FC = () => {
     const upcoming = appointments.filter(appointment => {
       const appointmentDate = new Date(appointment.scheduled_at);
       return appointmentDate >= now && 
-             ['confirmed', 'pending', 'scheduled'].includes(appointment.status);
+             ['pending', 'scheduled', 'reschedule_proposed'].includes(appointment.status);
     });
     
     // Sort by date (earliest first)
@@ -25,9 +26,10 @@ export const UpcomingAppointments: React.FC = () => {
     setUpcomingAppointments(upcoming);
   }, [appointments]);
 
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+
   const handleViewDetails = (appointment: Appointment) => {
-    // TODO: Implement appointment details modal
-    console.log('View details for appointment:', appointment);
+    setSelectedAppointment(appointment);
   };
 
   if (loading) {
@@ -54,21 +56,33 @@ export const UpcomingAppointments: React.FC = () => {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Calendar className="text-primary" size={20} />
-          Próximas Consultas
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <AppointmentsList
-          appointments={upcomingAppointments}
-          showStatus={true}
-          emptyMessage="Nenhuma consulta agendada"
-          onViewDetails={handleViewDetails}
-        />
-      </CardContent>
-    </Card>
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="text-primary" size={20} />
+            Próximas Consultas
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <AppointmentsList
+            appointments={upcomingAppointments}
+            showStatus={true}
+            emptyMessage="Nenhuma consulta agendada"
+            onViewDetails={handleViewDetails}
+          />
+        </CardContent>
+      </Card>
+
+      <AppointmentDetailsModal
+        appointment={selectedAppointment}
+        isOpen={!!selectedAppointment}
+        onClose={() => setSelectedAppointment(null)}
+        onUpdate={() => {
+          // Refresh appointments after updates
+          window.location.reload();
+        }}
+      />
+    </>
   );
 };

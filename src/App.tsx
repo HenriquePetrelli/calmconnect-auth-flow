@@ -22,6 +22,7 @@ import SOS from "./pages/SOS";
 import Profile from "./pages/Profile";
 import AccountSettings from "./pages/AccountSettings";
 import Appointments from "./pages/Appointments";
+import Notifications from "./pages/Notifications";
 import Statistics from "./pages/Statistics";
 import Progress from "./pages/Progress";
 import SubscriptionPlans from "./pages/SubscriptionPlans";
@@ -138,6 +139,11 @@ const App = () => {
                   <Route path="/appointments" element={
                     <RouteGuard allowedUserTypes={['patient']}>
                       <Appointments />
+                    </RouteGuard>
+                  } />
+                  <Route path="/notifications" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <Notifications />
                     </RouteGuard>
                   } />
                   <Route path="/statistics" element={

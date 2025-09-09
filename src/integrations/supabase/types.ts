@@ -22,6 +22,8 @@ export type Database = {
           id: string
           notes: string | null
           patient_id: string
+          proposal_notes: string | null
+          proposed_scheduled_at: string | null
           psychologist_id: string
           scheduled_at: string
           session_summary: string | null
@@ -36,6 +38,8 @@ export type Database = {
           id?: string
           notes?: string | null
           patient_id: string
+          proposal_notes?: string | null
+          proposed_scheduled_at?: string | null
           psychologist_id: string
           scheduled_at: string
           session_summary?: string | null
@@ -50,6 +54,8 @@ export type Database = {
           id?: string
           notes?: string | null
           patient_id?: string
+          proposal_notes?: string | null
+          proposed_scheduled_at?: string | null
           psychologist_id?: string
           scheduled_at?: string
           session_summary?: string | null
@@ -234,6 +240,54 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      notifications: {
+        Row: {
+          appointment_id: string | null
+          created_at: string | null
+          id: string
+          message: string
+          patient_id: string
+          status: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          appointment_id?: string | null
+          created_at?: string | null
+          id?: string
+          message: string
+          patient_id: string
+          status?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          appointment_id?: string | null
+          created_at?: string | null
+          id?: string
+          message?: string
+          patient_id?: string
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       patient_progress: {
         Row: {

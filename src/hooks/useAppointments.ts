@@ -11,6 +11,8 @@ export interface Appointment {
   notes?: string;
   session_summary?: string;
   rating?: number;
+  proposed_scheduled_at?: string;
+  proposal_notes?: string;
   psychologist: {
     full_name: string;
     specialty?: string;

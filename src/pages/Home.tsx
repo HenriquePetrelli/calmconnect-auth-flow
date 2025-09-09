@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Home, Calendar, User, Waves, Volume2, TrendingUp, Users, Lock } from "lucide-react";
 import FeatureCard from "@/components/FeatureCard";
 import SOSButton from "@/components/SOSButton";
+import { NotificationButton } from "@/components/notifications/NotificationButton";
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -77,6 +78,9 @@ const HomePage = () => {
 
       {/* SOS Button - Floating */}
       <SOSButton />
+
+      {/* Notification Button - Floating */}
+      <NotificationButton />
 
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">

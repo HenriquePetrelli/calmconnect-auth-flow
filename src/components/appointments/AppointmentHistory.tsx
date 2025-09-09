@@ -39,12 +39,12 @@ export const AppointmentHistory = () => {
     switch (status) {
       case 'completed':
         return 'bg-green-100 text-green-800';
-      case 'confirmed':
+      case 'scheduled':
         return 'bg-blue-100 text-blue-800';
       case 'cancelled':
         return 'bg-red-100 text-red-800';
-      case 'scheduled':
-        return 'bg-yellow-100 text-yellow-800';
+      case 'declined':
+        return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -54,18 +54,23 @@ export const AppointmentHistory = () => {
     switch (status) {
       case 'completed':
         return 'Concluída';
-      case 'confirmed':
+      case 'scheduled':
         return 'Confirmada';
       case 'cancelled':
         return 'Cancelada';
-      case 'scheduled':
-        return 'Agendada';
+      case 'declined':
+        return 'Recusada';
       default:
         return status;
     }
   };
 
   const filteredAppointments = appointments.filter((appointment) => {
+    // Only show declined and completed appointments in history
+    const isHistoryAppointment = ['declined', 'completed'].includes(appointment.status);
+    
+    if (!isHistoryAppointment) return false;
+
     const matchesPsychologist = filterPsychologist === 'all' || !filterPsychologist || 
       appointment.psychologist?.full_name?.toLowerCase().includes(filterPsychologist.toLowerCase());
     
