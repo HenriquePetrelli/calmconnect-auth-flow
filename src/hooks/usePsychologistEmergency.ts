@@ -47,6 +47,7 @@ export const usePsychologistEmergency = () => {
     try {
       // Accept the emergency request
       const { data, error } = await supabase.functions.invoke('psychologist-emergency', {
+        method: 'PUT',
         body: {
           requestId,
           action: 'accept'
