@@ -18,9 +18,9 @@ const SOS = () => {
   const [userId, setUserId] = useState<string>('');
   const { cancelRequest } = useEmergencySOS();
 
-  // Enable automatic cleanup only when we have a valid requestId and user
-  // Reset cleanup when requestId changes
-  useSOSCleanup({ requestId: requestId || null, enabled: !!requestId });
+  // Enable automatic cleanup only on page unmount (when user leaves SOS page)
+  // This prevents immediate cleanup when requestId is first set
+  useSOSCleanup({ requestId: requestId || null, enabled: false });
 
   // Fetch latest emergency request for current user and subscribe for acceptance
   useEffect(() => {

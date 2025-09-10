@@ -28,7 +28,7 @@ export const useSOSCleanup = ({ requestId, enabled = true }: SOSCleanupOptions) 
   useEffect(() => {
     const performCleanup = async () => {
       const currentId = currentRequestIdRef.current;
-      if (!currentId || hasCleanedUpRef.current || !enabled) return;
+      if (!currentId || hasCleanedUpRef.current) return;
       
       try {
         hasCleanedUpRef.current = true;
@@ -40,11 +40,11 @@ export const useSOSCleanup = ({ requestId, enabled = true }: SOSCleanupOptions) 
       }
     };
 
-    // Only cleanup on component unmount
+    // Always setup cleanup on component unmount, regardless of enabled flag
     return () => {
       performCleanup();
     };
-  }, [cancelRequest, enabled]); // Remove requestId dependency
+  }, [cancelRequest]); // Remove enabled dependency to always cleanup on unmount
 
   // Manual cleanup function
   const manualCleanup = async () => {
