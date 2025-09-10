@@ -14,20 +14,26 @@ interface SOSCleanupOptions {
 export const useSOSCleanup = ({ requestId, enabled = true }: SOSCleanupOptions) => {
   const { cancelRequest } = useEmergencySOS();
   const hasCleanedUpRef = useRef(false);
+  const currentRequestIdRef = useRef<string | null>(null);
 
+  // Update the current request ID without triggering cleanup
   useEffect(() => {
+    currentRequestIdRef.current = requestId;
     if (!requestId || !enabled) {
       hasCleanedUpRef.current = false;
-      return;
     }
+  }, [requestId, enabled]);
 
+  // Only setup cleanup on mount, not when requestId changes
+  useEffect(() => {
     const performCleanup = async () => {
-      if (hasCleanedUpRef.current) return;
+      const currentId = currentRequestIdRef.current;
+      if (!currentId || hasCleanedUpRef.current || !enabled) return;
       
       try {
         hasCleanedUpRef.current = true;
-        console.log(`Performing SOS cleanup for request: ${requestId}`);
-        await cancelRequest(requestId);
+        console.log(`Performing SOS cleanup for request: ${currentId}`);
+        await cancelRequest(currentId);
       } catch (error) {
         console.error('Error during SOS cleanup:', error);
         hasCleanedUpRef.current = false; // Reset on error to allow retry
@@ -38,7 +44,7 @@ export const useSOSCleanup = ({ requestId, enabled = true }: SOSCleanupOptions) 
     return () => {
       performCleanup();
     };
-  }, [requestId, enabled, cancelRequest]);
+  }, [cancelRequest, enabled]); // Remove requestId dependency
 
   // Manual cleanup function
   const manualCleanup = async () => {
