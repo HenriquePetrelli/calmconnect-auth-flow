@@ -45,7 +45,9 @@ export const usePsychologistEmergency = () => {
   // Accept emergency request
   const acceptEmergencyRequest = async (requestId: string) => {
     try {
-      // Accept the emergency request
+      console.log('🔄 Accepting emergency request:', requestId);
+      
+      // Accept the emergency request using PUT method
       const { data, error } = await supabase.functions.invoke('psychologist-emergency', {
         method: 'PUT',
         body: {
@@ -54,9 +56,14 @@ export const usePsychologistEmergency = () => {
         }
       });
 
-      if (error) throw error;
+      console.log('📋 Response from psychologist-emergency:', { data, error });
 
-      // Check for specific error codes from the updated function
+      if (error) {
+        console.error('❌ Error from psychologist-emergency:', error);
+        throw error;
+      }
+
+      // Check for specific error codes from the function
       if (data && !data.success) {
         let errorMessage = data.error || 'Erro ao aceitar solicitação';
         
@@ -117,10 +124,11 @@ export const usePsychologistEmergency = () => {
       // If no session_id in response, this is an error since psychologist-emergency should create it
       if (!data || !data.session_id) {
         console.error('❌ No session_id returned from psychologist-emergency');
+        console.log('📋 Full response data:', data);
         throw new Error('Falha ao obter ID da sessão - tente novamente');
       }
     } catch (error: any) {
-      console.error('Error accepting emergency request:', error);
+      console.error('❌ Error accepting emergency request:', error);
       toast({
         title: 'Erro',
         description: error.message || 'Erro ao aceitar solicitação',

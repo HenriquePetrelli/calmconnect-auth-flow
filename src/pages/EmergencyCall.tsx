@@ -81,92 +81,23 @@ const EmergencyCall = () => {
             sessionData.session = refreshedSession.session;
           }
           
-          // DEBUG: Log all data being sent
-          const requestBody = {
-            emergency_request_id: requestId,
-            user_type: userTypeFromParams
+          // Get session data from URL parameters (passed from psychologist-emergency function)
+          const sessionId = searchParams.get('session_id');
+          
+          console.log('✅ Session ID from URL:', sessionId);
+          
+          if (!sessionId) {
+            throw new Error('Session ID não encontrado na URL - tente aceitar a emergência novamente');
+          }
+          
+          // Use the session_id directly since it was created by psychologist-emergency
+          const webrtcData = {
+            success: true,
+            session_id: sessionId,
+            stun_servers: ["stun:stun.l.google.com:19302", "stun:global.stun.twilio.com:3478"]
           };
           
-          console.log('🚀 DEBUG - About to call initiate-webrtc function with:');
-          console.log('📦 Request body:', JSON.stringify(requestBody, null, 2));
-          console.log('🔑 Token (first 20 chars):', sessionData.session.access_token?.substring(0, 20) + '...');
-          console.log('📋 Request ID:', requestId);
-          console.log('👤 User type:', userTypeFromParams);
-          console.log('✅ Body is valid JSON:', !!JSON.stringify(requestBody));
-          
-          // First try with direct fetch for better debugging
-          let webrtcData;
-          try {
-            console.log('Attempting direct fetch call...');
-            const fetchResponse = await fetch(
-              'https://ihrrgmmsfuvlasmzdmwf.supabase.co/functions/v1/initiate-webrtc',
-              {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${sessionData.session.access_token}`,
-                  'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlocnJnbW1zZnV2bGFzbXpkbXdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1NDMzMDcsImV4cCI6MjA2OTExOTMwN30.6hRDCL5alu-Bs4kT4jKYJW3G3zmeBJDZB5udruQzOFU'
-                },
-                body: JSON.stringify(requestBody)
-              }
-            );
-
-            console.log('📈 Fetch response status:', fetchResponse.status);
-            console.log('📋 Fetch response headers:', Object.fromEntries(fetchResponse.headers.entries()));
-
-            if (!fetchResponse.ok) {
-              const errorText = await fetchResponse.text();
-              console.error('❌ Fetch error response:', errorText);
-              throw new Error(`HTTP ${fetchResponse.status}: ${errorText}`);
-            }
-
-            webrtcData = await fetchResponse.json();
-            console.log('✅ Direct fetch successful:', webrtcData);
-
-          } catch (fetchError) {
-            console.error('❌ Direct fetch failed:', fetchError);
-            console.log('🔄 Falling back to supabase.functions.invoke...');
-            
-            // Fallback to supabase.functions.invoke
-            const { data: supabaseData, error: webrtcError } = await supabase.functions.invoke('initiate-webrtc', {
-              body: requestBody,
-              headers: {
-                'Authorization': `Bearer ${sessionData.session.access_token}`,
-                'Content-Type': 'application/json'
-              }
-            });
-
-            console.log('📊 Supabase invoke response:', {
-              data: supabaseData,
-              error: webrtcError,
-              hasSessionId: !!supabaseData?.session_id
-            });
-
-            if (webrtcError) {
-              console.error('❌ Supabase invoke also failed:', webrtcError);
-              
-              // Provide user-friendly error messages based on specific error codes
-              if (webrtcError.message?.includes('EMPTY_BODY') || webrtcError.message?.includes('Corpo da requisição inválido')) {
-                throw new Error('Erro de comunicação: dados não enviados corretamente');
-              } else if (webrtcError.message?.includes('INVALID_JSON')) {
-                throw new Error('Erro de formato de dados na comunicação');
-              } else if (webrtcError.message?.includes('MISSING_REQUIRED_FIELDS') || webrtcError.message?.includes('Campos obrigatórios ausentes')) {
-                throw new Error('Dados obrigatórios não foram enviados');
-              } else if (webrtcError.message?.includes('INVALID_USER_TYPE') || webrtcError.message?.includes('deve ser \'psychologist\' ou \'patient\'')) {
-                throw new Error('Tipo de usuário inválido');
-              } else if (webrtcError.message?.includes('Token inválido') || webrtcError.message?.includes('expirado')) {
-                throw new Error('Sessão expirada - faça login novamente');
-              } else if (webrtcError.message?.includes('403') || webrtcError.message?.includes('Unauthorized')) {
-                throw new Error('Acesso negado - verifique se você tem permissão para esta chamada');
-              } else if (webrtcError.message?.includes('404')) {
-                throw new Error('Solicitação de emergência não encontrada ou expirada');
-              } else {
-                throw new Error(`Erro ao inicializar chamada: ${webrtcError.message || 'Erro desconhecido'}`);
-              }
-            }
-
-            webrtcData = supabaseData;
-          }
+          console.log('✅ Using session from emergency acceptance:', webrtcData);
 
           if (!webrtcData?.session_id) {
             console.error('Invalid response from WebRTC function:', webrtcData);
