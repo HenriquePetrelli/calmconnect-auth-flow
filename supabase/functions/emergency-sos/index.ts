@@ -136,14 +136,30 @@ serve(async (req) => {
 
       const { data: request, error } = await supabase
         .from('emergency_requests')
-        .select('*')
+        .select(`
+          *,
+          psychologist:accepted_by(full_name)
+        `)
         .eq('id', requestId)
         .eq('patient_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching emergency request:', error.message);
-        throw error;
+        throw new Error(`Erro ao buscar solicitação: ${error.message}`);
+      }
+
+      if (!request) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Solicitação não encontrada',
+            message: 'A solicitação pode ter expirado ou sido cancelada.'
+          }),
+          {
+            status: 404,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
       }
 
       return new Response(

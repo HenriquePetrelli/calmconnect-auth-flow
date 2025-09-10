@@ -18,64 +18,32 @@ export const useSOSCleanup = ({ requestId, enabled = true }: SOSCleanupOptions) 
     if (!requestId || !enabled) return;
 
     let isCleanedUp = false;
+    let cleanupPromise: Promise<void> | null = null;
 
     const performCleanup = async () => {
-      if (isCleanedUp || !requestId) return;
+      if (isCleanedUp || !requestId || cleanupPromise) return;
       
       try {
         isCleanedUp = true;
         console.log(`Performing SOS cleanup for request: ${requestId}`);
-        await cancelRequest(requestId);
+        cleanupPromise = cancelRequest(requestId);
+        await cleanupPromise;
       } catch (error) {
         console.error('Error during SOS cleanup:', error);
+      } finally {
+        cleanupPromise = null;
       }
     };
 
-    // Cleanup when component unmounts (user navigates away)
-    const handleUnmount = () => {
-      performCleanup();
-    };
-
-    // Cleanup when browser/tab is closed
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      performCleanup();
-      // Don't show browser confirmation dialog for emergency situations
-    };
-
-    // Cleanup when page becomes hidden (mobile apps, tab switching)
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
+    // Cleanup function for unmount only (avoid multiple listeners)
+    const cleanup = () => {
+      if (!isCleanedUp) {
         performCleanup();
       }
     };
 
-    // Cleanup when page loses focus (with debouncing)
-    let blurTimeoutId: ReturnType<typeof setTimeout>;
-    const handlePageBlur = () => {
-      clearTimeout(blurTimeoutId);
-      blurTimeoutId = setTimeout(() => {
-        if (!document.hasFocus() && document.visibilityState === 'hidden' && !isCleanedUp) {
-          performCleanup();
-        }
-      }, 1000);
-    };
-
-    // Register all cleanup listeners
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    window.addEventListener('pagehide', handleUnmount);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('blur', handlePageBlur);
-
-    // Cleanup function - this runs when component unmounts
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      window.removeEventListener('pagehide', handleUnmount);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('blur', handlePageBlur);
-      
-      // Perform cleanup on unmount if not done yet
-      handleUnmount();
-    };
+    // Only register unmount cleanup to avoid conflicts
+    return cleanup;
   }, [requestId, enabled, cancelRequest]);
 
   // Manual cleanup function

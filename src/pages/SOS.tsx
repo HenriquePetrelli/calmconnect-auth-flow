@@ -18,8 +18,8 @@ const SOS = () => {
   const [userId, setUserId] = useState<string>('');
   const { cancelRequest } = useEmergencySOS();
 
-  // Enable automatic cleanup on browser close/tab switch/navigation
-  useSOSCleanup({ requestId, enabled: !!requestId });
+  // Enable automatic cleanup only when we have a valid requestId and user
+  useSOSCleanup({ requestId: requestId && userId ? requestId : null, enabled: !!requestId && !!userId });
 
   // Fetch latest emergency request for current user and subscribe for acceptance
   useEffect(() => {
