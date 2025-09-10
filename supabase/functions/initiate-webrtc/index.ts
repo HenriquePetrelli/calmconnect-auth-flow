@@ -199,7 +199,8 @@ serve(async (req) => {
     console.log("Checking emergency request:", emergency_request_id, "for user:", user.id, "type:", user_type);
 
     // Verify the emergency request exists and user has permission
-    const { data: emergencyRequest, error: emergencyError } = await supabaseClient
+    // Try with admin client first to get complete data
+    const { data: emergencyRequest, error: emergencyError } = await supabaseAdmin
       .from("emergency_requests")
       .select("id, status, patient_id, accepted_by")
       .eq("id", emergency_request_id)
@@ -213,9 +214,15 @@ serve(async (req) => {
     });
 
     if (emergencyError || !emergencyRequest) {
-      console.error("Emergency request not found or access denied:", emergencyError);
+      console.error("Emergency request not found:", {
+        error: emergencyError,
+        requestId: emergency_request_id,
+        userId: user.id,
+        userType: user_type
+      });
       return new Response(JSON.stringify({ 
-        error: "Emergency request not found",
+        error: "Solicitação de emergência não encontrada ou não existe",
+        code: "EMERGENCY_REQUEST_NOT_FOUND",
         debug: emergencyError?.message || "Request not found"
       }), {
         status: 404,
@@ -249,7 +256,7 @@ serve(async (req) => {
 
     // Check for existing WebRTC session
     console.log("Checking for existing WebRTC session...");
-    const { data: existingSession, error: existingError } = await supabaseClient
+    const { data: existingSession, error: existingError } = await supabaseAdmin
       .from("webrtc_sessions")
       .select("*")
       .eq("emergency_request_id", emergency_request_id)
@@ -281,13 +288,19 @@ serve(async (req) => {
 
     if (user_type === "psychologist") {
       sessionData.psychologist_id = user.id;
+      sessionData.patient_id = emergencyRequest.patient_id; // Include patient_id for psychologists
     } else {
       sessionData.patient_id = user.id;
+      // For patients, try to get psychologist_id if already accepted
+      if (emergencyRequest.accepted_by) {
+        sessionData.psychologist_id = emergencyRequest.accepted_by;
+      }
     }
 
     console.log("Creating new WebRTC session with data:", sessionData);
 
-    const { data: session, error: sessionError } = await supabaseClient
+    // Use admin client for session creation to avoid RLS issues
+    const { data: session, error: sessionError } = await supabaseAdmin
       .from("webrtc_sessions")
       .insert(sessionData)
       .select()
@@ -302,30 +315,19 @@ serve(async (req) => {
     });
 
     if (sessionError) {
-      console.error("Failed to create WebRTC session:", sessionError);
-      
-      // Try with admin client as fallback
-      console.log("Attempting session creation with admin client...");
-      const { data: adminSession, error: adminError } = await supabaseAdmin
-        .from("webrtc_sessions")
-        .insert(sessionData)
-        .select()
-        .single();
-
-      if (adminError) {
-        console.error("Admin fallback also failed:", adminError);
-        return new Response(JSON.stringify({ 
-          error: "Failed to create session", 
-          details: sessionError.message,
-          adminError: adminError.message 
-        }), {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      console.log("Session created with admin client:", adminSession.id);
-      session = adminSession;
+      console.error("Failed to create WebRTC session:", {
+        error: sessionError,
+        sessionData,
+        emergencyRequest
+      });
+      return new Response(JSON.stringify({ 
+        error: "Falha ao criar sessão de vídeo", 
+        code: "SESSION_CREATION_FAILED",
+        details: sessionError.message
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     console.log("WebRTC session successfully created:", session.id, "for user:", user.id);

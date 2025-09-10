@@ -86,10 +86,13 @@ export const usePsychologistEmergency = () => {
         return null;
       }
 
-      toast({
-        title: 'Sucesso',
-        description: data.message,
-      });
+      // Show success message
+      if (data && data.message) {
+        toast({
+          title: 'Sucesso',
+          description: data.message,
+        });
+      }
 
       // Increment accepted counter for current psychologist
       const { data: authUser } = await supabase.auth.getUser();
@@ -99,45 +102,23 @@ export const usePsychologistEmergency = () => {
       }
 
       // Check if session_id was returned from psychologist-emergency function
-      let sessionId = data.session_id;
-      
-      if (!sessionId) {
-        console.log('No session_id in response, creating new session manually...');
+      if (data && data.session_id) {
+        console.log('✅ Session ID received from psychologist-emergency:', data.session_id);
         
-        // Fallback: Create WebRTC session manually if not returned
-        try {
-          const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-          if (sessionError || !sessionData.session) {
-            throw new Error('Usuário não autenticado - faça login novamente');
-          }
-
-          const { data: webrtcData, error: webrtcError } = await supabase.functions.invoke('initiate-webrtc', {
-            body: {
-              emergency_request_id: requestId,
-              user_type: 'psychologist'
-            }
-          });
-
-          if (webrtcError || !webrtcData?.session_id) {
-            throw new Error('Falha ao criar sessão de vídeo');
-          }
-
-          sessionId = webrtcData.session_id;
-        } catch (fallbackError) {
-          console.error('Fallback session creation failed:', fallbackError);
-          throw new Error('Falha ao criar sessão de vídeo');
-        }
+        // Refresh the list
+        fetchEmergencyRequests();
+        
+        return {
+          emergency_request: data.emergency_request,
+          session_id: data.session_id
+        };
       }
 
-      console.log('✅ Session ID obtained:', sessionId);
-
-      // Refresh the list
-      fetchEmergencyRequests();
-      
-      return {
-        emergency_request: data.emergency_request,
-        session_id: sessionId
-      };
+      // If no session_id in response, this is an error since psychologist-emergency should create it
+      if (!data || !data.session_id) {
+        console.error('❌ No session_id returned from psychologist-emergency');
+        throw new Error('Falha ao obter ID da sessão - tente novamente');
+      }
     } catch (error: any) {
       console.error('Error accepting emergency request:', error);
       toast({
