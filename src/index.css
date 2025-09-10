@@ -2,68 +2,102 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
+/* Design System Moderno e Acolhedor - Soliv Psychology App
+   Focado na experiência do paciente com cores calmantes e acessibilidade
 */
 
 @layer base {
   :root {
-    /* Soliv Design System - Paleta Azul Acolhedora */
-    --background: 208 100% 90%; /* #D0E8FF - Azul claro acolhedor */
-    --foreground: 213 37% 20%; /* Azul escuro para texto */
+    /* === CORE BRAND COLORS === */
+    /* Paleta principal: Azul acolhedor + Verde calmante + Neutros suaves */
+    --background: 210 40% 98%; /* Off-white suave */
+    --foreground: 220 13% 18%; /* Quase preto, mais suave */
 
-    --card: 0 0% 100%; /* Branco para cards */
-    --card-foreground: 213 37% 20%;
-
+    /* === SURFACE COLORS === */
+    --card: 0 0% 100%; /* Branco puro para cards */
+    --card-foreground: 220 13% 18%;
+    
     --popover: 0 0% 100%;
-    --popover-foreground: 213 37% 20%;
+    --popover-foreground: 220 13% 18%;
 
-    --primary: 213 49% 32%; /* #2B4F81 - Azul escuro dos botões */
+    /* === PRIMARY BRAND === */
+    /* Azul profissional mas acolhedor */
+    --primary: 212 85% 55%; /* Azul vibrante e confiável */
+    --primary-hover: 212 85% 48%; /* Estado hover */
+    --primary-active: 212 85% 42%; /* Estado pressed */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 100%; /* Branco para elementos secundários */
-    --secondary-foreground: 213 37% 20%;
+    /* === SECONDARY ACTIONS === */
+    /* Verde calmante para ações secundárias */
+    --secondary: 156 39% 54%; /* Verde suave */
+    --secondary-hover: 156 39% 47%;
+    --secondary-active: 156 39% 40%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 210 40% 96%;
-    --muted-foreground: 213 25% 55%;
+    /* === NEUTRAL TONES === */
+    --muted: 210 40% 96%; /* Backgrounds sutis */
+    --muted-foreground: 215.4 16.3% 46.9%;
+    
+    --accent: 210 40% 94%; /* Hover states */
+    --accent-foreground: 220 13% 18%;
 
-    --accent: 208 85% 85%; /* Azul mais claro para acentos */
-    --accent-foreground: 213 37% 20%;
-
-    --destructive: 0 84.2% 60.2%;
+    /* === STATUS COLORS === */
+    --success: 142 71% 45%; /* Verde sucesso */
+    --success-foreground: 0 0% 100%;
+    
+    --warning: 38 92% 50%; /* Amarelo alerta */
+    --warning-foreground: 220 13% 18%;
+    
+    --destructive: 0 72% 51%; /* Vermelho suave */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 208 50% 85%; /* Bordas suaves em azul claro */
-    --input: 0 0% 100%; /* Inputs brancos para contraste */
-    --ring: 213 49% 32%; /* Ring igual ao primary */
+    /* === BORDERS & INPUTS === */
+    --border: 214.3 31.8% 91.4%; /* Bordas muito sutis */
+    --input: 214.3 31.8% 91.4%; /* Background de inputs */
+    --ring: 212 85% 55%; /* Focus ring = primary */
 
-    --radius: 1rem; /* Bordas mais arredondadas para suavidade */
-
-    /* Variáveis customizadas para o Soliv */
-    --calm-blue-light: 208 100% 90%; /* #D0E8FF */
-    --calm-blue-dark: 213 49% 32%; /* #2B4F81 */
-    --calm-shadow: 213 49% 32% / 0.1; /* Sombras sutis */
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* === DESIGN TOKENS === */
+    --radius: 0.75rem; /* Bordas moderadamente arredondadas */
     
-    /* Cores específicas para os botões da home */
-    --breathing-primary: 200 70% 65%; /* Azul calmante */
-    --breathing-secondary: 200 70% 85%; /* Azul claro */
-    --sounds-primary: 35 40% 60%; /* Marrom terroso */
-    --sounds-secondary: 35 30% 80%; /* Bege claro */
-    --evolution-primary: 280 70% 65%; /* Roxo */
-    --evolution-secondary: 320 70% 75%; /* Rosa */
-    --yoga-disabled: 0 0% 85%; /* Cinza claro */
-    
-    /* SOS Button - cores vibrantes */
-    --sos-primary: 350 85% 55%; /* Vermelho vibrante */
-    --sos-secondary: 340 80% 70%; /* Rosa vibrante */
-    --sos-glow: 350 85% 55% / 0.3; /* Brilho do SOS */
+    /* === GRADIENTS ACOLHEDORES === */
+    --gradient-primary: linear-gradient(135deg, hsl(212 85% 55%), hsl(156 39% 54%));
+    --gradient-calm: linear-gradient(180deg, hsl(210 40% 98%), hsl(210 40% 96%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(210 40% 98%));
 
-    /* Breathing exercise colors */
-    --breathing-inhale: 215 100% 70%;
-    --breathing-hold: 215 100% 65%;
-    --breathing-exhale: 125 60% 65%;
+    /* === SHADOWS SUTIS === */
+    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.1);
+    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.1);
+    --shadow-primary: 0 4px 12px hsl(212 85% 55% / 0.15);
+    --shadow-success: 0 4px 12px hsl(142 71% 45% / 0.15);
+
+    /* === TRANSITIONS SUAVES === */
+    --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-normal: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* === CORES ESPECÍFICAS POR FUNCIONALIDADE === */
+    /* Respiração - Tons azuis calmantes */
+    --breathing-primary: 212 85% 55%;
+    --breathing-secondary: 212 85% 85%;
+    --breathing-inhale: 212 100% 70%;
+    --breathing-hold: 200 100% 65%;
+    --breathing-exhale: 156 60% 65%;
     --breathing-pause: 220 10% 75%;
+
+    /* Sons relaxantes - Tons terrosos e naturais */
+    --sounds-primary: 25 45% 58%;
+    --sounds-secondary: 25 30% 85%;
+    --sounds-accent: 156 39% 54%;
+
+    /* Evolução - Tons roxos inspiradores */
+    --evolution-primary: 259 94% 51%;
+    --evolution-secondary: 259 94% 85%;
+
+    /* SOS - Vermelho acessível mas não agressivo */
+    --sos-primary: 0 72% 51%;
+    --sos-secondary: 0 72% 85%;
+    --sos-glow: 0 72% 51% / 0.2;
 
     --sidebar-background: 0 0% 98%;
 
@@ -82,75 +116,280 @@ All colors MUST be HSL.
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
+  /* === DARK MODE OTIMIZADO === */
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    /* Backgrounds escuros mais suaves */
+    --background: 220 20% 8%; /* Preto azulado suave */
+    --foreground: 210 40% 95%; /* Branco off-white */
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    /* Superfícies */
+    --card: 220 20% 10%; /* Cards escuros */
+    --card-foreground: 210 40% 95%;
+    
+    --popover: 220 20% 10%;
+    --popover-foreground: 210 40% 95%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    /* Primary adaptado para dark mode */
+    --primary: 212 85% 60%; /* Mais claro no escuro */
+    --primary-hover: 212 85% 65%;
+    --primary-active: 212 85% 70%;
+    --primary-foreground: 220 20% 8%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    /* Secondary adaptado */
+    --secondary: 156 39% 58%; /* Verde mais vibrante */
+    --secondary-hover: 156 39% 62%;
+    --secondary-active: 156 39% 66%;
+    --secondary-foreground: 220 20% 8%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    /* Neutros escuros */
+    --muted: 220 20% 14%; /* Cinza escuro azulado */
+    --muted-foreground: 215 20% 65%;
+    
+    --accent: 220 20% 16%;
+    --accent-foreground: 210 40% 95%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    /* Status colors para dark mode */
+    --success: 142 71% 50%;
+    --success-foreground: 220 20% 8%;
+    
+    --warning: 38 92% 55%;
+    --warning-foreground: 220 20% 8%;
+    
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 100%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    /* Bordas mais visíveis no escuro */
+    --border: 220 20% 20%;
+    --input: 220 20% 16%;
+    --ring: 212 85% 60%;
 
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 210 40% 98%;
+    /* Gradientes para dark mode */
+    --gradient-primary: linear-gradient(135deg, hsl(212 85% 60%), hsl(156 39% 58%));
+    --gradient-calm: linear-gradient(180deg, hsl(220 20% 10%), hsl(220 20% 14%));
+    --gradient-card: linear-gradient(145deg, hsl(220 20% 12%), hsl(220 20% 8%));
 
-  /* Breathing exercise colors - dark mode */
-  --breathing-inhale: 215 80% 65%;
-  --breathing-hold: 215 80% 60%;
-  --breathing-exhale: 125 50% 60%;
-  --breathing-pause: 220 15% 65%;
+    /* Shadows mais suaves no escuro */
+    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.3);
+    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.4);
+    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.5);
+    --shadow-primary: 0 4px 12px hsl(212 85% 60% / 0.3);
+    --shadow-success: 0 4px 12px hsl(142 71% 50% / 0.3);
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Cores funcionais adaptadas */
+    --breathing-primary: 212 85% 60%;
+    --breathing-secondary: 212 85% 25%;
+    --breathing-inhale: 212 80% 65%;
+    --breathing-hold: 200 80% 60%;
+    --breathing-exhale: 156 50% 60%;
+    --breathing-pause: 220 15% 65%;
+
+    --sounds-primary: 25 45% 62%;
+    --sounds-secondary: 25 30% 25%;
+    
+    --evolution-primary: 259 94% 55%;
+    --evolution-secondary: 259 94% 25%;
+    
+    --sos-primary: 0 72% 55%;
+    --sos-secondary: 0 72% 25%;
   }
 }
 
+/* === COMPONENTES UTILITÁRIOS === */
 @layer utilities {
-  .animate-pulse-gentle {
-    animation: pulse-gentle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  /* Animações suaves */
+  .animate-fade-in {
+    animation: fade-in 0.4s ease-out forwards;
   }
   
-  @keyframes pulse-gentle {
-    0%, 100% {
-      opacity: 1;
-      transform: scale(1);
-    }
-    50% {
-      opacity: 0.9;
-      transform: scale(1.02);
-    }
+  .animate-slide-up {
+    animation: slide-up 0.3s ease-out forwards;
+  }
+  
+  .animate-scale-in {
+    animation: scale-in 0.2s ease-out forwards;
+  }
+  
+  .animate-pulse-gentle {
+    animation: pulse-gentle 2s ease-in-out infinite;
+  }
+  
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  /* Hover effects */
+  .hover-lift {
+    transition: var(--transition-normal);
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .hover-scale {
+    transition: var(--transition-normal);
+  }
+  
+  .hover-scale:hover {
+    transform: scale(1.02);
+  }
+
+  /* Gradientes utilitários */
+  .bg-gradient-calm {
+    background: var(--gradient-calm);
+  }
+  
+  .bg-gradient-primary {
+    background: var(--gradient-primary);
+  }
+  
+  .bg-gradient-card {
+    background: var(--gradient-card);
+  }
+
+  /* Shadows */
+  .shadow-primary {
+    box-shadow: var(--shadow-primary);
+  }
+  
+  .shadow-success {
+    box-shadow: var(--shadow-success);
+  }
+
+  /* Focus states melhorados */
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
   }
 }
 
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse-gentle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+/* === TYPOGRAPHY & BASE STYLES === */
 @layer base {
   * {
     @apply border-border;
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Hierarquia tipográfica melhorada */
+  h1 {
+    @apply text-3xl font-bold tracking-tight text-foreground;
+  }
+  
+  h2 {
+    @apply text-2xl font-semibold tracking-tight text-foreground;
+  }
+  
+  h3 {
+    @apply text-xl font-semibold text-foreground;
+  }
+  
+  h4 {
+    @apply text-lg font-medium text-foreground;
+  }
+  
+  h5 {
+    @apply text-base font-medium text-foreground;
+  }
+  
+  h6 {
+    @apply text-sm font-medium text-foreground;
+  }
+
+  /* Texto de corpo melhorado */
+  p {
+    @apply text-base leading-relaxed text-foreground;
+  }
+  
+  .text-small {
+    @apply text-sm leading-5 text-muted-foreground;
+  }
+  
+  .text-caption {
+    @apply text-xs leading-4 text-muted-foreground;
+  }
+
+  /* Links melhorados */
+  a {
+    @apply text-primary underline-offset-4 hover:underline focus-ring;
+  }
+
+  /* Scrollbar customizada */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
   }
 }
 
