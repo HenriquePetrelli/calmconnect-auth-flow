@@ -18,6 +18,7 @@ export interface EmergencyRequest {
 export const useEmergencySOS = () => {
   const [currentRequest, setCurrentRequest] = useState<EmergencyRequest | null>(null);
   const [loading, setLoading] = useState(false);
+  const [stopPolling, setStopPolling] = useState<(() => void) | null>(null);
   const { toast } = useToast();
 
   const createEmergencyRequest = async () => {
@@ -67,7 +68,8 @@ export const useEmergencySOS = () => {
       });
       
       // Start polling for status updates
-      startStatusPolling(data.emergency_request_id);
+      const cleanupFn = startStatusPolling(data.emergency_request_id);
+      setStopPolling(() => cleanupFn);
       
       return data.emergency_request_id;
     } catch (error: any) {
@@ -94,7 +96,18 @@ export const useEmergencySOS = () => {
       const { data, error } = await supabase.functions.invoke(`emergency-sos?request_id=${requestId}`, {
         method: 'GET',
       });
-      if (error) throw error;
+      
+      if (error) {
+        console.error('Edge function error:', error);
+        return null;
+      }
+      
+      // Handle response where request doesn't exist
+      if (data?.success === true && data?.data === null) {
+        console.log('Request was cancelled or not found, stopping polling');
+        return null;
+      }
+      
       setCurrentRequest(data);
       return data;
     } catch (error: any) {
@@ -105,10 +118,11 @@ export const useEmergencySOS = () => {
   };
 
   const startStatusPolling = (requestId: string) => {
+    let pollingInterval: NodeJS.Timeout | null = null;
     let failureCount = 0;
     const maxFailures = 3;
 
-    const interval = setInterval(async () => {
+    const poll = async () => {
       const request = await checkRequestStatus(requestId);
       
       if (request === null) {
@@ -116,13 +130,11 @@ export const useEmergencySOS = () => {
         console.warn(`Status check failed (${failureCount}/${maxFailures})`);
         
         if (failureCount >= maxFailures) {
-          console.error('Max failures reached, stopping status polling');
-          clearInterval(interval);
-          toast({
-            title: 'Erro de Conexão',
-            description: 'Não foi possível verificar o status da solicitação',
-            variant: 'destructive',
-          });
+          console.log('Max failures reached, stopping status polling');
+          if (pollingInterval) {
+            clearInterval(pollingInterval);
+            pollingInterval = null;
+          }
           return;
         }
       } else {
@@ -130,40 +142,79 @@ export const useEmergencySOS = () => {
       }
       
       if (request && request.status === 'accepted') {
-        clearInterval(interval);
+        console.log('Request accepted, stopping polling');
+        if (pollingInterval) {
+          clearInterval(pollingInterval);
+          pollingInterval = null;
+        }
         toast({
           title: 'Psicólogo encontrado!',
           description: `${request.psychologist?.full_name} aceitou sua solicitação`,
         });
+        return;
       }
       
       if (request && ['completed', 'cancelled'].includes(request.status)) {
-        clearInterval(interval);
+        console.log('Request completed or cancelled, stopping polling');
+        if (pollingInterval) {
+          clearInterval(pollingInterval);
+          pollingInterval = null;
+        }
+        return;
       }
-    }, 5000); // Check every 5 seconds
+    };
+
+    // Start polling
+    pollingInterval = setInterval(poll, 5000);
 
     // Stop polling after 10 minutes
     setTimeout(() => {
-      clearInterval(interval);
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+        pollingInterval = null;
+        console.log('Polling timeout reached, stopping status polling');
+      }
     }, 600000);
+
+    // Return cleanup function
+    return () => {
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+        pollingInterval = null;
+      }
+    };
   };
 
   const cancelRequest = async (requestId: string) => {
     try {
       setLoading(true);
-      // Delete the emergency request instead of just updating status
+      
+      // Stop any ongoing polling first
+      if (stopPolling) {
+        stopPolling();
+        setStopPolling(null);
+      }
+      
+      // Delete the emergency request
       const { error } = await supabase
         .from('emergency_requests')
         .delete()
         .eq('id', requestId);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error cancelling request:', error);
+        throw error;
+      }
       
+      // Clear current request
       setCurrentRequest(null);
+      
       toast({
         title: 'Solicitação cancelada',
         description: 'Sua solicitação de emergência foi cancelada',
       });
+      
+      console.log('Emergency request cancelled successfully');
     } catch (error: any) {
       console.error('Error cancelling request:', error);
       toast({
@@ -171,6 +222,7 @@ export const useEmergencySOS = () => {
         description: 'Erro ao cancelar solicitação',
         variant: 'destructive',
       });
+      throw error;
     } finally {
       setLoading(false);
     }

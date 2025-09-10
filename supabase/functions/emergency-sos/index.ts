@@ -131,7 +131,16 @@ serve(async (req) => {
       const requestId = url.searchParams.get('request_id');
 
       if (!requestId) {
-        throw new Error('Request ID is required');
+        return new Response(
+          JSON.stringify({ 
+            error: 'Request ID is required',
+            message: 'Parameter request_id é obrigatório'
+          }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
       }
 
       const { data: request, error } = await supabase
@@ -146,17 +155,29 @@ serve(async (req) => {
 
       if (error) {
         console.error('Error fetching emergency request:', error.message);
-        throw new Error(`Erro ao buscar solicitação: ${error.message}`);
-      }
-
-      if (!request) {
         return new Response(
           JSON.stringify({ 
-            error: 'Solicitação não encontrada',
-            message: 'A solicitação pode ter expirado ou sido cancelada.'
+            error: 'Database error',
+            message: 'Erro interno do servidor. Tente novamente.'
           }),
           {
-            status: 404,
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      // If request doesn't exist, return success with null data
+      if (!request) {
+        console.log('Emergency request not found:', requestId);
+        return new Response(
+          JSON.stringify({ 
+            success: true,
+            data: null,
+            message: 'Solicitação não encontrada ou foi cancelada'
+          }),
+          {
+            status: 200,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           }
         );

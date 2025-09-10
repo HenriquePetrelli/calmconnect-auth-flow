@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useEmergencySOS } from './useEmergencySOS';
 
@@ -13,46 +13,42 @@ interface SOSCleanupOptions {
  */
 export const useSOSCleanup = ({ requestId, enabled = true }: SOSCleanupOptions) => {
   const { cancelRequest } = useEmergencySOS();
+  const hasCleanedUpRef = useRef(false);
 
   useEffect(() => {
-    if (!requestId || !enabled) return;
-
-    let isCleanedUp = false;
-    let cleanupPromise: Promise<void> | null = null;
+    if (!requestId || !enabled) {
+      hasCleanedUpRef.current = false;
+      return;
+    }
 
     const performCleanup = async () => {
-      if (isCleanedUp || !requestId || cleanupPromise) return;
+      if (hasCleanedUpRef.current) return;
       
       try {
-        isCleanedUp = true;
+        hasCleanedUpRef.current = true;
         console.log(`Performing SOS cleanup for request: ${requestId}`);
-        cleanupPromise = cancelRequest(requestId);
-        await cleanupPromise;
+        await cancelRequest(requestId);
       } catch (error) {
         console.error('Error during SOS cleanup:', error);
-      } finally {
-        cleanupPromise = null;
+        hasCleanedUpRef.current = false; // Reset on error to allow retry
       }
     };
 
-    // Cleanup function for unmount only (avoid multiple listeners)
-    const cleanup = () => {
-      if (!isCleanedUp) {
-        performCleanup();
-      }
+    // Only cleanup on component unmount
+    return () => {
+      performCleanup();
     };
-
-    // Only register unmount cleanup to avoid conflicts
-    return cleanup;
   }, [requestId, enabled, cancelRequest]);
 
   // Manual cleanup function
   const manualCleanup = async () => {
-    if (requestId) {
+    if (requestId && !hasCleanedUpRef.current) {
       try {
+        hasCleanedUpRef.current = true;
         await cancelRequest(requestId);
       } catch (error) {
         console.error('Manual cleanup error:', error);
+        hasCleanedUpRef.current = false; // Reset on error
       }
     }
   };
