@@ -99,7 +99,8 @@ export const useEmergencySOS = () => {
       
       if (error) {
         console.error('Edge function error:', error);
-        return null;
+        // Throw error to let caller handle retries for temporary issues
+        throw error;
       }
       
       // Handle response where request doesn't exist
@@ -112,59 +113,86 @@ export const useEmergencySOS = () => {
       return data;
     } catch (error: any) {
       console.error('Error checking request status:', error);
-      // Stop the polling loop on persistent errors
-      return null;
+      
+      // Re-throw error to let polling function handle it appropriately
+      throw error;
     }
   };
 
   const startStatusPolling = (requestId: string) => {
     let pollingInterval: NodeJS.Timeout | null = null;
-    let failureCount = 0;
-    const maxFailures = 3;
+    let consecutiveFailures = 0;
+    let temporaryFailures = 0;
+    const maxConsecutiveFailures = 5; // Allow more failures before stopping
+    const maxTemporaryFailures = 15; // Allow temporary failures for longer
 
     const poll = async () => {
-      const request = await checkRequestStatus(requestId);
-      
-      if (request === null) {
-        failureCount++;
-        console.warn(`Status check failed (${failureCount}/${maxFailures})`);
+      try {
+        const request = await checkRequestStatus(requestId);
         
-        if (failureCount >= maxFailures) {
-          console.log('Max failures reached, stopping status polling');
+        // Reset failure counters on success
+        consecutiveFailures = 0;
+        temporaryFailures = 0;
+        
+        if (request && request.status === 'accepted') {
+          console.log('Request accepted, stopping polling');
+          if (pollingInterval) {
+            clearInterval(pollingInterval);
+            pollingInterval = null;
+          }
+          toast({
+            title: 'Psicólogo encontrado!',
+            description: `${request.psychologist?.full_name || 'Um psicólogo'} aceitou sua solicitação`,
+          });
+          return;
+        }
+        
+        if (request && ['completed', 'cancelled'].includes(request.status)) {
+          console.log('Request completed or cancelled, stopping polling');
           if (pollingInterval) {
             clearInterval(pollingInterval);
             pollingInterval = null;
           }
           return;
         }
-      } else {
-        failureCount = 0; // Reset failure count on success
-      }
-      
-      if (request && request.status === 'accepted') {
-        console.log('Request accepted, stopping polling');
-        if (pollingInterval) {
-          clearInterval(pollingInterval);
-          pollingInterval = null;
+        
+        // If request is null (cancelled/not found), stop polling
+        if (request === null) {
+          console.log('Request not found, stopping polling');
+          if (pollingInterval) {
+            clearInterval(pollingInterval);
+            pollingInterval = null;
+          }
+          return;
         }
-        toast({
-          title: 'Psicólogo encontrado!',
-          description: `${request.psychologist?.full_name} aceitou sua solicitação`,
-        });
-        return;
-      }
-      
-      if (request && ['completed', 'cancelled'].includes(request.status)) {
-        console.log('Request completed or cancelled, stopping polling');
-        if (pollingInterval) {
-          clearInterval(pollingInterval);
-          pollingInterval = null;
+      } catch (error: any) {
+        consecutiveFailures++;
+        temporaryFailures++;
+        
+        console.warn(`Status check failed (${consecutiveFailures}/${maxConsecutiveFailures}, temp: ${temporaryFailures}/${maxTemporaryFailures})`);
+        
+        // Stop polling if too many consecutive failures or too many temporary failures
+        if (consecutiveFailures >= maxConsecutiveFailures || temporaryFailures >= maxTemporaryFailures) {
+          console.error('Max failures reached, stopping status polling');
+          if (pollingInterval) {
+            clearInterval(pollingInterval);
+            pollingInterval = null;
+          }
+          
+          // Only show error toast after many failures
+          toast({
+            title: 'Problema de Conectividade',
+            description: 'Dificuldade para verificar o status. Sua solicitação continua ativa.',
+            variant: 'destructive',
+            duration: 5000,
+          });
+          return;
         }
-        return;
       }
     };
 
-    // Start polling
+    // Start polling immediately, then every 5 seconds
+    poll();
     pollingInterval = setInterval(poll, 5000);
 
     // Stop polling after 10 minutes

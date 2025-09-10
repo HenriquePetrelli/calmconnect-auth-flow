@@ -145,10 +145,7 @@ serve(async (req) => {
 
       const { data: request, error } = await supabase
         .from('emergency_requests')
-        .select(`
-          *,
-          psychologist:accepted_by(full_name)
-        `)
+        .select('*')
         .eq('id', requestId)
         .eq('patient_id', user.id)
         .maybeSingle();
@@ -158,7 +155,8 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({ 
             error: 'Database error',
-            message: 'Erro interno do servidor. Tente novamente.'
+            message: 'Erro interno do servidor. Tente novamente.',
+            temporary: true
           }),
           {
             status: 500,
@@ -183,8 +181,23 @@ serve(async (req) => {
         );
       }
 
+      // Get psychologist name if request is accepted
+      let psychologistName = null;
+      if (request.accepted_by) {
+        const { data: psychologist } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('user_id', request.accepted_by)
+          .maybeSingle();
+        
+        psychologistName = psychologist?.full_name || null;
+      }
+
       return new Response(
-        JSON.stringify(request),
+        JSON.stringify({
+          ...request,
+          psychologist: psychologistName ? { full_name: psychologistName } : null
+        }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         }
