@@ -6,7 +6,6 @@ import { useNavigate } from "react-router-dom";
 import CancelConfirmationModal from "@/components/sos/CancelConfirmationModal";
 import SupportiveMessages from "@/components/sos/SupportiveMessages";
 import { supabase } from "@/integrations/supabase/client";
-import { useSOSCleanup } from "@/hooks/useSOSCleanup";
 import { useEmergencySOS } from "@/hooks/useEmergencySOS";
 
 const SOS = () => {
@@ -18,9 +17,16 @@ const SOS = () => {
   const [userId, setUserId] = useState<string>('');
   const { cancelRequest } = useEmergencySOS();
 
-  // Enable automatic cleanup only on page unmount (when user leaves SOS page)
-  // This prevents immediate cleanup when requestId is first set
-  useSOSCleanup({ requestId: requestId || null, enabled: false });
+  // Cleanup function that runs only when user leaves the page
+  useEffect(() => {
+    return () => {
+      // Only cleanup if we have a requestId and we're leaving the page
+      if (requestId) {
+        console.log(`User left SOS page, cleaning up request: ${requestId}`);
+        cancelRequest(requestId).catch(console.error);
+      }
+    };
+  }, [requestId, cancelRequest]);
 
   // Fetch latest emergency request for current user and subscribe for acceptance
   useEffect(() => {
@@ -104,6 +110,7 @@ const SOS = () => {
     setShowCancelModal(false);
     if (requestId) {
       try {
+        console.log(`User manually cancelled request: ${requestId}`);
         await cancelRequest(requestId);
       } catch (error) {
         console.error('Error cancelling request:', error);
