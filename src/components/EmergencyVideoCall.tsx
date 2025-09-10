@@ -7,6 +7,7 @@ import { Mic, MicOff, Camera, CameraOff, PhoneOff, Loader2, AlertTriangle } from
 import { useWebRTC } from '@/hooks/useWebRTC';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { FeedbackModal } from '@/components/sos/FeedbackModal';
 
 interface EmergencyVideoCallProps {
   sessionId?: string;
@@ -33,6 +34,8 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   const [isCameraOff, setIsCameraOff] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [sessionValid, setSessionValid] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [userInfo, setUserInfo] = useState<{name: string; details: string}>({name: '', details: ''});
 
   const {
     localVideoRef,
@@ -92,6 +95,9 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
         setSessionValid(true);
         setIsLoading(false);
         
+        // Fetch user information
+        await fetchUserInfo(sessionId, detectedUserType || userType);
+        
         console.log('✅ Enhanced session validation completed successfully');
       } catch (error) {
         console.error('❌ Enhanced session validation failed:', error);
@@ -147,6 +153,64 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     validateSessionWithDelay();
   }, [sessionId, navigate, toast]);
 
+  const fetchUserInfo = async (sessionId: string, currentUserType: 'patient' | 'psychologist') => {
+    try {
+      // Get the WebRTC session to find the emergency request
+      const { data: webrtcSession, error: sessionError } = await supabase
+        .from('webrtc_sessions')
+        .select('emergency_request_id, patient_id, psychologist_id')
+        .eq('id', sessionId)
+        .single();
+
+      if (sessionError || !webrtcSession?.emergency_request_id) {
+        console.error('Error fetching WebRTC session:', sessionError);
+        return;
+      }
+
+      // Get emergency request with patient details
+      const { data: emergencyRequest, error: emergencyError } = await supabase
+        .from('emergency_requests')
+        .select('patient_details, accepted_by, patient_id')
+        .eq('id', webrtcSession.emergency_request_id)
+        .single();
+
+      if (emergencyError) {
+        console.error('Error fetching emergency request:', emergencyError);
+        return;
+      }
+
+      if (currentUserType === 'patient') {
+        // Patient sees psychologist info
+        if (emergencyRequest.accepted_by) {
+          const { data: psychologist, error: psychError } = await supabase
+            .from('psychologists')
+            .select('full_name, specialization')
+            .eq('user_id', emergencyRequest.accepted_by)
+            .single();
+
+          if (!psychError && psychologist) {
+            setUserInfo({
+              name: psychologist.full_name,
+              details: psychologist.specialization || 'Psicólogo'
+            });
+          }
+        }
+      } else {
+        // Psychologist sees patient info
+        const patientDetails = emergencyRequest.patient_details as any;
+        if (patientDetails?.full_name) {
+          const symptoms = patientDetails.sintomas_selecionados || [];
+          setUserInfo({
+            name: patientDetails.full_name,
+            details: symptoms.length > 0 ? symptoms.join(', ') : 'Sem sintomas cadastrados'
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching user info:', error);
+    }
+  };
+
   // Timer countdown
   useEffect(() => {
     if (!isConnected) return;
@@ -186,18 +250,35 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
           .eq('id', sessionId);
       }
 
+      // Show feedback modal instead of immediately navigating
+      setShowFeedbackModal(true);
+    } catch (error) {
+      console.error('Error ending call:', error);
       toast({
-        title: 'Chamada Finalizada',
-        description: 'A videochamada foi encerrada com sucesso.',
+        title: 'Erro',
+        description: 'Erro ao finalizar chamada',
+        variant: 'destructive',
       });
-
+      
       if (onEndCall) {
         onEndCall();
       } else {
         navigate('/home');
       }
-    } catch (error) {
-      console.error('Error ending call:', error);
+    }
+  };
+
+  const handleFeedbackClose = () => {
+    setShowFeedbackModal(false);
+    
+    toast({
+      title: 'Chamada Finalizada',
+      description: 'A videochamada foi encerrada com sucesso.',
+    });
+
+    if (onEndCall) {
+      onEndCall();
+    } else {
       navigate('/home');
     }
   };
@@ -341,9 +422,16 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
             <Badge variant={status.color === 'green' ? 'default' : 'destructive'}>
               {status.text}
             </Badge>
-            <span className="text-sm">
-              {userType === 'psychologist' ? 'Psicólogo' : 'Paciente'}
-            </span>
+            <div className="text-sm">
+              <span className="font-medium">
+                {userType === 'psychologist' ? 'Psicólogo' : 'Paciente'}
+              </span>
+              {userInfo.name && (
+                <div className="text-xs opacity-80">
+                  {userType === 'patient' ? `Com ${userInfo.name}` : `Atendendo ${userInfo.name}`}
+                </div>
+              )}
+            </div>
           </div>
           
           <div className="text-center">
@@ -353,6 +441,14 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
             <div className="text-xs opacity-80">
               Tempo restante
             </div>
+            {userInfo.details && (
+              <div className="text-xs opacity-70 mt-1 max-w-xs truncate">
+                {userType === 'patient' 
+                  ? `Especialização: ${userInfo.details}`
+                  : `Sintomas: ${userInfo.details}`
+                }
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -446,6 +542,15 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
           </Button>
         </div>
       </div>
+
+      {/* Feedback Modal */}
+      <FeedbackModal
+        isOpen={showFeedbackModal}
+        onClose={handleFeedbackClose}
+        userType={userType}
+        sessionId={sessionId || ''}
+        partnerName={userInfo.name}
+      />
     </div>
   );
 };
