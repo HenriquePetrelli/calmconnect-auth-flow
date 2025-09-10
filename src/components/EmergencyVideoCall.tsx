@@ -309,9 +309,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   if (isLoading) {
     // Show the intelligent initializer with delay and progress
     const VideoCallInitializer = React.lazy(() => 
-      import('@/components/VideoCallInitializer').then(module => ({ 
-        default: module.VideoCallInitializer 
-      }))
+      import('@/components/VideoCallInitializer')
     );
     
     return (

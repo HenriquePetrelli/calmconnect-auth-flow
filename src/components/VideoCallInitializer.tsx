@@ -32,7 +32,7 @@ const stepProgress: Record<InitializationStep, number> = {
   ready: 100
 };
 
-export const VideoCallInitializer: React.FC<VideoCallInitializerProps> = ({
+const VideoCallInitializer: React.FC<VideoCallInitializerProps> = ({
   onReady,
   onError,
   sessionId
@@ -156,3 +156,5 @@ export const VideoCallInitializer: React.FC<VideoCallInitializerProps> = ({
     </div>
   );
 };
+
+export default VideoCallInitializer;
