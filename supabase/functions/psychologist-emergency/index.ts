@@ -216,7 +216,7 @@ serve(async (req) => {
           );
         }
 
-        // Accept the emergency request
+        // Accept the emergency request and save the session_id
         const { data: updatedRequest, error } = await supabase
           .from('emergency_requests')
           .update({
@@ -305,6 +305,22 @@ serve(async (req) => {
 
             sessionId = newSession.id;
             console.log('WebRTC session created successfully:', sessionId);
+          }
+
+          // CRITICAL: Update the emergency_requests table with the session_id
+          const { error: updateSessionError } = await supabase
+            .from('emergency_requests')
+            .update({
+              video_room_id: sessionId,
+              room_url: sessionId // For backward compatibility
+            })
+            .eq('id', requestId);
+
+          if (updateSessionError) {
+            console.error('Error updating emergency request with session_id:', updateSessionError);
+            // Continue anyway, session was created successfully
+          } else {
+            console.log('Emergency request updated with session_id:', sessionId);
           }
 
           return new Response(

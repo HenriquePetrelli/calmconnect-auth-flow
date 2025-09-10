@@ -140,13 +140,15 @@ export const useEmergencySOS = () => {
             clearInterval(pollingInterval);
             pollingInterval = null;
           }
+          
           toast({
             title: 'Psicólogo encontrado!',
             description: `${request.psychologist?.full_name || 'Um psicólogo'} aceitou sua solicitação`,
           });
           
-          // Redirect to video call using session_id or room_url
+          // Get session_id from the accepted request
           const sessionId = request.video_room_id || request.room_url;
+          
           if (sessionId) {
             console.log('✅ Redirecting patient to video call with session_id:', sessionId);
             // Use a callback to notify parent component about redirection
@@ -155,13 +157,42 @@ export const useEmergencySOS = () => {
             });
             window.dispatchEvent(redirectEvent);
           } else {
-            console.error('❌ No session_id found in accepted request:', request);
-            toast({
-              title: 'Erro de conexão',
-              description: 'Não foi possível conectar à sala de vídeo. O psicólogo foi notificado.',
-              variant: 'destructive',
-              duration: 8000,
-            });
+            console.error('❌ No session_id found in accepted request, retrying...');
+            // Don't show error immediately, give it more time to be updated
+            // The session_id might still be being written to the database
+            
+            // Retry after a short delay
+            setTimeout(async () => {
+              try {
+                const retryRequest = await checkRequestStatus(requestId);
+                if (retryRequest) {
+                  const retrySessionId = retryRequest.video_room_id || retryRequest.room_url;
+                  if (retrySessionId) {
+                    console.log('✅ Session_id found on retry:', retrySessionId);
+                    const redirectEvent = new CustomEvent('emergencyAccepted', {
+                      detail: { sessionId: retrySessionId, requestId: retryRequest.id }
+                    });
+                    window.dispatchEvent(redirectEvent);
+                  } else {
+                    console.error('❌ Session_id still not available after retry');
+                    toast({
+                      title: 'Erro de conexão',
+                      description: 'Não foi possível conectar à sala de vídeo. O psicólogo foi notificado.',
+                      variant: 'destructive',
+                      duration: 8000,
+                    });
+                  }
+                }
+              } catch (retryError) {
+                console.error('Error on retry check:', retryError);
+                toast({
+                  title: 'Erro de conexão',
+                  description: 'Problema de conexão. Tente atualizar a página.',
+                  variant: 'destructive',
+                  duration: 8000,
+                });
+              }
+            }, 2000); // Wait 2 seconds before retry
           }
           return;
         }

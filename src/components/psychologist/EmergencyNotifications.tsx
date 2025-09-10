@@ -8,11 +8,13 @@ import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const EmergencyNotifications = () => {
   const { emergencyRequests, loading, acceptEmergencyRequest, declineEmergencyRequest } = usePsychologistEmergency();
   const [processingRequests, setProcessingRequests] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleAccept = async (requestId: string) => {
     setProcessingRequests(prev => new Set(prev).add(requestId));
@@ -24,7 +26,12 @@ const EmergencyNotifications = () => {
       
       if (!result || !result.session_id) {
         console.error('❌ No session_id returned from acceptEmergencyRequest');
-        throw new Error('Falha ao obter ID da sessão - tente novamente');
+        toast({
+          title: "Erro",
+          description: "Falha ao obter ID da sessão - tente novamente",
+          variant: "destructive",
+        });
+        return;
       }
       
       console.log('✅ Navigating to emergency call with session_id:', result.session_id);
@@ -33,6 +40,11 @@ const EmergencyNotifications = () => {
       navigate(`/emergency-call/${result.session_id}?requestId=${requestId}&userType=psychologist`);
     } catch (error) {
       console.error('❌ Error accepting emergency:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao aceitar emergência - tente novamente",
+        variant: "destructive",
+      });
     } finally {
       setProcessingRequests(prev => {
         const newSet = new Set(prev);
