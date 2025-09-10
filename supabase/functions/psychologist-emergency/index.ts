@@ -264,16 +264,84 @@ serve(async (req) => {
           );
         }
 
-        return new Response(
-          JSON.stringify({
-            success: true,
-            message: 'Emergência aceita com sucesso',
-            emergency_request: updatedRequest
-          }),
-          {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        // Create WebRTC session after accepting the emergency
+        console.log('Creating WebRTC session for accepted emergency request:', requestId);
+        
+        try {
+          // Check for existing WebRTC session first
+          const { data: existingSession, error: existingError } = await supabase
+            .from("webrtc_sessions")
+            .select("*")
+            .eq("emergency_request_id", requestId)
+            .maybeSingle();
+
+          let sessionId;
+          
+          if (existingSession) {
+            console.log('Using existing WebRTC session:', existingSession.id);
+            sessionId = existingSession.id;
+          } else {
+            // Create new WebRTC session
+            const sessionData = {
+              emergency_request_id: requestId,
+              psychologist_id: user.id,
+              patient_id: updatedRequest.patient_id,
+              status: "pending",
+              expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours
+            };
+
+            console.log('Creating new WebRTC session:', sessionData);
+
+            const { data: newSession, error: sessionError } = await supabase
+              .from("webrtc_sessions")
+              .insert(sessionData)
+              .select()
+              .single();
+
+            if (sessionError) {
+              console.error('Failed to create WebRTC session:', sessionError);
+              throw new Error(`Falha ao criar sessão de vídeo: ${sessionError.message}`);
+            }
+
+            sessionId = newSession.id;
+            console.log('WebRTC session created successfully:', sessionId);
           }
-        );
+
+          return new Response(
+            JSON.stringify({
+              success: true,
+              message: 'Emergência aceita com sucesso',
+              emergency_request: updatedRequest,
+              session_id: sessionId,
+              webrtc_data: {
+                session_id: sessionId,
+                stun_servers: ["stun:stun.l.google.com:19302", "stun:global.stun.twilio.com:3478"]
+              }
+            }),
+            {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            }
+          );
+
+        } catch (sessionError) {
+          console.error('Error creating WebRTC session:', sessionError);
+          
+          // Still return success for the emergency acceptance, but indicate session creation failed
+          return new Response(
+            JSON.stringify({
+              success: true,
+              message: 'Emergência aceita, mas houve erro ao criar sessão de vídeo',
+              emergency_request: updatedRequest,
+              session_error: sessionError.message,
+              // Return null session_id so frontend can handle it appropriately
+              session_id: null,
+              webrtc_data: null
+            }),
+            {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            }
+          );
+        }
       } else {
         // For decline, we don't need to update the request - it remains available for other psychologists
         return new Response(
