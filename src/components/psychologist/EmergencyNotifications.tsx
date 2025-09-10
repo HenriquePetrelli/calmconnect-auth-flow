@@ -17,12 +17,22 @@ const EmergencyNotifications = () => {
   const handleAccept = async (requestId: string) => {
     setProcessingRequests(prev => new Set(prev).add(requestId));
     try {
+      console.log('🔄 Starting emergency acceptance for request:', requestId);
       const result = await acceptEmergencyRequest(requestId);
       
+      console.log('📋 Emergency acceptance result:', result);
+      
+      if (!result || !result.session_id) {
+        console.error('❌ No session_id returned from acceptEmergencyRequest');
+        throw new Error('Falha ao obter ID da sessão - tente novamente');
+      }
+      
+      console.log('✅ Navigating to emergency call with session_id:', result.session_id);
+      
       // Navigate to WebRTC video call with the actual session ID
-      navigate(`/emergency-call/${result.session_id}?requestId=${requestId}&userType=psychologist`);
+      navigate(`/emergency-call/${result.session_id}?requestId=${requestId}&userType=psychologist&session_id=${result.session_id}`);
     } catch (error) {
-      console.error('Error accepting emergency:', error);
+      console.error('❌ Error accepting emergency:', error);
     } finally {
       setProcessingRequests(prev => {
         const newSet = new Set(prev);

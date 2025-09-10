@@ -215,6 +215,7 @@ export const useAppointments = () => {
       const status = accept ? 'scheduled' : 'declined';
       
       const { data, error } = await supabase.functions.invoke('psychologist-schedule', {
+        method: 'PUT',
         body: {
           appointmentId,
           status,

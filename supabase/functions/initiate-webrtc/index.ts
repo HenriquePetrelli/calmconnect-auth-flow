@@ -98,7 +98,7 @@ serve(async (req) => {
         return new Response(JSON.stringify({ 
           error: "Corpo da requisição inválido ou ausente",
           code: "EMPTY_BODY",
-          details: "Request body is empty or missing"
+          details: "Request body is empty or missing. This function requires a valid JSON body with emergency_request_id and user_type."
         }), {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -116,7 +116,7 @@ serve(async (req) => {
       return new Response(JSON.stringify({ 
         error: "Corpo da requisição inválido ou ausente",
         code: "INVALID_JSON",
-        details: `JSON parsing failed: ${parseError.message}`
+        details: `JSON parsing failed: ${parseError.message}. Expected JSON with emergency_request_id and user_type.`
       }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

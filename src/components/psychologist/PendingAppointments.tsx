@@ -35,12 +35,21 @@ const PendingAppointments = () => {
   // Fetch pending appointments that are properly connected to the hook
   const fetchPendingAppointments = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('psychologist-schedule?action=pending', {
-        method: 'GET'
+      // Use direct fetch instead of supabase.functions.invoke for GET with query params
+      const response = await fetch(`https://ihrrgmmsfuvlasmzdmwf.supabase.co/functions/v1/psychologist-schedule?action=pending`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlocnJnbW1zZnV2bGFzbXpkbXdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1NDMzMDcsImV4cCI6MjA2OTExOTMwN30.6hRDCL5alu-Bs4kT4jKYJW3G3zmeBJDZB5udruQzOFU',
+          'Content-Type': 'application/json'
+        }
       });
       
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       
+      const data = await response.json();
       setPendingAppointments(data || []);
     } catch (error: any) {
       console.error('Error fetching pending appointments:', error);
@@ -99,6 +108,7 @@ const PendingAppointments = () => {
     setProcessingAppointments(prev => new Set(prev).add(selectedAppointmentId));
     try {
       const { data, error } = await supabase.functions.invoke('psychologist-schedule', {
+        method: 'PUT',
         body: {
           appointmentId: selectedAppointmentId,
           status: 'reschedule_proposed',

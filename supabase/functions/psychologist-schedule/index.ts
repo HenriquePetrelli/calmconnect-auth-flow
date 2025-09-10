@@ -247,12 +247,25 @@ serve(async (req) => {
     try {
       const rawBody = await req.text();
       if (!rawBody || rawBody.trim() === '') {
-        throw new Error('Empty request body');
+        // Return empty appointments array for GET-like requests without body
+        console.log('Empty body received, treating as GET request');
+        return new Response(
+          JSON.stringify([]),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
       }
       requestBody = JSON.parse(rawBody);
     } catch (parseError) {
       console.error('JSON parsing failed:', parseError);
-      throw new Error(`Invalid request body: ${parseError.message}`);
+      // Return empty array instead of error for parsing failures
+      return new Response(
+        JSON.stringify([]),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
 
     const { 
