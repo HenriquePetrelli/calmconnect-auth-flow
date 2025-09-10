@@ -144,6 +144,25 @@ export const useEmergencySOS = () => {
             title: 'Psicólogo encontrado!',
             description: `${request.psychologist?.full_name || 'Um psicólogo'} aceitou sua solicitação`,
           });
+          
+          // Redirect to video call using session_id or room_url
+          const sessionId = request.video_room_id || request.room_url;
+          if (sessionId) {
+            console.log('✅ Redirecting patient to video call with session_id:', sessionId);
+            // Use a callback to notify parent component about redirection
+            const redirectEvent = new CustomEvent('emergencyAccepted', {
+              detail: { sessionId, requestId: request.id }
+            });
+            window.dispatchEvent(redirectEvent);
+          } else {
+            console.error('❌ No session_id found in accepted request:', request);
+            toast({
+              title: 'Erro de conexão',
+              description: 'Não foi possível conectar à sala de vídeo. O psicólogo foi notificado.',
+              variant: 'destructive',
+              duration: 8000,
+            });
+          }
           return;
         }
         

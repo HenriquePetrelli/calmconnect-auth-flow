@@ -177,23 +177,29 @@ const App = () => {
                     </RouteGuard>
                   } />
                   
-                  {/* Rotas de Emergência - Paciente inicia, Psicólogo atende */}
+                  {/* Rotas de Emergência */}
                   <Route path="/emergency-call" element={
+                    <RouteGuard allowedUserTypes={['patient', 'psychologist']}>
+                      <EmergencyCall />
+                    </RouteGuard>
+                  } />
+                  
+                  {/* Rota de emergência para pacientes (usando requestId) */}
+                  <Route path="/emergency-call/request/:requestId" element={
                     <RouteGuard allowedUserTypes={['patient']}>
                       <EmergencyCall />
                     </RouteGuard>
                   } />
-                  <Route path="/emergency-call/:requestId" element={
-                    <RouteGuard allowedUserTypes={['patient']}>
-                      <EmergencyCall />
-                    </RouteGuard>
-                  } />
-                  <Route path="/emergency/call/:requestId" element={
-                    <RouteGuard allowedUserTypes={['psychologist']}>
-                      <EmergencyCall />
-                    </RouteGuard>
-                  } />
+                  
+                  {/* Rota de emergência para psicólogos e pacientes (usando sessionId) */}
                   <Route path="/emergency-call/:sessionId" element={
+                    <RouteGuard allowedUserTypes={['patient', 'psychologist']}>
+                      <EmergencyCall />
+                    </RouteGuard>
+                  } />
+                  
+                  {/* Rota legacy para psicólogos */}
+                  <Route path="/emergency/call/:requestId" element={
                     <RouteGuard allowedUserTypes={['psychologist']}>
                       <EmergencyCall />
                     </RouteGuard>

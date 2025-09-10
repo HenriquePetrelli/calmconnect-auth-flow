@@ -35,14 +35,17 @@ export const ROUTE_PERMISSIONS = {
     '/subscription-success',
     '/subscription-cancel',
     '/webrtc-test',
-    '/emergency-call', // paciente pode iniciar chamada
-    '/emergency-call/' // rotas com parâmetros para paciente
+    '/emergency-call', // paciente e psicólogo podem acessar
+    '/emergency-call/', // rotas com parâmetros
+    '/emergency/call' // rota legacy para psicólogo
   ],
   psychologist: [
     '/psychologist-dashboard',
     '/psychologist-profile',
-    '/emergency/call', // psicólogo pode atender chamada
-    '/emergency-call/' // rotas com parâmetros para psicólogo (sessionId)
+    '/emergency-call', // psicólogo pode atender chamada
+    '/emergency-call/', // rotas com parâmetros
+    '/emergency/call', // rota legacy
+    '/emergency/call/' // rotas com parâmetros legacy
   ],
   admin: [
     '/admin-dashboard'

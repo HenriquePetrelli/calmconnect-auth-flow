@@ -25,6 +25,7 @@ const EmergencyCall = () => {
   useEffect(() => {
     // If this is a direct session route, use the new component
     if (isDirectSessionRoute && sessionId) {
+      console.log('✅ Direct session route detected with sessionId:', sessionId);
       setSessionIdState(sessionId);
       const userTypeParam = searchParams.get('userType') as 'psychologist' | 'patient' || 'patient';
       setUserType(userTypeParam);
@@ -44,6 +45,7 @@ const EmergencyCall = () => {
         setUserType(userTypeFromParams);
 
         if (sessionIdFromParams) {
+          console.log('✅ Using sessionId from search params:', sessionIdFromParams);
           setSessionIdState(sessionIdFromParams);
         } else {
           // Create new WebRTC session for patient

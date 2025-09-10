@@ -39,6 +39,16 @@ const SOS = () => {
   // Fetch latest emergency request for current user and subscribe for acceptance
   useEffect(() => {
     let reqChannel: any = null;
+    
+    // Listen for emergency acceptance events
+    const handleEmergencyAccepted = (event: CustomEvent) => {
+      const { sessionId, requestId } = event.detail;
+      console.log('Emergency accepted, redirecting to call:', { sessionId, requestId });
+      navigate(`/emergency-call/${sessionId}?userType=patient&requestId=${requestId}`);
+    };
+    
+    window.addEventListener('emergencyAccepted', handleEmergencyAccepted as EventListener);
+    
     const init = async () => {
       const { data: auth } = await supabase.auth.getUser();
       const currentUserId = auth.user?.id;
@@ -52,7 +62,7 @@ const SOS = () => {
       // Get the most recent request from this user
       const { data } = await supabase
         .from('emergency_requests')
-        .select('id, status, room_url, created_at')
+        .select('id, status, room_url, video_room_id, created_at')
         .eq('patient_id', currentUserId)
         .order('created_at', { ascending: false })
         .limit(1)
@@ -62,9 +72,11 @@ const SOS = () => {
         const id = (data as any).id as string;
         setRequestId(id);
 
-        // Navigate to call when accepted and we have a room
-        if ((data as any).status === 'accepted' && (data as any).room_url) {
-          navigate(`/emergency/call/${id}`);
+        // Navigate to call when accepted and we have a session ID
+        const sessionId = (data as any).video_room_id || (data as any).room_url;
+        if ((data as any).status === 'accepted' && sessionId) {
+          navigate(`/emergency-call/${sessionId}?userType=patient&requestId=${id}`);
+          return;
         }
 
         // Subscribe to updates for this request
@@ -72,8 +84,9 @@ const SOS = () => {
           .channel(`emergency_watch_${id}`)
           .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'emergency_requests', filter: `id=eq.${id}` }, (payload) => {
             const n = payload.new as any;
-            if (n.status === 'accepted' && n.room_url) {
-              navigate(`/emergency/call/${id}`);
+            const sessionId = n.video_room_id || n.room_url;
+            if (n.status === 'accepted' && sessionId) {
+              navigate(`/emergency-call/${sessionId}?userType=patient&requestId=${id}`);
               if (reqChannel) supabase.removeChannel(reqChannel);
             }
           })
@@ -86,6 +99,7 @@ const SOS = () => {
 
     return () => {
       if (reqChannel) supabase.removeChannel(reqChannel);
+      window.removeEventListener('emergencyAccepted', handleEmergencyAccepted as EventListener);
     };
   }, [navigate]);
 

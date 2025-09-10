@@ -30,7 +30,7 @@ const EmergencyNotifications = () => {
       console.log('✅ Navigating to emergency call with session_id:', result.session_id);
       
       // Navigate to WebRTC video call with the actual session ID
-      navigate(`/emergency-call/${result.session_id}?requestId=${requestId}&userType=psychologist&session_id=${result.session_id}`);
+      navigate(`/emergency-call/${result.session_id}?requestId=${requestId}&userType=psychologist`);
     } catch (error) {
       console.error('❌ Error accepting emergency:', error);
     } finally {
