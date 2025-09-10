@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
@@ -16,17 +16,25 @@ const SOS = () => {
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string>('');
   const { cancelRequest } = useEmergencySOS();
+  
+  // Use ref to store requestId for cleanup without causing re-renders
+  const requestIdRef = useRef<string | null>(null);
+  
+  // Update ref when requestId changes
+  useEffect(() => {
+    requestIdRef.current = requestId;
+  }, [requestId]);
 
-  // Cleanup function that runs only when user leaves the page
+  // Cleanup function that runs only when component unmounts (user leaves the page)
   useEffect(() => {
     return () => {
       // Only cleanup if we have a requestId and we're leaving the page
-      if (requestId) {
-        console.log(`User left SOS page, cleaning up request: ${requestId}`);
-        cancelRequest(requestId).catch(console.error);
+      if (requestIdRef.current) {
+        console.log(`User left SOS page, cleaning up request: ${requestIdRef.current}`);
+        cancelRequest(requestIdRef.current).catch(console.error);
       }
     };
-  }, [requestId, cancelRequest]);
+  }, []); // Empty dependency array - only runs on unmount
 
   // Fetch latest emergency request for current user and subscribe for acceptance
   useEffect(() => {
