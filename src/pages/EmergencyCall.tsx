@@ -81,19 +81,23 @@ const EmergencyCall = () => {
             sessionData.session = refreshedSession.session;
           }
           
-          // Get session data from URL parameters (passed from psychologist-emergency function)
-          const sessionId = searchParams.get('session_id');
+          // Get session data from URL path parameter first, then search params as fallback
+          const sessionIdFromPath = sessionId; // from useParams
+          const sessionIdFromSearch = searchParams.get('session_id');
+          const finalSessionId = sessionIdFromPath || sessionIdFromSearch;
           
-          console.log('✅ Session ID from URL:', sessionId);
+          console.log('✅ Session ID from path:', sessionIdFromPath);
+          console.log('✅ Session ID from search params:', sessionIdFromSearch);
+          console.log('✅ Final Session ID:', finalSessionId);
           
-          if (!sessionId) {
+          if (!finalSessionId) {
             throw new Error('Session ID não encontrado na URL - tente aceitar a emergência novamente');
           }
           
           // Use the session_id directly since it was created by psychologist-emergency
           const webrtcData = {
             success: true,
-            session_id: sessionId,
+            session_id: finalSessionId,
             stun_servers: ["stun:stun.l.google.com:19302", "stun:global.stun.twilio.com:3478"]
           };
           
