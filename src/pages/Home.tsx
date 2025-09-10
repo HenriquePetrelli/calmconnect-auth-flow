@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import FeatureCard from "@/components/FeatureCard";
 import SOSButton from "@/components/SOSButton";
 import { NotificationButton } from "@/components/notifications/NotificationButton";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -77,6 +78,7 @@ const HomePage = () => {
           {/* Header Actions */}
           <div className="flex items-center gap-2">
             <NotificationButton />
+            <ThemeToggle />
             <Button
               variant="ghost"
               size="icon"
