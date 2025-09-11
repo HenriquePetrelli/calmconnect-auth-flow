@@ -279,10 +279,10 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
             {occupiedSlots.length > 0 && (
               <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
                 <p className="text-sm text-amber-800">
-                  <strong>Horários ocupados:</strong> {occupiedSlots.join(', ')}
+                  <strong>Horários ocupados:</strong> {occupiedSlots.sort().join(', ')}
                 </p>
                 <p className="text-xs text-amber-700 mt-1">
-                  * Cada consulta dura 50 minutos, ocupando 2 slots consecutivos
+                  * Cada consulta dura 50 minutos, ocupando aproximadamente 2 slots consecutivos
                 </p>
               </div>
             )}

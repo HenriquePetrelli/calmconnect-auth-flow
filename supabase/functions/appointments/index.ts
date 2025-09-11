@@ -185,21 +185,40 @@ serve(async (req) => {
       
       console.log('Final appointment type:', finalAppointmentType);
 
-      // Check for scheduling conflicts - prevent booking same psychologist at same time
+      // Check for scheduling conflicts - prevent overlapping appointments
+      // A 50-minute appointment starting at scheduled_at will end 50 minutes later
+      const appointmentStart = new Date(scheduled_at);
+      const appointmentEnd = new Date(appointmentStart.getTime() + 50 * 60 * 1000); // 50 minutes later
+      
+      // Check if there are any existing appointments that would overlap
       const { data: conflictingAppointments, error: conflictError } = await supabase
         .from('appointments')
-        .select('id')
+        .select('id, scheduled_at, duration')
         .eq('psychologist_id', psychologist_id)
-        .eq('scheduled_at', scheduled_at)
-        .in('status', ['pending', 'scheduled']);
+        .in('status', ['pending', 'scheduled'])
+        .gte('scheduled_at', new Date(appointmentStart.getTime() - 50 * 60 * 1000).toISOString()) // Check 50 minutes before
+        .lte('scheduled_at', appointmentEnd.toISOString()); // Check until our appointment ends
 
       if (conflictError) {
         console.error('Error checking conflicts:', conflictError);
         throw new Error('Erro ao verificar conflitos de horário');
       }
 
+      // Check if any existing appointment would overlap with the new one
       if (conflictingAppointments && conflictingAppointments.length > 0) {
-        throw new Error('Este horário já está ocupado. Escolha outro horário disponível.');
+        for (const existingAppointment of conflictingAppointments) {
+          const existingStart = new Date(existingAppointment.scheduled_at);
+          const existingEnd = new Date(existingStart.getTime() + (existingAppointment.duration || 50) * 60 * 1000);
+          
+          // Check if there's any overlap
+          if (
+            (appointmentStart >= existingStart && appointmentStart < existingEnd) ||
+            (appointmentEnd > existingStart && appointmentEnd <= existingEnd) ||
+            (appointmentStart <= existingStart && appointmentEnd >= existingEnd)
+          ) {
+            throw new Error('Este horário já está ocupado. Escolha outro horário disponível.');
+          }
+        }
       }
 
       // Validate 48-hour advance booking rule
@@ -211,7 +230,7 @@ serve(async (req) => {
         throw new Error('Consultas devem ser agendadas com pelo menos 48 horas de antecedência.');
       }
 
-      // Validate allowed hours (7 AM to 6 PM) and only full hours
+      // Validate allowed hours (7 AM to 6 PM) and 30-minute intervals
       const hour = scheduledDate.getHours();
       const minutes = scheduledDate.getMinutes();
       
@@ -219,8 +238,8 @@ serve(async (req) => {
         throw new Error('Consultas só podem ser agendadas entre 07h e 18h.');
       }
       
-      if (minutes !== 0) {
-        throw new Error('Consultas só podem ser agendadas em horários inteiros (ex: 08:00, 09:00, etc.).');
+      if (minutes !== 0 && minutes !== 30) {
+        throw new Error('Consultas só podem ser agendadas em intervalos de 30 minutos (ex: 08:00, 08:30, 09:00, etc.).');
       }
 
       const { data: appointment, error } = await supabase
