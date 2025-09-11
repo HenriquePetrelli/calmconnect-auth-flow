@@ -463,7 +463,10 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
                   {userType === 'patient' ? (
                     <span>{userInfo.details}</span>
                   ) : (
-                    <span>Sintomas: {userInfo.details}</span>
+                    <div className="space-y-1">
+                      <div className="font-medium text-blue-400">Sintomas relatados:</div>
+                      <div className="text-gray-300 leading-relaxed">{userInfo.details}</div>
+                    </div>
                   )}
                 </div>
               )}

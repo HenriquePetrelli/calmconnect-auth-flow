@@ -320,9 +320,27 @@ export const WebRTCVideoCall = ({ sessionId, userType, onEndCall }: WebRTCVideoC
     }
   };
 
-  const handleEndCall = () => {
-    cleanup();
-    setShowFeedbackModal(true);
+  const handleEndCall = async () => {
+    try {
+      // Update session status first
+      if (sessionId) {
+        await supabase
+          .from('webrtc_sessions')
+          .update({ status: 'completed' })
+          .eq('id', sessionId);
+      }
+      
+      // Clean up WebRTC connections
+      cleanup();
+      
+      // Show feedback modal
+      setShowFeedbackModal(true);
+    } catch (error) {
+      console.error('Error ending call:', error);
+      // Still proceed with cleanup even if database update fails
+      cleanup();
+      setShowFeedbackModal(true);
+    }
   };
 
   const handleFeedbackClose = () => {
@@ -372,7 +390,10 @@ export const WebRTCVideoCall = ({ sessionId, userType, onEndCall }: WebRTCVideoC
                   {userType === 'patient' ? (
                     <span>{userInfo.details}</span>
                   ) : (
-                    <span>Sintomas: {userInfo.details}</span>
+                    <div className="space-y-1">
+                      <div className="font-medium text-blue-400">Sintomas relatados:</div>
+                      <div className="text-gray-300 leading-relaxed">{userInfo.details}</div>
+                    </div>
                   )}
                 </div>
               )}

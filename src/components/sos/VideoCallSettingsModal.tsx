@@ -18,12 +18,14 @@ export const VideoCallSettingsModal = ({ isOpen, onClose, localStream }: VideoCa
   const [selectedAudioDevice, setSelectedAudioDevice] = useState('');
   const [selectedVideoDevice, setSelectedVideoDevice] = useState('');
   const [isBackgroundBlurEnabled, setIsBackgroundBlurEnabled] = useState(false);
+  const [currentStream, setCurrentStream] = useState<MediaStream | null>(null);
 
   useEffect(() => {
     if (isOpen) {
       loadDevices();
+      setCurrentStream(localStream);
     }
-  }, [isOpen]);
+  }, [isOpen, localStream]);
 
   const loadDevices = async () => {
     try {
@@ -34,19 +36,29 @@ export const VideoCallSettingsModal = ({ isOpen, onClose, localStream }: VideoCa
       setAudioDevices(audioInputs);
       setVideoDevices(videoInputs);
       
-      // Set current devices
+      // Set current devices as default selected
       if (localStream) {
         const audioTrack = localStream.getAudioTracks()[0];
         const videoTrack = localStream.getVideoTracks()[0];
         
         if (audioTrack) {
           const audioSettings = audioTrack.getSettings();
-          setSelectedAudioDevice(audioSettings.deviceId || '');
+          const deviceId = audioSettings.deviceId || '';
+          setSelectedAudioDevice(deviceId);
         }
         
         if (videoTrack) {
           const videoSettings = videoTrack.getSettings();
-          setSelectedVideoDevice(videoSettings.deviceId || '');
+          const deviceId = videoSettings.deviceId || '';
+          setSelectedVideoDevice(deviceId);
+        }
+      } else {
+        // Set first available devices as default if no stream
+        if (audioInputs.length > 0) {
+          setSelectedAudioDevice(audioInputs[0].deviceId);
+        }
+        if (videoInputs.length > 0) {
+          setSelectedVideoDevice(videoInputs[0].deviceId);
         }
       }
     } catch (error) {
@@ -57,8 +69,26 @@ export const VideoCallSettingsModal = ({ isOpen, onClose, localStream }: VideoCa
   const handleAudioDeviceChange = async (deviceId: string) => {
     try {
       setSelectedAudioDevice(deviceId);
-      // Here you would implement device switching logic
-      console.log('Switching to audio device:', deviceId);
+      
+      if (currentStream) {
+        // Stop current audio track
+        const audioTrack = currentStream.getAudioTracks()[0];
+        if (audioTrack) {
+          audioTrack.stop();
+        }
+
+        // Get new audio stream with selected device
+        const newAudioStream = await navigator.mediaDevices.getUserMedia({
+          audio: { deviceId: { exact: deviceId } }
+        });
+
+        // Replace audio track in current stream
+        const newAudioTrack = newAudioStream.getAudioTracks()[0];
+        if (newAudioTrack) {
+          currentStream.removeTrack(audioTrack);
+          currentStream.addTrack(newAudioTrack);
+        }
+      }
     } catch (error) {
       console.error('Error switching audio device:', error);
     }
@@ -67,17 +97,64 @@ export const VideoCallSettingsModal = ({ isOpen, onClose, localStream }: VideoCa
   const handleVideoDeviceChange = async (deviceId: string) => {
     try {
       setSelectedVideoDevice(deviceId);
-      // Here you would implement device switching logic
-      console.log('Switching to video device:', deviceId);
+      
+      if (currentStream) {
+        // Stop current video track
+        const videoTrack = currentStream.getVideoTracks()[0];
+        if (videoTrack) {
+          videoTrack.stop();
+        }
+
+        // Get new video stream with selected device
+        const newVideoStream = await navigator.mediaDevices.getUserMedia({
+          video: { deviceId: { exact: deviceId } }
+        });
+
+        // Replace video track in current stream
+        const newVideoTrack = newVideoStream.getVideoTracks()[0];
+        if (newVideoTrack) {
+          currentStream.removeTrack(videoTrack);
+          currentStream.addTrack(newVideoTrack);
+        }
+      }
     } catch (error) {
       console.error('Error switching video device:', error);
     }
   };
 
-  const toggleBackgroundBlur = (enabled: boolean) => {
+  const toggleBackgroundBlur = async (enabled: boolean) => {
     setIsBackgroundBlurEnabled(enabled);
-    // Here you would implement background blur logic
-    console.log('Background blur:', enabled ? 'enabled' : 'disabled');
+    
+    if (currentStream) {
+      const videoTrack = currentStream.getVideoTracks()[0];
+      if (videoTrack && 'applyConstraints' in videoTrack) {
+        try {
+          // Apply blur effect using browser's built-in background blur if available
+          await videoTrack.applyConstraints({
+            // @ts-ignore - backgroundBlur is experimental
+            backgroundBlur: enabled
+          });
+        } catch (error) {
+          console.warn('Background blur not supported by this browser:', error);
+          // Fallback: Apply CSS filter blur to video element
+          if (enabled) {
+            const videoElements = document.querySelectorAll('video[autoplay]');
+            videoElements.forEach((video) => {
+              if (video !== document.querySelector('video[ref*="remote"]')) {
+                (video as HTMLVideoElement).style.filter = 'blur(5px) brightness(0.8)';
+              }
+            });
+          } else {
+            const videoElements = document.querySelectorAll('video[autoplay]');
+            videoElements.forEach((video) => {
+              if (video !== document.querySelector('video[ref*="remote"]')) {
+                (video as HTMLVideoElement).style.filter = 'none';
+              }
+            });
+          }
+        }
+      }
+    }
   };
 
   return (
