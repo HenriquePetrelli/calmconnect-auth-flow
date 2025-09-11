@@ -5,11 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Clock, Calendar as CalendarIcon, User, AlertTriangle } from 'lucide-react';
-import { format, addDays, setHours, setMinutes, isAfter, isBefore, startOfDay, addHours } from 'date-fns';
+import { format, addDays, setHours, setMinutes, isAfter, startOfDay, addHours } from 'date-fns';
+import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 import { ptBR } from 'date-fns/locale';
 import { useAppointments } from '@/hooks/useAppointments';
 import { useToast } from '@/hooks/use-toast';
+import { useAvailableTimeSlots } from '@/hooks/useAvailableTimeSlots';
 import { PsychologistData } from './PsychologistList';
+
+const BRAZIL_TIMEZONE = 'America/Sao_Paulo';
 
 interface AppointmentFormProps {
   psychologist: PsychologistData;
@@ -29,16 +33,17 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
   
   const { createAppointment } = useAppointments();
   const { toast } = useToast();
-
-  // Gerar horários disponíveis (7h às 18h - conforme regra)
-  const generateTimeSlots = () => {
-    const slots = [];
-    for (let hour = 7; hour <= 17; hour++) {
-      slots.push(`${hour.toString().padStart(2, '0')}:00`);
-      slots.push(`${hour.toString().padStart(2, '0')}:30`);
-    }
-    return slots;
-  };
+  
+  // Hook para gerenciar horários disponíveis
+  const { 
+    allTimeSlots, 
+    occupiedSlots, 
+    loading: slotsLoading, 
+    isSlotAvailable 
+  } = useAvailableTimeSlots({
+    psychologistId: psychologist.user_id,
+    selectedDate
+  });
 
   // Verificar se pode agendar (mínimo 48h de antecedência)
   const canScheduleDate = (date: Date): boolean => {
@@ -47,10 +52,10 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
     return isAfter(date, minScheduleTime);
   };
 
-  // Verificar se horário está no intervalo permitido
-  const isValidTimeSlot = (date: Date, time: string): boolean => {
-    const [hour] = time.split(':').map(Number);
-    return hour >= 7 && hour <= 17;
+  // Verificar se horário está no intervalo permitido (7h às 18h)
+  const isValidTimeSlot = (time: string): boolean => {
+    const [hour, minute] = time.split(':').map(Number);
+    return (hour >= 7 && hour < 18) || (hour === 18 && minute === 0);
   };
 
   const handleSubmit = async () => {
@@ -63,8 +68,21 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
       return;
     }
 
+    // Verificar se horário está disponível
+    if (!isSlotAvailable(selectedTime)) {
+      toast({
+        title: 'Horário ocupado',
+        description: 'Este horário já está ocupado. Escolha outro horário disponível.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const [hours, minutes] = selectedTime.split(':').map(Number);
-    const appointmentDateTime = setMinutes(setHours(selectedDate, hours), minutes);
+    const appointmentDateTimeBrazil = setMinutes(setHours(selectedDate, hours), minutes);
+    
+    // Converter para UTC considerando o fuso horário do Brasil
+    const appointmentDateTime = fromZonedTime(appointmentDateTimeBrazil, BRAZIL_TIMEZONE);
 
     // Verificar regra de 48h de antecedência
     if (!canScheduleDate(appointmentDateTime)) {
@@ -77,7 +95,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
     }
 
     // Verificar horário permitido
-    if (!isValidTimeSlot(appointmentDateTime, selectedTime)) {
+    if (!isValidTimeSlot(selectedTime)) {
       toast({
         title: 'Horário inválido',
         description: 'Consultas só podem ser agendadas entre 07h e 18h',
@@ -92,7 +110,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
       await createAppointment(
         psychologist.user_id,
         appointmentDateTime.toISOString(),
-        60, // duração padrão de 60 minutos
+        50, // duração padrão de 50 minutos
         'regular',
         notes.trim() || undefined
       );
@@ -157,7 +175,8 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-blue-700">
           <p>• Consultas devem ser agendadas com pelo menos <strong>48 horas de antecedência</strong></p>
-          <p>• Horários disponíveis: <strong>07h às 18h</strong></p>
+          <p>• Horários disponíveis: <strong>07h às 18h</strong> (intervalos de 30 minutos)</p>
+          <p>• Duração da consulta: <strong>50 minutos</strong></p>
           <p>• Cancelamentos podem ser feitos até <strong>12h antes</strong> da consulta</p>
           <p>• O psicólogo tem <strong>24h para confirmar</strong> sua solicitação</p>
         </CardContent>
@@ -202,14 +221,19 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Clock className="w-5 h-5" />
-              Horário (07h às 18h)
+              Horário (07h às 18h - intervalos de 30 min)
+              {slotsLoading && (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary ml-2"></div>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 gap-2">
-              {generateTimeSlots().map((time) => {
-                const isValidTime = selectedDate ? isValidTimeSlot(selectedDate, time) : true;
+              {allTimeSlots.map((time) => {
+                const isValidTime = isValidTimeSlot(time);
                 const canSchedule = selectedDate ? canScheduleDate(selectedDate) : true;
+                const isAvailable = isSlotAvailable(time);
+                const isOccupied = occupiedSlots.includes(time);
                 
                 return (
                   <Button
@@ -217,14 +241,57 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
                     variant={selectedTime === time ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setSelectedTime(time)}
-                    disabled={!isValidTime || !canSchedule}
-                    className="text-sm"
+                    disabled={!isValidTime || !canSchedule || !isAvailable || slotsLoading}
+                    className={`text-sm relative ${
+                      isOccupied 
+                        ? 'bg-red-50 border-red-200 text-red-500 cursor-not-allowed' 
+                        : isAvailable 
+                          ? 'hover:bg-primary/10' 
+                          : ''
+                    }`}
+                    title={
+                      isOccupied 
+                        ? 'Horário ocupado' 
+                        : !isValidTime 
+                          ? 'Horário fora do funcionamento'
+                          : !canSchedule
+                            ? 'Antecedência insuficiente'
+                            : 'Disponível'
+                    }
                   >
                     {time}
+                    {isOccupied && (
+                      <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                    )}
                   </Button>
                 );
               })}
             </div>
+            
+            {/* Legenda */}
+            <div className="flex items-center gap-4 mt-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-primary rounded"></div>
+                <span>Disponível</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-red-200 border border-red-300 rounded relative">
+                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                </div>
+                <span>Ocupado</span>
+              </div>
+            </div>
+            
+            {occupiedSlots.length > 0 && (
+              <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <p className="text-sm text-amber-800">
+                  <strong>Horários ocupados:</strong> {occupiedSlots.join(', ')}
+                </p>
+                <p className="text-xs text-amber-700 mt-1">
+                  * Cada consulta dura 50 minutos, ocupando 2 slots consecutivos
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
@@ -263,7 +330,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
               <span className="font-medium">Horário:</span> {selectedTime}
             </div>
             <div className="text-sm">
-              <span className="font-medium">Duração:</span> 60 minutos
+              <span className="font-medium">Duração:</span> 50 minutos
             </div>
             <div className="text-sm">
               <span className="font-medium">Status inicial:</span>{' '}
