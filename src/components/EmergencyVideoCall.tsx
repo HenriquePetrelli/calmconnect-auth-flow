@@ -3,11 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Mic, MicOff, Camera, CameraOff, PhoneOff, Loader2, AlertTriangle } from 'lucide-react';
+import { Mic, MicOff, Camera, CameraOff, PhoneOff, Loader2, AlertTriangle, Settings, Shield, Video } from 'lucide-react';
 import { useWebRTC } from '@/hooks/useWebRTC';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { FeedbackModal } from '@/components/sos/FeedbackModal';
+import { VideoCallSettingsModal } from '@/components/sos/VideoCallSettingsModal';
 
 interface EmergencyVideoCallProps {
   sessionId?: string;
@@ -35,7 +36,14 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [sessionValid, setSessionValid] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-  const [userInfo, setUserInfo] = useState<{name: string; details: string}>({name: '', details: ''});
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [userInfo, setUserInfo] = useState<{
+    name: string; 
+    details: string;
+    consultations?: number;
+    sosCount?: number;
+    rating?: number;
+  }>({name: '', details: ''});
 
   const {
     localVideoRef,
@@ -184,25 +192,46 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
         if (emergencyRequest.accepted_by) {
           const { data: psychologist, error: psychError } = await supabase
             .from('psychologists')
-            .select('full_name, specialization')
+            .select('full_name, specialization, total_appointments')
             .eq('user_id', emergencyRequest.accepted_by)
             .single();
 
           if (!psychError && psychologist) {
             setUserInfo({
               name: psychologist.full_name,
-              details: psychologist.specialization || 'Psicólogo'
+              details: psychologist.specialization || 'Psicólogo',
+              consultations: psychologist.total_appointments || 0,
+              rating: 4.8 // Mock rating
             });
           }
         }
       } else {
-        // Psychologist sees patient info
+        // Psychologist sees patient info with additional details
         const patientDetails = emergencyRequest.patient_details as any;
         if (patientDetails?.full_name) {
           const symptoms = patientDetails.sintomas_selecionados || [];
+          
+          // Get patient statistics
+          const { data: patientStats } = await supabase
+            .from('appointments')
+            .select('id, status')
+            .eq('patient_id', emergencyRequest.patient_id);
+          
+          const { data: sosStats } = await supabase
+            .from('emergency_requests')
+            .select('id')
+            .eq('patient_id', emergencyRequest.patient_id)
+            .eq('status', 'completed');
+          
+          const completedConsultations = patientStats?.filter(a => a.status === 'completed').length || 0;
+          const completedSos = sosStats?.length || 0;
+          
           setUserInfo({
             name: patientDetails.full_name,
-            details: symptoms.length > 0 ? symptoms.join(', ') : 'Sem sintomas cadastrados'
+            details: symptoms.length > 0 ? symptoms.join(', ') : 'Sem sintomas cadastrados',
+            consultations: completedConsultations,
+            sosCount: completedSos,
+            rating: 4.2 // Mock rating
           });
         }
       }
@@ -412,69 +441,74 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 flex flex-col relative">
-      {/* Header moderno com informações do usuário */}
-      <div className="bg-slate-800/90 backdrop-blur-sm text-white p-4 z-10">
+    <div className="min-h-screen bg-[#202124] flex flex-col relative">
+      {/* Header com informações do usuário e timer - Estilo Google Meet */}
+      <div className="bg-[#303134]/95 backdrop-blur-sm text-white p-4 z-10 border-b border-gray-600/30">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           {/* Informações do participante */}
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-blue-600 flex items-center justify-center shadow-lg">
-              <span className="text-white font-semibold">
-                {userType === 'psychologist' ? 'Dr' : userInfo.name?.charAt(0) || 'P'}
+              <span className="text-white font-semibold text-lg">
+                {userType === 'patient' ? (userInfo.name?.charAt(0) || 'Dr') : (userInfo.name?.charAt(0) || 'P')}
               </span>
             </div>
-            <div>
+            <div className="space-y-1">
               <div className="font-semibold text-lg">
                 {userType === 'patient' && userInfo.name ? `Dr. ${userInfo.name}` : 
                  userType === 'psychologist' && userInfo.name ? userInfo.name : 
                  'Conectando...'}
               </div>
               {userInfo.details && (
-                <div className="text-sm text-slate-300 max-w-sm">
-                  {userType === 'patient' 
-                    ? `Especialização: ${userInfo.details}`
-                    : `Sintomas: ${userInfo.details}`
-                  }
+                <div className="text-sm text-gray-300 max-w-md">
+                  {userType === 'patient' ? (
+                    <span>{userInfo.details}</span>
+                  ) : (
+                    <span>Sintomas: {userInfo.details}</span>
+                  )}
+                </div>
+              )}
+              {/* Additional info for psychologist viewing patient */}
+              {userType === 'psychologist' && userInfo.name && (
+                <div className="flex items-center gap-4 text-xs text-gray-400">
+                  <span>Consultas: {userInfo.consultations || 0}</span>
+                  <span>SOS: {userInfo.sosCount || 0}</span>
+                  <span className="flex items-center gap-1">
+                    Avaliação: {userInfo.rating || 0}⭐
+                  </span>
+                </div>
+              )}
+              {/* Additional info for patient viewing psychologist */}
+              {userType === 'patient' && userInfo.consultations !== undefined && (
+                <div className="flex items-center gap-4 text-xs text-gray-400">
+                  <span>Consultas realizadas: {userInfo.consultations}</span>
+                  <span className="flex items-center gap-1">
+                    Avaliação: {userInfo.rating || 0}⭐
+                  </span>
                 </div>
               )}
               {/* Status de conexão */}
-              <div className="flex items-center gap-2 mt-1">
-                <div className={`w-2 h-2 rounded-full ${status.color === 'green' ? 'bg-green-400 animate-pulse' : 'bg-yellow-400'}`}></div>
-                <span className="text-xs text-slate-400">{status.text}</span>
+              <div className="flex items-center gap-2">
+                <div className={`w-3 h-3 rounded-full ${status.color === 'green' ? 'bg-green-400 animate-pulse' : 'bg-yellow-400'} shadow-lg`}></div>
+                <span className="text-xs text-gray-400 font-medium">{status.text}</span>
               </div>
             </div>
           </div>
           
-          {/* Timer central */}
+          {/* Timer centralizado */}
           <div className="text-center">
-            <div className="text-3xl font-mono font-bold text-white mb-1">
+            <div className="text-3xl font-mono font-bold text-white bg-black/20 px-4 py-2 rounded-lg mb-1">
               {formatTime(timeLeft)}
             </div>
-            <div className="text-sm text-slate-400">Tempo restante</div>
+            <div className="text-xs text-gray-400">Tempo restante</div>
           </div>
 
-          {/* Informações adicionais para psicólogo */}
-          {userType === 'psychologist' && userInfo.name && (
-            <div className="text-right text-sm text-slate-300 space-y-1">
-              <div className="flex items-center gap-2">
-                <span>📅</span>
-                <span>Consultas: 12</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span>🚨</span>
-                <span>SOS anteriores: 3</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span>⭐</span>
-                <span>Avaliação: 4.8/5</span>
-              </div>
-            </div>
-          )}
+          {/* Spacer para manter layout equilibrado */}
+          <div className="w-32"></div>
         </div>
       </div>
 
-      {/* Área principal do vídeo */}
-      <div className="flex-1 relative bg-slate-900 overflow-hidden">
+      {/* Área principal do vídeo - Estilo Google Meet */}
+      <div className="flex-1 relative bg-[#202124] overflow-hidden">
         {/* Vídeo remoto */}
         <video 
           ref={remoteVideoRef} 
@@ -483,32 +517,15 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
           className="w-full h-full object-cover"
         />
         
-        {/* Overlay de status do participante */}
+        {/* Indicador de status do participante remoto */}
         {isConnected && (
-          <div className="absolute top-6 left-6 z-20">
-            <div className="bg-black/70 backdrop-blur-md rounded-lg px-4 py-2 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-blue-600 flex items-center justify-center">
-                <span className="text-white text-xs font-semibold">
-                  {userType === 'psychologist' ? userInfo.name?.charAt(0) || 'P' : 'Dr'}
+          <div className="absolute top-6 left-6 z-10">
+            <div className="flex items-center gap-2 bg-black/70 backdrop-blur-md rounded-xl px-4 py-2 shadow-lg border border-white/10">
+              <div className="flex items-center gap-2">
+                <MicOff className="text-red-400" size={18} />
+                <span className="text-white font-medium">
+                  {userType === 'patient' ? (userInfo.name || 'Psicólogo') : (userInfo.name || 'Paciente')}
                 </span>
-              </div>
-              <div>
-                <div className="text-white font-medium text-sm">
-                  {userType === 'patient' ? userInfo.name || 'Psicólogo' : userInfo.name || 'Paciente'}
-                </div>
-                {/* Indicadores de microfone/câmera */}
-                <div className="flex items-center gap-1 mt-1">
-                  {isMuted && (
-                    <div className="bg-red-500 rounded-full p-1">
-                      <MicOff className="text-white" size={10} />
-                    </div>
-                  )}
-                  {isCameraOff && (
-                    <div className="bg-red-500 rounded-full p-1">
-                      <CameraOff className="text-white" size={10} />
-                    </div>
-                  )}
-                </div>
               </div>
             </div>
           </div>
@@ -516,46 +533,56 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
         
         {/* Placeholder quando não conectado */}
         {!isConnected && (
-          <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
-            <div className="text-center space-y-8 max-w-lg mx-4">
+          <div className="absolute inset-0 flex items-center justify-center bg-[#202124]">
+            <div className="text-center space-y-8 max-w-md mx-4">
               <div className="relative">
                 <div className="w-40 h-40 mx-auto rounded-full bg-gradient-to-br from-emerald-500 to-blue-600 flex items-center justify-center shadow-2xl">
                   {connectionState === 'connecting' ? (
                     <Loader2 className="w-16 h-16 animate-spin text-white" />
                   ) : (
                     <span className="text-white font-bold text-5xl">
-                      {userType === 'psychologist' ? 'P' : 'Dr'}
+                      {userType === 'patient' ? 'Dr' : (userInfo.name?.charAt(0) || 'P')}
                     </span>
                   )}
                 </div>
-                <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center border-4 border-slate-900">
-                  <div className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
+                <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center animate-pulse">
+                  <div className="w-3 h-3 bg-white rounded-full"></div>
                 </div>
               </div>
               
               <div className="space-y-3">
-                <h3 className="text-3xl font-bold text-white">
-                  {userType === 'psychologist' ? 'Aguardando paciente' : 'Conectando com psicólogo'}
+                <h3 className="text-3xl font-semibold text-white">
+                  {userType === 'psychologist' ? 'Aguardando paciente...' : 'Conectando com psicólogo...'}
                 </h3>
-                <p className="text-slate-400 text-lg">
+                <p className="text-gray-400 text-lg">
                   {connectionState === 'connecting' ? 'Estabelecendo conexão segura...' : status.text}
                 </p>
+                <div className="flex items-center justify-center gap-2 mt-4">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Vídeo próprio (miniatura) */}
-        <div className="absolute bottom-6 right-6 w-48 h-32 bg-slate-800 rounded-2xl border-3 border-slate-700 overflow-hidden shadow-2xl group hover:scale-105 transition-all duration-300">
+        {/* Vídeo próprio (self-view) - Estilo Google Meet */}
+        <div className="absolute bottom-8 right-8 w-48 h-36 bg-gray-800 rounded-2xl border-2 border-gray-600/50 overflow-hidden shadow-2xl transition-transform hover:scale-105 cursor-pointer">
           {isCameraOff ? (
-            <div className="w-full h-full flex items-center justify-center bg-slate-800 relative">
+            <div className="w-full h-full flex items-center justify-center bg-gray-800">
               <div className="text-center">
-                <CameraOff className="text-slate-400 mx-auto mb-2" size={24} />
-                <div className="text-sm text-slate-400 font-medium">Câmera desligada</div>
+                <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-gray-600 to-gray-700 flex items-center justify-center mb-2">
+                  <span className="text-white font-semibold text-lg">
+                    {userType === 'patient' ? (userInfo.name?.charAt(0) || 'P') : 'Dr'}
+                  </span>
+                </div>
+                <CameraOff className="text-gray-400 mx-auto mb-1" size={24} />
+                <div className="text-xs text-gray-400 font-medium">Câmera desligada</div>
               </div>
             </div>
           ) : (
-            <>
+            <div className="relative w-full h-full">
               <video
                 ref={localVideoRef}
                 autoPlay
@@ -563,91 +590,109 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
                 muted
                 className="w-full h-full object-cover scale-x-[-1]"
               />
-              {/* Indicadores de status no vídeo próprio */}
-              <div className="absolute bottom-2 left-2 flex gap-1">
+              {/* Status indicators overlay */}
+              <div className="absolute inset-0 pointer-events-none">
                 {isMuted && (
-                  <div className="bg-red-500 rounded-full p-1.5 shadow-lg">
-                    <MicOff className="text-white" size={12} />
+                  <div className="absolute top-2 left-2 bg-red-500/90 backdrop-blur-sm rounded-full p-2 shadow-lg">
+                    <MicOff className="text-white" size={16} />
                   </div>
                 )}
               </div>
-              {/* Nome no canto */}
-              <div className="absolute bottom-2 right-2 bg-black/60 rounded px-2 py-1">
-                <span className="text-white text-xs font-medium">Você</span>
+              {/* Name label */}
+              <div className="absolute bottom-2 left-2 right-2">
+                <div className="bg-black/60 backdrop-blur-sm rounded-lg px-2 py-1 text-center">
+                  <span className="text-white text-xs font-medium">Você</span>
+                </div>
               </div>
-            </>
+            </div>
           )}
         </div>
       </div>
 
-      {/* Barra de controles moderna */}
-      <div className="bg-slate-800/95 backdrop-blur-md border-t border-slate-700 p-6">
-        <div className="flex justify-center items-center gap-8 max-w-lg mx-auto">
+      {/* Barra de controles inferior - Estilo Google Meet */}
+      <div className="bg-[#202124] border-t border-gray-600/30 p-6">
+        {/* Indicadores de segurança no topo */}
+        <div className="flex justify-center items-center gap-6 mb-6 text-gray-400 text-sm">
+          <div className="flex items-center gap-2">
+            <Shield className="w-4 h-4 text-green-400" />
+            <span>Conexão criptografada</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Video className="w-4 h-4 text-blue-400" />
+            <span>Qualidade HD</span>
+          </div>
+        </div>
+
+        {/* Controles principais */}
+        <div className="flex justify-center items-center gap-6 max-w-md mx-auto">
           {/* Botão de microfone */}
           <button
             onClick={handleMuteToggle}
-            className={`group relative w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 transform hover:scale-110 ${
+            className={`group relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-200 ${
               isMuted 
-                ? 'bg-red-500 hover:bg-red-600 shadow-xl shadow-red-500/30' 
-                : 'bg-slate-600 hover:bg-slate-500 shadow-xl shadow-slate-600/20'
+                ? 'bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/30' 
+                : 'bg-gray-600 hover:bg-gray-500 shadow-lg'
             }`}
           >
             {isMuted ? (
-              <MicOff className="text-white" size={22} />
+              <MicOff className="text-white" size={20} />
             ) : (
-              <Mic className="text-white" size={22} />
+              <Mic className="text-white" size={20} />
             )}
-            {/* Tooltip */}
-            <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-black/80 text-white px-3 py-1 rounded-lg text-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+            <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-3 py-1 rounded-md text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
               {isMuted ? 'Ativar microfone' : 'Desativar microfone'}
-            </div>
-          </button>
-
-          {/* Botão de encerrar chamada */}
-          <button
-            onClick={handleEndCall}
-            className="group relative w-20 h-20 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center transition-all duration-300 transform hover:scale-110 shadow-2xl shadow-red-500/40"
-          >
-            <PhoneOff className="text-white" size={28} />
-            {/* Tooltip */}
-            <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-black/80 text-white px-3 py-1 rounded-lg text-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-              Encerrar chamada
             </div>
           </button>
 
           {/* Botão de câmera */}
           <button
             onClick={handleCameraToggle}
-            className={`group relative w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 transform hover:scale-110 ${
+            className={`group relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-200 ${
               isCameraOff 
-                ? 'bg-red-500 hover:bg-red-600 shadow-xl shadow-red-500/30' 
-                : 'bg-slate-600 hover:bg-slate-500 shadow-xl shadow-slate-600/20'
+                ? 'bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/30' 
+                : 'bg-gray-600 hover:bg-gray-500 shadow-lg'
             }`}
           >
             {isCameraOff ? (
-              <CameraOff className="text-white" size={22} />
+              <CameraOff className="text-white" size={20} />
             ) : (
-              <Camera className="text-white" size={22} />
+              <Camera className="text-white" size={20} />
             )}
-            {/* Tooltip */}
-            <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-black/80 text-white px-3 py-1 rounded-lg text-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+            <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-3 py-1 rounded-md text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
               {isCameraOff ? 'Ativar câmera' : 'Desativar câmera'}
             </div>
           </button>
-        </div>
-        
-        {/* Informações de segurança e qualidade */}
-        <div className="flex justify-center items-center gap-8 mt-6 text-slate-400 text-sm">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-            <span>Conexão criptografada</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-            <span>HD Quality</span>
-          </div>
+
+          {/* Botão de configurações */}
+          <button
+            onClick={() => setShowSettingsModal(true)}
+            className="group relative w-14 h-14 rounded-full bg-gray-600 hover:bg-gray-500 flex items-center justify-center transition-all duration-200 shadow-lg"
+          >
+            <Settings className="text-white" size={20} />
+            <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-3 py-1 rounded-md text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+              Configurações
+            </div>
+          </button>
+
+          {/* Botão de encerrar chamada */}
+          <button
+            onClick={handleEndCall}
+            className="group relative w-16 h-16 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center transition-all duration-200 shadow-lg shadow-red-500/30 ml-2"
+          >
+            <PhoneOff className="text-white" size={24} />
+            <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-3 py-1 rounded-md text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+              Encerrar
+            </div>
+          </button>
         </div>
       </div>
+
+      {/* Settings Modal */}
+      <VideoCallSettingsModal
+        isOpen={showSettingsModal}
+        onClose={() => setShowSettingsModal(false)}
+        localStream={localVideoRef.current?.srcObject as MediaStream || null}
+      />
 
       {/* Feedback Modal */}
       <FeedbackModal
