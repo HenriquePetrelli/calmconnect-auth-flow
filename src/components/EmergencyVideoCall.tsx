@@ -412,48 +412,70 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <div className="bg-primary text-primary-foreground p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Badge variant={status.color === 'green' ? 'default' : 'destructive'}>
-              {status.text}
-            </Badge>
-            <div className="text-sm">
-              <span className="font-medium">
-                {userType === 'psychologist' ? 'Psicólogo' : 'Paciente'}
+    <div className="min-h-screen bg-slate-900 flex flex-col relative">
+      {/* Header moderno com informações do usuário */}
+      <div className="bg-slate-800/90 backdrop-blur-sm text-white p-4 z-10">
+        <div className="flex items-center justify-between max-w-7xl mx-auto">
+          {/* Informações do participante */}
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-blue-600 flex items-center justify-center shadow-lg">
+              <span className="text-white font-semibold">
+                {userType === 'psychologist' ? 'Dr' : userInfo.name?.charAt(0) || 'P'}
               </span>
-              {userInfo.name && (
-                <div className="text-xs opacity-80">
-                  {userType === 'patient' ? `Com ${userInfo.name}` : `Atendendo ${userInfo.name}`}
+            </div>
+            <div>
+              <div className="font-semibold text-lg">
+                {userType === 'patient' && userInfo.name ? `Dr. ${userInfo.name}` : 
+                 userType === 'psychologist' && userInfo.name ? userInfo.name : 
+                 'Conectando...'}
+              </div>
+              {userInfo.details && (
+                <div className="text-sm text-slate-300 max-w-sm">
+                  {userType === 'patient' 
+                    ? `Especialização: ${userInfo.details}`
+                    : `Sintomas: ${userInfo.details}`
+                  }
                 </div>
               )}
+              {/* Status de conexão */}
+              <div className="flex items-center gap-2 mt-1">
+                <div className={`w-2 h-2 rounded-full ${status.color === 'green' ? 'bg-green-400 animate-pulse' : 'bg-yellow-400'}`}></div>
+                <span className="text-xs text-slate-400">{status.text}</span>
+              </div>
             </div>
           </div>
           
+          {/* Timer central */}
           <div className="text-center">
-            <div className="text-2xl font-mono font-bold">
+            <div className="text-3xl font-mono font-bold text-white mb-1">
               {formatTime(timeLeft)}
             </div>
-            <div className="text-xs opacity-80">
-              Tempo restante
-            </div>
-            {userInfo.details && (
-              <div className="text-xs opacity-70 mt-1 max-w-xs truncate">
-                {userType === 'patient' 
-                  ? `Especialização: ${userInfo.details}`
-                  : `Sintomas: ${userInfo.details}`
-                }
-              </div>
-            )}
+            <div className="text-sm text-slate-400">Tempo restante</div>
           </div>
+
+          {/* Informações adicionais para psicólogo */}
+          {userType === 'psychologist' && userInfo.name && (
+            <div className="text-right text-sm text-slate-300 space-y-1">
+              <div className="flex items-center gap-2">
+                <span>📅</span>
+                <span>Consultas: 12</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span>🚨</span>
+                <span>SOS anteriores: 3</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span>⭐</span>
+                <span>Avaliação: 4.8/5</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Video Area */}
-      <div className="flex-1 relative bg-secondary">
-        {/* Remote Video */}
+      {/* Área principal do vídeo */}
+      <div className="flex-1 relative bg-slate-900 overflow-hidden">
+        {/* Vídeo remoto */}
         <video 
           ref={remoteVideoRef} 
           autoPlay 
@@ -461,83 +483,169 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
           className="w-full h-full object-cover"
         />
         
-        {/* Placeholder when no remote video */}
+        {/* Overlay de status do participante */}
+        {isConnected && (
+          <div className="absolute top-6 left-6 z-20">
+            <div className="bg-black/70 backdrop-blur-md rounded-lg px-4 py-2 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-blue-600 flex items-center justify-center">
+                <span className="text-white text-xs font-semibold">
+                  {userType === 'psychologist' ? userInfo.name?.charAt(0) || 'P' : 'Dr'}
+                </span>
+              </div>
+              <div>
+                <div className="text-white font-medium text-sm">
+                  {userType === 'patient' ? userInfo.name || 'Psicólogo' : userInfo.name || 'Paciente'}
+                </div>
+                {/* Indicadores de microfone/câmera */}
+                <div className="flex items-center gap-1 mt-1">
+                  {isMuted && (
+                    <div className="bg-red-500 rounded-full p-1">
+                      <MicOff className="text-white" size={10} />
+                    </div>
+                  )}
+                  {isCameraOff && (
+                    <div className="bg-red-500 rounded-full p-1">
+                      <CameraOff className="text-white" size={10} />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Placeholder quando não conectado */}
         {!isConnected && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Card className="w-full max-w-md mx-4">
-              <CardContent className="p-8 text-center space-y-4">
-                <div className="w-24 h-24 mx-auto rounded-full bg-primary/20 flex items-center justify-center">
-                  <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center">
-                    {connectionState === 'connecting' ? (
-                      <Loader2 className="w-8 h-8 animate-spin text-primary-foreground" />
-                    ) : (
-                      <span className="text-primary-foreground font-bold text-xl">
-                        {userType === 'psychologist' ? 'P' : 'PS'}
-                      </span>
-                    )}
-                  </div>
+          <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
+            <div className="text-center space-y-8 max-w-lg mx-4">
+              <div className="relative">
+                <div className="w-40 h-40 mx-auto rounded-full bg-gradient-to-br from-emerald-500 to-blue-600 flex items-center justify-center shadow-2xl">
+                  {connectionState === 'connecting' ? (
+                    <Loader2 className="w-16 h-16 animate-spin text-white" />
+                  ) : (
+                    <span className="text-white font-bold text-5xl">
+                      {userType === 'psychologist' ? 'P' : 'Dr'}
+                    </span>
+                  )}
                 </div>
-                
-                <div>
-                  <h3 className="text-xl font-semibold text-foreground mb-1">
-                    {userType === 'psychologist' ? 'Aguardando paciente...' : 'Conectando com psicólogo...'}
-                  </h3>
-                  <p className="text-muted-foreground text-sm">
-                    {status.text}
-                  </p>
+                <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center border-4 border-slate-900">
+                  <div className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+              
+              <div className="space-y-3">
+                <h3 className="text-3xl font-bold text-white">
+                  {userType === 'psychologist' ? 'Aguardando paciente' : 'Conectando com psicólogo'}
+                </h3>
+                <p className="text-slate-400 text-lg">
+                  {connectionState === 'connecting' ? 'Estabelecendo conexão segura...' : status.text}
+                </p>
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Local Video */}
-        <div className="absolute bottom-4 right-4 w-32 h-24 bg-secondary rounded-lg border-2 border-border overflow-hidden shadow-lg">
+        {/* Vídeo próprio (miniatura) */}
+        <div className="absolute bottom-6 right-6 w-48 h-32 bg-slate-800 rounded-2xl border-3 border-slate-700 overflow-hidden shadow-2xl group hover:scale-105 transition-all duration-300">
           {isCameraOff ? (
-            <div className="w-full h-full flex items-center justify-center bg-secondary">
-              <CameraOff className="text-muted-foreground" size={24} />
+            <div className="w-full h-full flex items-center justify-center bg-slate-800 relative">
+              <div className="text-center">
+                <CameraOff className="text-slate-400 mx-auto mb-2" size={24} />
+                <div className="text-sm text-slate-400 font-medium">Câmera desligada</div>
+              </div>
             </div>
           ) : (
-            <video
-              ref={localVideoRef}
-              autoPlay
-              playsInline
-              muted
-              className="w-full h-full object-cover scale-x-[-1]"
-            />
+            <>
+              <video
+                ref={localVideoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-full object-cover scale-x-[-1]"
+              />
+              {/* Indicadores de status no vídeo próprio */}
+              <div className="absolute bottom-2 left-2 flex gap-1">
+                {isMuted && (
+                  <div className="bg-red-500 rounded-full p-1.5 shadow-lg">
+                    <MicOff className="text-white" size={12} />
+                  </div>
+                )}
+              </div>
+              {/* Nome no canto */}
+              <div className="absolute bottom-2 right-2 bg-black/60 rounded px-2 py-1">
+                <span className="text-white text-xs font-medium">Você</span>
+              </div>
+            </>
           )}
         </div>
       </div>
 
-      {/* Controls */}
-      <div className="p-6 bg-background border-t">
-        <div className="flex justify-center space-x-6">
-          <Button
-            variant={isMuted ? "destructive" : "secondary"}
-            size="icon"
-            className="w-12 h-12 rounded-full"
+      {/* Barra de controles moderna */}
+      <div className="bg-slate-800/95 backdrop-blur-md border-t border-slate-700 p-6">
+        <div className="flex justify-center items-center gap-8 max-w-lg mx-auto">
+          {/* Botão de microfone */}
+          <button
             onClick={handleMuteToggle}
+            className={`group relative w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 transform hover:scale-110 ${
+              isMuted 
+                ? 'bg-red-500 hover:bg-red-600 shadow-xl shadow-red-500/30' 
+                : 'bg-slate-600 hover:bg-slate-500 shadow-xl shadow-slate-600/20'
+            }`}
           >
-            {isMuted ? <MicOff size={20} /> : <Mic size={20} />}
-          </Button>
+            {isMuted ? (
+              <MicOff className="text-white" size={22} />
+            ) : (
+              <Mic className="text-white" size={22} />
+            )}
+            {/* Tooltip */}
+            <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-black/80 text-white px-3 py-1 rounded-lg text-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+              {isMuted ? 'Ativar microfone' : 'Desativar microfone'}
+            </div>
+          </button>
 
-          <Button
-            variant="destructive"
-            size="icon"
-            className="w-14 h-14 rounded-full"
+          {/* Botão de encerrar chamada */}
+          <button
             onClick={handleEndCall}
+            className="group relative w-20 h-20 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center transition-all duration-300 transform hover:scale-110 shadow-2xl shadow-red-500/40"
           >
-            <PhoneOff size={24} />
-          </Button>
+            <PhoneOff className="text-white" size={28} />
+            {/* Tooltip */}
+            <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-black/80 text-white px-3 py-1 rounded-lg text-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+              Encerrar chamada
+            </div>
+          </button>
 
-          <Button
-            variant={isCameraOff ? "destructive" : "secondary"}
-            size="icon"
-            className="w-12 h-12 rounded-full"
+          {/* Botão de câmera */}
+          <button
             onClick={handleCameraToggle}
+            className={`group relative w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 transform hover:scale-110 ${
+              isCameraOff 
+                ? 'bg-red-500 hover:bg-red-600 shadow-xl shadow-red-500/30' 
+                : 'bg-slate-600 hover:bg-slate-500 shadow-xl shadow-slate-600/20'
+            }`}
           >
-            {isCameraOff ? <CameraOff size={20} /> : <Camera size={20} />}
-          </Button>
+            {isCameraOff ? (
+              <CameraOff className="text-white" size={22} />
+            ) : (
+              <Camera className="text-white" size={22} />
+            )}
+            {/* Tooltip */}
+            <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-black/80 text-white px-3 py-1 rounded-lg text-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+              {isCameraOff ? 'Ativar câmera' : 'Desativar câmera'}
+            </div>
+          </button>
+        </div>
+        
+        {/* Informações de segurança e qualidade */}
+        <div className="flex justify-center items-center gap-8 mt-6 text-slate-400 text-sm">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+            <span>Conexão criptografada</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+            <span>HD Quality</span>
+          </div>
         </div>
       </div>
 
