@@ -6,14 +6,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Clock, Calendar as CalendarIcon, User, AlertTriangle } from 'lucide-react';
 import { format, addDays, setHours, setMinutes, isAfter, startOfDay, addHours } from 'date-fns';
-import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 import { ptBR } from 'date-fns/locale';
 import { useAppointments } from '@/hooks/useAppointments';
 import { useToast } from '@/hooks/use-toast';
 import { useAvailableTimeSlots } from '@/hooks/useAvailableTimeSlots';
 import { PsychologistData } from './PsychologistList';
-
-const BRAZIL_TIMEZONE = 'America/Sao_Paulo';
 
 interface AppointmentFormProps {
   psychologist: PsychologistData;
@@ -79,10 +76,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
     }
 
     const [hours, minutes] = selectedTime.split(':').map(Number);
-    const appointmentDateTimeBrazil = setMinutes(setHours(selectedDate, hours), minutes);
-    
-    // Converter para UTC considerando o fuso horário do Brasil
-    const appointmentDateTime = fromZonedTime(appointmentDateTimeBrazil, BRAZIL_TIMEZONE);
+    const appointmentDateTime = setMinutes(setHours(selectedDate, hours), minutes);
 
     // Verificar regra de 48h de antecedência
     if (!canScheduleDate(appointmentDateTime)) {

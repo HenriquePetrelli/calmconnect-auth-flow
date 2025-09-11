@@ -1,9 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { toZonedTime, fromZonedTime } from 'date-fns-tz';
-import { format, addMinutes, parseISO, isSameDay } from 'date-fns';
-
-const BRAZIL_TIMEZONE = 'America/Sao_Paulo';
+import { format, addMinutes, parseISO, startOfDay, endOfDay } from 'date-fns';
 
 interface UseAvailableTimeSlotsProps {
   psychologistId: string;
@@ -35,16 +32,9 @@ export const useAvailableTimeSlots = ({ psychologistId, selectedDate }: UseAvail
     try {
       setLoading(true);
       
-      // Converter data para o início e fim do dia no fuso horário do Brasil
-      const startOfDayBrazil = fromZonedTime(
-        new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0),
-        BRAZIL_TIMEZONE
-      );
-      
-      const endOfDayBrazil = fromZonedTime(
-        new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59),
-        BRAZIL_TIMEZONE
-      );
+      // Converter data para o início e fim do dia (considerando o fuso horário do usuário)
+      const startOfDayBrazil = startOfDay(date);
+      const endOfDayBrazil = endOfDay(date);
 
       // Buscar consultas agendadas e pendentes do psicólogo para essa data
       const { data: appointments, error } = await supabase
@@ -69,7 +59,7 @@ export const useAvailableTimeSlots = ({ psychologistId, selectedDate }: UseAvail
       const occupied: string[] = [];
       
       appointments.forEach(appointment => {
-        const appointmentTime = toZonedTime(parseISO(appointment.scheduled_at), BRAZIL_TIMEZONE);
+        const appointmentTime = parseISO(appointment.scheduled_at);
         const duration = appointment.duration || 50; // Duração padrão de 50 minutos
         
         // Ocupar o slot inicial
