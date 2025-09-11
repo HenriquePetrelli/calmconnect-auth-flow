@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle } from "lucide-react";
+import { Hand } from "lucide-react";
 import ConfirmationModal from "./sos/ConfirmationModal";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -65,7 +65,7 @@ const SOSButton = () => {
           className="w-16 h-16 rounded-full bg-destructive hover:bg-destructive/90 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
           aria-label="Botão SOS - Emergência"
         >
-          <AlertTriangle className="w-8 h-8 text-white" />
+          <Hand className="w-8 h-8 text-white" />
         </Button>
       </div>
 

@@ -9,6 +9,7 @@ import { AppointmentHistory } from '@/components/appointments/AppointmentHistory
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import BottomNavigation from '@/components/BottomNavigation';
 
 const Appointments = () => {
   const navigate = useNavigate();
@@ -62,7 +63,7 @@ const Appointments = () => {
       </div>
 
       {/* Content */}
-      <div className="p-4 space-y-6">
+      <div className="p-4 space-y-6 pb-24">
         {/* Schedule New Appointment */}
         <Card>
           <CardContent className="p-6">
@@ -83,6 +84,9 @@ const Appointments = () => {
         {/* Consultation History */}
         <AppointmentHistory />
       </div>
+
+      {/* Bottom Navigation */}
+      <BottomNavigation />
 
       {/* Upgrade Modal */}
       <Dialog open={showUpgradeModal} onOpenChange={setShowUpgradeModal}>

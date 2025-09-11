@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useToast } from "@/hooks/use-toast";
+import BottomNavigation from "@/components/BottomNavigation";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -135,7 +136,7 @@ const Profile = () => {
       </div>
 
       {/* Content */}
-      <div className="p-4 space-y-6">
+      <div className="p-4 space-y-6 pb-24">
         {/* User Info */}
         <Card>
           <CardContent className="p-6">
@@ -213,6 +214,9 @@ const Profile = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Bottom Navigation */}
+      <BottomNavigation />
     </div>
   );
 };

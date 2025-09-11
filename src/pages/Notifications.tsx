@@ -16,13 +16,22 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '@/hooks/useNotifications';
+import BottomNavigation from '@/components/BottomNavigation';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 
 const Notifications = () => {
   const navigate = useNavigate();
-  const { notifications, unreadCount, loading, markAsRead, markAllAsRead } = useNotifications();
+  const { 
+    notifications, 
+    unreadCount, 
+    loading, 
+    markAsRead, 
+    markAllAsRead, 
+    deleteNotification, 
+    deleteAllNotifications 
+  } = useNotifications();
 
   const getNotificationIcon = (title: string) => {
     const lowerTitle = title.toLowerCase();
@@ -45,6 +54,17 @@ const Notifications = () => {
     if (notification.appointment_id) {
       navigate('/appointments');
     }
+  };
+
+  const handleDeleteNotification = async (notificationId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    await deleteNotification(notificationId);
+    toast.success('Notificação excluída');
+  };
+
+  const handleDeleteAllNotifications = async () => {
+    await deleteAllNotifications();
+    toast.success('Todas as notificações foram excluídas');
   };
 
   if (loading) {
@@ -116,17 +136,30 @@ const Notifications = () => {
           </div>
           
           <div className="flex items-center gap-2">
-            {unreadCount > 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={markAllAsRead}
-                className="hover-scale"
-              >
-                <CheckCheck className="h-4 w-4 mr-2" />
-                Marcar todas
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {unreadCount > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={markAllAsRead}
+                  className="hover-scale"
+                >
+                  <CheckCheck className="h-4 w-4 mr-2" />
+                  Marcar todas
+                </Button>
+              )}
+              {notifications.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDeleteAllNotifications}
+                  className="hover-scale text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Excluir todas
+                </Button>
+              )}
+            </div>
             <ThemeToggle />
           </div>
         </div>
@@ -173,25 +206,26 @@ const Notifications = () => {
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-3 mb-2">
-                        <h4 className={`font-semibold leading-tight ${
-                          notification.status === 'unread' 
-                            ? 'text-foreground' 
-                            : 'text-foreground/80'
-                        }`}>
-                          {notification.title}
-                        </h4>
+                      <div className="flex items-start justify-between gap-3 mb-3">
+                        <div className="flex-1">
+                          <h4 className={`font-semibold text-base leading-tight mb-1 ${
+                            notification.status === 'unread' 
+                              ? 'text-foreground' 
+                              : 'text-foreground/80'
+                          }`}>
+                            {notification.title}
+                          </h4>
+                          <p className="text-sm text-muted-foreground leading-relaxed">
+                            {notification.message}
+                          </p>
+                        </div>
                         {notification.status === 'unread' && (
                           <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0 mt-1" />
                         )}
                       </div>
                       
-                      <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-                        {notification.message}
-                      </p>
-                      
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs text-muted-foreground/80">
+                      <div className="flex items-center justify-between pt-2 border-t border-border/30">
+                        <p className="text-xs text-muted-foreground/80 font-medium">
                           {format(new Date(notification.created_at), 'PPp', { locale: ptBR })}
                         </p>
                         
@@ -200,11 +234,9 @@ const Notifications = () => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 w-8 p-0 hover:bg-muted/80"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // TODO: Implement delete notification
-                            }}
+                            className="h-7 w-7 p-0 hover:bg-destructive/10 hover:text-destructive"
+                            onClick={(e) => handleDeleteNotification(notification.id, e)}
+                            title="Excluir notificação"
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>
@@ -223,6 +255,9 @@ const Notifications = () => {
           </div>
         )}
       </div>
+
+      {/* Bottom Navigation */}
+      <BottomNavigation />
     </div>
   );
 };

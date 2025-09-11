@@ -147,11 +147,11 @@ const HomePage = () => {
           </div>
 
           {/* Secondary Features Grid */}
-          <div className="grid grid-cols-2 gap-3 mt-4">
+          <div className="grid grid-cols-1 gap-4 mt-4">
             <FeatureCard
-              icon={<TrendingUp className="w-6 h-6" />}
+              icon={<TrendingUp className="w-8 h-8" />}
               title="Minha Evolução"
-              description="Acompanhe seu progresso"
+              description="Acompanhe seu progresso e métricas de bem-estar"
               variant="evolution"
               onClick={() => navigate('/statistics')}
               badge={
@@ -165,12 +165,12 @@ const HomePage = () => {
             <FeatureCard
               icon={
                 <div className="relative">
-                  <Users className="text-gray-400 w-6 h-6" />
-                  <Lock className="absolute -bottom-1 -right-1 w-3 h-3 text-gray-500" />
+                  <Users className="text-gray-400 w-8 h-8" />
+                  <Lock className="absolute -bottom-1 -right-1 w-4 h-4 text-gray-500" />
                 </div>
               }
               title="Aulas de Yoga"
-              description="Em breve disponível"
+              description="Sessões guiadas de yoga e mindfulness - Em breve disponível"
               disabled={true}
               badge={
                 <Badge variant="secondary" className="text-xs px-2 py-1">
@@ -276,7 +276,7 @@ const HomePage = () => {
       </div>
 
       {/* Floating SOS Button */}
-      <div className="fixed bottom-24 right-4 z-50 animate-float">
+      <div className="fixed bottom-20 right-4 z-50 animate-float">
         <SOSButton />
       </div>
     </div>
