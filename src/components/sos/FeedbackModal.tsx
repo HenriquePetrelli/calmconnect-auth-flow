@@ -14,9 +14,10 @@ interface FeedbackModalProps {
   userType: 'patient' | 'psychologist';
   sessionId: string;
   partnerName?: string;
+  onRedirect?: () => void;
 }
 
-export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerName }: FeedbackModalProps) => {
+export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerName, onRedirect }: FeedbackModalProps) => {
   const [rating, setRating] = useState<number>(0);
   const [problemResolved, setProblemResolved] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -47,24 +48,55 @@ export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerNam
 
     setIsSubmitting(true);
     try {
-      // Save feedback to database (you can create a feedback table)
-      const feedbackData = {
-        session_id: sessionId,
-        rating,
-        user_type: userType,
-        problem_resolved: userType === 'patient' ? problemResolved : null,
-        created_at: new Date().toISOString()
-      };
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
 
-      // For now, just log the feedback - you can implement database saving later
-      console.log('Feedback submitted:', feedbackData);
+      // Save feedback to database
+      const { error: feedbackError } = await supabase
+        .from('session_feedback')
+        .insert({
+          session_id: sessionId,
+          user_id: user.id,
+          user_type: userType,
+          rating,
+          problem_resolved: userType === 'patient' ? problemResolved : null,
+        });
+
+      if (feedbackError) {
+        throw feedbackError;
+      }
+
+      // Update psychologist average rating if it's a patient rating
+      if (userType === 'patient') {
+        const { data: session } = await supabase
+          .from('webrtc_sessions')
+          .select('psychologist_id')
+          .eq('id', sessionId)
+          .single();
+
+        if (session?.psychologist_id) {
+          const { data: avgRating } = await supabase
+            .rpc('calculate_psychologist_average_rating', {
+              psychologist_user_id: session.psychologist_id
+            });
+
+          if (avgRating !== null) {
+            await supabase
+              .from('psychologists')
+              .update({ average_rating: avgRating })
+              .eq('user_id', session.psychologist_id);
+          }
+        }
+      }
 
       toast({
         title: 'Obrigado!',
         description: 'Sua avaliação foi enviada com sucesso.',
       });
 
-      onClose();
+      handleClose();
     } catch (error) {
       console.error('Error submitting feedback:', error);
       toast({
@@ -74,6 +106,13 @@ export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerNam
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleClose = () => {
+    onClose();
+    if (onRedirect) {
+      setTimeout(onRedirect, 100);
     }
   };
 
@@ -133,33 +172,29 @@ export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerNam
                 <Label className="font-medium">
                   O psicólogo conseguiu resolver seu problema?
                 </Label>
-                <RadioGroup value={problemResolved} onValueChange={setProblemResolved}>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="yes" id="yes" />
-                    <Label htmlFor="yes">Sim, me ajudou muito</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="partially" id="partially" />
-                    <Label htmlFor="partially">Parcialmente, foi útil</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="no" id="no" />
-                    <Label htmlFor="no">Não conseguiu me ajudar</Label>
-                  </div>
-                </RadioGroup>
+                 <RadioGroup value={problemResolved} onValueChange={setProblemResolved}>
+                   <div className="flex items-center space-x-2">
+                     <RadioGroupItem value="yes" id="yes" />
+                     <Label htmlFor="yes">Sim, conseguiu me ajudar</Label>
+                   </div>
+                   <div className="flex items-center space-x-2">
+                     <RadioGroupItem value="no" id="no" />
+                     <Label htmlFor="no">Não conseguiu me ajudar</Label>
+                   </div>
+                 </RadioGroup>
               </div>
             )}
 
             {/* Action buttons */}
             <div className="flex gap-3">
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={onClose}
-                disabled={isSubmitting}
-              >
-                Pular
-              </Button>
+               <Button
+                 variant="outline"
+                 className="flex-1"
+                 onClick={handleClose}
+                 disabled={isSubmitting}
+               >
+                 Pular
+               </Button>
               <Button
                 className="flex-1"
                 onClick={handleSubmit}

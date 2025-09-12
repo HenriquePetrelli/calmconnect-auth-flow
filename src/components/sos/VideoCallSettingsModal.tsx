@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Settings, Mic, Camera, Eye } from 'lucide-react';
+import { Settings, Mic, Camera, Eye, Volume2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface VideoCallSettingsModalProps {
   isOpen: boolean;
@@ -13,10 +14,13 @@ interface VideoCallSettingsModalProps {
 }
 
 export const VideoCallSettingsModal = ({ isOpen, onClose, localStream }: VideoCallSettingsModalProps) => {
+  const { toast } = useToast();
   const [audioDevices, setAudioDevices] = useState<MediaDeviceInfo[]>([]);
   const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([]);
+  const [audioOutputDevices, setAudioOutputDevices] = useState<MediaDeviceInfo[]>([]);
   const [selectedAudioDevice, setSelectedAudioDevice] = useState('');
   const [selectedVideoDevice, setSelectedVideoDevice] = useState('');
+  const [selectedAudioOutputDevice, setSelectedAudioOutputDevice] = useState('');
   const [isBackgroundBlurEnabled, setIsBackgroundBlurEnabled] = useState(false);
   const [currentStream, setCurrentStream] = useState<MediaStream | null>(null);
 
@@ -32,9 +36,11 @@ export const VideoCallSettingsModal = ({ isOpen, onClose, localStream }: VideoCa
       const devices = await navigator.mediaDevices.enumerateDevices();
       const audioInputs = devices.filter(device => device.kind === 'audioinput');
       const videoInputs = devices.filter(device => device.kind === 'videoinput');
+      const audioOutputs = devices.filter(device => device.kind === 'audiooutput');
       
       setAudioDevices(audioInputs);
       setVideoDevices(videoInputs);
+      setAudioOutputDevices(audioOutputs);
       
       // Set current devices as default selected
       if (localStream) {
@@ -60,6 +66,11 @@ export const VideoCallSettingsModal = ({ isOpen, onClose, localStream }: VideoCa
         if (videoInputs.length > 0) {
           setSelectedVideoDevice(videoInputs[0].deviceId);
         }
+      }
+      
+      // Set first available audio output as default
+      if (audioOutputs.length > 0) {
+        setSelectedAudioOutputDevice(audioOutputs[0].deviceId);
       }
     } catch (error) {
       console.error('Error loading devices:', error);
@@ -122,39 +133,53 @@ export const VideoCallSettingsModal = ({ isOpen, onClose, localStream }: VideoCa
     }
   };
 
+  const handleAudioOutputDeviceChange = async (deviceId: string) => {
+    try {
+      setSelectedAudioOutputDevice(deviceId);
+      
+      // Change audio output for all audio elements
+      const audioElements = document.querySelectorAll('audio, video');
+      audioElements.forEach((element) => {
+        const audioElement = element as HTMLAudioElement | HTMLVideoElement;
+        if ('setSinkId' in audioElement) {
+          (audioElement as any).setSinkId(deviceId).catch(console.error);
+        }
+      });
+    } catch (error) {
+      console.error('Error switching audio output device:', error);
+    }
+  };
+
   const toggleBackgroundBlur = async (enabled: boolean) => {
     setIsBackgroundBlurEnabled(enabled);
     
     if (currentStream) {
       const videoTrack = currentStream.getVideoTracks()[0];
-      if (videoTrack && 'applyConstraints' in videoTrack) {
+      if (videoTrack) {
         try {
-          // Apply blur effect using browser's built-in background blur if available
-          await videoTrack.applyConstraints({
-            // @ts-ignore - backgroundBlur is experimental
-            backgroundBlur: enabled
+          // Apply CSS filter to the local video for blur effect
+          const localVideoElements = document.querySelectorAll('video[autoplay][muted]');
+          localVideoElements.forEach((video) => {
+            const videoElement = video as HTMLVideoElement;
+            if (enabled) {
+              videoElement.style.filter = 'blur(3px) brightness(0.9)';
+            } else {
+              videoElement.style.filter = 'none';
+            }
           });
         } catch (error) {
-          console.warn('Background blur not supported by this browser:', error);
-          // Fallback: Apply CSS filter blur to video element
-          if (enabled) {
-            const videoElements = document.querySelectorAll('video[autoplay]');
-            videoElements.forEach((video) => {
-              if (video !== document.querySelector('video[ref*="remote"]')) {
-                (video as HTMLVideoElement).style.filter = 'blur(5px) brightness(0.8)';
-              }
-            });
-          } else {
-            const videoElements = document.querySelectorAll('video[autoplay]');
-            videoElements.forEach((video) => {
-              if (video !== document.querySelector('video[ref*="remote"]')) {
-                (video as HTMLVideoElement).style.filter = 'none';
-              }
-            });
-          }
+          console.error('Error applying background blur:', error);
         }
       }
     }
+  };
+
+  const handleSaveSettings = () => {
+    toast({
+      title: 'Configurações salvas',
+      description: 'Suas configurações foram aplicadas com sucesso.',
+    });
+    onClose();
   };
 
   return (
@@ -178,7 +203,7 @@ export const VideoCallSettingsModal = ({ isOpen, onClose, localStream }: VideoCa
               <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
                 <SelectValue placeholder="Selecionar microfone" />
               </SelectTrigger>
-              <SelectContent className="bg-gray-700 border-gray-600">
+              <SelectContent className="bg-gray-700 border-gray-600 z-50">
                 {audioDevices.map((device) => (
                   <SelectItem 
                     key={device.deviceId} 
@@ -202,7 +227,7 @@ export const VideoCallSettingsModal = ({ isOpen, onClose, localStream }: VideoCa
               <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
                 <SelectValue placeholder="Selecionar câmera" />
               </SelectTrigger>
-              <SelectContent className="bg-gray-700 border-gray-600">
+              <SelectContent className="bg-gray-700 border-gray-600 z-50">
                 {videoDevices.map((device) => (
                   <SelectItem 
                     key={device.deviceId} 
@@ -210,6 +235,30 @@ export const VideoCallSettingsModal = ({ isOpen, onClose, localStream }: VideoCa
                     className="text-white hover:bg-gray-600"
                   >
                     {device.label || `Câmera ${device.deviceId.slice(0, 8)}...`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Audio Output Device Selection */}
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2 text-sm font-medium text-gray-200">
+              <Volume2 className="w-4 h-4" />
+              Alto-falante
+            </Label>
+            <Select value={selectedAudioOutputDevice} onValueChange={handleAudioOutputDeviceChange}>
+              <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+                <SelectValue placeholder="Selecionar alto-falante" />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-700 border-gray-600 z-50">
+                {audioOutputDevices.map((device) => (
+                  <SelectItem 
+                    key={device.deviceId} 
+                    value={device.deviceId}
+                    className="text-white hover:bg-gray-600"
+                  >
+                    {device.label || `Alto-falante ${device.deviceId.slice(0, 8)}...`}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -235,7 +284,13 @@ export const VideoCallSettingsModal = ({ isOpen, onClose, localStream }: VideoCa
             onClick={onClose}
             className="bg-gray-700 border-gray-600 text-white hover:bg-gray-600"
           >
-            Fechar
+            Cancelar
+          </Button>
+          <Button 
+            onClick={handleSaveSettings}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            Salvar
           </Button>
         </div>
       </DialogContent>

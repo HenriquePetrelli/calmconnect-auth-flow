@@ -634,6 +634,7 @@ export type Database = {
           approval_status: string | null
           approved: boolean | null
           area_atendimento: string | null
+          average_rating: number | null
           bio: string | null
           city: string | null
           cpf: string | null
@@ -646,6 +647,7 @@ export type Database = {
           id: string
           pix_key: string | null
           pix_type: string | null
+          ratings_count: number | null
           rejected_at: string | null
           rejection_reason: string | null
           reviewed_at: string | null
@@ -662,6 +664,7 @@ export type Database = {
           approval_status?: string | null
           approved?: boolean | null
           area_atendimento?: string | null
+          average_rating?: number | null
           bio?: string | null
           city?: string | null
           cpf?: string | null
@@ -674,6 +677,7 @@ export type Database = {
           id?: string
           pix_key?: string | null
           pix_type?: string | null
+          ratings_count?: number | null
           rejected_at?: string | null
           rejection_reason?: string | null
           reviewed_at?: string | null
@@ -690,6 +694,7 @@ export type Database = {
           approval_status?: string | null
           approved?: boolean | null
           area_atendimento?: string | null
+          average_rating?: number | null
           bio?: string | null
           city?: string | null
           cpf?: string | null
@@ -702,6 +707,7 @@ export type Database = {
           id?: string
           pix_key?: string | null
           pix_type?: string | null
+          ratings_count?: number | null
           rejected_at?: string | null
           rejection_reason?: string | null
           reviewed_at?: string | null

@@ -192,7 +192,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
         if (emergencyRequest.accepted_by) {
           const { data: psychologist, error: psychError } = await supabase
             .from('psychologists')
-            .select('full_name, specialization, total_appointments')
+            .select('full_name, specialization, total_appointments, average_rating')
             .eq('user_id', emergencyRequest.accepted_by)
             .single();
 
@@ -201,7 +201,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
               name: psychologist.full_name,
               details: psychologist.specialization || 'Psicólogo',
               consultations: psychologist.total_appointments || 0,
-              rating: 4.8 // Mock rating
+              rating: psychologist.average_rating || 0
             });
           }
         }
@@ -211,27 +211,19 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
         if (patientDetails?.full_name) {
           const symptoms = patientDetails.sintomas_selecionados || [];
           
-          // Get patient statistics
+          // Get patient statistics using the new function
           const { data: patientStats } = await supabase
-            .from('appointments')
-            .select('id, status')
-            .eq('patient_id', emergencyRequest.patient_id);
-          
-          const { data: sosStats } = await supabase
-            .from('emergency_requests')
-            .select('id')
-            .eq('patient_id', emergencyRequest.patient_id)
-            .eq('status', 'completed');
-          
-          const completedConsultations = patientStats?.filter(a => a.status === 'completed').length || 0;
-          const completedSos = sosStats?.length || 0;
+            .rpc('get_patient_statistics', {
+              patient_user_id: emergencyRequest.patient_id
+            })
+            .single();
           
           setUserInfo({
             name: patientDetails.full_name,
             details: symptoms.length > 0 ? symptoms.join(', ') : 'Sem sintomas cadastrados',
-            consultations: completedConsultations,
-            sosCount: completedSos,
-            rating: 4.2 // Mock rating
+            consultations: patientStats?.consultation_count || 0,
+            sosCount: patientStats?.sos_count || 0,
+            rating: patientStats?.average_rating || 0
           });
         }
       }
@@ -305,10 +297,11 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
       description: 'A videochamada foi encerrada com sucesso.',
     });
 
-    if (onEndCall) {
-      onEndCall();
-    } else {
+    // Redirect based on user type
+    if (userType === 'patient') {
       navigate('/home');
+    } else {
+      navigate('/psychologist-dashboard');
     }
   };
 
@@ -704,6 +697,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
         userType={userType}
         sessionId={sessionId || ''}
         partnerName={userInfo.name}
+        onRedirect={handleFeedbackClose}
       />
     </div>
   );
