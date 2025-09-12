@@ -754,6 +754,39 @@ export type Database = {
         }
         Relationships: []
       }
+      session_feedback: {
+        Row: {
+          created_at: string | null
+          id: string
+          problem_resolved: string | null
+          rating: number
+          session_id: string
+          updated_at: string | null
+          user_id: string
+          user_type: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          problem_resolved?: string | null
+          rating: number
+          session_id: string
+          updated_at?: string | null
+          user_id: string
+          user_type: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          problem_resolved?: string | null
+          rating?: number
+          session_id?: string
+          updated_at?: string | null
+          user_id?: string
+          user_type?: string
+        }
+        Relationships: []
+      }
       subscribers: {
         Row: {
           created_at: string
@@ -875,6 +908,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_psychologist_average_rating: {
+        Args: { psychologist_user_id: string }
+        Returns: number
+      }
       can_access_document: {
         Args: { bucket_name: string; object_name: string }
         Returns: boolean
@@ -958,6 +995,14 @@ export type Database = {
           pending_psychologists: number
           sos_requests_last_30_days: number
           total_patients: number
+        }[]
+      }
+      get_patient_statistics: {
+        Args: { patient_user_id: string }
+        Returns: {
+          average_rating: number
+          consultation_count: number
+          sos_count: number
         }[]
       }
       get_psychologist_document_url: {
