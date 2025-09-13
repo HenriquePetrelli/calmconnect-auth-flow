@@ -48,6 +48,8 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   const {
     localVideoRef,
     remoteVideoRef,
+    localStream,
+    peerConnection,
     connectionState,
     isConnected,
     error,
@@ -687,7 +689,15 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
       <VideoCallSettingsModal
         isOpen={showSettingsModal}
         onClose={() => setShowSettingsModal(false)}
-        localStream={localVideoRef.current?.srcObject as MediaStream || null}
+        localStream={localStream}
+        peerConnection={peerConnection}
+        localVideoRef={localVideoRef}
+        onStreamUpdate={(stream) => {
+          // Update local video element when stream changes
+          if (localVideoRef.current) {
+            localVideoRef.current.srcObject = stream;
+          }
+        }}
       />
 
       {/* Feedback Modal */}

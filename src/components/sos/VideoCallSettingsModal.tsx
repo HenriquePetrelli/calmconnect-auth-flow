@@ -4,17 +4,32 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Settings, Mic, Camera, Eye, Volume2 } from 'lucide-react';
+import { Settings, Mic, Camera, Eye, Volume2, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useUserPreferences } from '@/hooks/useUserPreferences';
+import { useMediaDeviceSettings } from '@/hooks/useMediaDeviceSettings';
 
 interface VideoCallSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   localStream: MediaStream | null;
+  peerConnection?: RTCPeerConnection | null;
+  localVideoRef?: React.RefObject<HTMLVideoElement>;
+  onStreamUpdate?: (stream: MediaStream) => void;
 }
 
-export const VideoCallSettingsModal = ({ isOpen, onClose, localStream }: VideoCallSettingsModalProps) => {
+export const VideoCallSettingsModal = ({ 
+  isOpen, 
+  onClose, 
+  localStream, 
+  peerConnection = null,
+  localVideoRef,
+  onStreamUpdate 
+}: VideoCallSettingsModalProps) => {
   const { toast } = useToast();
+  const { preferences, savePreferences, isLoading: preferencesLoading } = useUserPreferences();
+  const mediaDeviceManager = useMediaDeviceSettings(localVideoRef || { current: null }, onStreamUpdate);
+  
   const [audioDevices, setAudioDevices] = useState<MediaDeviceInfo[]>([]);
   const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([]);
   const [audioOutputDevices, setAudioOutputDevices] = useState<MediaDeviceInfo[]>([]);
@@ -23,6 +38,7 @@ export const VideoCallSettingsModal = ({ isOpen, onClose, localStream }: VideoCa
   const [selectedAudioOutputDevice, setSelectedAudioOutputDevice] = useState('');
   const [isBackgroundBlurEnabled, setIsBackgroundBlurEnabled] = useState(false);
   const [currentStream, setCurrentStream] = useState<MediaStream | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -30,6 +46,21 @@ export const VideoCallSettingsModal = ({ isOpen, onClose, localStream }: VideoCa
       setCurrentStream(localStream);
     }
   }, [isOpen, localStream]);
+
+  // Load saved preferences when modal opens
+  useEffect(() => {
+    if (isOpen && !preferencesLoading && preferences) {
+      setSelectedAudioDevice(preferences.mic_device_id || '');
+      setSelectedVideoDevice(preferences.camera_device_id || '');
+      setSelectedAudioOutputDevice(preferences.speaker_device_id || '');
+      setIsBackgroundBlurEnabled(preferences.background_blur || false);
+      
+      // Apply background blur if enabled
+      if (preferences.background_blur && localVideoRef?.current) {
+        mediaDeviceManager.applyBackgroundBlur(true, localVideoRef.current);
+      }
+    }
+  }, [isOpen, preferencesLoading, preferences, localVideoRef, mediaDeviceManager]);
 
   const loadDevices = async () => {
     try {
@@ -78,108 +109,54 @@ export const VideoCallSettingsModal = ({ isOpen, onClose, localStream }: VideoCa
   };
 
   const handleAudioDeviceChange = async (deviceId: string) => {
-    try {
-      setSelectedAudioDevice(deviceId);
-      
-      if (currentStream) {
-        // Stop current audio track
-        const audioTrack = currentStream.getAudioTracks()[0];
-        if (audioTrack) {
-          audioTrack.stop();
-        }
-
-        // Get new audio stream with selected device
-        const newAudioStream = await navigator.mediaDevices.getUserMedia({
-          audio: { deviceId: { exact: deviceId } }
-        });
-
-        // Replace audio track in current stream
-        const newAudioTrack = newAudioStream.getAudioTracks()[0];
-        if (newAudioTrack) {
-          currentStream.removeTrack(audioTrack);
-          currentStream.addTrack(newAudioTrack);
-        }
-      }
-    } catch (error) {
-      console.error('Error switching audio device:', error);
+    setSelectedAudioDevice(deviceId);
+    const newStream = await mediaDeviceManager.changeAudioDevice(deviceId, currentStream, peerConnection);
+    if (newStream) {
+      setCurrentStream(newStream);
     }
   };
 
   const handleVideoDeviceChange = async (deviceId: string) => {
-    try {
-      setSelectedVideoDevice(deviceId);
-      
-      if (currentStream) {
-        // Stop current video track
-        const videoTrack = currentStream.getVideoTracks()[0];
-        if (videoTrack) {
-          videoTrack.stop();
-        }
-
-        // Get new video stream with selected device
-        const newVideoStream = await navigator.mediaDevices.getUserMedia({
-          video: { deviceId: { exact: deviceId } }
-        });
-
-        // Replace video track in current stream
-        const newVideoTrack = newVideoStream.getVideoTracks()[0];
-        if (newVideoTrack) {
-          currentStream.removeTrack(videoTrack);
-          currentStream.addTrack(newVideoTrack);
-        }
-      }
-    } catch (error) {
-      console.error('Error switching video device:', error);
+    setSelectedVideoDevice(deviceId);
+    const newStream = await mediaDeviceManager.changeVideoDevice(deviceId, currentStream, peerConnection);
+    if (newStream) {
+      setCurrentStream(newStream);
     }
   };
 
   const handleAudioOutputDeviceChange = async (deviceId: string) => {
-    try {
-      setSelectedAudioOutputDevice(deviceId);
-      
-      // Change audio output for all audio elements
-      const audioElements = document.querySelectorAll('audio, video');
-      audioElements.forEach((element) => {
-        const audioElement = element as HTMLAudioElement | HTMLVideoElement;
-        if ('setSinkId' in audioElement) {
-          (audioElement as any).setSinkId(deviceId).catch(console.error);
-        }
-      });
-    } catch (error) {
-      console.error('Error switching audio output device:', error);
-    }
+    setSelectedAudioOutputDevice(deviceId);
+    await mediaDeviceManager.changeAudioOutputDevice(deviceId);
   };
 
   const toggleBackgroundBlur = async (enabled: boolean) => {
     setIsBackgroundBlurEnabled(enabled);
-    
-    if (currentStream) {
-      const videoTrack = currentStream.getVideoTracks()[0];
-      if (videoTrack) {
-        try {
-          // Apply CSS filter to the local video for blur effect
-          const localVideoElements = document.querySelectorAll('video[autoplay][muted]');
-          localVideoElements.forEach((video) => {
-            const videoElement = video as HTMLVideoElement;
-            if (enabled) {
-              videoElement.style.filter = 'blur(3px) brightness(0.9)';
-            } else {
-              videoElement.style.filter = 'none';
-            }
-          });
-        } catch (error) {
-          console.error('Error applying background blur:', error);
-        }
-      }
-    }
+    mediaDeviceManager.applyBackgroundBlur(enabled, localVideoRef?.current || null);
   };
 
-  const handleSaveSettings = () => {
-    toast({
-      title: 'Configurações salvas',
-      description: 'Suas configurações foram aplicadas com sucesso.',
-    });
-    onClose();
+  const handleSaveSettings = async () => {
+    setIsSaving(true);
+    
+    try {
+      const success = await savePreferences({
+        mic_device_id: selectedAudioDevice || null,
+        camera_device_id: selectedVideoDevice || null,
+        speaker_device_id: selectedAudioOutputDevice || null,
+        background_blur: isBackgroundBlurEnabled,
+      });
+
+      if (success) {
+        toast({
+          title: 'Configurações salvas',
+          description: 'Suas configurações foram aplicadas e salvas com sucesso.',
+        });
+        onClose();
+      }
+    } catch (error) {
+      console.error('Error saving settings:', error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -288,9 +265,17 @@ export const VideoCallSettingsModal = ({ isOpen, onClose, localStream }: VideoCa
           </Button>
           <Button 
             onClick={handleSaveSettings}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
+            disabled={isSaving || preferencesLoading}
+            className="bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
           >
-            Salvar
+            {isSaving ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Salvando...
+              </>
+            ) : (
+              'Salvar'
+            )}
           </Button>
         </div>
       </DialogContent>

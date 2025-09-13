@@ -497,6 +497,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     remoteVideoRef,
     localStream,
     remoteStream,
+    peerConnection,
     connectionState,
     isConnected,
     error,

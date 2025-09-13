@@ -611,6 +611,15 @@ export const WebRTCVideoCall = ({ sessionId, userType, onEndCall }: WebRTCVideoC
         isOpen={showSettingsModal}
         onClose={() => setShowSettingsModal(false)}
         localStream={localStream}
+        peerConnection={peerConnection}
+        localVideoRef={localVideoRef}
+        onStreamUpdate={(stream) => {
+          // Update local video element when stream changes
+          if (localVideoRef.current) {
+            localVideoRef.current.srcObject = stream;
+          }
+          setLocalStream(stream);
+        }}
       />
 
       {/* Feedback Modal */}

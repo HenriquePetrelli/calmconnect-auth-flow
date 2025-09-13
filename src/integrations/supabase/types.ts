@@ -862,6 +862,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_preferences: {
+        Row: {
+          background_blur: boolean | null
+          camera_device_id: string | null
+          id: string
+          mic_device_id: string | null
+          speaker_device_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          background_blur?: boolean | null
+          camera_device_id?: string | null
+          id?: string
+          mic_device_id?: string | null
+          speaker_device_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          background_blur?: boolean | null
+          camera_device_id?: string | null
+          id?: string
+          mic_device_id?: string | null
+          speaker_device_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       webrtc_sessions: {
         Row: {
           answer: Json | null
