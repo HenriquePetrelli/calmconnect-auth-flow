@@ -70,7 +70,7 @@ export const useUserPreferences = () => {
           camera_device_id: updatedPreferences.camera_device_id,
           speaker_device_id: updatedPreferences.speaker_device_id,
           background_blur: updatedPreferences.background_blur,
-        });
+        }, { onConflict: 'user_id' });
 
       if (error) throw error;
 

@@ -5,6 +5,7 @@ import { getWebRTCConnectionManager } from '@/utils/webrtc-manager';
 import { flowLock } from '@/utils/flow-lock';
 import { stateMachineRegistry, type WebRTCState } from '@/utils/state-machine';
 import { loopDetector } from '@/utils/loop-detector';
+import { useUserPreferences } from '@/hooks/useUserPreferences';
 
 interface WebRTCSession {
   id: string;
@@ -41,30 +42,56 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
   const { toast } = useToast();
   const connectionManager = getWebRTCConnectionManager();
   const stateMachine = useRef(stateMachineRegistry.getOrCreate(sessionId));
+  const { preferences, isLoading: prefsLoading } = useUserPreferences();
 
   const initializeMedia = useCallback(async () => {
     try {
-      console.log('🎥 Initializing media devices...');
+      console.log('🎥 Initializing media devices with preferences...');
+
+      const videoConstraints: MediaTrackConstraints = {
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+        facingMode: 'user',
+        ...(preferences?.camera_device_id ? { deviceId: { exact: preferences.camera_device_id } } : {})
+      };
+
+      const audioConstraints: MediaTrackConstraints = {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+        ...(preferences?.mic_device_id ? { deviceId: { exact: preferences.mic_device_id } } : {})
+      };
+
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { 
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          facingMode: 'user'
-        },
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
-        }
+        video: videoConstraints,
+        audio: audioConstraints
       });
 
       setLocalStream(stream);
       
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
+        if (preferences?.background_blur) {
+          try {
+            localVideoRef.current.style.filter = 'blur(3px) brightness(0.9)';
+          } catch {}
+        }
       }
-      
-      console.log('✅ Media devices initialized successfully');
+
+      // Apply preferred audio output device if supported
+      if (preferences?.speaker_device_id) {
+        try {
+          const elements = document.querySelectorAll('audio, video');
+          await Promise.all(Array.from(elements).map(async (el) => {
+            const anyEl = el as any;
+            if (typeof anyEl.setSinkId === 'function') {
+              try { await anyEl.setSinkId(preferences.speaker_device_id as string); } catch {}
+            }
+          }));
+        } catch {}
+      }
+
+      console.log('✅ Media devices initialized with preferences');
       return stream;
     } catch (err) {
       const errorMessage = 'Erro ao acessar câmera e microfone. Verifique as permissões.';
@@ -77,7 +104,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
       });
       throw new Error(errorMessage);
     }
-  }, [toast]);
+  }, [toast, preferences]);
 
   const createPeerConnection = useCallback(async (stream: MediaStream) => {
     console.log('🔗 Creating managed peer connection...');
@@ -490,7 +517,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
         cleanup();
       }
     };
-  }, [sessionId, userType]); // Minimal dependencies to prevent loop
+  }, [sessionId, userType, prefsLoading]); // Minimal dependencies to prevent loop
 
   return {
     localVideoRef,

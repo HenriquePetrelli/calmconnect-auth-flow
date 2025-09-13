@@ -138,10 +138,42 @@ export const VideoCallSettingsModal = ({
     setIsSaving(true);
     
     try {
+      // Validate selected devices exist
+      const audioValid = !selectedAudioDevice || audioDevices.some(d => d.deviceId === selectedAudioDevice);
+      const videoValid = !selectedVideoDevice || videoDevices.some(d => d.deviceId === selectedVideoDevice);
+      const outputValid = !selectedAudioOutputDevice || audioOutputDevices.some(d => d.deviceId === selectedAudioOutputDevice);
+
+      const safeMicId = audioValid ? selectedAudioDevice : null;
+      const safeCamId = videoValid ? selectedVideoDevice : null;
+      const safeSpeakerId = outputValid ? selectedAudioOutputDevice : null;
+
+      if (!audioValid || !videoValid || !outputValid) {
+        toast({
+          title: 'Dispositivo inválido',
+          description: 'Alguns dispositivos selecionados não estão disponíveis. Aplicando valores padrão.',
+          variant: 'destructive',
+        });
+      }
+
+      // Apply changes in real time to current call
+      let updatedStream = currentStream;
+      if (safeMicId && updatedStream) {
+        updatedStream = await mediaDeviceManager.changeAudioDevice(safeMicId, updatedStream, peerConnection || null);
+      }
+      if (safeCamId && updatedStream) {
+        updatedStream = await mediaDeviceManager.changeVideoDevice(safeCamId, updatedStream, peerConnection || null);
+      }
+      if (safeSpeakerId) {
+        await mediaDeviceManager.changeAudioOutputDevice(safeSpeakerId);
+      }
+      mediaDeviceManager.applyBackgroundBlur(isBackgroundBlurEnabled, localVideoRef?.current || null);
+      if (updatedStream) setCurrentStream(updatedStream);
+
+      // Persist to Supabase
       const success = await savePreferences({
-        mic_device_id: selectedAudioDevice || null,
-        camera_device_id: selectedVideoDevice || null,
-        speaker_device_id: selectedAudioOutputDevice || null,
+        mic_device_id: safeMicId || null,
+        camera_device_id: safeCamId || null,
+        speaker_device_id: safeSpeakerId || null,
         background_blur: isBackgroundBlurEnabled,
       });
 
