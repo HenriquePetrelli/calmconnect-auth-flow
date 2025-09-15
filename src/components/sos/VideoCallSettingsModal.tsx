@@ -47,20 +47,37 @@ export const VideoCallSettingsModal = ({
     }
   }, [isOpen, localStream]);
 
-  // Load saved preferences when modal opens
+  // Load saved preferences when modal opens or set current devices
   useEffect(() => {
-    if (isOpen && !preferencesLoading && preferences) {
-      setSelectedAudioDevice(preferences.mic_device_id || '');
-      setSelectedVideoDevice(preferences.camera_device_id || '');
-      setSelectedAudioOutputDevice(preferences.speaker_device_id || '');
-      setIsBackgroundBlurEnabled(preferences.background_blur || false);
-      
-      // Apply background blur if enabled
-      if (preferences.background_blur && localVideoRef?.current) {
-        mediaDeviceManager.applyBackgroundBlur(true, localVideoRef.current);
+    if (isOpen && !preferencesLoading) {
+      if (preferences) {
+        // Use saved preferences if available
+        setSelectedAudioDevice(preferences.mic_device_id || '');
+        setSelectedVideoDevice(preferences.camera_device_id || '');
+        setSelectedAudioOutputDevice(preferences.speaker_device_id || '');
+      } else {
+        // Detect current devices from the stream
+        if (localStream) {
+          const audioTrack = localStream.getAudioTracks()[0];
+          const videoTrack = localStream.getVideoTracks()[0];
+          
+          if (audioTrack) {
+            const audioSettings = audioTrack.getSettings();
+            if (audioSettings.deviceId) {
+              setSelectedAudioDevice(audioSettings.deviceId);
+            }
+          }
+          
+          if (videoTrack) {
+            const videoSettings = videoTrack.getSettings();
+            if (videoSettings.deviceId) {
+              setSelectedVideoDevice(videoSettings.deviceId);
+            }
+          }
+        }
       }
     }
-  }, [isOpen, preferencesLoading, preferences, localVideoRef, mediaDeviceManager]);
+  }, [isOpen, preferencesLoading, preferences, localStream]);
 
   const loadDevices = async () => {
     try {
@@ -73,34 +90,14 @@ export const VideoCallSettingsModal = ({
       setVideoDevices(videoInputs);
       setAudioOutputDevices(audioOutputs);
       
-      // Set current devices as default selected
-      if (localStream) {
-        const audioTrack = localStream.getAudioTracks()[0];
-        const videoTrack = localStream.getVideoTracks()[0];
-        
-        if (audioTrack) {
-          const audioSettings = audioTrack.getSettings();
-          const deviceId = audioSettings.deviceId || '';
-          setSelectedAudioDevice(deviceId);
-        }
-        
-        if (videoTrack) {
-          const videoSettings = videoTrack.getSettings();
-          const deviceId = videoSettings.deviceId || '';
-          setSelectedVideoDevice(deviceId);
-        }
-      } else {
-        // Set first available devices as default if no stream
-        if (audioInputs.length > 0) {
-          setSelectedAudioDevice(audioInputs[0].deviceId);
-        }
-        if (videoInputs.length > 0) {
-          setSelectedVideoDevice(videoInputs[0].deviceId);
-        }
+      // Set first available devices as fallback if no current device detected
+      if (!selectedAudioDevice && audioInputs.length > 0) {
+        setSelectedAudioDevice(audioInputs[0].deviceId);
       }
-      
-      // Set first available audio output as default
-      if (audioOutputs.length > 0) {
+      if (!selectedVideoDevice && videoInputs.length > 0) {
+        setSelectedVideoDevice(videoInputs[0].deviceId);
+      }
+      if (!selectedAudioOutputDevice && audioOutputs.length > 0) {
         setSelectedAudioOutputDevice(audioOutputs[0].deviceId);
       }
     } catch (error) {
@@ -110,28 +107,58 @@ export const VideoCallSettingsModal = ({
 
   const handleAudioDeviceChange = async (deviceId: string) => {
     setSelectedAudioDevice(deviceId);
-    const newStream = await mediaDeviceManager.changeAudioDevice(deviceId, currentStream, peerConnection);
-    if (newStream) {
-      setCurrentStream(newStream);
+    hasInteractedRef.current = true;
+    
+    try {
+      const newStream = await mediaDeviceManager.changeAudioDevice(deviceId, localStream, peerConnection);
+      if (newStream && onStreamUpdate) {
+        onStreamUpdate(newStream);
+        setCurrentStream(newStream);
+      }
+    } catch (error) {
+      console.error('Error changing audio device:', error);
+      toast({
+        title: 'Erro no microfone',
+        description: 'Não foi possível trocar o microfone.',
+        variant: 'destructive',
+      });
     }
   };
 
   const handleVideoDeviceChange = async (deviceId: string) => {
     setSelectedVideoDevice(deviceId);
-    const newStream = await mediaDeviceManager.changeVideoDevice(deviceId, currentStream, peerConnection);
-    if (newStream) {
-      setCurrentStream(newStream);
+    hasInteractedRef.current = true;
+    
+    try {
+      const newStream = await mediaDeviceManager.changeVideoDevice(deviceId, localStream, peerConnection);
+      if (newStream && onStreamUpdate) {
+        onStreamUpdate(newStream);
+        setCurrentStream(newStream);
+      }
+    } catch (error) {
+      console.error('Error changing video device:', error);
+      toast({
+        title: 'Erro na câmera',
+        description: 'Não foi possível trocar a câmera.',
+        variant: 'destructive',
+      });
     }
   };
 
   const handleAudioOutputDeviceChange = async (deviceId: string) => {
     setSelectedAudioOutputDevice(deviceId);
-    await mediaDeviceManager.changeAudioOutputDevice(deviceId);
-  };
-
-  const toggleBackgroundBlur = async (enabled: boolean) => {
-    setIsBackgroundBlurEnabled(enabled);
-    mediaDeviceManager.applyBackgroundBlur(enabled, localVideoRef?.current || null);
+    hasInteractedRef.current = true;
+    
+    try {
+      await mediaDeviceManager.changeAudioOutputDevice(deviceId);
+    } catch (error) {
+      console.error('Error changing audio output device:', error);
+      toast({
+        title: 'Erro no alto-falante',
+        description: 'Não foi possível trocar o alto-falante.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleSaveSettings = async () => {
@@ -166,7 +193,6 @@ export const VideoCallSettingsModal = ({
       if (safeSpeakerId) {
         await mediaDeviceManager.changeAudioOutputDevice(safeSpeakerId);
       }
-      mediaDeviceManager.applyBackgroundBlur(isBackgroundBlurEnabled, localVideoRef?.current || null);
       if (updatedStream) setCurrentStream(updatedStream);
 
       // Persist to Supabase
@@ -174,7 +200,6 @@ export const VideoCallSettingsModal = ({
         mic_device_id: safeMicId || null,
         camera_device_id: safeCamId || null,
         speaker_device_id: safeSpeakerId || null,
-        background_blur: isBackgroundBlurEnabled,
       });
 
       if (success) {
