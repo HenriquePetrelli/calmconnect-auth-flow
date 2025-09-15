@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Mic, MicOff, Camera, CameraOff, PhoneOff, Loader2, AlertTriangle, Settings, Shield, Video } from 'lucide-react';
 import { useWebRTC } from '@/hooks/useWebRTC';
 import { useToast } from '@/hooks/use-toast';
+import { useAudioLevelMeter } from '@/hooks/useAudioLevelMeter';
 import { supabase } from '@/integrations/supabase/client';
 import { FeedbackModal } from '@/components/sos/FeedbackModal';
 import { VideoCallSettingsModal } from '@/components/sos/VideoCallSettingsModal';
@@ -49,6 +50,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     localVideoRef,
     remoteVideoRef,
     localStream,
+    remoteStream,
     peerConnection,
     connectionState,
     isConnected,
@@ -71,6 +73,10 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
       }
     }
   });
+
+  // Audio level meters for both local and remote streams
+  const localAudioMeter = useAudioLevelMeter({ stream: localStream });
+  const remoteAudioMeter = useAudioLevelMeter({ stream: remoteStream });
 
   // Enhanced session validation with intelligent delay
   useEffect(() => {
@@ -254,11 +260,13 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   const handleMuteToggle = () => {
     const muted = toggleAudio();
     setIsMuted(muted);
+    console.log('🎤 Audio toggled:', muted ? 'muted' : 'unmuted');
   };
 
   const handleCameraToggle = () => {
     const cameraOff = toggleVideo();
     setIsCameraOff(cameraOff);
+    console.log('📹 Video toggled:', cameraOff ? 'off' : 'on');
   };
 
   const handleEndCall = async () => {
@@ -513,16 +521,43 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
           autoPlay 
           playsInline 
           className="w-full h-full object-cover"
+          onLoadedData={() => console.log('🎥 Remote video loaded')}
+          onError={(e) => console.error('❌ Remote video error:', e)}
         />
         
-        {/* Indicador de status do participante remoto */}
+        {/* Debug indicator for remote stream */}
+        {remoteStream && (
+          <div className="absolute top-4 right-4 bg-green-500/80 text-white text-xs px-2 py-1 rounded">
+            Stream Recebido
+          </div>
+        )}
+        
+        {!remoteStream && isConnected && (
+          <div className="absolute top-4 right-4 bg-yellow-500/80 text-white text-xs px-2 py-1 rounded">
+            Aguardando Stream
+          </div>
+        )}
+        
+        {/* Indicador de status do participante remoto com medidor de áudio */}
         {isConnected && (
           <div className="absolute top-6 left-6 z-10">
-            <div className="flex items-center gap-2 bg-black/70 backdrop-blur-md rounded-xl px-4 py-2 shadow-lg border border-white/10">
+            <div className="flex items-center gap-3 bg-black/70 backdrop-blur-md rounded-xl px-4 py-2 shadow-lg border border-white/10">
               <div className="flex items-center gap-2">
                 <span className="text-white font-medium">
                   {userType === 'patient' ? (userInfo.name || 'Psicólogo') : (userInfo.name || 'Paciente')}
                 </span>
+              </div>
+              {/* Remote audio level meter */}
+              <div className="flex items-center gap-2">
+                <div className={`w-3 h-3 rounded-full transition-all duration-200 ${
+                  remoteAudioMeter.isSpeaking ? 'bg-green-400 animate-pulse' : 'bg-gray-500'
+                }`}></div>
+                <div className="w-8 h-2 bg-gray-600 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-green-400 to-yellow-400 transition-all duration-100 rounded-full"
+                    style={{ width: `${remoteAudioMeter.audioLevel}%` }}
+                  ></div>
+                </div>
               </div>
             </div>
           </div>
@@ -595,10 +630,23 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
                   </div>
                 )}
               </div>
-              {/* Name label */}
+              {/* Name label with local audio meter */}
               <div className="absolute bottom-2 left-2 right-2">
-                <div className="bg-black/60 backdrop-blur-sm rounded-lg px-2 py-1 text-center">
-                  <span className="text-white text-xs font-medium">Você</span>
+                <div className="bg-black/60 backdrop-blur-sm rounded-lg px-2 py-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-white text-xs font-medium">Você</span>
+                    <div className="flex items-center gap-1">
+                      <div className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                        localAudioMeter.isSpeaking ? 'bg-green-400 animate-pulse' : 'bg-gray-500'
+                      }`}></div>
+                      <div className="w-6 h-1 bg-gray-600 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-gradient-to-r from-green-400 to-yellow-400 transition-all duration-100 rounded-full"
+                          style={{ width: `${localAudioMeter.audioLevel}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

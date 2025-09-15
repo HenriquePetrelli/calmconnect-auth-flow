@@ -36,9 +36,11 @@ export const VideoCallSettingsModal = ({
   const [selectedAudioDevice, setSelectedAudioDevice] = useState('');
   const [selectedVideoDevice, setSelectedVideoDevice] = useState('');
   const [selectedAudioOutputDevice, setSelectedAudioOutputDevice] = useState('');
+  const [tempAudioDevice, setTempAudioDevice] = useState('');
+  const [tempVideoDevice, setTempVideoDevice] = useState('');
+  const [tempAudioOutputDevice, setTempAudioOutputDevice] = useState('');
   const [currentStream, setCurrentStream] = useState<MediaStream | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const hasInteractedRef = useRef(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -52,28 +54,43 @@ export const VideoCallSettingsModal = ({
     if (isOpen && !preferencesLoading) {
       if (preferences) {
         // Use saved preferences if available
-        setSelectedAudioDevice(preferences.mic_device_id || '');
-        setSelectedVideoDevice(preferences.camera_device_id || '');
-        setSelectedAudioOutputDevice(preferences.speaker_device_id || '');
+        const micId = preferences.mic_device_id || '';
+        const cameraId = preferences.camera_device_id || '';
+        const speakerId = preferences.speaker_device_id || '';
+        
+        setSelectedAudioDevice(micId);
+        setSelectedVideoDevice(cameraId);
+        setSelectedAudioOutputDevice(speakerId);
+        setTempAudioDevice(micId);
+        setTempVideoDevice(cameraId);
+        setTempAudioOutputDevice(speakerId);
       } else {
         // Detect current devices from the stream
         if (localStream) {
           const audioTrack = localStream.getAudioTracks()[0];
           const videoTrack = localStream.getVideoTracks()[0];
           
+          let micId = '';
+          let cameraId = '';
+          
           if (audioTrack) {
             const audioSettings = audioTrack.getSettings();
             if (audioSettings.deviceId) {
-              setSelectedAudioDevice(audioSettings.deviceId);
+              micId = audioSettings.deviceId;
             }
           }
           
           if (videoTrack) {
             const videoSettings = videoTrack.getSettings();
             if (videoSettings.deviceId) {
-              setSelectedVideoDevice(videoSettings.deviceId);
+              cameraId = videoSettings.deviceId;
             }
           }
+          
+          setSelectedAudioDevice(micId);
+          setSelectedVideoDevice(cameraId);
+          setTempAudioDevice(micId);
+          setTempVideoDevice(cameraId);
         }
       }
     }
@@ -105,60 +122,24 @@ export const VideoCallSettingsModal = ({
     }
   };
 
-  const handleAudioDeviceChange = async (deviceId: string) => {
-    setSelectedAudioDevice(deviceId);
-    hasInteractedRef.current = true;
-    
-    try {
-      const newStream = await mediaDeviceManager.changeAudioDevice(deviceId, localStream, peerConnection);
-      if (newStream && onStreamUpdate) {
-        onStreamUpdate(newStream);
-        setCurrentStream(newStream);
-      }
-    } catch (error) {
-      console.error('Error changing audio device:', error);
-      toast({
-        title: 'Erro no microfone',
-        description: 'Não foi possível trocar o microfone.',
-        variant: 'destructive',
-      });
-    }
+  const handleAudioDeviceChange = (deviceId: string) => {
+    setTempAudioDevice(deviceId);
   };
 
-  const handleVideoDeviceChange = async (deviceId: string) => {
-    setSelectedVideoDevice(deviceId);
-    hasInteractedRef.current = true;
-    
-    try {
-      const newStream = await mediaDeviceManager.changeVideoDevice(deviceId, localStream, peerConnection);
-      if (newStream && onStreamUpdate) {
-        onStreamUpdate(newStream);
-        setCurrentStream(newStream);
-      }
-    } catch (error) {
-      console.error('Error changing video device:', error);
-      toast({
-        title: 'Erro na câmera',
-        description: 'Não foi possível trocar a câmera.',
-        variant: 'destructive',
-      });
-    }
+  const handleVideoDeviceChange = (deviceId: string) => {
+    setTempVideoDevice(deviceId);
   };
 
-  const handleAudioOutputDeviceChange = async (deviceId: string) => {
-    setSelectedAudioOutputDevice(deviceId);
-    hasInteractedRef.current = true;
-    
-    try {
-      await mediaDeviceManager.changeAudioOutputDevice(deviceId);
-    } catch (error) {
-      console.error('Error changing audio output device:', error);
-      toast({
-        title: 'Erro no alto-falante',
-        description: 'Não foi possível trocar o alto-falante.',
-        variant: 'destructive',
-      });
-    }
+  const handleAudioOutputDeviceChange = (deviceId: string) => {
+    setTempAudioOutputDevice(deviceId);
+  };
+
+  const handleCancel = () => {
+    // Reset temp values to original values
+    setTempAudioDevice(selectedAudioDevice);
+    setTempVideoDevice(selectedVideoDevice);
+    setTempAudioOutputDevice(selectedAudioOutputDevice);
+    onClose();
   };
 
   const handleSaveSettings = async () => {
@@ -166,13 +147,13 @@ export const VideoCallSettingsModal = ({
     
     try {
       // Validate selected devices exist
-      const audioValid = !selectedAudioDevice || audioDevices.some(d => d.deviceId === selectedAudioDevice);
-      const videoValid = !selectedVideoDevice || videoDevices.some(d => d.deviceId === selectedVideoDevice);
-      const outputValid = !selectedAudioOutputDevice || audioOutputDevices.some(d => d.deviceId === selectedAudioOutputDevice);
+      const audioValid = !tempAudioDevice || audioDevices.some(d => d.deviceId === tempAudioDevice);
+      const videoValid = !tempVideoDevice || videoDevices.some(d => d.deviceId === tempVideoDevice);
+      const outputValid = !tempAudioOutputDevice || audioOutputDevices.some(d => d.deviceId === tempAudioOutputDevice);
 
-      const safeMicId = audioValid ? selectedAudioDevice : null;
-      const safeCamId = videoValid ? selectedVideoDevice : null;
-      const safeSpeakerId = outputValid ? selectedAudioOutputDevice : null;
+      const safeMicId = audioValid ? tempAudioDevice : null;
+      const safeCamId = videoValid ? tempVideoDevice : null;
+      const safeSpeakerId = outputValid ? tempAudioOutputDevice : null;
 
       if (!audioValid || !videoValid || !outputValid) {
         toast({
@@ -183,7 +164,7 @@ export const VideoCallSettingsModal = ({
       }
 
       // Apply changes in real time to current call
-      let updatedStream = currentStream;
+      let updatedStream = currentStream || localStream;
       if (safeMicId && updatedStream) {
         updatedStream = await mediaDeviceManager.changeAudioDevice(safeMicId, updatedStream, peerConnection || null);
       }
@@ -193,7 +174,17 @@ export const VideoCallSettingsModal = ({
       if (safeSpeakerId) {
         await mediaDeviceManager.changeAudioOutputDevice(safeSpeakerId);
       }
-      if (updatedStream) setCurrentStream(updatedStream);
+      
+      // Update stream and notify parent
+      if (updatedStream && onStreamUpdate) {
+        onStreamUpdate(updatedStream);
+        setCurrentStream(updatedStream);
+      }
+
+      // Update the actual selected values
+      setSelectedAudioDevice(safeMicId || '');
+      setSelectedVideoDevice(safeCamId || '');
+      setSelectedAudioOutputDevice(safeSpeakerId || '');
 
       // Persist to Supabase
       const success = await savePreferences({
@@ -211,6 +202,11 @@ export const VideoCallSettingsModal = ({
       }
     } catch (error) {
       console.error('Error saving settings:', error);
+      toast({
+        title: 'Erro ao salvar',
+        description: 'Não foi possível salvar as configurações.',
+        variant: 'destructive',
+      });
     } finally {
       setIsSaving(false);
     }
@@ -233,7 +229,7 @@ export const VideoCallSettingsModal = ({
               <Mic className="w-4 h-4" />
               Microfone
             </Label>
-            <Select value={selectedAudioDevice} onValueChange={handleAudioDeviceChange}>
+            <Select value={tempAudioDevice} onValueChange={handleAudioDeviceChange}>
               <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
                 <SelectValue placeholder="Selecionar microfone" />
               </SelectTrigger>
@@ -257,7 +253,7 @@ export const VideoCallSettingsModal = ({
               <Camera className="w-4 h-4" />
               Câmera
             </Label>
-            <Select value={selectedVideoDevice} onValueChange={handleVideoDeviceChange}>
+            <Select value={tempVideoDevice} onValueChange={handleVideoDeviceChange}>
               <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
                 <SelectValue placeholder="Selecionar câmera" />
               </SelectTrigger>
@@ -281,7 +277,7 @@ export const VideoCallSettingsModal = ({
               <Volume2 className="w-4 h-4" />
               Alto-falante
             </Label>
-            <Select value={selectedAudioOutputDevice} onValueChange={handleAudioOutputDeviceChange}>
+            <Select value={tempAudioOutputDevice} onValueChange={handleAudioOutputDeviceChange}>
               <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
                 <SelectValue placeholder="Selecionar alto-falante" />
               </SelectTrigger>
@@ -304,7 +300,7 @@ export const VideoCallSettingsModal = ({
         <div className="flex justify-end gap-2 pt-4">
           <Button 
             variant="outline" 
-            onClick={onClose}
+            onClick={handleCancel}
             className="bg-gray-700 border-gray-600 text-white hover:bg-gray-600"
           >
             Cancelar
