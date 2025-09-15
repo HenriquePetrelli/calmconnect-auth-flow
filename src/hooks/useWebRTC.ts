@@ -401,6 +401,13 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
         throw new Error('Session ID is required');
       }
 
+      // Wait for preferences to load before initializing
+      if (prefsLoading) {
+        flowLock.releaseLock(sessionId);
+        loopDetector.trace(sessionId, 'initialize_skip_preferences_loading');
+        return;
+      }
+
       try {
         loopDetector.trace(sessionId, 'initialize_start');
         
@@ -517,7 +524,77 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
         cleanup();
       }
     };
-  }, [sessionId, userType, prefsLoading]); // Minimal dependencies to prevent loop
+
+    // Only initialize once preferences are loaded
+    if (!prefsLoading) {
+      initialize();
+    }
+  }, [sessionId, userType]); // Remove prefsLoading from dependencies to prevent restart
+  
+  // Separate effect to initialize when preferences finish loading
+  useEffect(() => {
+    if (!prefsLoading && webrtcState === 'idle' && sessionId && !isInitializing) {
+      // Trigger initialization if we're still in idle state after preferences load
+      const timer = setTimeout(() => {
+        if (webrtcState === 'idle') {
+          const initialize = async () => {
+            if (!flowLock.acquireLock(sessionId, 'webrtc_initialization')) {
+              return;
+            }
+            try {
+              stateMachine.current.transitionTo('initializing');
+              setWebrtcState('initializing');
+              setIsInitializing(true);
+              initializationRef.current = true;
+              
+              const stream = await initializeMedia();
+              const pc = await createPeerConnection(stream);
+              
+              // Set up realtime subscription
+              const channel = supabase
+                .channel(`webrtc_session_${sessionId}`)
+                .on('postgres_changes', {
+                  event: 'UPDATE',
+                  schema: 'public', 
+                  table: 'webrtc_sessions',
+                  filter: `id=eq.${sessionId}`
+                }, async (payload) => {
+                  const sessionData = payload.new as WebRTCSession;
+                  setSession(sessionData);
+                  if (sessionData.offer && userType === 'patient' && !pc.remoteDescription) {
+                    await handleOffer(sessionData.offer, pc);
+                  } else if (sessionData.answer && userType === 'psychologist' && !pc.remoteDescription) {
+                    await handleAnswer(sessionData.answer, pc);
+                  }
+                  if (sessionData.ice_candidates) {
+                    await processIceCandidates(sessionData.ice_candidates, pc);
+                  }
+                }).subscribe();
+              
+              if (userType === 'psychologist') {
+                setTimeout(() => createOffer(pc), 1000);
+              }
+              
+              stateMachine.current.transitionTo('connected');
+              setWebrtcState('connected');
+            } catch (error) {
+              console.error('❌ WebRTC delayed initialization failed:', error);
+              stateMachine.current.transitionTo('error');
+              setWebrtcState('error');
+              setError(error instanceof Error ? error.message : 'Erro ao inicializar videochamada');
+            } finally {
+              flowLock.releaseLock(sessionId);
+              setIsInitializing(false);
+              initializationRef.current = false;
+            }
+          };
+          initialize();
+        }
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [prefsLoading, webrtcState, sessionId, isInitializing]);
 
   return {
     localVideoRef,
