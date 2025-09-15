@@ -6,6 +6,7 @@ import { flowLock } from '@/utils/flow-lock';
 import { stateMachineRegistry, type WebRTCState } from '@/utils/state-machine';
 import { loopDetector } from '@/utils/loop-detector';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
+import { useMediaDeviceManager } from '@/hooks/useMediaDeviceManager';
 
 interface WebRTCSession {
   id: string;
@@ -43,68 +44,67 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
   const connectionManager = getWebRTCConnectionManager();
   const stateMachine = useRef(stateMachineRegistry.getOrCreate(sessionId));
   const { preferences, isLoading: prefsLoading } = useUserPreferences();
+  const mediaManager = useMediaDeviceManager();
 
   const initializeMedia = useCallback(async () => {
     try {
       console.log('🎥 Initializing media devices with preferences...');
+      
+      const result = await mediaManager.getMediaStream(
+        preferences?.mic_device_id || undefined,
+        preferences?.camera_device_id || undefined
+      );
 
-      const videoConstraints: MediaTrackConstraints = {
-        width: { ideal: 1280 },
-        height: { ideal: 720 },
-        facingMode: 'user',
-        ...(preferences?.camera_device_id ? { deviceId: { exact: preferences.camera_device_id } } : {})
-      };
+      if (result.error) {
+        // Show specific error message
+        const errorMessage = result.error.message + (result.error.details ? ` - ${result.error.details}` : '');
+        console.error('❌ Media device error:', result.error);
+        
+        setError(errorMessage);
+        toast({
+          title: `Erro de ${result.error.type === 'permission' ? 'Permissão' : 'Dispositivo'}`,
+          description: errorMessage,
+          variant: 'destructive',
+        });
 
-      const audioConstraints: MediaTrackConstraints = {
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true,
-        ...(preferences?.mic_device_id ? { deviceId: { exact: preferences.mic_device_id } } : {})
-      };
+        // If we have a stream but with warnings, proceed anyway
+        if (result.stream.getTracks().length > 0) {
+          console.log('⚠️ Proceeding with available stream despite warnings');
+        } else {
+          throw new Error(errorMessage);
+        }
+      }
 
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: videoConstraints,
-        audio: audioConstraints
-      });
-
+      const stream = result.stream;
       setLocalStream(stream);
       
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
-        if (preferences?.background_blur) {
-          try {
-            localVideoRef.current.style.filter = 'blur(3px) brightness(0.9)';
-          } catch {}
-        }
       }
 
       // Apply preferred audio output device if supported
       if (preferences?.speaker_device_id) {
         try {
-          const elements = document.querySelectorAll('audio, video');
-          await Promise.all(Array.from(elements).map(async (el) => {
-            const anyEl = el as any;
-            if (typeof anyEl.setSinkId === 'function') {
-              try { await anyEl.setSinkId(preferences.speaker_device_id as string); } catch {}
-            }
-          }));
-        } catch {}
+          await mediaManager.setAudioOutputDevice(preferences.speaker_device_id);
+        } catch (error) {
+          console.warn('⚠️ Failed to apply audio output preference:', error);
+        }
       }
 
-      console.log('✅ Media devices initialized with preferences');
+      console.log('✅ Media devices initialized successfully');
       return stream;
     } catch (err) {
-      const errorMessage = 'Erro ao acessar câmera e microfone. Verifique as permissões.';
-      console.error('❌ Media device error:', err);
+      console.error('❌ Media initialization failed completely:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido ao inicializar mídia';
       setError(errorMessage);
       toast({
         title: 'Erro de Mídia',
         description: errorMessage,
         variant: 'destructive',
       });
-      throw new Error(errorMessage);
+      throw err;
     }
-  }, [toast, preferences]);
+  }, [toast, preferences, mediaManager, localVideoRef]);
 
   const createPeerConnection = useCallback(async (stream: MediaStream) => {
     console.log('🔗 Creating managed peer connection...');

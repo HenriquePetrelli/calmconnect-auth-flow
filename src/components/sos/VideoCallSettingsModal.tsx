@@ -2,11 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
 import { Label } from '@/components/ui/label';
-import { Settings, Mic, Camera, Volume2, Loader2 } from 'lucide-react';
+import { Settings, Mic, Camera, Volume2, Loader2, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
+import { useMediaDeviceManager } from '@/hooks/useMediaDeviceManager';
 import { useMediaDeviceSettings } from '@/hooks/useMediaDeviceSettings';
 
 interface VideoCallSettingsModalProps {
@@ -29,6 +29,7 @@ export const VideoCallSettingsModal = ({
   const { toast } = useToast();
   const { preferences, savePreferences, isLoading: preferencesLoading } = useUserPreferences();
   const mediaDeviceManager = useMediaDeviceSettings(localVideoRef || { current: null }, onStreamUpdate);
+  const mediaManager = useMediaDeviceManager();
   
   const [audioDevices, setAudioDevices] = useState<MediaDeviceInfo[]>([]);
   const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([]);
@@ -41,6 +42,7 @@ export const VideoCallSettingsModal = ({
   const [tempAudioOutputDevice, setTempAudioOutputDevice] = useState('');
   const [currentStream, setCurrentStream] = useState<MediaStream | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isTestingDevices, setIsTestingDevices] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -98,27 +100,37 @@ export const VideoCallSettingsModal = ({
 
   const loadDevices = async () => {
     try {
-      const devices = await navigator.mediaDevices.enumerateDevices();
+      await mediaManager.loadDevices();
+      const devices = mediaManager.devices;
+      
       const audioInputs = devices.filter(device => device.kind === 'audioinput');
-      const videoInputs = devices.filter(device => device.kind === 'videoinput');
+      const videoInputs = devices.filter(device => device.kind === 'videoinput');  
       const audioOutputs = devices.filter(device => device.kind === 'audiooutput');
       
-      setAudioDevices(audioInputs);
-      setVideoDevices(videoInputs);
-      setAudioOutputDevices(audioOutputs);
+      setAudioDevices(audioInputs as MediaDeviceInfo[]);
+      setVideoDevices(videoInputs as MediaDeviceInfo[]);
+      setAudioOutputDevices(audioOutputs as MediaDeviceInfo[]);
       
       // Set first available devices as fallback if no current device detected
       if (!selectedAudioDevice && audioInputs.length > 0) {
         setSelectedAudioDevice(audioInputs[0].deviceId);
+        setTempAudioDevice(audioInputs[0].deviceId);
       }
       if (!selectedVideoDevice && videoInputs.length > 0) {
         setSelectedVideoDevice(videoInputs[0].deviceId);
+        setTempVideoDevice(videoInputs[0].deviceId);
       }
       if (!selectedAudioOutputDevice && audioOutputs.length > 0) {
         setSelectedAudioOutputDevice(audioOutputs[0].deviceId);
+        setTempAudioOutputDevice(audioOutputs[0].deviceId);
       }
     } catch (error) {
       console.error('Error loading devices:', error);
+      toast({
+        title: 'Erro ao carregar dispositivos',
+        description: 'Não foi possível listar os dispositivos de mídia disponíveis.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -142,37 +154,57 @@ export const VideoCallSettingsModal = ({
     onClose();
   };
 
-  const handleSaveSettings = async () => {
+  const testDevicesAndSave = async () => {
+    setIsTestingDevices(true);
     setIsSaving(true);
     
     try {
-      // Validate selected devices exist
-      const audioValid = !tempAudioDevice || audioDevices.some(d => d.deviceId === tempAudioDevice);
-      const videoValid = !tempVideoDevice || videoDevices.some(d => d.deviceId === tempVideoDevice);
-      const outputValid = !tempAudioOutputDevice || audioOutputDevices.some(d => d.deviceId === tempAudioOutputDevice);
+      // Test the selected devices before saving
+      console.log('🧪 Testing selected devices...');
+      
+      const testResult = await mediaManager.getMediaStream(
+        tempAudioDevice || undefined,
+        tempVideoDevice || undefined
+      );
 
-      const safeMicId = audioValid ? tempAudioDevice : null;
-      const safeCamId = videoValid ? tempVideoDevice : null;
-      const safeSpeakerId = outputValid ? tempAudioOutputDevice : null;
-
-      if (!audioValid || !videoValid || !outputValid) {
+      if (testResult.error && testResult.error.type === 'permission') {
         toast({
-          title: 'Dispositivo inválido',
-          description: 'Alguns dispositivos selecionados não estão disponíveis. Aplicando valores padrão.',
+          title: 'Erro de Permissão',
+          description: testResult.error.message,
           variant: 'destructive',
+        });
+        return false;
+      }
+
+      if (testResult.error && testResult.error.type !== 'device') {
+        toast({
+          title: 'Erro nos Dispositivos',
+          description: testResult.error.message,
+          variant: 'destructive', 
+        });
+        return false;
+      }
+
+      // If we got here, the devices work (even if with warnings)
+      if (testResult.error && testResult.error.type === 'device') {
+        toast({
+          title: 'Aviso',
+          description: testResult.error.message,
+          variant: 'default',
         });
       }
 
+      console.log('✅ Device test successful, proceeding to save and apply...');
+
       // Apply changes in real time to current call
-      let updatedStream = currentStream || localStream;
-      if (safeMicId && updatedStream) {
-        updatedStream = await mediaDeviceManager.changeAudioDevice(safeMicId, updatedStream, peerConnection || null);
-      }
-      if (safeCamId && updatedStream) {
-        updatedStream = await mediaDeviceManager.changeVideoDevice(safeCamId, updatedStream, peerConnection || null);
-      }
-      if (safeSpeakerId) {
-        await mediaDeviceManager.changeAudioOutputDevice(safeSpeakerId);
+      let updatedStream = testResult.stream;
+      
+      if (tempAudioOutputDevice) {
+        try {
+          await mediaManager.setAudioOutputDevice(tempAudioOutputDevice);
+        } catch (error) {
+          console.warn('⚠️ Failed to set audio output:', error);
+        }
       }
       
       // Update stream and notify parent
@@ -182,32 +214,37 @@ export const VideoCallSettingsModal = ({
       }
 
       // Update the actual selected values
-      setSelectedAudioDevice(safeMicId || '');
-      setSelectedVideoDevice(safeCamId || '');
-      setSelectedAudioOutputDevice(safeSpeakerId || '');
+      setSelectedAudioDevice(tempAudioDevice);
+      setSelectedVideoDevice(tempVideoDevice);
+      setSelectedAudioOutputDevice(tempAudioOutputDevice);
 
       // Persist to Supabase
       const success = await savePreferences({
-        mic_device_id: safeMicId || null,
-        camera_device_id: safeCamId || null,
-        speaker_device_id: safeSpeakerId || null,
+        mic_device_id: tempAudioDevice || null,
+        camera_device_id: tempVideoDevice || null,
+        speaker_device_id: tempAudioOutputDevice || null,
       });
 
       if (success) {
         toast({
-          title: 'Configurações salvas',
-          description: 'Suas configurações foram aplicadas e salvas com sucesso.',
+          title: 'Configurações aplicadas',
+          description: 'Dispositivos testados e configurações salvas com sucesso.',
         });
         onClose();
+        return true;
+      } else {
+        throw new Error('Falha ao salvar preferências');
       }
     } catch (error) {
-      console.error('Error saving settings:', error);
+      console.error('Error testing/saving settings:', error);
       toast({
-        title: 'Erro ao salvar',
-        description: 'Não foi possível salvar as configurações.',
+        title: 'Erro ao aplicar configurações',
+        description: 'Não foi possível testar ou aplicar as configurações selecionadas.',
         variant: 'destructive',
       });
+      return false;
     } finally {
+      setIsTestingDevices(false);
       setIsSaving(false);
     }
   };
@@ -223,6 +260,25 @@ export const VideoCallSettingsModal = ({
         </DialogHeader>
         
         <div className="space-y-6 py-4">
+          {/* Device Status Indicator */}
+          {isTestingDevices && (
+            <div className="flex items-center gap-2 p-3 bg-blue-900/30 border border-blue-500/30 rounded-lg">
+              <Loader2 className="w-4 h-4 animate-spin text-blue-400" />
+              <span className="text-sm text-blue-200">Testando dispositivos selecionados...</span>
+            </div>
+          )}
+
+          {/* Device Error Warnings */}
+          {(!audioDevices.length || !videoDevices.length) && (
+            <div className="flex items-center gap-2 p-3 bg-yellow-900/30 border border-yellow-500/30 rounded-lg">
+              <AlertTriangle className="w-4 h-4 text-yellow-400" />
+              <span className="text-sm text-yellow-200">
+                {!audioDevices.length && 'Nenhum microfone detectado. '}
+                {!videoDevices.length && 'Nenhuma câmera detectada. '}
+                Verifique se os dispositivos estão conectados.
+              </span>
+            </div>
+          )}
           {/* Audio Device Selection */}
           <div className="space-y-2">
             <Label className="flex items-center gap-2 text-sm font-medium text-gray-200">
@@ -306,17 +362,17 @@ export const VideoCallSettingsModal = ({
             Cancelar
           </Button>
           <Button 
-            onClick={handleSaveSettings}
-            disabled={isSaving || preferencesLoading}
+            onClick={testDevicesAndSave}
+            disabled={isSaving || preferencesLoading || isTestingDevices}
             className="bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
           >
-            {isSaving ? (
+            {isSaving || isTestingDevices ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Salvando...
+                {isTestingDevices ? 'Testando...' : 'Salvando...'}
               </>
             ) : (
-              'Salvar'
+              'Testar e Salvar'
             )}
           </Button>
         </div>

@@ -528,13 +528,22 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
         {/* Debug indicator for remote stream */}
         {remoteStream && (
           <div className="absolute top-4 right-4 bg-green-500/80 text-white text-xs px-2 py-1 rounded">
-            Stream Recebido
+            Stream Conectado
           </div>
         )}
         
         {!remoteStream && isConnected && (
           <div className="absolute top-4 right-4 bg-yellow-500/80 text-white text-xs px-2 py-1 rounded">
             Aguardando Stream
+          </div>
+        )}
+        
+        {error && (
+          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-red-500/90 text-white text-sm px-4 py-2 rounded-lg border border-red-400 shadow-lg">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4" />
+              <span>{error}</span>
+            </div>
           </div>
         )}
         
@@ -744,6 +753,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
           if (localVideoRef.current) {
             localVideoRef.current.srcObject = stream;
           }
+          console.log('🔄 Stream updated from settings modal');
         }}
       />
 
