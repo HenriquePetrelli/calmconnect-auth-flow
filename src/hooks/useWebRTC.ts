@@ -341,11 +341,34 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     
     console.log('🧹 Cleaning up WebRTC resources...');
     
+    // Stop all media tracks properly
     if (localStream) {
       localStream.getTracks().forEach(track => {
-        track.stop();
-        console.log(`🛑 Stopped ${track.kind} track`);
+        if (track.readyState !== 'ended') {
+          track.stop();
+          console.log(`🛑 Stopped ${track.kind} track`);
+        }
       });
+    }
+    
+    // Close peer connection properly
+    if (peerConnection) {
+      try {
+        // Close all transceivers
+        peerConnection.getTransceivers().forEach(transceiver => {
+          if (transceiver.stop) {
+            transceiver.stop();
+          }
+        });
+        
+        // Close the connection
+        if (peerConnection.connectionState !== 'closed') {
+          peerConnection.close();
+          console.log('🔌 Peer connection closed');
+        }
+      } catch (error) {
+        console.warn('⚠️ Error closing peer connection:', error);
+      }
     }
     
     // Use connection manager for proper cleanup
@@ -369,7 +392,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     
     cleanupRef.current = false;
     loopDetector.trace(sessionId, 'cleanup_complete');
-  }, [localStream, sessionId, connectionManager]);
+  }, [localStream, peerConnection, sessionId, connectionManager]);
 
   // Initialize WebRTC with loop protection
   useEffect(() => {

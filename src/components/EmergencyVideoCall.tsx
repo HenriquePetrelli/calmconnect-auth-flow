@@ -6,7 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Mic, MicOff, Camera, CameraOff, PhoneOff, Loader2, AlertTriangle, Settings, Shield, Video } from 'lucide-react';
 import { useWebRTC } from '@/hooks/useWebRTC';
 import { useToast } from '@/hooks/use-toast';
-import { useAudioLevelMeter } from '@/hooks/useAudioLevelMeter';
+import VoiceMeter from '@/components/sos/VoiceMeter';
+import { ConnectionQuality } from '@/components/sos/ConnectionQuality';
 import { supabase } from '@/integrations/supabase/client';
 import { FeedbackModal } from '@/components/sos/FeedbackModal';
 import { VideoCallSettingsModal } from '@/components/sos/VideoCallSettingsModal';
@@ -74,9 +75,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     }
   });
 
-  // Audio level meters for both local and remote streams
-  const localAudioMeter = useAudioLevelMeter({ stream: localStream });
-  const remoteAudioMeter = useAudioLevelMeter({ stream: remoteStream });
+  const [callEndedBy, setCallEndedBy] = useState<string | null>(null);
 
   // Enhanced session validation with intelligent delay
   useEffect(() => {
@@ -271,15 +270,34 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
 
   const handleEndCall = async () => {
     try {
-      cleanup();
+      // Properly stop all media tracks
+      if (localStream) {
+        localStream.getTracks().forEach(track => {
+          track.stop();
+          console.log(`🛑 Stopped ${track.kind} track`);
+        });
+      }
       
-      // Update session status
+      // Close peer connection properly
+      if (peerConnection) {
+        peerConnection.close();
+        console.log('🔌 Peer connection closed');
+      }
+      
+      // Update session status and mark who ended the call
       if (sessionId) {
+        const { data: { user } } = await supabase.auth.getUser();
         await supabase
           .from('webrtc_sessions')
-          .update({ status: 'completed' })
+          .update({ 
+            status: 'completed',
+            ended_by: user?.id,
+            ended_by_type: userType
+          })
           .eq('id', sessionId);
       }
+      
+      cleanup();
 
       // Show feedback modal instead of immediately navigating
       setShowFeedbackModal(true);
@@ -556,18 +574,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
                   {userType === 'patient' ? (userInfo.name || 'Psicólogo') : (userInfo.name || 'Paciente')}
                 </span>
               </div>
-              {/* Remote audio level meter */}
-              <div className="flex items-center gap-2">
-                <div className={`w-3 h-3 rounded-full transition-all duration-200 ${
-                  remoteAudioMeter.isSpeaking ? 'bg-green-400 animate-pulse' : 'bg-gray-500'
-                }`}></div>
-                <div className="w-8 h-2 bg-gray-600 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-green-400 to-yellow-400 transition-all duration-100 rounded-full"
-                    style={{ width: `${remoteAudioMeter.audioLevel}%` }}
-                  ></div>
-                </div>
-              </div>
+              <VoiceMeter stream={remoteStream} size="small" />
             </div>
           </div>
         )}
@@ -644,17 +651,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
                 <div className="bg-black/60 backdrop-blur-sm rounded-lg px-2 py-1">
                   <div className="flex items-center justify-between">
                     <span className="text-white text-xs font-medium">Você</span>
-                    <div className="flex items-center gap-1">
-                      <div className={`w-2 h-2 rounded-full transition-all duration-200 ${
-                        localAudioMeter.isSpeaking ? 'bg-green-400 animate-pulse' : 'bg-gray-500'
-                      }`}></div>
-                      <div className="w-6 h-1 bg-gray-600 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-gradient-to-r from-green-400 to-yellow-400 transition-all duration-100 rounded-full"
-                          style={{ width: `${localAudioMeter.audioLevel}%` }}
-                        ></div>
-                      </div>
-                    </div>
+                    <VoiceMeter stream={localStream} size="small" />
                   </div>
                 </div>
               </div>
