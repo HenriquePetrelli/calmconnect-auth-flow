@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
+
 import { Label } from '@/components/ui/label';
-import { Settings, Mic, Camera, Eye, Volume2, Loader2 } from 'lucide-react';
+import { Settings, Mic, Camera, Volume2, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { useMediaDeviceSettings } from '@/hooks/useMediaDeviceSettings';
@@ -36,9 +36,9 @@ export const VideoCallSettingsModal = ({
   const [selectedAudioDevice, setSelectedAudioDevice] = useState('');
   const [selectedVideoDevice, setSelectedVideoDevice] = useState('');
   const [selectedAudioOutputDevice, setSelectedAudioOutputDevice] = useState('');
-  const [isBackgroundBlurEnabled, setIsBackgroundBlurEnabled] = useState(false);
   const [currentStream, setCurrentStream] = useState<MediaStream | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const hasInteractedRef = useRef(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -274,17 +274,6 @@ export const VideoCallSettingsModal = ({
             </Select>
           </div>
 
-          {/* Background Blur */}
-          <div className="flex items-center justify-between">
-            <Label className="flex items-center gap-2 text-sm font-medium text-gray-200">
-              <Eye className="w-4 h-4" />
-              Desfocar fundo
-            </Label>
-            <Switch 
-              checked={isBackgroundBlurEnabled}
-              onCheckedChange={toggleBackgroundBlur}
-            />
-          </div>
         </div>
 
         <div className="flex justify-end gap-2 pt-4">
