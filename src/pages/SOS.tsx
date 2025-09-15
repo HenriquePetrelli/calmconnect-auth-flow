@@ -19,6 +19,7 @@ const SOS = () => {
   
   // Use ref to store requestId for cleanup without causing re-renders
   const requestIdRef = useRef<string | null>(null);
+  const acceptedRef = useRef<boolean>(false);
   
   // Update ref when requestId changes
   useEffect(() => {
@@ -28,10 +29,12 @@ const SOS = () => {
   // Cleanup function that runs only when component unmounts (user leaves the page)
   useEffect(() => {
     return () => {
-      // Only cleanup if we have a requestId and we're leaving the page
-      if (requestIdRef.current) {
-        console.log(`User left SOS page, cleaning up request: ${requestIdRef.current}`);
+      // Only cleanup if we have a requestId, the request was NOT accepted, and we're leaving the page
+      if (requestIdRef.current && !acceptedRef.current) {
+        console.log(`User left SOS page without acceptance, cleaning up pending request: ${requestIdRef.current}`);
         cancelRequest(requestIdRef.current).catch(console.error);
+      } else if (acceptedRef.current) {
+        console.log('Skipping cleanup: emergency was accepted, preserving request and session.');
       }
     };
   }, []); // Empty dependency array - only runs on unmount
@@ -44,6 +47,7 @@ const SOS = () => {
     const handleEmergencyAccepted = (event: CustomEvent) => {
       const { sessionId, requestId } = event.detail;
       console.log('Emergency accepted, redirecting to call:', { sessionId, requestId });
+      acceptedRef.current = true;
       navigate(`/emergency-call/${sessionId}?userType=patient&requestId=${requestId}`);
     };
     
@@ -86,6 +90,8 @@ const SOS = () => {
             const n = payload.new as any;
             const sessionId = n.video_room_id || n.room_url;
             if (n.status === 'accepted' && sessionId) {
+              console.log('✅ Realtime acceptance received. Redirecting to call.', { sessionId, id });
+              acceptedRef.current = true;
               navigate(`/emergency-call/${sessionId}?userType=patient&requestId=${id}`);
               if (reqChannel) supabase.removeChannel(reqChannel);
             }
