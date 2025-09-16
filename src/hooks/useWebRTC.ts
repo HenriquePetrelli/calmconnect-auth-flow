@@ -17,6 +17,8 @@ interface WebRTCSession {
   offer?: RTCSessionDescriptionInit;
   answer?: RTCSessionDescriptionInit;
   ice_candidates?: RTCIceCandidateInit[];
+  ended_by?: string;
+  ended_by_type?: string;
 }
 
 interface UseWebRTCProps {
@@ -35,6 +37,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
   const [session, setSession] = useState<WebRTCSession | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
   const [webrtcState, setWebrtcState] = useState<WebRTCState>('idle');
+  const [callEndedBy, setCallEndedBy] = useState<{userId: string, userType: string} | null>(null);
   
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -135,9 +138,16 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
         onConnectionStateChange?.(state);
 
         if (state === 'failed' || state === 'disconnected') {
-          setError('Conexão perdida. Tentando reconectar...');
+          // Check if call was ended by someone instead of connection failure
+          if (callEndedBy) {
+            const endedByName = callEndedBy.userType === 'psychologist' ? 'O psicólogo' : 'O paciente';
+            setError(`${endedByName} finalizou a chamada.`);
+          } else {
+            setError('Conexão perdida. Tentando reconectar...');
+          }
         } else if (state === 'connected') {
           setError(null);
+          setCallEndedBy(null);
           toast({
             title: 'Conectado!',
             description: 'Videochamada estabelecida com sucesso.',
@@ -385,6 +395,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     setIsConnected(false);
     setConnectionState('closed');
     setIsInitializing(false);
+    setCallEndedBy(null);
     
     // Transition back to idle
     stateMachine.current.transitionTo('idle');
@@ -393,6 +404,49 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     cleanupRef.current = false;
     loopDetector.trace(sessionId, 'cleanup_complete');
   }, [localStream, peerConnection, sessionId, connectionManager]);
+  
+  const updateDeviceStream = useCallback(async (newStream: MediaStream) => {
+    if (!peerConnection || !localStream) return;
+    
+    try {
+      console.log('🔄 Updating device stream for remote peer...');
+      
+      // Replace video track in peer connection
+      const videoTrack = newStream.getVideoTracks()[0];
+      const audioTrack = newStream.getAudioTracks()[0];
+      
+      const senders = peerConnection.getSenders();
+      
+      for (const sender of senders) {
+        if (sender.track) {
+          if (sender.track.kind === 'video' && videoTrack) {
+            await sender.replaceTrack(videoTrack);
+            console.log('✅ Video track replaced in peer connection');
+          } else if (sender.track.kind === 'audio' && audioTrack) {
+            await sender.replaceTrack(audioTrack);
+            console.log('✅ Audio track replaced in peer connection');
+          }
+        }
+      }
+      
+      // Update local stream
+      setLocalStream(newStream);
+      
+      // Update local video element
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = newStream;
+      }
+      
+      console.log('✅ Device stream updated successfully');
+    } catch (error) {
+      console.error('❌ Error updating device stream:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao atualizar dispositivos na chamada',
+        variant: 'destructive',
+      });
+    }
+  }, [peerConnection, localStream, localVideoRef, toast]);
 
   // Initialize WebRTC with loop protection
   useEffect(() => {
@@ -475,6 +529,14 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
               console.log('📡 Session update received:', payload);
               const sessionData = payload.new as WebRTCSession;
               setSession(sessionData);
+
+              // Check if call was ended by someone
+              if (sessionData.status === 'completed' && sessionData.ended_by && sessionData.ended_by_type) {
+                setCallEndedBy({
+                  userId: sessionData.ended_by,
+                  userType: sessionData.ended_by_type
+                });
+              }
 
               // Handle offer/answer exchange
               if (sessionData.offer && userType === 'patient' && !pc.remoteDescription) {
@@ -631,8 +693,10 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     session,
     isInitializing,
     webrtcState,
+    callEndedBy,
     toggleAudio,
     toggleVideo,
-    cleanup
+    cleanup,
+    updateDeviceStream
   };
 };

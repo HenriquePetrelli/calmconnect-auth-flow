@@ -56,9 +56,11 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     connectionState,
     isConnected,
     error,
+    callEndedBy,
     toggleAudio,
     toggleVideo,
-    cleanup
+    cleanup,
+    updateDeviceStream
   } = useWebRTC({
     sessionId: sessionId || '',
     userType,
@@ -75,7 +77,6 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     }
   });
 
-  const [callEndedBy, setCallEndedBy] = useState<string | null>(null);
 
   // Enhanced session validation with intelligent delay
   useEffect(() => {
@@ -543,16 +544,10 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
           onError={(e) => console.error('❌ Remote video error:', e)}
         />
         
-        {/* Debug indicator for remote stream */}
-        {remoteStream && (
-          <div className="absolute top-4 right-4 bg-green-500/80 text-white text-xs px-2 py-1 rounded">
-            Stream Conectado
-          </div>
-        )}
-        
-        {!remoteStream && isConnected && (
-          <div className="absolute top-4 right-4 bg-yellow-500/80 text-white text-xs px-2 py-1 rounded">
-            Aguardando Stream
+        {/* Connection quality indicator */}
+        {peerConnection && isConnected && (
+          <div className="absolute top-4 right-4 z-10">
+            <ConnectionQuality peerConnection={peerConnection} />
           </div>
         )}
         
@@ -752,6 +747,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
           }
           console.log('🔄 Stream updated from settings modal');
         }}
+        onDeviceStreamUpdate={updateDeviceStream}
       />
 
       {/* Feedback Modal */}

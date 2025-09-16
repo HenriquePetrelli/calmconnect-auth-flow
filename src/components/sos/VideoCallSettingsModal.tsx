@@ -16,6 +16,7 @@ interface VideoCallSettingsModalProps {
   peerConnection?: RTCPeerConnection | null;
   localVideoRef?: React.RefObject<HTMLVideoElement>;
   onStreamUpdate?: (stream: MediaStream) => void;
+  onDeviceStreamUpdate?: (stream: MediaStream) => void;
 }
 
 export const VideoCallSettingsModal = ({ 
@@ -24,7 +25,8 @@ export const VideoCallSettingsModal = ({
   localStream, 
   peerConnection = null,
   localVideoRef,
-  onStreamUpdate 
+  onStreamUpdate,
+  onDeviceStreamUpdate 
 }: VideoCallSettingsModalProps) => {
   const { toast } = useToast();
   const { preferences, savePreferences, isLoading: preferencesLoading } = useUserPreferences();
@@ -211,6 +213,11 @@ export const VideoCallSettingsModal = ({
       if (updatedStream && onStreamUpdate) {
         onStreamUpdate(updatedStream);
         setCurrentStream(updatedStream);
+      }
+
+      // Notify for device stream update (for WebRTC peer connection)
+      if (updatedStream && onDeviceStreamUpdate) {
+        onDeviceStreamUpdate(updatedStream);
       }
 
       // Update the actual selected values

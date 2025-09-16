@@ -99,26 +99,44 @@ export default function VoiceMeter({ stream, size = 'small', label }: VoiceMeter
     };
   }, [stream]);
 
-  const barCount = size === 'large' ? 10 : 5;
-  const barWidth = size === 'large' ? 'w-1.5' : 'w-1';
-  const containerHeight = size === 'large' ? 'h-8' : 'h-6';
+  const barCount = size === 'large' ? 12 : 8;
+  const containerHeight = size === 'large' ? 'h-10' : 'h-7';
 
   return (
-    <div className={`flex items-center gap-2 ${size === 'large' ? 'w-24' : 'w-16'}`}>
-      <div className={`flex space-x-0.5 ${containerHeight} items-end`}>
+    <div className={`flex items-center gap-3 ${size === 'large' ? 'w-32' : 'w-20'}`}>
+      <div className={`flex items-end gap-0.5 ${containerHeight} px-1`}>
         {[...Array(barCount)].map((_, i) => {
           const barThreshold = (i + 1) * (100 / barCount);
           const isBarActive = level >= barThreshold;
-          const barHeight = isBarActive ? `${Math.min(100, (level - barThreshold + (100 / barCount)) / (100 / barCount) * 100)}%` : '4px';
+          
+          // Calculate height more smoothly
+          let barHeight = '2px'; // Minimum height
+          if (isBarActive) {
+            const heightPercent = Math.min(100, (level / 100) * 100);
+            const barFactor = (i + 1) / barCount;
+            const adjustedHeight = heightPercent * barFactor;
+            barHeight = `${Math.max(2, adjustedHeight)}%`;
+          }
+          
+          // Color gradient from green to red
+          let barColor = 'bg-gray-600/60';
+          if (isBarActive) {
+            if (i < barCount * 0.5) {
+              barColor = 'bg-green-400';
+            } else if (i < barCount * 0.75) {
+              barColor = 'bg-green-500';
+            } else if (i < barCount * 0.9) {
+              barColor = 'bg-yellow-400';
+            } else {
+              barColor = 'bg-red-400';
+            }
+          }
           
           return (
             <div
               key={i}
-              className={`${barWidth} transition-all duration-100 ease-out rounded-sm ${
-                isBarActive 
-                  ? i < barCount * 0.6 ? 'bg-green-500' : 
-                    i < barCount * 0.8 ? 'bg-yellow-500' : 'bg-red-500'
-                  : 'bg-gray-600'
+              className={`w-1 transition-all duration-75 ease-out rounded-full ${barColor} ${
+                isBarActive ? 'shadow-sm' : ''
               }`}
               style={{ height: barHeight }}
             />
@@ -126,13 +144,8 @@ export default function VoiceMeter({ stream, size = 'small', label }: VoiceMeter
         })}
       </div>
       
-      {/* Indicador de atividade */}
-      <div className={`w-2 h-2 rounded-full transition-all duration-200 ${
-        isActive ? 'bg-green-400 shadow-green-400/50 shadow-md' : 'bg-gray-600'
-      }`} />
-      
       {label && (
-        <span className="text-xs text-gray-400 ml-1">{label}</span>
+        <span className="text-xs text-gray-300 font-medium">{label}</span>
       )}
     </div>
   );
