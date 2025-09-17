@@ -146,7 +146,7 @@ export const WebRTCVideoCall = ({ sessionId, userType, onEndCall }: WebRTCVideoC
       setLocalStream(stream);
 
       // Set up session status listener for remote user actions
-      const handleSessionUpdate = (event: CustomEvent) => {
+      const handleRemoteStatusUpdate = (event: CustomEvent) => {
         const sessionData = event.detail;
         
         // Check if call was ended by remote user
@@ -174,7 +174,7 @@ export const WebRTCVideoCall = ({ sessionId, userType, onEndCall }: WebRTCVideoC
         }
       };
 
-      window.addEventListener('webrtc-session-update', handleSessionUpdate as EventListener);
+      window.addEventListener('webrtc-session-update', handleRemoteStatusUpdate as EventListener);
 
       // Create peer connection
       const pc = new RTCPeerConnection({
