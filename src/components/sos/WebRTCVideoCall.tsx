@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { FeedbackModal } from '@/components/sos/FeedbackModal';
 import { VideoCallSettingsModal } from '@/components/sos/VideoCallSettingsModal';
+import VoiceMeter from '@/components/sos/VoiceMeter';
 
 interface WebRTCVideoCallProps {
   sessionId: string;
@@ -31,6 +32,9 @@ export const WebRTCVideoCall = ({ sessionId, userType, onEndCall }: WebRTCVideoC
     sosCount?: number;
     rating?: number;
   }>({name: '', details: ''});
+  const [remoteMuted, setRemoteMuted] = useState(false);
+  const [remoteIsCameraOff, setRemoteIsCameraOff] = useState(false);
+  const [callEndedBy, setCallEndedBy] = useState<{userId: string, userType: string} | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -141,6 +145,37 @@ export const WebRTCVideoCall = ({ sessionId, userType, onEndCall }: WebRTCVideoC
       }
       setLocalStream(stream);
 
+      // Set up session status listener for remote user actions
+      const handleSessionUpdate = (event: CustomEvent) => {
+        const sessionData = event.detail;
+        
+        // Check if call was ended by remote user
+        if (sessionData.ended_by && sessionData.ended_by_type) {
+          const remoteUserType = userType === 'patient' ? 'psychologist' : 'patient';
+          if (sessionData.ended_by_type === remoteUserType) {
+            setCallEndedBy({
+              userId: sessionData.ended_by,
+              userType: sessionData.ended_by_type
+            });
+          }
+        }
+        
+        // Update remote mute/camera status
+        const remoteUserType = userType === 'patient' ? 'psychologist' : 'patient';
+        const remoteMutedKey = `${remoteUserType}_muted`;
+        const remoteCameraOffKey = `${remoteUserType}_camera_off`;
+        
+        if (sessionData[remoteMutedKey] !== undefined) {
+          setRemoteMuted(sessionData[remoteMutedKey]);
+        }
+        
+        if (sessionData[remoteCameraOffKey] !== undefined) {
+          setRemoteIsCameraOff(sessionData[remoteCameraOffKey]);
+        }
+      };
+
+      window.addEventListener('webrtc-session-update', handleSessionUpdate as EventListener);
+
       // Create peer connection
       const pc = new RTCPeerConnection({
         iceServers: [
@@ -171,7 +206,25 @@ export const WebRTCVideoCall = ({ sessionId, userType, onEndCall }: WebRTCVideoC
 
       pc.onconnectionstatechange = () => {
         console.log('Connection state:', pc.connectionState);
-        setStatus(pc.connectionState);
+        const state = pc.connectionState;
+        setStatus(state);
+        
+        if (state === 'failed' || state === 'disconnected') {
+          // Check if call was ended by someone instead of connection failure
+          if (callEndedBy) {
+            const endedByName = callEndedBy.userType === 'psychologist' ? 'O psicólogo' : 'O paciente';
+            toast({
+              title: "Chamada finalizada",
+              description: `${endedByName} finalizou a chamada.`,
+            });
+          } else {
+            toast({
+              title: "Erro na Videochamada",
+              description: "Conexão perdida. Tentando reconectar...",
+              variant: "destructive",
+            });
+          }
+        }
       };
 
       setPeerConnection(pc);
@@ -189,6 +242,8 @@ export const WebRTCVideoCall = ({ sessionId, userType, onEndCall }: WebRTCVideoC
           },
           (payload) => {
             handleSessionUpdate(payload.new, pc);
+            // Dispatch custom event for other listeners
+            window.dispatchEvent(new CustomEvent('webrtc-session-update', { detail: payload.new }));
           }
         )
         .subscribe();
@@ -297,7 +352,17 @@ export const WebRTCVideoCall = ({ sessionId, userType, onEndCall }: WebRTCVideoC
       const audioTrack = localStream.getAudioTracks()[0];
       if (audioTrack) {
         audioTrack.enabled = !audioTrack.enabled;
-        setIsMuted(!audioTrack.enabled);
+        const muted = !audioTrack.enabled;
+        setIsMuted(muted);
+        
+        // Update database to notify remote user
+        supabase
+          .from('webrtc_sessions')
+          .update({ 
+            [`${userType}_muted`]: muted
+          })
+          .eq('id', sessionId)
+          .then(() => console.log('🎤 Mute status communicated:', muted ? 'muted' : 'unmuted'));
       }
     }
   };
@@ -307,18 +372,33 @@ export const WebRTCVideoCall = ({ sessionId, userType, onEndCall }: WebRTCVideoC
       const videoTrack = localStream.getVideoTracks()[0];
       if (videoTrack) {
         videoTrack.enabled = !videoTrack.enabled;
-        setIsCameraOff(!videoTrack.enabled);
+        const cameraOff = !videoTrack.enabled;
+        setIsCameraOff(cameraOff);
+        
+        // Update database to notify remote user
+        supabase
+          .from('webrtc_sessions')
+          .update({ 
+            [`${userType}_camera_off`]: cameraOff
+          })
+          .eq('id', sessionId)
+          .then(() => console.log('📹 Camera status communicated:', cameraOff ? 'off' : 'on'));
       }
     }
   };
 
   const handleEndCall = async () => {
     try {
-      // Update session status first
-      if (sessionId) {
+      // Update session status with who ended the call
+      const user = await supabase.auth.getUser();
+      if (sessionId && user.data.user) {
         await supabase
           .from('webrtc_sessions')
-          .update({ status: 'completed' })
+          .update({ 
+            status: 'completed',
+            ended_by: user.data.user.id,
+            ended_by_type: userType
+          })
           .eq('id', sessionId);
       }
       
@@ -345,12 +425,70 @@ export const WebRTCVideoCall = ({ sessionId, userType, onEndCall }: WebRTCVideoC
   };
 
   const cleanup = () => {
+    console.log('🧹 Cleaning up WebRTC resources...');
+    
+    // Stop all media tracks properly and completely
     if (localStream) {
-      localStream.getTracks().forEach(track => track.stop());
+      console.log('🛑 Stopping local stream tracks...');
+      localStream.getTracks().forEach(track => {
+        if (track.readyState !== 'ended') {
+          track.stop();
+          console.log(`🛑 Stopped ${track.kind} track - readyState: ${track.readyState}`);
+        }
+      });
+      
+      // Clear video elements to remove any lingering streams
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = null;
+        console.log('🧹 Cleared local video element');
+      }
     }
+    
+    // Stop remote stream tracks if any
+    if (remoteVideoRef.current && remoteVideoRef.current.srcObject) {
+      const remoteStream = remoteVideoRef.current.srcObject as MediaStream;
+      console.log('🛑 Stopping remote stream tracks...');
+      remoteStream.getTracks().forEach(track => {
+        if (track.readyState !== 'ended') {
+          track.stop();
+          console.log(`🛑 Stopped remote ${track.kind} track`);
+        }
+      });
+      
+      remoteVideoRef.current.srcObject = null;
+      console.log('🧹 Cleared remote video element');
+    }
+    
+    // Close peer connection properly
     if (peerConnection) {
-      peerConnection.close();
+      try {
+        // Stop all transceivers first
+        peerConnection.getTransceivers().forEach(transceiver => {
+          if (transceiver.stop) {
+            transceiver.stop();
+            console.log(`🛑 Stopped ${transceiver.direction} transceiver`);
+          }
+        });
+        
+        // Remove all tracks from connection
+        peerConnection.getSenders().forEach(sender => {
+          if (sender.track) {
+            peerConnection.removeTrack(sender);
+            console.log(`🗑️ Removed ${sender.track.kind} sender`);
+          }
+        });
+        
+        // Close the connection
+        if (peerConnection.connectionState !== 'closed') {
+          peerConnection.close();
+          console.log('🔌 Peer connection closed');
+        }
+      } catch (error) {
+        console.warn('⚠️ Error closing peer connection:', error);
+      }
     }
+    
+    console.log('✅ Complete WebRTC cleanup finished');
   };
 
   const formatTime = (seconds: number) => {
@@ -433,20 +571,40 @@ export const WebRTCVideoCall = ({ sessionId, userType, onEndCall }: WebRTCVideoC
       {/* Área principal do vídeo */}
       <div className="flex-1 relative bg-[#202124] overflow-hidden">
         {/* Vídeo remoto */}
-        <video 
-          ref={remoteVideoRef} 
-          autoPlay 
-          playsInline 
-          className="w-full h-full object-cover"
-        />
+        {remoteIsCameraOff ? (
+          <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+            <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-2xl">
+              <span className="text-white font-bold text-4xl">
+                {userType === 'patient' ? 'Dr' : (userInfo.name?.charAt(0)?.toUpperCase() || 'P')}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <video 
+            ref={remoteVideoRef} 
+            autoPlay 
+            playsInline 
+            className="w-full h-full object-cover"
+          />
+        )}
         
         {/* Indicador de status do participante remoto */}
         {status === 'connected' && (
           <div className="absolute top-6 left-6 z-10">
-            <div className="flex items-center gap-2 bg-black/70 backdrop-blur-md rounded-xl px-4 py-2 shadow-lg border border-white/10">
+            <div className="flex items-center gap-3 bg-black/70 backdrop-blur-md rounded-xl px-4 py-2 shadow-lg border border-white/10">
               <div className="flex items-center gap-2">
                 <span className="text-white font-medium">{userInfo.name || 'Participante'}</span>
+                {remoteMuted && (
+                  <MicOff className="w-4 h-4 text-red-400" />
+                )}
               </div>
+              {/* Voice meter for remote user */}
+              {!remoteMuted && (
+                <VoiceMeter 
+                  stream={remoteVideoRef.current?.srcObject as MediaStream || null} 
+                  size="small"
+                />
+              )}
             </div>
           </div>
         )}
