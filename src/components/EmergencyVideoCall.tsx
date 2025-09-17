@@ -360,7 +360,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     console.log('🎤 Audio toggled:', muted ? 'muted' : 'unmuted');
   };
 
-  const handleCameraToggle = () => {
+  const handleCameraToggle = async () => {
     const cameraOff = toggleVideo();
     setIsCameraOff(cameraOff);
     
@@ -375,14 +375,31 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
         .then(() => console.log('📹 Camera status communicated:', cameraOff ? 'off' : 'on'));
     }
     
-    // Ensure video element is updated when camera is turned back on
-    if (!cameraOff && localStream && localVideoRef.current) {
-      setTimeout(() => {
-        if (localVideoRef.current && localStream) {
-          localVideoRef.current.srcObject = localStream;
-          localVideoRef.current.play().catch(e => console.warn('Video play error:', e));
+    // Improved video reactivation when camera is turned back on
+    if (!cameraOff && localVideoRef.current) {
+      try {
+        // Get a fresh media stream when reactivating camera
+        const newStream = await navigator.mediaDevices.getUserMedia({ 
+          video: true, 
+          audio: true 
+        });
+        
+        if (newStream && updateDeviceStream) {
+          await updateDeviceStream(newStream);
+          if (localVideoRef.current) {
+            localVideoRef.current.srcObject = newStream;
+            await localVideoRef.current.play();
+            console.log('📹 Video reactivated with fresh stream');
+          }
         }
-      }, 100);
+      } catch (error) {
+        console.warn('Video reactivation error, using fallback:', error);
+        // Fallback to existing stream
+        if (localStream && localVideoRef.current) {
+          localVideoRef.current.srcObject = localStream;
+          await localVideoRef.current.play().catch(e => console.warn('Video play fallback error:', e));
+        }
+      }
     }
     
     console.log('📹 Video toggled:', cameraOff ? 'off' : 'on');
@@ -390,21 +407,37 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
 
   const handleEndCall = async () => {
     try {
-      // Properly stop all media tracks
+      console.log('🔄 Starting complete call cleanup...');
+      
+      // 1. Stop all local media tracks first
       if (localStream) {
         localStream.getTracks().forEach(track => {
           track.stop();
-          console.log(`🛑 Stopped ${track.kind} track`);
+          console.log(`🛑 Stopped ${track.kind} track (readyState: ${track.readyState})`);
         });
       }
       
-      // Close peer connection properly
+      // 2. Close peer connection
       if (peerConnection) {
+        // Close all transceivers first
+        peerConnection.getTransceivers().forEach(transceiver => {
+          if (transceiver.stop) {
+            transceiver.stop();
+          }
+        });
         peerConnection.close();
         console.log('🔌 Peer connection closed');
       }
       
-      // Update session status and mark who ended the call
+      // 3. Clear video elements immediately
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = null;
+      }
+      if (remoteVideoRef.current) {
+        remoteVideoRef.current.srcObject = null;
+      }
+      
+      // 4. Update session status and mark who ended the call
       if (sessionId) {
         const { data: { user } } = await supabase.auth.getUser();
         await supabase
@@ -412,17 +445,28 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
           .update({ 
             status: 'completed',
             ended_by: user?.id,
-            ended_by_type: userType
+            ended_by_type: userType,
+            ended_at: new Date().toISOString()
           })
           .eq('id', sessionId);
+        
+        console.log('📝 Session marked as completed in database');
       }
       
+      // 5. Call cleanup from hook
       cleanup();
+      
+      // 6. Force garbage collection hint
+      if (window.gc) {
+        window.gc();
+      }
+      
+      console.log('✅ Complete call cleanup finished');
 
       // Show feedback modal instead of immediately navigating
       setShowFeedbackModal(true);
     } catch (error) {
-      console.error('Error ending call:', error);
+      console.error('❌ Error ending call:', error);
       toast({
         title: 'Erro',
         description: 'Erro ao finalizar chamada',
@@ -584,79 +628,43 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-[#202124] flex flex-col relative">
-      {/* Header com informações do usuário e timer - Estilo Google Meet */}
-      <div className="bg-[#303134]/95 backdrop-blur-sm text-white p-4 z-10 border-b border-gray-600/30">
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
-          {/* Informações do participante */}
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-blue-600 flex items-center justify-center shadow-lg">
-              <span className="text-white font-semibold text-lg">
+    <div className="min-h-screen bg-background flex flex-col relative">
+      {/* Header fixo com informações - Responsivo */}
+      <div className="fixed top-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-b border-border z-50 safe-area-top">
+        <div className="flex items-center justify-between p-4 max-w-7xl mx-auto">
+          {/* Informações do participante - Adaptável */}
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-primary flex items-center justify-center shadow-lg flex-shrink-0">
+              <span className="text-white font-semibold text-sm md:text-lg">
                 {userType === 'patient' ? (userInfo.name?.charAt(0) || 'Dr') : (userInfo.name?.charAt(0) || 'P')}
               </span>
             </div>
-            <div className="space-y-1">
-              <div className="font-semibold text-lg">
+            <div className="space-y-1 min-w-0 flex-1">
+              <div className="font-semibold text-sm md:text-lg truncate">
                 {userType === 'patient' && userInfo.name ? `Dr. ${userInfo.name}` : 
                  userType === 'psychologist' && userInfo.name ? userInfo.name : 
                  'Conectando...'}
               </div>
-              {userInfo.details && (
-                <div className="text-sm text-gray-300 max-w-md">
-                  {userType === 'patient' ? (
-                    <span>{userInfo.details}</span>
-                  ) : (
-                    <div className="space-y-1">
-                      <div className="font-medium text-blue-400">Sintomas relatados:</div>
-                      <div className="text-gray-300 leading-relaxed">{userInfo.details}</div>
-                    </div>
-                  )}
-                </div>
-              )}
-              {/* Additional info for psychologist viewing patient */}
-              {userType === 'psychologist' && userInfo.name && (
-                <div className="flex items-center gap-4 text-xs text-gray-400">
-                  <span>Consultas: {userInfo.consultations || 0}</span>
-                  <span>SOS: {userInfo.sosCount || 0}</span>
-                  <span className="flex items-center gap-1">
-                    Avaliação: {userInfo.rating || 0}⭐
-                  </span>
-                </div>
-              )}
-              {/* Additional info for patient viewing psychologist */}
-              {userType === 'patient' && userInfo.consultations !== undefined && (
-                <div className="flex items-center gap-4 text-xs text-gray-400">
-                  <span>Consultas realizadas: {userInfo.consultations}</span>
-                  <span className="flex items-center gap-1">
-                    Avaliação: {userInfo.rating || 0}⭐
-                  </span>
-                </div>
-              )}
-              {/* Status de conexão */}
               <div className="flex items-center gap-2">
-                <div className={`w-3 h-3 rounded-full ${status.color === 'green' ? 'bg-green-400 animate-pulse' : 'bg-yellow-400'} shadow-lg`}></div>
-                <span className="text-xs text-gray-400 font-medium">{status.text}</span>
+                <div className={`w-2 h-2 rounded-full ${status.color === 'green' ? 'bg-success animate-pulse' : 'bg-warning'} shadow-sm`}></div>
+                <span className="text-xs text-muted-foreground font-medium hidden sm:inline">{status.text}</span>
               </div>
             </div>
           </div>
           
-          {/* Timer centralizado */}
-          <div className="text-center">
-            <div className="text-3xl font-mono font-bold text-white bg-black/20 px-4 py-2 rounded-lg mb-1">
+          {/* Timer - Responsivo */}
+          <div className="text-center px-2">
+            <div className="text-lg md:text-2xl font-mono font-bold bg-muted px-2 md:px-4 py-1 md:py-2 rounded-lg">
               {formatTime(timeLeft)}
             </div>
-            <div className="text-xs text-gray-400">Tempo restante</div>
           </div>
-
-          {/* Spacer para manter layout equilibrado */}
-          <div className="w-32"></div>
         </div>
       </div>
 
-      {/* Área principal do vídeo - Estilo Google Meet */}
-      <div className="flex-1 relative bg-[#202124] overflow-hidden">
-        {/* Vídeo remoto */}
-        <div className="relative w-full h-full">
+      {/* Área principal do vídeo - Tela inteira */}
+      <div className="flex-1 relative bg-background overflow-hidden mt-[72px] md:mt-[88px]">
+        {/* Vídeo remoto - Tela inteira */}
+        <div className="absolute inset-0">
           <video 
             ref={remoteVideoRef} 
             autoPlay 
@@ -668,14 +676,14 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
           
           {/* Remote camera off overlay */}
           {isConnected && remoteIsCameraOff && (
-            <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
+            <div className="absolute inset-0 flex items-center justify-center bg-muted">
               <div className="text-center">
-                <div className="w-40 h-40 mx-auto rounded-full bg-gradient-to-br from-emerald-500 to-blue-600 flex items-center justify-center mb-4 shadow-2xl">
-                  <span className="text-white font-bold text-5xl">
+                <div className="w-32 h-32 md:w-40 md:h-40 mx-auto rounded-full bg-gradient-primary flex items-center justify-center mb-4 shadow-2xl">
+                  <span className="text-white font-bold text-3xl md:text-5xl">
                     {userType === 'patient' ? (userInfo.name?.charAt(0)?.toUpperCase() || 'Dr') : (userInfo.name?.charAt(0)?.toUpperCase() || 'P')}
                   </span>
                 </div>
-                <div className="text-gray-400 text-lg">
+                <div className="text-muted-foreground text-base md:text-lg px-4">
                   {userType === 'patient' ? 'Dr. ' + (userInfo.name || 'Psicólogo') : (userInfo.name || 'Paciente')} desligou a câmera
                 </div>
               </div>
@@ -684,90 +692,67 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
           
           {/* Remote mute indicator */}
           {isConnected && remoteMuted && (
-            <div className="absolute top-6 left-6 bg-red-500/90 backdrop-blur-sm rounded-full p-3 shadow-lg z-20">
-              <MicOff className="text-white" size={20} />
+            <div className="absolute top-4 left-4 bg-destructive/90 backdrop-blur-sm rounded-full p-2 md:p-3 shadow-lg z-20">
+              <MicOff className="text-white" size={16} />
             </div>
           )}
         </div>
         
-        {/* Connection quality indicator */}
+        {/* Connection quality indicator - Responsivo */}
         {peerConnection && isConnected && (
-          <div className="absolute top-4 right-4 z-10">
+          <div className="absolute top-4 right-4 z-30">
             <ConnectionQuality peerConnection={peerConnection} />
-          </div>
-        )}
-        
-        {displayError && (
-          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-red-500/90 text-white text-sm px-4 py-2 rounded-lg border border-red-400 shadow-lg">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4" />
-              <span>{displayError}</span>
-            </div>
-          </div>
-        )}
-        
-        {/* Indicador de status do participante remoto com medidor de áudio */}
-        {isConnected && (
-          <div className="absolute top-6 left-6 z-10">
-            <div className="flex items-center gap-3 bg-black/70 backdrop-blur-md rounded-xl px-4 py-2 shadow-lg border border-white/10">
-              <div className="flex items-center gap-2">
-                <span className="text-white font-medium">
-                  {userType === 'patient' ? (userInfo.name || 'Psicólogo') : (userInfo.name || 'Paciente')}
-                </span>
-              </div>
-              <VoiceMeter stream={remoteStream} size="small" />
-            </div>
           </div>
         )}
         
         {/* Placeholder quando não conectado */}
         {!isConnected && (
-          <div className="absolute inset-0 flex items-center justify-center bg-[#202124]">
-            <div className="text-center space-y-8 max-w-md mx-4">
+          <div className="absolute inset-0 flex items-center justify-center bg-background">
+            <div className="text-center space-y-6 md:space-y-8 max-w-md mx-4">
               <div className="relative">
-                <div className="w-40 h-40 mx-auto rounded-full bg-gradient-to-br from-emerald-500 to-blue-600 flex items-center justify-center shadow-2xl">
+                <div className="w-32 h-32 md:w-40 md:h-40 mx-auto rounded-full bg-gradient-primary flex items-center justify-center shadow-2xl">
                   {connectionState === 'connecting' ? (
-                    <Loader2 className="w-16 h-16 animate-spin text-white" />
+                    <Loader2 className="w-12 h-12 md:w-16 md:h-16 animate-spin text-white" />
                   ) : (
-                    <span className="text-white font-bold text-5xl">
+                    <span className="text-white font-bold text-3xl md:text-5xl">
                       {userType === 'patient' ? 'Dr' : (userInfo.name?.charAt(0) || 'P')}
                     </span>
                   )}
                 </div>
-                <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center animate-pulse">
-                  <div className="w-3 h-3 bg-white rounded-full"></div>
+                <div className="absolute -bottom-2 -right-2 w-6 h-6 md:w-8 md:h-8 bg-warning rounded-full flex items-center justify-center animate-pulse">
+                  <div className="w-2 h-2 md:w-3 md:h-3 bg-white rounded-full"></div>
                 </div>
               </div>
               
               <div className="space-y-3">
-                <h3 className="text-3xl font-semibold text-white">
+                <h3 className="text-xl md:text-3xl font-semibold">
                   {userType === 'psychologist' ? 'Aguardando paciente...' : 'Conectando com psicólogo...'}
                 </h3>
-                <p className="text-gray-400 text-lg">
+                <p className="text-muted-foreground text-sm md:text-lg">
                   {connectionState === 'connecting' ? 'Estabelecendo conexão segura...' : status.text}
                 </p>
                 <div className="flex items-center justify-center gap-2 mt-4">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Vídeo próprio (self-view) - Estilo Google Meet */}
-        <div className="absolute bottom-8 right-8 w-48 h-36 bg-gray-800 rounded-2xl border-2 border-gray-600/50 overflow-hidden shadow-2xl transition-transform hover:scale-105 cursor-pointer">
+        {/* Vídeo próprio (self-view) - Responsivo e sobreposto */}
+        <div className="absolute bottom-20 md:bottom-24 right-4 w-32 h-24 md:w-48 md:h-36 bg-card rounded-xl md:rounded-2xl border-2 border-border overflow-hidden shadow-2xl transition-transform hover:scale-105 cursor-pointer z-20">
           {isCameraOff ? (
-            <div className="w-full h-full flex items-center justify-center bg-gray-800">
+            <div className="w-full h-full flex items-center justify-center bg-muted">
               <div className="text-center">
-                <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-emerald-500 to-blue-600 flex items-center justify-center mb-2">
-                  <span className="text-white font-semibold text-lg">
+                <div className="w-10 h-10 md:w-16 md:h-16 mx-auto rounded-full bg-gradient-primary flex items-center justify-center mb-1 md:mb-2">
+                  <span className="text-white font-semibold text-xs md:text-lg">
                     {currentUserName?.charAt(0)?.toUpperCase() || (userType === 'patient' ? 'P' : 'Dr')}
                   </span>
                 </div>
-                <CameraOff className="text-gray-400 mx-auto mb-1" size={24} />
-                <div className="text-xs text-gray-400 font-medium">Câmera desligada</div>
+                <CameraOff className="text-muted-foreground mx-auto mb-1" size={16} />
+                <div className="text-xs text-muted-foreground font-medium">Câmera desligada</div>
               </div>
             </div>
           ) : (
@@ -788,16 +773,16 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
               {/* Status indicators overlay */}
               <div className="absolute inset-0 pointer-events-none">
                 {isMuted && (
-                  <div className="absolute top-2 left-2 bg-red-500/90 backdrop-blur-sm rounded-full p-2 shadow-lg">
-                    <MicOff className="text-white" size={16} />
+                  <div className="absolute top-1 left-1 md:top-2 md:left-2 bg-destructive/90 backdrop-blur-sm rounded-full p-1 md:p-2 shadow-lg">
+                    <MicOff className="text-white" size={12} />
                   </div>
                 )}
               </div>
               {/* Name label with local audio meter */}
-              <div className="absolute bottom-2 left-2 right-2">
-                <div className="bg-black/60 backdrop-blur-sm rounded-lg px-2 py-1">
+              <div className="absolute bottom-1 left-1 right-1 md:bottom-2 md:left-2 md:right-2">
+                <div className="bg-background/60 backdrop-blur-sm rounded px-1 py-0.5 md:px-2 md:py-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-white text-xs font-medium">Você</span>
+                    <span className="text-foreground text-xs font-medium">Você</span>
                     <VoiceMeter stream={localStream} size="small" />
                   </div>
                 </div>
@@ -805,39 +790,51 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
             </div>
           )}
         </div>
+
+        {/* Indicador de participante remoto com medidor - Sobreposto */}
+        {isConnected && (
+          <div className="absolute top-4 left-4 z-30">
+            <div className="flex items-center gap-2 bg-background/70 backdrop-blur-md rounded-xl px-3 py-2 shadow-lg border border-border">
+              <span className="text-foreground font-medium text-sm max-w-32 truncate">
+                {userType === 'patient' ? (userInfo.name || 'Psicólogo') : (userInfo.name || 'Paciente')}
+              </span>
+              <VoiceMeter stream={remoteStream} size="small" />
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Barra de controles inferior - Estilo Google Meet */}
-      <div className="bg-[#202124] border-t border-gray-600/30 p-6">
-        {/* Indicadores de segurança no topo */}
-        <div className="flex justify-center items-center gap-6 mb-6 text-gray-400 text-sm">
+      {/* Barra de controles fixa na parte inferior - Sobreposta */}
+      <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border p-4 safe-area-bottom z-40">
+        {/* Indicadores de segurança - Desktop apenas */}
+        <div className="hidden md:flex justify-center items-center gap-6 mb-4 text-muted-foreground text-sm">
           <div className="flex items-center gap-2">
-            <Shield className="w-4 h-4 text-green-400" />
+            <Shield className="w-4 h-4 text-success" />
             <span>Conexão criptografada</span>
           </div>
           <div className="flex items-center gap-2">
-            <Video className="w-4 h-4 text-blue-400" />
+            <Video className="w-4 h-4 text-primary" />
             <span>Qualidade HD</span>
           </div>
         </div>
 
-        {/* Controles principais */}
-        <div className="flex justify-center items-center gap-6 max-w-md mx-auto">
+        {/* Controles principais - Responsivos */}
+        <div className="flex justify-center items-center gap-4 md:gap-6 max-w-sm md:max-w-md mx-auto">
           {/* Botão de microfone */}
           <button
             onClick={handleMuteToggle}
-            className={`group relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-200 ${
+            className={`group relative w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center transition-all duration-200 ${
               isMuted 
-                ? 'bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/30' 
-                : 'bg-gray-600 hover:bg-gray-500 shadow-lg'
+                ? 'bg-destructive hover:bg-destructive/90 shadow-lg shadow-destructive/30' 
+                : 'bg-muted hover:bg-muted/80 shadow-lg'
             }`}
           >
             {isMuted ? (
-              <MicOff className="text-white" size={20} />
+              <MicOff className="text-white" size={18} />
             ) : (
-              <Mic className="text-white" size={20} />
+              <Mic className="text-foreground" size={18} />
             )}
-            <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-3 py-1 rounded-md text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+            <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-popover text-popover-foreground px-3 py-1 rounded-md text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
               {isMuted ? 'Ativar microfone' : 'Desativar microfone'}
             </div>
           </button>
@@ -845,18 +842,18 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
           {/* Botão de câmera */}
           <button
             onClick={handleCameraToggle}
-            className={`group relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-200 ${
+            className={`group relative w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center transition-all duration-200 ${
               isCameraOff 
-                ? 'bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/30' 
-                : 'bg-gray-600 hover:bg-gray-500 shadow-lg'
+                ? 'bg-destructive hover:bg-destructive/90 shadow-lg shadow-destructive/30' 
+                : 'bg-muted hover:bg-muted/80 shadow-lg'
             }`}
           >
             {isCameraOff ? (
-              <CameraOff className="text-white" size={20} />
+              <CameraOff className="text-white" size={18} />
             ) : (
-              <Camera className="text-white" size={20} />
+              <Camera className="text-foreground" size={18} />
             )}
-            <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-3 py-1 rounded-md text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+            <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-popover text-popover-foreground px-3 py-1 rounded-md text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
               {isCameraOff ? 'Ativar câmera' : 'Desativar câmera'}
             </div>
           </button>
@@ -864,10 +861,10 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
           {/* Botão de configurações */}
           <button
             onClick={() => setShowSettingsModal(true)}
-            className="group relative w-14 h-14 rounded-full bg-gray-600 hover:bg-gray-500 flex items-center justify-center transition-all duration-200 shadow-lg"
+            className="group relative w-12 h-12 md:w-14 md:h-14 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-all duration-200 shadow-lg"
           >
-            <Settings className="text-white" size={20} />
-            <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-3 py-1 rounded-md text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+            <Settings className="text-foreground" size={18} />
+            <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-popover text-popover-foreground px-3 py-1 rounded-md text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
               Configurações
             </div>
           </button>
@@ -875,10 +872,10 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
           {/* Botão de encerrar chamada */}
           <button
             onClick={handleEndCall}
-            className="group relative w-16 h-16 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center transition-all duration-200 shadow-lg shadow-red-500/30 ml-2"
+            className="group relative w-14 h-14 md:w-16 md:h-16 rounded-full bg-destructive hover:bg-destructive/90 flex items-center justify-center transition-all duration-200 shadow-lg shadow-destructive/30"
           >
-            <PhoneOff className="text-white" size={24} />
-            <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-3 py-1 rounded-md text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+            <PhoneOff className="text-white" size={20} />
+            <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-popover text-popover-foreground px-3 py-1 rounded-md text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
               Encerrar
             </div>
           </button>

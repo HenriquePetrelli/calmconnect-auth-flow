@@ -124,48 +124,67 @@ export default function VoiceMeter({ stream, size = 'small', label }: VoiceMeter
   const barCount = size === 'large' ? 12 : 8;
   const containerHeight = size === 'large' ? 'h-10' : 'h-7';
 
+  const meterWidth = size === 'large' ? 'w-24' : 'w-16';
+  const barWidth = size === 'large' ? 'w-1.5' : 'w-1';
+
   return (
-    <div className={`flex items-center gap-3 ${size === 'large' ? 'w-32' : 'w-20'}`}>
-      <div className={`flex items-end gap-0.5 ${containerHeight} px-1`}>
+    <div className={`flex items-center gap-2 ${meterWidth}`}>
+      <div className={`flex items-end gap-0.5 ${containerHeight} flex-1 justify-center`}>
         {[...Array(barCount)].map((_, i) => {
-          const barThreshold = (i + 1) * (100 / barCount);
+          const barThreshold = ((i + 1) / barCount) * 100;
           const isBarActive = level >= barThreshold;
           
-          // Calculate height more smoothly
-          let barHeight = '2px'; // Minimum height
+          // Smoother height calculation with exponential curve
+          let barHeight = '3px'; // Minimum visible height
           if (isBarActive) {
-            const heightPercent = Math.min(100, (level / 100) * 100);
-            const barFactor = (i + 1) / barCount;
-            const adjustedHeight = heightPercent * barFactor;
-            barHeight = `${Math.max(2, adjustedHeight)}%`;
+            const normalizedLevel = Math.min(100, Math.max(0, level));
+            const barPosition = (i + 1) / barCount;
+            
+            // Exponential curve for more natural visualization
+            const curve = Math.pow(normalizedLevel / 100, 0.8);
+            const targetHeight = curve * 100;
+            const barFactor = Math.pow(barPosition, 0.6);
+            
+            const calculatedHeight = targetHeight * barFactor;
+            barHeight = `${Math.max(3, Math.min(calculatedHeight, 100))}%`;
           }
           
-          // Color mapping using design tokens
-          let barColor = 'bg-muted-foreground/40';
+          // Enhanced color mapping with smooth transitions
+          let barColor = 'bg-border opacity-50';
+          let glowClass = '';
+          
           if (isBarActive) {
-            if (i < barCount * 0.5) {
+            const intensity = Math.min(100, level) / 100;
+            if (i < barCount * 0.6) {
+              // Green zone - good levels
               barColor = 'bg-success';
-            } else if (i < barCount * 0.8) {
+              glowClass = intensity > 0.7 ? 'shadow-success shadow-sm' : '';
+            } else if (i < barCount * 0.85) {
+              // Yellow zone - moderate levels
               barColor = 'bg-warning';
+              glowClass = intensity > 0.8 ? 'shadow-warning shadow-sm' : '';
             } else {
+              // Red zone - high levels
               barColor = 'bg-destructive';
+              glowClass = intensity > 0.9 ? 'shadow-destructive shadow-sm' : '';
             }
           }
           
           return (
             <div
               key={i}
-              className={`w-1 transition-all duration-75 ease-out rounded-full ${barColor} ${
-                isBarActive ? 'shadow-sm' : ''
-              }`}
-              style={{ height: barHeight }}
+              className={`${barWidth} transition-all duration-100 ease-out rounded-full ${barColor} ${glowClass}`}
+              style={{ 
+                height: barHeight,
+                minHeight: '3px'
+              }}
             />
           );
         })}
       </div>
       
       {label && (
-        <span className="text-xs text-muted-foreground font-medium">{label}</span>
+        <span className="text-xs text-muted-foreground font-medium ml-1">{label}</span>
       )}
     </div>
   );
