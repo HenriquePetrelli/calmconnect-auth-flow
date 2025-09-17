@@ -46,6 +46,9 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     sosCount?: number;
     rating?: number;
   }>({name: '', details: ''});
+  const [currentUserName, setCurrentUserName] = useState<string>('');
+  const [remoteMuted, setRemoteMuted] = useState(false);
+  const [remoteIsCameraOff, setRemoteIsCameraOff] = useState(false);
 
   const {
     localVideoRef,
@@ -68,15 +71,61 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
       if (state === 'connected') {
         setIsLoading(false);
       } else if (state === 'failed') {
-        toast({
-          title: 'Conexão Perdida',
-          description: 'A conexão da videochamada foi perdida.',
-          variant: 'destructive',
-        });
+        if (callEndedBy) {
+          const endedByName = callEndedBy.userType === 'psychologist' ? 'O psicólogo' : 'O paciente';
+          toast({
+            title: 'Chamada Finalizada',
+            description: `${endedByName} finalizou a chamada.`,
+            variant: 'default',
+          });
+        } else {
+          toast({
+            title: 'Conexão Perdida',
+            description: 'A conexão da videochamada foi perdida.',
+            variant: 'destructive',
+          });
+        }
       }
     }
   });
 
+
+  // Get current user name for initials
+  useEffect(() => {
+    const getCurrentUserName = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        // Check if user is psychologist
+        const { data: psychologist } = await supabase
+          .from('psychologists')
+          .select('full_name')
+          .eq('user_id', user.id)
+          .single();
+
+        if (psychologist?.full_name) {
+          setCurrentUserName(psychologist.full_name);
+          return;
+        }
+
+        // Check profiles table
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('user_id', user.id)
+          .single();
+
+        if (profile?.full_name) {
+          setCurrentUserName(profile.full_name);
+        }
+      } catch (error) {
+        console.error('Error getting current user name:', error);
+      }
+    };
+
+    getCurrentUserName();
+  }, []);
 
   // Enhanced session validation with intelligent delay
   useEffect(() => {
@@ -260,12 +309,48 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   const handleMuteToggle = () => {
     const muted = toggleAudio();
     setIsMuted(muted);
+    
+    // Communicate mute status to remote peer
+    if (sessionId && peerConnection) {
+      supabase
+        .from('webrtc_sessions')
+        .update({ 
+          [`${userType}_muted`]: muted,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', sessionId)
+        .then(() => console.log('🎤 Mute status communicated:', muted ? 'muted' : 'unmuted'));
+    }
+    
     console.log('🎤 Audio toggled:', muted ? 'muted' : 'unmuted');
   };
 
   const handleCameraToggle = () => {
     const cameraOff = toggleVideo();
     setIsCameraOff(cameraOff);
+    
+    // Communicate camera status to remote peer
+    if (sessionId && peerConnection) {
+      supabase
+        .from('webrtc_sessions')
+        .update({ 
+          [`${userType}_camera_off`]: cameraOff,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', sessionId)
+        .then(() => console.log('📹 Camera status communicated:', cameraOff ? 'off' : 'on'));
+    }
+    
+    // Ensure video element is updated when camera is turned back on
+    if (!cameraOff && localStream && localVideoRef.current) {
+      setTimeout(() => {
+        if (localVideoRef.current && localStream) {
+          localVideoRef.current.srcObject = localStream;
+          localVideoRef.current.play().catch(e => console.warn('Video play error:', e));
+        }
+      }, 100);
+    }
+    
     console.log('📹 Video toggled:', cameraOff ? 'off' : 'on');
   };
 
@@ -535,14 +620,39 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
       {/* Área principal do vídeo - Estilo Google Meet */}
       <div className="flex-1 relative bg-[#202124] overflow-hidden">
         {/* Vídeo remoto */}
-        <video 
-          ref={remoteVideoRef} 
-          autoPlay 
-          playsInline 
-          className="w-full h-full object-cover"
-          onLoadedData={() => console.log('🎥 Remote video loaded')}
-          onError={(e) => console.error('❌ Remote video error:', e)}
-        />
+        <div className="relative w-full h-full">
+          <video 
+            ref={remoteVideoRef} 
+            autoPlay 
+            playsInline 
+            className="w-full h-full object-cover"
+            onLoadedData={() => console.log('🎥 Remote video loaded')}
+            onError={(e) => console.error('❌ Remote video error:', e)}
+          />
+          
+          {/* Remote camera off overlay */}
+          {isConnected && remoteIsCameraOff && (
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
+              <div className="text-center">
+                <div className="w-40 h-40 mx-auto rounded-full bg-gradient-to-br from-emerald-500 to-blue-600 flex items-center justify-center mb-4 shadow-2xl">
+                  <span className="text-white font-bold text-5xl">
+                    {userType === 'patient' ? (userInfo.name?.charAt(0)?.toUpperCase() || 'Dr') : (userInfo.name?.charAt(0)?.toUpperCase() || 'P')}
+                  </span>
+                </div>
+                <div className="text-gray-400 text-lg">
+                  {userType === 'patient' ? 'Dr. ' + (userInfo.name || 'Psicólogo') : (userInfo.name || 'Paciente')} desligou a câmera
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Remote mute indicator */}
+          {isConnected && remoteMuted && (
+            <div className="absolute top-6 left-6 bg-red-500/90 backdrop-blur-sm rounded-full p-3 shadow-lg z-20">
+              <MicOff className="text-white" size={20} />
+            </div>
+          )}
+        </div>
         
         {/* Connection quality indicator */}
         {peerConnection && isConnected && (
@@ -615,9 +725,9 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
           {isCameraOff ? (
             <div className="w-full h-full flex items-center justify-center bg-gray-800">
               <div className="text-center">
-                <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-gray-600 to-gray-700 flex items-center justify-center mb-2">
+                <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-emerald-500 to-blue-600 flex items-center justify-center mb-2">
                   <span className="text-white font-semibold text-lg">
-                    {userType === 'patient' ? (userInfo.name?.charAt(0) || 'P') : 'Dr'}
+                    {currentUserName?.charAt(0)?.toUpperCase() || (userType === 'patient' ? 'P' : 'Dr')}
                   </span>
                 </div>
                 <CameraOff className="text-gray-400 mx-auto mb-1" size={24} />
@@ -632,6 +742,12 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
                 playsInline
                 muted
                 className="w-full h-full object-cover scale-x-[-1]"
+                onLoadedData={() => {
+                  console.log('📹 Local video loaded and playing');
+                }}
+                onError={(e) => {
+                  console.error('❌ Local video error:', e);
+                }}
               />
               {/* Status indicators overlay */}
               <div className="absolute inset-0 pointer-events-none">

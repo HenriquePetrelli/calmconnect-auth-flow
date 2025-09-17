@@ -351,23 +351,55 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     
     console.log('🧹 Cleaning up WebRTC resources...');
     
-    // Stop all media tracks properly
+    // Stop all media tracks properly and completely
     if (localStream) {
+      console.log('🛑 Stopping local stream tracks...');
       localStream.getTracks().forEach(track => {
         if (track.readyState !== 'ended') {
           track.stop();
-          console.log(`🛑 Stopped ${track.kind} track`);
+          console.log(`🛑 Stopped ${track.kind} track - readyState: ${track.readyState}`);
         }
       });
+      
+      // Clear video elements to remove any lingering streams
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = null;
+        console.log('🧹 Cleared local video element');
+      }
+    }
+    
+    // Stop remote stream tracks if any
+    if (remoteStream) {
+      console.log('🛑 Stopping remote stream tracks...');
+      remoteStream.getTracks().forEach(track => {
+        if (track.readyState !== 'ended') {
+          track.stop();
+          console.log(`🛑 Stopped remote ${track.kind} track`);
+        }
+      });
+      
+      if (remoteVideoRef.current) {
+        remoteVideoRef.current.srcObject = null;
+        console.log('🧹 Cleared remote video element');
+      }
     }
     
     // Close peer connection properly
     if (peerConnection) {
       try {
-        // Close all transceivers
+        // Stop all transceivers first
         peerConnection.getTransceivers().forEach(transceiver => {
           if (transceiver.stop) {
             transceiver.stop();
+            console.log(`🛑 Stopped ${transceiver.direction} transceiver`);
+          }
+        });
+        
+        // Remove all tracks from connection
+        peerConnection.getSenders().forEach(sender => {
+          if (sender.track) {
+            peerConnection.removeTrack(sender);
+            console.log(`🗑️ Removed ${sender.track.kind} sender`);
           }
         });
         
@@ -403,7 +435,9 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     
     cleanupRef.current = false;
     loopDetector.trace(sessionId, 'cleanup_complete');
-  }, [localStream, peerConnection, sessionId, connectionManager]);
+    
+    console.log('✅ Complete WebRTC cleanup finished');
+  }, [localStream, remoteStream, peerConnection, sessionId, connectionManager, localVideoRef, remoteVideoRef]);
   
   const updateDeviceStream = useCallback(async (newStream: MediaStream) => {
     if (!peerConnection || !localStream) return;
@@ -529,6 +563,11 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
               console.log('📡 Session update received:', payload);
               const sessionData = payload.new as WebRTCSession;
               setSession(sessionData);
+
+              // Emit session update for parent component to handle mute/camera status
+              window.dispatchEvent(new CustomEvent('webrtc-session-update', { 
+                detail: sessionData 
+              }));
 
               // Check if call was ended by someone
               if (sessionData.status === 'completed' && sessionData.ended_by && sessionData.ended_by_type) {
