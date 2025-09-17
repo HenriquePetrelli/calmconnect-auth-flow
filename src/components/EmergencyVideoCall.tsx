@@ -164,6 +164,26 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
         await fetchUserInfo(sessionId, detectedUserType || userType);
         
         console.log('✅ Enhanced session validation completed successfully');
+        
+        // Set up listener for remote peer status updates
+        const handleSessionUpdate = (event: CustomEvent) => {
+          const sessionData = event.detail;
+          const remoteUserType = userType === 'patient' ? 'psychologist' : 'patient';
+          
+          // Update remote mute status
+          const remoteMutedKey = `${remoteUserType}_muted`;
+          if (sessionData[remoteMutedKey] !== undefined) {
+            setRemoteMuted(sessionData[remoteMutedKey]);
+          }
+          
+          // Update remote camera status
+          const remoteCameraOffKey = `${remoteUserType}_camera_off`;
+          if (sessionData[remoteCameraOffKey] !== undefined) {
+            setRemoteIsCameraOff(sessionData[remoteCameraOffKey]);
+          }
+        };
+
+        window.addEventListener('webrtc-session-update', handleSessionUpdate as EventListener);
       } catch (error) {
         console.error('❌ Enhanced session validation failed:', error);
         
@@ -315,8 +335,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
       supabase
         .from('webrtc_sessions')
         .update({ 
-          [`${userType}_muted`]: muted,
-          updated_at: new Date().toISOString()
+          [`${userType}_muted`]: muted
         })
         .eq('id', sessionId)
         .then(() => console.log('🎤 Mute status communicated:', muted ? 'muted' : 'unmuted'));
@@ -334,8 +353,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
       supabase
         .from('webrtc_sessions')
         .update({ 
-          [`${userType}_camera_off`]: cameraOff,
-          updated_at: new Date().toISOString()
+          [`${userType}_camera_off`]: cameraOff
         })
         .eq('id', sessionId)
         .then(() => console.log('📹 Camera status communicated:', cameraOff ? 'off' : 'on'));

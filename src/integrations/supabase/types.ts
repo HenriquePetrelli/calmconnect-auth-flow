@@ -901,8 +901,12 @@ export type Database = {
           ice_candidates: Json[] | null
           id: string
           offer: Json | null
+          patient_camera_off: boolean | null
           patient_id: string | null
+          patient_muted: boolean | null
+          psychologist_camera_off: boolean | null
           psychologist_id: string | null
+          psychologist_muted: boolean | null
           status: string | null
         }
         Insert: {
@@ -913,8 +917,12 @@ export type Database = {
           ice_candidates?: Json[] | null
           id?: string
           offer?: Json | null
+          patient_camera_off?: boolean | null
           patient_id?: string | null
+          patient_muted?: boolean | null
+          psychologist_camera_off?: boolean | null
           psychologist_id?: string | null
+          psychologist_muted?: boolean | null
           status?: string | null
         }
         Update: {
@@ -925,8 +933,12 @@ export type Database = {
           ice_candidates?: Json[] | null
           id?: string
           offer?: Json | null
+          patient_camera_off?: boolean | null
           patient_id?: string | null
+          patient_muted?: boolean | null
+          psychologist_camera_off?: boolean | null
           psychologist_id?: string | null
+          psychologist_muted?: boolean | null
           status?: string | null
         }
         Relationships: [
