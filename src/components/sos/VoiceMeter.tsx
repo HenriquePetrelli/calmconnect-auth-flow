@@ -13,6 +13,9 @@ export default function VoiceMeter({ stream, size = 'small', label }: VoiceMeter
   const analyserRef = useRef<AnalyserNode | null>(null);
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
   const rafId = useRef<number>();
+  // Smoothing refs for more fluid meter
+  const prevDbRef = useRef<number>(-60);
+  const prevLevelRef = useRef<number>(0);
 
   useEffect(() => {
     if (!stream) {
@@ -42,30 +45,49 @@ export default function VoiceMeter({ stream, size = 'small', label }: VoiceMeter
       analyserRef.current = analyser;
       sourceRef.current = source;
 
-      const dataArray = new Uint8Array(analyser.fftSize);
+      // Use Float32 for better precision and smoother response
+      const dataArray = new Float32Array(analyser.fftSize);
 
       const updateLevel = () => {
         if (!analyser) return;
-        
-        analyser.getByteTimeDomainData(dataArray);
-        
-        // Calcular RMS
+
+        // Prefer Float data if available
+        if ((analyser as any).getFloatTimeDomainData) {
+          (analyser as any).getFloatTimeDomainData(dataArray);
+        } else {
+          // Fallback to Byte and convert to Float
+          const byteArray = new Uint8Array(analyser.fftSize);
+          analyser.getByteTimeDomainData(byteArray);
+          for (let i = 0; i < byteArray.length; i++) {
+            dataArray[i] = (byteArray[i] - 128) / 128;
+          }
+        }
+
+        // Compute RMS
         let sum = 0;
         for (let i = 0; i < dataArray.length; i++) {
-          const v = (dataArray[i] - 128) / 128;
+          const v = dataArray[i];
           sum += v * v;
         }
-        
         const rms = Math.sqrt(sum / dataArray.length);
-        // Converter para decibéis
-        const db = 20 * Math.log10(rms || 1e-8);
-        
-        // Normalizar para 0-100 (de -60dB a 0dB)
-        const normalizedLevel = Math.max(0, Math.min(100, (db + 60) / 60 * 100));
-        
-        setLevel(normalizedLevel);
-        setIsActive(normalizedLevel > 15); // Threshold para considerar "falando"
-        
+
+        // Convert to dBFS and smooth with EMA
+        const instantDb = 20 * Math.log10(rms || 1e-8);
+        const alpha = 0.2; // smoothing factor
+        const smoothedDb = prevDbRef.current + alpha * (instantDb - prevDbRef.current);
+        prevDbRef.current = smoothedDb;
+
+        // Normalize -60dB..0dB => 0..100
+        const normalized = Math.max(0, Math.min(100, ((smoothedDb + 60) / 60) * 100));
+
+        // Additional smoothing on level to reduce jitter
+        const levelAlpha = 0.3;
+        const smoothLevel = prevLevelRef.current + levelAlpha * (normalized - prevLevelRef.current);
+        prevLevelRef.current = smoothLevel;
+
+        setLevel(smoothLevel);
+        setIsActive(smoothLevel > 15);
+
         rafId.current = requestAnimationFrame(updateLevel);
       };
 
@@ -118,17 +140,15 @@ export default function VoiceMeter({ stream, size = 'small', label }: VoiceMeter
             barHeight = `${Math.max(2, adjustedHeight)}%`;
           }
           
-          // Color gradient from green to red
-          let barColor = 'bg-gray-600/60';
+          // Color mapping using design tokens
+          let barColor = 'bg-muted-foreground/40';
           if (isBarActive) {
             if (i < barCount * 0.5) {
-              barColor = 'bg-green-400';
-            } else if (i < barCount * 0.75) {
-              barColor = 'bg-green-500';
-            } else if (i < barCount * 0.9) {
-              barColor = 'bg-yellow-400';
+              barColor = 'bg-success';
+            } else if (i < barCount * 0.8) {
+              barColor = 'bg-warning';
             } else {
-              barColor = 'bg-red-400';
+              barColor = 'bg-destructive';
             }
           }
           
@@ -145,7 +165,7 @@ export default function VoiceMeter({ stream, size = 'small', label }: VoiceMeter
       </div>
       
       {label && (
-        <span className="text-xs text-gray-300 font-medium">{label}</span>
+        <span className="text-xs text-muted-foreground font-medium">{label}</span>
       )}
     </div>
   );

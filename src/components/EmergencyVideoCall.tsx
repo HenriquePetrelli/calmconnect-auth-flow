@@ -60,6 +60,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     isConnected,
     error,
     callEndedBy,
+    session,
     toggleAudio,
     toggleVideo,
     cleanup,
@@ -184,6 +185,8 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
         };
 
         window.addEventListener('webrtc-session-update', handleSessionUpdate as EventListener);
+        // Cleanup listener when component unmounts
+        return () => window.removeEventListener('webrtc-session-update', handleSessionUpdate as EventListener);
       } catch (error) {
         console.error('❌ Enhanced session validation failed:', error);
         
@@ -238,7 +241,20 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     validateSessionWithDelay();
   }, [sessionId, navigate, toast]);
 
-  const fetchUserInfo = async (sessionId: string, currentUserType: 'patient' | 'psychologist') => {
+  // Sync initial remote mute/camera status from current session
+  useEffect(() => {
+    if (!session) return;
+    const remoteType = userType === 'patient' ? 'psychologist' : 'patient';
+    const s: any = session;
+    if (typeof s[`${remoteType}_muted`] === 'boolean') {
+      setRemoteMuted(s[`${remoteType}_muted`]);
+    }
+    if (typeof s[`${remoteType}_camera_off`] === 'boolean') {
+      setRemoteIsCameraOff(s[`${remoteType}_camera_off`]);
+    }
+  }, [session, userType]);
+ 
+   const fetchUserInfo = async (sessionId: string, currentUserType: 'patient' | 'psychologist') => {
     try {
       // Get the WebRTC session to find the emergency request
       const { data: webrtcSession, error: sessionError } = await supabase
@@ -459,6 +475,8 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   };
 
   const status = getConnectionStatus();
+  const endedByName = callEndedBy ? (callEndedBy.userType === 'psychologist' ? 'O psicólogo' : 'O paciente') : null;
+  const displayError = endedByName ? `${endedByName} finalizou a chamada.` : error;
 
   if (isLoading) {
     // Show the intelligent initializer with delay and progress
@@ -541,7 +559,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     );
   }
 
-  if (error) {
+  if (displayError) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="w-full max-w-md mx-4">
@@ -550,7 +568,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
             <h3 className="text-xl font-semibold text-destructive">
               Erro na Videochamada
             </h3>
-            <p className="text-muted-foreground">{error}</p>
+            <p className="text-muted-foreground">{displayError}</p>
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => window.location.reload()}>
                 Tentar Novamente
@@ -679,11 +697,11 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
           </div>
         )}
         
-        {error && (
+        {displayError && (
           <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-red-500/90 text-white text-sm px-4 py-2 rounded-lg border border-red-400 shadow-lg">
             <div className="flex items-center gap-2">
               <AlertTriangle className="w-4 h-4" />
-              <span>{error}</span>
+              <span>{displayError}</span>
             </div>
           </div>
         )}
