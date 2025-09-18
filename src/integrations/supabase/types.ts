@@ -897,6 +897,9 @@ export type Database = {
           answer: Json | null
           created_at: string
           emergency_request_id: string | null
+          ended_at: string | null
+          ended_by: string | null
+          ended_by_type: string | null
           expires_at: string | null
           ice_candidates: Json[] | null
           id: string
@@ -908,11 +911,15 @@ export type Database = {
           psychologist_id: string | null
           psychologist_muted: boolean | null
           status: string | null
+          updated_at: string
         }
         Insert: {
           answer?: Json | null
           created_at?: string
           emergency_request_id?: string | null
+          ended_at?: string | null
+          ended_by?: string | null
+          ended_by_type?: string | null
           expires_at?: string | null
           ice_candidates?: Json[] | null
           id?: string
@@ -924,11 +931,15 @@ export type Database = {
           psychologist_id?: string | null
           psychologist_muted?: boolean | null
           status?: string | null
+          updated_at?: string
         }
         Update: {
           answer?: Json | null
           created_at?: string
           emergency_request_id?: string | null
+          ended_at?: string | null
+          ended_by?: string | null
+          ended_by_type?: string | null
           expires_at?: string | null
           ice_candidates?: Json[] | null
           id?: string
@@ -940,6 +951,7 @@ export type Database = {
           psychologist_id?: string | null
           psychologist_muted?: boolean | null
           status?: string | null
+          updated_at?: string
         }
         Relationships: [
           {

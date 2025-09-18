@@ -51,6 +51,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   const [currentUserName, setCurrentUserName] = useState<string>('');
   const [remoteMuted, setRemoteMuted] = useState(false);
   const [remoteIsCameraOff, setRemoteIsCameraOff] = useState(false);
+  const [callTerminatedMessage, setCallTerminatedMessage] = useState<string | null>(null);
 
   const {
     localVideoRef,
@@ -243,6 +244,191 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     validateSessionWithDelay();
   }, [sessionId, navigate, toast]);
 
+  // Load and apply user preferences on connection
+  useEffect(() => {
+    const applySavedSettings = async () => {
+      if (!isConnected || prefsLoading) return;
+      
+      try {
+        console.log('🔧 Applying saved device preferences...');
+        
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data: preferences } = await supabase
+          .from('user_preferences')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+        
+        if (preferences && updateDeviceStream) {
+          console.log('📱 Found saved preferences, applying them...');
+          
+          // Get new stream with preferred devices
+          const newStream = await navigator.mediaDevices.getUserMedia({
+            video: preferences.camera_device_id ? 
+              { deviceId: preferences.camera_device_id } : true,
+            audio: preferences.mic_device_id ? 
+              { deviceId: preferences.mic_device_id } : true
+          });
+          
+          // Update the stream in the peer connection
+          await updateDeviceStream(newStream);
+          
+          console.log('✅ Device preferences applied successfully');
+        }
+      } catch (error) {
+        console.warn('⚠️ Could not apply saved device preferences:', error);
+      }
+    };
+
+    applySavedSettings();
+  }, [isConnected, prefsLoading, updateDeviceStream]);
+
+  // Enhanced cleanup function - defined early to avoid dependency issues
+  const enhancedCleanup = useCallback(async () => {
+    console.log('🧹 Starting enhanced cleanup...');
+    
+    // 1. Stop all local stream tracks completely
+    if (localStream) {
+      localStream.getTracks().forEach(track => {
+        if (track.readyState !== 'ended') {
+          track.stop();
+          track.enabled = false;
+          console.log(`🛑 Enhanced stop ${track.kind} track (readyState: ${track.readyState})`);
+        }
+      });
+    }
+    
+    // 2. Stop all remote stream tracks if any
+    if (remoteStream) {
+      remoteStream.getTracks().forEach(track => {
+        if (track.readyState !== 'ended') {
+          track.stop();
+          track.enabled = false;
+          console.log(`🛑 Enhanced stop remote ${track.kind} track`);
+        }
+      });
+    }
+    
+    // 3. Close peer connection with transceivers
+    if (peerConnection) {
+      try {
+        // Stop all transceivers first
+        peerConnection.getTransceivers().forEach(transceiver => {
+          if (transceiver.stop) {
+            transceiver.stop();
+            console.log(`🛑 Enhanced stop ${transceiver.direction} transceiver`);
+          }
+        });
+        
+        // Remove all senders
+        peerConnection.getSenders().forEach(sender => {
+          if (sender.track) {
+            peerConnection.removeTrack(sender);
+            console.log(`🗑️ Enhanced remove ${sender.track.kind} sender`);
+          }
+        });
+        
+        if (peerConnection.connectionState !== 'closed') {
+          peerConnection.close();
+          console.log('🔌 Enhanced peer connection closed');
+        }
+      } catch (error) {
+        console.warn('⚠️ Enhanced peer connection cleanup error:', error);
+      }
+    }
+    
+    // 4. Clear video elements immediately with null assignment
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = null;
+      localVideoRef.current.load(); // Force video element reset
+      console.log('🧹 Enhanced clear local video element');
+    }
+    if (remoteVideoRef.current) {
+      remoteVideoRef.current.srcObject = null;
+      remoteVideoRef.current.load(); // Force video element reset  
+      console.log('🧹 Enhanced clear remote video element');
+    }
+    
+    // 5. Force device release by getting and immediately stopping a temporary stream
+    try {
+      const tempStream = await navigator.mediaDevices.getUserMedia({ 
+        video: true, 
+        audio: true 
+      });
+      tempStream.getTracks().forEach(track => track.stop());
+      console.log('📵 Devices forcefully released');
+    } catch (error) {
+      console.log('⚠️ Force release not needed or possible:', error);
+    }
+    
+    // 6. Force garbage collection and memory cleanup
+    if (window.gc) {
+      setTimeout(() => window.gc(), 100);
+    }
+    
+    console.log('✅ Enhanced cleanup completed');
+  }, [localStream, remoteStream, peerConnection, localVideoRef, remoteVideoRef]);
+
+  // Real-time synchronization of call status via Supabase
+  useEffect(() => {
+    if (!sessionId) return;
+
+    console.log('📡 Setting up real-time session status synchronization...');
+    
+    const channel = supabase
+      .channel('webrtc-session-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'webrtc_sessions',
+          filter: `id=eq.${sessionId}`
+        },
+        (payload) => {
+          const newData = payload.new;
+          const remoteUserType = userType === 'patient' ? 'psychologist' : 'patient';
+          
+          console.log('📡 Received session update:', newData);
+          
+          // Update remote mute status
+          if (newData[`${remoteUserType}_muted`] !== undefined) {
+            setRemoteMuted(newData[`${remoteUserType}_muted`]);
+            console.log('🎤 Remote mute status updated:', newData[`${remoteUserType}_muted`]);
+          }
+          
+          // Update remote camera status
+          if (newData[`${remoteUserType}_camera_off`] !== undefined) {
+            setRemoteIsCameraOff(newData[`${remoteUserType}_camera_off`]);
+            console.log('📹 Remote camera status updated:', newData[`${remoteUserType}_camera_off`]);
+          }
+          
+          // Check if call was terminated
+          if (newData.status === 'completed' && newData.ended_by && newData.ended_by_type) {
+            const endedByType = newData.ended_by_type;
+            const endedByName = endedByType === 'psychologist' ? 'O psicólogo' : 'O paciente';
+            
+            console.log('📞 Call terminated by:', endedByName);
+            setCallTerminatedMessage(`${endedByName} encerrou a chamada de vídeo.`);
+            
+            // Execute enhanced cleanup after a brief delay
+            setTimeout(() => {
+              enhancedCleanup();
+              setShowFeedbackModal(true);
+            }, 1000);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('🔌 Cleaning up real-time session subscription');
+      supabase.removeChannel(channel);
+    };
+  }, [sessionId, userType, enhancedCleanup]);
+
   // Sync initial remote mute/camera status from current session
   useEffect(() => {
     if (!session) return;
@@ -344,19 +530,29 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     return () => clearInterval(timer);
   }, [isConnected]);
 
-  const handleMuteToggle = () => {
+  const handleMuteToggle = async () => {
     const muted = toggleAudio();
     setIsMuted(muted);
     
-    // Communicate mute status to remote peer
-    if (sessionId && peerConnection) {
-      supabase
-        .from('webrtc_sessions')
-        .update({ 
-          [`${userType}_muted`]: muted
-        })
-        .eq('id', sessionId)
-        .then(() => console.log('🎤 Mute status communicated:', muted ? 'muted' : 'unmuted'));
+    // Communicate mute status to remote peer via Supabase
+    if (sessionId) {
+      try {
+        const { error } = await supabase
+          .from('webrtc_sessions')
+          .update({ 
+            [`${userType}_muted`]: muted,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', sessionId);
+        
+        if (error) {
+          console.error('Error updating mute status:', error);
+        } else {
+          console.log('🎤 Mute status updated in database:', muted);
+        }
+      } catch (error) {
+        console.error('Failed to update mute status:', error);
+      }
     }
     
     console.log('🎤 Audio toggled:', muted ? 'muted' : 'unmuted');
@@ -366,15 +562,25 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     const cameraOff = toggleVideo();
     setIsCameraOff(cameraOff);
     
-    // Communicate camera status to remote peer
-    if (sessionId && peerConnection) {
-      supabase
-        .from('webrtc_sessions')
-        .update({ 
-          [`${userType}_camera_off`]: cameraOff
-        })
-        .eq('id', sessionId)
-        .then(() => console.log('📹 Camera status communicated:', cameraOff ? 'off' : 'on'));
+    // Communicate camera status to remote peer via Supabase
+    if (sessionId) {
+      try {
+        const { error } = await supabase
+          .from('webrtc_sessions')
+          .update({ 
+            [`${userType}_camera_off`]: cameraOff,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', sessionId);
+        
+        if (error) {
+          console.error('Error updating camera status:', error);
+        } else {
+          console.log('📹 Camera status updated in database:', cameraOff);
+        }
+      } catch (error) {
+        console.error('Failed to update camera status:', error);
+      }
     }
     
     // Enhanced video reactivation when camera is turned back on
@@ -382,13 +588,17 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
       try {
         console.log('📹 Reactivating camera with fresh stream...');
         
-        // Get a completely fresh media stream
-        const newStream = await navigator.mediaDevices.getUserMedia({
-          video: preferences?.camera_device_id ? { deviceId: preferences.camera_device_id } : true,
-          audio: preferences?.mic_device_id ? { deviceId: preferences.mic_device_id } : true
-        });
+        // Get a completely fresh media stream with preferred devices
+        const constraints = {
+          video: preferences?.camera_device_id ? 
+            { deviceId: { exact: preferences.camera_device_id } } : true,
+          audio: preferences?.mic_device_id ? 
+            { deviceId: { exact: preferences.mic_device_id } } : true
+        };
         
-        // Apply the muted state to the new audio track
+        const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+        
+        // Apply the current muted state to the new audio track
         const audioTrack = newStream.getAudioTracks()[0];
         if (audioTrack && localStream) {
           const currentAudioTrack = localStream.getAudioTracks()[0];
@@ -401,10 +611,10 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
           await updateDeviceStream(newStream);
         }
         
-        // Immediately update local video element
+        // Immediately update local video element and force play
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = newStream;
-          await localVideoRef.current.play();
+          await localVideoRef.current.play().catch(console.error);
           console.log('📹 Local video immediately updated with new stream');
         }
         
@@ -416,6 +626,12 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
           const videoTrack = localStream.getVideoTracks()[0];
           if (videoTrack) {
             videoTrack.enabled = true;
+            
+            // Force local video element update for fallback
+            if (localVideoRef.current) {
+              localVideoRef.current.srcObject = localStream;
+              localVideoRef.current.play().catch(console.error);
+            }
           }
         }
       }
@@ -424,108 +640,41 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     console.log('📹 Video toggled:', cameraOff ? 'off' : 'on');
   };
 
-  const enhancedCleanup = useCallback(() => {
-    console.log('🧹 Starting enhanced cleanup...');
-    
-    // 1. Stop all local stream tracks completely
-    if (localStream) {
-      localStream.getTracks().forEach(track => {
-        if (track.readyState !== 'ended') {
-          track.stop();
-          track.enabled = false;
-          console.log(`🛑 Enhanced stop ${track.kind} track (readyState: ${track.readyState})`);
-        }
-      });
-    }
-    
-    // 2. Stop all remote stream tracks if any
-    if (remoteStream) {
-      remoteStream.getTracks().forEach(track => {
-        if (track.readyState !== 'ended') {
-          track.stop();
-          track.enabled = false;
-          console.log(`🛑 Enhanced stop remote ${track.kind} track`);
-        }
-      });
-    }
-    
-    // 3. Close peer connection with transceivers
-    if (peerConnection) {
-      try {
-        // Stop all transceivers first
-        peerConnection.getTransceivers().forEach(transceiver => {
-          if (transceiver.stop) {
-            transceiver.stop();
-            console.log(`🛑 Enhanced stop ${transceiver.direction} transceiver`);
-          }
-        });
-        
-        // Remove all senders
-        peerConnection.getSenders().forEach(sender => {
-          if (sender.track) {
-            peerConnection.removeTrack(sender);
-            console.log(`🗑️ Enhanced remove ${sender.track.kind} sender`);
-          }
-        });
-        
-        if (peerConnection.connectionState !== 'closed') {
-          peerConnection.close();
-          console.log('🔌 Enhanced peer connection closed');
-        }
-      } catch (error) {
-        console.warn('⚠️ Enhanced peer connection cleanup error:', error);
-      }
-    }
-    
-    // 4. Clear video elements immediately with null assignment
-    if (localVideoRef.current) {
-      localVideoRef.current.srcObject = null;
-      localVideoRef.current.load(); // Force video element reset
-      console.log('🧹 Enhanced clear local video element');
-    }
-    if (remoteVideoRef.current) {
-      remoteVideoRef.current.srcObject = null;
-      remoteVideoRef.current.load(); // Force video element reset  
-      console.log('🧹 Enhanced clear remote video element');
-    }
-    
-    // 5. Force garbage collection and memory cleanup
-    if (window.gc) {
-      setTimeout(() => window.gc(), 100);
-    }
-    
-    console.log('✅ Enhanced cleanup completed');
-  }, [localStream, remoteStream, peerConnection, localVideoRef, remoteVideoRef]);
 
   const handleEndCall = async () => {
     try {
       console.log('🔄 Starting complete call cleanup...');
       
-      // 1. Enhanced cleanup of all media devices
-      enhancedCleanup();
-      
-      // 2. Update session status and mark who ended the call
+      // 1. Update session status and mark who ended the call FIRST
       if (sessionId) {
         const { data: { user } } = await supabase.auth.getUser();
-        await supabase
+        const { error } = await supabase
           .from('webrtc_sessions')
           .update({ 
             status: 'completed',
             ended_by: user?.id,
             ended_by_type: userType,
-            ended_at: new Date().toISOString()
+            ended_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
           })
           .eq('id', sessionId);
         
-        console.log('📝 Session marked as completed in database');
+        if (error) {
+          console.error('Error updating session status:', error);
+        } else {
+          console.log('📝 Session marked as completed in database');
+        }
       }
+      
+      // 2. Enhanced cleanup of all media devices
+      await enhancedCleanup();
       
       // 3. Call cleanup from hook
       cleanup();
       
       console.log('✅ Complete call cleanup finished');
 
-      // Show feedback modal instead of immediately navigating
+      // Show feedback modal
       setShowFeedbackModal(true);
     } catch (error) {
       console.error('❌ Error ending call:', error);
@@ -580,9 +729,34 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     }
   };
 
+  // Helper to determine what error/message to display
+  const getDisplayError = () => {
+    // Priority 1: Call termination message from real-time updates
+    if (callTerminatedMessage) {
+      return callTerminatedMessage;
+    }
+    
+    // Priority 2: Call ended by someone (from WebRTC hook)
+    if (callEndedBy) {
+      const endedByName = callEndedBy.userType === 'psychologist' ? 'O psicólogo' : 'O paciente';
+      return `${endedByName} encerrou a chamada de vídeo.`;
+    }
+    
+    // Priority 3: Generic connection error
+    if (error?.includes('finalizou a chamada')) {
+      return error;
+    }
+    
+    // Priority 4: Any other error
+    if (error) {
+      return `Erro na conexão: ${error}`;
+    }
+    
+    return null;
+  };
+
   const status = getConnectionStatus();
-  const endedByName = callEndedBy ? (callEndedBy.userType === 'psychologist' ? 'O psicólogo' : 'O paciente') : null;
-  const displayError = endedByName ? `${endedByName} encerrou a chamada de vídeo` : error;
+  const displayError = getDisplayError();
 
   if (isLoading) {
     // Show the intelligent initializer with delay and progress
@@ -725,6 +899,23 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
 
       {/* Área principal do vídeo - Tela inteira */}
       <div className="absolute inset-0 top-[72px] md:top-[88px] bottom-[100px] md:bottom-[120px] bg-background overflow-hidden">
+        
+        {/* Continuous local video stream updater */}
+        {localStream && (
+          <div style={{ display: 'none' }}>
+            <video
+              ref={(el) => {
+                if (el && localVideoRef.current !== el) {
+                  localVideoRef.current = el;
+                }
+                if (el && localStream) {
+                  el.srcObject = localStream;
+                  el.play().catch(console.error);
+                }
+              }}
+            />
+          </div>
+        )}
         {/* Vídeo remoto - Tela inteira */}
         <div className="absolute inset-0">
           <video 
@@ -800,6 +991,34 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Real-time local video stream updater */}
+        {localStream && (
+          <div className="absolute inset-0 pointer-events-none">
+            <video
+              key={`local-stream-${Date.now()}`}
+              ref={(el) => {
+                if (el && localStream) {
+                  // Continuously update to ensure live video feed
+                  const updateVideo = () => {
+                    if (el.srcObject !== localStream) {
+                      el.srcObject = localStream;
+                      el.play().catch(console.error);
+                    }
+                  };
+                  updateVideo();
+                  // Update every second to ensure stream continuity
+                  const interval = setInterval(updateVideo, 1000);
+                  return () => clearInterval(interval);
+                }
+              }}
+              style={{ display: 'none' }}
+              autoPlay
+              playsInline
+              muted
+            />
           </div>
         )}
 
