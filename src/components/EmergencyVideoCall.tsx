@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,6 +11,7 @@ import { ConnectionQuality } from '@/components/sos/ConnectionQuality';
 import { supabase } from '@/integrations/supabase/client';
 import { FeedbackModal } from '@/components/sos/FeedbackModal';
 import { VideoCallSettingsModal } from '@/components/sos/VideoCallSettingsModal';
+import { useUserPreferences } from '@/hooks/useUserPreferences';
 
 interface EmergencyVideoCallProps {
   sessionId?: string;
@@ -28,6 +29,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   const { sessionId: paramSessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { preferences, isLoading: prefsLoading, loadPreferences } = useUserPreferences();
   
   // Use the URL parameter as the session ID (this should be the WebRTC session ID, not the emergency request ID)
   const sessionId = propSessionId || paramSessionId;
@@ -375,29 +377,46 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
         .then(() => console.log('📹 Camera status communicated:', cameraOff ? 'off' : 'on'));
     }
     
-    // Improved video reactivation when camera is turned back on
-    if (!cameraOff && localVideoRef.current) {
+    // Enhanced video reactivation when camera is turned back on
+    if (!cameraOff) {
       try {
-        // Get a fresh media stream when reactivating camera
-        const newStream = await navigator.mediaDevices.getUserMedia({ 
-          video: true, 
-          audio: true 
+        console.log('📹 Reactivating camera with fresh stream...');
+        
+        // Get a completely fresh media stream
+        const newStream = await navigator.mediaDevices.getUserMedia({
+          video: preferences?.camera_device_id ? { deviceId: preferences.camera_device_id } : true,
+          audio: preferences?.mic_device_id ? { deviceId: preferences.mic_device_id } : true
         });
         
-        if (newStream && updateDeviceStream) {
-          await updateDeviceStream(newStream);
-          if (localVideoRef.current) {
-            localVideoRef.current.srcObject = newStream;
-            await localVideoRef.current.play();
-            console.log('📹 Video reactivated with fresh stream');
+        // Apply the muted state to the new audio track
+        const audioTrack = newStream.getAudioTracks()[0];
+        if (audioTrack && localStream) {
+          const currentAudioTrack = localStream.getAudioTracks()[0];
+          if (currentAudioTrack) {
+            audioTrack.enabled = currentAudioTrack.enabled;
           }
         }
+        
+        if (updateDeviceStream) {
+          await updateDeviceStream(newStream);
+        }
+        
+        // Immediately update local video element
+        if (localVideoRef.current) {
+          localVideoRef.current.srcObject = newStream;
+          await localVideoRef.current.play();
+          console.log('📹 Local video immediately updated with new stream');
+        }
+        
+        console.log('✅ Camera reactivated successfully');
       } catch (error) {
-        console.warn('Video reactivation error, using fallback:', error);
-        // Fallback to existing stream
-        if (localStream && localVideoRef.current) {
-          localVideoRef.current.srcObject = localStream;
-          await localVideoRef.current.play().catch(e => console.warn('Video play fallback error:', e));
+        console.warn('⚠️ Camera reactivation error, using fallback:', error);
+        // Fallback: just enable the existing video track
+        if (localStream) {
+          const videoTrack = localStream.getVideoTracks()[0];
+          if (videoTrack) {
+            videoTrack.enabled = true;
+          }
         }
       }
     }
@@ -405,39 +424,87 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     console.log('📹 Video toggled:', cameraOff ? 'off' : 'on');
   };
 
+  const enhancedCleanup = useCallback(() => {
+    console.log('🧹 Starting enhanced cleanup...');
+    
+    // 1. Stop all local stream tracks completely
+    if (localStream) {
+      localStream.getTracks().forEach(track => {
+        if (track.readyState !== 'ended') {
+          track.stop();
+          track.enabled = false;
+          console.log(`🛑 Enhanced stop ${track.kind} track (readyState: ${track.readyState})`);
+        }
+      });
+    }
+    
+    // 2. Stop all remote stream tracks if any
+    if (remoteStream) {
+      remoteStream.getTracks().forEach(track => {
+        if (track.readyState !== 'ended') {
+          track.stop();
+          track.enabled = false;
+          console.log(`🛑 Enhanced stop remote ${track.kind} track`);
+        }
+      });
+    }
+    
+    // 3. Close peer connection with transceivers
+    if (peerConnection) {
+      try {
+        // Stop all transceivers first
+        peerConnection.getTransceivers().forEach(transceiver => {
+          if (transceiver.stop) {
+            transceiver.stop();
+            console.log(`🛑 Enhanced stop ${transceiver.direction} transceiver`);
+          }
+        });
+        
+        // Remove all senders
+        peerConnection.getSenders().forEach(sender => {
+          if (sender.track) {
+            peerConnection.removeTrack(sender);
+            console.log(`🗑️ Enhanced remove ${sender.track.kind} sender`);
+          }
+        });
+        
+        if (peerConnection.connectionState !== 'closed') {
+          peerConnection.close();
+          console.log('🔌 Enhanced peer connection closed');
+        }
+      } catch (error) {
+        console.warn('⚠️ Enhanced peer connection cleanup error:', error);
+      }
+    }
+    
+    // 4. Clear video elements immediately with null assignment
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = null;
+      localVideoRef.current.load(); // Force video element reset
+      console.log('🧹 Enhanced clear local video element');
+    }
+    if (remoteVideoRef.current) {
+      remoteVideoRef.current.srcObject = null;
+      remoteVideoRef.current.load(); // Force video element reset  
+      console.log('🧹 Enhanced clear remote video element');
+    }
+    
+    // 5. Force garbage collection and memory cleanup
+    if (window.gc) {
+      setTimeout(() => window.gc(), 100);
+    }
+    
+    console.log('✅ Enhanced cleanup completed');
+  }, [localStream, remoteStream, peerConnection, localVideoRef, remoteVideoRef]);
+
   const handleEndCall = async () => {
     try {
       console.log('🔄 Starting complete call cleanup...');
       
-      // 1. Stop all local media tracks first
-      if (localStream) {
-        localStream.getTracks().forEach(track => {
-          track.stop();
-          console.log(`🛑 Stopped ${track.kind} track (readyState: ${track.readyState})`);
-        });
-      }
+      // 1. Enhanced cleanup of all media devices
+      enhancedCleanup();
       
-      // 2. Close peer connection
-      if (peerConnection) {
-        // Close all transceivers first
-        peerConnection.getTransceivers().forEach(transceiver => {
-          if (transceiver.stop) {
-            transceiver.stop();
-          }
-        });
-        peerConnection.close();
-        console.log('🔌 Peer connection closed');
-      }
-      
-      // 3. Clear video elements immediately
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = null;
-      }
-      if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = null;
-      }
-      
-      // 4. Update session status and mark who ended the call
+      // 2. Update session status and mark who ended the call
       if (sessionId) {
         const { data: { user } } = await supabase.auth.getUser();
         await supabase
@@ -453,13 +520,8 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
         console.log('📝 Session marked as completed in database');
       }
       
-      // 5. Call cleanup from hook
+      // 3. Call cleanup from hook
       cleanup();
-      
-      // 6. Force garbage collection hint
-      if (window.gc) {
-        window.gc();
-      }
       
       console.log('✅ Complete call cleanup finished');
 
@@ -520,7 +582,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
 
   const status = getConnectionStatus();
   const endedByName = callEndedBy ? (callEndedBy.userType === 'psychologist' ? 'O psicólogo' : 'O paciente') : null;
-  const displayError = endedByName ? `${endedByName} finalizou a chamada.` : error;
+  const displayError = endedByName ? `${endedByName} encerrou a chamada de vídeo` : error;
 
   if (isLoading) {
     // Show the intelligent initializer with delay and progress
@@ -610,7 +672,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
           <CardContent className="p-8 text-center space-y-4">
             <AlertTriangle className="w-12 h-12 mx-auto text-destructive" />
             <h3 className="text-xl font-semibold text-destructive">
-              Erro na Videochamada
+              {callEndedBy ? 'Chamada Finalizada' : 'Erro na Videochamada'}
             </h3>
             <p className="text-muted-foreground">{displayError}</p>
             <div className="flex gap-2">
@@ -628,7 +690,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col relative">
+    <div className="fixed inset-0 bg-background flex flex-col overflow-hidden">
       {/* Header fixo com informações - Responsivo */}
       <div className="fixed top-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-b border-border z-50 safe-area-top">
         <div className="flex items-center justify-between p-4 max-w-7xl mx-auto">
@@ -662,7 +724,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
       </div>
 
       {/* Área principal do vídeo - Tela inteira */}
-      <div className="flex-1 relative bg-background overflow-hidden mt-[72px] md:mt-[88px]">
+      <div className="absolute inset-0 top-[72px] md:top-[88px] bottom-[100px] md:bottom-[120px] bg-background overflow-hidden">
         {/* Vídeo remoto - Tela inteira */}
         <div className="absolute inset-0">
           <video 
