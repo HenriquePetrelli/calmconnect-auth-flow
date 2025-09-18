@@ -441,6 +441,30 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
       setRemoteIsCameraOff(s[`${remoteType}_camera_off`]);
     }
   }, [session, userType]);
+
+  // Monitor local stream changes to ensure video is updated
+  useEffect(() => {
+    const updateLocalVideo = () => {
+      if (localVideoRef.current && localStream) {
+        // Only update if necessary
+        if (localVideoRef.current.srcObject !== localStream) {
+          localVideoRef.current.srcObject = localStream;
+          localVideoRef.current.play().catch(error => {
+            console.warn('Video play error, retrying...', error);
+            setTimeout(updateLocalVideo, 100);
+          });
+          console.log('📹 Local video stream updated');
+        }
+      }
+    };
+    
+    updateLocalVideo();
+    
+    // Set up interval for continuous verification
+    const interval = setInterval(updateLocalVideo, 2000);
+    
+    return () => clearInterval(interval);
+  }, [localStream, localVideoRef]);
  
    const fetchUserInfo = async (sessionId: string, currentUserType: 'patient' | 'psychologist') => {
     try {
@@ -531,12 +555,15 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   }, [isConnected]);
 
   const handleMuteToggle = async () => {
-    const muted = toggleAudio();
-    setIsMuted(muted);
-    
-    // Communicate mute status to remote peer via Supabase
-    if (sessionId) {
-      try {
+    try {
+      // First update local state immediately for visual feedback
+      setIsMuted(prev => !prev);
+      
+      // Execute toggle in WebRTC hook
+      const muted = toggleAudio();
+      
+      // Communicate status via Supabase
+      if (sessionId) {
         const { error } = await supabase
           .from('webrtc_sessions')
           .update({ 
@@ -547,97 +574,70 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
         
         if (error) {
           console.error('Error updating mute status:', error);
+          // Revert local state on error
+          setIsMuted(prev => !prev);
         } else {
           console.log('🎤 Mute status updated in database:', muted);
         }
-      } catch (error) {
-        console.error('Failed to update mute status:', error);
       }
+      
+      console.log('🎤 Audio toggled:', muted ? 'muted' : 'unmuted');
+    } catch (error) {
+      console.error('Failed to toggle audio:', error);
+      setIsMuted(prev => !prev); // Revert on error
     }
-    
-    console.log('🎤 Audio toggled:', muted ? 'muted' : 'unmuted');
   };
 
   const handleCameraToggle = async () => {
-    const cameraOff = toggleVideo();
-    setIsCameraOff(cameraOff);
-    
-    // Communicate camera status to remote peer via Supabase
-    if (sessionId) {
-      try {
-        const { error } = await supabase
-          .from('webrtc_sessions')
-          .update({ 
-            [`${userType}_camera_off`]: cameraOff,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', sessionId);
-        
-        if (error) {
-          console.error('Error updating camera status:', error);
-        } else {
-          console.log('📹 Camera status updated in database:', cameraOff);
-        }
-      } catch (error) {
-        console.error('Failed to update camera status:', error);
-      }
-    }
-    
-    // Enhanced video reactivation when camera is turned back on
-    if (!cameraOff) {
-      try {
-        console.log('📹 Reactivating camera with fresh stream...');
-        
-        // Get a completely fresh media stream with preferred devices
-        const constraints = {
-          video: preferences?.camera_device_id ? 
-            { deviceId: { exact: preferences.camera_device_id } } : true,
-          audio: preferences?.mic_device_id ? 
-            { deviceId: { exact: preferences.mic_device_id } } : true
-        };
-        
-        const newStream = await navigator.mediaDevices.getUserMedia(constraints);
-        
-        // Apply the current muted state to the new audio track
-        const audioTrack = newStream.getAudioTracks()[0];
-        if (audioTrack && localStream) {
-          const currentAudioTrack = localStream.getAudioTracks()[0];
-          if (currentAudioTrack) {
-            audioTrack.enabled = currentAudioTrack.enabled;
+    try {
+      // Immediate visual feedback
+      setIsCameraOff(prev => !prev);
+      
+      // Execute toggle
+      const cameraOff = toggleVideo();
+      
+      // Communicate camera status to remote peer via Supabase
+      if (sessionId) {
+        try {
+          const { error } = await supabase
+            .from('webrtc_sessions')
+            .update({ 
+              [`${userType}_camera_off`]: cameraOff,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', sessionId);
+          
+          if (error) {
+            console.error('Error updating camera status:', error);
+            setIsCameraOff(prev => !prev);
+          } else {
+            console.log('📹 Camera status updated in database:', cameraOff);
           }
+        } catch (error) {
+          console.error('Failed to update camera status:', error);
+          setIsCameraOff(prev => !prev);
         }
-        
-        if (updateDeviceStream) {
-          await updateDeviceStream(newStream);
-        }
-        
-        // Immediately update local video element and force play
-        if (localVideoRef.current) {
-          localVideoRef.current.srcObject = newStream;
-          await localVideoRef.current.play().catch(console.error);
-          console.log('📹 Local video immediately updated with new stream');
-        }
-        
-        console.log('✅ Camera reactivated successfully');
-      } catch (error) {
-        console.warn('⚠️ Camera reactivation error, using fallback:', error);
-        // Fallback: just enable the existing video track
-        if (localStream) {
-          const videoTrack = localStream.getVideoTracks()[0];
-          if (videoTrack) {
-            videoTrack.enabled = true;
-            
-            // Force local video element update for fallback
-            if (localVideoRef.current) {
-              localVideoRef.current.srcObject = localStream;
-              localVideoRef.current.play().catch(console.error);
-            }
+      }
+      
+      // If reactivating camera, ensure stream is updated
+      if (!cameraOff && localStream) {
+        const videoTrack = localStream.getVideoTracks()[0];
+        if (videoTrack) {
+          videoTrack.enabled = true;
+          // Force update of local video element
+          if (localVideoRef.current && localVideoRef.current.srcObject) {
+            localVideoRef.current.srcObject = localStream;
+            localVideoRef.current.play().catch(console.error);
+            console.log('📹 Local video element refreshed');
           }
         }
       }
+      
+      console.log('📹 Video toggled:', cameraOff ? 'off' : 'on');
+    } catch (error) {
+      console.error('Failed to toggle camera:', error);
+      setIsCameraOff(prev => !prev);
     }
-    
-    console.log('📹 Video toggled:', cameraOff ? 'off' : 'on');
   };
 
 
@@ -949,6 +949,16 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
               <MicOff className="text-white" size={16} />
             </div>
           )}
+
+          {/* Additional remote mute text indicator */}
+          {isConnected && remoteMuted && (
+            <div className="absolute top-16 left-4 bg-background/70 backdrop-blur-sm rounded-lg px-3 py-1 shadow-lg z-20">
+              <div className="flex items-center gap-1 text-destructive">
+                <MicOff size={14} />
+                <span className="text-xs font-medium">Microfone desligado</span>
+              </div>
+            </div>
+          )}
         </div>
         
         {/* Connection quality indicator - Responsivo */}
@@ -1049,6 +1059,15 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
                 }}
                 onError={(e) => {
                   console.error('❌ Local video error:', e);
+                  // Try to reload the video on error
+                  if (localVideoRef.current && localStream) {
+                    setTimeout(() => {
+                      if (localVideoRef.current) {
+                        localVideoRef.current.srcObject = localStream;
+                        localVideoRef.current.play().catch(console.error);
+                      }
+                    }, 500);
+                  }
                 }}
               />
               {/* Status indicators overlay */}
