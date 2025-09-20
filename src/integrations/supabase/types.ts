@@ -127,6 +127,39 @@ export type Database = {
         }
         Relationships: []
       }
+      conversas: {
+        Row: {
+          created_at: string
+          data_fim: string | null
+          data_inicio: string
+          id: string
+          paciente_id: string
+          psicologo_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string
+          id?: string
+          paciente_id: string
+          psicologo_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string
+          id?: string
+          paciente_id?: string
+          psicologo_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       emergency_requests: {
         Row: {
           accepted_at: string | null
@@ -207,6 +240,47 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      mensagens: {
+        Row: {
+          autor_id: string
+          conteudo: string | null
+          conversa_id: string
+          created_at: string
+          id: string
+          imagem_url: string | null
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          autor_id: string
+          conteudo?: string | null
+          conversa_id: string
+          created_at?: string
+          id?: string
+          imagem_url?: string | null
+          tipo?: string
+          updated_at?: string
+        }
+        Update: {
+          autor_id?: string
+          conteudo?: string | null
+          conversa_id?: string
+          created_at?: string
+          id?: string
+          imagem_url?: string | null
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mensagens_conversa_id_fkey"
+            columns: ["conversa_id"]
+            isOneToOne: false
+            referencedRelation: "conversas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notification_logs: {
         Row: {
@@ -1046,6 +1120,10 @@ export type Database = {
             }
         Returns: Json
       }
+      gerenciar_expiracao_conversas: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       get_admin_metrics: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -1105,6 +1183,10 @@ export type Database = {
       }
       is_super_admin: {
         Args: { user_id_param?: string }
+        Returns: boolean
+      }
+      pode_criar_conversa: {
+        Args: { p_paciente_id: string; p_psicologo_id: string }
         Returns: boolean
       }
       promote_to_admin: {
