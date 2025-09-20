@@ -35,6 +35,7 @@ export const ROUTE_PERMISSIONS = {
     '/subscription-success',
     '/subscription-cancel',
     '/webrtc-test',
+    '/chat', // chat disponível para pacientes
     '/emergency-call', // paciente e psicólogo podem acessar
     '/emergency-call/', // rotas com parâmetros
     '/emergency/call' // rota legacy para psicólogo
@@ -42,6 +43,7 @@ export const ROUTE_PERMISSIONS = {
   psychologist: [
     '/psychologist-dashboard',
     '/psychologist-profile',
+    '/chat', // chat disponível para psicólogos
     '/emergency-call', // psicólogo pode atender chamada
     '/emergency-call/', // rotas com parâmetros
     '/emergency/call', // rota legacy
