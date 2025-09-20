@@ -1,4 +1,4 @@
-import { Waves, Brain, TrendingUp, Crown, Phone, Bell, User, Calendar, Settings, Home as HomeIcon, Users, Lock } from "lucide-react";
+import { Waves, Brain, TrendingUp, Crown, Phone, Bell, User, Calendar, Settings, Home as HomeIcon, Users, Lock, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -207,6 +207,27 @@ const HomePage = () => {
               ) : undefined
             }
             className="animate-fade-in [animation-delay:400ms]"
+          />
+
+          <FeatureCard
+            icon={<MessageCircle className="w-8 h-8" />}
+            title="Chat com Psicólogos"
+            description={
+              subscribed 
+                ? "Converse em tempo real com psicólogos que você já consultou"
+                : "Faça upgrade para acessar o chat com psicólogos"
+            }
+            variant="default"
+            onClick={() => navigate('/chat')}
+            badge={
+              !subscribed ? (
+                <Badge variant="secondary" className="bg-primary text-primary-foreground">
+                  <Crown className="w-3 h-3 mr-1" />
+                  Premium
+                </Badge>
+              ) : undefined
+            }
+            className="animate-fade-in [animation-delay:450ms]"
           />
         </div>
 

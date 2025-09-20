@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home, Calendar, User } from "lucide-react";
+import { Home, Calendar, User, MessageCircle } from "lucide-react";
 
 const BottomNavigation = () => {
   const navigate = useNavigate();
@@ -12,6 +12,12 @@ const BottomNavigation = () => {
       label: "Home",
       path: "/home",
       isActive: location.pathname === "/home"
+    },
+    {
+      icon: MessageCircle,
+      label: "Chat",
+      path: "/chat",
+      isActive: location.pathname === "/chat"
     },
     {
       icon: Calendar,
