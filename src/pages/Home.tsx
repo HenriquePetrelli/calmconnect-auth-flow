@@ -1,4 +1,4 @@
-import { Waves, Brain, TrendingUp, Crown, Phone, Bell, User, Calendar, Settings, Home as HomeIcon, Users, Lock, MessageCircle } from "lucide-react";
+import { Waves, Brain, TrendingUp, Crown, Phone, Bell, User, Calendar, Settings, Users, Lock, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,6 +7,7 @@ import FeatureCard from "@/components/FeatureCard";
 import SOSButton from "@/components/SOSButton";
 import { NotificationButton } from "@/components/notifications/NotificationButton";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import BottomNavigation from "@/components/BottomNavigation";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -260,41 +261,9 @@ const HomePage = () => {
         )}
       </div>
 
+
       {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border/50 p-4">
-        <div className="flex items-center justify-around max-w-md mx-auto">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="flex-col h-auto py-2 px-3 rounded-xl bg-primary/10 text-primary"
-          >
-            <div className="w-6 h-6 rounded-lg bg-primary/20 flex items-center justify-center mb-1">
-              <HomeIcon className="w-4 h-4" />
-            </div>
-            <span className="text-xs font-medium">Home</span>
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/appointments')}
-            className="flex-col h-auto py-2 px-3 rounded-xl text-muted-foreground hover:text-foreground"
-          >
-            <Calendar className="w-6 h-6 mb-1" />
-            <span className="text-xs">Consultas</span>
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/profile')}
-            className="flex-col h-auto py-2 px-3 rounded-xl text-muted-foreground hover:text-foreground"
-          >
-            <User className="w-6 h-6 mb-1" />
-            <span className="text-xs">Perfil</span>
-          </Button>
-        </div>
-      </div>
+      <BottomNavigation />
 
       {/* Floating SOS Button */}
       <div className="fixed bottom-20 right-4 z-50 animate-float">

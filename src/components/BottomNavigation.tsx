@@ -17,7 +17,7 @@ const BottomNavigation = () => {
       icon: MessageCircle,
       label: "Chat",
       path: "/chat",
-      isActive: location.pathname === "/chat"
+      isActive: location.pathname.startsWith("/chat")
     },
     {
       icon: Calendar,
