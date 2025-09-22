@@ -221,14 +221,8 @@ serve(async (req) => {
         }
       }
 
-      // Validate 48-hour advance booking rule
+      // Advance booking rule removed - allow immediate scheduling
       const scheduledDate = new Date(scheduled_at);
-      const now = new Date();
-      const hoursInAdvance = (scheduledDate.getTime() - now.getTime()) / (1000 * 60 * 60);
-      
-      if (hoursInAdvance < 48) {
-        throw new Error('Consultas devem ser agendadas com pelo menos 48 horas de antecedência.');
-      }
 
       // Validate allowed hours (7 AM to 6 PM) and 30-minute intervals
       const hour = scheduledDate.getHours();

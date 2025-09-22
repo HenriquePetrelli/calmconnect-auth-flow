@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Clock, Calendar as CalendarIcon, User, AlertTriangle } from 'lucide-react';
-import { format, addDays, setHours, setMinutes, isAfter, startOfDay, addHours } from 'date-fns';
+import { format, addDays, setHours, setMinutes, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAppointments } from '@/hooks/useAppointments';
 import { useToast } from '@/hooks/use-toast';
@@ -42,11 +42,9 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
     selectedDate
   });
 
-  // Verificar se pode agendar (mínimo 48h de antecedência)
+  // Verificar se pode agendar (qualquer horário permitido)
   const canScheduleDate = (date: Date): boolean => {
-    const now = new Date();
-    const minScheduleTime = addHours(now, 48);
-    return isAfter(date, minScheduleTime);
+    return true; // Permite agendamento imediato
   };
 
   // Verificar se horário está no intervalo permitido (7h às 18h)
@@ -78,15 +76,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
     const [hours, minutes] = selectedTime.split(':').map(Number);
     const appointmentDateTime = setMinutes(setHours(selectedDate, hours), minutes);
 
-    // Verificar regra de 48h de antecedência
-    if (!canScheduleDate(appointmentDateTime)) {
-      toast({
-        title: 'Antecedência insuficiente',
-        description: 'Consultas devem ser agendadas com pelo menos 48 horas de antecedência',
-        variant: 'destructive',
-      });
-      return;
-    }
+    // Verificação de horário já removida - permite agendamento imediato
 
     // Verificar horário permitido
     if (!isValidTimeSlot(selectedTime)) {
@@ -168,7 +158,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-blue-700">
-          <p>• Consultas devem ser agendadas com pelo menos <strong>48 horas de antecedência</strong></p>
+          <p>• Agendamento <strong>imediato</strong> - sem necessidade de antecedência</p>
           <p>• Horários disponíveis: <strong>07h às 18h</strong> (intervalos de 30 minutos)</p>
           <p>• Duração da consulta: <strong>50 minutos</strong></p>
           <p>• Cancelamentos podem ser feitos até <strong>12h antes</strong> da consulta</p>
@@ -191,21 +181,13 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
             onSelect={setSelectedDate}
             disabled={(date) => {
               const now = new Date();
-              const minDate = addHours(now, 48);
-              return date < startOfDay(minDate) || date > addDays(new Date(), 30);
+              return date < startOfDay(now) || date > addDays(new Date(), 30);
             }}
             locale={ptBR}
             className="rounded-md border"
           />
           
-          {selectedDate && !canScheduleDate(selectedDate) && (
-            <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg mt-4">
-              <AlertTriangle className="w-4 h-4 text-amber-600" />
-              <p className="text-sm text-amber-800">
-                Consultas devem ser agendadas com pelo menos 48 horas de antecedência
-              </p>
-            </div>
-          )}
+          {/* Aviso de antecedência removido - permite agendamento imediato */}
         </CardContent>
       </Card>
 
@@ -225,7 +207,6 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
             <div className="grid grid-cols-3 gap-2">
               {allTimeSlots.map((time) => {
                 const isValidTime = isValidTimeSlot(time);
-                const canSchedule = selectedDate ? canScheduleDate(selectedDate) : true;
                 const isAvailable = isSlotAvailable(time);
                 const isOccupied = occupiedSlots.includes(time);
                 
@@ -235,7 +216,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
                     variant={selectedTime === time ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setSelectedTime(time)}
-                    disabled={!isValidTime || !canSchedule || !isAvailable || slotsLoading}
+                    disabled={!isValidTime || !isAvailable || slotsLoading}
                     className={`text-sm relative ${
                       isOccupied 
                         ? 'bg-red-50 border-red-200 text-red-500 cursor-not-allowed' 
@@ -246,10 +227,8 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
                     title={
                       isOccupied 
                         ? 'Horário ocupado' 
-                        : !isValidTime 
-                          ? 'Horário fora do funcionamento'
-                          : !canSchedule
-                            ? 'Antecedência insuficiente'
+                          : !isValidTime 
+                            ? 'Horário fora do funcionamento'
                             : 'Disponível'
                     }
                   >
