@@ -47,10 +47,10 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
     return true; // Permite agendamento imediato
   };
 
-  // Verificar se horário está no intervalo permitido (7h às 18h)
+  // Verificar se horário está no intervalo permitido (7h às 23:30)
   const isValidTimeSlot = (time: string): boolean => {
     const [hour, minute] = time.split(':').map(Number);
-    return (hour >= 7 && hour < 18) || (hour === 18 && minute === 0);
+    return (hour >= 7 && hour < 24) && (minute === 0 || minute === 30);
   };
 
   const handleSubmit = async () => {
@@ -82,7 +82,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
     if (!isValidTimeSlot(selectedTime)) {
       toast({
         title: 'Horário inválido',
-        description: 'Consultas só podem ser agendadas entre 07h e 18h',
+        description: 'Consultas só podem ser agendadas entre 07h e 23:30',
         variant: 'destructive',
       });
       return;
@@ -159,7 +159,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-blue-700">
           <p>• Agendamento <strong>imediato</strong> - sem necessidade de antecedência</p>
-          <p>• Horários disponíveis: <strong>07h às 18h</strong> (intervalos de 30 minutos)</p>
+          <p>• Horários disponíveis: <strong>07h às 23:30</strong> (intervalos de 30 minutos)</p>
           <p>• Duração da consulta: <strong>50 minutos</strong></p>
           <p>• Cancelamentos podem ser feitos até <strong>12h antes</strong> da consulta</p>
           <p>• O psicólogo tem <strong>24h para confirmar</strong> sua solicitação</p>
@@ -197,7 +197,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Clock className="w-5 h-5" />
-              Horário (07h às 18h - intervalos de 30 min)
+              Horário (07h às 23:30 - intervalos de 30 min)
               {slotsLoading && (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary ml-2"></div>
               )}

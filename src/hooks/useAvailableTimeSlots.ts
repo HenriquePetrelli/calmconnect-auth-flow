@@ -11,14 +11,10 @@ export const useAvailableTimeSlots = ({ psychologistId, selectedDate }: UseAvail
   const [occupiedSlots, setOccupiedSlots] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Gerar todos os slots de 30 em 30 minutos das 07:00 às 18:00
+  // Gerar todos os slots de 30 em 30 minutos das 07:00 às 23:30
   const generateAllTimeSlots = (): string[] => {
     const slots = [];
-    for (let hour = 7; hour <= 18; hour++) {
-      if (hour === 18) {
-        slots.push('18:00'); // Último slot às 18h
-        break;
-      }
+    for (let hour = 7; hour < 24; hour++) {
       slots.push(`${hour.toString().padStart(2, '0')}:00`);
       slots.push(`${hour.toString().padStart(2, '0')}:30`);
     }
@@ -75,7 +71,7 @@ export const useAvailableTimeSlots = ({ psychologistId, selectedDate }: UseAvail
           
           // Só ocupar se o slot estiver dentro do horário de funcionamento
           const [nextHour, nextMinute] = nextTimeSlot.split(':').map(Number);
-          if (nextHour >= 7 && (nextHour < 18 || (nextHour === 18 && nextMinute === 0))) {
+          if (nextHour >= 7 && nextHour < 24) {
             occupied.push(nextTimeSlot);
           }
         }

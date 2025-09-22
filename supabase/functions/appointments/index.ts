@@ -224,12 +224,12 @@ serve(async (req) => {
       // Advance booking rule removed - allow immediate scheduling
       const scheduledDate = new Date(scheduled_at);
 
-      // Validate allowed hours (7 AM to 6 PM) and 30-minute intervals
+      // Validate allowed hours (7 AM to 11:30 PM) and 30-minute intervals
       const hour = scheduledDate.getHours();
       const minutes = scheduledDate.getMinutes();
       
-      if (hour < 7 || hour >= 18) {
-        throw new Error('Consultas só podem ser agendadas entre 07h e 18h.');
+      if (hour < 7 || hour >= 24) {
+        throw new Error('Consultas só podem ser agendadas entre 07h e 23:30.');
       }
       
       if (minutes !== 0 && minutes !== 30) {
