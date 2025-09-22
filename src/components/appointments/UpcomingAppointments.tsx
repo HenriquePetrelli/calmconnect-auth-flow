@@ -10,12 +10,12 @@ export const UpcomingAppointments: React.FC = () => {
   const [upcomingAppointments, setUpcomingAppointments] = useState<Appointment[]>([]);
 
   useEffect(() => {
-    // Filter for upcoming appointments (including pending ones)
+    // Filter for upcoming appointments (including pending ones and in progress)
     const now = new Date();
     const upcoming = appointments.filter(appointment => {
       const appointmentDate = new Date(appointment.scheduled_at);
       return appointmentDate >= now && 
-             ['pending', 'scheduled', 'reschedule_proposed'].includes(appointment.status);
+             ['pending', 'scheduled', 'confirmed', 'reschedule_proposed', 'in_progress'].includes(appointment.status);
     });
     
     // Sort by date (earliest first)

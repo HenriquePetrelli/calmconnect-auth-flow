@@ -12,7 +12,7 @@ import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAppointmentVideoCall } from "@/hooks/useAppointmentVideoCall";
-import { formatTimeOnly } from "@/utils/timezone";
+import { formatTimeOnly, formatBrazilTime } from "@/utils/timezone";
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -20,12 +20,14 @@ const HomePage = () => {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [upcomingAppointments, setUpcomingAppointments] = useState(0);
   const [todayAppointment, setTodayAppointment] = useState<any>(null);
+  const [nextAppointment, setNextAppointment] = useState<any>(null);
   const { canJoinCall, startConsultation } = useAppointmentVideoCall();
 
   useEffect(() => {
     fetchUserProfile();
     fetchUpcomingAppointments();
     fetchTodayAppointment();
+    fetchNextAppointment();
   }, []);
 
   const fetchUserProfile = async () => {
@@ -47,7 +49,7 @@ const HomePage = () => {
           .from('appointments')
           .select('*', { count: 'exact', head: true })
           .eq('patient_id', user.id)
-          .in('status', ['scheduled', 'confirmed'])
+          .in('status', ['scheduled', 'confirmed', 'in_progress'])
           .gte('scheduled_at', new Date().toISOString());
         
         setUpcomingAppointments(count || 0);
@@ -78,7 +80,7 @@ const HomePage = () => {
             )
           `)
           .eq('patient_id', user.id)
-          .in('status', ['scheduled', 'confirmed'])
+          .in('status', ['scheduled', 'confirmed', 'in_progress'])
           .gte('scheduled_at', startOfDay.toISOString())
           .lt('scheduled_at', endOfDay.toISOString())
           .order('scheduled_at', { ascending: true })
@@ -103,6 +105,54 @@ const HomePage = () => {
       }
     } catch (error) {
       console.error('Error fetching today appointment:', error);
+    }
+  };
+
+  const fetchNextAppointment = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(0, 0, 0, 0);
+
+        const { data, error } = await supabase
+          .from('appointments')
+          .select(`
+            id,
+            scheduled_at,
+            status,
+            appointment_type,
+            psychologists!psychologist_id(
+              full_name,
+              specialization
+            )
+          `)
+          .eq('patient_id', user.id)
+          .in('status', ['scheduled', 'confirmed', 'in_progress'])
+          .gte('scheduled_at', tomorrow.toISOString())
+          .order('scheduled_at', { ascending: true })
+          .limit(1)
+          .maybeSingle();
+
+        if (error) throw error;
+        
+        if (data) {
+          const transformedAppointment = {
+            id: data.id,
+            scheduled_at: data.scheduled_at,
+            status: data.status,
+            appointment_type: data.appointment_type,
+            psychologist: {
+              full_name: data.psychologists?.full_name || 'Psicólogo não identificado',
+              specialization: data.psychologists?.specialization,
+            }
+          };
+          setNextAppointment(transformedAppointment);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching next appointment:', error);
     }
   };
 
@@ -186,8 +236,38 @@ const HomePage = () => {
         </div>
       )}
 
-      {/* Quick Stats Card - Only if user has appointments */}
-      {upcomingAppointments > 0 && !todayAppointment && (
+      {/* Next Appointment Card - Show next appointment info when no appointment today */}
+      {!todayAppointment && nextAppointment && (
+        <div className="p-4">
+          <Card className="bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/20 animate-fade-in">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-sm text-muted-foreground">Próxima consulta</p>
+                  <p className="font-semibold text-foreground">
+                    {formatBrazilTime(nextAppointment.scheduled_at, "dd 'de' MMM")} às {formatTimeOnly(nextAppointment.scheduled_at)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {nextAppointment.psychologist.full_name} - {nextAppointment.psychologist.specialization}
+                  </p>
+                </div>
+                <Button
+                  variant="primary-soft"
+                  size="sm"
+                  onClick={() => navigate('/appointments')}
+                  className="gap-2"
+                >
+                  <Calendar className="h-4 w-4" />
+                  Ver detalhes
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Fallback when no appointments */}
+      {upcomingAppointments > 0 && !todayAppointment && !nextAppointment && (
         <div className="p-4">
           <Card className="bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/20 animate-fade-in">
             <CardContent className="p-4">
@@ -251,110 +331,100 @@ const HomePage = () => {
               onClick={() => navigate('/statistics')}
               badge={
                 <Badge className="bg-evolution-primary text-white text-xs px-2 py-1">
-                  3
+                  Novo
                 </Badge>
               }
               className="animate-fade-in [animation-delay:200ms]"
             />
-            
+
             <FeatureCard
-              icon={
-                <div className="relative">
-                  <Users className="text-gray-400 w-8 h-8" />
-                  <Lock className="absolute -bottom-1 -right-1 w-4 h-4 text-gray-500" />
-                </div>
-              }
-              title="Aulas de Yoga"
-              description="Sessões guiadas de yoga e mindfulness - Em breve disponível"
-              disabled={true}
-              badge={
-                <Badge variant="secondary" className="text-xs px-2 py-1">
-                  EM BREVE
-                </Badge>
-              }
+              icon={<MessageCircle className="w-8 h-8" />}
+              title="Chat com Psicólogos"
+              description="Converse por texto com profissionais capacitados"
+              variant="default"
+              onClick={() => navigate('/chat')}
               className="animate-fade-in [animation-delay:300ms]"
             />
+
+            <FeatureCard
+              icon={<Calendar className="w-8 h-8" />}
+              title="Consultas"
+              description="Agende e gerencie suas consultas"
+              variant="default"
+              onClick={() => navigate('/appointments')}
+              className="animate-fade-in [animation-delay:400ms]"
+            />
           </div>
-        </div>
 
-        {/* Professional Care Section */}
-        <div className="space-y-3 mt-8">
-          <h2 className="text-lg font-semibold text-foreground">
-            Cuidado Profissional
-          </h2>
-          
-          <FeatureCard
-            icon={<Calendar className="w-8 h-8" />}
-            title="Consultas"
-            description={
-              subscribed 
-                ? "Agende sua consulta com um psicólogo especializado"
-                : "Faça upgrade para agendar consultas"
-            }
-            variant="default"
-            onClick={() => navigate('/appointments')}
-            badge={
-              !subscribed ? (
-                <Badge variant="secondary" className="bg-primary text-primary-foreground">
-                  <Crown className="w-3 h-3 mr-1" />
-                  Premium
-                </Badge>
-              ) : undefined
-            }
-            className="animate-fade-in [animation-delay:400ms]"
-          />
-
-          <FeatureCard
-            icon={<MessageCircle className="w-8 h-8" />}
-            title="Chat com Psicólogos"
-            description={
-              subscribed 
-                ? "Converse em tempo real com psicólogos que você já consultou"
-                : "Faça upgrade para acessar o chat com psicólogos"
-            }
-            variant="default"
-            onClick={() => navigate('/chat')}
-            badge={
-              !subscribed ? (
-                <Badge variant="secondary" className="bg-primary text-primary-foreground">
-                  <Crown className="w-3 h-3 mr-1" />
-                  Premium
-                </Badge>
-              ) : undefined
-            }
-            className="animate-fade-in [animation-delay:450ms]"
-          />
-        </div>
-
-        {/* Subscription Upsell for Free Users */}
-        {!subscribed && (
-          <Card className="bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/20 animate-fade-in [animation-delay:500ms]">
-            <CardContent className="p-6 text-center space-y-4">
-              <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
-                <Crown className="w-8 h-8 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-lg text-foreground mb-2">
-                  Desbloqueie Seu Potencial
+          {/* Subscription Features */}
+          {subscribed && (
+            <div className="mt-6 space-y-3">
+              <div className="flex items-center gap-2">
+                <Crown className="w-5 h-5 text-premium" />
+                <h3 className="text-md font-semibold text-foreground">
+                  Recursos Premium
                 </h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Acesse consultas com psicólogos, suporte emergencial 24h e muito mais
-                </p>
-                <Button
-                  variant="default"
-                  size="lg"
-                  onClick={() => navigate('/subscription-plans')}
-                  className="gap-2"
-                >
-                  <Crown className="w-4 h-4" />
-                  Ver Planos
-                </Button>
+                <Badge variant="secondary" className="text-xs">
+                  {subscriptionTier === 'premium' ? 'Premium' : 'Plus'}
+                </Badge>
               </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+              
+              <div className="grid grid-cols-1 gap-4">
+                <FeatureCard
+                  icon={<Users className="w-8 h-8" />}
+                  title="Grupos de Apoio"
+                  description="Participe de grupos com pessoas que compartilham experiências similares"
+                  variant="default"
+                  onClick={() => navigate('/support-groups')}
+                  className="animate-fade-in [animation-delay:500ms]"
+                />
 
+                <FeatureCard
+                  icon={<Lock className="w-8 h-8" />}
+                  title="Diário Privado"
+                  description="Escreva seus pensamentos em um ambiente seguro e criptografado"
+                  variant="default"
+                  onClick={() => navigate('/private-diary')}
+                  className="animate-fade-in [animation-delay:600ms]"
+                />
+
+                <FeatureCard
+                  icon={<Phone className="w-8 h-8" />}
+                  title="Suporte 24/7"
+                  description="Acesso prioritário ao suporte técnico e emocional"
+                  variant="default"
+                  onClick={() => navigate('/premium-support')}
+                  className="animate-fade-in [animation-delay:700ms]"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Call to Subscribe */}
+          {!subscribed && (
+            <div className="mt-6">
+              <Card className="bg-gradient-to-r from-premium-primary/10 to-premium-secondary/10 border-premium-primary/30">
+                <CardContent className="p-6 text-center">
+                  <Crown className="w-12 h-12 mx-auto text-premium-primary mb-4" />
+                  <h3 className="text-lg font-semibold text-foreground mb-2">
+                    Desbloqueie Todo o Potencial
+                  </h3>
+                  <p className="text-muted-foreground text-sm mb-4">
+                    Acesse recursos premium, grupos de apoio e suporte prioritário
+                  </p>
+                  <Button
+                    onClick={() => navigate('/subscription-plans')}
+                    className="bg-premium-primary hover:bg-premium-primary/90 text-white"
+                  >
+                    <Crown className="w-4 h-4 mr-2" />
+                    Ver Planos Premium
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Bottom Navigation */}
       <BottomNavigation />
