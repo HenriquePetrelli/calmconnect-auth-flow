@@ -6,10 +6,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Clock, Calendar as CalendarIcon, User, AlertTriangle } from 'lucide-react';
 import { format, addDays, setHours, setMinutes, startOfDay } from 'date-fns';
+import { fromZonedTime, toZonedTime } from 'date-fns-tz';
 import { ptBR } from 'date-fns/locale';
 import { useAppointments } from '@/hooks/useAppointments';
 import { useToast } from '@/hooks/use-toast';
 import { useAvailableTimeSlots } from '@/hooks/useAvailableTimeSlots';
+import { formatAppointmentTime } from '@/utils/timezone';
 import { PsychologistData } from './PsychologistList';
 
 interface AppointmentFormProps {
@@ -47,10 +49,10 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
     return true; // Permite agendamento imediato
   };
 
-  // Verificar se horário está no intervalo permitido (7h às 23:30)
+  // Verificar se horário está no intervalo permitido (7h às 23:50)
   const isValidTimeSlot = (time: string): boolean => {
     const [hour, minute] = time.split(':').map(Number);
-    return (hour >= 7 && hour < 24) && (minute === 0 || minute === 30);
+    return (hour >= 7 && hour < 24) && (minute % 10 === 0);
   };
 
   const handleSubmit = async () => {
@@ -82,7 +84,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
     if (!isValidTimeSlot(selectedTime)) {
       toast({
         title: 'Horário inválido',
-        description: 'Consultas só podem ser agendadas entre 07h e 23:30',
+        description: 'Consultas só podem ser agendadas entre 07h e 23:50',
         variant: 'destructive',
       });
       return;
@@ -91,9 +93,12 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
     setIsSubmitting(true);
 
     try {
+      // Converter horário de Brasília para UTC
+      const appointmentUTC = fromZonedTime(appointmentDateTime, 'America/Sao_Paulo');
+      
       await createAppointment(
         psychologist.user_id,
-        appointmentDateTime.toISOString(),
+        appointmentUTC.toISOString(),
         50, // duração padrão de 50 minutos
         'regular',
         notes.trim() || undefined
@@ -101,7 +106,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
 
       toast({
         title: 'Solicitação enviada!',
-        description: `Sua consulta foi solicitada para ${format(appointmentDateTime, "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}. Aguarde a confirmação do psicólogo.`,
+        description: `Sua consulta foi solicitada para ${formatAppointmentTime(appointmentUTC)}. Aguarde a confirmação do psicólogo.`,
       });
 
       onSuccess();
@@ -159,7 +164,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-blue-700">
           <p>• Agendamento <strong>imediato</strong> - sem necessidade de antecedência</p>
-          <p>• Horários disponíveis: <strong>07h às 23:30</strong> (intervalos de 30 minutos)</p>
+          <p>• Horários disponíveis: <strong>07h às 23:50</strong> (intervalos de 10 minutos)</p>
           <p>• Duração da consulta: <strong>50 minutos</strong></p>
           <p>• Cancelamentos podem ser feitos até <strong>12h antes</strong> da consulta</p>
           <p>• O psicólogo tem <strong>24h para confirmar</strong> sua solicitação</p>
@@ -197,7 +202,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Clock className="w-5 h-5" />
-              Horário (07h às 23:30 - intervalos de 30 min)
+              Horário (07h às 23:50 - intervalos de 10 min)
               {slotsLoading && (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary ml-2"></div>
               )}
@@ -261,7 +266,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
                   <strong>Horários ocupados:</strong> {occupiedSlots.sort().join(', ')}
                 </p>
                 <p className="text-xs text-amber-700 mt-1">
-                  * Cada consulta dura 50 minutos, ocupando aproximadamente 2 slots consecutivos
+                  * Cada consulta dura 50 minutos, ocupando aproximadamente 5 slots consecutivos
                 </p>
               </div>
             )}

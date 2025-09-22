@@ -224,16 +224,18 @@ serve(async (req) => {
       // Advance booking rule removed - allow immediate scheduling
       const scheduledDate = new Date(scheduled_at);
 
-      // Validate allowed hours (7 AM to 11:30 PM) and 30-minute intervals
-      const hour = scheduledDate.getHours();
-      const minutes = scheduledDate.getMinutes();
+      // Validate allowed hours (7 AM to 11:50 PM) and 10-minute intervals in Brazil timezone
+      // Convert UTC to Brazil timezone for validation
+      const brazilTime = new Date(scheduledDate.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+      const hour = brazilTime.getHours();
+      const minutes = brazilTime.getMinutes();
       
       if (hour < 7 || hour >= 24) {
-        throw new Error('Consultas só podem ser agendadas entre 07h e 23:30.');
+        throw new Error('Consultas só podem ser agendadas entre 07h e 23:50 (horário de Brasília).');
       }
       
-      if (minutes !== 0 && minutes !== 30) {
-        throw new Error('Consultas só podem ser agendadas em intervalos de 30 minutos (ex: 08:00, 08:30, 09:00, etc.).');
+      if (minutes % 10 !== 0) {
+        throw new Error('Consultas só podem ser agendadas em intervalos de 10 minutos (ex: 08:00, 08:10, 08:20, etc.).');
       }
 
       const { data: appointment, error } = await supabase

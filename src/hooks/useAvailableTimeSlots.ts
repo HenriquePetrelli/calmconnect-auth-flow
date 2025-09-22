@@ -11,12 +11,13 @@ export const useAvailableTimeSlots = ({ psychologistId, selectedDate }: UseAvail
   const [occupiedSlots, setOccupiedSlots] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Gerar todos os slots de 30 em 30 minutos das 07:00 às 23:30
+  // Gerar todos os slots de 10 em 10 minutos das 07:00 às 23:50
   const generateAllTimeSlots = (): string[] => {
     const slots = [];
     for (let hour = 7; hour < 24; hour++) {
-      slots.push(`${hour.toString().padStart(2, '0')}:00`);
-      slots.push(`${hour.toString().padStart(2, '0')}:30`);
+      for (let minute = 0; minute < 60; minute += 10) {
+        slots.push(`${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
+      }
     }
     return slots;
   };
@@ -58,15 +59,15 @@ export const useAvailableTimeSlots = ({ psychologistId, selectedDate }: UseAvail
         const appointmentTime = parseISO(appointment.scheduled_at);
         const duration = appointment.duration || 50; // Duração padrão de 50 minutos
         
-        // Para uma consulta de 50 minutos, ocupar 2 slots de 30 minutos
+        // Para uma consulta de 50 minutos, ocupar slots de 10 em 10 minutos
         const startTimeSlot = format(appointmentTime, 'HH:mm');
         occupied.push(startTimeSlot);
         
-        // Calcular quantos slots de 30 minutos a consulta ocupa
-        const slotsToOccupy = Math.ceil(duration / 30);
+        // Calcular quantos slots de 10 minutos a consulta ocupa
+        const slotsToOccupy = Math.ceil(duration / 10);
         
         for (let i = 1; i < slotsToOccupy; i++) {
-          const nextSlotTime = addMinutes(appointmentTime, i * 30);
+          const nextSlotTime = addMinutes(appointmentTime, i * 10);
           const nextTimeSlot = format(nextSlotTime, 'HH:mm');
           
           // Só ocupar se o slot estiver dentro do horário de funcionamento

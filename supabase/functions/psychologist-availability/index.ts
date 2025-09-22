@@ -92,10 +92,10 @@ Deno.serve(async (req) => {
         const dateStr = d.toISOString().split('T')[0];
         const timeSlots = [];
         
-        // Generate time slots from 7 AM to 11:30 PM (7-23:30)
+        // Generate time slots from 7 AM to 11:50 PM (7-23:50) in 10-minute intervals
         for (let hour = 7; hour < 24; hour++) {
-          for (const minute of ['00', '30']) {
-            const timeSlot = `${hour.toString().padStart(2, '0')}:${minute}`;
+          for (let minute = 0; minute < 60; minute += 10) {
+            const timeSlot = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
             const fullDateTime = `${dateStr}T${timeSlot}:00`;
             
             if (!bookedSlots.has(fullDateTime)) {

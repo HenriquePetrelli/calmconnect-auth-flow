@@ -19,6 +19,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Textarea } from '@/components/ui/textarea';
 import { useAppointments, type Psychologist } from '@/hooks/useAppointments';
 import { format, addDays, setHours, setMinutes } from 'date-fns';
+import { fromZonedTime, toZonedTime } from 'date-fns-tz';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
@@ -27,13 +28,18 @@ interface AppointmentScheduleModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const timeSlots = [
-  '07:00', '07:30', '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', 
-  '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30',
-  '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30',
-  '19:00', '19:30', '20:00', '20:30', '21:00', '21:30', '22:00', '22:30',
-  '23:00', '23:30'
-];
+// Gerar slots de 10 em 10 minutos das 07:00 às 23:50
+const generateTimeSlots = (): string[] => {
+  const slots = [];
+  for (let hour = 7; hour < 24; hour++) {
+    for (let minute = 0; minute < 60; minute += 10) {
+      slots.push(`${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
+    }
+  }
+  return slots;
+};
+
+const timeSlots = generateTimeSlots();
 
 export const AppointmentScheduleModal = ({
   open,
@@ -56,9 +62,12 @@ export const AppointmentScheduleModal = ({
       const [hours, minutes] = selectedTime.split(':').map(Number);
       const scheduledAt = setMinutes(setHours(selectedDate, hours), minutes);
       
+      // Converter horário de Brasília para UTC
+      const scheduledAtUTC = fromZonedTime(scheduledAt, 'America/Sao_Paulo');
+      
       await createAppointment(
         selectedPsychologist,
-        scheduledAt.toISOString(),
+        scheduledAtUTC.toISOString(),
         selectedDuration,
         selectedType,
         notes
@@ -131,7 +140,7 @@ export const AppointmentScheduleModal = ({
                 selected={selectedDate}
                 onSelect={setSelectedDate}
                 disabled={(date) => 
-                  date < new Date() || date < addDays(new Date(), 1)
+                  date < new Date()
                 }
                 className={cn("rounded-md border pointer-events-auto")}
                 locale={ptBR}
