@@ -2,9 +2,10 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock, User, Star } from 'lucide-react';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { Calendar, Clock, User, Star, Video } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { formatBrazilTime, formatTimeOnly } from '@/utils/timezone';
+import { useAppointmentVideoCall } from '@/hooks/useAppointmentVideoCall';
 import { Appointment } from '@/hooks/useAppointments';
 
 interface AppointmentsListProps {
@@ -32,6 +33,8 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
         return 'bg-red-100 text-red-800 border-red-200';
       case 'reschedule_proposed':
         return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'in_progress':
+        return 'bg-orange-100 text-orange-800 border-orange-200';
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200';
     }
@@ -53,6 +56,8 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
         return 'Recusado';
       case 'reschedule_proposed':
         return 'Reagendamento proposto';
+      case 'in_progress':
+        return 'Em andamento';
       default:
         return status;
     }
@@ -106,6 +111,9 @@ export const AppointmentsList: React.FC<AppointmentsListProps> = ({
   onViewDetails,
   onRate
 }) => {
+  const navigate = useNavigate();
+  const { canJoinCall, startConsultation, loading: videoCallLoading } = useAppointmentVideoCall();
+
   if (appointments.length === 0) {
     return (
       <Card>
@@ -150,11 +158,11 @@ export const AppointmentsList: React.FC<AppointmentsListProps> = ({
                   <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
                     <div className="flex items-center gap-1">
                       <Calendar size={14} />
-                      {format(new Date(appointment.scheduled_at), "dd 'de' MMM", { locale: ptBR })}
+                      {formatBrazilTime(appointment.scheduled_at, "dd 'de' MMM")}
                     </div>
                     <div className="flex items-center gap-1">
                       <Clock size={14} />
-                      {format(new Date(appointment.scheduled_at), 'HH:mm')}
+                      {formatTimeOnly(appointment.scheduled_at)}
                     </div>
                     {appointment.duration && (
                       <span className="text-xs bg-muted px-2 py-1 rounded">
@@ -191,6 +199,29 @@ export const AppointmentsList: React.FC<AppointmentsListProps> = ({
 
                   {/* Actions */}
                   <div className="flex gap-2">
+                    {/* Video call button for confirmed appointments */}
+                    {['scheduled', 'confirmed'].includes(appointment.status) && (
+                      <Button
+                        variant={canJoinCall(appointment) ? "default" : "outline"}
+                        size="sm"
+                        disabled={!canJoinCall(appointment) || videoCallLoading}
+                        onClick={async () => {
+                          if (canJoinCall(appointment)) {
+                            try {
+                              await startConsultation(appointment.id);
+                              navigate(`/consultation-call/${appointment.id}`);
+                            } catch (error) {
+                              console.error('Failed to start consultation:', error);
+                            }
+                          }
+                        }}
+                        className="gap-1"
+                      >
+                        <Video size={14} />
+                        {canJoinCall(appointment) ? 'Entrar na videochamada' : 'Aguardar horário'}
+                      </Button>
+                    )}
+                    
                     {onViewDetails && (
                       <Button
                         variant="outline"

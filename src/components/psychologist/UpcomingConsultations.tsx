@@ -128,25 +128,10 @@ const UpcomingConsultations = () => {
           )}
 
           <div className="flex gap-2">
-            {timeInfo.canStart ? (
-              <Button
-                onClick={() => handleStartConsultation(appointment.id)}
-                disabled={startingAppointments.has(appointment.id)}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-              >
-                {startingAppointments.has(appointment.id) ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                ) : (
-                  <Video className="w-4 h-4 mr-2" />
-                )}
-                Iniciar Consulta
-              </Button>
-            ) : (
-              <Button variant="outline" disabled className="flex-1">
-                <Clock className="w-4 h-4 mr-2" />
-                Aguardando horário
-              </Button>
-            )}
+            <Button variant="outline" disabled className="flex-1">
+              <Clock className="w-4 h-4 mr-2" />
+              Aguardando paciente
+            </Button>
             <Button variant="outline" size="sm">
               <MessageSquare className="w-4 h-4" />
             </Button>

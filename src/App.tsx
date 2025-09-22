@@ -35,6 +35,7 @@ import PsychologistProfile from "./pages/PsychologistProfile";
 import EmergencyCall from "./pages/EmergencyCall";
 import WebRTCTest from "./pages/WebRTCTest";
 import Chat from "./pages/Chat";
+import ConsultationCall from "./pages/ConsultationCall";
 
 import NotFound from "./pages/NotFound";
 
@@ -182,6 +183,11 @@ const App = () => {
                   <Route path="/webrtc-test" element={
                     <RouteGuard allowedUserTypes={['patient']}>
                       <WebRTCTest />
+                    </RouteGuard>
+                  } />
+                  <Route path="/consultation-call/:appointmentId" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <ConsultationCall />
                     </RouteGuard>
                   } />
                   <Route path="/chat" element={
