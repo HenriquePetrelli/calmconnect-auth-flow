@@ -387,15 +387,6 @@ const HomePage = () => {
                   onClick={() => navigate('/private-diary')}
                   className="animate-fade-in [animation-delay:600ms]"
                 />
-
-                <FeatureCard
-                  icon={<Phone className="w-8 h-8" />}
-                  title="Suporte 24/7"
-                  description="Acesso prioritário ao suporte técnico e emocional"
-                  variant="default"
-                  onClick={() => navigate('/premium-support')}
-                  className="animate-fade-in [animation-delay:700ms]"
-                />
               </div>
             </div>
           )}

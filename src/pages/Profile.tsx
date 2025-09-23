@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Crown, LogOut, Settings, User as UserIcon } from "lucide-react";
+import { ArrowLeft, Crown, LogOut, Settings, User as UserIcon, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -202,6 +202,17 @@ const Profile = () => {
               <Settings size={16} className="mr-2" />
               Alterar Dados da Conta
             </Button>
+            
+            {(subscribed && (subscriptionTier === 'Plus' || subscriptionTier === 'Premium')) && (
+              <Button 
+                variant="outline" 
+                className="w-full justify-start" 
+                onClick={() => navigate('/support')}
+              >
+                <MessageCircle size={16} className="mr-2" />
+                Suporte
+              </Button>
+            )}
             
             <Button 
               variant="destructive" 
