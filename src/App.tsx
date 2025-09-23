@@ -22,6 +22,7 @@ import GuidedBreathing from "./pages/GuidedBreathing";
 import SOS from "./pages/SOS";
 import Profile from "./pages/Profile";
 import AccountSettings from "./pages/AccountSettings";
+import Support from "./pages/Support";
 import Appointments from "./pages/Appointments";
 import Notifications from "./pages/Notifications";
 import Statistics from "./pages/Statistics";
@@ -143,6 +144,11 @@ const App = () => {
                   <Route path="/account-settings" element={
                     <RouteGuard allowedUserTypes={['patient']}>
                       <AccountSettings />
+                    </RouteGuard>
+                  } />
+                  <Route path="/support" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <Support />
                     </RouteGuard>
                   } />
                   <Route path="/appointments" element={

@@ -85,5 +85,8 @@ verify_jwt = true
 [functions.psychologist-cleanup]
 verify_jwt = false
 
+[functions.send-support-request]
+verify_jwt = true
+
 [analytics]
 enabled = false
