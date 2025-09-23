@@ -88,5 +88,8 @@ verify_jwt = false
 [functions.send-support-request]
 verify_jwt = true
 
+[functions.send-psychologist-support-request]
+verify_jwt = true
+
 [analytics]
 enabled = false

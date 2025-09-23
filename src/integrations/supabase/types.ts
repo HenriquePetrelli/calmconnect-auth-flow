@@ -915,6 +915,33 @@ export type Database = {
         }
         Relationships: []
       }
+      suporte_psicologo: {
+        Row: {
+          created_at: string | null
+          descricao: string
+          email_retorno: string
+          id: string
+          psicologo_id: string | null
+          telefone_retorno: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          descricao: string
+          email_retorno: string
+          id?: string
+          psicologo_id?: string | null
+          telefone_retorno?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          descricao?: string
+          email_retorno?: string
+          id?: string
+          psicologo_id?: string | null
+          telefone_retorno?: string | null
+        }
+        Relationships: []
+      }
       support_tickets: {
         Row: {
           created_at: string | null

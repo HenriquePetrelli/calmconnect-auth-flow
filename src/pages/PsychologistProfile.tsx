@@ -5,14 +5,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { LogOut, Mail, Lock, User, FileText, Pencil, Check } from 'lucide-react';
+import { LogOut, Mail, Lock, User, FileText, Pencil, Check, MessageCircle } from 'lucide-react';
 import BackButton from '@/components/BackButton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SPECIALIZATIONS } from '@/data/specializations';
 import { PasswordChangeModal } from '@/components/psychologist/PasswordChangeModal';
+import { useNavigate } from 'react-router-dom';
 
 const PsychologistProfile = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
 
@@ -266,14 +268,27 @@ const PsychologistProfile = () => {
         </CardContent>
       </Card>
 
-      <Button 
-        variant="destructive" 
-        className="w-full justify-start" 
-        onClick={handleLogout}
-       >
-         <LogOut size={16} className="mr-2" />
+      <Card>
+        <CardContent className="p-6 space-y-3">
+          <Button 
+            variant="outline" 
+            className="w-full justify-start" 
+            onClick={() => navigate('/psicologo/suporte')}
+          >
+            <MessageCircle size={16} className="mr-2" />
+            Suporte
+          </Button>
+          
+          <Button 
+            variant="destructive" 
+            className="w-full justify-start" 
+            onClick={handleLogout}
+          >
+            <LogOut size={16} className="mr-2" />
             Sair da Conta
-      </Button>
+          </Button>
+        </CardContent>
+      </Card>
 
       <PasswordChangeModal open={pwdOpen} onOpenChange={setPwdOpen} currentEmail={email} />
     </div>

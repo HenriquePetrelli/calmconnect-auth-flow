@@ -23,6 +23,7 @@ import SOS from "./pages/SOS";
 import Profile from "./pages/Profile";
 import AccountSettings from "./pages/AccountSettings";
 import Support from "./pages/Support";
+import PsychologistSupport from "./pages/PsychologistSupport";
 import Appointments from "./pages/Appointments";
 import Notifications from "./pages/Notifications";
 import Statistics from "./pages/Statistics";
@@ -146,7 +147,7 @@ const App = () => {
                       <AccountSettings />
                     </RouteGuard>
                   } />
-                  <Route path="/support" element={
+                  <Route path="/paciente/suporte" element={
                     <RouteGuard allowedUserTypes={['patient']}>
                       <Support />
                     </RouteGuard>
@@ -239,6 +240,11 @@ const App = () => {
                   <Route path="/psychologist-profile" element={
                     <RouteGuard allowedUserTypes={['psychologist']}>
                       <PsychologistProfile />
+                    </RouteGuard>
+                  } />
+                  <Route path="/psicologo/suporte" element={
+                    <RouteGuard allowedUserTypes={['psychologist']}>
+                      <PsychologistSupport />
                     </RouteGuard>
                   } />
 
