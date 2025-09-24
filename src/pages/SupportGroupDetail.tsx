@@ -155,47 +155,49 @@ const TestimonialCard = ({ testimonial, symptomName, onLike, onEdit, onDelete, c
           {testimonial.texto}
         </p>
         
-        {/* Like/Dislike counters - always visible */}
-        <div className="flex items-center gap-4 pt-2 border-t border-border/50">
-          {/* Like counts for everyone */}
-          <div className="flex items-center gap-4">
+        {/* Like/Dislike section - always visible */}
+        <div className="pt-2 border-t border-border/50 space-y-3">
+          {/* Like counts display */}
+          <div className="flex items-center gap-6">
             <div className="flex items-center gap-2 text-muted-foreground">
               <ThumbsUp className="w-4 h-4" />
-              <span className="text-sm">{testimonial.likes_positivos}</span>
+              <span className="text-sm font-medium">{testimonial.likes_positivos} curtidas</span>
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">
               <ThumbsDown className="w-4 h-4" />
-              <span className="text-sm">{testimonial.likes_negativos}</span>
+              <span className="text-sm font-medium">{testimonial.likes_negativos} não curtidas</span>
             </div>
           </div>
 
           {/* Interactive like buttons for non-owners */}
           {!isOwnTestimonial && (
-            <div className="flex items-center gap-2 ml-auto">
+            <div className="flex items-center gap-3">
               <Button
-                variant="ghost"
+                variant={userLikeType === 'positivo' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => onLike(testimonial.id, 'positivo')}
-                className={`h-8 px-3 ${
+                className={`flex items-center gap-2 h-9 px-4 transition-all ${
                   userLikeType === 'positivo' 
-                    ? 'text-green-600 bg-green-50 hover:bg-green-100' 
-                    : 'text-muted-foreground hover:text-green-600'
+                    ? 'bg-green-600 hover:bg-green-700 text-white border-green-600' 
+                    : 'text-muted-foreground hover:text-green-600 hover:border-green-600'
                 }`}
               >
-                👍 {userLikeType === 'positivo' ? 'Curtido' : 'Curtir'}
+                <ThumbsUp className="w-4 h-4" />
+                <span>{userLikeType === 'positivo' ? 'Curtido' : 'Curtir'}</span>
               </Button>
               
               <Button
-                variant="ghost"
+                variant={userLikeType === 'negativo' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => onLike(testimonial.id, 'negativo')}
-                className={`h-8 px-3 ${
+                className={`flex items-center gap-2 h-9 px-4 transition-all ${
                   userLikeType === 'negativo' 
-                    ? 'text-red-600 bg-red-50 hover:bg-red-100' 
-                    : 'text-muted-foreground hover:text-red-600'
+                    ? 'bg-red-600 hover:bg-red-700 text-white border-red-600' 
+                    : 'text-muted-foreground hover:text-red-600 hover:border-red-600'
                 }`}
               >
-                👎 {userLikeType === 'negativo' ? 'Não curtido' : 'Não curtir'}
+                <ThumbsDown className="w-4 h-4" />
+                <span>{userLikeType === 'negativo' ? 'Não curtir' : 'Não curtir'}</span>
               </Button>
             </div>
           )}

@@ -331,7 +331,55 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
 
   useEffect(() => {
     fetchTestimonials();
-  }, [groupId]);
+
+    // Set up real-time subscription for testimonial updates
+    const channel = supabase
+      .channel(`testimonials-${groupId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'group_testimonials',
+          filter: `group_id=eq.${groupId}`
+        },
+        () => {
+          // Refresh testimonials when likes are updated
+          fetchTestimonials(filterByUser);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'group_testimonials',
+          filter: `group_id=eq.${groupId}`
+        },
+        () => {
+          // Refresh testimonials when new testimonial is added
+          fetchTestimonials(filterByUser);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'group_testimonials',
+          filter: `group_id=eq.${groupId}`
+        },
+        () => {
+          // Refresh testimonials when testimonial is deleted
+          fetchTestimonials(filterByUser);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [groupId, filterByUser]);
 
   const likeTestimonial = async (testimonialId: string, tipo: 'positivo' | 'negativo') => {
     try {
@@ -344,7 +392,7 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
         .select('*')
         .eq('testimonial_id', testimonialId)
         .eq('user_id', user.user.id)
-        .single();
+        .maybeSingle();
 
       if (existingLike) {
         // If same type, remove the like (toggle off)
@@ -355,14 +403,24 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
             .eq('id', existingLike.id);
           
           if (error) throw error;
+          
+          toast({
+            title: "Reação removida",
+            description: "Sua avaliação foi removida",
+          });
         } else {
-          // If different type, update the like
+          // If different type, update the like (switch reaction)
           const { error } = await supabase
             .from('group_testimonial_likes')
             .update({ tipo })
             .eq('id', existingLike.id);
           
           if (error) throw error;
+          
+          toast({
+            title: "Reação alterada",
+            description: `Sua avaliação foi alterada para ${tipo === 'positivo' ? 'curtir' : 'não curtir'}`,
+          });
         }
       } else {
         // Create new like
@@ -375,9 +433,16 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
           });
         
         if (error) throw error;
+        
+        toast({
+          title: "Reação adicionada",
+          description: `Você ${tipo === 'positivo' ? 'curtiu' : 'não curtiu'} este depoimento`,
+        });
       }
 
-      await fetchTestimonials(filterByUser); // Refresh to get updated counts
+      // The counts will be updated automatically by the trigger
+      // But we refresh to get the updated user_like status
+      await fetchTestimonials(filterByUser);
       return true;
     } catch (error) {
       console.error('Error liking testimonial:', error);
