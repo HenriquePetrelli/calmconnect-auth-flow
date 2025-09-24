@@ -38,6 +38,8 @@ import EmergencyCall from "./pages/EmergencyCall";
 import WebRTCTest from "./pages/WebRTCTest";
 import Chat from "./pages/Chat";
 import ConsultationCall from "./pages/ConsultationCall";
+import SupportGroups from "./pages/SupportGroups";
+import SupportGroupDetail from "./pages/SupportGroupDetail";
 
 import NotFound from "./pages/NotFound";
 
@@ -95,6 +97,16 @@ const App = () => {
                   <Route path="/home" element={
                     <RouteGuard allowedUserTypes={['patient']}>
                       <Home />
+                    </RouteGuard>
+                  } />
+                  <Route path="/support-groups" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <SupportGroups />
+                    </RouteGuard>
+                  } />
+                  <Route path="/support-group/:groupId" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <SupportGroupDetail />
                     </RouteGuard>
                   } />
                   <Route path="/sounds" element={

@@ -241,6 +241,83 @@ export type Database = {
         }
         Relationships: []
       }
+      group_favorites: {
+        Row: {
+          favoritado_em: string
+          group_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          favoritado_em?: string
+          group_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          favoritado_em?: string
+          group_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_favorites_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "support_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_testimonials: {
+        Row: {
+          anonimo: boolean
+          criado_em: string
+          group_id: string
+          humor: number
+          id: string
+          sintoma_id: string | null
+          texto: string
+          user_id: string
+        }
+        Insert: {
+          anonimo?: boolean
+          criado_em?: string
+          group_id: string
+          humor: number
+          id?: string
+          sintoma_id?: string | null
+          texto: string
+          user_id: string
+        }
+        Update: {
+          anonimo?: boolean
+          criado_em?: string
+          group_id?: string
+          humor?: number
+          id?: string
+          sintoma_id?: string | null
+          texto?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_testimonials_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "support_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_testimonials_sintoma_id_fkey"
+            columns: ["sintoma_id"]
+            isOneToOne: false
+            referencedRelation: "transtornos_sintomas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mensagens: {
         Row: {
           autor_id: string
@@ -939,6 +1016,27 @@ export type Database = {
           id?: string
           psicologo_id?: string | null
           telefone_retorno?: string | null
+        }
+        Relationships: []
+      }
+      support_groups: {
+        Row: {
+          criado_em: string
+          descricao: string
+          id: string
+          nome: string
+        }
+        Insert: {
+          criado_em?: string
+          descricao: string
+          id?: string
+          nome: string
+        }
+        Update: {
+          criado_em?: string
+          descricao?: string
+          id?: string
+          nome?: string
         }
         Relationships: []
       }

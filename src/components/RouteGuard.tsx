@@ -18,6 +18,8 @@ export const ROUTE_PERMISSIONS = {
   ],
   patient: [
     '/home',
+    '/support-groups',
+    '/support-group/:groupId',
     '/sounds',
     '/sounds/category',
     '/sounds/subcategory', 
