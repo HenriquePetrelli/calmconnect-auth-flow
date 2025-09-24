@@ -384,7 +384,7 @@ const HomePage = () => {
                   title="Diário Privado"
                   description="Escreva seus pensamentos em um ambiente seguro e criptografado"
                   variant="default"
-                  onClick={() => navigate('/private-diary')}
+                  onClick={() => navigate('/journal')}
                   className="animate-fade-in [animation-delay:600ms]"
                 />
               </div>
