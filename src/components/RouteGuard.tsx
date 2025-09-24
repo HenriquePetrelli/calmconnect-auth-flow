@@ -88,6 +88,7 @@ const isRouteAllowed = (pathname: string, userType: string): boolean => {
     if (route.includes('/player') && pathname.includes('/player/')) return true;
     if (route.includes('/emergency-call') && pathname.startsWith('/emergency-call/')) return true;
     if (route.includes('/emergency/call') && pathname.startsWith('/emergency/call/')) return true;
+    if (route.includes('/support-group/') && pathname.startsWith('/support-group/')) return true;
     
     return false;
   });
