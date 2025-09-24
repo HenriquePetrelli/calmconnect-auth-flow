@@ -197,7 +197,7 @@ const TestimonialCard = ({ testimonial, symptomName, onLike, onEdit, onDelete, c
                 }`}
               >
                 <ThumbsDown className="w-4 h-4" />
-                <span>{userLikeType === 'negativo' ? 'Não curtir' : 'Não curtir'}</span>
+                <span>{userLikeType === 'negativo' ? 'Não curtido' : 'Não curtir'}</span>
               </Button>
             </div>
           )}

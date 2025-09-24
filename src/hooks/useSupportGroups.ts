@@ -344,7 +344,7 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
           filter: `group_id=eq.${groupId}`
         },
         () => {
-          // Refresh testimonials when likes are updated
+          // Refresh testimonials when likes are updated (by trigger)
           fetchTestimonials(filterByUser);
         }
       )
@@ -374,6 +374,18 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
           fetchTestimonials(filterByUser);
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen to all like/dislike events
+          schema: 'public',
+          table: 'group_testimonial_likes'
+        },
+        () => {
+          // Refresh when likes are added/removed/changed
+          fetchTestimonials(filterByUser);
+        }
+      )
       .subscribe();
 
     return () => {
@@ -392,7 +404,7 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
         .select('*')
         .eq('testimonial_id', testimonialId)
         .eq('user_id', user.user.id)
-        .maybeSingle();
+        .maybeSingle(); // Use maybeSingle to avoid errors when no record exists
 
       if (existingLike) {
         // If same type, remove the like (toggle off)
@@ -440,8 +452,8 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
         });
       }
 
-      // The counts will be updated automatically by the trigger
-      // But we refresh to get the updated user_like status
+      // No need to manually refresh for count updates (handled by trigger)
+      // But refresh to get updated user_like status immediately for better UX
       await fetchTestimonials(filterByUser);
       return true;
     } catch (error) {
