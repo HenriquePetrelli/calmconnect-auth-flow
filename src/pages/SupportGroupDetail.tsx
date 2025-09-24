@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Info, Plus, User } from 'lucide-react';
+import { Info, Plus, User, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { useGroupTestimonials, useGroupSymptoms } from '@/hooks/useSupportGroups';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -18,21 +19,29 @@ const moodLabels = ['Muito triste', 'Triste', 'Neutro', 'Bem', 'Feliz', 'Muito f
 interface TestimonialCardProps {
   testimonial: {
     id: string;
+    user_id: string;
     anonimo: boolean;
     humor: number;
     texto: string;
     criado_em: string;
+    likes_positivos: number;
+    likes_negativos: number;
     profiles?: {
       full_name: string;
     };
     transtornos_sintomas?: {
       sintomas: string[];
     };
+    user_like?: {
+      tipo: 'positivo' | 'negativo';
+    };
   };
   symptomName?: string;
+  onLike: (testimonialId: string, tipo: 'positivo' | 'negativo') => void;
+  currentUserId?: string;
 }
 
-const TestimonialCard = ({ testimonial, symptomName }: TestimonialCardProps) => {
+const TestimonialCard = ({ testimonial, symptomName, onLike, currentUserId }: TestimonialCardProps) => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR', {
       day: '2-digit',
@@ -44,6 +53,9 @@ const TestimonialCard = ({ testimonial, symptomName }: TestimonialCardProps) => 
   const userName = testimonial.anonimo 
     ? 'Anônimo' 
     : testimonial.profiles?.full_name || 'Usuário';
+
+  const isOwnTestimonial = currentUserId === testimonial.user_id;
+  const userLikeType = testimonial.user_like?.tipo;
 
   return (
     <Card className="hover:shadow-md transition-shadow duration-200">
@@ -89,10 +101,43 @@ const TestimonialCard = ({ testimonial, symptomName }: TestimonialCardProps) => 
         )}
       </CardHeader>
       
-      <CardContent className="pt-0">
+      <CardContent className="pt-0 space-y-4">
         <p className="text-foreground leading-relaxed whitespace-pre-wrap">
           {testimonial.texto}
         </p>
+        
+        {/* Like/Dislike buttons */}
+        {!isOwnTestimonial && (
+          <div className="flex items-center gap-4 pt-2 border-t border-border/50">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onLike(testimonial.id, 'positivo')}
+              className={`flex items-center gap-2 h-8 px-3 ${
+                userLikeType === 'positivo' 
+                  ? 'text-green-600 bg-green-50 hover:bg-green-100' 
+                  : 'text-muted-foreground hover:text-green-600'
+              }`}
+            >
+              <ThumbsUp className="w-4 h-4" />
+              <span className="text-sm">{testimonial.likes_positivos}</span>
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onLike(testimonial.id, 'negativo')}
+              className={`flex items-center gap-2 h-8 px-3 ${
+                userLikeType === 'negativo' 
+                  ? 'text-red-600 bg-red-50 hover:bg-red-100' 
+                  : 'text-muted-foreground hover:text-red-600'
+              }`}
+            >
+              <ThumbsDown className="w-4 h-4" />
+              <span className="text-sm">{testimonial.likes_negativos}</span>
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -104,10 +149,20 @@ const SupportGroupDetail = () => {
   const navigate = useNavigate();
   const [showSymptoms, setShowSymptoms] = useState(false);
   const [showAddTestimonial, setShowAddTestimonial] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | undefined>();
   
   const groupName = location.state?.groupName || 'Grupo de Apoio';
-  const { testimonials, loading: testimonialsLoading, refetch } = useGroupTestimonials(groupId || '');
+  const { testimonials, loading: testimonialsLoading, likeTestimonial, refetch } = useGroupTestimonials(groupId || '');
   const { symptoms, loading: symptomsLoading } = useGroupSymptoms(groupName);
+
+  // Get current user ID
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUserId(user?.id);
+    };
+    getCurrentUser();
+  }, []);
 
   if (!groupId) {
     navigate('/support-groups');
@@ -123,7 +178,7 @@ const SupportGroupDetail = () => {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-6 pb-20">
         <div className="mb-6">
-          <BackButton />
+          <BackButton to="/support-groups" label="Voltar para Grupos" />
         </div>
         
         <div className="space-y-6">
@@ -248,6 +303,8 @@ const SupportGroupDetail = () => {
                   symptomName={
                     testimonial.transtornos_sintomas?.sintomas?.[0] || undefined
                   }
+                  onLike={likeTestimonial}
+                  currentUserId={currentUserId}
                 />
               ))
             )}

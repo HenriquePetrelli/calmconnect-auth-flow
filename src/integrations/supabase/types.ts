@@ -270,6 +270,38 @@ export type Database = {
           },
         ]
       }
+      group_testimonial_likes: {
+        Row: {
+          criado_em: string
+          id: string
+          testimonial_id: string
+          tipo: Database["public"]["Enums"]["like_type"]
+          user_id: string
+        }
+        Insert: {
+          criado_em?: string
+          id?: string
+          testimonial_id: string
+          tipo: Database["public"]["Enums"]["like_type"]
+          user_id: string
+        }
+        Update: {
+          criado_em?: string
+          id?: string
+          testimonial_id?: string
+          tipo?: Database["public"]["Enums"]["like_type"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_testimonial_likes_testimonial_id_fkey"
+            columns: ["testimonial_id"]
+            isOneToOne: false
+            referencedRelation: "group_testimonials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       group_testimonials: {
         Row: {
           anonimo: boolean
@@ -277,6 +309,8 @@ export type Database = {
           group_id: string
           humor: number
           id: string
+          likes_negativos: number
+          likes_positivos: number
           sintoma_id: string | null
           texto: string
           user_id: string
@@ -287,6 +321,8 @@ export type Database = {
           group_id: string
           humor: number
           id?: string
+          likes_negativos?: number
+          likes_positivos?: number
           sintoma_id?: string | null
           texto: string
           user_id: string
@@ -297,6 +333,8 @@ export type Database = {
           group_id?: string
           humor?: number
           id?: string
+          likes_negativos?: number
+          likes_positivos?: number
           sintoma_id?: string | null
           texto?: string
           user_id?: string
@@ -1373,6 +1411,7 @@ export type Database = {
       }
     }
     Enums: {
+      like_type: "positivo" | "negativo"
       registration_status: "pending" | "approved" | "rejected"
       user_type: "patient" | "psychologist" | "admin"
     }
@@ -1502,6 +1541,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      like_type: ["positivo", "negativo"],
       registration_status: ["pending", "approved", "rejected"],
       user_type: ["patient", "psychologist", "admin"],
     },

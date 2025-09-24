@@ -138,9 +138,9 @@ const SupportGroups = () => {
     return (
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-6 pb-20">
-          <div className="mb-6">
-            <BackButton />
-          </div>
+        <div className="mb-6">
+          <BackButton to="/home" label="Voltar para Home" />
+        </div>
           
           <div className="space-y-6">
             <div className="text-center space-y-2">
@@ -170,7 +170,7 @@ const SupportGroups = () => {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-6 pb-20">
         <div className="mb-6">
-          <BackButton />
+          <BackButton to="/home" label="Voltar para Home" />
         </div>
         
         <div className="space-y-6">

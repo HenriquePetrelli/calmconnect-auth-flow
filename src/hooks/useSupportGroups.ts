@@ -19,11 +19,16 @@ export interface GroupTestimonial {
   humor: number;
   texto: string;
   criado_em: string;
+  likes_positivos: number;
+  likes_negativos: number;
   profiles?: {
     full_name: string;
   };
   transtornos_sintomas?: {
     sintomas: string[];
+  };
+  user_like?: {
+    tipo: 'positivo' | 'negativo';
   };
 }
 
@@ -163,8 +168,9 @@ export const useGroupTestimonials = (groupId: string) => {
     
     try {
       setLoading(true);
+      const { data: user } = await supabase.auth.getUser();
       
-      // Fetch testimonials without profiles relation for now
+      // Fetch testimonials with like counts
       const { data, error } = await supabase
         .from('group_testimonials')
         .select(`
@@ -176,18 +182,33 @@ export const useGroupTestimonials = (groupId: string) => {
 
       if (error) throw error;
 
-      // For each testimonial, fetch the user profile separately
+      // For each testimonial, fetch user profile and user like status
       const testimonialsWithProfiles = await Promise.all(
         (data || []).map(async (testimonial) => {
+          // Fetch profile
           const { data: profile } = await supabase
             .from('profiles')
             .select('full_name')
             .eq('user_id', testimonial.user_id)
             .single();
 
+          // Fetch user's like on this testimonial
+          let userLike = null;
+          if (user.user) {
+            const { data: likeData } = await supabase
+              .from('group_testimonial_likes')
+              .select('tipo')
+              .eq('testimonial_id', testimonial.id)
+              .eq('user_id', user.user.id)
+              .single();
+            
+            userLike = likeData;
+          }
+
           return {
             ...testimonial,
-            profiles: profile
+            profiles: profile,
+            user_like: userLike
           };
         })
       );
@@ -247,10 +268,68 @@ export const useGroupTestimonials = (groupId: string) => {
     fetchTestimonials();
   }, [groupId]);
 
+  const likeTestimonial = async (testimonialId: string, tipo: 'positivo' | 'negativo') => {
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) return false;
+
+      // Check if user already liked this testimonial
+      const { data: existingLike } = await supabase
+        .from('group_testimonial_likes')
+        .select('*')
+        .eq('testimonial_id', testimonialId)
+        .eq('user_id', user.user.id)
+        .single();
+
+      if (existingLike) {
+        // If same type, remove the like (toggle off)
+        if (existingLike.tipo === tipo) {
+          const { error } = await supabase
+            .from('group_testimonial_likes')
+            .delete()
+            .eq('id', existingLike.id);
+          
+          if (error) throw error;
+        } else {
+          // If different type, update the like
+          const { error } = await supabase
+            .from('group_testimonial_likes')
+            .update({ tipo })
+            .eq('id', existingLike.id);
+          
+          if (error) throw error;
+        }
+      } else {
+        // Create new like
+        const { error } = await supabase
+          .from('group_testimonial_likes')
+          .insert({
+            testimonial_id: testimonialId,
+            user_id: user.user.id,
+            tipo
+          });
+        
+        if (error) throw error;
+      }
+
+      await fetchTestimonials(); // Refresh to get updated counts
+      return true;
+    } catch (error) {
+      console.error('Error liking testimonial:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível processar sua avaliação",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
   return {
     testimonials,
     loading,
     addTestimonial,
+    likeTestimonial,
     refetch: fetchTestimonials
   };
 };
