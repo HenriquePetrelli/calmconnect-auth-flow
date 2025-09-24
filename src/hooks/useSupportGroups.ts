@@ -333,7 +333,7 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
     fetchTestimonials();
   }, [groupId, filterByUser]); // Remove real-time subscription complexity for now
 
-  const likeTestimonial = async (testimonialId: string, tipo: 'positivo' | 'negativo') => {
+  const likeTestimonial = async (testimonialId: string, tipo: 'positivo' | 'negativo' | 'none') => {
     try {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) return false;
@@ -342,40 +342,41 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
       setTestimonials(prev => {
         return prev.map(testimonial => {
           if (testimonial.id === testimonialId) {
-            const currentLike = testimonial.user_like?.tipo;
+            const currentLike = testimonial.user_like?.tipo as ('positivo' | 'negativo' | undefined);
             
-            let newLike = null;
+            // If user is clearing the reaction
+            if (tipo === 'none') {
+              if (!currentLike) return testimonial; // nothing to clear
+              return {
+                ...testimonial,
+                user_like: null,
+                likes_positivos: currentLike === 'positivo' ? Math.max(0, testimonial.likes_positivos - 1) : testimonial.likes_positivos,
+                likes_negativos: currentLike === 'negativo' ? Math.max(0, testimonial.likes_negativos - 1) : testimonial.likes_negativos,
+              };
+            }
+
+            // Otherwise user is setting a reaction
+            let newLike: { tipo: 'positivo' | 'negativo' } | null = { tipo } as { tipo: 'positivo' | 'negativo' };
             let newPositives = testimonial.likes_positivos;
             let newNegatives = testimonial.likes_negativos;
 
             if (currentLike === tipo) {
-              // Same type - remove like (toggle off)
+              // Same type clicked -> toggle off
               newLike = null;
-              if (tipo === 'positivo') {
+              if (tipo === 'positivo') newPositives = Math.max(0, newPositives - 1);
+              else newNegatives = Math.max(0, newNegatives - 1);
+            } else if (currentLike) {
+              // Switch reaction
+              if (currentLike === 'positivo') {
                 newPositives = Math.max(0, newPositives - 1);
+                newNegatives = newNegatives + 1;
               } else {
                 newNegatives = Math.max(0, newNegatives - 1);
+                newPositives = newPositives + 1;
               }
             } else {
-              // Different type or no like - set new like
-              newLike = { tipo };
-              if (currentLike) {
-                // Had opposite reaction - remove old, add new
-                if (currentLike === 'positivo') {
-                  newPositives = Math.max(0, newPositives - 1);
-                  newNegatives = newNegatives + 1;
-                } else {
-                  newNegatives = Math.max(0, newNegatives - 1);
-                  newPositives = newPositives + 1;
-                }
-              } else {
-                // No previous reaction - just add new
-                if (tipo === 'positivo') {
-                  newPositives = newPositives + 1;
-                } else {
-                  newNegatives = newNegatives + 1;
-                }
-              }
+              // Add new reaction
+              if (tipo === 'positivo') newPositives = newPositives + 1; else newNegatives = newNegatives + 1;
             }
 
             return {
@@ -397,34 +398,34 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
         .eq('user_id', user.user.id)
         .maybeSingle();
 
-      if (existingLike) {
-        // If same type, remove the like (toggle off)
-        if (existingLike.tipo === tipo) {
+      // If user is clearing reaction
+      if (tipo === 'none') {
+        if (existingLike) {
           const { error } = await supabase
             .from('group_testimonial_likes')
             .delete()
             .eq('id', existingLike.id);
-          
           if (error) throw error;
-          
-          toast({
-            title: "Reação removida",
-            description: "Sua avaliação foi removida",
-          });
-        } else {
-          // If different type, update the like (switch reaction)
-          const { error } = await supabase
-            .from('group_testimonial_likes')
-            .update({ tipo })
-            .eq('id', existingLike.id);
-          
-          if (error) throw error;
-          
-          toast({
-            title: "Reação alterada",
-            description: `Sua avaliação foi alterada para ${tipo === 'positivo' ? 'curtir' : 'não curtir'}`,
-          });
+          toast({ title: 'Reação removida', description: 'Sua avaliação foi removida' });
         }
+        return true;
+      }
+
+      // From here on, tipo is 'positivo' | 'negativo'
+      const targetTipo: 'positivo' | 'negativo' = tipo === 'positivo' ? 'positivo' : 'negativo';
+
+      if (existingLike) {
+        if (existingLike.tipo === targetTipo) {
+          // No change needed
+          return true;
+        }
+        // Switch reaction
+        const { error } = await supabase
+          .from('group_testimonial_likes')
+          .update({ tipo: targetTipo })
+          .eq('id', existingLike.id);
+        if (error) throw error;
+        toast({ title: 'Reação alterada', description: `Sua avaliação foi alterada para ${targetTipo === 'positivo' ? 'curtir' : 'não curtir'}` });
       } else {
         // Create new like
         const { error } = await supabase
@@ -432,15 +433,10 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
           .insert({
             testimonial_id: testimonialId,
             user_id: user.user.id,
-            tipo
+            tipo: targetTipo,
           });
-        
         if (error) throw error;
-        
-        toast({
-          title: "Reação adicionada",
-          description: `Você ${tipo === 'positivo' ? 'curtiu' : 'não curtiu'} este depoimento`,
-        });
+        toast({ title: 'Reação adicionada', description: `Você ${targetTipo === 'positivo' ? 'curtiu' : 'não curtiu'} este depoimento` });
       }
 
       return true;

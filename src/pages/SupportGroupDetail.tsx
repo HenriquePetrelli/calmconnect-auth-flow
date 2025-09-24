@@ -41,7 +41,7 @@ interface TestimonialCardProps {
     };
   };
   symptomName?: string;
-  onLike: (testimonialId: string, tipo: 'positivo' | 'negativo') => void;
+  onLike: (testimonialId: string, tipo: 'positivo' | 'negativo' | 'none') => void;
   onEdit: (testimonial: any) => void;
   onDelete: (testimonialId: string) => void;
   currentUserId?: string;
@@ -175,7 +175,7 @@ const TestimonialCard = ({ testimonial, symptomName, onLike, onEdit, onDelete, c
               <Button
                 variant={userLikeType === 'positivo' ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => onLike(testimonial.id, 'positivo')}
+                onClick={() => onLike(testimonial.id, userLikeType === 'positivo' ? 'none' : 'positivo')}
                 className={`flex items-center gap-2 h-9 px-4 transition-all ${
                   userLikeType === 'positivo' 
                     ? 'bg-green-600 hover:bg-green-700 text-white border-green-600' 
@@ -189,7 +189,7 @@ const TestimonialCard = ({ testimonial, symptomName, onLike, onEdit, onDelete, c
               <Button
                 variant={userLikeType === 'negativo' ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => onLike(testimonial.id, 'negativo')}
+                onClick={() => onLike(testimonial.id, userLikeType === 'negativo' ? 'none' : 'negativo')}
                 className={`flex items-center gap-2 h-9 px-4 transition-all ${
                   userLikeType === 'negativo' 
                     ? 'bg-red-600 hover:bg-red-700 text-white border-red-600' 
