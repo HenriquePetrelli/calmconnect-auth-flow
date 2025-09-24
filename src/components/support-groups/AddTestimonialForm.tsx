@@ -38,7 +38,7 @@ const AddTestimonialForm = ({ groupId, groupName, onSuccess }: AddTestimonialFor
 
     const success = await addTestimonial({
       anonimo: isAnonymous,
-      sintoma_id: selectedSymptom || symptomId,
+      sintoma_id: selectedSymptom === 'none' ? null : symptomId,
       humor: mood,
       texto: text.trim()
     });
@@ -71,9 +71,9 @@ const AddTestimonialForm = ({ groupId, groupName, onSuccess }: AddTestimonialFor
               <SelectValue placeholder="Selecione um sintoma..." />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Nenhum sintoma específico</SelectItem>
+              <SelectItem value="none">Nenhum sintoma específico</SelectItem>
               {symptoms.map((symptom, index) => (
-                <SelectItem key={index} value={symptomId || ''}>
+                <SelectItem key={index} value={`${symptomId}-${index}`}>
                   {symptom}
                 </SelectItem>
               ))}
