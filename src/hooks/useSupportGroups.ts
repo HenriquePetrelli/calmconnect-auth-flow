@@ -338,15 +338,11 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) return false;
 
-      console.log('Like testimonial called:', { testimonialId, tipo, userId: user.user.id });
-
       // Optimistic update - update UI immediately for better UX
       setTestimonials(prev => {
-        console.log('Current testimonials before update:', prev.length);
         return prev.map(testimonial => {
           if (testimonial.id === testimonialId) {
             const currentLike = testimonial.user_like?.tipo;
-            console.log('Current like status:', currentLike, 'New type:', tipo);
             
             let newLike = null;
             let newPositives = testimonial.likes_positivos;
@@ -354,7 +350,6 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
 
             if (currentLike === tipo) {
               // Same type - remove like (toggle off)
-              console.log('Toggling off same type');
               newLike = null;
               if (tipo === 'positivo') {
                 newPositives = Math.max(0, newPositives - 1);
@@ -363,7 +358,6 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
               }
             } else {
               // Different type or no like - set new like
-              console.log('Setting new like type');
               newLike = { tipo };
               if (currentLike) {
                 // Had opposite reaction - remove old, add new
@@ -384,12 +378,6 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
               }
             }
 
-            console.log('Updated testimonial state:', { 
-              newLike, 
-              newPositives, 
-              newNegatives 
-            });
-
             return {
               ...testimonial,
               user_like: newLike,
@@ -408,8 +396,6 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
         .eq('testimonial_id', testimonialId)
         .eq('user_id', user.user.id)
         .maybeSingle();
-
-      console.log('Existing like from DB:', existingLike);
 
       if (existingLike) {
         // If same type, remove the like (toggle off)
