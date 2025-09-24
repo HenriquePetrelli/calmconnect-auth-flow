@@ -206,7 +206,7 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
               .select('tipo')
               .eq('testimonial_id', testimonial.id)
               .eq('user_id', user.user.id)
-              .single();
+              .maybeSingle(); // Use maybeSingle to avoid errors when no like exists
             
             userLike = likeData;
           }
@@ -331,72 +331,75 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
 
   useEffect(() => {
     fetchTestimonials();
-
-    // Set up real-time subscription for testimonial updates
-    const channel = supabase
-      .channel(`testimonials-${groupId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'group_testimonials',
-          filter: `group_id=eq.${groupId}`
-        },
-        () => {
-          // Refresh testimonials when likes are updated (by trigger)
-          fetchTestimonials(filterByUser);
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'group_testimonials',
-          filter: `group_id=eq.${groupId}`
-        },
-        () => {
-          // Refresh testimonials when new testimonial is added
-          fetchTestimonials(filterByUser);
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'DELETE',
-          schema: 'public',
-          table: 'group_testimonials',
-          filter: `group_id=eq.${groupId}`
-        },
-        () => {
-          // Refresh testimonials when testimonial is deleted
-          fetchTestimonials(filterByUser);
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*', // Listen to all like/dislike events
-          schema: 'public',
-          table: 'group_testimonial_likes'
-        },
-        () => {
-          // Refresh when likes are added/removed/changed
-          fetchTestimonials(filterByUser);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [groupId, filterByUser]);
+  }, [groupId, filterByUser]); // Remove real-time subscription complexity for now
 
   const likeTestimonial = async (testimonialId: string, tipo: 'positivo' | 'negativo') => {
     try {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) return false;
+
+      console.log('Like testimonial called:', { testimonialId, tipo, userId: user.user.id });
+
+      // Optimistic update - update UI immediately for better UX
+      setTestimonials(prev => {
+        console.log('Current testimonials before update:', prev.length);
+        return prev.map(testimonial => {
+          if (testimonial.id === testimonialId) {
+            const currentLike = testimonial.user_like?.tipo;
+            console.log('Current like status:', currentLike, 'New type:', tipo);
+            
+            let newLike = null;
+            let newPositives = testimonial.likes_positivos;
+            let newNegatives = testimonial.likes_negativos;
+
+            if (currentLike === tipo) {
+              // Same type - remove like (toggle off)
+              console.log('Toggling off same type');
+              newLike = null;
+              if (tipo === 'positivo') {
+                newPositives = Math.max(0, newPositives - 1);
+              } else {
+                newNegatives = Math.max(0, newNegatives - 1);
+              }
+            } else {
+              // Different type or no like - set new like
+              console.log('Setting new like type');
+              newLike = { tipo };
+              if (currentLike) {
+                // Had opposite reaction - remove old, add new
+                if (currentLike === 'positivo') {
+                  newPositives = Math.max(0, newPositives - 1);
+                  newNegatives = newNegatives + 1;
+                } else {
+                  newNegatives = Math.max(0, newNegatives - 1);
+                  newPositives = newPositives + 1;
+                }
+              } else {
+                // No previous reaction - just add new
+                if (tipo === 'positivo') {
+                  newPositives = newPositives + 1;
+                } else {
+                  newNegatives = newNegatives + 1;
+                }
+              }
+            }
+
+            console.log('Updated testimonial state:', { 
+              newLike, 
+              newPositives, 
+              newNegatives 
+            });
+
+            return {
+              ...testimonial,
+              user_like: newLike,
+              likes_positivos: newPositives,
+              likes_negativos: newNegatives
+            };
+          }
+          return testimonial;
+        });
+      });
 
       // Check if user already liked this testimonial
       const { data: existingLike } = await supabase
@@ -404,7 +407,9 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
         .select('*')
         .eq('testimonial_id', testimonialId)
         .eq('user_id', user.user.id)
-        .maybeSingle(); // Use maybeSingle to avoid errors when no record exists
+        .maybeSingle();
+
+      console.log('Existing like from DB:', existingLike);
 
       if (existingLike) {
         // If same type, remove the like (toggle off)
@@ -452,12 +457,13 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
         });
       }
 
-      // No need to manually refresh for count updates (handled by trigger)
-      // But refresh to get updated user_like status immediately for better UX
-      await fetchTestimonials(filterByUser);
       return true;
     } catch (error) {
       console.error('Error liking testimonial:', error);
+      
+      // Revert optimistic update on error by fetching fresh data
+      await fetchTestimonials(filterByUser);
+      
       toast({
         title: "Erro",
         description: "Não foi possível processar sua avaliação",
