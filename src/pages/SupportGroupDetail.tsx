@@ -4,14 +4,17 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Info, Plus, User, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Info, Plus, User, ThumbsUp, ThumbsDown, Edit, Trash2, Filter } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useGroupTestimonials, useGroupSymptoms } from '@/hooks/useSupportGroups';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import BottomNavigation from '@/components/BottomNavigation';
 import BackButton from '@/components/BackButton';
 import AddTestimonialForm from '@/components/support-groups/AddTestimonialForm';
+import EditTestimonialForm from '@/components/support-groups/EditTestimonialForm';
 
 const moodEmojis = ['😞', '😔', '😐', '🙂', '😊', '😄'];
 const moodLabels = ['Muito triste', 'Triste', 'Neutro', 'Bem', 'Feliz', 'Muito feliz'];
@@ -21,6 +24,7 @@ interface TestimonialCardProps {
     id: string;
     user_id: string;
     anonimo: boolean;
+    sintoma_id: string | null;
     humor: number;
     texto: string;
     criado_em: string;
@@ -38,10 +42,13 @@ interface TestimonialCardProps {
   };
   symptomName?: string;
   onLike: (testimonialId: string, tipo: 'positivo' | 'negativo') => void;
+  onEdit: (testimonial: any) => void;
+  onDelete: (testimonialId: string) => void;
   currentUserId?: string;
+  groupName: string;
 }
 
-const TestimonialCard = ({ testimonial, symptomName, onLike, currentUserId }: TestimonialCardProps) => {
+const TestimonialCard = ({ testimonial, symptomName, onLike, onEdit, onDelete, currentUserId, groupName }: TestimonialCardProps) => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR', {
       day: '2-digit',
@@ -90,6 +97,48 @@ const TestimonialCard = ({ testimonial, symptomName, onLike, currentUserId }: Te
               </div>
             </div>
           </div>
+
+          {/* Edit/Delete buttons for own testimonials */}
+          {isOwnTestimonial && (
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onEdit(testimonial)}
+                className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+              >
+                <Edit className="w-4 h-4" />
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Excluir depoimento</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Tem certeza que deseja excluir este depoimento? Esta ação não pode ser desfeita.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => onDelete(testimonial.id)}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Excluir
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          )}
         </div>
         
         {symptomName && (
@@ -106,38 +155,51 @@ const TestimonialCard = ({ testimonial, symptomName, onLike, currentUserId }: Te
           {testimonial.texto}
         </p>
         
-        {/* Like/Dislike buttons */}
-        {!isOwnTestimonial && (
-          <div className="flex items-center gap-4 pt-2 border-t border-border/50">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onLike(testimonial.id, 'positivo')}
-              className={`flex items-center gap-2 h-8 px-3 ${
-                userLikeType === 'positivo' 
-                  ? 'text-green-600 bg-green-50 hover:bg-green-100' 
-                  : 'text-muted-foreground hover:text-green-600'
-              }`}
-            >
+        {/* Like/Dislike counters - always visible */}
+        <div className="flex items-center gap-4 pt-2 border-t border-border/50">
+          {/* Like counts for everyone */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-muted-foreground">
               <ThumbsUp className="w-4 h-4" />
               <span className="text-sm">{testimonial.likes_positivos}</span>
-            </Button>
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onLike(testimonial.id, 'negativo')}
-              className={`flex items-center gap-2 h-8 px-3 ${
-                userLikeType === 'negativo' 
-                  ? 'text-red-600 bg-red-50 hover:bg-red-100' 
-                  : 'text-muted-foreground hover:text-red-600'
-              }`}
-            >
+            </div>
+            <div className="flex items-center gap-2 text-muted-foreground">
               <ThumbsDown className="w-4 h-4" />
               <span className="text-sm">{testimonial.likes_negativos}</span>
-            </Button>
+            </div>
           </div>
-        )}
+
+          {/* Interactive like buttons for non-owners */}
+          {!isOwnTestimonial && (
+            <div className="flex items-center gap-2 ml-auto">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onLike(testimonial.id, 'positivo')}
+                className={`h-8 px-3 ${
+                  userLikeType === 'positivo' 
+                    ? 'text-green-600 bg-green-50 hover:bg-green-100' 
+                    : 'text-muted-foreground hover:text-green-600'
+                }`}
+              >
+                👍 {userLikeType === 'positivo' ? 'Curtido' : 'Curtir'}
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onLike(testimonial.id, 'negativo')}
+                className={`h-8 px-3 ${
+                  userLikeType === 'negativo' 
+                    ? 'text-red-600 bg-red-50 hover:bg-red-100' 
+                    : 'text-muted-foreground hover:text-red-600'
+                }`}
+              >
+                👎 {userLikeType === 'negativo' ? 'Não curtido' : 'Não curtir'}
+              </Button>
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
@@ -149,10 +211,13 @@ const SupportGroupDetail = () => {
   const navigate = useNavigate();
   const [showSymptoms, setShowSymptoms] = useState(false);
   const [showAddTestimonial, setShowAddTestimonial] = useState(false);
+  const [showEditTestimonial, setShowEditTestimonial] = useState(false);
+  const [editingTestimonial, setEditingTestimonial] = useState<any>(null);
   const [currentUserId, setCurrentUserId] = useState<string | undefined>();
+  const [filter, setFilter] = useState<'all' | 'mine'>('all');
   
   const groupName = location.state?.groupName || 'Grupo de Apoio';
-  const { testimonials, loading: testimonialsLoading, likeTestimonial, refetch } = useGroupTestimonials(groupId || '');
+  const { testimonials, loading: testimonialsLoading, likeTestimonial, updateTestimonial, deleteTestimonial, refetch } = useGroupTestimonials(groupId || '', filter === 'mine');
   const { symptoms, loading: symptomsLoading } = useGroupSymptoms(groupName);
 
   // Get current user ID
@@ -171,7 +236,30 @@ const SupportGroupDetail = () => {
 
   const handleTestimonialAdded = () => {
     setShowAddTestimonial(false);
-    refetch();
+    refetch(filter === 'mine');
+  };
+
+  const handleEditTestimonial = (testimonial: any) => {
+    setEditingTestimonial(testimonial);
+    setShowEditTestimonial(true);
+  };
+
+  const handleUpdateTestimonial = async (testimonialId: string, updates: any) => {
+    const success = await updateTestimonial(testimonialId, updates);
+    if (success) {
+      setShowEditTestimonial(false);
+      setEditingTestimonial(null);
+    }
+    return success;
+  };
+
+  const handleDeleteTestimonial = async (testimonialId: string) => {
+    await deleteTestimonial(testimonialId);
+  };
+
+  const handleFilterChange = (newFilter: 'all' | 'mine') => {
+    setFilter(newFilter);
+    refetch(newFilter === 'mine');
   };
 
   return (
@@ -227,8 +315,23 @@ const SupportGroupDetail = () => {
             </div>
           </div>
 
-          {/* Add Testimonial Button */}
-          <div className="flex justify-center">
+          {/* Filter and Add Testimonial */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            {/* Filter */}
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-muted-foreground" />
+              <Select value={filter} onValueChange={(value: 'all' | 'mine') => handleFilterChange(value)}>
+                <SelectTrigger className="w-48">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os depoimentos</SelectItem>
+                  <SelectItem value="mine">Meus depoimentos</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Add Testimonial Button */}
             <Dialog open={showAddTestimonial} onOpenChange={setShowAddTestimonial}>
               <DialogTrigger asChild>
                 <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
@@ -248,6 +351,26 @@ const SupportGroupDetail = () => {
               </DialogContent>
             </Dialog>
           </div>
+
+          {/* Edit Testimonial Dialog */}
+          <Dialog open={showEditTestimonial} onOpenChange={setShowEditTestimonial}>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Editar Depoimento</DialogTitle>
+              </DialogHeader>
+              {editingTestimonial && (
+                <EditTestimonialForm
+                  groupName={groupName}
+                  testimonial={editingTestimonial}
+                  onSave={handleUpdateTestimonial}
+                  onCancel={() => {
+                    setShowEditTestimonial(false);
+                    setEditingTestimonial(null);
+                  }}
+                />
+              )}
+            </DialogContent>
+          </Dialog>
 
           {/* Testimonials */}
           <div className="space-y-4">
@@ -281,17 +404,20 @@ const SupportGroupDetail = () => {
                     <User className="w-8 h-8 text-muted-foreground" />
                   </div>
                   <h3 className="text-lg font-medium text-foreground mb-2">
-                    Ainda não há depoimentos
+                    {filter === 'mine' ? 'Você ainda não tem depoimentos' : 'Ainda não há depoimentos'}
                   </h3>
                   <p className="text-muted-foreground mb-4">
-                    Seja o primeiro a compartilhar sua experiência neste grupo.
+                    {filter === 'mine' 
+                      ? 'Compartilhe sua primeira experiência neste grupo.' 
+                      : 'Seja o primeiro a compartilhar sua experiência neste grupo.'
+                    }
                   </p>
                   <Button 
                     onClick={() => setShowAddTestimonial(true)}
                     className="bg-primary hover:bg-primary/90"
                   >
                     <Plus className="w-4 h-4 mr-2" />
-                    Adicionar Primeiro Depoimento
+                    {filter === 'mine' ? 'Adicionar Meu Primeiro Depoimento' : 'Adicionar Primeiro Depoimento'}
                   </Button>
                 </CardContent>
               </Card>
@@ -304,7 +430,10 @@ const SupportGroupDetail = () => {
                     testimonial.transtornos_sintomas?.sintomas?.[0] || undefined
                   }
                   onLike={likeTestimonial}
+                  onEdit={handleEditTestimonial}
+                  onDelete={handleDeleteTestimonial}
                   currentUserId={currentUserId}
+                  groupName={groupName}
                 />
               ))
             )}

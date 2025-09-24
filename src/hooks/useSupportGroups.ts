@@ -158,27 +158,33 @@ export const useSupportGroups = () => {
   };
 };
 
-export const useGroupTestimonials = (groupId: string) => {
+export const useGroupTestimonials = (groupId: string, filterByUser: boolean = false) => {
   const [testimonials, setTestimonials] = useState<GroupTestimonial[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  const fetchTestimonials = async () => {
+  const fetchTestimonials = async (userFilter: boolean = filterByUser) => {
     if (!groupId) return;
     
     try {
       setLoading(true);
       const { data: user } = await supabase.auth.getUser();
       
-      // Fetch testimonials with like counts
-      const { data, error } = await supabase
+      // Build query with optional user filter
+      let query = supabase
         .from('group_testimonials')
         .select(`
           *,
           transtornos_sintomas(sintomas)
         `)
-        .eq('group_id', groupId)
-        .order('criado_em', { ascending: false });
+        .eq('group_id', groupId);
+
+      // Apply user filter if requested
+      if (userFilter && user.user) {
+        query = query.eq('user_id', user.user.id);
+      }
+
+      const { data, error } = await query.order('criado_em', { ascending: false });
 
       if (error) throw error;
 
@@ -264,6 +270,65 @@ export const useGroupTestimonials = (groupId: string) => {
     }
   };
 
+  const updateTestimonial = async (testimonialId: string, updates: {
+    anonimo: boolean;
+    sintoma_id: string | null;
+    humor: number;
+    texto: string;
+  }) => {
+    try {
+      const { error } = await supabase
+        .from('group_testimonials')
+        .update(updates)
+        .eq('id', testimonialId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Depoimento atualizado",
+        description: "Suas alterações foram salvas com sucesso!",
+      });
+
+      await fetchTestimonials(filterByUser); // Refresh list
+      return true;
+    } catch (error) {
+      console.error('Error updating testimonial:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o depoimento",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
+  const deleteTestimonial = async (testimonialId: string) => {
+    try {
+      const { error } = await supabase
+        .from('group_testimonials')
+        .delete()
+        .eq('id', testimonialId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Depoimento excluído",
+        description: "Seu depoimento foi removido com sucesso!",
+      });
+
+      await fetchTestimonials(filterByUser); // Refresh list
+      return true;
+    } catch (error) {
+      console.error('Error deleting testimonial:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir o depoimento",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
   useEffect(() => {
     fetchTestimonials();
   }, [groupId]);
@@ -312,7 +377,7 @@ export const useGroupTestimonials = (groupId: string) => {
         if (error) throw error;
       }
 
-      await fetchTestimonials(); // Refresh to get updated counts
+      await fetchTestimonials(filterByUser); // Refresh to get updated counts
       return true;
     } catch (error) {
       console.error('Error liking testimonial:', error);
@@ -329,8 +394,10 @@ export const useGroupTestimonials = (groupId: string) => {
     testimonials,
     loading,
     addTestimonial,
+    updateTestimonial,
+    deleteTestimonial,
     likeTestimonial,
-    refetch: fetchTestimonials
+    refetch: (userFilter: boolean = filterByUser) => fetchTestimonials(userFilter)
   };
 };
 
