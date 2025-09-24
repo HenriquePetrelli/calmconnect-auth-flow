@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -55,6 +55,12 @@ const JournalEntryModal = ({
           <DialogTitle>
             {editingEntry ? 'Editar Entrada' : 'Nova Entrada do Diário'}
           </DialogTitle>
+          <DialogDescription>
+            {editingEntry 
+              ? 'Modifique o texto e humor da sua entrada do diário.' 
+              : 'Crie uma nova entrada no seu diário pessoal.'
+            }
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
