@@ -40,6 +40,7 @@ import Chat from "./pages/Chat";
 import ConsultationCall from "./pages/ConsultationCall";
 import SupportGroups from "./pages/SupportGroups";
 import SupportGroupDetail from "./pages/SupportGroupDetail";
+import PrivateJournal from "./pages/PrivateJournal";
 
 import NotFound from "./pages/NotFound";
 
@@ -107,6 +108,11 @@ const App = () => {
                   <Route path="/support-group/:groupId" element={
                     <RouteGuard allowedUserTypes={['patient']}>
                       <SupportGroupDetail />
+                    </RouteGuard>
+                  } />
+                  <Route path="/journal" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <PrivateJournal />
                     </RouteGuard>
                   } />
                   <Route path="/sounds" element={

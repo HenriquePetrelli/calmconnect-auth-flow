@@ -596,6 +596,33 @@ export type Database = {
           },
         ]
       }
+      private_journals: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          humor: number
+          id: string
+          texto: string
+          user_id: string
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          humor: number
+          id?: string
+          texto: string
+          user_id: string
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          humor?: number
+          id?: string
+          texto?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           cpf: string | null
