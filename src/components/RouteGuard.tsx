@@ -38,7 +38,8 @@ export const ROUTE_PERMISSIONS = {
     '/chat', // chat disponível para pacientes
     '/emergency-call', // paciente e psicólogo podem acessar
     '/emergency-call/', // rotas com parâmetros
-    '/emergency/call' // rota legacy para psicólogo
+    '/emergency/call', // rota legacy para psicólogo
+    '/paciente/suporte' // suporte para pacientes
   ],
   psychologist: [
     '/psychologist-dashboard',
@@ -47,7 +48,8 @@ export const ROUTE_PERMISSIONS = {
     '/emergency-call', // psicólogo pode atender chamada
     '/emergency-call/', // rotas com parâmetros
     '/emergency/call', // rota legacy
-    '/emergency/call/' // rotas com parâmetros legacy
+    '/emergency/call/', // rotas com parâmetros legacy
+    '/psicologo/suporte' // suporte para psicólogos
   ],
   admin: [
     '/admin-dashboard'
