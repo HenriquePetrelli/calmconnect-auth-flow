@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { JournalEntry } from '@/hooks/usePrivateJournal';
-import { Loader2 } from 'lucide-react';
 
 const moodEmojis = ['😞', '😔', '😐', '🙂', '😊', '😄'];
 const moodLabels = ['Muito triste', 'Triste', 'Neutro', 'Bem', 'Feliz', 'Muito feliz'];
@@ -12,110 +11,100 @@ const moodLabels = ['Muito triste', 'Triste', 'Neutro', 'Bem', 'Feliz', 'Muito f
 interface JournalEntryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (texto: string, humor: number) => Promise<boolean>;
-  entry?: JournalEntry | null;
+  onSave: (texto: string, humor: number) => void;
+  editingEntry?: JournalEntry | null;
+  loading?: boolean;
 }
 
-const JournalEntryModal = ({ isOpen, onClose, onSave, entry }: JournalEntryModalProps) => {
+const JournalEntryModal = ({ 
+  isOpen, 
+  onClose, 
+  onSave, 
+  editingEntry, 
+  loading = false 
+}: JournalEntryModalProps) => {
   const [texto, setTexto] = useState('');
-  const [humor, setHumor] = useState(2);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const isEditing = !!entry;
+  const [humor, setHumor] = useState(2); // Neutro como padrão
 
   useEffect(() => {
-    if (entry) {
-      setTexto(entry.texto);
-      setHumor(entry.humor);
+    if (editingEntry) {
+      setTexto(editingEntry.texto);
+      setHumor(editingEntry.humor);
     } else {
       setTexto('');
       setHumor(2);
     }
-  }, [entry, isOpen]);
+  }, [editingEntry]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!texto.trim()) {
-      return;
-    }
-
-    setIsSubmitting(true);
-    const success = await onSave(texto.trim(), humor);
-    
-    if (success) {
-      onClose();
-    }
-    
-    setIsSubmitting(false);
+  const handleSave = () => {
+    if (!texto.trim()) return;
+    onSave(texto.trim(), humor);
+    handleClose();
   };
 
   const handleClose = () => {
-    if (!isSubmitting) {
-      onClose();
-    }
+    setTexto('');
+    setHumor(2);
+    onClose();
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>
-            {isEditing ? 'Editar Entrada' : 'Nova Entrada do Diário'}
+            {editingEntry ? 'Editar Entrada' : 'Nova Entrada do Diário'}
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-4 py-4">
+          {/* Campo de texto */}
           <div className="space-y-2">
-            <Label htmlFor="mood">Como você está se sentindo?</Label>
+            <Label htmlFor="texto">Como você está se sentindo?</Label>
+            <Textarea
+              id="texto"
+              placeholder="Escreva seus pensamentos e sentimentos..."
+              value={texto}
+              onChange={(e) => setTexto(e.target.value)}
+              className="min-h-[120px] resize-none"
+              maxLength={1000}
+            />
+            <div className="text-xs text-muted-foreground text-right">
+              {texto.length}/1000 caracteres
+            </div>
+          </div>
+
+          {/* Seletor de humor */}
+          <div className="space-y-2">
+            <Label>Como está seu humor?</Label>
             <div className="grid grid-cols-3 gap-2">
               {moodEmojis.map((emoji, index) => (
                 <Button
                   key={index}
                   type="button"
                   variant={humor === index ? "default" : "outline"}
-                  className="h-auto p-3 flex flex-col items-center gap-1"
                   onClick={() => setHumor(index)}
+                  className="flex flex-col items-center gap-1 h-auto py-3"
                 >
-                  <span className="text-lg">{emoji}</span>
-                  <span className="text-xs text-center leading-tight">
-                    {moodLabels[index]}
-                  </span>
+                  <span className="text-2xl">{emoji}</span>
+                  <span className="text-xs">{moodLabels[index]}</span>
                 </Button>
               ))}
             </div>
           </div>
+        </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="text">Escreva seus pensamentos</Label>
-            <Textarea
-              id="text"
-              value={texto}
-              onChange={(e) => setTexto(e.target.value)}
-              placeholder="Conte como foi seu dia, seus sentimentos, pensamentos..."
-              className="min-h-[120px] resize-none"
-              disabled={isSubmitting}
-            />
-          </div>
-
-          <div className="flex gap-2 justify-end">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              disabled={isSubmitting}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              disabled={!texto.trim() || isSubmitting}
-            >
-              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isEditing ? 'Atualizar' : 'Salvar'}
-            </Button>
-          </div>
-        </form>
+        <DialogFooter>
+          <Button variant="outline" onClick={handleClose} disabled={loading}>
+            Cancelar
+          </Button>
+          <Button 
+            onClick={handleSave} 
+            disabled={!texto.trim() || loading}
+          >
+            {loading ? 'Salvando...' : 'Salvar'}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

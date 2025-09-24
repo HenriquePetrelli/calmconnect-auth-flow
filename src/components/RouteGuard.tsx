@@ -20,6 +20,7 @@ export const ROUTE_PERMISSIONS = {
     '/home',
     '/support-groups',
     '/support-group/:groupId',
+    '/journal',
     '/sounds',
     '/sounds/category',
     '/sounds/subcategory', 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -13,19 +13,19 @@ export interface JournalEntry {
 
 export const usePrivateJournal = () => {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const fetchEntries = async (moodFilter?: number) => {
+  const fetchEntries = useCallback(async (humorFilter?: number) => {
+    setLoading(true);
     try {
-      setLoading(true);
       let query = supabase
         .from('private_journals')
         .select('*')
         .order('criado_em', { ascending: false });
 
-      if (moodFilter !== undefined) {
-        query = query.eq('humor', moodFilter);
+      if (humorFilter !== undefined) {
+        query = query.eq('humor', humorFilter);
       }
 
       const { data, error } = await query;
@@ -33,76 +33,86 @@ export const usePrivateJournal = () => {
       if (error) throw error;
 
       setEntries(data || []);
-    } catch (error: any) {
+    } catch (error) {
+      console.error('Erro ao buscar entradas do diário:', error);
       toast({
-        title: "Erro ao carregar entradas",
-        description: error.message,
-        variant: "destructive",
+        title: 'Erro',
+        description: 'Não foi possível carregar as entradas do diário.',
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
-  const addEntry = async (texto: string, humor: number): Promise<boolean> => {
+  const createEntry = useCallback(async (texto: string, humor: number) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuário não autenticado');
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('private_journals')
         .insert({
           user_id: user.id,
           texto,
-          humor
-        });
+          humor,
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
+      setEntries(prev => [data, ...prev]);
       toast({
-        title: "Entrada criada",
-        description: "Sua entrada foi salva no diário.",
+        title: 'Sucesso',
+        description: 'Entrada criada com sucesso!',
       });
 
-      fetchEntries(); // Reload entries
-      return true;
-    } catch (error: any) {
+      return data;
+    } catch (error) {
+      console.error('Erro ao criar entrada:', error);
       toast({
-        title: "Erro ao criar entrada",
-        description: error.message,
-        variant: "destructive",
+        title: 'Erro',
+        description: 'Não foi possível criar a entrada.',
+        variant: 'destructive',
       });
-      return false;
+      throw error;
     }
-  };
+  }, [toast]);
 
-  const updateEntry = async (id: string, texto: string, humor: number): Promise<boolean> => {
+  const updateEntry = useCallback(async (id: string, texto: string, humor: number) => {
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('private_journals')
         .update({ texto, humor })
-        .eq('id', id);
+        .eq('id', id)
+        .select()
+        .single();
 
       if (error) throw error;
 
+      setEntries(prev => prev.map(entry => 
+        entry.id === id ? data : entry
+      ));
+
       toast({
-        title: "Entrada atualizada",
-        description: "Sua entrada foi atualizada com sucesso.",
+        title: 'Sucesso',
+        description: 'Entrada atualizada com sucesso!',
       });
 
-      fetchEntries(); // Reload entries
-      return true;
-    } catch (error: any) {
+      return data;
+    } catch (error) {
+      console.error('Erro ao atualizar entrada:', error);
       toast({
-        title: "Erro ao atualizar entrada",
-        description: error.message,
-        variant: "destructive",
+        title: 'Erro',
+        description: 'Não foi possível atualizar a entrada.',
+        variant: 'destructive',
       });
-      return false;
+      throw error;
     }
-  };
+  }, [toast]);
 
-  const deleteEntry = async (id: string): Promise<boolean> => {
+  const deleteEntry = useCallback(async (id: string) => {
     try {
       const { error } = await supabase
         .from('private_journals')
@@ -111,33 +121,28 @@ export const usePrivateJournal = () => {
 
       if (error) throw error;
 
+      setEntries(prev => prev.filter(entry => entry.id !== id));
       toast({
-        title: "Entrada excluída",
-        description: "Sua entrada foi removida do diário.",
+        title: 'Sucesso',
+        description: 'Entrada excluída com sucesso!',
       });
-
-      fetchEntries(); // Reload entries
-      return true;
-    } catch (error: any) {
+    } catch (error) {
+      console.error('Erro ao excluir entrada:', error);
       toast({
-        title: "Erro ao excluir entrada",
-        description: error.message,
-        variant: "destructive",
+        title: 'Erro',
+        description: 'Não foi possível excluir a entrada.',
+        variant: 'destructive',
       });
-      return false;
+      throw error;
     }
-  };
-
-  useEffect(() => {
-    fetchEntries();
-  }, []);
+  }, [toast]);
 
   return {
     entries,
     loading,
     fetchEntries,
-    addEntry,
+    createEntry,
     updateEntry,
-    deleteEntry
+    deleteEntry,
   };
 };
