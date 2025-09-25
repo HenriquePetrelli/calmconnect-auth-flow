@@ -74,9 +74,10 @@ const Appointments = () => {
                 size="lg"
                 onClick={handleScheduleClick}
                 disabled={subscriptionTier !== 'Premium'}
-              >
-                <Plus size={20} />
-                Agendar Nova Consulta
+              >    
+                 <Plus className="w-4 h-4 mr-2" />
+                  Agendar Nova Consulta
+                  {!isPremiumUser && <Crown className="w-4 h-4 ml-2" />}
               </Button>
               {subscriptionTier !== 'Premium' && (
                 <Badge className="bg-premium-primary text-white px-2 py-1 text-xs flex items-center gap-1">
