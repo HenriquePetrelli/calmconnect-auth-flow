@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import FeatureCard from "@/components/FeatureCard";
+import ModernFeatureCard from "@/components/ModernFeatureCard";
 import SOSButton from "@/components/SOSButton";
 import { NotificationButton } from "@/components/notifications/NotificationButton";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -302,7 +302,7 @@ const HomePage = () => {
           </h2>
           
           <div className="grid grid-cols-1 gap-4">
-            <FeatureCard
+            <ModernFeatureCard
               icon={<Calendar className="w-8 h-8" />}
               title="Consultas"
               description="Agende e gerencie suas consultas"
@@ -311,7 +311,7 @@ const HomePage = () => {
               className="animate-fade-in [animation-delay:100ms]"
             />
 
-             <FeatureCard
+             <ModernFeatureCard
               icon={<MessageCircle className="w-8 h-8" />}
               title="Chat com Psicólogos"
               description="Converse por texto com profissionais capacitados"
@@ -329,7 +329,7 @@ const HomePage = () => {
           </h2>
           
           <div className="grid grid-cols-1 gap-4">
-            <FeatureCard
+            <ModernFeatureCard
               icon={<Users className="w-8 h-8" />}
               title="Grupos de Apoio"
               description="Participe de grupos com pessoas que compartilham experiências similares"
@@ -338,7 +338,7 @@ const HomePage = () => {
               className="animate-fade-in [animation-delay:200ms]"
             />
             
-            <FeatureCard
+            <ModernFeatureCard
               icon={<Waves className="w-8 h-8" />}
               title="Respiração Guiada"
               description="Exercícios de respiração para acalmar a mente e reduzir a ansiedade"
@@ -347,7 +347,7 @@ const HomePage = () => {
               className="animate-fade-in"
             />
             
-            <FeatureCard
+            <ModernFeatureCard
               icon={<Brain className="w-8 h-8" />}
               title="Sons Relaxantes"
               description="Biblioteca de sons da natureza e músicas calmantes"
@@ -365,7 +365,7 @@ const HomePage = () => {
           </h2>
           
           <div className="grid grid-cols-1 gap-4">
-            <FeatureCard
+            <ModernFeatureCard
               icon={<TrendingUp className="w-8 h-8" />}
               title="Minha Evolução"
               description="Acompanhe seu progresso e métricas de bem-estar"
@@ -374,7 +374,7 @@ const HomePage = () => {
               className="animate-fade-in"
             />
 
-            <FeatureCard
+            <ModernFeatureCard
               icon={<Lock className="w-8 h-8" />}
               title="Meu Diário"
               description="Escreva seus pensamentos em um ambiente seguro e privado"

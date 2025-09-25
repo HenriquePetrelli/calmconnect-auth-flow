@@ -53,18 +53,19 @@ const SOSButton = () => {
 
   return (
     <>
-      <div className="fixed bottom-20 right-6 z-50 flex items-center gap-2">
+      <div className="fixed bottom-20 right-6 z-50 flex items-center gap-3">
         <Button
           onClick={handleButtonClick}
           disabled={!canUse || loading}
-          className="w-12 h-12 rounded-full bg-destructive hover:bg-destructive/90 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+          className="w-16 h-16 rounded-full bg-destructive hover:bg-destructive/90 shadow-xl disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-300 hover:scale-105 animate-pulse-gentle"
           aria-label="Botão SOS - Emergência"
         >
-          <Hand className="w-12 h-12 text-white" strokeWidth={3} />
+          <Hand className="w-8 h-8 text-white" strokeWidth={2.5} />
         </Button>
-         {!canUse && (
-          <Badge className="bg-premium-primary text-white px-2 py-1 text-xs flex items-center gap-1">
-            <Crown className="w-3 h-3" />
+        {!canUse && (
+          <Badge className="bg-premium-primary text-premium-primary border-premium-primary/20 shadow-premium px-3 py-1.5 text-xs flex items-center gap-1.5 animate-scale-in">
+            <Crown className="w-3.5 h-3.5" />
+            <span className="font-medium">Premium</span>
           </Badge>
         )}
       </div>
