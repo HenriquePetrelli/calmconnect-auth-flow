@@ -173,7 +173,7 @@ const HomePage = () => {
           {/* Greeting */}
           <div className="flex-1">
             <h1 className="text-xl font-bold text-foreground">
-              {getGreeting()}, {firstName}! 👋
+              {getGreeting()}, {firstName}!
             </h1>
             <p className="text-sm text-muted-foreground">
               Como você está se sentindo hoje?
@@ -303,21 +303,21 @@ const HomePage = () => {
           
           <div className="grid grid-cols-1 gap-4">
             <FeatureCard
-              icon={<MessageCircle className="w-8 h-8" />}
-              title="Chat com Psicólogos"
-              description="Converse por texto com profissionais capacitados"
-              variant="default"
-              onClick={() => navigate('/chat')}
-              className="animate-fade-in"
-            />
-
-            <FeatureCard
               icon={<Calendar className="w-8 h-8" />}
               title="Consultas"
               description="Agende e gerencie suas consultas"
               variant="default"
               onClick={() => navigate('/appointments')}
               className="animate-fade-in [animation-delay:100ms]"
+            />
+
+             <FeatureCard
+              icon={<MessageCircle className="w-8 h-8" />}
+              title="Chat com Psicólogos"
+              description="Converse por texto com profissionais capacitados"
+              variant="default"
+              onClick={() => navigate('/chat')}
+              className="animate-fade-in"
             />
           </div>
         </div>
@@ -329,6 +329,15 @@ const HomePage = () => {
           </h2>
           
           <div className="grid grid-cols-1 gap-4">
+            <FeatureCard
+              icon={<Users className="w-8 h-8" />}
+              title="Grupos de Apoio"
+              description="Participe de grupos com pessoas que compartilham experiências similares"
+              variant="default"
+              onClick={() => navigate('/support-groups')}
+              className="animate-fade-in [animation-delay:200ms]"
+            />
+            
             <FeatureCard
               icon={<Waves className="w-8 h-8" />}
               title="Respiração Guiada"
@@ -345,15 +354,6 @@ const HomePage = () => {
               variant="sounds"
               onClick={() => navigate('/sounds')}
               className="animate-fade-in [animation-delay:100ms]"
-            />
-
-            <FeatureCard
-              icon={<Users className="w-8 h-8" />}
-              title="Grupos de Apoio"
-              description="Participe de grupos com pessoas que compartilham experiências similares"
-              variant="default"
-              onClick={() => navigate('/support-groups')}
-              className="animate-fade-in [animation-delay:200ms]"
             />
           </div>
         </div>
