@@ -294,13 +294,40 @@ const HomePage = () => {
       )}
 
       {/* Main Features */}
-      <div className="p-4 space-y-4 pb-24">
+      <div className="p-4 space-y-6 pb-24">
+        {/* Apoio Profissional */}
         <div className="space-y-3">
           <h2 className="text-lg font-semibold text-foreground">
-            Ferramentas de Bem-estar
+            Apoio Profissional
           </h2>
           
-          {/* Primary Features Grid */}
+          <div className="grid grid-cols-1 gap-4">
+            <FeatureCard
+              icon={<MessageCircle className="w-8 h-8" />}
+              title="Chat com Psicólogos"
+              description="Converse por texto com profissionais capacitados"
+              variant="default"
+              onClick={() => navigate('/chat')}
+              className="animate-fade-in"
+            />
+
+            <FeatureCard
+              icon={<Calendar className="w-8 h-8" />}
+              title="Consultas"
+              description="Agende e gerencie suas consultas"
+              variant="default"
+              onClick={() => navigate('/appointments')}
+              className="animate-fade-in [animation-delay:100ms]"
+            />
+          </div>
+        </div>
+
+        {/* Autocuidado */}
+        <div className="space-y-3">
+          <h2 className="text-lg font-semibold text-foreground">
+            Autocuidado
+          </h2>
+          
           <div className="grid grid-cols-1 gap-4">
             <FeatureCard
               icon={<Waves className="w-8 h-8" />}
@@ -319,10 +346,25 @@ const HomePage = () => {
               onClick={() => navigate('/sounds')}
               className="animate-fade-in [animation-delay:100ms]"
             />
-          </div>
 
-          {/* Secondary Features Grid */}
-          <div className="grid grid-cols-1 gap-4 mt-4">
+            <FeatureCard
+              icon={<Users className="w-8 h-8" />}
+              title="Grupos de Apoio"
+              description="Participe de grupos com pessoas que compartilham experiências similares"
+              variant="default"
+              onClick={() => navigate('/support-groups')}
+              className="animate-fade-in [animation-delay:200ms]"
+            />
+          </div>
+        </div>
+
+        {/* Minha Jornada */}
+        <div className="space-y-3">
+          <h2 className="text-lg font-semibold text-foreground">
+            Minha Jornada
+          </h2>
+          
+          <div className="grid grid-cols-1 gap-4">
             <FeatureCard
               icon={<TrendingUp className="w-8 h-8" />}
               title="Minha Evolução"
@@ -334,37 +376,7 @@ const HomePage = () => {
                   Novo
                 </Badge>
               }
-              className="animate-fade-in [animation-delay:200ms]"
-            />
-
-            <FeatureCard
-              icon={<MessageCircle className="w-8 h-8" />}
-              title="Chat com Psicólogos"
-              description="Converse por texto com profissionais capacitados"
-              variant="default"
-              onClick={() => navigate('/chat')}
-              className="animate-fade-in [animation-delay:300ms]"
-            />
-
-            <FeatureCard
-              icon={<Calendar className="w-8 h-8" />}
-              title="Consultas"
-              description="Agende e gerencie suas consultas"
-              variant="default"
-              onClick={() => navigate('/appointments')}
-              className="animate-fade-in [animation-delay:400ms]"
-            />
-          </div>
-
-          {/* Community Features - Available for All */}
-          <div className="grid grid-cols-1 gap-4 mt-4">
-            <FeatureCard
-              icon={<Users className="w-8 h-8" />}
-              title="Grupos de Apoio"
-              description="Participe de grupos com pessoas que compartilham experiências similares"
-              variant="default"
-              onClick={() => navigate('/support-groups')}
-              className="animate-fade-in [animation-delay:500ms]"
+              className="animate-fade-in"
             />
 
             <FeatureCard
@@ -373,33 +385,9 @@ const HomePage = () => {
               description="Escreva seus pensamentos em um ambiente seguro e privado"
               variant="default"
               onClick={() => navigate('/journal')}
-              className="animate-fade-in [animation-delay:600ms]"
+              className="animate-fade-in [animation-delay:100ms]"
             />
           </div>
-
-          {/* Call to Subscribe */}
-          {!subscribed && (
-            <div className="mt-6">
-              <Card className="bg-gradient-to-r from-premium-primary/10 to-premium-secondary/10 border-premium-primary/30">
-                <CardContent className="p-6 text-center">
-                  <Crown className="w-12 h-12 mx-auto text-premium-primary mb-4" />
-                  <h3 className="text-lg font-semibold text-foreground mb-2">
-                    Desbloqueie Todo o Potencial
-                  </h3>
-                  <p className="text-muted-foreground text-sm mb-4">
-                    Acesse recursos premium, grupos de apoio e suporte prioritário
-                  </p>
-                  <Button
-                    onClick={() => navigate('/subscription-plans')}
-                    className="bg-premium-primary hover:bg-premium-primary/90 text-white"
-                  >
-                    <Crown className="w-4 h-4 mr-2" />
-                    Ver Planos Premium
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          )}
         </div>
       </div>
 

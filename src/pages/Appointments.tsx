@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Plus, Crown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -67,14 +68,23 @@ const Appointments = () => {
         {/* Schedule New Appointment */}
         <Card>
           <CardContent className="p-6">
-            <Button 
-              className="w-full flex items-center gap-2" 
-              size="lg"
-              onClick={handleScheduleClick}
-            >
-              <Plus size={20} />
-              Agendar Nova Consulta
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                className="flex-1 flex items-center gap-2" 
+                size="lg"
+                onClick={handleScheduleClick}
+                disabled={subscriptionTier !== 'Premium'}
+              >
+                <Plus size={20} />
+                Agendar Nova Consulta
+              </Button>
+              {subscriptionTier !== 'Premium' && (
+                <Badge className="bg-premium-primary text-white px-2 py-1 text-xs flex items-center gap-1">
+                  <Crown className="w-3 h-3" />
+                  Premium
+                </Badge>
+              )}
+            </div>
           </CardContent>
         </Card>
 

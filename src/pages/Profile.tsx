@@ -203,16 +203,14 @@ const Profile = () => {
               Alterar Dados da Conta
             </Button>
             
-            {(subscribed && (subscriptionTier === 'Plus' || subscriptionTier === 'Premium')) && (
-              <Button 
-                variant="outline" 
-                className="w-full justify-start" 
-                onClick={() => navigate('/paciente/suporte')}
-              >
-                <MessageCircle size={16} className="mr-2" />
-                Suporte
-              </Button>
-            )}
+            <Button 
+              variant="outline" 
+              className="w-full justify-start" 
+              onClick={() => navigate('/support')}
+            >
+              <MessageCircle size={16} className="mr-2" />
+              Suporte
+            </Button>
             
             <Button 
               variant="destructive" 

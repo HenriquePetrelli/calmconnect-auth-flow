@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Hand } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Hand, Crown } from "lucide-react";
 import ConfirmationModal from "./sos/ConfirmationModal";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -58,14 +59,20 @@ const SOSButton = () => {
 
   return (
     <>
-      <div className="fixed bottom-20 right-6 z-50">
+      <div className="fixed bottom-20 right-6 z-50 flex items-center gap-2">
+        {!canUse && (
+          <Badge className="bg-premium-primary text-white px-2 py-1 text-xs flex items-center gap-1">
+            <Crown className="w-3 h-3" />
+            Premium
+          </Badge>
+        )}
         <Button
           onClick={handleButtonClick}
           disabled={!canUse || loading}
-          className="w-16 h-16 rounded-full bg-destructive hover:bg-destructive/90 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+          className="w-20 h-20 rounded-full bg-destructive hover:bg-destructive/90 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
           aria-label="Botão SOS - Emergência"
         >
-          <Hand className="w-8 h-8 text-white" />
+          <Hand className="w-10 h-10 text-white" strokeWidth={2.5} />
         </Button>
       </div>
 
