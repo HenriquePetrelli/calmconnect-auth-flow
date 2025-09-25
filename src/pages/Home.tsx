@@ -314,15 +314,6 @@ const HomePage = () => {
               onClick={() => navigate('/chat')}
               className="animate-fade-in [animation-delay:200ms]"
             />
-
-            <ModernFeatureCard
-              icon={<Users2 className="w-8 h-8" />}
-              title="Grupos de Apoio"
-              description="Participe de grupos com experiências similares"
-              variant="professional"
-              onClick={() => navigate('/support-groups')}
-              className="animate-fade-in [animation-delay:300ms]"
-            />
           </div>
         </div>
 
@@ -336,6 +327,15 @@ const HomePage = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <ModernFeatureCard
+              icon={<Users2 className="w-8 h-8" />}
+              title="Grupos de Apoio"
+              description="Participe de grupos com experiências similares"
+              variant="professional"
+              onClick={() => navigate('/support-groups')}
+              className="animate-fade-in [animation-delay:300ms]"
+            />
+            
             <ModernFeatureCard
               icon={<Activity className="w-8 h-8" />}
               title="Respiração Guiada"
