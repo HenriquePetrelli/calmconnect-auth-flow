@@ -14,22 +14,20 @@ export const NotificationButton: React.FC = () => {
   };
 
   return (
-    <div className="fixed top-4 right-4 z-50">
-      <Button
-        size="sm"
-        variant="outline"
-        className="relative bg-background shadow-lg border-border hover:bg-accent"
-        onClick={handleClick}
-      >
-        <Bell size={18} />
-        {unreadCount > 0 && (
-          <Badge 
-            className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground min-w-[20px] h-5 flex items-center justify-center text-xs"
-          >
-            {unreadCount > 99 ? '99+' : unreadCount}
-          </Badge>
-        )}
-      </Button>
-    </div>
+    <Button
+      size="sm"
+      variant="ghost"
+      className="relative rounded-full hover:bg-accent/50 transition-all duration-200 hover:scale-105"
+      onClick={handleClick}
+    >
+      <Bell size={20} className="text-muted-foreground hover:text-foreground transition-colors" />
+      {unreadCount > 0 && (
+        <Badge 
+          className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground min-w-[18px] h-[18px] text-xs px-1 animate-pulse"
+        >
+          {unreadCount > 99 ? '99+' : unreadCount}
+        </Badge>
+      )}
+    </Button>
   );
 };

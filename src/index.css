@@ -80,12 +80,16 @@
     --gradient-card: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(220 67% 98%) 100%);
     
     /* Feature-specific gradients */
+    --gradient-professional: linear-gradient(135deg, hsl(var(--professional-primary)), hsl(var(--professional-secondary)));
     --gradient-breathing: linear-gradient(135deg, hsl(200 100% 70%) 0%, hsl(280 100% 70%) 100%);
     --gradient-sounds: linear-gradient(135deg, hsl(160 100% 50%) 0%, hsl(220 100% 60%) 100%);
     --gradient-evolution: linear-gradient(135deg, hsl(45 100% 60%) 0%, hsl(25 100% 60%) 100%);
     --gradient-sos: linear-gradient(135deg, hsl(0 65% 63%) 0%, hsl(15 72% 51%) 100%);
 
     /* Feature Colors */
+    --professional-primary: 99 102 241; /* Indigo 500 */
+    --professional-secondary: 139 92 246; /* Violet 500 */
+    
     --breathing-primary: 200 100% 70%;
     --breathing-secondary: 280 100% 70%;
     --breathing-inhale: 200 100% 65%;
@@ -99,6 +103,12 @@
 
     --evolution-primary: 45 100% 60%;
     --evolution-secondary: 25 100% 60%;
+    
+    --journey-primary: 168 85 247; /* Purple 500 */
+    --journey-secondary: 217 70 239; /* Fuchsia 500 */
+    
+    --selfcare-primary: 34 197 94; /* Green 500 */
+    --selfcare-secondary: 59 130 246; /* Blue 500 */
 
     --sos-primary: 0 65% 63%;
     --sos-secondary: 15 72% 51%;
@@ -110,9 +120,16 @@
     --shadow-md: 0 4px 6px -1px hsl(215 25% 27% / 0.1), 0 2px 4px -2px hsl(215 25% 27% / 0.1);
     --shadow-lg: 0 10px 15px -3px hsl(215 25% 27% / 0.1), 0 4px 6px -4px hsl(215 25% 27% / 0.1);
     --shadow-xl: 0 20px 25px -5px hsl(215 25% 27% / 0.1), 0 8px 10px -6px hsl(215 25% 27% / 0.1);
-    --shadow-primary: 0 10px 30px -10px hsl(215 80% 58% / 0.3);
-    --shadow-success: 0 10px 30px -10px hsl(145 63% 42% / 0.3);
-    --shadow-premium: 0 10px 30px -10px hsl(45 93% 63% / 0.4);
+    --shadow-primary: 0 10px 25px -5px hsl(var(--primary) / 0.15);
+    --shadow-secondary: 0 10px 25px -5px hsl(var(--secondary) / 0.15);
+    --shadow-success: 0 10px 25px -5px hsl(var(--success) / 0.15);
+    --shadow-warning: 0 10px 25px -5px hsl(var(--warning) / 0.15);
+    --shadow-destructive: 0 10px 25px -5px hsl(var(--destructive) / 0.15);
+    --shadow-premium: 0 10px 25px -5px hsl(var(--premium-primary) / 0.2);
+    --shadow-professional: 0 10px 25px -5px hsl(var(--professional-primary) / 0.2);
+    --shadow-breathing: 0 10px 25px -5px hsl(var(--breathing-primary) / 0.2);
+    --shadow-sounds: 0 10px 25px -5px hsl(var(--sounds-primary) / 0.2);
+    --shadow-evolution: 0 10px 25px -5px hsl(var(--evolution-primary) / 0.2);
 
     /* Border Radius */
     --radius: 0.75rem;
@@ -188,6 +205,9 @@
     --gradient-sos: linear-gradient(135deg, hsl(0 65% 63%) 0%, hsl(15 72% 51%) 100%);
 
     /* Enhanced feature colors for dark mode */
+    --professional-primary: 99 102 241; /* Indigo 500 - same for dark */
+    --professional-secondary: 139 92 246; /* Violet 500 - same for dark */
+    
     --breathing-primary: 200 100% 75%;
     --breathing-secondary: 280 100% 75%;
     --sounds-primary: 160 100% 55%;
@@ -203,9 +223,16 @@
     --shadow-md: 0 4px 6px -1px hsl(220 27% 5% / 0.5), 0 2px 4px -2px hsl(220 27% 5% / 0.5);
     --shadow-lg: 0 10px 15px -3px hsl(220 27% 5% / 0.6), 0 4px 6px -4px hsl(220 27% 5% / 0.6);
     --shadow-xl: 0 20px 25px -5px hsl(220 27% 5% / 0.7), 0 8px 10px -6px hsl(220 27% 5% / 0.7);
-    --shadow-primary: 0 10px 30px -10px hsl(215 85% 65% / 0.4);
-    --shadow-success: 0 10px 30px -10px hsl(145 70% 45% / 0.4);
-    --shadow-premium: 0 10px 30px -10px hsl(45 93% 70% / 0.5);
+    --shadow-primary: 0 10px 25px -5px hsl(var(--primary) / 0.25);
+    --shadow-secondary: 0 10px 25px -5px hsl(var(--secondary) / 0.25);
+    --shadow-success: 0 10px 25px -5px hsl(var(--success) / 0.25);
+    --shadow-warning: 0 10px 25px -5px hsl(var(--warning) / 0.25);
+    --shadow-destructive: 0 10px 25px -5px hsl(var(--destructive) / 0.25);
+    --shadow-premium: 0 10px 25px -5px hsl(var(--premium-primary) / 0.3);
+    --shadow-professional: 0 10px 25px -5px hsl(var(--professional-primary) / 0.3);
+    --shadow-breathing: 0 10px 25px -5px hsl(var(--breathing-primary) / 0.3);
+    --shadow-sounds: 0 10px 25px -5px hsl(var(--sounds-primary) / 0.3);
+    --shadow-evolution: 0 10px 25px -5px hsl(var(--evolution-primary) / 0.3);
     
     /* Dark sidebar */
     --sidebar-background: 220 27% 11%;
@@ -318,6 +345,10 @@
     background: var(--gradient-card);
   }
 
+  .bg-gradient-professional {
+    background: var(--gradient-professional);
+  }
+
   .bg-gradient-breathing {
     background: var(--gradient-breathing);
   }
@@ -339,12 +370,32 @@
     box-shadow: var(--shadow-primary);
   }
 
+  .shadow-secondary {
+    box-shadow: var(--shadow-secondary);
+  }
+
   .shadow-success {
     box-shadow: var(--shadow-success);
   }
   
   .shadow-premium {
     box-shadow: var(--shadow-premium);
+  }
+
+  .shadow-professional {
+    box-shadow: var(--shadow-professional);
+  }
+
+  .shadow-breathing {
+    box-shadow: var(--shadow-breathing);
+  }
+
+  .shadow-sounds {
+    box-shadow: var(--shadow-sounds);
+  }
+
+  .shadow-evolution {
+    box-shadow: var(--shadow-evolution);
   }
 
   /* Glass morphism effects */

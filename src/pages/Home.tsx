@@ -1,4 +1,4 @@
-import { Waves, Brain, TrendingUp, Crown, Phone, Bell, User, Calendar, Settings, Users, Lock, MessageCircle, Video } from "lucide-react";
+import { Waves, BarChart3, Crown, Phone, Bell, User, Calendar, Settings, Users2, BookOpen, MessageCircle, Video, Headphones, Activity } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -181,17 +181,9 @@ const HomePage = () => {
           </div>
 
           {/* Header Actions */}
-          <div className="flex items-center gap-2">
-            <NotificationButton />
+          <div className="flex items-center gap-3">
             <ThemeToggle />
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate('/profile')}
-              className="rounded-full"
-            >
-              <User className="h-5 w-5" />
-            </Button>
+            <NotificationButton />
           </div>
         </div>
       </div>
@@ -296,91 +288,100 @@ const HomePage = () => {
       {/* Main Features */}
       <div className="p-4 space-y-6 pb-24">
         {/* Apoio Profissional */}
-        <div className="space-y-3">
-          <h2 className="text-lg font-semibold text-foreground">
-            Apoio Profissional
-          </h2>
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="w-1 h-6 bg-gradient-to-b from-professional-primary to-professional-secondary rounded-full"></div>
+            <h2 className="text-lg font-semibold text-foreground">
+              Apoio Profissional
+            </h2>
+          </div>
           
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             <ModernFeatureCard
               icon={<Calendar className="w-8 h-8" />}
               title="Consultas"
-              description="Agende e gerencie suas consultas"
-              variant="default"
+              description="Agende e gerencie suas consultas profissionais"
+              variant="professional"
               onClick={() => navigate('/appointments')}
               className="animate-fade-in [animation-delay:100ms]"
             />
 
-             <ModernFeatureCard
+            <ModernFeatureCard
               icon={<MessageCircle className="w-8 h-8" />}
               title="Chat com Psicólogos"
               description="Converse por texto com profissionais capacitados"
-              variant="default"
+              variant="professional"
               onClick={() => navigate('/chat')}
-              className="animate-fade-in"
+              className="animate-fade-in [animation-delay:200ms]"
+            />
+
+            <ModernFeatureCard
+              icon={<Users2 className="w-8 h-8" />}
+              title="Grupos de Apoio"
+              description="Participe de grupos com experiências similares"
+              variant="professional"
+              onClick={() => navigate('/support-groups')}
+              className="animate-fade-in [animation-delay:300ms]"
             />
           </div>
         </div>
 
         {/* Autocuidado */}
-        <div className="space-y-3">
-          <h2 className="text-lg font-semibold text-foreground">
-            Autocuidado
-          </h2>
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="w-1 h-6 bg-gradient-to-b from-selfcare-primary to-selfcare-secondary rounded-full"></div>
+            <h2 className="text-lg font-semibold text-foreground">
+              Autocuidado
+            </h2>
+          </div>
           
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <ModernFeatureCard
-              icon={<Users className="w-8 h-8" />}
-              title="Grupos de Apoio"
-              description="Participe de grupos com pessoas que compartilham experiências similares"
-              variant="default"
-              onClick={() => navigate('/support-groups')}
-              className="animate-fade-in [animation-delay:200ms]"
-            />
-            
-            <ModernFeatureCard
-              icon={<Waves className="w-8 h-8" />}
+              icon={<Activity className="w-8 h-8" />}
               title="Respiração Guiada"
-              description="Exercícios de respiração para acalmar a mente e reduzir a ansiedade"
+              description="Exercícios de respiração para acalmar a mente"
               variant="breathing"
               onClick={() => navigate('/breathing')}
-              className="animate-fade-in"
+              className="animate-fade-in [animation-delay:100ms]"
             />
             
             <ModernFeatureCard
-              icon={<Brain className="w-8 h-8" />}
+              icon={<Headphones className="w-8 h-8" />}
               title="Sons Relaxantes"
               description="Biblioteca de sons da natureza e músicas calmantes"
               variant="sounds"
               onClick={() => navigate('/sounds')}
-              className="animate-fade-in [animation-delay:100ms]"
+              className="animate-fade-in [animation-delay:200ms]"
             />
           </div>
         </div>
 
         {/* Minha Jornada */}
-        <div className="space-y-3">
-          <h2 className="text-lg font-semibold text-foreground">
-            Minha Jornada
-          </h2>
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="w-1 h-6 bg-gradient-to-b from-journey-primary to-journey-secondary rounded-full"></div>
+            <h2 className="text-lg font-semibold text-foreground">
+              Minha Jornada
+            </h2>
+          </div>
           
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <ModernFeatureCard
-              icon={<TrendingUp className="w-8 h-8" />}
+              icon={<BarChart3 className="w-8 h-8" />}
               title="Minha Evolução"
               description="Acompanhe seu progresso e métricas de bem-estar"
               variant="evolution"
               onClick={() => navigate('/statistics')}
-              className="animate-fade-in"
+              className="animate-fade-in [animation-delay:100ms]"
             />
 
             <ModernFeatureCard
-              icon={<Lock className="w-8 h-8" />}
+              icon={<BookOpen className="w-8 h-8" />}
               title="Meu Diário"
-              description="Escreva seus pensamentos em um ambiente seguro e privado"
-              variant="default"
+              description="Escreva seus pensamentos em um ambiente seguro"
+              variant="evolution"
               onClick={() => navigate('/journal')}
-              className="animate-fade-in [animation-delay:100ms]"
+              className="animate-fade-in [animation-delay:200ms]"
             />
           </div>
         </div>

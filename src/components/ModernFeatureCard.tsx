@@ -13,7 +13,7 @@ interface ModernFeatureCardProps {
   isPremium?: boolean;
   showPremiumBadge?: boolean;
   onClick?: () => void;
-  variant?: 'breathing' | 'sounds' | 'evolution' | 'default';
+  variant?: 'breathing' | 'sounds' | 'evolution' | 'professional' | 'default';
 }
 
 const ModernFeatureCard = ({ 
@@ -34,9 +34,10 @@ const ModernFeatureCard = ({
     }
     
     const variants = {
-      breathing: "bg-gradient-to-br from-breathing-primary/5 to-breathing-secondary/10 border-breathing-primary/20 hover:border-breathing-primary/40 hover:shadow-primary",
-      sounds: "bg-gradient-to-br from-sounds-primary/5 to-sounds-secondary/10 border-sounds-primary/20 hover:border-sounds-primary/40 hover:from-sounds-primary/10",
-      evolution: "bg-gradient-to-br from-evolution-primary/5 to-evolution-secondary/10 border-evolution-primary/20 hover:border-evolution-primary/40 hover:from-evolution-primary/10",
+      breathing: "bg-gradient-to-br from-breathing-primary/8 to-breathing-secondary/12 border-breathing-primary/25 hover:border-breathing-primary/50 hover:shadow-breathing hover:from-breathing-primary/12",
+      sounds: "bg-gradient-to-br from-sounds-primary/8 to-sounds-secondary/12 border-sounds-primary/25 hover:border-sounds-primary/50 hover:shadow-sounds hover:from-sounds-primary/12",
+      evolution: "bg-gradient-to-br from-evolution-primary/8 to-evolution-secondary/12 border-evolution-primary/25 hover:border-evolution-primary/50 hover:shadow-evolution hover:from-evolution-primary/12",
+      professional: "bg-gradient-to-br from-professional-primary/8 to-professional-secondary/12 border-professional-primary/25 hover:border-professional-primary/50 hover:shadow-professional hover:from-professional-primary/12",
       default: "bg-gradient-card border-border/50 hover:border-primary/30 hover:shadow-md"
     };
     
@@ -52,14 +53,15 @@ const ModernFeatureCard = ({
     }
     
     const iconVariants = {
-      breathing: "bg-gradient-breathing text-white shadow-primary/20",
-      sounds: "bg-gradient-sounds text-white shadow-success/20",
-      evolution: "bg-gradient-evolution text-white shadow-premium/20", 
+      breathing: "bg-gradient-breathing text-white shadow-breathing/25",
+      sounds: "bg-gradient-sounds text-white shadow-sounds/25",
+      evolution: "bg-gradient-evolution text-white shadow-evolution/25",
+      professional: "bg-gradient-professional text-white shadow-professional/25",
       default: "bg-gradient-primary text-white shadow-primary/20"
     };
     
     return cn(
-      "w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-110",
+      "w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-110 group-hover:scale-115",
       iconVariants[variant]
     );
   };
@@ -73,7 +75,7 @@ const ModernFeatureCard = ({
     <div className="relative">
       <Card 
         className={cn(
-          "rounded-2xl border shadow-sm transition-all duration-200",
+          "rounded-2xl border shadow-sm transition-all duration-300 group",
           getVariantStyles(),
           className
         )}
