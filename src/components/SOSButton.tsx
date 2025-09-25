@@ -26,20 +26,14 @@ const SOSButton = () => {
       return;
     }
     setCanUse(Boolean(data?.can_use_sos));
-    if (data && data.can_use_sos === false && data.reason) {
-      toast({ title: "Aviso", description: data.reason });
-    }
+    // Remove toast notification for subscription check
   };
 
   const handleButtonClick = async () => {
     const { data } = await supabase.functions.invoke('check-subscription');
     const allowed = Boolean(data?.can_use_sos);
     if (!allowed) {
-      toast({
-        title: "Limite atingido",
-        description: data?.reason || "Seu plano não permite SOS.",
-        variant: "destructive",
-      });
+      // Just prevent action, no toast notification
       return;
     }
     setShowModal(true);
@@ -69,10 +63,10 @@ const SOSButton = () => {
         <Button
           onClick={handleButtonClick}
           disabled={!canUse || loading}
-          className="w-20 h-20 rounded-full bg-destructive hover:bg-destructive/90 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+          className="w-24 h-24 rounded-full bg-destructive hover:bg-destructive/90 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
           aria-label="Botão SOS - Emergência"
         >
-          <Hand className="w-10 h-10 text-white" strokeWidth={2.5} />
+          <Hand className="w-12 h-12 text-white" strokeWidth={3} />
         </Button>
       </div>
 

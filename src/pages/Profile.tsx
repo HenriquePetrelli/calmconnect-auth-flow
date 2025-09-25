@@ -206,7 +206,7 @@ const Profile = () => {
             <Button 
               variant="outline" 
               className="w-full justify-start" 
-              onClick={() => navigate('/support')}
+              onClick={() => navigate('/paciente/suporte')}
             >
               <MessageCircle size={16} className="mr-2" />
               Suporte
