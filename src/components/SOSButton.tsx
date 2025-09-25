@@ -65,7 +65,6 @@ const SOSButton = () => {
          {!canUse && (
           <Badge className="bg-premium-primary text-white px-2 py-1 text-xs flex items-center gap-1">
             <Crown className="w-3 h-3" />
-            Premium
           </Badge>
         )}
       </div>
