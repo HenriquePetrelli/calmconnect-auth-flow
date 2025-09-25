@@ -60,14 +60,14 @@ const SOSButton = () => {
           className="w-12 h-12 rounded-full bg-destructive hover:bg-destructive/90 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
           aria-label="Botão SOS - Emergência"
         >
-           {!canUse && (
+          <Hand className="w-12 h-12 text-white" strokeWidth={3} />
+        </Button>
+         {!canUse && (
           <Badge className="bg-premium-primary text-white px-2 py-1 text-xs flex items-center gap-1">
             <Crown className="w-3 h-3" />
             Premium
           </Badge>
         )}
-          <Hand className="w-12 h-12 text-white" strokeWidth={3} />
-        </Button>
       </div>
 
       <ConfirmationModal
