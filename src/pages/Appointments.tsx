@@ -69,7 +69,7 @@ const Appointments = () => {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-2">
-              <Button 
+                <Button 
                 className="flex-1 flex items-center gap-2" 
                 size="lg"
                 onClick={handleScheduleClick}
@@ -77,7 +77,7 @@ const Appointments = () => {
               >    
                  <Plus className="w-4 h-4 mr-2" />
                   Agendar Nova Consulta
-                  {!isPremiumUser && <Crown className="w-4 h-4 ml-2" />}
+                  {subscriptionTier !== 'Premium' && <Crown className="w-4 h-4 ml-2" />}
               </Button>
               {subscriptionTier !== 'Premium' && (
                 <Badge className="bg-premium-primary text-white px-2 py-1 text-xs flex items-center gap-1">
