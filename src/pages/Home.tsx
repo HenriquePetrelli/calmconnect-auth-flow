@@ -371,11 +371,6 @@ const HomePage = () => {
               description="Acompanhe seu progresso e métricas de bem-estar"
               variant="evolution"
               onClick={() => navigate('/statistics')}
-              badge={
-                <Badge className="bg-evolution-primary text-white text-xs px-2 py-1">
-                  Novo
-                </Badge>
-              }
               className="animate-fade-in"
             />
 
