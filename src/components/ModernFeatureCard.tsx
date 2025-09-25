@@ -28,21 +28,21 @@ const ModernFeatureCard = ({
   variant = 'default'
 }: ModernFeatureCardProps) => {
   
-  const getVariantStyles = () => {
+const getVariantStyles = () => {
     if (disabled || (isPremium && showPremiumBadge)) {
       return "opacity-60 cursor-not-allowed bg-muted/30";
     }
     
     const variants = {
-      breathing: "bg-gradient-to-br from-breathing-primary/8 to-breathing-secondary/12 border-breathing-primary/25 hover:border-breathing-primary/50 hover:shadow-breathing hover:from-breathing-primary/12",
-      sounds: "bg-gradient-to-br from-sounds-primary/8 to-sounds-secondary/12 border-sounds-primary/25 hover:border-sounds-primary/50 hover:shadow-sounds hover:from-sounds-primary/12",
-      evolution: "bg-gradient-to-br from-evolution-primary/8 to-evolution-secondary/12 border-evolution-primary/25 hover:border-evolution-primary/50 hover:shadow-evolution hover:from-evolution-primary/12",
-      professional: "bg-gradient-to-br from-professional-primary/8 to-professional-secondary/12 border-professional-primary/25 hover:border-professional-primary/50 hover:shadow-professional hover:from-professional-primary/12",
-      default: "bg-gradient-card border-border/50 hover:border-primary/30 hover:shadow-md"
+      breathing: "bg-card border-l-4 border-l-breathing-primary shadow-sm hover:shadow-md hover:border-l-breathing-primary/80",
+      sounds: "bg-card border-l-4 border-l-sounds-primary shadow-sm hover:shadow-md hover:border-l-sounds-primary/80",
+      evolution: "bg-card border-l-4 border-l-evolution-primary shadow-sm hover:shadow-md hover:border-l-evolution-primary/80",
+      professional: "bg-card border-l-4 border-l-professional-primary shadow-sm hover:shadow-md hover:border-l-professional-primary/80",
+      default: "bg-card border-l-4 border-l-border shadow-sm hover:shadow-md hover:border-l-primary/80"
     };
     
     return cn(
-      "cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 tap-scale",
+      "cursor-pointer transition-all duration-300 hover:scale-[1.01] hover:-translate-y-0.5",
       variants[variant]
     );
   };
@@ -53,15 +53,15 @@ const ModernFeatureCard = ({
     }
     
     const iconVariants = {
-      breathing: "bg-gradient-breathing text-white shadow-breathing/25",
-      sounds: "bg-gradient-sounds text-white shadow-sounds/25",
-      evolution: "bg-gradient-evolution text-white shadow-evolution/25",
-      professional: "bg-gradient-professional text-white shadow-professional/25",
-      default: "bg-gradient-primary text-white shadow-primary/20"
+      breathing: "bg-breathing-primary text-white",
+      sounds: "bg-sounds-primary text-white",
+      evolution: "bg-evolution-primary text-white",
+      professional: "bg-professional-primary text-white",
+      default: "bg-primary text-white"
     };
     
     return cn(
-      "w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-110 group-hover:scale-115",
+      "w-14 h-14 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-105",
       iconVariants[variant]
     );
   };

@@ -34,7 +34,7 @@ const BottomNavigation = () => {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-card/90 backdrop-blur-lg border-t border-border/30 shadow-xl safe-area-pb">
+    <div className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border/20 shadow-sm safe-area-pb">
       <div className="flex items-center justify-around max-w-md mx-auto px-2 py-3">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -44,22 +44,16 @@ const BottomNavigation = () => {
               variant="ghost"
               size="sm"
               onClick={() => navigate(item.path)}
-              className={`flex-col h-auto py-3 px-4 rounded-2xl transition-all duration-300 hover-lift ${
+              className={`flex-col h-auto py-3 px-4 rounded-xl transition-all duration-200 ${
                 item.isActive
-                  ? "bg-gradient-primary text-white shadow-primary scale-105"
-                  : "text-muted-foreground hover:text-foreground hover:bg-accent/30 hover:scale-105"
+                  ? "bg-primary text-white scale-100"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/30 hover:scale-105"
               }`}
             >
-              <div className={`w-7 h-7 rounded-xl flex items-center justify-center mb-1.5 transition-all duration-300 ${
-                item.isActive 
-                  ? "bg-white/20 shadow-lg" 
-                  : "group-hover:bg-accent/20"
-              }`}>
-                <Icon className={`w-5 h-5 ${item.isActive ? 'drop-shadow-sm' : ''}`} />
+              <div className={`w-6 h-6 flex items-center justify-center mb-1.5 transition-all duration-200`}>
+                <Icon className={`w-5 h-5 ${item.isActive ? '' : 'opacity-70'}`} />
               </div>
-              <span className={`text-xs font-semibold tracking-wide ${
-                item.isActive ? 'drop-shadow-sm' : ''
-              }`}>
+              <span className={`text-xs font-medium tracking-wide transition-all duration-200`}>
                 {item.label}
               </span>
             </Button>
