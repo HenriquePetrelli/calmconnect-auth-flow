@@ -24,7 +24,7 @@ export const NotificationButton: React.FC = () => {
         <Bell size={18} />
         {unreadCount > 0 && (
           <Badge 
-            className="absolute -top-2 -right-2 text-destructive-foreground min-w-[20px] h-5 flex items-center justify-center text-xs"
+            className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground min-w-[20px] h-5 flex items-center justify-center text-xs"
           >
             {unreadCount > 99 ? '99+' : unreadCount}
           </Badge>
