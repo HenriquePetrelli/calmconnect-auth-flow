@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 
 export interface SupportGroup {
   id: string;
@@ -162,6 +163,7 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
   const [testimonials, setTestimonials] = useState<GroupTestimonial[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { subscribed, subscriptionTier } = useSubscription();
 
   const fetchTestimonials = async (userFilter: boolean = filterByUser) => {
     if (!groupId) return;
@@ -239,6 +241,16 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
     texto: string;
   }) => {
     try {
+      // Check subscription for premium features
+      if (!subscribed || (subscriptionTier !== 'Plus' && subscriptionTier !== 'Premium')) {
+        toast({
+          title: 'Funcionalidade Premium',
+          description: 'Essa funcionalidade está disponível apenas para usuários Premium ou Plus.',
+          variant: 'destructive',
+        });
+        return false;
+      }
+
       const user = (await supabase.auth.getUser()).data.user;
       if (!user) throw new Error('Usuário não autenticado');
 
@@ -335,6 +347,16 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
 
   const likeTestimonial = async (testimonialId: string, tipo: 'positivo' | 'negativo' | 'none') => {
     try {
+      // Check subscription for premium features
+      if (!subscribed || (subscriptionTier !== 'Plus' && subscriptionTier !== 'Premium')) {
+        toast({
+          title: 'Funcionalidade Premium',
+          description: 'Essa funcionalidade está disponível apenas para usuários Premium ou Plus.',
+          variant: 'destructive',
+        });
+        return false;
+      }
+
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) return false;
 

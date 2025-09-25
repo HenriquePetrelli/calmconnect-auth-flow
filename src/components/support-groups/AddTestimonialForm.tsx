@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { useGroupTestimonials, useGroupSymptoms } from '@/hooks/useSupportGroups';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import { Loader2 } from 'lucide-react';
 
 const moodEmojis = ['😞', '😔', '😐', '🙂', '😊', '😄'];
@@ -26,12 +27,18 @@ const AddTestimonialForm = ({ groupId, groupName, onSuccess }: AddTestimonialFor
 
   const { addTestimonial } = useGroupTestimonials(groupId);
   const { symptoms, symptomId } = useGroupSymptoms(groupName);
+  const { subscribed, subscriptionTier } = useSubscription();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!text.trim()) {
       return;
+    }
+
+    // Check subscription (additional frontend check)
+    if (!subscribed || (subscriptionTier !== 'Plus' && subscriptionTier !== 'Premium')) {
+      return; // This should not happen as the modal should be blocked already
     }
 
     setIsSubmitting(true);

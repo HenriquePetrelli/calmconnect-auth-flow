@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Info, Plus, User, ThumbsUp, ThumbsDown, Edit, Trash2, Filter } from 'lucide-react';
+import { Info, Plus, User, ThumbsUp, ThumbsDown, Edit, Trash2, Filter, Crown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useGroupTestimonials, useGroupSymptoms } from '@/hooks/useSupportGroups';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -15,6 +15,8 @@ import BottomNavigation from '@/components/BottomNavigation';
 import BackButton from '@/components/BackButton';
 import AddTestimonialForm from '@/components/support-groups/AddTestimonialForm';
 import EditTestimonialForm from '@/components/support-groups/EditTestimonialForm';
+import SubscriptionUpgradeModal from '@/components/SubscriptionUpgradeModal';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 
 const moodEmojis = ['😞', '😔', '😐', '🙂', '😊', '😄'];
 const moodLabels = ['Muito triste', 'Triste', 'Neutro', 'Bem', 'Feliz', 'Muito feliz'];
@@ -42,13 +44,14 @@ interface TestimonialCardProps {
   };
   symptomName?: string;
   onLike: (testimonialId: string, tipo: 'positivo' | 'negativo' | 'none') => void;
+  isPremiumUser?: boolean;
   onEdit: (testimonial: any) => void;
   onDelete: (testimonialId: string) => void;
   currentUserId?: string;
   groupName: string;
 }
 
-const TestimonialCard = ({ testimonial, symptomName, onLike, onEdit, onDelete, currentUserId, groupName }: TestimonialCardProps) => {
+const TestimonialCard = ({ testimonial, symptomName, onLike, onEdit, onDelete, currentUserId, groupName, isPremiumUser = false }: TestimonialCardProps) => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR', {
       day: '2-digit',
@@ -176,28 +179,32 @@ const TestimonialCard = ({ testimonial, symptomName, onLike, onEdit, onDelete, c
                 variant={userLikeType === 'positivo' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => onLike(testimonial.id, userLikeType === 'positivo' ? 'none' : 'positivo')}
+                disabled={!isPremiumUser}
                 className={`flex items-center gap-2 h-9 px-4 transition-all ${
                   userLikeType === 'positivo' 
                     ? 'bg-green-600 hover:bg-green-700 text-white border-green-600' 
                     : 'text-muted-foreground hover:text-green-600 hover:border-green-600'
-                }`}
+                } ${!isPremiumUser ? 'opacity-60' : ''}`}
               >
                 <ThumbsUp className="w-4 h-4" />
                 <span>{userLikeType === 'positivo' ? 'Curtido' : 'Curtir'}</span>
+                {!isPremiumUser && <Crown className="w-3 h-3 ml-1" />}
               </Button>
               
               <Button
                 variant={userLikeType === 'negativo' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => onLike(testimonial.id, userLikeType === 'negativo' ? 'none' : 'negativo')}
+                disabled={!isPremiumUser}
                 className={`flex items-center gap-2 h-9 px-4 transition-all ${
                   userLikeType === 'negativo' 
                     ? 'bg-red-600 hover:bg-red-700 text-white border-red-600' 
                     : 'text-muted-foreground hover:text-red-600 hover:border-red-600'
-                }`}
+                } ${!isPremiumUser ? 'opacity-60' : ''}`}
               >
                 <ThumbsDown className="w-4 h-4" />
                 <span>{userLikeType === 'negativo' ? 'Não curtido' : 'Não curtir'}</span>
+                {!isPremiumUser && <Crown className="w-3 h-3 ml-1" />}
               </Button>
             </div>
           )}
@@ -217,6 +224,10 @@ const SupportGroupDetail = () => {
   const [editingTestimonial, setEditingTestimonial] = useState<any>(null);
   const [currentUserId, setCurrentUserId] = useState<string | undefined>();
   const [filter, setFilter] = useState<'all' | 'mine'>('all');
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeModalFeature, setUpgradeModalFeature] = useState('');
+  
+  const { subscribed, subscriptionTier } = useSubscription();
   
   const groupName = location.state?.groupName || 'Grupo de Apoio';
   const { testimonials, loading: testimonialsLoading, likeTestimonial, updateTestimonial, deleteTestimonial, refetch } = useGroupTestimonials(groupId || '', filter === 'mine');
@@ -263,6 +274,26 @@ const SupportGroupDetail = () => {
     setFilter(newFilter);
     refetch(newFilter === 'mine');
   };
+
+  const handleAddTestimonialClick = () => {
+    if (!subscribed || (subscriptionTier !== 'Plus' && subscriptionTier !== 'Premium')) {
+      setUpgradeModalFeature('Criar Depoimento');
+      setShowUpgradeModal(true);
+      return;
+    }
+    setShowAddTestimonial(true);
+  };
+
+  const handleLikeClick = (testimonialId: string, tipo: 'positivo' | 'negativo' | 'none') => {
+    if (!subscribed || (subscriptionTier !== 'Plus' && subscriptionTier !== 'Premium')) {
+      setUpgradeModalFeature('Avaliar Depoimentos');
+      setShowUpgradeModal(true);
+      return;
+    }
+    likeTestimonial(testimonialId, tipo);
+  };
+
+  const isPremiumUser = subscribed && (subscriptionTier === 'Plus' || subscriptionTier === 'Premium');
 
   return (
     <div className="min-h-screen bg-background">
@@ -336,9 +367,14 @@ const SupportGroupDetail = () => {
             {/* Add Testimonial Button */}
             <Dialog open={showAddTestimonial} onOpenChange={setShowAddTestimonial}>
               <DialogTrigger asChild>
-                <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                <Button 
+                  onClick={handleAddTestimonialClick}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                  disabled={!isPremiumUser}
+                >
                   <Plus className="w-4 h-4 mr-2" />
                   Adicionar Depoimento
+                  {!isPremiumUser && <Crown className="w-4 h-4 ml-2" />}
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-lg">
@@ -415,11 +451,13 @@ const SupportGroupDetail = () => {
                     }
                   </p>
                   <Button 
-                    onClick={() => setShowAddTestimonial(true)}
+                    onClick={handleAddTestimonialClick}
                     className="bg-primary hover:bg-primary/90"
+                    disabled={!isPremiumUser}
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     {filter === 'mine' ? 'Adicionar Meu Primeiro Depoimento' : 'Adicionar Primeiro Depoimento'}
+                    {!isPremiumUser && <Crown className="w-4 h-4 ml-2" />}
                   </Button>
                 </CardContent>
               </Card>
@@ -431,15 +469,23 @@ const SupportGroupDetail = () => {
                   symptomName={
                     testimonial.transtornos_sintomas?.sintomas?.[0] || undefined
                   }
-                  onLike={likeTestimonial}
+                  onLike={handleLikeClick}
                   onEdit={handleEditTestimonial}
                   onDelete={handleDeleteTestimonial}
                   currentUserId={currentUserId}
                   groupName={groupName}
+                  isPremiumUser={isPremiumUser}
                 />
               ))
             )}
           </div>
+
+          {/* Subscription Upgrade Modal */}
+          <SubscriptionUpgradeModal
+            isOpen={showUpgradeModal}
+            onClose={() => setShowUpgradeModal(false)}
+            feature={upgradeModalFeature}
+          />
         </div>
       </div>
       <BottomNavigation />

@@ -50,6 +50,26 @@ export const usePrivateJournal = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuário não autenticado');
 
+      // Check daily limit (2 entries per day)
+      const today = new Date().toISOString().split('T')[0];
+      const { data: todayEntries, error: countError } = await supabase
+        .from('private_journals')
+        .select('id')
+        .eq('user_id', user.id)
+        .gte('criado_em', `${today}T00:00:00.000Z`)
+        .lt('criado_em', `${today}T23:59:59.999Z`);
+
+      if (countError) throw countError;
+
+      if (todayEntries && todayEntries.length >= 2) {
+        toast({
+          title: 'Limite diário atingido',
+          description: 'Limite diário de 2 entradas atingido. Tente novamente amanhã.',
+          variant: 'destructive',
+        });
+        throw new Error('Limite diário atingido');
+      }
+
       const { data, error } = await supabase
         .from('private_journals')
         .insert({
