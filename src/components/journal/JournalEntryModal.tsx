@@ -53,12 +53,12 @@ const JournalEntryModal = ({
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>
-            {editingEntry ? 'Editar Entrada' : 'Nova Entrada do Diário'}
+            {editingEntry ? 'Editar Anotação' : 'Nova Anotação do Diário'}
           </DialogTitle>
           <DialogDescription>
             {editingEntry 
-              ? 'Modifique o texto e humor da sua entrada do diário.' 
-              : 'Crie uma nova entrada no seu diário pessoal.'
+              ? 'Modifique o texto e humor da sua anotação do diário.' 
+              : 'Crie uma nova anotação no seu diário pessoal.'
             }
           </DialogDescription>
         </DialogHeader>

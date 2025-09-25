@@ -356,40 +356,26 @@ const HomePage = () => {
             />
           </div>
 
-          {/* Subscription Features */}
-          {subscribed && (
-            <div className="mt-6 space-y-3">
-              <div className="flex items-center gap-2">
-                <Crown className="w-5 h-5 text-premium" />
-                <h3 className="text-md font-semibold text-foreground">
-                  Recursos Premium
-                </h3>
-                <Badge variant="secondary" className="text-xs">
-                  {subscriptionTier === 'premium' ? 'Premium' : 'Plus'}
-                </Badge>
-              </div>
-              
-              <div className="grid grid-cols-1 gap-4">
-                <FeatureCard
-                  icon={<Users className="w-8 h-8" />}
-                  title="Grupos de Apoio"
-                  description="Participe de grupos com pessoas que compartilham experiências similares"
-                  variant="default"
-                  onClick={() => navigate('/support-groups')}
-                  className="animate-fade-in [animation-delay:500ms]"
-                />
+          {/* Community Features - Available for All */}
+          <div className="grid grid-cols-1 gap-4 mt-4">
+            <FeatureCard
+              icon={<Users className="w-8 h-8" />}
+              title="Grupos de Apoio"
+              description="Participe de grupos com pessoas que compartilham experiências similares"
+              variant="default"
+              onClick={() => navigate('/support-groups')}
+              className="animate-fade-in [animation-delay:500ms]"
+            />
 
-                <FeatureCard
-                  icon={<Lock className="w-8 h-8" />}
-                  title="Diário Privado"
-                  description="Escreva seus pensamentos em um ambiente seguro e criptografado"
-                  variant="default"
-                  onClick={() => navigate('/journal')}
-                  className="animate-fade-in [animation-delay:600ms]"
-                />
-              </div>
-            </div>
-          )}
+            <FeatureCard
+              icon={<Lock className="w-8 h-8" />}
+              title="Meu Diário"
+              description="Escreva seus pensamentos em um ambiente seguro e privado"
+              variant="default"
+              onClick={() => navigate('/journal')}
+              className="animate-fade-in [animation-delay:600ms]"
+            />
+          </div>
 
           {/* Call to Subscribe */}
           {!subscribed && (

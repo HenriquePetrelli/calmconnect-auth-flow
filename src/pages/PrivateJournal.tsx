@@ -107,14 +107,14 @@ const PrivateJournal = () => {
             <h2 className="text-lg font-medium mb-2">Seu diário está vazio</h2>
             <p className="text-muted-foreground mb-6">
               {selectedMood !== null 
-                ? 'Não há entradas com esse humor.' 
-                : 'Comece escrevendo sua primeira entrada!'
+                ? 'Não há anotações com esse humor.' 
+                : 'Comece escrevendo sua primeira anotação!'
               }
             </p>
             {selectedMood === null && (
               <Button onClick={handleCreateEntry}>
                 <Plus className="h-4 w-4 mr-2" />
-                Criar Primeira Entrada
+                Criar Primeira Anotação
               </Button>
             )}
           </div>
@@ -132,7 +132,7 @@ const PrivateJournal = () => {
         )}
       </div>
 
-      {/* Modal de entrada */}
+      {/* Modal de anotação */}
       <JournalEntryModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -145,9 +145,9 @@ const PrivateJournal = () => {
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir Entrada</AlertDialogTitle>
+            <AlertDialogTitle>Excluir Anotação</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza de que deseja excluir esta entrada? Esta ação não pode ser desfeita.
+              Tem certeza de que deseja excluir esta anotação? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -37,7 +37,7 @@ export const usePrivateJournal = () => {
       console.error('Erro ao buscar entradas do diário:', error);
       toast({
         title: 'Erro',
-        description: 'Não foi possível carregar as entradas do diário.',
+        description: 'Não foi possível carregar as anotações do diário.',
         variant: 'destructive',
       });
     } finally {
@@ -64,7 +64,7 @@ export const usePrivateJournal = () => {
       if (todayEntries && todayEntries.length >= 2) {
         toast({
           title: 'Limite diário atingido',
-          description: 'Limite diário de 2 entradas atingido. Tente novamente amanhã.',
+          description: 'Limite diário de 2 anotações atingido. Tente novamente amanhã.',
           variant: 'destructive',
         });
         throw new Error('Limite diário atingido');
@@ -85,7 +85,7 @@ export const usePrivateJournal = () => {
       setEntries(prev => [data, ...prev]);
       toast({
         title: 'Sucesso',
-        description: 'Entrada criada com sucesso!',
+        description: 'Anotação criada com sucesso!',
       });
 
       return data;
@@ -93,7 +93,7 @@ export const usePrivateJournal = () => {
       console.error('Erro ao criar entrada:', error);
       toast({
         title: 'Erro',
-        description: 'Não foi possível criar a entrada.',
+        description: 'Não foi possível criar a anotação.',
         variant: 'destructive',
       });
       throw error;
@@ -117,7 +117,7 @@ export const usePrivateJournal = () => {
 
       toast({
         title: 'Sucesso',
-        description: 'Entrada atualizada com sucesso!',
+        description: 'Anotação atualizada com sucesso!',
       });
 
       return data;
@@ -125,7 +125,7 @@ export const usePrivateJournal = () => {
       console.error('Erro ao atualizar entrada:', error);
       toast({
         title: 'Erro',
-        description: 'Não foi possível atualizar a entrada.',
+        description: 'Não foi possível atualizar a anotação.',
         variant: 'destructive',
       });
       throw error;
@@ -144,13 +144,13 @@ export const usePrivateJournal = () => {
       setEntries(prev => prev.filter(entry => entry.id !== id));
       toast({
         title: 'Sucesso',
-        description: 'Entrada excluída com sucesso!',
+        description: 'Anotação excluída com sucesso!',
       });
     } catch (error) {
       console.error('Erro ao excluir entrada:', error);
       toast({
         title: 'Erro',
-        description: 'Não foi possível excluir a entrada.',
+        description: 'Não foi possível excluir a anotação.',
         variant: 'destructive',
       });
       throw error;
