@@ -233,8 +233,6 @@ const HomePage = () => {
               </div>
             </section>
 
-            {/* Acesso Rápido - Refined */}
-           
           </div>
         </main>
       </div>
