@@ -38,15 +38,15 @@ export const AppointmentHistory = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
-        return 'bg-green-100 text-green-800';
+        return 'bg-success/10 text-success border-success/20';
       case 'scheduled':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-primary/10 text-primary border-primary/20';
       case 'cancelled':
-        return 'bg-red-100 text-red-800';
+        return 'bg-destructive/10 text-destructive border-destructive/20';
       case 'declined':
-        return 'bg-red-100 text-red-800';
+        return 'bg-destructive/10 text-destructive border-destructive/20';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-muted text-muted-foreground border-border';
     }
   };
 
@@ -95,21 +95,29 @@ export const AppointmentHistory = () => {
 
   return (
     <>
-      <Card>
-        <CardHeader>
+      <Card className="border-l-4 border-l-muted-foreground/30">
+        <CardHeader className="bg-gradient-to-r from-muted/30 to-transparent">
           <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Histórico de Consultas
+            <CardTitle className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-muted-foreground/10 rounded-full flex items-center justify-center">
+                <Calendar className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-foreground">Histórico de Consultas</h3>
+                <p className="text-sm text-muted-foreground font-normal">Consultas realizadas e canceladas</p>
+              </div>
             </CardTitle>
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4" />
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Filter className="h-4 w-4" />
+                <span className="text-xs font-medium">Filtros:</span>
+              </div>
               <Select value={filterPsychologist} onValueChange={setFilterPsychologist}>
-                <SelectTrigger className="w-40">
+                <SelectTrigger className="w-44 h-9">
                   <SelectValue placeholder="Filtrar por psicólogo" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="all">Todos os psicólogos</SelectItem>
                   {psychologists.map((psy) => (
                     <SelectItem key={psy.user_id} value={psy.full_name}>
                       {psy.full_name}
@@ -119,15 +127,17 @@ export const AppointmentHistory = () => {
               </Select>
               
               <Select value={filterMonth} onValueChange={setFilterMonth}>
-                <SelectTrigger className="w-32">
-                  <SelectValue placeholder="Mês" />
+                <SelectTrigger className="w-36 h-9">
+                  <SelectValue placeholder="Selecionar mês" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="2024-01">Jan 2024</SelectItem>
-                  <SelectItem value="2024-02">Fev 2024</SelectItem>
-                  <SelectItem value="2024-03">Mar 2024</SelectItem>
-                  {/* Add more months as needed */}
+                  <SelectItem value="all">Todos os meses</SelectItem>
+                  <SelectItem value="2024-01">Janeiro 2024</SelectItem>
+                  <SelectItem value="2024-02">Fevereiro 2024</SelectItem>
+                  <SelectItem value="2024-03">Março 2024</SelectItem>
+                  <SelectItem value="2024-04">Abril 2024</SelectItem>
+                  <SelectItem value="2024-05">Maio 2024</SelectItem>
+                  <SelectItem value="2024-06">Junho 2024</SelectItem>
                 </SelectContent>
               </Select>
             </div>

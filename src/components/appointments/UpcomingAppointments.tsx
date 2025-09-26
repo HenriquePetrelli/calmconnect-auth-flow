@@ -57,14 +57,19 @@ export const UpcomingAppointments: React.FC = () => {
 
   return (
     <>
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="text-primary" size={20} />
-            Próximas Consultas
+      <Card className="border-l-4 border-l-primary">
+        <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">
+          <CardTitle className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
+              <Calendar className="text-primary" size={18} />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-foreground">Próximas Consultas</h3>
+              <p className="text-sm text-muted-foreground font-normal">Suas consultas agendadas</p>
+            </div>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <AppointmentsList
             appointments={upcomingAppointments}
             showStatus={true}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Crown, LogOut, Settings, User as UserIcon, MessageCircle } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useNavigate } from "react-router-dom";
@@ -139,68 +140,86 @@ const Profile = () => {
       {/* Content */}
       <div className="p-4 space-y-6 pb-24">
         {/* User Info */}
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
-                <UserIcon className="text-primary" size={32} />
+        <Card className="overflow-hidden">
+          <div className="bg-gradient-to-r from-primary/10 to-primary/5 p-6">
+            <div className="flex items-center gap-6">
+              <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center border-4 border-primary/30 shadow-lg">
+                <UserIcon className="text-primary" size={36} />
               </div>
               <div className="flex-1">
-                <h2 className="text-xl font-semibold text-foreground">
+                <h2 className="text-2xl font-bold text-foreground mb-1">
                   {user?.profile?.full_name || 'Usuário'}
                 </h2>
-                <p className="text-muted-foreground">{user?.email}</p>
+                <p className="text-muted-foreground text-base">{user?.email}</p>
+                <div className="mt-2">
+                  <Badge variant="outline" className="text-xs">
+                    {subscribed ? `Plano ${subscriptionTier}` : 'Plano Grátis'}
+                  </Badge>
+                </div>
               </div>
             </div>
-          </CardContent>
+          </div>
         </Card>
 
         {/* Current Plan */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Crown className="text-primary" size={20} />
-              Plano Atual
+        <Card className="border-2 border-primary/20 shadow-lg">
+          <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 pb-4">
+            <CardTitle className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-premium-primary/20 rounded-full flex items-center justify-center">
+                <Crown className="text-premium-primary" size={24} />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-foreground">Plano Atual</h3>
+                <p className="text-sm text-muted-foreground font-normal">Gerencie sua assinatura</p>
+              </div>
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="font-semibold text-foreground">{planInfo.name}</div>
-                {planInfo.features.map((feature, index) => (
-                  <div key={index} className="text-sm text-muted-foreground">
-                    {feature}
-                  </div>
-                ))}
+          <CardContent className="pt-6 space-y-6">
+            <div className="flex items-start justify-between">
+              <div className="space-y-3">
+                <div className="font-bold text-lg text-foreground">{planInfo.name}</div>
+                <div className="space-y-2">
+                  {planInfo.features.map((feature, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
+                      <span className="text-sm text-muted-foreground">{feature.replace('• ', '')}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="text-right">
-                <div className="text-2xl font-bold text-foreground">{planInfo.price}</div>
+              <div className="text-right bg-primary/5 p-4 rounded-lg">
+                <div className="text-3xl font-bold text-primary">{planInfo.price}</div>
                 <div className="text-sm text-muted-foreground">/mês</div>
               </div>
             </div>
             
-            {!subscribed ? (
-              <Button className="w-full" onClick={handleManageSubscription}>
-                <Crown size={16} className="mr-2" />
-                Fazer Upgrade
-              </Button>
-            ) : (
-              <Button className="w-full" onClick={handleManageSubscription}>
-                Gerenciar Assinatura
-              </Button>
-            )}
+            <div className="border-t pt-4">
+              {!subscribed ? (
+                <Button className="w-full h-12 text-base font-semibold transition-all duration-200 hover:scale-105" onClick={handleManageSubscription}>
+                  <Crown size={18} className="mr-2" />
+                  Fazer Upgrade
+                </Button>
+              ) : (
+                <Button variant="outline" className="w-full h-12 text-base font-semibold" onClick={handleManageSubscription}>
+                  Gerenciar Assinatura
+                </Button>
+              )}
+            </div>
           </CardContent>
         </Card>
 
         {/* Settings */}
         <Card>
           <CardHeader>
-            <CardTitle>Configurações</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Settings size={20} className="text-primary" />
+              Configurações
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <div className="text-base font-medium">Tema</div>
+          <CardContent className="space-y-6">
+            <div className="flex items-center justify-between p-4 rounded-lg border bg-gradient-to-r from-muted/30 to-transparent">
+              <div className="space-y-1">
+                <div className="text-base font-semibold">Tema do Aplicativo</div>
                 <div className="text-sm text-muted-foreground">
                   Alternar entre modo claro e escuro
                 </div>
@@ -212,33 +231,35 @@ const Profile = () => {
 
         {/* Account Actions */}
         <Card>
-          <CardContent className="p-6 space-y-3">
+          <CardContent className="p-6 space-y-4">
             <Button 
               variant="outline" 
-              className="w-full justify-start" 
+              className="w-full justify-start h-12 text-base transition-all duration-200 hover:bg-primary/5" 
               onClick={() => navigate('/account-settings')}
             >
-              <Settings size={16} className="mr-2" />
+              <Settings size={18} className="mr-3" />
               Alterar Dados da Conta
             </Button>
             
             <Button 
               variant="outline" 
-              className="w-full justify-start" 
+              className="w-full justify-start h-12 text-base transition-all duration-200 hover:bg-primary/5" 
               onClick={() => navigate('/paciente/suporte')}
             >
-              <MessageCircle size={16} className="mr-2" />
+              <MessageCircle size={18} className="mr-3" />
               Suporte
             </Button>
             
-            <Button 
-              variant="destructive" 
-              className="w-full justify-start" 
-              onClick={handleLogout}
-            >
-              <LogOut size={16} className="mr-2" />
-              Sair da Conta
-            </Button>
+            <div className="pt-2 border-t">
+              <Button 
+                variant="destructive" 
+                className="w-full justify-start h-12 text-base font-semibold transition-all duration-200 hover:scale-105" 
+                onClick={handleLogout}
+              >
+                <LogOut size={18} className="mr-3" />
+                Sair da Conta
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
