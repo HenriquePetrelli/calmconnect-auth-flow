@@ -37,15 +37,15 @@
     --popover: 0 0% 100%;             /* #ffffff */
     --popover-foreground: 222 84% 5%; /* #0f172a */
     
-    --primary: 262 83% 58%;           /* #6d28d9 - Violeta calmante */
-    --primary-foreground: 210 40% 98%;/* #f8fafc */
-    --primary-hover: 262 83% 50%;     /* #5b21b6 */
-    --primary-active: 262 83% 45%;    /* #4c1d95 */
-    
-    --secondary: 328 85% 65%;         /* #ec4899 - Rosa suave */
-    --secondary-foreground: 210 40% 98%; /* #f8fafc */
-    --secondary-hover: 328 85% 60%;   /* #db2777 */
-    --secondary-active: 328 85% 55%;  /* #be185d */
+  --primary: 262 83% 58%;           /* #6d28d9 - Violeta calmante */
+  --primary-foreground: 210 40% 98%;/* #f8fafc */
+  --primary-hover: 262 83% 50%;     /* #5b21b6 */
+  --primary-active: 262 83% 45%;    /* #4c1d95 */
+  
+  --secondary: 201 96% 55%;         /* #0ea5e9 - Azul calmante */
+  --secondary-foreground: 210 40% 98%; /* #f8fafc */
+  --secondary-hover: 201 96% 45%;   /* #0284c7 */
+  --secondary-active: 201 96% 40%;  /* #0369a1 */
     
     --muted: 210 40% 96%;             /* #f1f5f9 - Cinza muito claro */
     --muted-foreground: 215 16% 47%;  /* #64748b - Cinza médio */
@@ -124,26 +124,26 @@
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
-  .dark {
-    /* Dark Mode Colors */
-    --background: 222 84% 5%;          /* #0f172a - Azul muito escuro */
-    --foreground: 210 40% 98%;         /* #f8fafc - Branco azulado */
-    
-    --card: 222 84% 8%;                /* #1e293b - Azul escuro */
-    --card-foreground: 210 40% 98%;    /* #f8fafc */
-    
-    --popover: 222 84% 8%;             /* #1e293b */
-    --popover-foreground: 210 40% 98%; /* #f8fafc */
-    
-    --primary: 262 83% 70%;            /* #8b5cf6 - Violeta mais claro */
-    --primary-foreground: 222 84% 5%;  /* #0f172a */
-    --primary-hover: 262 83% 75%;      /* #a78bfa */
-    --primary-active: 262 83% 80%;     /* #c4b5fd */
-    
-    --secondary: 328 85% 75%;          /* #f9a8d4 - Rosa mais claro */
-    --secondary-foreground: 222 84% 5%;/* #0f172a */
-    --secondary-hover: 328 85% 80%;    /* #fbcfe8 */
-    --secondary-active: 328 85% 85%;   /* #fce7f3 */
+.dark {
+  /* Dark Mode Colors */
+  --background: 222 47% 11%;        /* #0d1a2d - Azul mais suave */
+  --foreground: 210 40% 98%;         /* #f8fafc - Branco azulado */
+  
+  --card: 222 47% 15%;              /* #122133 - Mais contrastante */
+  --card-foreground: 210 40% 98%;    /* #f8fafc */
+  
+  --popover: 222 47% 15%;           /* #122133 */
+  --popover-foreground: 210 40% 98%; /* #f8fafc */
+  
+  --primary: 262 70% 65%;           /* #8b5cf6 - Violeta mais suave */
+  --primary-foreground: 210 40% 98%; /* #f8fafc */
+  --primary-hover: 262 70% 70%;     /* #a78bfa */
+  --primary-active: 262 70% 75%;    /* #c4b5fd */
+  
+  --secondary: 201 96% 60%;         /* #38bdf8 - Azul claro */
+  --secondary-foreground: 222 47% 11%; /* #0d1a2d */
+  --secondary-hover: 201 96% 65%;   /* #38bdf8 */
+  --secondary-active: 201 96% 70%;  /* #7dd3fc */
     
     --muted: 217 33% 17%;              /* #1e293b - Azul escuro */
     --muted-foreground: 215 20% 65%;   /* #94a3b8 - Cinza azulado */
