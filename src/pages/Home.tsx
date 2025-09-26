@@ -94,33 +94,31 @@ const HomePage = () => {
         {/* Mobile/Tablet Header */}
         <header className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-card shadow-sm border-b border-border">
           <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-            {/* Logo Soliv à esquerda */}
-            <div className="flex items-center space-x-2">
+            
+            {/* PERFIL À ESQUERDA - ANTES do Soliv */}
+            <div 
+              className="w-8 h-8 rounded-full bg-primary flex items-center justify-center cursor-pointer" 
+              onClick={() => navigate('/profile')}
+            >
+              <span className="text-primary-foreground text-sm font-medium">
+                {firstName.charAt(0).toUpperCase()}
+              </span>
+            </div>
+            
+            {/* SOLIV CENTRALIZADO */}
+            <div className="flex items-center space-x-2 absolute left-1/2 transform -translate-x-1/2">
               <Sun className="w-6 h-6 text-primary" />
               <span className="text-xl font-bold text-foreground">Soliv</span>
             </div>
             
-            {/* CORREÇÃO: Notificações e Avatar à direita, melhor posicionados */}
-            <div className="flex items-center space-x-3">
-              {/* Botão Notificações - posição correta */}
-              <button 
-                className="relative p-2 text-muted-foreground hover:text-foreground transition-colors"
-                onClick={() => navigate('/notifications')}
-              >
-                <Bell className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-destructive rounded-full"></span>
-              </button>
-              
-              {/* Avatar do usuário */}
-              <div 
-                className="w-8 h-8 rounded-full bg-primary flex items-center justify-center cursor-pointer" 
-                onClick={() => navigate('/profile')}
-              >
-                <span className="text-primary-foreground text-sm font-medium">
-                  {firstName.charAt(0).toUpperCase()}
-                </span>
-              </div>
-            </div>
+            {/* NOTIFICAÇÕES À DIREITA - DEPOIS do Soliv */}
+            <button 
+              className="relative p-2 text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => navigate('/notifications')}
+            >
+              <Bell className="w-5 h-5" />
+              <span className="absolute -top-1 -right-1 w-3 h-3 bg-destructive rounded-full"></span>
+            </button>
           </div>
         </header>
 
@@ -159,9 +157,6 @@ const HomePage = () => {
                   <h1 className="text-2xl font-bold text-foreground">Olá, <span className="text-primary">{firstName}</span>! 👋</h1>
                   <p className="text-muted-foreground">Como você está se sentindo hoje?</p>
                 </div>
-                <div className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-full">
-                  {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
-                </div>
               </div>
 
               {/* Componente Interativo de Humor */}
@@ -183,37 +178,6 @@ const HomePage = () => {
               </div>
             </section>
 
-            {/* Seção de Atividades de Hoje */}
-            <section className="mb-8">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-foreground">Sua rotina hoje</h2>
-                <span className="text-xs text-muted-foreground">2 de 5 completas</span>
-              </div>
-              
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-card rounded-xl border border-border">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-                      <BookOpen className="w-4 h-4 text-primary" />
-                    </div>
-                    <span className="text-foreground">Escrever no diário</span>
-                  </div>
-                  <div className="w-6 h-6 border-2 border-primary rounded-full"></div>
-                </div>
-                
-                <div className="flex items-center justify-between p-3 bg-card rounded-xl border border-border">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                      <Activity className="w-4 h-4 text-green-600" />
-                    </div>
-                    <span className="text-foreground">Respiração guiada</span>
-                  </div>
-                  <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-                    <Check className="w-4 h-4 text-white" />
-                  </div>
-                </div>
-              </div>
-            </section>
 
             {/* Resources Section - Improved Grid */}
             <section className="mb-8">
@@ -221,8 +185,24 @@ const HomePage = () => {
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                 {features.map((feature, index) => (
                   <div key={index} className="bg-card rounded-xl p-4 border border-border hover:border-primary transition-colors group cursor-pointer" onClick={feature.onClick}>
-                    <div className="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-                      {React.cloneElement(feature.icon, { className: "w-6 h-6 text-white" })}
+                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-3 group-hover:scale-105 transition-transform ${
+                      index === 0 ? 'bg-blue-100' : 
+                      index === 1 ? 'bg-green-100' : 
+                      index === 2 ? 'bg-purple-100' : 
+                      index === 3 ? 'bg-orange-100' : 
+                      index === 4 ? 'bg-yellow-100' : 
+                      'bg-teal-100'
+                    }`}>
+                      {React.cloneElement(feature.icon, { 
+                        className: `w-6 h-6 ${
+                          index === 0 ? 'text-blue-600' : 
+                          index === 1 ? 'text-green-600' : 
+                          index === 2 ? 'text-purple-600' : 
+                          index === 3 ? 'text-orange-600' : 
+                          index === 4 ? 'text-yellow-600' : 
+                          'text-teal-600'
+                        }`
+                      })}
                     </div>
                     <h3 className="font-semibold text-foreground mb-1 text-sm lg:text-base">{feature.title}</h3>
                     {!isMobile && (
@@ -233,27 +213,6 @@ const HomePage = () => {
               </div>
             </section>
 
-            {/* Acesso Rápido - Refined */}
-            <section className="mb-8">
-              <h2 className="text-lg font-semibold text-foreground mb-4">Acesso rápido</h2>
-              <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
-                <button 
-                  className="w-full bg-gradient-to-r from-destructive to-orange-500 text-white py-4 px-4 rounded-xl font-semibold flex items-center justify-center space-x-3 shadow-lg hover:shadow-xl transition-all active:scale-95"
-                  onClick={() => navigate('/sos')}
-                >
-                  <AlertTriangle className="w-5 h-5" />
-                  <span>Ajuda Emergencial 24/7</span>
-                </button>
-                
-                <button 
-                  className="w-full bg-gradient-to-r from-primary to-purple-600 text-white py-4 px-4 rounded-xl font-semibold flex items-center justify-center space-x-3 shadow-lg hover:shadow-xl transition-all active:scale-95"
-                  onClick={() => navigate('/chat')}
-                >
-                  <MessageCircle className="w-5 h-5" />
-                  <span>Chat com Profissionais</span>
-                </button>
-              </div>
-            </section>
           </div>
         </main>
       </div>

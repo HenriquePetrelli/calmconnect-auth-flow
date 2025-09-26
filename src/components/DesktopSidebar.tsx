@@ -4,10 +4,8 @@ import {
   Home, 
   MessageCircle, 
   Calendar, 
-  TrendingUp, 
-  BookOpen, 
-  Users,
-  AlertTriangle
+  AlertTriangle,
+  User
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/Logo';
@@ -16,9 +14,8 @@ const sidebarItems = [
   { icon: Home, label: 'Home', path: '/home' },
   { icon: MessageCircle, label: 'Chat', path: '/chat' },
   { icon: Calendar, label: 'Consultas', path: '/appointments' },
-  { icon: TrendingUp, label: 'Meu Progresso', path: '/statistics' },
-  { icon: BookOpen, label: 'Meu Diário', path: '/journal' },
-  { icon: Users, label: 'Suporte', path: '/support-groups' },
+  { icon: AlertTriangle, label: 'Ajuda Emergencial', path: '/sos' },
+  { icon: User, label: 'Perfil', path: '/profile' },
 ];
 
 export const DesktopSidebar: React.FC = () => {
@@ -53,17 +50,6 @@ export const DesktopSidebar: React.FC = () => {
         })}
       </nav>
 
-      {/* Emergency Button */}
-      <div className="p-4 border-t border-border">
-        <Button
-          variant="destructive"
-          className="w-full gap-2 h-12"
-          onClick={() => navigate('/sos')}
-        >
-          <AlertTriangle className="w-5 h-5" />
-          <span className="font-semibold">Ajuda Emergencial</span>
-        </Button>
-      </div>
     </aside>
   );
 };

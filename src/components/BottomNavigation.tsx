@@ -42,46 +42,40 @@ const BottomNavigation = () => {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border shadow-lg safe-area-pb">
-      <div className="flex items-center justify-between max-w-md mx-auto px-3 py-2">
+    <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-40 h-16">
+      <div className="flex h-full">
         {navItems.map((item) => {
           const Icon = item.icon;
           
           if (item.isSpecial) {
             return (
-              <Button
-                key={item.path}
-                onClick={() => navigate(item.path)}
-                className="w-16 h-16 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center shadow-2xl z-10 relative -mt-4"
-              >
-                <Icon />
-              </Button>
+              <div key={item.path} className="flex-1 flex justify-center items-center">
+                <button
+                  onClick={() => navigate(item.path)}
+                  className="w-16 h-16 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center shadow-2xl z-10 relative -mt-4"
+                >
+                  <Icon />
+                </button>
+              </div>
             );
           }
           
           return (
-            <Button
-              key={item.path}
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate(item.path)}
-              className={`flex-col flex-grow items-center justify-center py-2 px-3 transition-all duration-200 relative ${
-                item.isActive
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-primary"
-              }`}
-            >
-              <div className="w-6 h-6 flex items-center justify-center mb-1">
+            <div key={item.path} className="flex-1 flex justify-center items-center">
+              <button 
+                onClick={() => navigate(item.path)}
+                className={`flex flex-col items-center justify-center w-full h-full p-2 transition-all duration-200 ${
+                  item.isActive ? 'text-primary bg-primary/10' : 'text-muted-foreground hover:bg-accent'
+                }`}
+              >
                 <Icon className="w-5 h-5" />
-              </div>
-              <span className="text-xs font-medium">
-                {item.label}
-              </span>
-            </Button>
+                <span className="text-xs mt-1">{item.label}</span>
+              </button>
+            </div>
           );
         })}
       </div>
-    </div>
+    </nav>
   );
 };
 
