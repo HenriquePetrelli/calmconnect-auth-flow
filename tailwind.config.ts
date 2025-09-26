@@ -22,11 +22,14 @@ export default {
 				sans: ['Poppins', 'system-ui', 'sans-serif'],
 			},
 			colors: {
+				// Cores base do sistema (light e dark mode via CSS variables)
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
+				
+				// Cores principais
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
 					foreground: 'hsl(var(--primary-foreground))',
@@ -39,6 +42,8 @@ export default {
 					hover: 'hsl(var(--secondary-hover))',
 					active: 'hsl(var(--secondary-active))',
 				},
+				
+				// Cores de estado
 				destructive: {
 					DEFAULT: 'hsl(var(--destructive))',
 					foreground: 'hsl(var(--destructive-foreground))'
@@ -59,6 +64,8 @@ export default {
 					DEFAULT: 'hsl(var(--accent))',
 					foreground: 'hsl(var(--accent-foreground))'
 				},
+				
+				// Cores de componentes
 				popover: {
 					DEFAULT: 'hsl(var(--popover))',
 					foreground: 'hsl(var(--popover-foreground))'
@@ -67,27 +74,29 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				
+				// Cores específicas para funcionalidades
 				'breathing': {
-					primary: 'hsl(var(--breathing-primary))',
-					secondary: 'hsl(var(--breathing-secondary))',
-					inhale: 'hsl(var(--breathing-inhale))',
-					hold: 'hsl(var(--breathing-hold))',
-					exhale: 'hsl(var(--breathing-exhale))',
-					pause: 'hsl(var(--breathing-pause))',
+					primary: 'hsl(var(--breathing-primary))',    // Azul calmante
+					secondary: 'hsl(var(--breathing-secondary))', // Verde refrescante
+					inhale: 'hsl(var(--breathing-inhale))',      // Verde suave para inspirar
+					hold: 'hsl(var(--breathing-hold))',          // Azul médio para segurar
+					exhale: 'hsl(var(--breathing-exhale))',      // Azul claro para expirar
+					pause: 'hsl(var(--breathing-pause))',        // Azul muito suave para pausa
 				},
 				'sounds': {
-					primary: 'hsl(var(--sounds-primary))',
-					secondary: 'hsl(var(--sounds-secondary))',
-					accent: 'hsl(var(--sounds-accent))',
+					primary: 'hsl(var(--sounds-primary))',       // Roxo relaxante
+					secondary: 'hsl(var(--sounds-secondary))',   // Lilás suave
+					accent: 'hsl(var(--sounds-accent))',         // Lavanda
 				},
 				'evolution': {
-					primary: 'hsl(var(--evolution-primary))',
-					secondary: 'hsl(var(--evolution-secondary))'
+					primary: 'hsl(var(--evolution-primary))',    // Verde de crescimento
+					secondary: 'hsl(var(--evolution-secondary))' // Verde mais claro
 				},
 				'sos': {
-					primary: 'hsl(var(--sos-primary))',
-					secondary: 'hsl(var(--sos-secondary))',
-					glow: 'hsl(var(--sos-glow))'
+					primary: 'hsl(var(--sos-primary))',          // Vermelho alerta (suavizado)
+					secondary: 'hsl(var(--sos-secondary))',      // Laranja cuidado
+					glow: 'hsl(var(--sos-glow))'                 // Brilho suave para atenção
 				},
 				'emma': {
 					header: 'hsl(var(--emma-header))',

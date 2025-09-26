@@ -27,52 +27,63 @@
 
 @layer base {
   :root {
-    /* Modern Color System - Light Mode */
-    --background: 220 14% 96%; /* #F9FAFB */
-    --foreground: 220 9% 12%; /* #1E1E1E */
-    --card: 0 0% 100%; /* #FFFFFF */
-    --card-foreground: 220 9% 12%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 9% 12%;
+    /* Light Mode Colors */
+    --background: 210 40% 98%;        /* #f8fafc - Azul muito claro */
+    --foreground: 222 84% 5%;         /* #0f172a - Azul muito escuro */
     
-    /* Primary: #6849FF */
-    --primary: 251 100% 65%; /* #6849FF */
-    --primary-glow: 261 100% 71%; /* #9B6BFF */
-    --primary-foreground: 0 0% 100%;
-    --primary-hover: 251 91% 67%; /* #7A5CFF */
-    --primary-active: 251 91% 67%;
+    --card: 0 0% 100%;                /* #ffffff - Branco puro */
+    --card-foreground: 222 84% 5%;    /* #0f172a */
     
-    /* Secondary: Light Gray */
-    --secondary: 220 14% 89%; /* #E5E7EB */
-    --secondary-foreground: 220 9% 12%; /* #1E1E1E */
-    --secondary-hover: 220 14% 85%;
-    --secondary-active: 220 14% 80%;
+    --popover: 0 0% 100%;             /* #ffffff */
+    --popover-foreground: 222 84% 5%; /* #0f172a */
     
-    /* Success Green */
-    --success: 145 63% 42%; /* #27AE60 */
-    --success-foreground: 0 0% 100%;
+    --primary: 262 83% 58%;           /* #6d28d9 - Violeta calmante */
+    --primary-foreground: 210 40% 98%;/* #f8fafc */
+    --primary-hover: 262 83% 50%;     /* #5b21b6 */
+    --primary-active: 262 83% 45%;    /* #4c1d95 */
     
-    /* Warning Yellow */
-    --warning: 45 93% 63%; /* #F2C94C */
-    --warning-foreground: 45 93% 10%;
+    --secondary: 328 85% 65%;         /* #ec4899 - Rosa suave */
+    --secondary-foreground: 210 40% 98%; /* #f8fafc */
+    --secondary-hover: 328 85% 60%;   /* #db2777 */
+    --secondary-active: 328 85% 55%;  /* #be185d */
     
-    /* Error Red */
-    --destructive: 0 84% 62%; /* #EB5757 */
-    --destructive-foreground: 0 0% 100%;
+    --muted: 210 40% 96%;             /* #f1f5f9 - Cinza muito claro */
+    --muted-foreground: 215 16% 47%;  /* #64748b - Cinza médio */
     
-    /* Neutral Colors */
-    --muted: 220 14% 92%; /* #E5E7EB */
-    --muted-foreground: 220 9% 39%; /* #6B7280 */
-    --accent: 220 14% 92%;
-    --accent-foreground: 220 9% 12%;
-    --border: 220 14% 89%; /* #E5E7EB */
-    --input: 220 14% 89%;
-    --ring: 251 100% 65%;
-
-    /* Premium: Golden */
-    --premium-primary: 51 100% 50%; /* #FFD700 */
-    --premium-secondary: 45 100% 55%;
-    --premium-glow: 51 100% 60%;
+    --accent: 210 40% 96%;            /* #f1f5f9 */
+    --accent-foreground: 222 84% 5%;  /* #0f172a */
+    
+    --destructive: 0 84% 60%;         /* #dc2626 - Vermelho */
+    --destructive-foreground: 210 40% 98%; /* #f8fafc */
+    
+    --success: 142 76% 36%;           /* #16a34a - Verde */
+    --success-foreground: 210 40% 98%; /* #f8fafc */
+    
+    --warning: 38 92% 50%;            /* #f59e0b - Âmbar */
+    --warning-foreground: 222 84% 5%; /* #0f172a */
+    
+    --border: 214 32% 91%;            /* #e2e8f0 - Cinza claro */
+    --input: 214 32% 91%;             /* #e2e8f0 */
+    --ring: 262 83% 58%;              /* #6d28d9 */
+    
+    /* Cores específicas - Light Mode */
+    --breathing-primary: 201 96% 55%;   /* #0ea5e9 - Azul céu */
+    --breathing-secondary: 160 84% 39%; /* #10b981 - Verde natureza */
+    --breathing-inhale: 142 76% 36%;    /* #16a34a - Verde inspiração */
+    --breathing-hold: 201 96% 45%;      /* #0284c7 - Azul segurar */
+    --breathing-exhale: 186 94% 82%;    /* #a5f3fc - Azul claro expirar */
+    --breathing-pause: 210 40% 96%;     /* #f1f5f9 - Cinza muito suave */
+    
+    --sounds-primary: 262 83% 58%;      /* #6d28d9 - Roxo */
+    --sounds-secondary: 269 97% 85%;    /* #d8b4fe - Lilás */
+    --sounds-accent: 251 95% 92%;       /* #e9d5ff - Lavanda */
+    
+    --evolution-primary: 142 76% 36%;   /* #16a34a - Verde crescimento */
+    --evolution-secondary: 152 82% 72%; /* #86efac - Verde claro */
+    
+    --sos-primary: 0 84% 60%;           /* #dc2626 - Vermelho alerta */
+    --sos-secondary: 25 95% 53%;        /* #ea580c - Laranja */
+    --sos-glow: 0 84% 60% / 0.3;        /* Vermelho com transparência */
 
     /* Emma App Style Colors */
     --emma-header: 220 100% 25%; /* Deep blue header like Emma */
@@ -81,46 +92,6 @@
     --emma-primary: 220 100% 25%; /* Dark blue for icons and text */
     --emma-text: 220 30% 20%; /* Dark text */
     --emma-secondary: 220 20% 60%; /* Muted text */
-
-    /* Modern Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(251 100% 65%), hsl(261 100% 71%));
-    --gradient-calm: linear-gradient(180deg, hsl(220 20% 98%) 0%, hsl(220 20% 96%) 100%);
-    --gradient-card: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(220 20% 98%) 100%);
-    
-    /* Feature-specific gradients */
-    --gradient-professional: linear-gradient(135deg, hsl(251 100% 65%), hsl(261 100% 71%));
-    --gradient-breathing: linear-gradient(135deg, hsl(200 100% 70%) 0%, hsl(251 100% 65%) 100%);
-    --gradient-sounds: linear-gradient(135deg, hsl(320 100% 74%) 0%, hsl(251 100% 65%) 100%);
-    --gradient-evolution: linear-gradient(135deg, hsl(45 100% 60%) 0%, hsl(251 100% 65%) 100%);
-    --gradient-sos: linear-gradient(135deg, hsl(0 65% 63%) 0%, hsl(15 72% 51%) 100%);
-
-    /* Feature Colors */
-    --professional-primary: 251 100% 65%; /* Primary purple */
-    --professional-secondary: 261 100% 71%; /* Light purple */
-    
-    --breathing-primary: 200 100% 70%; /* Calm blue */
-    --breathing-secondary: 251 100% 65%; /* Primary purple */
-    --breathing-inhale: 200 100% 70%;
-    --breathing-hold: 251 100% 65%;
-    --breathing-exhale: 261 100% 71%;
-    --breathing-pause: 220 50% 75%;
-
-    --sounds-primary: 320 100% 74%; /* Pink secondary */
-    --sounds-secondary: 251 100% 65%; /* Primary purple */
-    --sounds-accent: 261 100% 71%;
-
-    --evolution-primary: 45 100% 60%; /* Golden yellow */
-    --evolution-secondary: 251 100% 65%; /* Primary purple */
-    
-    --journey-primary: 261 100% 71%; /* Light purple */
-    --journey-secondary: 320 100% 74%; /* Pink secondary */
-    
-    --selfcare-primary: 145 63% 42%; /* Success green */
-    --selfcare-secondary: 251 100% 65%; /* Primary purple */
-
-    --sos-primary: 0 65% 63%;
-    --sos-secondary: 15 72% 51%;
-    --sos-glow: 0 100% 80%;
 
     /* Modern Shadow System */
     --shadow-xs: 0 1px 2px 0 hsl(215 25% 27% / 0.05);
@@ -154,77 +125,63 @@
   }
 
   .dark {
-    /* Elegant Dark Mode Colors */
-    --background: 0 0% 7%; /* #121212 */
-    --foreground: 0 0% 100%; /* #FFFFFF */
-    --card: 0 0% 12%; /* #1E1E1E */
-    --card-foreground: 0 0% 100%;
-    --popover: 0 0% 12%;
-    --popover-foreground: 0 0% 100%;
+    /* Dark Mode Colors */
+    --background: 222 84% 5%;          /* #0f172a - Azul muito escuro */
+    --foreground: 210 40% 98%;         /* #f8fafc - Branco azulado */
     
-    /* Primary: Elegant Purple */
-    --primary: 251 100% 65%; /* #6849FF */
-    --primary-glow: 261 100% 71%; /* #9B6BFF - lighter for highlights */
-    --primary-foreground: 0 0% 100%;
-    --primary-hover: 251 91% 67%; /* #7A5CFF */
-    --primary-active: 251 91% 67%;
+    --card: 222 84% 8%;                /* #1e293b - Azul escuro */
+    --card-foreground: 210 40% 98%;    /* #f8fafc */
     
-    /* Secondary: Dark Gray */
-    --secondary: 225 18% 20%; /* #2A2E38 */
-    --secondary-foreground: 0 0% 100%;
-    --secondary-hover: 225 18% 25%;
-    --secondary-active: 225 18% 30%;
+    --popover: 222 84% 8%;             /* #1e293b */
+    --popover-foreground: 210 40% 98%; /* #f8fafc */
     
-    /* Success: Soft Green */
-    --success: 138 47% 44%; /* #3BA55D */
-    --success-foreground: 0 0% 100%;
+    --primary: 262 83% 70%;            /* #8b5cf6 - Violeta mais claro */
+    --primary-foreground: 222 84% 5%;  /* #0f172a */
+    --primary-hover: 262 83% 75%;      /* #a78bfa */
+    --primary-active: 262 83% 80%;     /* #c4b5fd */
     
-    /* Warning: Soft Yellow */
-    --warning: 45 86% 58%; /* #E1B941 */
-    --warning-foreground: 45 86% 10%;
+    --secondary: 328 85% 75%;          /* #f9a8d4 - Rosa mais claro */
+    --secondary-foreground: 222 84% 5%;/* #0f172a */
+    --secondary-hover: 328 85% 80%;    /* #fbcfe8 */
+    --secondary-active: 328 85% 85%;   /* #fce7f3 */
     
-    /* Error: Soft Red */
-    --destructive: 6 78% 57%; /* #E74C3C */
-    --destructive-foreground: 0 0% 100%;
+    --muted: 217 33% 17%;              /* #1e293b - Azul escuro */
+    --muted-foreground: 215 20% 65%;   /* #94a3b8 - Cinza azulado */
     
-    /* Elegant Dark Neutrals */
-    --muted: 0 0% 17%; /* #2C2C2C */
-    --muted-foreground: 240 4% 63%; /* #A1A1AA */
-    --accent: 0 0% 17%;
-    --accent-foreground: 0 0% 100%;
-    --border: 0 0% 17%; /* #2C2C2C */
-    --input: 0 0% 17%;
-    --ring: 251 100% 65%;
-
-    /* Premium: Golden */
-    --premium-primary: 51 100% 50%; /* #FFD700 */
-    --premium-secondary: 45 100% 55%;
-    --premium-glow: 51 100% 60%;
-
-    /* Elegant Dark Mode Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(251 100% 65%), hsl(261 100% 71%));
-    --gradient-calm: linear-gradient(180deg, hsl(0 0% 7%) 0%, hsl(0 0% 10%) 100%);
-    --gradient-card: linear-gradient(135deg, hsl(0 0% 12%) 0%, hsl(0 0% 14%) 100%);
+    --accent: 217 33% 17%;             /* #1e293b */
+    --accent-foreground: 210 40% 98%;  /* #f8fafc */
     
-    /* Subtle feature gradients for elegant dark mode */
-    --gradient-professional: linear-gradient(135deg, hsl(251 100% 65%), hsl(261 100% 71%));
-    --gradient-breathing: linear-gradient(135deg, hsl(0 0% 12%) 0%, hsl(251 100% 65% / 0.1) 100%);
-    --gradient-sounds: linear-gradient(135deg, hsl(0 0% 12%) 0%, hsl(261 100% 71% / 0.1) 100%);
-    --gradient-evolution: linear-gradient(135deg, hsl(0 0% 12%) 0%, hsl(138 47% 44% / 0.1) 100%);
-    --gradient-sos: linear-gradient(135deg, hsl(6 78% 57%) 0%, hsl(15 72% 51%) 100%);
-
-    /* Elegant feature colors for dark mode */
-    --professional-primary: 261 100% 71%; /* Light purple for icons */
-    --professional-secondary: 251 100% 65%; /* Primary purple */
+    --destructive: 0 84% 70%;          /* #ef4444 - Vermelho mais claro */
+    --destructive-foreground: 210 40% 98%; /* #f8fafc */
     
-    --breathing-primary: 261 100% 71%; /* Light purple for consistency */
-    --breathing-secondary: 251 100% 65%;
-    --sounds-primary: 261 100% 71%;
-    --sounds-secondary: 251 100% 65%;
-    --evolution-primary: 138 47% 44%; /* Soft green */
-    --evolution-secondary: 261 100% 71%;
-    --sos-primary: 6 78% 57%; /* Soft red */
-    --sos-secondary: 15 72% 51%;
+    --success: 142 76% 46%;            /* #22c55e - Verde mais claro */
+    --success-foreground: 210 40% 98%; /* #f8fafc */
+    
+    --warning: 48 96% 70%;             /* #fbbf24 - Âmbar mais claro */
+    --warning-foreground: 222 84% 5%;  /* #0f172a */
+    
+    --border: 217 33% 17%;             /* #1e293b */
+    --input: 217 33% 17%;              /* #1e293b */
+    --ring: 262 83% 70%;               /* #8b5cf6 */
+    
+    /* Cores específicas - Dark Mode */
+    --breathing-primary: 201 96% 65%;   /* #38bdf8 - Azul mais claro */
+    --breathing-secondary: 160 84% 49%; /* #34d399 - Verde mais claro */
+    --breathing-inhale: 142 76% 46%;    /* #22c55e */
+    --breathing-hold: 201 96% 55%;      /* #0ea5e9 */
+    --breathing-exhale: 186 94% 62%;    /* #67e8f9 */
+    --breathing-pause: 217 33% 17%;     /* #1e293b */
+    
+    --sounds-primary: 262 83% 70%;      /* #8b5cf6 */
+    --sounds-secondary: 269 97% 75%;    /* #c4b5fd */
+    --sounds-accent: 251 95% 82%;       /* #ddd6fe */
+    
+    --evolution-primary: 142 76% 46%;   /* #22c55e */
+    --evolution-secondary: 152 82% 52%; /* #4ade80 */
+    
+    --sos-primary: 0 84% 70%;           /* #ef4444 */
+    --sos-secondary: 25 95% 63%;        /* #f97316 */
+    --sos-glow: 0 84% 70% / 0.4;        /* Vermelho com mais transparência */
 
     /* Dark shadow system */
     --shadow-xs: 0 1px 2px 0 hsl(220 27% 5% / 0.3);
