@@ -69,10 +69,18 @@
     --input: 220 20% 90%;
     --ring: 251 100% 65%;
 
-    /* Premium Gold */
+    /* Premium: Golden */
     --premium-primary: 51 100% 50%; /* #FFD700 */
     --premium-secondary: 45 100% 55%;
     --premium-glow: 51 100% 60%;
+
+    /* Emma App Style Colors */
+    --emma-header: 220 100% 25%; /* Deep blue header like Emma */
+    --emma-background: 240 20% 96%; /* Light gray background */
+    --emma-card: 0 0% 100%; /* White cards */
+    --emma-primary: 220 100% 25%; /* Dark blue for icons and text */
+    --emma-text: 220 30% 20%; /* Dark text */
+    --emma-secondary: 220 20% 60%; /* Muted text */
 
     /* Modern Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(251 100% 65%), hsl(261 100% 71%));
@@ -437,17 +445,33 @@
     padding-right: env(safe-area-inset-right);
   }
 
-  /* Accessibility */
-  .sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
+  /* Emma App Utilities */
+  .emma-card {
+    @apply bg-white rounded-2xl shadow-sm border-0;
+  }
+  
+  .text-emma-primary {
+    color: hsl(var(--emma-primary));
+  }
+  
+  .text-emma-text {
+    color: hsl(var(--emma-text));
+  }
+  
+  .text-emma-secondary {
+    color: hsl(var(--emma-secondary));
+  }
+  
+  .bg-emma-header {
+    background: hsl(var(--emma-header));
+  }
+  
+  .bg-emma-background {
+    background: hsl(var(--emma-background));
+  }
+  
+  .bg-emma-card {
+    background: hsl(var(--emma-card));
   }
 }
 

@@ -88,6 +88,14 @@ export default {
 					primary: 'hsl(var(--sos-primary))',
 					secondary: 'hsl(var(--sos-secondary))',
 					glow: 'hsl(var(--sos-glow))'
+				},
+				'emma': {
+					header: 'hsl(var(--emma-header))',
+					background: 'hsl(var(--emma-background))', 
+					card: 'hsl(var(--emma-card))',
+					primary: 'hsl(var(--emma-primary))',
+					text: 'hsl(var(--emma-text))',
+					secondary: 'hsl(var(--emma-secondary))'
 				}
 			},
 			boxShadow: {
