@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Crown, LogOut, Settings, User as UserIcon, MessageCircle } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -188,6 +189,24 @@ const Profile = () => {
                 Gerenciar Assinatura
               </Button>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Configurações</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <div className="text-base font-medium">Tema</div>
+                <div className="text-sm text-muted-foreground">
+                  Alternar entre modo claro e escuro
+                </div>
+              </div>
+              <ThemeToggle />
+            </div>
           </CardContent>
         </Card>
 

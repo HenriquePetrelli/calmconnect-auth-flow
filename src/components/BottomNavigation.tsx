@@ -17,7 +17,15 @@ const BottomNavigation = () => {
       icon: MessageCircle,
       label: "Chat",
       path: "/chat",
-      isActive: location.pathname.startsWith("/chat")
+      isActive: location.pathname.startsWith("/chat"),
+      isSpecial: false
+    },
+    {
+      icon: () => <span className="text-sm font-bold">SOS</span>,
+      label: "",
+      path: "/sos",
+      isActive: location.pathname === "/sos",
+      isSpecial: true
     },
     {
       icon: Calendar,
@@ -38,6 +46,19 @@ const BottomNavigation = () => {
       <div className="flex items-center justify-around max-w-md mx-auto px-3 py-2">
         {navItems.map((item) => {
           const Icon = item.icon;
+          
+          if (item.isSpecial) {
+            return (
+              <Button
+                key={item.path}
+                onClick={() => navigate(item.path)}
+                className="w-12 h-12 rounded-full bg-destructive hover:bg-destructive/90 text-destructive-foreground flex items-center justify-center shadow-lg"
+              >
+                <Icon />
+              </Button>
+            );
+          }
+          
           return (
             <Button
               key={item.path}
