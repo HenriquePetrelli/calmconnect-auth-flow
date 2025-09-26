@@ -233,6 +233,12 @@ const HomePage = () => {
               </div>
             </section>
 
+            {/* Acesso Rápido - Refined */}
+           
+          </div>
+        </main>
+      </div>
+
       {/* Bottom Navigation - Only on Mobile/Tablet */}
       <div className="lg:hidden">
         <BottomNavigation />
