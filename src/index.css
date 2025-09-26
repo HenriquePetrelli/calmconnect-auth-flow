@@ -146,76 +146,76 @@
   }
 
   .dark {
-    /* Dark Mode Colors */
-    --background: 231 20% 13%; /* #1C1E26 */
+    /* Elegant Dark Mode Colors */
+    --background: 0 0% 7%; /* #121212 */
     --foreground: 0 0% 100%; /* #FFFFFF */
-    --card: 225 18% 20%; /* #2A2E38 */
+    --card: 0 0% 12%; /* #1E1E1E */
     --card-foreground: 0 0% 100%;
-    --popover: 225 18% 20%;
+    --popover: 0 0% 12%;
     --popover-foreground: 0 0% 100%;
     
-    /* Enhanced Primary for Dark Mode */
-    --primary: 261 100% 71%; /* #9B6BFF - lighter for contrast */
-    --primary-glow: 251 100% 65%; /* #6849FF */
-    --primary-foreground: 231 20% 13%;
-    --primary-hover: 261 100% 76%;
-    --primary-active: 261 100% 81%;
+    /* Primary: Elegant Purple */
+    --primary: 251 100% 65%; /* #6849FF */
+    --primary-glow: 261 100% 71%; /* #9B6BFF - lighter for highlights */
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 251 100% 68%; /* #7A5CFF */
+    --primary-active: 251 100% 70%;
     
-    /* Enhanced Secondary for Dark Mode */
-    --secondary: 324 100% 81%; /* #FF9ED9 - lighter pink */
-    --secondary-foreground: 231 20% 13%;
-    --secondary-hover: 324 100% 86%;
-    --secondary-active: 324 100% 91%;
+    /* Secondary: Neutral with subtle purple */
+    --secondary: 225 18% 20%; /* #2A2E38 */
+    --secondary-foreground: 0 0% 100%;
+    --secondary-hover: 225 18% 25%;
+    --secondary-active: 225 18% 30%;
     
-    /* Success (brighter for dark) */
-    --success: 145 52% 62%; /* #6FCF97 */
-    --success-foreground: 231 20% 13%;
+    /* Success: Soft Green */
+    --success: 138 47% 44%; /* #3BA55D */
+    --success-foreground: 0 0% 100%;
     
-    /* Warning (same) */
+    /* Warning: Muted Yellow */
     --warning: 45 93% 63%; /* #F2C94C */
     --warning-foreground: 45 93% 10%;
     
-    /* Error (brighter for dark) */
-    --destructive: 0 100% 71%; /* #FF6B6B */
+    /* Error: Soft Red */
+    --destructive: 6 78% 57%; /* #E74C3C */
     --destructive-foreground: 0 0% 100%;
     
-    /* Dark Neutrals */
-    --muted: 225 18% 23%;
-    --muted-foreground: 220 14% 69%; /* #A0AEC0 */
-    --accent: 225 18% 23%;
+    /* Elegant Dark Neutrals */
+    --muted: 0 0% 17%; /* #2C2C2C */
+    --muted-foreground: 240 5% 64%; /* #A1A1AA */
+    --accent: 0 0% 17%;
     --accent-foreground: 0 0% 100%;
-    --border: 225 18% 25%;
-    --input: 225 18% 25%;
-    --ring: 261 100% 71%;
+    --border: 0 0% 17%; /* #2C2C2C */
+    --input: 0 0% 17%;
+    --ring: 251 100% 65%;
 
-    /* Premium (same gold) */
+    /* Premium: Golden */
     --premium-primary: 51 100% 50%; /* #FFD700 */
     --premium-secondary: 45 100% 55%;
     --premium-glow: 51 100% 60%;
 
-    /* Dark Mode Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(261 100% 71%), hsl(251 100% 65%));
-    --gradient-calm: linear-gradient(180deg, hsl(231 20% 13%) 0%, hsl(225 18% 16%) 100%);
-    --gradient-card: linear-gradient(135deg, hsl(225 18% 20%) 0%, hsl(231 20% 17%) 100%);
+    /* Elegant Dark Mode Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(251 100% 65%), hsl(261 100% 71%));
+    --gradient-calm: linear-gradient(180deg, hsl(0 0% 7%) 0%, hsl(0 0% 10%) 100%);
+    --gradient-card: linear-gradient(135deg, hsl(0 0% 12%) 0%, hsl(0 0% 14%) 100%);
     
-    /* Enhanced feature gradients for dark mode */
-    --gradient-professional: linear-gradient(135deg, hsl(261 100% 71%), hsl(251 100% 65%));
-    --gradient-breathing: linear-gradient(135deg, hsl(200 100% 75%) 0%, hsl(261 100% 71%) 100%);
-    --gradient-sounds: linear-gradient(135deg, hsl(324 100% 81%) 0%, hsl(261 100% 71%) 100%);
-    --gradient-evolution: linear-gradient(135deg, hsl(45 100% 65%) 0%, hsl(261 100% 71%) 100%);
-    --gradient-sos: linear-gradient(135deg, hsl(0 100% 71%) 0%, hsl(15 72% 51%) 100%);
+    /* Subtle feature gradients for elegant dark mode */
+    --gradient-professional: linear-gradient(135deg, hsl(251 100% 65%), hsl(261 100% 71%));
+    --gradient-breathing: linear-gradient(135deg, hsl(0 0% 12%) 0%, hsl(251 100% 65% / 0.1) 100%);
+    --gradient-sounds: linear-gradient(135deg, hsl(0 0% 12%) 0%, hsl(261 100% 71% / 0.1) 100%);
+    --gradient-evolution: linear-gradient(135deg, hsl(0 0% 12%) 0%, hsl(138 47% 44% / 0.1) 100%);
+    --gradient-sos: linear-gradient(135deg, hsl(6 78% 57%) 0%, hsl(15 72% 51%) 100%);
 
-    /* Enhanced feature colors for dark mode */
-    --professional-primary: 261 100% 71%; /* Light purple */
+    /* Elegant feature colors for dark mode */
+    --professional-primary: 261 100% 71%; /* Light purple for icons */
     --professional-secondary: 251 100% 65%; /* Primary purple */
     
-    --breathing-primary: 200 100% 75%;
-    --breathing-secondary: 261 100% 71%;
-    --sounds-primary: 324 100% 81%;
-    --sounds-secondary: 261 100% 71%;
-    --evolution-primary: 45 100% 65%;
+    --breathing-primary: 261 100% 71%; /* Light purple for consistency */
+    --breathing-secondary: 251 100% 65%;
+    --sounds-primary: 261 100% 71%;
+    --sounds-secondary: 251 100% 65%;
+    --evolution-primary: 138 47% 44%; /* Soft green */
     --evolution-secondary: 261 100% 71%;
-    --sos-primary: 0 100% 71%;
+    --sos-primary: 6 78% 57%; /* Soft red */
     --sos-secondary: 15 72% 51%;
 
     /* Dark shadow system */
