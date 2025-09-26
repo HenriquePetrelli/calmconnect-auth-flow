@@ -52,7 +52,7 @@ const BottomNavigation = () => {
               <Button
                 key={item.path}
                 onClick={() => navigate(item.path)}
-                className="w-12 h-12 rounded-full bg-destructive hover:bg-destructive/90 text-destructive-foreground flex items-center justify-center shadow-lg"
+                className="w-16 h-16 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center shadow-lg"
               >
                 <Icon />
               </Button>
