@@ -233,31 +233,6 @@ const HomePage = () => {
               </div>
             </section>
 
-            {/* Acesso Rápido - Refined */}
-            <section className="mb-8">
-              <h2 className="text-lg font-semibold text-foreground mb-4">Acesso rápido</h2>
-              <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
-                <button 
-                  className="w-full bg-gradient-to-r from-destructive to-orange-500 text-white py-4 px-4 rounded-xl font-semibold flex items-center justify-center space-x-3 shadow-lg hover:shadow-xl transition-all active:scale-95"
-                  onClick={() => navigate('/sos')}
-                >
-                  <AlertTriangle className="w-5 h-5" />
-                  <span>Ajuda Emergencial 24/7</span>
-                </button>
-                
-                <button 
-                  className="w-full bg-gradient-to-r from-primary to-purple-600 text-white py-4 px-4 rounded-xl font-semibold flex items-center justify-center space-x-3 shadow-lg hover:shadow-xl transition-all active:scale-95"
-                  onClick={() => navigate('/chat')}
-                >
-                  <MessageCircle className="w-5 h-5" />
-                  <span>Chat com Profissionais</span>
-                </button>
-              </div>
-            </section>
-          </div>
-        </main>
-      </div>
-
       {/* Bottom Navigation - Only on Mobile/Tablet */}
       <div className="lg:hidden">
         <BottomNavigation />
