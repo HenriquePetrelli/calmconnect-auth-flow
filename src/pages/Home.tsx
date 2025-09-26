@@ -8,7 +8,9 @@ import {
   BookOpen,
   Bell,
   User,
-  AlertTriangle
+  AlertTriangle,
+  Sun,
+  Check
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,6 +23,7 @@ import Logo from "@/components/Logo";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
+import React from "react";
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -89,9 +92,19 @@ const HomePage = () => {
       
       <div className="lg:pl-64">
         {/* Mobile/Tablet Header */}
-        <header className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-card border-b border-border shadow-sm">
+        <header className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-md border-b border-border">
           <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-            <Logo />
+            {/* Logo e Nome do App */}
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center">
+                <Sun className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                Soliv
+              </span>
+            </div>
+            
+            {/* Avatar e Notificações */}
             <div className="flex items-center space-x-3">
               <Button
                 size="sm"
@@ -100,18 +113,13 @@ const HomePage = () => {
                 onClick={() => navigate('/notifications')}
               >
                 <Bell className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-destructive rounded-full"></span>
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-destructive rounded-full"></span>
               </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="w-8 h-8 rounded-full bg-primary flex items-center justify-center"
-                onClick={() => navigate('/profile')}
-              >
-                <span className="text-primary-foreground text-sm font-medium">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center cursor-pointer" onClick={() => navigate('/profile')}>
+                <span className="text-white text-sm font-medium">
                   {firstName.charAt(0).toUpperCase()}
                 </span>
-              </Button>
+              </div>
             </div>
           </div>
         </header>
@@ -146,66 +154,104 @@ const HomePage = () => {
           <div className="max-w-6xl mx-auto">
             {/* Mobile/Tablet Greeting Section */}
             <section className="lg:hidden mb-8">
-              <h1 className="text-2xl font-bold text-foreground mb-2">
-                Olá, {firstName}!
-              </h1>
-              <p className="text-muted-foreground mb-4">Como você está se sentindo hoje?</p>
-              <MoodSelector />
-            </section>
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h1 className="text-2xl font-bold text-foreground">Olá, <span className="text-primary">{firstName}</span>! 👋</h1>
+                  <p className="text-muted-foreground">Como você está se sentindo hoje?</p>
+                </div>
+                <div className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-full">
+                  {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                </div>
+              </div>
 
-            {/* Resources Section - Separated from Quick Access */}
-            <section className="mb-8">
-              <h2 className="text-lg font-semibold text-foreground mb-4 lg:hidden">
-                Seus Recursos
-              </h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
-                {features.map((feature, index) => (
-                  <Card 
-                    key={index}
-                    className="group cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-border/60 hover:border-primary/30"
-                    onClick={feature.onClick}
-                  >
-                    <CardContent className="p-4 lg:p-6 text-center">
-                      <div className="flex justify-center mb-3 lg:mb-4 p-3 lg:p-4 rounded-xl bg-primary/5 group-hover:bg-primary/10 transition-colors duration-300 mx-auto w-fit">
-                        {feature.icon}
-                      </div>
-                      <h3 className="font-semibold text-foreground text-sm lg:text-base leading-tight mb-1">
-                        {feature.title}
-                      </h3>
-                      {!isMobile && (
-                        <p className="text-xs lg:text-sm text-muted-foreground group-hover:text-foreground/80 transition-colors duration-300">
-                          {feature.subtitle}
-                        </p>
-                      )}
-                    </CardContent>
-                  </Card>
+              {/* Componente Interativo de Humor */}
+              <div className="flex space-x-3 overflow-x-auto pb-4 -mx-1 px-1">
+                {[
+                  { emoji: '😢', label: 'Triste' },
+                  { emoji: '😟', label: 'Preocupado' },
+                  { emoji: '😐', label: 'Neutro' },
+                  { emoji: '🙂', label: 'Bem' },
+                  { emoji: '😊', label: 'Feliz' },
+                  { emoji: '😄', label: 'Ótimo' },
+                  { emoji: '🤩', label: 'Empolgado' }
+                ].map((mood, index) => (
+                  <button key={index} className="flex-shrink-0 flex flex-col items-center space-y-2 p-3 rounded-xl bg-card border border-border hover:border-primary transition-all duration-200 active:scale-95">
+                    <span className="text-2xl">{mood.emoji}</span>
+                    <span className="text-sm font-medium text-foreground">{mood.label}</span>
+                  </button>
                 ))}
               </div>
             </section>
 
-            {/* Separated Quick Access Section */}
+            {/* Seção de Atividades de Hoje */}
             <section className="mb-8">
-              <h2 className="text-lg lg:text-xl font-semibold text-foreground mb-4 lg:mb-6">
-                Acesso Rápido
-              </h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-foreground">Sua rotina hoje</h2>
+                <span className="text-xs text-muted-foreground">2 de 5 completas</span>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-card rounded-xl border border-border">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                      <BookOpen className="w-4 h-4 text-primary" />
+                    </div>
+                    <span className="text-foreground">Escrever no diário</span>
+                  </div>
+                  <div className="w-6 h-6 border-2 border-primary rounded-full"></div>
+                </div>
+                
+                <div className="flex items-center justify-between p-3 bg-card rounded-xl border border-border">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                      <Activity className="w-4 h-4 text-green-600" />
+                    </div>
+                    <span className="text-foreground">Respiração guiada</span>
+                  </div>
+                  <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                    <Check className="w-4 h-4 text-white" />
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Resources Section - Improved Grid */}
+            <section className="mb-8">
+              <h2 className="text-lg font-semibold text-foreground mb-4">Seus recursos</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                {features.map((feature, index) => (
+                  <div key={index} className="bg-card rounded-xl p-4 border border-border hover:border-primary transition-colors group cursor-pointer" onClick={feature.onClick}>
+                    <div className="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                      {React.cloneElement(feature.icon, { className: "w-6 h-6 text-white" })}
+                    </div>
+                    <h3 className="font-semibold text-foreground mb-1 text-sm lg:text-base">{feature.title}</h3>
+                    {!isMobile && (
+                      <p className="text-xs text-muted-foreground">{feature.subtitle}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Acesso Rápido - Refined */}
+            <section className="mb-8">
+              <h2 className="text-lg font-semibold text-foreground mb-4">Acesso rápido</h2>
               <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
-                {/* Emergency Help Button - Prominent */}
-                <Button
-                  className="w-full bg-destructive text-destructive-foreground py-4 lg:py-6 px-4 rounded-xl font-medium flex items-center justify-center space-x-2 shadow-lg hover:bg-destructive/90 transition-colors min-h-[44px]"
+                <button 
+                  className="w-full bg-gradient-to-r from-destructive to-orange-500 text-white py-4 px-4 rounded-xl font-semibold flex items-center justify-center space-x-3 shadow-lg hover:shadow-xl transition-all active:scale-95"
                   onClick={() => navigate('/sos')}
                 >
                   <AlertTriangle className="w-5 h-5" />
                   <span>Ajuda Emergencial 24/7</span>
-                </Button>
+                </button>
                 
-                {/* Chat Button */}
-                <Button
-                  className="w-full bg-primary text-primary-foreground py-4 lg:py-6 px-4 rounded-xl font-medium flex items-center justify-center space-x-2 shadow-lg hover:bg-primary/90 transition-colors min-h-[44px]"
+                <button 
+                  className="w-full bg-gradient-to-r from-primary to-purple-600 text-white py-4 px-4 rounded-xl font-semibold flex items-center justify-center space-x-3 shadow-lg hover:shadow-xl transition-all active:scale-95"
                   onClick={() => navigate('/chat')}
                 >
                   <MessageCircle className="w-5 h-5" />
                   <span>Chat com Profissionais</span>
-                </Button>
+                </button>
               </div>
             </section>
           </div>
