@@ -28,87 +28,87 @@
 @layer base {
   :root {
     /* Modern Color System - Light Mode */
-    --background: 215 25% 97%; /* #F9FAFB */
-    --foreground: 220 13% 12%; /* #1E1E1E */
+    --background: 220 20% 98%; /* #F9FAFB */
+    --foreground: 0 0% 12%; /* #1E1E1E */
     --card: 0 0% 100%; /* #FFFFFF */
-    --card-foreground: 220 13% 12%;
+    --card-foreground: 0 0% 12%;
     --popover: 0 0% 100%;
-    --popover-foreground: 220 13% 12%;
+    --popover-foreground: 0 0% 12%;
     
-    /* Primary Gradient: Blue to Purple */
-    --primary: 215 80% 58%; /* #4A90E2 */
-    --primary-glow: 268 71% 60%; /* #9B51E0 */
+    /* Primary: #6849FF */
+    --primary: 251 100% 65%; /* #6849FF */
+    --primary-glow: 261 100% 71%; /* #9B6BFF */
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 215 80% 53%;
-    --primary-active: 215 80% 48%;
+    --primary-hover: 251 100% 60%;
+    --primary-active: 251 100% 55%;
+    
+    /* Secondary: Pink complement */
+    --secondary: 320 100% 74%; /* #FF7ED4 */
+    --secondary-foreground: 0 0% 100%;
+    --secondary-hover: 320 100% 69%;
+    --secondary-active: 320 100% 64%;
     
     /* Success Green */
-    --secondary: 145 63% 42%; /* #27AE60 */
-    --secondary-foreground: 0 0% 100%;
-    --secondary-hover: 145 63% 37%;
-    --secondary-active: 145 63% 32%;
-    
-    /* Error Red */
-    --destructive: 0 65% 63%; /* #EB5757 */
-    --destructive-foreground: 0 0% 100%;
+    --success: 145 63% 42%; /* #27AE60 */
+    --success-foreground: 0 0% 100%;
     
     /* Warning Yellow */
     --warning: 45 93% 63%; /* #F2C94C */
     --warning-foreground: 45 93% 10%;
     
-    /* Success (same as secondary) */
-    --success: 145 63% 42%;
-    --success-foreground: 0 0% 100%;
+    /* Error Red */
+    --destructive: 0 65% 63%; /* #EB5757 */
+    --destructive-foreground: 0 0% 100%;
     
     /* Neutral Colors */
-    --muted: 215 25% 95%;
-    --muted-foreground: 220 9% 46%; /* #6B7280 */
-    --accent: 215 25% 95%;
-    --accent-foreground: 220 13% 12%;
-    --border: 215 25% 90%;
-    --input: 215 25% 90%;
-    --ring: 215 80% 58%;
+    --muted: 220 20% 95%;
+    --muted-foreground: 220 13% 46%; /* #6B7280 */
+    --accent: 220 20% 95%;
+    --accent-foreground: 0 0% 12%;
+    --border: 220 20% 90%;
+    --input: 220 20% 90%;
+    --ring: 251 100% 65%;
 
     /* Premium Gold */
-    --premium-primary: 45 93% 63%; /* #F2C94C */
-    --premium-secondary: 38 100% 50%;
-    --premium-glow: 51 100% 50%;
+    --premium-primary: 51 100% 50%; /* #FFD700 */
+    --premium-secondary: 45 100% 55%;
+    --premium-glow: 51 100% 60%;
 
     /* Modern Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(215 80% 58%), hsl(268 71% 60%));
-    --gradient-calm: linear-gradient(180deg, hsl(215 25% 97%) 0%, hsl(220 100% 98%) 100%);
-    --gradient-card: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(220 67% 98%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(251 100% 65%), hsl(261 100% 71%));
+    --gradient-calm: linear-gradient(180deg, hsl(220 20% 98%) 0%, hsl(220 20% 96%) 100%);
+    --gradient-card: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(220 20% 98%) 100%);
     
     /* Feature-specific gradients */
-    --gradient-professional: linear-gradient(135deg, hsl(var(--professional-primary)), hsl(var(--professional-secondary)));
-    --gradient-breathing: linear-gradient(135deg, hsl(200 100% 70%) 0%, hsl(280 100% 70%) 100%);
-    --gradient-sounds: linear-gradient(135deg, hsl(160 100% 50%) 0%, hsl(220 100% 60%) 100%);
-    --gradient-evolution: linear-gradient(135deg, hsl(45 100% 60%) 0%, hsl(25 100% 60%) 100%);
+    --gradient-professional: linear-gradient(135deg, hsl(251 100% 65%), hsl(261 100% 71%));
+    --gradient-breathing: linear-gradient(135deg, hsl(200 100% 70%) 0%, hsl(251 100% 65%) 100%);
+    --gradient-sounds: linear-gradient(135deg, hsl(320 100% 74%) 0%, hsl(251 100% 65%) 100%);
+    --gradient-evolution: linear-gradient(135deg, hsl(45 100% 60%) 0%, hsl(251 100% 65%) 100%);
     --gradient-sos: linear-gradient(135deg, hsl(0 65% 63%) 0%, hsl(15 72% 51%) 100%);
 
     /* Feature Colors */
-    --professional-primary: 59 130 246; /* Blue-500 for appointments/consultations */
-    --professional-secondary: 99 102 241; /* Indigo-500 */
+    --professional-primary: 251 100% 65%; /* Primary purple */
+    --professional-secondary: 261 100% 71%; /* Light purple */
     
-    --breathing-primary: 20 184 166; /* Teal-500 for breathing exercises */
-    --breathing-secondary: 6 182 212; /* Cyan-500 */
-    --breathing-inhale: 20 184 166;
-    --breathing-hold: 6 182 212;
-    --breathing-exhale: 14 165 233;
-    --breathing-pause: 8 145 178;
+    --breathing-primary: 200 100% 70%; /* Calm blue */
+    --breathing-secondary: 251 100% 65%; /* Primary purple */
+    --breathing-inhale: 200 100% 70%;
+    --breathing-hold: 251 100% 65%;
+    --breathing-exhale: 261 100% 71%;
+    --breathing-pause: 220 50% 75%;
 
-    --sounds-primary: 147 51 234; /* Purple-600 for relaxing sounds */
-    --sounds-secondary: 168 85 247; /* Purple-500 */
-    --sounds-accent: 139 92 246;
+    --sounds-primary: 320 100% 74%; /* Pink secondary */
+    --sounds-secondary: 251 100% 65%; /* Primary purple */
+    --sounds-accent: 261 100% 71%;
 
-    --evolution-primary: 245 158 11; /* Amber-500 for progress/evolution */
-    --evolution-secondary: 249 115 22; /* Orange-500 */
+    --evolution-primary: 45 100% 60%; /* Golden yellow */
+    --evolution-secondary: 251 100% 65%; /* Primary purple */
     
-    --journey-primary: 168 85 247; /* Purple 500 */
-    --journey-secondary: 217 70 239; /* Fuchsia 500 */
+    --journey-primary: 261 100% 71%; /* Light purple */
+    --journey-secondary: 320 100% 74%; /* Pink secondary */
     
-    --selfcare-primary: 34 197 94; /* Green 500 */
-    --selfcare-secondary: 59 130 246; /* Blue 500 */
+    --selfcare-primary: 145 63% 42%; /* Success green */
+    --selfcare-secondary: 251 100% 65%; /* Primary purple */
 
     --sos-primary: 0 65% 63%;
     --sos-secondary: 15 72% 51%;
@@ -147,74 +147,75 @@
 
   .dark {
     /* Dark Mode Colors */
-    --background: 220 27% 11%; /* #1C1E26 */
+    --background: 231 20% 13%; /* #1C1E26 */
     --foreground: 0 0% 100%; /* #FFFFFF */
-    --card: 220 23% 16%; /* #2A2E38 */
+    --card: 225 18% 20%; /* #2A2E38 */
     --card-foreground: 0 0% 100%;
-    --popover: 220 23% 16%;
+    --popover: 225 18% 20%;
     --popover-foreground: 0 0% 100%;
     
     /* Enhanced Primary for Dark Mode */
-    --primary: 215 85% 65%; /* Slightly brighter blue */
-    --primary-glow: 268 75% 65%; /* Slightly brighter purple */
-    --primary-foreground: 220 27% 11%;
-    --primary-hover: 215 85% 70%;
-    --primary-active: 215 85% 75%;
+    --primary: 261 100% 71%; /* #9B6BFF - lighter for contrast */
+    --primary-glow: 251 100% 65%; /* #6849FF */
+    --primary-foreground: 231 20% 13%;
+    --primary-hover: 261 100% 76%;
+    --primary-active: 261 100% 81%;
     
     /* Enhanced Secondary for Dark Mode */
-    --secondary: 145 70% 45%; /* Brighter green */
-    --secondary-foreground: 220 27% 11%;
-    --secondary-hover: 145 70% 50%;
-    --secondary-active: 145 70% 55%;
+    --secondary: 324 100% 81%; /* #FF9ED9 - lighter pink */
+    --secondary-foreground: 231 20% 13%;
+    --secondary-hover: 324 100% 86%;
+    --secondary-active: 324 100% 91%;
     
-    /* Error (same brightness for visibility) */
-    --destructive: 0 65% 63%;
-    --destructive-foreground: 0 0% 100%;
+    /* Success (brighter for dark) */
+    --success: 145 52% 62%; /* #6FCF97 */
+    --success-foreground: 231 20% 13%;
     
-    /* Warning (enhanced for dark) */
-    --warning: 45 93% 70%;
+    /* Warning (same) */
+    --warning: 45 93% 63%; /* #F2C94C */
     --warning-foreground: 45 93% 10%;
     
-    /* Success (same as secondary) */
-    --success: 145 70% 45%;
-    --success-foreground: 220 27% 11%;
+    /* Error (brighter for dark) */
+    --destructive: 0 100% 71%; /* #FF6B6B */
+    --destructive-foreground: 0 0% 100%;
     
     /* Dark Neutrals */
-    --muted: 220 23% 20%;
-    --muted-foreground: 220 10% 63%; /* #A0AEC0 */
-    --accent: 220 23% 20%;
+    --muted: 225 18% 23%;
+    --muted-foreground: 220 14% 69%; /* #A0AEC0 */
+    --accent: 225 18% 23%;
     --accent-foreground: 0 0% 100%;
-    --border: 220 23% 20%;
-    --input: 220 23% 20%;
-    --ring: 215 85% 65%;
+    --border: 225 18% 25%;
+    --input: 225 18% 25%;
+    --ring: 261 100% 71%;
 
-    /* Premium (enhanced for dark) */
-    --premium-primary: 45 93% 70%;
-    --premium-secondary: 38 100% 55%;
+    /* Premium (same gold) */
+    --premium-primary: 51 100% 50%; /* #FFD700 */
+    --premium-secondary: 45 100% 55%;
     --premium-glow: 51 100% 60%;
 
     /* Dark Mode Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(215 85% 65%), hsl(268 75% 65%));
-    --gradient-calm: linear-gradient(180deg, hsl(220 27% 11%) 0%, hsl(220 23% 14%) 100%);
-    --gradient-card: linear-gradient(135deg, hsl(220 23% 16%) 0%, hsl(220 27% 13%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(261 100% 71%), hsl(251 100% 65%));
+    --gradient-calm: linear-gradient(180deg, hsl(231 20% 13%) 0%, hsl(225 18% 16%) 100%);
+    --gradient-card: linear-gradient(135deg, hsl(225 18% 20%) 0%, hsl(231 20% 17%) 100%);
     
     /* Enhanced feature gradients for dark mode */
-    --gradient-breathing: linear-gradient(135deg, hsl(200 100% 75%) 0%, hsl(280 100% 75%) 100%);
-    --gradient-sounds: linear-gradient(135deg, hsl(160 100% 55%) 0%, hsl(220 100% 65%) 100%);
-    --gradient-evolution: linear-gradient(135deg, hsl(45 100% 65%) 0%, hsl(25 100% 65%) 100%);
-    --gradient-sos: linear-gradient(135deg, hsl(0 65% 63%) 0%, hsl(15 72% 51%) 100%);
+    --gradient-professional: linear-gradient(135deg, hsl(261 100% 71%), hsl(251 100% 65%));
+    --gradient-breathing: linear-gradient(135deg, hsl(200 100% 75%) 0%, hsl(261 100% 71%) 100%);
+    --gradient-sounds: linear-gradient(135deg, hsl(324 100% 81%) 0%, hsl(261 100% 71%) 100%);
+    --gradient-evolution: linear-gradient(135deg, hsl(45 100% 65%) 0%, hsl(261 100% 71%) 100%);
+    --gradient-sos: linear-gradient(135deg, hsl(0 100% 71%) 0%, hsl(15 72% 51%) 100%);
 
     /* Enhanced feature colors for dark mode */
-    --professional-primary: 99 102 241; /* Indigo 500 - same for dark */
-    --professional-secondary: 139 92 246; /* Violet 500 - same for dark */
+    --professional-primary: 261 100% 71%; /* Light purple */
+    --professional-secondary: 251 100% 65%; /* Primary purple */
     
     --breathing-primary: 200 100% 75%;
-    --breathing-secondary: 280 100% 75%;
-    --sounds-primary: 160 100% 55%;
-    --sounds-secondary: 220 100% 65%;
+    --breathing-secondary: 261 100% 71%;
+    --sounds-primary: 324 100% 81%;
+    --sounds-secondary: 261 100% 71%;
     --evolution-primary: 45 100% 65%;
-    --evolution-secondary: 25 100% 65%;
-    --sos-primary: 0 65% 63%;
+    --evolution-secondary: 261 100% 71%;
+    --sos-primary: 0 100% 71%;
     --sos-secondary: 15 72% 51%;
 
     /* Dark shadow system */
