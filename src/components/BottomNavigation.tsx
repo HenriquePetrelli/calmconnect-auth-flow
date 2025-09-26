@@ -34,8 +34,8 @@ const BottomNavigation = () => {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border/20 shadow-sm safe-area-pb">
-      <div className="flex items-center justify-around max-w-md mx-auto px-2 py-3">
+    <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border shadow-lg safe-area-pb">
+      <div className="flex items-center justify-around max-w-md mx-auto px-3 py-2">
         {navItems.map((item) => {
           const Icon = item.icon;
           return (
@@ -44,18 +44,21 @@ const BottomNavigation = () => {
               variant="ghost"
               size="sm"
               onClick={() => navigate(item.path)}
-              className={`flex-col h-auto py-3 px-4 rounded-xl transition-all duration-200 ${
+              className={`flex-col h-auto py-2 px-3 transition-all duration-200 relative ${
                 item.isActive
-                  ? "bg-primary text-white scale-100"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/30 hover:scale-105"
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-primary"
               }`}
             >
-              <div className={`w-6 h-6 flex items-center justify-center mb-1.5 transition-all duration-200`}>
-                <Icon className={`w-5 h-5 ${item.isActive ? '' : 'opacity-70'}`} />
+              <div className="w-6 h-6 flex items-center justify-center mb-1">
+                <Icon className="w-5 h-5" />
               </div>
-              <span className={`text-xs font-medium tracking-wide transition-all duration-200`}>
+              <span className="text-xs font-medium">
                 {item.label}
               </span>
+              {item.isActive && (
+                <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-6 h-0.5 bg-primary rounded-full" />
+              )}
             </Button>
           );
         })}

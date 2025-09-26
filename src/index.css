@@ -28,25 +28,25 @@
 @layer base {
   :root {
     /* Modern Color System - Light Mode */
-    --background: 220 20% 98%; /* #F9FAFB */
-    --foreground: 0 0% 12%; /* #1E1E1E */
+    --background: 220 14% 96%; /* #F9FAFB */
+    --foreground: 220 9% 12%; /* #1E1E1E */
     --card: 0 0% 100%; /* #FFFFFF */
-    --card-foreground: 0 0% 12%;
+    --card-foreground: 220 9% 12%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 12%;
+    --popover-foreground: 220 9% 12%;
     
     /* Primary: #6849FF */
     --primary: 251 100% 65%; /* #6849FF */
     --primary-glow: 261 100% 71%; /* #9B6BFF */
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 251 100% 60%;
-    --primary-active: 251 100% 55%;
+    --primary-hover: 251 91% 67%; /* #7A5CFF */
+    --primary-active: 251 91% 67%;
     
-    /* Secondary: Pink complement */
-    --secondary: 320 100% 74%; /* #FF7ED4 */
-    --secondary-foreground: 0 0% 100%;
-    --secondary-hover: 320 100% 69%;
-    --secondary-active: 320 100% 64%;
+    /* Secondary: Light Gray */
+    --secondary: 220 14% 89%; /* #E5E7EB */
+    --secondary-foreground: 220 9% 12%; /* #1E1E1E */
+    --secondary-hover: 220 14% 85%;
+    --secondary-active: 220 14% 80%;
     
     /* Success Green */
     --success: 145 63% 42%; /* #27AE60 */
@@ -57,16 +57,16 @@
     --warning-foreground: 45 93% 10%;
     
     /* Error Red */
-    --destructive: 0 65% 63%; /* #EB5757 */
+    --destructive: 0 84% 62%; /* #EB5757 */
     --destructive-foreground: 0 0% 100%;
     
     /* Neutral Colors */
-    --muted: 220 20% 95%;
-    --muted-foreground: 220 13% 46%; /* #6B7280 */
-    --accent: 220 20% 95%;
-    --accent-foreground: 0 0% 12%;
-    --border: 220 20% 90%;
-    --input: 220 20% 90%;
+    --muted: 220 14% 92%; /* #E5E7EB */
+    --muted-foreground: 220 9% 39%; /* #6B7280 */
+    --accent: 220 14% 92%;
+    --accent-foreground: 220 9% 12%;
+    --border: 220 14% 89%; /* #E5E7EB */
+    --input: 220 14% 89%;
     --ring: 251 100% 65%;
 
     /* Premium: Golden */
@@ -166,10 +166,10 @@
     --primary: 251 100% 65%; /* #6849FF */
     --primary-glow: 261 100% 71%; /* #9B6BFF - lighter for highlights */
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 251 100% 68%; /* #7A5CFF */
-    --primary-active: 251 100% 70%;
+    --primary-hover: 251 91% 67%; /* #7A5CFF */
+    --primary-active: 251 91% 67%;
     
-    /* Secondary: Neutral with subtle purple */
+    /* Secondary: Dark Gray */
     --secondary: 225 18% 20%; /* #2A2E38 */
     --secondary-foreground: 0 0% 100%;
     --secondary-hover: 225 18% 25%;
@@ -179,9 +179,9 @@
     --success: 138 47% 44%; /* #3BA55D */
     --success-foreground: 0 0% 100%;
     
-    /* Warning: Muted Yellow */
-    --warning: 45 93% 63%; /* #F2C94C */
-    --warning-foreground: 45 93% 10%;
+    /* Warning: Soft Yellow */
+    --warning: 45 86% 58%; /* #E1B941 */
+    --warning-foreground: 45 86% 10%;
     
     /* Error: Soft Red */
     --destructive: 6 78% 57%; /* #E74C3C */
@@ -189,7 +189,7 @@
     
     /* Elegant Dark Neutrals */
     --muted: 0 0% 17%; /* #2C2C2C */
-    --muted-foreground: 240 5% 64%; /* #A1A1AA */
+    --muted-foreground: 240 4% 63%; /* #A1A1AA */
     --accent: 0 0% 17%;
     --accent-foreground: 0 0% 100%;
     --border: 0 0% 17%; /* #2C2C2C */
