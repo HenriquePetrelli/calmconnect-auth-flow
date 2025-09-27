@@ -16,7 +16,8 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { NotificationButton } from "@/components/notifications/NotificationButton";
 import { Button } from "@/components/ui/button";
-import { MoodSelector } from "@/components/MoodSelector";
+import { MoodSelectionModal } from "@/components/MoodSelectionModal";
+import ConfirmationModal from "@/components/sos/ConfirmationModal";
 import { DesktopSidebar } from "@/components/DesktopSidebar";
 import BottomNavigation from "@/components/BottomNavigation";
 import Logo from "@/components/Logo";
@@ -29,9 +30,14 @@ const HomePage = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [currentMood, setCurrentMood] = useState<string | null>(null);
+  const [showMoodModal, setShowMoodModal] = useState(false);
+  const [showSOSModal, setShowSOSModal] = useState(false);
+  const [hideMoodDaily, setHideMoodDaily] = useState(false);
 
   useEffect(() => {
     fetchUserProfile();
+    checkTodayMood();
   }, []);
 
   const fetchUserProfile = async () => {
@@ -45,44 +51,80 @@ const HomePage = () => {
     }
   };
 
+  const checkTodayMood = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const today = new Date().toISOString().split('T')[0];
+      const { data: patientData } = await supabase
+        .from('patients')
+        .select('last_mood_date')
+        .eq('user_id', user.id)
+        .single();
+
+      // Reset mood daily at 00:01 Brazil time
+      if (!patientData?.last_mood_date || patientData.last_mood_date !== today) {
+        setCurrentMood(null);
+      }
+    } catch (error) {
+      console.error('Error checking today mood:', error);
+    }
+  };
+
+  const handleMoodSelected = (mood: string, value: number) => {
+    setCurrentMood(mood);
+  };
+
+  const handleSOSConfirm = () => {
+    setShowSOSModal(false);
+    navigate('/sos'); // This should go to the waiting room
+  };
+
   const firstName = userProfile?.user_metadata?.full_name?.split(' ')[0] || 'Usuário';
 
   const features = [
     {
-      icon: <Calendar className="w-8 h-8 lg:w-10 lg:h-10 text-primary transition-all duration-300 group-hover:scale-110" />,
+      icon: Calendar,
       title: "Consultas",
       subtitle: "Agende suas consultas",
-      onClick: () => navigate('/appointments')
+      onClick: () => navigate('/appointments'),
+      color: 'hsl(230,100%,66%)'
     },
     {
-      icon: <Activity className="w-8 h-8 lg:w-10 lg:h-10 text-primary transition-all duration-300 group-hover:scale-110" />,
+      icon: Activity,
       title: "Respiração Guiada", 
       subtitle: "Exercícios de relaxamento",
-      onClick: () => navigate('/breathing')
+      onClick: () => navigate('/breathing'),
+      color: 'hsl(142,76%,66%)'
     },
     {
-      icon: <Headphones className="w-8 h-8 lg:w-10 lg:h-10 text-primary transition-all duration-300 group-hover:scale-110" />,
+      icon: Headphones,
       title: "Sons Terapêuticos",
       subtitle: "Biblioteca de áudios calmantes",
-      onClick: () => navigate('/sounds')
+      onClick: () => navigate('/sounds'),
+      color: 'hsl(271,91%,65%)'
     },
     {
-      icon: <Users2 className="w-8 h-8 lg:w-10 lg:h-10 text-primary transition-all duration-300 group-hover:scale-110" />,
+      icon: Users2,
       title: "Grupos de Apoio",
       subtitle: "Suporte da comunidade",
-      onClick: () => navigate('/support-groups')
+      onClick: () => navigate('/support-groups'),
+      color: 'hsl(45,93%,51%)'
     },
     {
-      icon: <BookOpen className="w-8 h-8 lg:w-10 lg:h-10 text-primary transition-all duration-300 group-hover:scale-110" />,
+      icon: BookOpen,
       title: "Meu Diário",
       subtitle: "Diário pessoal",
-      onClick: () => navigate('/journal')
+      onClick: () => navigate('/journal'),
+      color: 'hsl(48,96%,53%)'
     },
     {
-      icon: <BarChart3 className="w-8 h-8 lg:w-10 lg:h-10 text-primary transition-all duration-300 group-hover:scale-110" />,
+      icon: BarChart3,
       title: "Meu Progresso", 
       subtitle: "Acompanhe sua jornada",
-      onClick: () => navigate('/statistics')
+      onClick: () => navigate('/statistics'),
+      color: 'hsl(187,85%,53%)'
     }
   ];
 
@@ -152,7 +194,24 @@ const HomePage = () => {
               <p className="text-muted-foreground">Como você está se sentindo hoje?</p>
             </div>
             <div className="flex items-center gap-4">
-              <MoodSelector />
+              {!hideMoodDaily && (
+                <button
+                  onClick={() => setShowMoodModal(true)}
+                  className="flex items-center gap-2 p-3 rounded-xl bg-card/80 backdrop-blur-sm border border-border hover:border-primary transition-all duration-200"
+                >
+                  {currentMood ? (
+                    <>
+                      <span className="text-2xl">{currentMood}</span>
+                      <span className="text-sm font-medium text-foreground">Humor registrado</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-2xl">😊</span>
+                      <span className="text-sm font-medium text-foreground">Registrar humor</span>
+                    </>
+                  )}
+                </button>
+              )}
               <div className="flex items-center gap-2">
                 <NotificationButton />
                 <Button
@@ -179,23 +238,27 @@ const HomePage = () => {
                 </div>
               </div>
 
-              {/* Componente Interativo de Humor */}
-              <div className="flex space-x-3 overflow-x-auto pb-4 -mx-1 px-1">
-                {[
-                  { emoji: '😢', label: 'Triste' },
-                  { emoji: '😟', label: 'Preocupado' },
-                  { emoji: '😐', label: 'Neutro' },
-                  { emoji: '🙂', label: 'Bem' },
-                  { emoji: '😊', label: 'Feliz' },
-                  { emoji: '😄', label: 'Ótimo' },
-                  { emoji: '🤩', label: 'Empolgado' }
-                ].map((mood, index) => (
-                  <button key={index} className="flex-shrink-0 flex flex-col items-center space-y-2 p-3 rounded-xl bg-card/80 backdrop-blur-sm border border-border hover:border-primary transition-all duration-200 active:scale-95">
-                    <span className="text-2xl">{mood.emoji}</span>
-                    <span className="text-sm font-medium text-foreground">{mood.label}</span>
-                  </button>
-                ))}
-              </div>
+              {/* Mood Button */}
+              {!hideMoodDaily && (
+                <button
+                  onClick={() => setShowMoodModal(true)}
+                  className="w-full p-4 rounded-xl bg-card/80 backdrop-blur-sm border border-border hover:border-primary transition-all duration-200 active:scale-95"
+                >
+                  <div className="flex items-center justify-center space-x-3">
+                    {currentMood ? (
+                      <>
+                        <span className="text-3xl">{currentMood}</span>
+                        <span className="text-foreground font-medium">Humor registrado hoje</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-3xl">😊</span>
+                        <span className="text-foreground font-medium">Registrar humor do dia</span>
+                      </>
+                    )}
+                  </div>
+                </button>
+              )}
             </section>
 
 
@@ -203,40 +266,30 @@ const HomePage = () => {
             <section className="mb-8">
               <h2 className="text-lg font-semibold text-foreground mb-4">Seus recursos</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                {features.map((feature, index) => (
-                  <div key={index} className={`bg-card/80 backdrop-blur-sm rounded-xl p-4 border transition-colors group cursor-pointer shadow-sm ${
-                    index === 0 ? 'border-[hsl(230,100%,66%)] hover:border-[hsl(230,100%,56%)]' : 
-                    index === 1 ? 'border-[hsl(142,76%,66%)] hover:border-[hsl(142,76%,56%)]' : 
-                    index === 2 ? 'border-[hsl(271,91%,65%)] hover:border-[hsl(271,91%,55%)]' : 
-                    index === 3 ? 'border-[hsl(45,93%,51%)] hover:border-[hsl(45,93%,41%)]' : 
-                    index === 4 ? 'border-[hsl(48,96%,53%)] hover:border-[hsl(48,96%,43%)]' : 
-                    'border-[hsl(187,85%,53%)] hover:border-[hsl(187,85%,43%)]'
-                  }`} onClick={feature.onClick}>
-                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-3 group-hover:scale-105 transition-transform ${
-                      index === 0 ? 'bg-[hsl(230,100%,66%)]/10' : 
-                      index === 1 ? 'bg-[hsl(142,76%,66%)]/10' : 
-                      index === 2 ? 'bg-[hsl(271,91%,65%)]/10' : 
-                      index === 3 ? 'bg-[hsl(45,93%,51%)]/10' : 
-                      index === 4 ? 'bg-[hsl(48,96%,53%)]/10' : 
-                      'bg-[hsl(187,85%,53%)]/10'
-                    }`}>
-                      {React.cloneElement(feature.icon, { 
-                        className: `w-6 h-6 ${
-                          index === 0 ? 'text-[hsl(230,100%,66%)]' : 
-                          index === 1 ? 'text-[hsl(142,76%,66%)]' : 
-                          index === 2 ? 'text-[hsl(271,91%,65%)]' : 
-                          index === 3 ? 'text-[hsl(45,93%,51%)]' : 
-                          index === 4 ? 'text-[hsl(48,96%,53%)]' : 
-                          'text-[hsl(187,85%,53%)]'
-                        }`
-                      })}
+                {features.map((feature, index) => {
+                  const Icon = feature.icon;
+                  return (
+                    <div 
+                      key={index} 
+                      className="bg-card/80 backdrop-blur-sm rounded-xl p-4 border transition-colors group cursor-pointer shadow-sm hover:border-primary/50"
+                      style={{ borderColor: feature.color }}
+                      onClick={feature.onClick}
+                    >
+                      <div className="flex flex-col items-center text-center">
+                        <div 
+                          className="w-12 h-12 rounded-lg flex items-center justify-center mb-3 group-hover:scale-105 transition-transform"
+                          style={{ backgroundColor: `${feature.color}20` }}
+                        >
+                          <Icon className="w-6 h-6 opacity-60" style={{ color: feature.color }} />
+                        </div>
+                        <h3 className="font-semibold text-foreground mb-1 text-sm lg:text-base opacity-60">{feature.title}</h3>
+                        {!isMobile && (
+                          <p className="text-xs text-muted-foreground opacity-60">{feature.subtitle}</p>
+                        )}
+                      </div>
                     </div>
-                    <h3 className="font-semibold text-foreground mb-1 text-sm lg:text-base">{feature.title}</h3>
-                    {!isMobile && (
-                      <p className="text-xs text-muted-foreground">{feature.subtitle}</p>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </section>
 
@@ -246,10 +299,24 @@ const HomePage = () => {
 
       {/* Bottom Navigation - Only on Mobile/Tablet */}
       <div className="lg:hidden">
-        <div className="fixed bottom-0 left-0 right-0 bg-card/80 backdrop-blur-md border-t border-border z-40 h-16">
-          <BottomNavigation />
+        <div className="fixed bottom-0 left-0 right-0 bg-card/80 backdrop-blur-md border-t border-border z-50 h-16">
+          <BottomNavigation onSOSClick={() => setShowSOSModal(true)} />
         </div>
       </div>
+
+      {/* Modals */}
+      <MoodSelectionModal
+        open={showMoodModal}
+        onOpenChange={setShowMoodModal}
+        onMoodSelected={handleMoodSelected}
+        currentMood={currentMood}
+      />
+
+      <ConfirmationModal
+        open={showSOSModal}
+        onOpenChange={setShowSOSModal}
+        onConfirm={handleSOSConfirm}
+      />
     </div>
   );
 };

@@ -515,9 +515,12 @@ export type Database = {
           city: string
           cpf: string
           created_at: string | null
+          daily_mood_count: number | null
+          daily_mood_sum: number | null
           email: string
           full_name: string
           id: string
+          last_mood_date: string | null
           phone: string | null
           sintomas_selecionados: string[] | null
           state: string
@@ -528,9 +531,12 @@ export type Database = {
           city: string
           cpf: string
           created_at?: string | null
+          daily_mood_count?: number | null
+          daily_mood_sum?: number | null
           email: string
           full_name: string
           id?: string
+          last_mood_date?: string | null
           phone?: string | null
           sintomas_selecionados?: string[] | null
           state: string
@@ -541,9 +547,12 @@ export type Database = {
           city?: string
           cpf?: string
           created_at?: string | null
+          daily_mood_count?: number | null
+          daily_mood_sum?: number | null
           email?: string
           full_name?: string
           id?: string
+          last_mood_date?: string | null
           phone?: string | null
           sintomas_selecionados?: string[] | null
           state?: string
