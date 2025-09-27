@@ -42,8 +42,8 @@ const BottomNavigation = () => {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-40 h-16">
-      <div className="flex h-full">
+    <nav className="flex h-full">
+      <div className="flex h-full w-full">
         {navItems.map((item) => {
           const Icon = item.icon;
           

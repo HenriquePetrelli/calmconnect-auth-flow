@@ -87,12 +87,32 @@ const HomePage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" style={{
+      backgroundImage: `url(${
+        typeof window !== 'undefined' 
+          ? window.innerWidth <= 767 
+            ? (document.documentElement.classList.contains('dark') 
+              ? '/src/assets/backgrounds/mobile_dark.jpg' 
+              : '/src/assets/backgrounds/mobile_light.png')
+            : window.innerWidth <= 1023
+            ? (document.documentElement.classList.contains('dark') 
+              ? '/src/assets/backgrounds/tablet_dark.jpg' 
+              : '/src/assets/backgrounds/tablet_light.png')
+            : (document.documentElement.classList.contains('dark') 
+              ? '/src/assets/backgrounds/desktop_dark.jpg' 
+              : '/src/assets/backgrounds/desktop_light.png')
+          : ''
+      })`,
+      backgroundRepeat: 'no-repeat',
+      backgroundSize: 'cover',
+      backgroundPosition: 'bottom center',
+      backgroundAttachment: 'fixed'
+    }}>
       <DesktopSidebar />
       
       <div className="lg:pl-64">
         {/* Mobile/Tablet Header */}
-        <header className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-card shadow-sm border-b border-border">
+        <header className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-md shadow-sm border-b border-border">
           <div className="container mx-auto px-4 h-16 flex items-center justify-between">
             
             {/* PERFIL À ESQUERDA - ANTES do Soliv */}
@@ -123,7 +143,7 @@ const HomePage = () => {
         </header>
 
         {/* Desktop Header */}
-        <header className="hidden lg:block bg-card border-b border-border p-6">
+        <header className="hidden lg:block bg-card/80 backdrop-blur-md border-b border-border p-6">
           <div className="max-w-6xl mx-auto flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-foreground mb-2">
@@ -170,7 +190,7 @@ const HomePage = () => {
                   { emoji: '😄', label: 'Ótimo' },
                   { emoji: '🤩', label: 'Empolgado' }
                 ].map((mood, index) => (
-                  <button key={index} className="flex-shrink-0 flex flex-col items-center space-y-2 p-3 rounded-xl bg-card border border-border hover:border-primary transition-all duration-200 active:scale-95">
+                  <button key={index} className="flex-shrink-0 flex flex-col items-center space-y-2 p-3 rounded-xl bg-card/80 backdrop-blur-sm border border-border hover:border-primary transition-all duration-200 active:scale-95">
                     <span className="text-2xl">{mood.emoji}</span>
                     <span className="text-sm font-medium text-foreground">{mood.label}</span>
                   </button>
@@ -226,7 +246,9 @@ const HomePage = () => {
 
       {/* Bottom Navigation - Only on Mobile/Tablet */}
       <div className="lg:hidden">
-        <BottomNavigation />
+        <div className="fixed bottom-0 left-0 right-0 bg-card/80 backdrop-blur-md border-t border-border z-40 h-16">
+          <BottomNavigation />
+        </div>
       </div>
     </div>
   );

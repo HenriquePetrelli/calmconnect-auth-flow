@@ -702,48 +702,60 @@
   }
 }
 
+/* Enhanced Cards with Transparency */
+.bg-card\/80 {
+  background-color: hsl(var(--card) / 0.8);
+  backdrop-filter: blur(10px);
+}
+
+.bg-card\/90 {
+  background-color: hsl(var(--card) / 0.9);
+  backdrop-filter: blur(8px);
+}
+
 /* Responsive Background Images */
 body {
   background-repeat: no-repeat;
   background-size: cover;
   background-position: bottom center;
   background-attachment: fixed;
+  min-height: 100vh;
 }
 
 /* Background Images - Light Mode */
 @media (max-width: 767px) {
   body {
-    background-image: url('./assets/backgrounds/mobile_light.png');
+    background-image: url('/src/assets/backgrounds/mobile_light.png');
   }
 }
 
 @media (min-width: 768px) and (max-width: 1023px) {
   body {
-    background-image: url('./assets/backgrounds/tablet_light.png');
+    background-image: url('/src/assets/backgrounds/tablet_light.png');
   }
 }
 
 @media (min-width: 1024px) {
   body {
-    background-image: url('./assets/backgrounds/desktop_light.png');
+    background-image: url('/src/assets/backgrounds/desktop_light.png');
   }
 }
 
 /* Background Images - Dark Mode */
 @media (max-width: 767px) {
   .dark body {
-    background-image: url('./assets/backgrounds/mobile_dark.jpg');
+    background-image: url('/src/assets/backgrounds/mobile_dark.jpg');
   }
 }
 
 @media (min-width: 768px) and (max-width: 1023px) {
   .dark body {
-    background-image: url('./assets/backgrounds/tablet_dark.jpg');
+    background-image: url('/src/assets/backgrounds/tablet_dark.jpg');
   }
 }
 
 @media (min-width: 1024px) {
   .dark body {
-    background-image: url('./assets/backgrounds/desktop_dark.jpg');
+    background-image: url('/src/assets/backgrounds/desktop_dark.jpg');
   }
 }
