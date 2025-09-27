@@ -27,52 +27,52 @@
 
 @layer base {
   :root {
-    /* Light Mode Colors */
-    --background: 210 40% 98%;        /* #f8fafc - Azul muito claro */
-    --foreground: 222 84% 5%;         /* #0f172a - Azul muito escuro */
+    /* Base Colors - New Soliv Palette */
+    --background: 240 33% 98%;        /* #f9f9fb */
+    --foreground: 0 0% 7%;            /* #111111 */
     
-    --card: 0 0% 100%;                /* #ffffff - Branco puro */
-    --card-foreground: 222 84% 5%;    /* #0f172a */
+    --card: 0 0% 100%;                /* #ffffff */
+    --card-foreground: 0 0% 7%;       /* #111111 */
     
     --popover: 0 0% 100%;             /* #ffffff */
-    --popover-foreground: 222 84% 5%; /* #0f172a */
+    --popover-foreground: 0 0% 7%;    /* #111111 */
     
-  --primary: 262 83% 58%;           /* #6d28d9 - Violeta calmante */
-  --primary-foreground: 210 40% 98%;/* #f8fafc */
-  --primary-hover: 262 83% 50%;     /* #5b21b6 */
-  --primary-active: 262 83% 45%;    /* #4c1d95 */
-  
-  --secondary: 201 96% 55%;         /* #0ea5e9 - Azul calmante */
-  --secondary-foreground: 210 40% 98%; /* #f8fafc */
-  --secondary-hover: 201 96% 45%;   /* #0284c7 */
-  --secondary-active: 201 96% 40%;  /* #0369a1 */
+    --primary: 230 100% 66%;          /* #5572ff */
+    --primary-foreground: 0 0% 100%;  /* #ffffff */
+    --primary-hover: 230 100% 56%;    /* Darker primary */
+    --primary-active: 230 100% 46%;   /* Even darker primary */
     
-    --muted: 210 40% 96%;             /* #f1f5f9 - Cinza muito claro */
-    --muted-foreground: 215 16% 47%;  /* #64748b - Cinza médio */
+    --secondary: 0 0% 33%;            /* #555555 */
+    --secondary-foreground: 0 0% 100%; /* #ffffff */
+    --secondary-hover: 0 0% 25%;      /* Darker secondary */
+    --secondary-active: 0 0% 20%;     /* Even darker secondary */
     
-    --accent: 210 40% 96%;            /* #f1f5f9 */
-    --accent-foreground: 222 84% 5%;  /* #0f172a */
+    --muted: 230 20% 92%;             /* #e4e6f0 */
+    --muted-foreground: 0 0% 33%;     /* #555555 */
     
-    --destructive: 0 84% 60%;         /* #dc2626 - Vermelho */
-    --destructive-foreground: 210 40% 98%; /* #f8fafc */
+    --accent: 230 20% 92%;            /* #e4e6f0 */
+    --accent-foreground: 0 0% 7%;     /* #111111 */
     
-    --success: 142 76% 36%;           /* #16a34a - Verde */
-    --success-foreground: 210 40% 98%; /* #f8fafc */
+    --destructive: 0 84% 60%;         /* #dc2626 */
+    --destructive-foreground: 0 0% 100%; /* #ffffff */
     
-    --warning: 38 92% 50%;            /* #f59e0b - Âmbar */
-    --warning-foreground: 222 84% 5%; /* #0f172a */
+    --success: 142 76% 36%;           /* #16a34a */
+    --success-foreground: 0 0% 100%;  /* #ffffff */
     
-    --border: 214 32% 91%;            /* #e2e8f0 - Cinza claro */
-    --input: 214 32% 91%;             /* #e2e8f0 */
-    --ring: 262 83% 58%;              /* #6d28d9 */
+    --warning: 48 96% 53%;            /* #facc15 */
+    --warning-foreground: 0 0% 7%;    /* #111111 */
     
-    /* Cores específicas - Light Mode */
-    --breathing-primary: 201 96% 55%;   /* #0ea5e9 - Azul céu */
-    --breathing-secondary: 160 84% 39%; /* #10b981 - Verde natureza */
-    --breathing-inhale: 142 76% 36%;    /* #16a34a - Verde inspiração */
-    --breathing-hold: 201 96% 45%;      /* #0284c7 - Azul segurar */
-    --breathing-exhale: 186 94% 82%;    /* #a5f3fc - Azul claro expirar */
-    --breathing-pause: 210 40% 96%;     /* #f1f5f9 - Cinza muito suave */
+    --border: 230 20% 92%;            /* #e4e6f0 */
+    --input: 230 20% 92%;             /* #e4e6f0 */
+    --ring: 230 100% 66%;             /* #5572ff */
+    
+    /* Category Colors */
+    --category-appointments: 230 100% 66%;  /* #5572ff - Primary blue */
+    --category-breathing: 142 76% 66%;      /* #4ade80 - Green */
+    --category-sounds: 271 91% 65%;         /* #a855f7 - Purple */
+    --category-groups: 45 93% 51%;          /* #f59e0b - Orange */
+    --category-journal: 48 96% 53%;         /* #facc15 - Yellow */
+    --category-progress: 187 85% 53%;       /* #22d3ee - Cyan */
     
     --sounds-primary: 262 83% 58%;      /* #6d28d9 - Roxo */
     --sounds-secondary: 269 97% 85%;    /* #d8b4fe - Lilás */
@@ -125,44 +125,44 @@
   }
 
 .dark {
-  /* Dark Mode Colors */
-  --background: 222 47% 11%;        /* #0d1a2d - Azul mais suave */
-  --foreground: 210 40% 98%;         /* #f8fafc - Branco azulado */
+  /* Base Colors - New Soliv Dark Palette */
+  --background: 225 27% 8%;           /* #0f121a */
+  --foreground: 0 0% 100%;            /* #ffffff */
   
-  --card: 222 47% 15%;              /* #122133 - Mais contrastante */
-  --card-foreground: 210 40% 98%;    /* #f8fafc */
+  --card: 225 22% 13%;                /* #1c1f2a */
+  --card-foreground: 0 0% 100%;       /* #ffffff */
   
-  --popover: 222 47% 15%;           /* #122133 */
-  --popover-foreground: 210 40% 98%; /* #f8fafc */
+  --popover: 225 22% 13%;             /* #1c1f2a */
+  --popover-foreground: 0 0% 100%;    /* #ffffff */
   
-  --primary: 262 70% 65%;           /* #8b5cf6 - Violeta mais suave */
-  --primary-foreground: 210 40% 98%; /* #f8fafc */
-  --primary-hover: 262 70% 70%;     /* #a78bfa */
-  --primary-active: 262 70% 75%;    /* #c4b5fd */
+  --primary: 230 100% 66%;            /* #5572ff */
+  --primary-foreground: 0 0% 100%;    /* #ffffff */
+  --primary-hover: 230 100% 56%;      /* Darker primary */
+  --primary-active: 230 100% 46%;     /* Even darker primary */
   
-  --secondary: 201 96% 60%;         /* #38bdf8 - Azul claro */
-  --secondary-foreground: 222 47% 11%; /* #0d1a2d */
-  --secondary-hover: 201 96% 65%;   /* #38bdf8 */
-  --secondary-active: 201 96% 70%;  /* #7dd3fc */
+  --secondary: 0 0% 73%;              /* #bbbbbb */
+  --secondary-foreground: 225 27% 8%; /* #0f121a */
+  --secondary-hover: 0 0% 65%;        /* Darker secondary */
+  --secondary-active: 0 0% 60%;       /* Even darker secondary */
     
-    --muted: 217 33% 17%;              /* #1e293b - Azul escuro */
-    --muted-foreground: 215 20% 65%;   /* #94a3b8 - Cinza azulado */
+    --muted: 225 16% 20%;              /* #2b2e3a */
+    --muted-foreground: 0 0% 73%;      /* #bbbbbb */
     
-    --accent: 217 33% 17%;             /* #1e293b */
-    --accent-foreground: 210 40% 98%;  /* #f8fafc */
+    --accent: 225 16% 20%;             /* #2b2e3a */
+    --accent-foreground: 0 0% 100%;    /* #ffffff */
     
-    --destructive: 0 84% 70%;          /* #ef4444 - Vermelho mais claro */
-    --destructive-foreground: 210 40% 98%; /* #f8fafc */
+    --destructive: 0 84% 60%;          /* #dc2626 */
+    --destructive-foreground: 0 0% 100%; /* #ffffff */
     
-    --success: 142 76% 46%;            /* #22c55e - Verde mais claro */
-    --success-foreground: 210 40% 98%; /* #f8fafc */
+    --success: 142 76% 46%;            /* #22c55e */
+    --success-foreground: 0 0% 100%;   /* #ffffff */
     
-    --warning: 48 96% 70%;             /* #fbbf24 - Âmbar mais claro */
-    --warning-foreground: 222 84% 5%;  /* #0f172a */
+    --warning: 48 96% 70%;             /* #fbbf24 */
+    --warning-foreground: 225 27% 8%;  /* #0f121a */
     
-    --border: 217 33% 17%;             /* #1e293b */
-    --input: 217 33% 17%;              /* #1e293b */
-    --ring: 262 83% 70%;               /* #8b5cf6 */
+    --border: 225 16% 20%;             /* #2b2e3a */
+    --input: 225 16% 20%;              /* #2b2e3a */
+    --ring: 230 100% 66%;              /* #5572ff */
     
     /* Cores específicas - Dark Mode */
     --breathing-primary: 201 96% 65%;   /* #38bdf8 - Azul mais claro */
@@ -699,5 +699,51 @@
     flex-wrap: wrap;
     justify-content: center;
     gap: 12px;
+  }
+}
+
+/* Responsive Background Images */
+body {
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: bottom center;
+  background-attachment: fixed;
+}
+
+/* Background Images - Light Mode */
+@media (max-width: 767px) {
+  body {
+    background-image: url('./assets/backgrounds/mobile_light.png');
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  body {
+    background-image: url('./assets/backgrounds/tablet_light.png');
+  }
+}
+
+@media (min-width: 1024px) {
+  body {
+    background-image: url('./assets/backgrounds/desktop_light.png');
+  }
+}
+
+/* Background Images - Dark Mode */
+@media (max-width: 767px) {
+  .dark body {
+    background-image: url('./assets/backgrounds/mobile_dark.jpg');
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .dark body {
+    background-image: url('./assets/backgrounds/tablet_dark.jpg');
+  }
+}
+
+@media (min-width: 1024px) {
+  .dark body {
+    background-image: url('./assets/backgrounds/desktop_dark.jpg');
   }
 }

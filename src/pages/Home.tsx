@@ -184,23 +184,30 @@ const HomePage = () => {
               <h2 className="text-lg font-semibold text-foreground mb-4">Seus recursos</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                 {features.map((feature, index) => (
-                  <div key={index} className="bg-card rounded-xl p-4 border border-border hover:border-primary transition-colors group cursor-pointer" onClick={feature.onClick}>
+                  <div key={index} className={`bg-card/80 backdrop-blur-sm rounded-xl p-4 border transition-colors group cursor-pointer shadow-sm ${
+                    index === 0 ? 'border-[hsl(230,100%,66%)] hover:border-[hsl(230,100%,56%)]' : 
+                    index === 1 ? 'border-[hsl(142,76%,66%)] hover:border-[hsl(142,76%,56%)]' : 
+                    index === 2 ? 'border-[hsl(271,91%,65%)] hover:border-[hsl(271,91%,55%)]' : 
+                    index === 3 ? 'border-[hsl(45,93%,51%)] hover:border-[hsl(45,93%,41%)]' : 
+                    index === 4 ? 'border-[hsl(48,96%,53%)] hover:border-[hsl(48,96%,43%)]' : 
+                    'border-[hsl(187,85%,53%)] hover:border-[hsl(187,85%,43%)]'
+                  }`} onClick={feature.onClick}>
                     <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-3 group-hover:scale-105 transition-transform ${
-                      index === 0 ? 'bg-blue-100' : 
-                      index === 1 ? 'bg-green-100' : 
-                      index === 2 ? 'bg-purple-100' : 
-                      index === 3 ? 'bg-orange-100' : 
-                      index === 4 ? 'bg-yellow-100' : 
-                      'bg-teal-100'
+                      index === 0 ? 'bg-[hsl(230,100%,66%)]/10' : 
+                      index === 1 ? 'bg-[hsl(142,76%,66%)]/10' : 
+                      index === 2 ? 'bg-[hsl(271,91%,65%)]/10' : 
+                      index === 3 ? 'bg-[hsl(45,93%,51%)]/10' : 
+                      index === 4 ? 'bg-[hsl(48,96%,53%)]/10' : 
+                      'bg-[hsl(187,85%,53%)]/10'
                     }`}>
                       {React.cloneElement(feature.icon, { 
                         className: `w-6 h-6 ${
-                          index === 0 ? 'text-blue-600' : 
-                          index === 1 ? 'text-green-600' : 
-                          index === 2 ? 'text-purple-600' : 
-                          index === 3 ? 'text-orange-600' : 
-                          index === 4 ? 'text-yellow-600' : 
-                          'text-teal-600'
+                          index === 0 ? 'text-[hsl(230,100%,66%)]' : 
+                          index === 1 ? 'text-[hsl(142,76%,66%)]' : 
+                          index === 2 ? 'text-[hsl(271,91%,65%)]' : 
+                          index === 3 ? 'text-[hsl(45,93%,51%)]' : 
+                          index === 4 ? 'text-[hsl(48,96%,53%)]' : 
+                          'text-[hsl(187,85%,53%)]'
                         }`
                       })}
                     </div>

@@ -52,7 +52,7 @@ const BottomNavigation = () => {
               <div key={item.path} className="flex-1 flex justify-center items-center">
                 <button
                   onClick={() => navigate(item.path)}
-                  className="w-16 h-16 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center shadow-2xl z-10 relative -mt-4"
+                  className="w-16 h-16 rounded-full bg-[hsl(0,84%,60%)] hover:bg-[hsl(0,84%,50%)] text-white flex items-center justify-center shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-105 z-10 relative -mt-4"
                 >
                   <Icon />
                 </button>
@@ -64,10 +64,15 @@ const BottomNavigation = () => {
             <div key={item.path} className="flex-1 flex justify-center items-center">
               <button 
                 onClick={() => navigate(item.path)}
-                className={`flex flex-col items-center justify-center w-full h-full p-2 transition-all duration-200 ${
-                  item.isActive ? 'text-primary bg-primary/10' : 'text-muted-foreground hover:bg-accent'
+                className={`flex flex-col items-center justify-center w-full h-full p-2 transition-all duration-200 relative ${
+                  item.isActive 
+                    ? 'text-primary' 
+                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
                 }`}
               >
+                {item.isActive && (
+                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-primary rounded-full transition-all duration-200"></div>
+                )}
                 <Icon className="w-5 h-5" />
                 <span className="text-xs mt-1">{item.label}</span>
               </button>
