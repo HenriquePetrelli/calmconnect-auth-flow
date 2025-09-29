@@ -69,67 +69,69 @@ const PrivateJournal = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b">
-        <div className="flex items-center justify-between p-4">
-          <BackButton to="/home" label="Home" />
-          <h1 className="text-xl font-semibold">Meu Diário</h1>
-          <Button onClick={handleCreateEntry} size="icon">
-            <Plus className="h-5 w-5" />
-          </Button>
+    <div className="has-tabs">
+      <div className="screen">
+        {/* Header */}
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b">
+          <div className="flex items-center justify-between p-4">
+            <BackButton to="/home" label="Home" />
+            <h1 className="text-xl font-semibold">Meu Diário</h1>
+            <Button onClick={handleCreateEntry} size="icon">
+              <Plus className="h-5 w-5" />
+            </Button>
+          </div>
+
+          {/* Filtro de humor */}
+          <div className="px-4 pb-4">
+            <MoodFilter
+              selectedMood={selectedMood}
+              onMoodSelect={handleMoodFilter}
+            />
+          </div>
         </div>
 
-        {/* Filtro de humor */}
-        <div className="px-4 pb-4">
-          <MoodFilter
-            selectedMood={selectedMood}
-            onMoodSelect={handleMoodFilter}
-          />
-        </div>
-      </div>
-
-      {/* Conteúdo */}
-      <div className="p-4 pb-20">
-        {loading ? (
-          <div className="space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="space-y-3">
-                <Skeleton className="h-4 w-1/3" />
-                <Skeleton className="h-20 w-full" />
-                <Skeleton className="h-4 w-1/4" />
-              </div>
-            ))}
-          </div>
-        ) : entries.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">📖</div>
-            <h2 className="text-lg font-medium mb-2">Seu diário está vazio</h2>
-            <p className="text-muted-foreground mb-6">
-              {selectedMood !== null 
-                ? 'Não há anotações com esse humor.' 
-                : 'Comece escrevendo sua primeira anotação!'
-              }
-            </p>
-            {selectedMood === null && (
-              <Button onClick={handleCreateEntry}>
-                <Plus className="h-4 w-4 mr-2" />
-                Criar Primeira Anotação
-              </Button>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {entries.map((entry) => (
-              <JournalEntryCard
-                key={entry.id}
-                entry={entry}
-                onEdit={handleEditEntry}
-                onDelete={handleDeleteEntry}
-              />
-            ))}
-          </div>
-        )}
+        {/* Conteúdo */}
+        <main className="p-4">
+          {loading ? (
+            <div className="space-y-4">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="space-y-3">
+                  <Skeleton className="h-4 w-1/3" />
+                  <Skeleton className="h-20 w-full" />
+                  <Skeleton className="h-4 w-1/4" />
+                </div>
+              ))}
+            </div>
+          ) : entries.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">📖</div>
+              <h2 className="text-lg font-medium mb-2">Seu diário está vazio</h2>
+              <p className="text-muted-foreground mb-6">
+                {selectedMood !== null 
+                  ? 'Não há anotações com esse humor.' 
+                  : 'Comece escrevendo sua primeira anotação!'
+                }
+              </p>
+              {selectedMood === null && (
+                <Button onClick={handleCreateEntry}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Criar Primeira Anotação
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {entries.map((entry) => (
+                <JournalEntryCard
+                  key={entry.id}
+                  entry={entry}
+                  onEdit={handleEditEntry}
+                  onDelete={handleDeleteEntry}
+                />
+              ))}
+            </div>
+          )}
+        </main>
       </div>
 
       {/* Modal de anotação */}

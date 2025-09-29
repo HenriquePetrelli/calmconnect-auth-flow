@@ -27,6 +27,9 @@
 
 @layer base {
   :root {
+    /* Tab bar height */
+    --tab-height: 72px;
+    
     /* Base Colors - New Soliv Palette */
     --background: 240 33% 98%;        /* #f9f9fb */
     --foreground: 0 0% 7%;            /* #111111 */
@@ -551,6 +554,72 @@
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* garantir altura full */
+  html,
+  body,
+  #root {
+    height: 100%;
+    min-height: 100%;
+  }
+
+  /* wrapper das telas que possuem tabs */
+  .has-tabs {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  /* garantir que o conteúdo ocupe espaço até a tab */
+  .has-tabs .screen {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - var(--tab-height));
+  }
+
+  /* main scrollável */
+  .has-tabs .screen main,
+  .has-tabs .screen .screen-content {
+    flex: 1 1 auto;
+    overflow: auto;
+    padding-bottom: calc(var(--tab-height) + env(safe-area-inset-bottom));
+  }
+
+  /* barra de tabs fixa */
+  .tabs {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: var(--tab-height);
+    padding-bottom: env(safe-area-inset-bottom);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    gap: 12px;
+    z-index: 1000;
+    background: hsl(var(--card) / 0.95);
+    border-top: 1px solid hsl(var(--border) / 0.6);
+    backdrop-filter: blur(6px);
+  }
+
+  /* destaque do SOS dentro da barra fixa */
+  .tabs .tab-item.sos {
+    transform: translateY(-10px);
+    width: 56px;
+    height: 56px;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1001;
+  }
+
+  /* z-index das modals deve ser maior que das tabs */
+  .modal,
+  .modal-backdrop {
+    z-index: 1100;
   }
 
   /* Improved Typography Hierarchy */

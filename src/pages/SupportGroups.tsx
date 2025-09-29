@@ -136,30 +136,32 @@ const SupportGroups = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-6 pb-20">
-        <div className="mb-6">
-          <BackButton to="/home" label="Voltar para Home" />
-        </div>
-          
-          <div className="space-y-6">
-            <div className="text-center space-y-2">
-              <Skeleton className="h-8 w-64 mx-auto" />
-              <Skeleton className="h-4 w-96 mx-auto" />
+      <div className="has-tabs">
+        <div className="screen">
+          <main className="container mx-auto px-4 py-6">
+            <div className="mb-6">
+              <BackButton to="/home" label="Voltar para Home" />
             </div>
-            
-            <div className="space-y-4">
-              {[...Array(6)].map((_, i) => (
-                <Card key={i}>
-                  <CardHeader>
-                    <Skeleton className="h-6 w-3/4" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                  </CardHeader>
-                </Card>
-              ))}
+              
+            <div className="space-y-6">
+              <div className="text-center space-y-2">
+                <Skeleton className="h-8 w-64 mx-auto" />
+                <Skeleton className="h-4 w-96 mx-auto" />
+              </div>
+              
+              <div className="space-y-4">
+                {[...Array(6)].map((_, i) => (
+                  <Card key={i}>
+                    <CardHeader>
+                      <Skeleton className="h-6 w-3/4" />
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                    </CardHeader>
+                  </Card>
+                ))}
+              </div>
             </div>
-          </div>
+          </main>
         </div>
         <BottomNavigation />
       </div>
@@ -167,47 +169,49 @@ const SupportGroups = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-6 pb-20">
-        <div className="mb-6">
-          <BackButton to="/home" label="Voltar para Home" />
-        </div>
-        
-        <div className="space-y-6">
-          <div className="text-center space-y-2">
-            <h1 className="text-2xl font-bold text-foreground">
-              Grupos de Apoio
-            </h1>
-            <p className="text-muted-foreground">
-              Conecte-se com pessoas que enfrentam desafios similares aos seus
-            </p>
+    <div className="has-tabs">
+      <div className="screen">
+        <main className="container mx-auto px-4 py-6">
+          <div className="mb-6">
+            <BackButton to="/home" label="Voltar para Home" />
           </div>
-
-          {groups.length === 0 ? (
-            <Card>
-              <CardContent className="text-center py-12">
-                <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-foreground mb-2">
-                  Nenhum grupo encontrado
-                </h3>
-                <p className="text-muted-foreground">
-                  Os grupos de apoio aparecerão aqui quando estiverem disponíveis.
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-4">
-              {groups.map((group) => (
-                <GroupCard
-                  key={group.id}
-                  group={group}
-                  onToggleFavorite={toggleFavorite}
-                  onViewGroup={handleViewGroup}
-                />
-              ))}
+          
+          <div className="space-y-6">
+            <div className="text-center space-y-2">
+              <h1 className="text-2xl font-bold text-foreground">
+                Grupos de Apoio
+              </h1>
+              <p className="text-muted-foreground">
+                Conecte-se com pessoas que enfrentam desafios similares aos seus
+              </p>
             </div>
-          )}
-        </div>
+
+            {groups.length === 0 ? (
+              <Card>
+                <CardContent className="text-center py-12">
+                  <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-foreground mb-2">
+                    Nenhum grupo encontrado
+                  </h3>
+                  <p className="text-muted-foreground">
+                    Os grupos de apoio aparecerão aqui quando estiverem disponíveis.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {groups.map((group) => (
+                  <GroupCard
+                    key={group.id}
+                    group={group}
+                    onToggleFavorite={toggleFavorite}
+                    onViewGroup={handleViewGroup}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </main>
       </div>
       <BottomNavigation />
     </div>

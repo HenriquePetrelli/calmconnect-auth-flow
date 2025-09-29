@@ -296,57 +296,58 @@ const SupportGroupDetail = () => {
   const isPremiumUser = subscribed && (subscriptionTier === 'Plus' || subscriptionTier === 'Premium');
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-6 pb-20">
-        <div className="mb-6">
-          <BackButton to="/support-groups" label="Voltar para Grupos" />
-        </div>
-        
-        <div className="space-y-6">
-          {/* Header */}
-          <div className="text-center space-y-3">
-            <h1 className="text-2xl font-bold text-foreground">
-              {groupName}
-            </h1>
-            
-            <div className="flex items-center justify-center gap-2">
-              <Dialog open={showSymptoms} onOpenChange={setShowSymptoms}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Info className="w-4 h-4 mr-2" />
-                    Ver sintomas
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Sintomas relacionados - {groupName}</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-2">
-                    {symptomsLoading ? (
-                      <div className="space-y-2">
-                        {[...Array(5)].map((_, i) => (
-                          <Skeleton key={i} className="h-4 w-full" />
-                        ))}
-                      </div>
-                    ) : symptoms.length > 0 ? (
-                      <ul className="space-y-2">
-                        {symptoms.map((symptom, index) => (
-                          <li key={index} className="flex items-start gap-2 text-sm">
-                            <span className="w-1 h-1 bg-primary rounded-full mt-2 flex-shrink-0" />
-                            <span>{symptom}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="text-muted-foreground text-sm">
-                        Nenhum sintoma específico cadastrado para este grupo.
-                      </p>
-                    )}
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </div>
+    <div className="has-tabs">
+      <div className="screen">
+        <main className="container mx-auto px-4 py-6">
+          <div className="mb-6">
+            <BackButton to="/support-groups" label="Voltar para Grupos" />
           </div>
+          
+          <div className="space-y-6">
+            {/* Header */}
+            <div className="text-center space-y-3">
+              <h1 className="text-2xl font-bold text-foreground">
+                {groupName}
+              </h1>
+              
+              <div className="flex items-center justify-center gap-2">
+                <Dialog open={showSymptoms} onOpenChange={setShowSymptoms}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <Info className="w-4 h-4 mr-2" />
+                      Ver sintomas
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Sintomas relacionados - {groupName}</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-2">
+                      {symptomsLoading ? (
+                        <div className="space-y-2">
+                          {[...Array(5)].map((_, i) => (
+                            <Skeleton key={i} className="h-4 w-full" />
+                          ))}
+                        </div>
+                      ) : symptoms.length > 0 ? (
+                        <ul className="space-y-2">
+                          {symptoms.map((symptom, index) => (
+                            <li key={index} className="flex items-start gap-2 text-sm">
+                              <span className="w-1 h-1 bg-primary rounded-full mt-2 flex-shrink-0" />
+                              <span>{symptom}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-muted-foreground text-sm">
+                          Nenhum sintoma específico cadastrado para este grupo.
+                        </p>
+                      )}
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
 
           {/* Filter and Add Testimonial */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">

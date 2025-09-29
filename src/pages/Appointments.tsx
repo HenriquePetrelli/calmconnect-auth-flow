@@ -54,55 +54,57 @@ const Appointments = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="flex items-center gap-4 p-4 border-b border-border">
-        <Button variant="ghost" size="sm" onClick={() => navigate('/home')}>
-          <ArrowLeft size={20} />
-        </Button>
-        <h1 className="text-xl font-semibold text-foreground">Consultas</h1>
-      </div>
+    <div className="has-tabs">
+      <div className="screen">
+        {/* Header */}
+        <div className="flex items-center gap-4 p-4 border-b border-border">
+          <Button variant="ghost" size="sm" onClick={() => navigate('/home')}>
+            <ArrowLeft size={20} />
+          </Button>
+          <h1 className="text-xl font-semibold text-foreground">Consultas</h1>
+        </div>
 
-      {/* Content */}
-      <div className="p-4 space-y-6 pb-24">
-        {/* Schedule New Appointment */}
-        <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="flex-shrink-0 w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-primary" />
+        {/* Content */}
+        <main className="p-4 space-y-6">
+          {/* Schedule New Appointment */}
+          <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="flex-shrink-0 w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center">
+                  <Calendar className="w-6 h-6 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-foreground mb-1">Schedule New Appointment</h3>
+                  <p className="text-sm text-muted-foreground">Book a session with a psychologist</p>
+                </div>
               </div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-foreground mb-1">Schedule New Appointment</h3>
-                <p className="text-sm text-muted-foreground">Book a session with a psychologist</p>
+              <div className="mt-4 flex items-center gap-2">
+                <Button 
+                  className="flex-1 flex items-center gap-2 transition-all duration-200 hover:scale-105" 
+                  size="lg"
+                  onClick={handleScheduleClick}
+                  disabled={subscriptionTier !== 'Premium'}
+                >    
+                   <Plus className="w-4 h-4" />
+                    Agendar Nova Consulta
+                    {subscriptionTier !== 'Premium' && <Crown className="w-4 h-4 ml-2" />}
+                </Button>
+                {subscriptionTier !== 'Premium' && (
+                  <Badge className="bg-premium-primary text-white px-3 py-2 text-xs flex items-center gap-1 rounded-full">
+                    <Crown className="w-3 h-3" />
+                    Premium
+                  </Badge>
+                )}
               </div>
-            </div>
-            <div className="mt-4 flex items-center gap-2">
-              <Button 
-                className="flex-1 flex items-center gap-2 transition-all duration-200 hover:scale-105" 
-                size="lg"
-                onClick={handleScheduleClick}
-                disabled={subscriptionTier !== 'Premium'}
-              >    
-                 <Plus className="w-4 h-4" />
-                  Agendar Nova Consulta
-                  {subscriptionTier !== 'Premium' && <Crown className="w-4 h-4 ml-2" />}
-              </Button>
-              {subscriptionTier !== 'Premium' && (
-                <Badge className="bg-premium-primary text-white px-3 py-2 text-xs flex items-center gap-1 rounded-full">
-                  <Crown className="w-3 h-3" />
-                  Premium
-                </Badge>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        {/* Upcoming Appointments */}
-        <UpcomingAppointments />
+          {/* Upcoming Appointments */}
+          <UpcomingAppointments />
 
-        {/* Consultation History */}
-        <AppointmentHistory />
+          {/* Consultation History */}
+          <AppointmentHistory />
+        </main>
       </div>
 
       {/* Bottom Navigation */}

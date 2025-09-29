@@ -299,9 +299,7 @@ const HomePage = () => {
 
       {/* Bottom Navigation - Only on Mobile/Tablet */}
       <div className="lg:hidden">
-        <div className="fixed bottom-0 left-0 right-0 bg-card/80 backdrop-blur-md border-t border-border z-50 h-16">
-          <BottomNavigation onSOSClick={() => setShowSOSModal(true)} />
-        </div>
+        <BottomNavigation onSOSClick={() => setShowSOSModal(true)} />
       </div>
 
       {/* Modals */}
