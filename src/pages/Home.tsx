@@ -35,10 +35,29 @@ const HomePage = () => {
   const [showSOSModal, setShowSOSModal] = useState(false);
   const [moodEnabled, setMoodEnabled] = useState(true);
   const [todayMoodValue, setTodayMoodValue] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetchUserProfile();
-    checkTodayMood();
+    const loadHomeData = async () => {
+      setIsLoading(true);
+      await Promise.all([
+        fetchUserProfile(),
+        checkTodayMood()
+      ]);
+      setIsLoading(false);
+    };
+    
+    loadHomeData();
+
+    // Listen for mood toggle changes
+    const handleMoodToggleChange = (event: CustomEvent) => {
+      setMoodEnabled(event.detail.enabled);
+    };
+
+    window.addEventListener('moodToggleChanged', handleMoodToggleChange as EventListener);
+    return () => {
+      window.removeEventListener('moodToggleChanged', handleMoodToggleChange as EventListener);
+    };
   }, []);
 
   const fetchUserProfile = async () => {
@@ -249,6 +268,15 @@ const HomePage = () => {
         {/* Main Content */}
         <main className="pt-16 lg:pt-0 pb-20 lg:pb-6 px-4 lg:p-6">
           <div className="max-w-6xl mx-auto">
+            {isLoading ? (
+              <div className="flex items-center justify-center min-h-[60vh]">
+                <div className="flex flex-col items-center space-y-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  <p className="text-sm text-muted-foreground">Carregando...</p>
+                </div>
+              </div>
+            ) : (
+              <>
             {/* Mobile/Tablet Greeting Section */}
             {moodEnabled && (
               <section className="lg:hidden mb-8">
@@ -312,7 +340,8 @@ const HomePage = () => {
                 })}
               </div>
             </section>
-
+              </>
+            )}
           </div>
         </main>
       </div>

@@ -33,6 +33,12 @@ export const DailyMoodToggle: React.FC = () => {
   };
 
   const handleToggle = async (checked: boolean) => {
+    // Immediate state update and event dispatch
+    setIsEnabled(checked);
+    window.dispatchEvent(new CustomEvent('moodToggleChanged', { 
+      detail: { enabled: checked } 
+    }));
+
     setIsLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -45,6 +51,11 @@ export const DailyMoodToggle: React.FC = () => {
 
       if (error) {
         console.error('Error updating mood setting:', error);
+        // Revert state on error
+        setIsEnabled(!checked);
+        window.dispatchEvent(new CustomEvent('moodToggleChanged', { 
+          detail: { enabled: !checked } 
+        }));
         toast({
           title: "Erro",
           description: "Não foi possível atualizar a configuração. Tente novamente.",
@@ -53,7 +64,6 @@ export const DailyMoodToggle: React.FC = () => {
         return;
       }
 
-      setIsEnabled(checked);
       toast({
         title: checked ? "Humor diário ativado" : "Humor diário desativado",
         description: checked 
@@ -62,6 +72,11 @@ export const DailyMoodToggle: React.FC = () => {
       });
     } catch (error) {
       console.error('Error updating mood setting:', error);
+      // Revert state on error
+      setIsEnabled(!checked);
+      window.dispatchEvent(new CustomEvent('moodToggleChanged', { 
+        detail: { enabled: !checked } 
+      }));
       toast({
         title: "Erro",
         description: "Não foi possível atualizar a configuração. Tente novamente.",
