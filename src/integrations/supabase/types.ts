@@ -521,6 +521,7 @@ export type Database = {
           full_name: string
           id: string
           last_mood_date: string | null
+          last_mood_value: number | null
           phone: string | null
           sintomas_selecionados: string[] | null
           state: string
@@ -537,6 +538,7 @@ export type Database = {
           full_name: string
           id?: string
           last_mood_date?: string | null
+          last_mood_value?: number | null
           phone?: string | null
           sintomas_selecionados?: string[] | null
           state: string
@@ -553,6 +555,7 @@ export type Database = {
           full_name?: string
           id?: string
           last_mood_date?: string | null
+          last_mood_value?: number | null
           phone?: string | null
           sintomas_selecionados?: string[] | null
           state?: string

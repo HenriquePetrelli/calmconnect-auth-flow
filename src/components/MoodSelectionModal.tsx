@@ -46,7 +46,7 @@ export const MoodSelectionModal: React.FC<MoodSelectionModalProps> = ({
       const today = new Date().toISOString().split('T')[0];
       const { data: patientData, error: fetchError } = await supabase
         .from('patients')
-        .select('daily_mood_count, daily_mood_sum, last_mood_date')
+        .select('daily_mood_count, daily_mood_sum, last_mood_date, last_mood_value')
         .eq('user_id', user.id)
         .single();
 
@@ -57,15 +57,26 @@ export const MoodSelectionModal: React.FC<MoodSelectionModalProps> = ({
 
       const isNewDay = !patientData?.last_mood_date || patientData.last_mood_date !== today;
       
-      const newCount = isNewDay ? 1 : (patientData?.daily_mood_count || 0) + 1;
-      const newSum = isNewDay ? mood.value : (patientData?.daily_mood_sum || 0) + mood.value;
+      let newCount, newSum;
+      
+      if (isNewDay) {
+        // Novo dia: incrementar count e somar o valor
+        newCount = (patientData?.daily_mood_count || 0) + 1;
+        newSum = (patientData?.daily_mood_sum || 0) + mood.value;
+      } else {
+        // Mesmo dia: substituir valor (descontar o antigo, somar o novo, manter count)
+        const previousMoodValue = patientData?.last_mood_value || 0;
+        newCount = patientData?.daily_mood_count || 1; // Manter o count do dia
+        newSum = (patientData?.daily_mood_sum || 0) - previousMoodValue + mood.value;
+      }
 
       const { error: updateError } = await supabase
         .from('patients')
         .update({
           daily_mood_count: newCount,
           daily_mood_sum: newSum,
-          last_mood_date: today
+          last_mood_date: today,
+          last_mood_value: mood.value
         })
         .eq('user_id', user.id);
 
