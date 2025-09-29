@@ -33,12 +33,15 @@ export const MoodSelectionModal: React.FC<MoodSelectionModalProps> = ({
   const { toast } = useToast();
   const [selectedMood, setSelectedMood] = useState<string | null>(currentMood);
   const [hideMoodDaily, setHideMoodDaily] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isHiding, setIsHiding] = useState(false);
 
   useEffect(() => {
     setSelectedMood(currentMood);
   }, [currentMood]);
 
   const handleMoodSelect = async (mood: typeof moods[0]) => {
+    setIsLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -105,16 +108,48 @@ export const MoodSelectionModal: React.FC<MoodSelectionModalProps> = ({
         description: "Não foi possível salvar seu humor. Tente novamente.",
         variant: "destructive"
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleHideMoodDaily = () => {
-    setHideMoodDaily(true);
-    onOpenChange(false);
-    toast({
-      title: "Humor diário ocultado",
-      description: "Você pode reativar nas configurações do perfil.",
-    });
+  const handleHideMoodDaily = async () => {
+    setIsHiding(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('patients')
+        .update({ daily_mood_enabled: false })
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error hiding daily mood:', error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível ocultar o humor diário. Tente novamente.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      setHideMoodDaily(true);
+      onOpenChange(false);
+      toast({
+        title: "Humor diário ocultado",
+        description: "Você pode reativar nas configurações do perfil.",
+      });
+    } catch (error) {
+      console.error('Error hiding daily mood:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível ocultar o humor diário. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsHiding(false);
+    }
   };
 
   return (
@@ -134,13 +169,18 @@ export const MoodSelectionModal: React.FC<MoodSelectionModalProps> = ({
               <button
                 key={mood.value}
                 onClick={() => handleMoodSelect(mood)}
-                className={`flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-200 hover:scale-105 ${
+                disabled={isLoading}
+                className={`flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${
                   selectedMood === mood.emoji
                     ? 'border-primary bg-primary/10'
                     : 'border-border hover:border-primary/50'
                 }`}
               >
-                <span className="text-4xl mb-2">{mood.emoji}</span>
+                {isLoading ? (
+                  <div className="w-10 h-10 mb-2 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <span className="text-4xl mb-2">{mood.emoji}</span>
+                )}
                 <span className="text-sm font-medium">{mood.label}</span>
               </button>
             ))}
@@ -150,13 +190,18 @@ export const MoodSelectionModal: React.FC<MoodSelectionModalProps> = ({
           <div className="mb-4">
             <button
               onClick={() => handleMoodSelect(moods[2])}
-              className={`w-full flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-200 hover:scale-105 ${
+              disabled={isLoading}
+              className={`w-full flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${
                 selectedMood === moods[2].emoji
                   ? 'border-primary bg-primary/10'
                   : 'border-border hover:border-primary/50'
               }`}
             >
-              <span className="text-5xl mb-2">{moods[2].emoji}</span>
+              {isLoading ? (
+                <div className="w-12 h-12 mb-2 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <span className="text-5xl mb-2">{moods[2].emoji}</span>
+              )}
               <span className="text-base font-medium">{moods[2].label}</span>
             </button>
           </div>
@@ -167,13 +212,18 @@ export const MoodSelectionModal: React.FC<MoodSelectionModalProps> = ({
               <button
                 key={mood.value}
                 onClick={() => handleMoodSelect(mood)}
-                className={`flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-200 hover:scale-105 ${
+                disabled={isLoading}
+                className={`flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${
                   selectedMood === mood.emoji
                     ? 'border-primary bg-primary/10'
                     : 'border-border hover:border-primary/50'
                 }`}
               >
-                <span className="text-4xl mb-2">{mood.emoji}</span>
+                {isLoading ? (
+                  <div className="w-10 h-10 mb-2 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <span className="text-4xl mb-2">{mood.emoji}</span>
+                )}
                 <span className="text-sm font-medium">{mood.label}</span>
               </button>
             ))}
@@ -184,9 +234,17 @@ export const MoodSelectionModal: React.FC<MoodSelectionModalProps> = ({
           <Button
             variant="outline"
             onClick={handleHideMoodDaily}
+            disabled={isHiding}
             className="text-sm text-muted-foreground"
           >
-            Ocultar humor diário
+            {isHiding ? (
+              <>
+                <div className="w-4 h-4 mr-2 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                Ocultando...
+              </>
+            ) : (
+              'Ocultar humor diário'
+            )}
           </Button>
         </div>
       </DialogContent>

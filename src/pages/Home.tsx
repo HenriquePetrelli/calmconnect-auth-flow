@@ -33,7 +33,8 @@ const HomePage = () => {
   const [currentMood, setCurrentMood] = useState<string | null>(null);
   const [showMoodModal, setShowMoodModal] = useState(false);
   const [showSOSModal, setShowSOSModal] = useState(false);
-  const [hideMoodDaily, setHideMoodDaily] = useState(false);
+  const [moodEnabled, setMoodEnabled] = useState(true);
+  const [todayMoodValue, setTodayMoodValue] = useState<number | null>(null);
 
   useEffect(() => {
     fetchUserProfile();
@@ -59,13 +60,31 @@ const HomePage = () => {
       const today = new Date().toISOString().split('T')[0];
       const { data: patientData } = await supabase
         .from('patients')
-        .select('last_mood_date')
+        .select('last_mood_date, last_mood_value, daily_mood_enabled')
         .eq('user_id', user.id)
         .single();
+
+      // Check if mood tracking is enabled
+      setMoodEnabled(patientData?.daily_mood_enabled !== false);
 
       // Reset mood daily at 00:01 Brazil time
       if (!patientData?.last_mood_date || patientData.last_mood_date !== today) {
         setCurrentMood(null);
+        setTodayMoodValue(null);
+      } else {
+        // Show today's mood if it exists
+        setTodayMoodValue(patientData.last_mood_value);
+        const moods = [
+          { emoji: '😀', label: 'Feliz', value: 5 },
+          { emoji: '🙂', label: 'Calmo', value: 4 },
+          { emoji: '😐', label: 'Neutro', value: 3 },
+          { emoji: '😔', label: 'Triste', value: 2 },
+          { emoji: '😡', label: 'Irritado', value: 1 }
+        ];
+        const todayMood = moods.find(mood => mood.value === patientData.last_mood_value);
+        if (todayMood) {
+          setCurrentMood(todayMood.emoji);
+        }
       }
     } catch (error) {
       console.error('Error checking today mood:', error);
@@ -74,6 +93,7 @@ const HomePage = () => {
 
   const handleMoodSelected = (mood: string, value: number) => {
     setCurrentMood(mood);
+    setTodayMoodValue(value);
   };
 
   const handleSOSConfirm = () => {
@@ -194,7 +214,7 @@ const HomePage = () => {
               <p className="text-muted-foreground">Como você está se sentindo hoje?</p>
             </div>
             <div className="flex items-center gap-4">
-              {!hideMoodDaily && (
+              {moodEnabled && (
                 <button
                   onClick={() => setShowMoodModal(true)}
                   className="flex items-center gap-2 p-3 rounded-xl bg-card/80 backdrop-blur-sm border border-border hover:border-primary transition-all duration-200"
@@ -230,16 +250,16 @@ const HomePage = () => {
         <main className="pt-16 lg:pt-0 pb-20 lg:pb-6 px-4 lg:p-6">
           <div className="max-w-6xl mx-auto">
             {/* Mobile/Tablet Greeting Section */}
-            <section className="lg:hidden mb-8">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h1 className="text-2xl font-bold text-foreground">Olá, <span className="text-primary">{firstName}</span>! 👋</h1>
-                  <p className="text-muted-foreground">Como você está se sentindo hoje?</p>
+            {moodEnabled && (
+              <section className="lg:hidden mb-8">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h1 className="text-2xl font-bold text-foreground">Olá, <span className="text-primary">{firstName}</span>! 👋</h1>
+                    <p className="text-muted-foreground">Como você está se sentindo hoje?</p>
+                  </div>
                 </div>
-              </div>
 
-              {/* Mood Button */}
-              {!hideMoodDaily && (
+                {/* Mood Button */}
                 <button
                   onClick={() => setShowMoodModal(true)}
                   className="w-full p-4 rounded-xl bg-card/80 backdrop-blur-sm border border-border hover:border-primary transition-all duration-200 active:scale-95"
@@ -258,8 +278,8 @@ const HomePage = () => {
                     )}
                   </div>
                 </button>
-              )}
-            </section>
+              </section>
+            )}
 
 
             {/* Resources Section - Improved Grid */}
@@ -303,12 +323,14 @@ const HomePage = () => {
       </div>
 
       {/* Modals */}
-      <MoodSelectionModal
-        open={showMoodModal}
-        onOpenChange={setShowMoodModal}
-        onMoodSelected={handleMoodSelected}
-        currentMood={currentMood}
-      />
+      {moodEnabled && (
+        <MoodSelectionModal
+          open={showMoodModal}
+          onOpenChange={setShowMoodModal}
+          onMoodSelected={handleMoodSelected}
+          currentMood={currentMood}
+        />
+      )}
 
       <ConfirmationModal
         open={showSOSModal}

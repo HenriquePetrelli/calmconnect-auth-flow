@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Crown, LogOut, Settings, User as UserIcon, MessageCircle } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { DailyMoodToggle } from "@/components/DailyMoodToggle";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -227,6 +228,8 @@ const Profile = () => {
                 </div>
                 <ThemeToggle />
               </div>
+              
+              <DailyMoodToggle />
             </CardContent>
           </Card>
 

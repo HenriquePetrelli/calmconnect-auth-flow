@@ -516,6 +516,7 @@ export type Database = {
           cpf: string
           created_at: string | null
           daily_mood_count: number | null
+          daily_mood_enabled: boolean
           daily_mood_sum: number | null
           email: string
           full_name: string
@@ -533,6 +534,7 @@ export type Database = {
           cpf: string
           created_at?: string | null
           daily_mood_count?: number | null
+          daily_mood_enabled?: boolean
           daily_mood_sum?: number | null
           email: string
           full_name: string
@@ -550,6 +552,7 @@ export type Database = {
           cpf?: string
           created_at?: string | null
           daily_mood_count?: number | null
+          daily_mood_enabled?: boolean
           daily_mood_sum?: number | null
           email?: string
           full_name?: string
