@@ -45,15 +45,17 @@ const ProfileContent: React.FC = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Try to get patient data first
-      const { data: patientData } = await supabase
-        .from('patients')
-        .select('full_name, email, phone, city, state')
-        .eq('user_id', user.id)
-        .single();
+      // Wait for all profile-related data to load
+      const [patientDataResult] = await Promise.allSettled([
+        supabase
+          .from('patients')
+          .select('full_name, email, phone, city, state')
+          .eq('user_id', user.id)
+          .single()
+      ]);
 
-      if (patientData) {
-        setProfileData(patientData);
+      if (patientDataResult.status === 'fulfilled' && patientDataResult.value.data) {
+        setProfileData(patientDataResult.value.data);
       } else {
         // Fallback to user metadata
         setProfileData({
@@ -72,7 +74,10 @@ const ProfileContent: React.FC = () => {
         variant: "destructive"
       });
     } finally {
-      setIsLoading(false);
+      // Add a small delay to ensure smooth loading experience
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 300);
     }
   };
 
