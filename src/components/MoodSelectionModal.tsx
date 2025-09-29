@@ -48,7 +48,7 @@ export const MoodSelectionModal: React.FC<MoodSelectionModalProps> = ({
         .from('patients')
         .select('daily_mood_count, daily_mood_sum, last_mood_date, last_mood_value')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (fetchError) {
         console.error('Error fetching patient data:', fetchError);
