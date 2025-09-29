@@ -27,20 +27,21 @@ interface ProfileData {
   phone?: string;
   city?: string;
   state?: string;
+  daily_mood_enabled?: boolean;
 }
 
 const ProfileContent: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [dataReady, setDataReady] = useState(false);
+  const [toggleReady, setToggleReady] = useState(false);
 
   useEffect(() => {
     loadProfileData();
   }, []);
 
   const loadProfileData = async () => {
-    setIsLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -49,7 +50,7 @@ const ProfileContent: React.FC = () => {
       const [patientDataResult] = await Promise.allSettled([
         supabase
           .from('patients')
-          .select('full_name, email, phone, city, state')
+          .select('full_name, email, phone, city, state, daily_mood_enabled')
           .eq('user_id', user.id)
           .single()
       ]);
@@ -74,10 +75,7 @@ const ProfileContent: React.FC = () => {
         variant: "destructive"
       });
     } finally {
-      // Add a small delay to ensure smooth loading experience
-      setTimeout(() => {
-        setIsLoading(false);
-      }, 300);
+      setDataReady(true);
     }
   };
 
@@ -95,7 +93,8 @@ const ProfileContent: React.FC = () => {
     }
   };
 
-  if (isLoading) {
+  const showSkeleton = !(dataReady && toggleReady);
+  if (showSkeleton) {
     return <PageSkeleton type="profile" />;
   }
 
@@ -171,7 +170,10 @@ const ProfileContent: React.FC = () => {
             <CardTitle className="text-lg">Configurações</CardTitle>
           </CardHeader>
           <CardContent>
-            <DailyMoodToggle />
+            <DailyMoodToggle 
+              initialEnabled={profileData?.daily_mood_enabled !== false}
+              onReady={() => setToggleReady(true)}
+            />
           </CardContent>
         </Card>
 

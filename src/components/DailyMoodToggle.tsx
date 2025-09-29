@@ -4,9 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Heart } from "lucide-react";
 
-export const DailyMoodToggle: React.FC = () => {
+interface DailyMoodToggleProps {
+  initialEnabled?: boolean;
+  onReady?: () => void;
+}
+
+export const DailyMoodToggle: React.FC<DailyMoodToggleProps> = ({ initialEnabled = true, onReady }) => {
   const { toast } = useToast();
-  const [isEnabled, setIsEnabled] = useState(true);
+  const [isEnabled, setIsEnabled] = useState(initialEnabled);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -29,6 +34,8 @@ export const DailyMoodToggle: React.FC = () => {
       }
     } catch (error) {
       console.error('Error fetching mood setting:', error);
+    } finally {
+      onReady?.();
     }
   };
 
