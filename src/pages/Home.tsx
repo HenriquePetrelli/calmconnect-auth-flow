@@ -71,6 +71,17 @@ const HomePage = () => {
     }
   };
 
+  const getMoodLabel = (value: number) => {
+    const moods = [
+      { emoji: '😀', label: 'Feliz', value: 5 },
+      { emoji: '🙂', label: 'Calmo', value: 4 },
+      { emoji: '😐', label: 'Neutro', value: 3 },
+      { emoji: '😔', label: 'Triste', value: 2 },
+      { emoji: '😡', label: 'Irritado', value: 1 }
+    ];
+    return moods.find(mood => mood.value === value)?.label || '';
+  };
+
   const checkTodayMood = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -238,12 +249,12 @@ const HomePage = () => {
                   onClick={() => setShowMoodModal(true)}
                   className="flex items-center gap-2 p-3 rounded-xl bg-card/80 backdrop-blur-sm border border-border hover:border-primary transition-all duration-200"
                 >
-                  {currentMood ? (
-                    <>
-                      <span className="text-2xl">{currentMood}</span>
-                      <span className="text-sm font-medium text-foreground">Humor registrado</span>
-                    </>
-                  ) : (
+                   {currentMood ? (
+                     <>
+                       <span className="text-2xl">{currentMood}</span>
+                       <span className="text-sm font-medium text-foreground">{getMoodLabel(todayMoodValue || 0)}</span>
+                     </>
+                   ) : (
                     <>
                       <span className="text-2xl">😊</span>
                       <span className="text-sm font-medium text-foreground">Registrar humor</span>
@@ -269,10 +280,30 @@ const HomePage = () => {
         <main className="pt-16 lg:pt-0 pb-20 lg:pb-6 px-4 lg:p-6">
           <div className="max-w-6xl mx-auto">
             {isLoading ? (
-              <div className="flex items-center justify-center min-h-[60vh]">
-                <div className="flex flex-col items-center space-y-4">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                  <p className="text-sm text-muted-foreground">Carregando...</p>
+              <div className="space-y-8">
+                {/* Mobile/Tablet Mood Section Skeleton */}
+                <div className="lg:hidden space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-2">
+                      <div className="h-7 w-48 bg-muted/60 rounded animate-pulse"></div>
+                      <div className="h-4 w-64 bg-muted/40 rounded animate-pulse"></div>
+                    </div>
+                  </div>
+                  <div className="w-full h-16 bg-card/80 border border-muted/50 rounded-xl animate-pulse"></div>
+                </div>
+
+                {/* Resources Section Skeleton */}
+                <div className="space-y-4">
+                  <div className="h-6 w-32 bg-muted/60 rounded animate-pulse"></div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {[...Array(6)].map((_, i) => (
+                      <div key={i} className="bg-card/80 border border-muted/50 rounded-xl p-4 space-y-3 animate-pulse">
+                        <div className="w-12 h-12 bg-primary/10 rounded-lg mx-auto"></div>
+                        <div className="h-4 w-3/4 bg-muted/60 rounded mx-auto"></div>
+                        <div className="h-3 w-full bg-muted/40 rounded"></div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             ) : (
@@ -293,12 +324,12 @@ const HomePage = () => {
                   className="w-full p-4 rounded-xl bg-card/80 backdrop-blur-sm border border-border hover:border-primary transition-all duration-200 active:scale-95"
                 >
                   <div className="flex items-center justify-center space-x-3">
-                    {currentMood ? (
-                      <>
-                        <span className="text-3xl">{currentMood}</span>
-                        <span className="text-foreground font-medium">Humor registrado hoje</span>
-                      </>
-                    ) : (
+                     {currentMood ? (
+                       <>
+                         <span className="text-3xl">{currentMood}</span>
+                         <span className="text-foreground font-medium">{getMoodLabel(todayMoodValue || 0)}</span>
+                       </>
+                     ) : (
                       <>
                         <span className="text-3xl">😊</span>
                         <span className="text-foreground font-medium">Registrar humor do dia</span>

@@ -114,6 +114,11 @@ export const MoodSelectionModal: React.FC<MoodSelectionModalProps> = ({
   };
 
   const handleHideMoodDaily = async () => {
+    // Dispatch event immediately to hide section
+    window.dispatchEvent(new CustomEvent('moodToggleChanged', { 
+      detail: { enabled: false } 
+    }));
+
     setIsHiding(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -126,6 +131,10 @@ export const MoodSelectionModal: React.FC<MoodSelectionModalProps> = ({
 
       if (error) {
         console.error('Error hiding daily mood:', error);
+        // Revert state on error
+        window.dispatchEvent(new CustomEvent('moodToggleChanged', { 
+          detail: { enabled: true } 
+        }));
         toast({
           title: "Erro",
           description: "Não foi possível ocultar o humor diário. Tente novamente.",
@@ -134,7 +143,6 @@ export const MoodSelectionModal: React.FC<MoodSelectionModalProps> = ({
         return;
       }
 
-      setHideMoodDaily(true);
       onOpenChange(false);
       toast({
         title: "Humor diário ocultado",
@@ -142,6 +150,10 @@ export const MoodSelectionModal: React.FC<MoodSelectionModalProps> = ({
       });
     } catch (error) {
       console.error('Error hiding daily mood:', error);
+      // Revert state on error
+      window.dispatchEvent(new CustomEvent('moodToggleChanged', { 
+        detail: { enabled: true } 
+      }));
       toast({
         title: "Erro",
         description: "Não foi possível ocultar o humor diário. Tente novamente.",
