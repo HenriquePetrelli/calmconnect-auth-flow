@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import { DailyMoodToggle } from '@/components/DailyMoodToggle';
 import PageSkeleton from '@/components/PageSkeleton';
 import { 
@@ -18,7 +19,11 @@ import {
   MapPin,
   Shield,
   CreditCard,
-  MessageCircle
+  MessageCircle,
+  Crown,
+  ChevronDown,
+  ChevronUp,
+  Check
 } from 'lucide-react';
 
 interface ProfileData {
@@ -33,9 +38,11 @@ interface ProfileData {
 const ProfileContent: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { subscribed, subscriptionTier, loading: subscriptionLoading } = useSubscription();
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [dataReady, setDataReady] = useState(false);
   const [toggleReady, setToggleReady] = useState(false);
+  const [planDropdownOpen, setPlanDropdownOpen] = useState(false);
 
   useEffect(() => {
     loadProfileData();
@@ -93,10 +100,60 @@ const ProfileContent: React.FC = () => {
     }
   };
 
-  const showSkeleton = !(dataReady && toggleReady);
+  const showSkeleton = !(dataReady && toggleReady && !subscriptionLoading);
   if (showSkeleton) {
     return <PageSkeleton type="profile" />;
   }
+
+  const getPlanDisplayInfo = () => {
+    if (!subscribed) {
+      return { name: 'Plano Gratuito', price: 'R$ 0,00/mês' };
+    }
+    
+    switch (subscriptionTier?.toLowerCase()) {
+      case 'plus':
+        return { name: 'Plano Plus', price: 'R$ 89,00/mês' };
+      case 'premium':
+        return { name: 'Plano Premium', price: 'R$ 120,00/mês' };
+      default:
+        return { name: 'Plano Ativo', price: 'Consulte valor' };
+    }
+  };
+
+  const getPlanBenefits = () => {
+    const commonBenefits = [
+      'Acesso à biblioteca de sons',
+      'Exercícios de respiração'
+    ];
+
+    if (!subscribed) {
+      return [
+        'Funcionalidades limitadas',
+        ...commonBenefits
+      ];
+    }
+
+    switch (subscriptionTier?.toLowerCase()) {
+      case 'plus':
+        return [
+          '1 chamada emergencial por mês',
+          '1 consulta agendada por mês',
+          'Duração: 50 minutos',
+          ...commonBenefits,
+          'Suporte prioritário'
+        ];
+      case 'premium':
+        return [
+          'Chamadas emergenciais ilimitadas',
+          '1 consulta agendada por mês',
+          'Duração: 50 minutos',
+          ...commonBenefits,
+          'Suporte prioritário'
+        ];
+      default:
+        return commonBenefits;
+    }
+  };
 
   const menuItems = [
     {
@@ -105,13 +162,6 @@ const ProfileContent: React.FC = () => {
       description: "Altere suas informações pessoais",
       onClick: () => navigate('/account-settings'),
       color: 'hsl(230,100%,66%)'
-    },
-    {
-      icon: CreditCard,
-      label: "Planos de Assinatura",
-      description: "Gerencie sua assinatura",
-      onClick: () => navigate('/subscription-plans'),
-      color: 'hsl(142,76%,66%)'
     },
     {
       icon: HelpCircle,
@@ -162,6 +212,61 @@ const ProfileContent: React.FC = () => {
               </div>
             )}
           </CardContent>
+        </Card>
+
+        {/* Current Plan Section */}
+        <Card className="shadow-sm">
+          <div 
+            className="cursor-pointer transition-all duration-200 hover:bg-accent/5"
+            onClick={() => setPlanDropdownOpen(!planDropdownOpen)}
+          >
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
+                    <Crown className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground">{getPlanDisplayInfo().name}</h3>
+                    <p className="text-sm text-muted-foreground">{getPlanDisplayInfo().price}</p>
+                  </div>
+                </div>
+                <div className="flex items-center">
+                  {planDropdownOpen ? (
+                    <ChevronUp className="w-5 h-5 text-muted-foreground transition-transform duration-200" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-muted-foreground transition-transform duration-200" />
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </div>
+          
+          {/* Dropdown Content with Animation */}
+          <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
+            planDropdownOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+          }`}>
+            <CardContent className="px-6 pb-6 pt-0">
+              <div className="border-t border-border/50 pt-4">
+                <h4 className="font-medium text-foreground mb-3">Benefícios do seu plano:</h4>
+                <div className="space-y-2 mb-4">
+                  {getPlanBenefits().map((benefit, index) => (
+                    <div key={index} className="flex items-center space-x-2">
+                      <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                      <span className="text-sm text-muted-foreground">{benefit}</span>
+                    </div>
+                  ))}
+                </div>
+                <Button 
+                  className="w-full"
+                  onClick={() => navigate('/subscription-plans')}
+                >
+                  <CreditCard className="w-4 h-4 mr-2" />
+                  Gerenciar Assinatura
+                </Button>
+              </div>
+            </CardContent>
+          </div>
         </Card>
 
         {/* Daily Mood Toggle */}
