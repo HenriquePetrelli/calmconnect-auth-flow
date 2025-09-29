@@ -9,6 +9,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import SplashScreen from "@/components/SplashScreen";
 import RouteGuard from "@/components/RouteGuard";
+import MainLayout from "@/components/MainLayout";
 import Index from "./pages/Index";
 import SignupType from "./pages/SignupType";
 import PatientSignUp from "./pages/PatientSignUp";
@@ -94,12 +95,37 @@ const App = () => {
                     </RouteGuard>
                   } />
 
-                  {/* Rotas do Paciente */}
+                  {/* Rotas do Paciente com Layout Principal */}
                   <Route path="/home" element={
                     <RouteGuard allowedUserTypes={['patient']}>
-                      <Home />
+                      <MainLayout>
+                        <Home />
+                      </MainLayout>
                     </RouteGuard>
                   } />
+                  <Route path="/chat" element={
+                    <RouteGuard allowedUserTypes={['patient', 'psychologist']}>
+                      <MainLayout>
+                        <Chat />
+                      </MainLayout>
+                    </RouteGuard>
+                  } />
+                  <Route path="/profile" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <MainLayout>
+                        <Profile />
+                      </MainLayout>
+                    </RouteGuard>
+                  } />
+                  <Route path="/appointments" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <MainLayout>
+                        <Appointments />
+                      </MainLayout>
+                    </RouteGuard>
+                  } />
+
+                  {/* Outras rotas do Paciente sem Layout Principal */}
                   <Route path="/support-groups" element={
                     <RouteGuard allowedUserTypes={['patient']}>
                       <SupportGroups />
@@ -155,11 +181,6 @@ const App = () => {
                       <SOS />
                     </RouteGuard>
                   } />
-                  <Route path="/profile" element={
-                    <RouteGuard allowedUserTypes={['patient']}>
-                      <Profile />
-                    </RouteGuard>
-                  } />
                   <Route path="/account-settings" element={
                     <RouteGuard allowedUserTypes={['patient']}>
                       <AccountSettings />
@@ -168,16 +189,6 @@ const App = () => {
                   <Route path="/paciente/suporte" element={
                     <RouteGuard allowedUserTypes={['patient']}>
                       <Support />
-                    </RouteGuard>
-                  } />
-                  <Route path="/appointments" element={
-                    <RouteGuard allowedUserTypes={['patient']}>
-                      <Appointments />
-                    </RouteGuard>
-                  } />
-                  <Route path="/notifications" element={
-                    <RouteGuard allowedUserTypes={['patient']}>
-                      <Notifications />
                     </RouteGuard>
                   } />
                   <Route path="/statistics" element={
@@ -213,11 +224,6 @@ const App = () => {
                   <Route path="/consultation-call/:appointmentId" element={
                     <RouteGuard allowedUserTypes={['patient']}>
                       <ConsultationCall />
-                    </RouteGuard>
-                  } />
-                  <Route path="/chat" element={
-                    <RouteGuard allowedUserTypes={['patient', 'psychologist']}>
-                      <Chat />
                     </RouteGuard>
                   } />
                   
