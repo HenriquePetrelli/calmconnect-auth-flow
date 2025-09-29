@@ -349,145 +349,146 @@ const SupportGroupDetail = () => {
               </div>
             </div>
 
-          {/* Filter and Add Testimonial */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            {/* Filter */}
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-muted-foreground" />
-              <Select value={filter} onValueChange={(value: 'all' | 'mine') => handleFilterChange(value)}>
-                <SelectTrigger className="w-48">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os depoimentos</SelectItem>
-                  <SelectItem value="mine">Meus depoimentos</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Add Testimonial Button */}
-            <Dialog open={showAddTestimonial} onOpenChange={setShowAddTestimonial}>
-              <DialogTrigger asChild>
-                <Button 
-                  onClick={handleAddTestimonialClick}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                  disabled={!isPremiumUser}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Adicionar Depoimento
-                  {!isPremiumUser && <Crown className="w-4 h-4 ml-2" />}
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-lg">
-                <DialogHeader>
-                  <DialogTitle>Adicionar Depoimento</DialogTitle>
-                </DialogHeader>
-                <AddTestimonialForm
-                  groupId={groupId}
-                  groupName={groupName}
-                  onSuccess={handleTestimonialAdded}
-                />
-              </DialogContent>
-            </Dialog>
-          </div>
-
-          {/* Edit Testimonial Dialog */}
-          <Dialog open={showEditTestimonial} onOpenChange={setShowEditTestimonial}>
-            <DialogContent className="max-w-lg">
-              <DialogHeader>
-                <DialogTitle>Editar Depoimento</DialogTitle>
-              </DialogHeader>
-              {editingTestimonial && (
-                <EditTestimonialForm
-                  groupName={groupName}
-                  testimonial={editingTestimonial}
-                  onSave={handleUpdateTestimonial}
-                  onCancel={() => {
-                    setShowEditTestimonial(false);
-                    setEditingTestimonial(null);
-                  }}
-                />
-              )}
-            </DialogContent>
-          </Dialog>
-
-          {/* Testimonials */}
-          <div className="space-y-4">
-            {testimonialsLoading ? (
-              <div className="space-y-4">
-                {[...Array(3)].map((_, i) => (
-                  <Card key={i}>
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center gap-3">
-                        <Skeleton className="w-10 h-10 rounded-full" />
-                        <div className="flex-1 space-y-2">
-                          <Skeleton className="h-4 w-32" />
-                          <Skeleton className="h-3 w-24" />
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      <div className="space-y-2">
-                        <Skeleton className="h-4 w-full" />
-                        <Skeleton className="h-4 w-3/4" />
-                        <Skeleton className="h-4 w-1/2" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+            {/* Filter and Add Testimonial */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              {/* Filter */}
+              <div className="flex items-center gap-2">
+                <Filter className="w-4 h-4 text-muted-foreground" />
+                <Select value={filter} onValueChange={(value: 'all' | 'mine') => handleFilterChange(value)}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os depoimentos</SelectItem>
+                    <SelectItem value="mine">Meus depoimentos</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            ) : testimonials.length === 0 ? (
-              <Card>
-                <CardContent className="text-center py-12">
-                  <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                    <User className="w-8 h-8 text-muted-foreground" />
-                  </div>
-                  <h3 className="text-lg font-medium text-foreground mb-2">
-                    {filter === 'mine' ? 'Você ainda não tem depoimentos' : 'Ainda não há depoimentos'}
-                  </h3>
-                  <p className="text-muted-foreground mb-4">
-                    {filter === 'mine' 
-                      ? 'Compartilhe sua primeira experiência neste grupo.' 
-                      : 'Seja o primeiro a compartilhar sua experiência neste grupo.'
-                    }
-                  </p>
+
+              {/* Add Testimonial Button */}
+              <Dialog open={showAddTestimonial} onOpenChange={setShowAddTestimonial}>
+                <DialogTrigger asChild>
                   <Button 
                     onClick={handleAddTestimonialClick}
-                    className="bg-primary hover:bg-primary/90"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
                     disabled={!isPremiumUser}
                   >
                     <Plus className="w-4 h-4 mr-2" />
-                    {filter === 'mine' ? 'Adicionar Meu Primeiro Depoimento' : 'Adicionar Primeiro Depoimento'}
+                    Adicionar Depoimento
                     {!isPremiumUser && <Crown className="w-4 h-4 ml-2" />}
                   </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              testimonials.map((testimonial) => (
-                <TestimonialCard
-                  key={testimonial.id}
-                  testimonial={testimonial}
-                  symptomName={
-                    testimonial.transtornos_sintomas?.sintomas?.[0] || undefined
-                  }
-                  onLike={handleLikeClick}
-                  onEdit={handleEditTestimonial}
-                  onDelete={handleDeleteTestimonial}
-                  currentUserId={currentUserId}
-                  groupName={groupName}
-                  isPremiumUser={isPremiumUser}
-                />
-              ))
-            )}
-          </div>
+                </DialogTrigger>
+                <DialogContent className="max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle>Adicionar Depoimento</DialogTitle>
+                  </DialogHeader>
+                  <AddTestimonialForm
+                    groupId={groupId}
+                    groupName={groupName}
+                    onSuccess={handleTestimonialAdded}
+                  />
+                </DialogContent>
+              </Dialog>
+            </div>
 
-          {/* Subscription Upgrade Modal */}
-          <SubscriptionUpgradeModal
-            isOpen={showUpgradeModal}
-            onClose={() => setShowUpgradeModal(false)}
-            feature={upgradeModalFeature}
-          />
-        </div>
+            {/* Edit Testimonial Dialog */}
+            <Dialog open={showEditTestimonial} onOpenChange={setShowEditTestimonial}>
+              <DialogContent className="max-w-lg">
+                <DialogHeader>
+                  <DialogTitle>Editar Depoimento</DialogTitle>
+                </DialogHeader>
+                {editingTestimonial && (
+                  <EditTestimonialForm
+                    groupName={groupName}
+                    testimonial={editingTestimonial}
+                    onSave={handleUpdateTestimonial}
+                    onCancel={() => {
+                      setShowEditTestimonial(false);
+                      setEditingTestimonial(null);
+                    }}
+                  />
+                )}
+              </DialogContent>
+            </Dialog>
+
+            {/* Testimonials */}
+            <div className="space-y-4">
+              {testimonialsLoading ? (
+                <div className="space-y-4">
+                  {[...Array(3)].map((_, i) => (
+                    <Card key={i}>
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center gap-3">
+                          <Skeleton className="w-10 h-10 rounded-full" />
+                          <div className="flex-1 space-y-2">
+                            <Skeleton className="h-4 w-32" />
+                            <Skeleton className="h-3 w-24" />
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <div className="space-y-2">
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-4 w-3/4" />
+                          <Skeleton className="h-4 w-1/2" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : testimonials.length === 0 ? (
+                <Card>
+                  <CardContent className="text-center py-12">
+                    <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                      <User className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-lg font-medium text-foreground mb-2">
+                      {filter === 'mine' ? 'Você ainda não tem depoimentos' : 'Ainda não há depoimentos'}
+                    </h3>
+                    <p className="text-muted-foreground mb-4">
+                      {filter === 'mine' 
+                        ? 'Compartilhe sua primeira experiência neste grupo.' 
+                        : 'Seja o primeiro a compartilhar sua experiência neste grupo.'
+                      }
+                    </p>
+                    <Button 
+                      onClick={handleAddTestimonialClick}
+                      className="bg-primary hover:bg-primary/90"
+                      disabled={!isPremiumUser}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      {filter === 'mine' ? 'Adicionar Meu Primeiro Depoimento' : 'Adicionar Primeiro Depoimento'}
+                      {!isPremiumUser && <Crown className="w-4 h-4 ml-2" />}
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                testimonials.map((testimonial) => (
+                  <TestimonialCard
+                    key={testimonial.id}
+                    testimonial={testimonial}
+                    symptomName={
+                      testimonial.transtornos_sintomas?.sintomas?.[0] || undefined
+                    }
+                    onLike={handleLikeClick}
+                    onEdit={handleEditTestimonial}
+                    onDelete={handleDeleteTestimonial}
+                    currentUserId={currentUserId}
+                    groupName={groupName}
+                    isPremiumUser={isPremiumUser}
+                  />
+                ))
+              )}
+            </div>
+
+            {/* Subscription Upgrade Modal */}
+            <SubscriptionUpgradeModal
+              isOpen={showUpgradeModal}
+              onClose={() => setShowUpgradeModal(false)}
+              feature={upgradeModalFeature}
+            />
+          </div>
+        </main>
       </div>
       <BottomNavigation />
     </div>
