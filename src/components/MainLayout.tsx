@@ -56,29 +56,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen bg-background" style={{
-      backgroundImage: `url(${
-        typeof window !== 'undefined' 
-          ? window.innerWidth <= 767 
-            ? (document.documentElement.classList.contains('dark') 
-              ? '/src/assets/backgrounds/mobile_dark.jpg' 
-              : '/src/assets/backgrounds/mobile_light.png')
-            : window.innerWidth <= 1023
-            ? (document.documentElement.classList.contains('dark') 
-              ? '/src/assets/backgrounds/tablet_dark.jpg' 
-              : '/src/assets/backgrounds/tablet_light.png')
-            : (document.documentElement.classList.contains('dark') 
-              ? '/src/assets/backgrounds/desktop_dark.jpg' 
-              : '/src/assets/backgrounds/desktop_light.png')
-          : ''
-      })`,
-      backgroundRepeat: 'no-repeat',
-      backgroundSize: 'cover',
-      backgroundPosition: 'bottom center',
-      backgroundAttachment: 'fixed'
-    }}>
-      <div className="min-h-screen bg-background"
-      >
+    <div className="min-h-screen">
+      <div className="min-h-screen">
         <DesktopSidebar />
         
         <div className="lg:pl-64">

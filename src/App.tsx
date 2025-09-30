@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import SplashScreen from "@/components/SplashScreen";
 import RouteGuard from "@/components/RouteGuard";
 import MainLayout from "@/components/MainLayout";
+import BackgroundWrapper from "@/components/BackgroundWrapper";
 import Index from "./pages/Index";
 import SignupType from "./pages/SignupType";
 import PatientSignUp from "./pages/PatientSignUp";
@@ -72,7 +73,8 @@ const App = () => {
               <SplashScreen />
             ) : (
               <BrowserRouter>
-                <Routes>
+                <BackgroundWrapper>
+                  <Routes>
                   {/* Rotas Públicas */}
                   <Route path="/" element={
                     <RouteGuard allowedUserTypes={['public']}>
@@ -282,6 +284,7 @@ const App = () => {
                   {/* Rota 404 */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
+                </BackgroundWrapper>
               </BrowserRouter>
             )}
           </SubscriptionProvider>
