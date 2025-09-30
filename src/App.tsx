@@ -126,6 +126,13 @@ const App = () => {
                       </MainLayout>
                     </RouteGuard>
                   } />
+                  <Route path="/notifications" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <MainLayout>
+                        <Notifications />
+                      </MainLayout>
+                    </RouteGuard>
+                  } />
 
                   {/* Outras rotas do Paciente sem Layout Principal */}
                   <Route path="/support-groups" element={

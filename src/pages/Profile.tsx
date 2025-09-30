@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useToast } from "@/hooks/use-toast";
 import BottomNavigation from "@/components/BottomNavigation";
+import ProfileSkeleton from "@/components/ProfileSkeleton";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -116,14 +117,7 @@ const Profile = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-          <p className="mt-4 text-muted-foreground">Carregando...</p>
-        </div>
-      </div>
-    );
+    return <ProfileSkeleton />;
   }
 
   const planInfo = getPlanInfo();

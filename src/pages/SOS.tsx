@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import CancelConfirmationModal from "@/components/sos/CancelConfirmationModal";
 import SupportiveMessages from "@/components/sos/SupportiveMessages";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,12 +10,16 @@ import { useEmergencySOS } from "@/hooks/useEmergencySOS";
 
 const SOS = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [availableProfessionals, setAvailableProfessionals] = useState(0);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [requestId, setRequestId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string>('');
   const { cancelRequest } = useEmergencySOS();
+  
+  // Get requestId from navigation state (passed from SOSButton)
+  const expectedRequestId = location.state?.requestId;
   
   // Use ref to store requestId for cleanup without causing re-renders
   const requestIdRef = useRef<string | null>(null);
@@ -63,20 +67,37 @@ const SOS = () => {
       
       setUserId(currentUserId);
 
-      // Get the most recent request from this user
-      const { data } = await supabase
-        .from('emergency_requests')
-        .select('id, status, room_url, video_room_id, created_at')
-        .eq('patient_id', currentUserId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      // If we have an expected requestId from navigation, use it
+      // Otherwise, get the most recent pending/waiting request
+      let data: any = null;
+      
+      if (expectedRequestId) {
+        // Fetch the specific request we just created
+        const { data: specificRequest } = await supabase
+          .from('emergency_requests')
+          .select('id, status, room_url, video_room_id, created_at')
+          .eq('id', expectedRequestId)
+          .eq('patient_id', currentUserId)
+          .maybeSingle();
+        data = specificRequest;
+      } else {
+        // Fallback: Get the most recent pending/waiting request
+        const { data: latestRequest } = await supabase
+          .from('emergency_requests')
+          .select('id, status, room_url, video_room_id, created_at')
+          .eq('patient_id', currentUserId)
+          .in('status', ['pending', 'waiting'])
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        data = latestRequest;
+      }
 
       if (data) {
         const id = (data as any).id as string;
         setRequestId(id);
 
-        // Navigate to call when accepted and we have a session ID
+        // Only navigate to call if this specific request is accepted
         const sessionId = (data as any).video_room_id || (data as any).room_url;
         if ((data as any).status === 'accepted' && sessionId) {
           navigate(`/emergency-call/${sessionId}?userType=patient&requestId=${id}`);

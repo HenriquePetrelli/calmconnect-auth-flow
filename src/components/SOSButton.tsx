@@ -44,7 +44,7 @@ const SOSButton = () => {
     try {
       const requestId = await createEmergencyRequest();
       if (requestId) {
-        navigate('/sos');
+        navigate('/sos', { state: { requestId } });
       }
     } catch (error) {
       console.error('Error creating emergency request:', error);
