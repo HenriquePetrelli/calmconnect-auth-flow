@@ -69,7 +69,7 @@ const BottomNavigation = ({ onSOSClick }: BottomNavigationProps) => {
             className={`tab-item flex flex-col items-center justify-center flex-1 h-full p-2 transition-all duration-200 relative rounded-lg ${
               item.isActive 
                 ? 'text-primary bg-primary/10' 
-                : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             {item.isActive && (
