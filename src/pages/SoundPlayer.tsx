@@ -14,13 +14,13 @@ const SoundPlayer = () => {
   
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(600); // 10 minutes default
+  const [duration, setDuration] = useState(600); // padrão 10 min
   const [selectedDuration, setSelectedDuration] = useState("10");
   const [selectedAnimation, setSelectedAnimation] = useState("waves");
   const [currentSoundIndex, setCurrentSoundIndex] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Get sound data
+  // pega os dados do som
   const isPlaylist = playlistId !== undefined;
   let currentSound, playlist;
 
@@ -49,32 +49,22 @@ const SoundPlayer = () => {
     }
   }
 
-  // Inicializa o áudio quando troca de som
+  // inicializa o áudio quando troca de som
   useEffect(() => {
     if (currentSound && audioRef.current) {
       audioRef.current.src = currentSound.file;
-      audioRef.current.loop = false; // não usar loop automático
+      audioRef.current.loop = true; // loop contínuo sem pausa
       audioRef.current.volume = 0.7;
-
-      // limpa handlers antigos
-      audioRef.current.onended = null;
-
-      // handler para recomeçar com 1 segundo de pausa
-      audioRef.current.onended = () => {
-        setTimeout(() => {
-          if (isPlaying && audioRef.current) {
-            audioRef.current.currentTime = 0;
-            audioRef.current.play().catch(console.error);
-          }
-        }, 1000); // pausa de 1 segundo
-      };
+      audioRef.current.onended = null; // garante que não tem handler manual
     }
-  }, [currentSound, isPlaying]);
+  }, [currentSound]);
 
+  // converte minutos em segundos dinamicamente
   useEffect(() => {
     setDuration(parseInt(selectedDuration) * 60);
   }, [selectedDuration]);
 
+  // cronômetro da sessão
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isPlaying && currentTime < duration) {
@@ -228,6 +218,7 @@ const SoundPlayer = () => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="0.25">15 segundos</SelectItem>
                 <SelectItem value="5">5 minutos</SelectItem>
                 <SelectItem value="10">10 minutos</SelectItem>
                 <SelectItem value="15">15 minutos</SelectItem>
@@ -252,7 +243,6 @@ const SoundPlayer = () => {
         </Button>
       </div>
 
-      {/* Elemento oculto */}
       <audio ref={audioRef} preload="auto" />
     </div>
   );
