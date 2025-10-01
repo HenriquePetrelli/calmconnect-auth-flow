@@ -25,23 +25,22 @@ const SoundPlayer = () => {
   let currentSound, playlist;
 
   if (isPlaylist) {
-    // Check in categories first, then subcategories
-    playlist = soundsData.categories[playlistId as keyof typeof soundsData.categories]?.sounds || 
-               soundsData.subcategories[playlistId as keyof typeof soundsData.subcategories]?.sounds || [];
+    playlist =
+      soundsData.categories[playlistId as keyof typeof soundsData.categories]?.sounds ||
+      soundsData.subcategories[playlistId as keyof typeof soundsData.subcategories]?.sounds ||
+      [];
     currentSound = playlist[currentSoundIndex];
   } else {
-    // Find sound in all categories and subcategories
     for (const category of Object.values(soundsData.categories)) {
-      const found = category.sounds.find(s => s.id === soundId);
+      const found = category.sounds.find((s) => s.id === soundId);
       if (found) {
         currentSound = found;
         break;
       }
     }
-    // If not found in categories, check subcategories
     if (!currentSound) {
       for (const subcategory of Object.values(soundsData.subcategories)) {
-        const found = subcategory.sounds.find(s => s.id === soundId);
+        const found = subcategory.sounds.find((s) => s.id === soundId);
         if (found) {
           currentSound = found;
           break;
@@ -50,36 +49,48 @@ const SoundPlayer = () => {
     }
   }
 
-  // Initialize audio when sound changes
+  // Inicializa o áudio quando troca de som
   useEffect(() => {
     if (currentSound && audioRef.current) {
       audioRef.current.src = currentSound.file;
-      audioRef.current.loop = true;
+      audioRef.current.loop = false; // não usar loop automático
       audioRef.current.volume = 0.7;
+
+      // limpa handlers antigos
+      audioRef.current.onended = null;
+
+      // handler para recomeçar com 1 segundo de pausa
+      audioRef.current.onended = () => {
+        setTimeout(() => {
+          if (isPlaying && audioRef.current) {
+            audioRef.current.currentTime = 0;
+            audioRef.current.play().catch(console.error);
+          }
+        }, 1000); // pausa de 1 segundo
+      };
     }
-  }, [currentSound]);
+  }, [currentSound, isPlaying]);
 
   useEffect(() => {
-    setDuration(parseInt(selectedDuration) * 60); // Convert minutes to seconds
+    setDuration(parseInt(selectedDuration) * 60);
   }, [selectedDuration]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isPlaying && currentTime < duration) {
       interval = setInterval(() => {
-        setCurrentTime(prev => prev + 1);
+        setCurrentTime((prev) => prev + 1);
       }, 1000);
     } else if (currentTime >= duration) {
-      // Session completed
       if (audioRef.current) {
         audioRef.current.pause();
       }
-      navigate('/sounds/feedback', { 
-        state: { 
+      navigate("/sounds/feedback", {
+        state: {
           sound: currentSound,
           duration: selectedDuration,
-          isPlaylist 
-        }
+          isPlaylist,
+        },
       });
     }
     return () => clearInterval(interval);
@@ -107,14 +118,14 @@ const SoundPlayer = () => {
 
   const nextTrack = () => {
     if (isPlaylist && playlist && currentSoundIndex < playlist.length - 1) {
-      setCurrentSoundIndex(prev => prev + 1);
+      setCurrentSoundIndex((prev) => prev + 1);
       resetTimer();
     }
   };
 
   const prevTrack = () => {
     if (isPlaylist && currentSoundIndex > 0) {
-      setCurrentSoundIndex(prev => prev - 1);
+      setCurrentSoundIndex((prev) => prev - 1);
       resetTimer();
     }
   };
@@ -122,7 +133,7 @@ const SoundPlayer = () => {
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
   if (!currentSound) {
@@ -130,9 +141,7 @@ const SoundPlayer = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-xl font-semibold mb-4">Som não encontrado</h2>
-          <Button onClick={() => navigate('/sounds')}>
-            Voltar à biblioteca
-          </Button>
+          <Button onClick={() => navigate("/sounds")}>Voltar à biblioteca</Button>
         </div>
       </div>
     );
@@ -140,9 +149,8 @@ const SoundPlayer = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-blue-50/30">
-      {/* Header */}
       <div className="flex items-center gap-4 p-4 bg-white/80 backdrop-blur-sm border-b border-border">
-        <Button variant="ghost" size="sm" onClick={() => navigate('/sounds')}>
+        <Button variant="ghost" size="sm" onClick={() => navigate("/sounds")}>
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <div className="flex-1">
@@ -156,42 +164,32 @@ const SoundPlayer = () => {
       </div>
 
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] p-6 space-y-8">
-        {/* Animation Area */}
         <div className="w-80 h-80 relative">
-          <SoundAnimation 
-            type={selectedAnimation} 
+          <SoundAnimation
+            type={selectedAnimation}
             isPlaying={isPlaying}
             soundName={currentSound.name}
           />
         </div>
 
-        {/* Sound Title */}
         <div className="text-center">
           <h2 className="text-2xl font-bold text-foreground mb-2">{currentSound.name}</h2>
           <p className="text-muted-foreground">{currentSound.category}</p>
         </div>
 
-        {/* Timer Display */}
         <div className="text-center">
           <div className="text-3xl font-mono font-bold text-foreground mb-2">
             {formatTime(currentTime)} / {formatTime(duration)}
           </div>
           <div className="w-80 mb-4">
-            <Slider
-              value={[currentTime]}
-              max={duration}
-              step={1}
-              className="w-full"
-              disabled
-            />
+            <Slider value={[currentTime]} max={duration} step={1} className="w-full" disabled />
           </div>
         </div>
 
-        {/* Controls */}
         <div className="flex items-center gap-4">
           {isPlaylist && (
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="icon"
               onClick={prevTrack}
               disabled={currentSoundIndex === 0}
@@ -199,9 +197,9 @@ const SoundPlayer = () => {
               <SkipBack className="w-4 h-4" />
             </Button>
           )}
-          
-          <Button 
-            size="icon" 
+
+          <Button
+            size="icon"
             className="w-16 h-16 rounded-full bg-sounds-primary hover:bg-sounds-secondary"
             onClick={togglePlay}
           >
@@ -209,8 +207,8 @@ const SoundPlayer = () => {
           </Button>
 
           {isPlaylist && (
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="icon"
               onClick={nextTrack}
               disabled={!playlist || currentSoundIndex === playlist.length - 1}
@@ -220,9 +218,7 @@ const SoundPlayer = () => {
           )}
         </div>
 
-        {/* Options */}
         <div className="w-full max-w-md space-y-4">
-          {/* Duration Selector */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
               Duração da Sessão
@@ -243,28 +239,20 @@ const SoundPlayer = () => {
             </Select>
           </div>
 
-          {/* Animation Selector */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
               Animação Sincronizada
             </label>
-            <AnimationSelector 
-              selected={selectedAnimation}
-              onChange={setSelectedAnimation}
-            />
+            <AnimationSelector selected={selectedAnimation} onChange={setSelectedAnimation} />
           </div>
         </div>
 
-        <Button 
-          variant="outline"
-          onClick={resetTimer}
-          className="mt-4"
-        >
+        <Button variant="outline" onClick={resetTimer} className="mt-4">
           Reiniciar Sessão
         </Button>
       </div>
 
-      {/* Hidden Audio Element */}
+      {/* Elemento oculto */}
       <audio ref={audioRef} preload="auto" />
     </div>
   );
