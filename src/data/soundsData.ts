@@ -24,7 +24,7 @@ export const soundsData = {
           name: "432 Hz",
           duration: "60:00",
           category: "Tons Terapêuticos",
-          file: "/sounds/sleep/432hz.wav"
+          file: "https://github.com/HenriquePetrelli/calmconnect-auth-flow/releases/download/1.0/432hz.wav"
         },
         {
           id: "sleep-2", 
