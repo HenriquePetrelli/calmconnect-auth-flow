@@ -24,7 +24,7 @@ export const soundsData = {
           name: "432 Hz",
           duration: "60:00",
           category: "Tons Terapêuticos",
-          file: "https://github.com/HenriquePetrelli/calmconnect-auth-flow/releases/download/1.0/432hz.wav"
+          file: "/sounds/sleep/432hz.mp3"
         },
         {
           id: "sleep-2", 
@@ -38,28 +38,28 @@ export const soundsData = {
           name: "Ruído Rosa",
           duration: "60:00",
           category: "Tons Terapêuticos",
-          file: "/sounds/sleep/pink_noise.wav"
+          file: "/sounds/sleep/pink_noise.mp3"
         },
         {
           id: "sleep-4",
           name: "Chuva Suave",
           duration: "45:00",
           category: "Sons da Natureza",
-          file: "/sounds/sleep/rain.wav"
+          file: "/sounds/sleep/rain.mp3"
         },
         {
           id: "sleep-5",
           name: "Ondas do Mar",
           duration: "60:00",
           category: "Sons da Natureza",
-          file: "/sounds/sleep/wave.wav"
+          file: "/sounds/sleep/wave.mp3"
         },
         {
           id: "sleep-6",
           name: "Ruído Branco",
           duration: "60:00",
           category: "Tons Terapêuticos",
-          file: "/sounds/sleep/white_noise.ogg"
+          file: "/sounds/sleep/white_noise.mp3"
         }
       ]
     },
@@ -72,7 +72,7 @@ export const soundsData = {
           name: "Om Mantra",
           duration: "20:00",
           category: "Meditação e Mantras",
-          file: "/sounds/meditate/aum.wav"
+          file: "/sounds/meditate/aum.mp3"
         },
         {
           id: "meditate-2",
@@ -86,21 +86,21 @@ export const soundsData = {
           name: "Canto Gregoriano",
           duration: "25:00",
           category: "Meditação e Mantras",
-          file: "/sounds/meditate/gregorian.wav"
+          file: "/sounds/meditate/gregorian.mp3"
         },
         {
           id: "meditate-4",
           name: "Sino Tibetano",
           duration: "18:00",
           category: "Meditação e Mantras",
-          file: "/sounds/meditate/tibetan.wav"
+          file: "/sounds/meditate/tibetan.mp3"
         },
         {
           id: "meditate-5",
           name: "Cachoeira",
           duration: "35:00",
           category: "Sons da Natureza",
-          file: "/sounds/meditate/waterfall.wav"
+          file: "/sounds/meditate/waterfall.mp3"
         }
       ]
     },
@@ -113,14 +113,14 @@ export const soundsData = {
           name: "528 Hz Frequência",
           duration: "60:00",
           category: "Tons Terapêuticos",
-          file: "/sounds/focus/528hz.wav"
+          file: "/sounds/focus/528hz.mp3"
         },
         {
           id: "focus-2",
           name: "Canto dos Pássaros",
           duration: "45:00",
           category: "Sons da Natureza",
-          file: "/sounds/focus/birds.wav"
+          file: "/sounds/focus/birds.mp3"
         },
         {
           id: "focus-3",
@@ -141,7 +141,7 @@ export const soundsData = {
           name: "Harpa Relaxante",
           duration: "35:00",
           category: "Música Instrumental",
-          file: "/sounds/focus/harp.wav"
+          file: "/sounds/focus/harp.mp3"
         }
       ]
     }
