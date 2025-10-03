@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Crown, LogOut, Settings, User as UserIcon, MessageCircle, Edit } from "lucide-react";
+import { ArrowLeft, Crown, LogOut, Settings, User as UserIcon, MessageCircle, Edit, ChevronDown } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { DailyMoodToggle } from "@/components/DailyMoodToggle";
 import { useNavigate } from "react-router-dom";
@@ -20,6 +21,7 @@ const Profile = () => {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [editSymptomsOpen, setEditSymptomsOpen] = useState(false);
+  const [planDropdownOpen, setPlanDropdownOpen] = useState(false);
 
   useEffect(() => {
     fetchUserData();
@@ -160,51 +162,58 @@ const Profile = () => {
           </Card>
 
           {/* Current Plan */}
-          <Card className="border-2 border-primary/20 shadow-lg">
-            <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 pb-4">
-              <CardTitle className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-premium-primary/20 rounded-full flex items-center justify-center">
-                  <Crown className="text-premium-primary" size={24} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-foreground">Plano Atual</h3>
-                  <p className="text-sm text-muted-foreground font-normal">Gerencie sua assinatura</p>
-                </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-6 space-y-6">
-              <div className="flex items-start justify-between">
-                <div className="space-y-3">
-                  <div className="font-bold text-lg text-foreground">{planInfo.name}</div>
-                  <div className="space-y-2">
-                    {planInfo.features.map((feature, index) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
-                        <span className="text-sm text-muted-foreground">{feature.replace('• ', '')}</span>
+          <Collapsible open={planDropdownOpen} onOpenChange={setPlanDropdownOpen}>
+            <Card className="border-2 border-primary/20 shadow-lg overflow-hidden">
+              <CollapsibleTrigger className="w-full">
+                <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 pb-4 cursor-pointer hover:from-primary/10 hover:to-primary/15 transition-all duration-200">
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-premium-primary/20 rounded-full flex items-center justify-center">
+                        <Crown className="text-premium-primary" size={24} />
                       </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="text-right bg-primary/5 p-4 rounded-lg">
-                  <div className="text-3xl font-bold text-primary">{planInfo.price}</div>
-                  <div className="text-sm text-muted-foreground">/mês</div>
-                </div>
-              </div>
+                      <div className="text-left">
+                        <h3 className="text-xl font-bold text-foreground">{planInfo.name}</h3>
+                        <p className="text-sm text-muted-foreground font-normal">{planInfo.price}/mês</p>
+                      </div>
+                    </div>
+                    <ChevronDown 
+                      className={`text-primary transition-transform duration-300 ${planDropdownOpen ? 'rotate-180' : ''}`} 
+                      size={24} 
+                    />
+                  </CardTitle>
+                </CardHeader>
+              </CollapsibleTrigger>
               
-              <div className="border-t pt-4">
-                {!subscribed ? (
-                  <Button className="w-full h-12 text-base font-semibold transition-all duration-200 hover:scale-105" onClick={handleManageSubscription}>
-                    <Crown size={18} className="mr-2" />
-                    Fazer Upgrade
-                  </Button>
-                ) : (
-                  <Button variant="outline" className="w-full h-12 text-base font-semibold" onClick={handleManageSubscription}>
-                    Gerenciar Assinatura
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+              <CollapsibleContent className="animate-accordion-down">
+                <CardContent className="pt-6 space-y-6">
+                  <div className="space-y-3">
+                    <h4 className="font-semibold text-foreground">Benefícios do Plano:</h4>
+                    <div className="space-y-2">
+                      {planInfo.features.map((feature, index) => (
+                        <div key={index} className="flex items-center gap-3 p-2 rounded-lg hover:bg-primary/5 transition-colors duration-200">
+                          <div className="w-2 h-2 rounded-full bg-primary"></div>
+                          <span className="text-sm text-muted-foreground">{feature.replace('• ', '')}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="border-t pt-4">
+                    {!subscribed ? (
+                      <Button className="w-full h-12 text-base font-semibold transition-all duration-200 hover:scale-105" onClick={handleManageSubscription}>
+                        <Crown size={18} className="mr-2" />
+                        Fazer Upgrade
+                      </Button>
+                    ) : (
+                      <Button variant="outline" className="w-full h-12 text-base font-semibold hover:bg-primary/5" onClick={handleManageSubscription}>
+                        Gerenciar Assinatura
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
 
           {/* Settings */}
           <Card>
