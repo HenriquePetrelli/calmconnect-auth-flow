@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Crown, LogOut, Settings, User as UserIcon, MessageCircle } from "lucide-react";
+import { ArrowLeft, Crown, LogOut, Settings, User as UserIcon, MessageCircle, Edit } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { DailyMoodToggle } from "@/components/DailyMoodToggle";
 import { useNavigate } from "react-router-dom";
@@ -11,6 +11,7 @@ import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useToast } from "@/hooks/use-toast";
 import BottomNavigation from "@/components/BottomNavigation";
 import ProfileSkeleton from "@/components/ProfileSkeleton";
+import { EditSymptomsModal } from "@/components/EditSymptomsModal";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ const Profile = () => {
   const { toast } = useToast();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [editSymptomsOpen, setEditSymptomsOpen] = useState(false);
 
   useEffect(() => {
     fetchUserData();
@@ -224,6 +226,23 @@ const Profile = () => {
               </div>
               
               <DailyMoodToggle />
+              
+              <div className="flex items-center justify-between p-4 rounded-lg border bg-gradient-to-r from-muted/30 to-transparent">
+                <div className="space-y-1">
+                  <div className="text-base font-semibold">Meus Sintomas</div>
+                  <div className="text-sm text-muted-foreground">
+                    Configure os sintomas que você apresenta
+                  </div>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setEditSymptomsOpen(true)}
+                >
+                  <Edit size={16} className="mr-2" />
+                  Editar
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
@@ -265,6 +284,15 @@ const Profile = () => {
 
       {/* Bottom Navigation */}
       <BottomNavigation />
+      
+      {/* Edit Symptoms Modal */}
+      {user && (
+        <EditSymptomsModal 
+          open={editSymptomsOpen}
+          onOpenChange={setEditSymptomsOpen}
+          userId={user.id}
+        />
+      )}
     </div>
   );
 };
