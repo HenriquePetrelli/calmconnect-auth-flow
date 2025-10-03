@@ -23,8 +23,10 @@ import {
   Crown,
   ChevronDown,
   ChevronUp,
-  Check
+  Check,
+  Stethoscope
 } from 'lucide-react';
+import { EditSymptomsModal } from '@/components/EditSymptomsModal';
 
 interface ProfileData {
   full_name: string;
@@ -43,6 +45,8 @@ const ProfileContent: React.FC = () => {
   const [dataReady, setDataReady] = useState(false);
   const [toggleReady, setToggleReady] = useState(false);
   const [planDropdownOpen, setPlanDropdownOpen] = useState(false);
+  const [symptomsModalOpen, setSymptomsModalOpen] = useState(false);
+  const [userId, setUserId] = useState<string>('');
 
   useEffect(() => {
     loadProfileData();
@@ -52,6 +56,8 @@ const ProfileContent: React.FC = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+      
+      setUserId(user.id);
 
       // Wait for all profile-related data to load
       const [patientDataResult] = await Promise.allSettled([
@@ -269,18 +275,44 @@ const ProfileContent: React.FC = () => {
           </div>
         </Card>
 
-        {/* Daily Mood Toggle */}
+        {/* Daily Mood Toggle and Symptoms */}
         <Card className="shadow-sm">
           <CardHeader>
             <CardTitle className="text-lg">Configurações</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <DailyMoodToggle 
               initialEnabled={profileData?.daily_mood_enabled !== false}
               onReady={() => setToggleReady(true)}
             />
+            <Separator />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Stethoscope className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">Meus Sintomas</h3>
+                  <p className="text-sm text-muted-foreground">Gerencie os sintomas que você sente</p>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSymptomsModalOpen(true)}
+              >
+                Editar
+              </Button>
+            </div>
           </CardContent>
         </Card>
+
+        {/* Edit Symptoms Modal */}
+        <EditSymptomsModal
+          open={symptomsModalOpen}
+          onOpenChange={setSymptomsModalOpen}
+          userId={userId}
+        />
 
         {/* Menu Items */}
         <div className="space-y-3">
