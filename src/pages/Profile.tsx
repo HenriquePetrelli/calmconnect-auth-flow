@@ -22,6 +22,7 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [editSymptomsOpen, setEditSymptomsOpen] = useState(false);
   const [planDropdownOpen, setPlanDropdownOpen] = useState(false);
+  const [settingsDropdownOpen, setSettingsDropdownOpen] = useState(false);
 
   useEffect(() => {
     fetchUserData();
@@ -216,44 +217,57 @@ const Profile = () => {
           </Collapsible>
 
           {/* Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Settings size={20} className="text-primary" />
-                Configurações
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between p-4 rounded-lg border bg-gradient-to-r from-muted/30 to-transparent">
-                <div className="space-y-1">
-                  <div className="text-base font-semibold">Tema do Aplicativo</div>
-                  <div className="text-sm text-muted-foreground">
-                    Alternar entre modo claro e escuro
-                  </div>
-                </div>
-                <ThemeToggle />
-              </div>
+          <Collapsible open={settingsDropdownOpen} onOpenChange={setSettingsDropdownOpen}>
+            <Card className="overflow-hidden">
+              <CollapsibleTrigger className="w-full">
+                <CardHeader className="cursor-pointer hover:bg-primary/5 transition-all duration-200">
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Settings size={20} className="text-primary" />
+                      <span>Configurações</span>
+                    </div>
+                    <ChevronDown 
+                      className={`text-primary transition-transform duration-300 ${settingsDropdownOpen ? 'rotate-180' : ''}`} 
+                      size={20} 
+                    />
+                  </CardTitle>
+                </CardHeader>
+              </CollapsibleTrigger>
               
-              <DailyMoodToggle />
-              
-              <div className="flex items-center justify-between p-4 rounded-lg border bg-gradient-to-r from-muted/30 to-transparent">
-                <div className="space-y-1">
-                  <div className="text-base font-semibold">Meus Sintomas</div>
-                  <div className="text-sm text-muted-foreground">
-                    Configure os sintomas que você apresenta
+              <CollapsibleContent className="animate-accordion-down">
+                <CardContent className="space-y-6 pt-6">
+                  <div className="flex items-center justify-between p-4 rounded-lg border bg-gradient-to-r from-muted/30 to-transparent">
+                    <div className="space-y-1">
+                      <div className="text-base font-semibold">Tema do Aplicativo</div>
+                      <div className="text-sm text-muted-foreground">
+                        Alternar entre modo claro e escuro
+                      </div>
+                    </div>
+                    <ThemeToggle />
                   </div>
-                </div>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => setEditSymptomsOpen(true)}
-                >
-                  <Edit size={16} className="mr-2" />
-                  Editar
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+                  
+                  <DailyMoodToggle />
+                  
+                  <div className="flex items-center justify-between p-4 rounded-lg border bg-gradient-to-r from-muted/30 to-transparent">
+                    <div className="space-y-1">
+                      <div className="text-base font-semibold">Meus Sintomas</div>
+                      <div className="text-sm text-muted-foreground">
+                        Configure os sintomas que você apresenta
+                      </div>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setEditSymptomsOpen(true)}
+                    >
+                      <Edit size={16} className="mr-2" />
+                      Editar
+                    </Button>
+                  </div>
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
 
           {/* Account Actions */}
           <Card>
