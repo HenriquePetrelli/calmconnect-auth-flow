@@ -204,3 +204,5 @@ export const EditSymptomsModal: React.FC<EditSymptomsModalProps> = ({
     </Dialog>
   );
 };
+
+export default EditSymptomsModal;

@@ -11,7 +11,7 @@ import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useToast } from "@/hooks/use-toast";
 import BottomNavigation from "@/components/BottomNavigation";
 import ProfileSkeleton from "@/components/ProfileSkeleton";
-import { EditSymptomsModal } from "@/components/EditSymptomsModal";
+import EditSymptomsModal from "@/components/EditSymptomsModal";
 
 const Profile = () => {
   const navigate = useNavigate();
