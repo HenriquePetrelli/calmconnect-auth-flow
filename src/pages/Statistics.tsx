@@ -2,9 +2,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, BarChart3, TrendingUp, Clock, Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { usePatientStatistics } from "@/hooks/usePatientStatistics";
+import { getTimeAgo, formatActivityDate } from "@/utils/timeAgo";
 
 const Statistics = () => {
   const navigate = useNavigate();
+  const { recentActivities, loading } = usePatientStatistics();
 
   const stats = {
     totalSessions: 15,
@@ -19,13 +22,6 @@ const Statistics = () => {
       { area: "Stress", progress: 45, trend: "down" },
     ]
   };
-
-  const recentActivities = [
-    { date: "2024-01-20", activity: "Respiração Guiada", duration: "15 min" },
-    { date: "2024-01-19", activity: "Sons Relaxantes", duration: "30 min" },
-    { date: "2024-01-18", activity: "Consulta com Dr. Ana", duration: "50 min" },
-    { date: "2024-01-17", activity: "Respiração Guiada", duration: "10 min" },
-  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -136,28 +132,37 @@ const Statistics = () => {
               Atividades Recentes
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {recentActivities.map((activity, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between p-3 rounded-lg bg-accent/50"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-primary"></div>
-                  <div>
-                    <div className="text-sm font-medium text-foreground">
-                      {activity.activity}
+          <CardContent>
+            {loading ? (
+              <div className="text-center py-8 text-muted-foreground">
+                Carregando atividades...
+              </div>
+            ) : recentActivities.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                Nenhuma atividade recente
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {recentActivities.map((activity, index) => (
+                  <div
+                    key={index}
+                    className="flex flex-col gap-2 p-4 rounded-lg border bg-gradient-to-r from-muted/30 to-transparent"
+                  >
+                    <div className="flex items-start justify-between">
+                      <p className="font-semibold text-base">{activity.name}</p>
+                      <span className="text-sm font-medium text-primary flex items-center gap-1">
+                        <Clock size={14} />
+                        {getTimeAgo(activity.date)}
+                      </span>
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      {new Date(activity.date).toLocaleDateString('pt-BR')}
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Calendar size={12} />
+                      {formatActivityDate(activity.date)}
                     </div>
                   </div>
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  {activity.duration}
-                </div>
+                ))}
               </div>
-            ))}
+            )}
           </CardContent>
         </Card>
       </div>
