@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent } from '@/components/ui/card';
 import { useGroupTestimonials, useGroupSymptoms } from '@/hooks/useSupportGroups';
 import { useSubscription } from '@/contexts/SubscriptionContext';
+import { usePatientStatistics } from '@/hooks/usePatientStatistics';
 import { Loader2 } from 'lucide-react';
 
 const moodEmojis = ['😞', '😔', '😐', '🙂', '😊', '😄'];
@@ -28,6 +29,7 @@ const AddTestimonialForm = ({ groupId, groupName, onSuccess }: AddTestimonialFor
   const { addTestimonial } = useGroupTestimonials(groupId);
   const { symptoms, symptomId } = useGroupSymptoms(groupName);
   const { subscribed, subscriptionTier } = useSubscription();
+  const { addActivity } = usePatientStatistics();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,6 +53,7 @@ const AddTestimonialForm = ({ groupId, groupName, onSuccess }: AddTestimonialFor
     });
 
     if (success) {
+      addActivity(`Grupo de Apoio: ${groupName}`);
       onSuccess();
     }
 

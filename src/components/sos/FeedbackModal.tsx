@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Star } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { usePatientStatistics } from '@/hooks/usePatientStatistics';
 
 interface FeedbackModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerNam
   const [problemResolved, setProblemResolved] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { addActivity } = usePatientStatistics();
 
   const handleStarClick = (star: number) => {
     setRating(star);
@@ -95,6 +97,22 @@ export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerNam
         title: 'Obrigado!',
         description: 'Sua avaliação foi enviada com sucesso.',
       });
+
+      // Track activity only for patients
+      if (userType === 'patient') {
+        // Check if it's an emergency session or regular appointment
+        const { data: emergencyData } = await supabase
+          .from('emergency_requests')
+          .select('id')
+          .eq('video_room_id', sessionId)
+          .maybeSingle();
+
+        if (emergencyData) {
+          addActivity("SOS de Emergência");
+        } else {
+          addActivity("Consulta com Psicólogo");
+        }
+      }
 
       handleClose();
     } catch (error) {

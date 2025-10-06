@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { JournalEntry } from '@/hooks/usePrivateJournal';
+import { usePatientStatistics } from '@/hooks/usePatientStatistics';
 
 const moodEmojis = ['😞', '😔', '😐', '🙂', '😊', '😄'];
 const moodLabels = ['Muito triste', 'Triste', 'Neutro', 'Bem', 'Feliz', 'Muito feliz'];
@@ -25,6 +26,7 @@ const JournalEntryModal = ({
 }: JournalEntryModalProps) => {
   const [texto, setTexto] = useState('');
   const [humor, setHumor] = useState(2); // Neutro como padrão
+  const { addActivity } = usePatientStatistics();
 
   useEffect(() => {
     if (editingEntry) {
@@ -39,6 +41,12 @@ const JournalEntryModal = ({
   const handleSave = () => {
     if (!texto.trim()) return;
     onSave(texto.trim(), humor);
+    
+    // Track activity only for new entries
+    if (!editingEntry) {
+      addActivity("Diário Privado");
+    }
+    
     handleClose();
   };
 

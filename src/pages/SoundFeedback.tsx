@@ -1,12 +1,21 @@
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle, RotateCcw, Home } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { usePatientStatistics } from "@/hooks/usePatientStatistics";
 
 const SoundFeedback = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { sound, duration, isPlaylist } = location.state || {};
+  const { addActivity } = usePatientStatistics();
+
+  useEffect(() => {
+    if (sound) {
+      addActivity(`Sons Terapêuticos: ${sound.name}`);
+    }
+  }, [sound, addActivity]);
 
   const handleListenOther = () => {
     navigate('/sounds');

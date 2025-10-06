@@ -1,5 +1,7 @@
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
+import { usePatientStatistics } from "@/hooks/usePatientStatistics";
 
 interface CompletionScreenProps {
   onViewOtherOptions: () => void;
@@ -7,6 +9,12 @@ interface CompletionScreenProps {
 }
 
 const CompletionScreen = ({ onViewOtherOptions, onBackToHome }: CompletionScreenProps) => {
+  const { addActivity } = usePatientStatistics();
+
+  useEffect(() => {
+    addActivity("Respiração Guiada");
+  }, [addActivity]);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-breathing-primary/5 to-background flex flex-col items-center justify-center p-8">
       <div className="text-center space-y-8 max-w-md">
