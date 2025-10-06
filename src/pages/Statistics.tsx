@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, BarChart3, TrendingUp, Clock, Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { usePatientStatistics } from "@/hooks/usePatientStatistics";
-import { getTimeAgo, formatActivityDate } from "@/utils/timeAgo";
+import { getRelativeTime, formatDateTime } from "@/utils/dateFormatters";
 
 const Statistics = () => {
   const navigate = useNavigate();
@@ -152,12 +152,12 @@ const Statistics = () => {
                       <p className="font-semibold text-base">{activity.name}</p>
                       <span className="text-sm font-medium text-primary flex items-center gap-1">
                         <Clock size={14} />
-                        {getTimeAgo(activity.date)}
+                        {getRelativeTime(activity.date)}
                       </span>
                     </div>
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                       <Calendar size={12} />
-                      {formatActivityDate(activity.date)}
+                      {formatDateTime(activity.date)}
                     </div>
                   </div>
                 ))}
