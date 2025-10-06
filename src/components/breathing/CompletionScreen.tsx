@@ -13,7 +13,7 @@ const CompletionScreen = ({ onViewOtherOptions, onBackToHome }: CompletionScreen
 
   useEffect(() => {
     addActivity("Respiração Guiada");
-  }, [addActivity]);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-breathing-primary/5 to-background flex flex-col items-center justify-center p-8">

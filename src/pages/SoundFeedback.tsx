@@ -15,7 +15,7 @@ const SoundFeedback = () => {
     if (sound) {
       addActivity(`Sons Terapêuticos: ${sound.name}`);
     }
-  }, [sound, addActivity]);
+  }, []);
 
   const handleListenOther = () => {
     navigate('/sounds');

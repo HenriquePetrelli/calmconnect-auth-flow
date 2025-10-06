@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -40,7 +40,7 @@ export const usePatientStatistics = () => {
     }
   };
 
-  const addActivity = async (activityName: string) => {
+  const addActivity = useCallback(async (activityName: string) => {
     if (!user) return;
 
     try {
@@ -57,7 +57,7 @@ export const usePatientStatistics = () => {
     } catch (error) {
       console.error('Error adding activity:', error);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchStatistics();
