@@ -537,6 +537,30 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_statistics: {
+        Row: {
+          created_at: string
+          id: string
+          patient_id: string
+          recent_activities: Json[] | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          patient_id: string
+          recent_activities?: Json[] | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          patient_id?: string
+          recent_activities?: Json[] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       patients: {
         Row: {
           city: string
@@ -1307,6 +1331,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_patient_activity: {
+        Args: {
+          p_activity_date?: string
+          p_activity_name: string
+          p_patient_id: string
+        }
+        Returns: undefined
+      }
       calculate_psychologist_average_rating: {
         Args: { psychologist_user_id: string }
         Returns: number
