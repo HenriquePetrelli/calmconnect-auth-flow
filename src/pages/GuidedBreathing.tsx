@@ -118,6 +118,7 @@ const GuidedBreathing = () => {
   const [activeFilter, setActiveFilter] = useState("all");
   const [currentScreen, setCurrentScreen] = useState<'main' | 'practice' | 'completion'>('main');
   const [selectedTechnique, setSelectedTechnique] = useState<Technique | null>(null);
+  const [completedDuration, setCompletedDuration] = useState<number>(5);
 
   const handleSelectTechnique = (technique: Technique) => {
     setSelectedTechnique(technique);
@@ -142,6 +143,7 @@ const GuidedBreathing = () => {
       <CompletionScreen 
         onViewOtherOptions={handleBackToMain}
         onBackToHome={handleBackToHome}
+        duration={completedDuration}
       />
     );
   }

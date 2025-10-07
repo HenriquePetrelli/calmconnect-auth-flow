@@ -9,36 +9,54 @@ interface Activity {
 
 interface PatientStatistics {
   recent_activities: Activity[];
+  total_scheduled_consultations: number;
+  total_emergency_consultations: number;
+  total_guided_breathing_time: number;
+  total_therapeutic_sound_time: number;
+  streak_days: number;
+  last_active_date: string | null;
 }
 
 export const usePatientStatistics = () => {
   const { user } = useAuth();
   const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
+  const [statistics, setStatistics] = useState<Omit<PatientStatistics, 'recent_activities'> | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchStatistics = async () => {
+  const fetchStatistics = useCallback(async () => {
     if (!user) return;
 
     try {
       setLoading(true);
       const { data, error } = await supabase
         .from('patient_statistics')
-        .select('recent_activities')
+        .select('*')
         .eq('patient_id', user.id)
         .maybeSingle();
 
       if (error) throw error;
 
-      if (data?.recent_activities) {
-        const activities = (data.recent_activities as unknown) as Activity[];
-        setRecentActivities(activities);
+      if (data) {
+        if (data.recent_activities) {
+          const activities = (data.recent_activities as unknown) as Activity[];
+          setRecentActivities(activities);
+        }
+        
+        setStatistics({
+          total_scheduled_consultations: data.total_scheduled_consultations || 0,
+          total_emergency_consultations: data.total_emergency_consultations || 0,
+          total_guided_breathing_time: data.total_guided_breathing_time || 0,
+          total_therapeutic_sound_time: data.total_therapeutic_sound_time || 0,
+          streak_days: data.streak_days || 0,
+          last_active_date: data.last_active_date || null,
+        });
       }
     } catch (error) {
       console.error('Error fetching patient statistics:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   const addActivity = useCallback(async (activityName: string) => {
     if (!user) return;
@@ -59,14 +77,56 @@ export const usePatientStatistics = () => {
     }
   }, [user]);
 
+  const updateActivityTime = useCallback(async (activityType: 'breathing' | 'sound', durationMinutes: number) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase.rpc('update_patient_activity_time', {
+        p_patient_id: user.id,
+        p_activity_type: activityType,
+        p_duration_minutes: durationMinutes
+      });
+
+      if (error) throw error;
+
+      // Refresh statistics after updating
+      await fetchStatistics();
+    } catch (error) {
+      console.error('Error updating activity time:', error);
+    }
+  }, [user, fetchStatistics]);
+
+  const updateStreak = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase.rpc('update_patient_streak', {
+        p_patient_id: user.id
+      });
+
+      if (error) throw error;
+
+      // Refresh statistics after updating
+      await fetchStatistics();
+      
+      return data;
+    } catch (error) {
+      console.error('Error updating streak:', error);
+      return null;
+    }
+  }, [user, fetchStatistics]);
+
   useEffect(() => {
     fetchStatistics();
-  }, [user]);
+  }, [fetchStatistics]);
 
   return {
     recentActivities,
+    statistics,
     loading,
     addActivity,
+    updateActivityTime,
+    updateStreak,
     refreshStatistics: fetchStatistics
   };
 };

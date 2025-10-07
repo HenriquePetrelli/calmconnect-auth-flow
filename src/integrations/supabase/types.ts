@@ -541,22 +541,40 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          last_active_date: string | null
           patient_id: string
           recent_activities: Json[] | null
+          streak_days: number
+          total_emergency_consultations: number
+          total_guided_breathing_time: number
+          total_scheduled_consultations: number
+          total_therapeutic_sound_time: number
           updated_at: string
         }
         Insert: {
           created_at?: string
           id?: string
+          last_active_date?: string | null
           patient_id: string
           recent_activities?: Json[] | null
+          streak_days?: number
+          total_emergency_consultations?: number
+          total_guided_breathing_time?: number
+          total_scheduled_consultations?: number
+          total_therapeutic_sound_time?: number
           updated_at?: string
         }
         Update: {
           created_at?: string
           id?: string
+          last_active_date?: string | null
           patient_id?: string
           recent_activities?: Json[] | null
+          streak_days?: number
+          total_emergency_consultations?: number
+          total_guided_breathing_time?: number
+          total_scheduled_consultations?: number
+          total_therapeutic_sound_time?: number
           updated_at?: string
         }
         Relationships: []
@@ -1490,9 +1508,25 @@ export type Database = {
         Args: { target_user_email: string }
         Returns: boolean
       }
+      sync_consultation_counts: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       sync_psychologist_payments: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      update_patient_activity_time: {
+        Args: {
+          p_activity_type: string
+          p_duration_minutes: number
+          p_patient_id: string
+        }
+        Returns: undefined
+      }
+      update_patient_streak: {
+        Args: { p_patient_id: string }
+        Returns: Json
       }
       validate_cpf: {
         Args: { cpf_input: string }

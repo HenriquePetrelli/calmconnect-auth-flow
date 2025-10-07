@@ -9,11 +9,12 @@ const SoundFeedback = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { sound, duration, isPlaylist } = location.state || {};
-  const { addActivity } = usePatientStatistics();
+  const { addActivity, updateActivityTime } = usePatientStatistics();
 
   useEffect(() => {
     if (sound) {
       addActivity(`Sons Terapêuticos: ${sound.name}`);
+      updateActivityTime('sound', parseInt(duration) || 10);
     }
   }, []);
 

@@ -6,13 +6,15 @@ import { usePatientStatistics } from "@/hooks/usePatientStatistics";
 interface CompletionScreenProps {
   onViewOtherOptions: () => void;
   onBackToHome: () => void;
+  duration?: number; // duration in minutes
 }
 
-const CompletionScreen = ({ onViewOtherOptions, onBackToHome }: CompletionScreenProps) => {
-  const { addActivity } = usePatientStatistics();
+const CompletionScreen = ({ onViewOtherOptions, onBackToHome, duration = 5 }: CompletionScreenProps) => {
+  const { addActivity, updateActivityTime } = usePatientStatistics();
 
   useEffect(() => {
     addActivity("Respiração Guiada");
+    updateActivityTime('breathing', duration);
   }, []);
 
   return (

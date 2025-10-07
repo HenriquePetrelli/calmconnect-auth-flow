@@ -72,6 +72,7 @@ const PracticeScreen = ({ technique, onBack, onComplete }: PracticeScreenProps) 
         setTimeRemaining(prev => {
           if (prev <= 1) {
             setCurrentPhase('completed');
+            // Pass duration to completion screen
             onComplete();
             return 0;
           }
