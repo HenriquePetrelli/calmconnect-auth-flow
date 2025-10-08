@@ -21,6 +21,7 @@ export const useAchievements = () => {
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [loading, setLoading] = useState(true);
   const [newlyUnlocked, setNewlyUnlocked] = useState<Achievement | null>(null);
+  const [isChecking, setIsChecking] = useState(false);
 
   const fetchAchievements = useCallback(async () => {
     if (!user) return;
@@ -87,52 +88,48 @@ export const useAchievements = () => {
   }, [user, achievements]);
 
   const checkAchievements = useCallback(async () => {
-    if (!user) return;
-
+    if (!user || isChecking) return;
+    
+    setIsChecking(true);
     try {
-      // Fetch statistics
-      const { data: stats } = await supabase
-        .from('patient_statistics')
-        .select('*')
-        .eq('patient_id', user.id)
-        .maybeSingle();
+      // Single query for both stats and journal count
+      const [statsResult, journalResult] = await Promise.all([
+        supabase
+          .from('patient_statistics')
+          .select('*')
+          .eq('patient_id', user.id)
+          .maybeSingle(),
+        supabase
+          .from('private_journals')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+      ]);
+
+      const stats = statsResult.data;
+      const journalCount = journalResult.count || 0;
 
       if (!stats) return;
 
-      // Fetch journal entries count
-      const { count: journalCount } = await supabase
-        .from('private_journals')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
+      // Batch check all achievements
+      const toUnlock: string[] = [];
+      
+      if (stats.total_guided_breathing_time > 0) toUnlock.push('First Step');
+      if (stats.total_guided_breathing_time >= 5) toUnlock.push('Deep Breather');
+      if (journalCount >= 7) toUnlock.push('Mindful Writer');
+      if (stats.total_scheduled_consultations >= 3) toUnlock.push('Therapy Follower');
+      if (stats.streak_days >= 7) toUnlock.push('Mood Tracker Pro');
+      if (stats.streak_days >= 30) toUnlock.push('Consistent Care');
 
-      // Check each achievement condition
-      if (stats.total_guided_breathing_time > 0) {
-        await unlockAchievement('First Step');
-      }
-
-      if (stats.total_guided_breathing_time >= 5) {
-        await unlockAchievement('Deep Breather');
-      }
-
-      if ((journalCount || 0) >= 7) {
-        await unlockAchievement('Mindful Writer');
-      }
-
-      if (stats.total_scheduled_consultations >= 3) {
-        await unlockAchievement('Therapy Follower');
-      }
-
-      if (stats.streak_days >= 7) {
-        await unlockAchievement('Mood Tracker Pro');
-      }
-
-      if (stats.streak_days >= 30) {
-        await unlockAchievement('Consistent Care');
+      // Unlock all achievements at once
+      for (const title of toUnlock) {
+        await unlockAchievement(title);
       }
     } catch (error) {
       console.error('Error checking achievements:', error);
+    } finally {
+      setIsChecking(false);
     }
-  }, [user, unlockAchievement]);
+  }, [user, isChecking, unlockAchievement]);
 
   useEffect(() => {
     fetchAchievements();
