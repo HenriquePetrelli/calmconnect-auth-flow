@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Clock, Calendar, Activity, Zap, Wind, Music, Trophy } from "lucide-react";
+import { ArrowLeft, Clock, Calendar, Activity, Zap, Wind, Music, Trophy, History } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { usePatientStatistics } from "@/hooks/usePatientStatistics";
 import { useAchievements } from "@/hooks/useAchievements";
@@ -35,15 +35,27 @@ const Statistics = () => {
 
       {/* Content */}
       <div className="p-4 space-y-6">
-        {/* Achievements Button */}
-        <Button
-          onClick={() => navigate('/achievements')}
-          className="w-full flex items-center justify-center gap-2"
-          size="lg"
-        >
-          <Trophy size={20} />
-          Ver Minhas Conquistas
-        </Button>
+        {/* Action Buttons */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Button
+            onClick={() => navigate('/achievements')}
+            className="w-full flex items-center justify-center gap-2"
+            size="lg"
+          >
+            <Trophy size={20} />
+            Ver Minhas Conquistas
+          </Button>
+          
+          <Button
+            onClick={() => navigate('/statistics/activity-history')}
+            className="w-full flex items-center justify-center gap-2"
+            size="lg"
+            variant="outline"
+          >
+            <History size={20} />
+            Ver Histórico de Atividades
+          </Button>
+        </div>
 
         {loading ? (
           <div className="text-center py-8 text-muted-foreground">

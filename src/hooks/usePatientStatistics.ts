@@ -62,13 +62,25 @@ export const usePatientStatistics = () => {
     if (!user) return;
 
     try {
-      const { error } = await supabase.rpc('add_patient_activity', {
+      const activityDate = new Date().toISOString();
+      
+      // Add to recent activities (last 5)
+      const { error: recentError } = await supabase.rpc('add_patient_activity', {
         p_patient_id: user.id,
         p_activity_name: activityName,
-        p_activity_date: new Date().toISOString()
+        p_activity_date: activityDate
       });
 
-      if (error) throw error;
+      if (recentError) throw recentError;
+
+      // Add to quarterly activities (last 3 months)
+      const { error: quarterlyError } = await supabase.rpc('add_quarterly_activity', {
+        p_patient_id: user.id,
+        p_activity_name: activityName,
+        p_activity_date: activityDate
+      });
+
+      if (quarterlyError) throw quarterlyError;
     } catch (error) {
       console.error('Error adding activity:', error);
     }

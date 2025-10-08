@@ -579,6 +579,7 @@ export type Database = {
           id: string
           last_active_date: string | null
           patient_id: string
+          quarterly_activities: Json[] | null
           recent_activities: Json[] | null
           streak_days: number
           total_emergency_consultations: number
@@ -592,6 +593,7 @@ export type Database = {
           id?: string
           last_active_date?: string | null
           patient_id: string
+          quarterly_activities?: Json[] | null
           recent_activities?: Json[] | null
           streak_days?: number
           total_emergency_consultations?: number
@@ -605,6 +607,7 @@ export type Database = {
           id?: string
           last_active_date?: string | null
           patient_id?: string
+          quarterly_activities?: Json[] | null
           recent_activities?: Json[] | null
           streak_days?: number
           total_emergency_consultations?: number
@@ -1393,6 +1396,14 @@ export type Database = {
         }
         Returns: undefined
       }
+      add_quarterly_activity: {
+        Args: {
+          p_activity_date?: string
+          p_activity_name: string
+          p_patient_id: string
+        }
+        Returns: undefined
+      }
       calculate_psychologist_average_rating: {
         Args: { psychologist_user_id: string }
         Returns: number
@@ -1412,6 +1423,10 @@ export type Database = {
           plan_type: string
           reason: string
         }[]
+      }
+      cleanup_quarterly_activities: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       cleanup_rejected_psychologist: {
         Args: { p_user_id: string }
