@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Clock, Calendar, Activity, Zap, Wind, Music } from "lucide-react";
+import { ArrowLeft, Clock, Calendar, Activity, Zap, Wind, Music, Trophy } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { usePatientStatistics } from "@/hooks/usePatientStatistics";
 import { useAchievements } from "@/hooks/useAchievements";
@@ -35,6 +35,16 @@ const Statistics = () => {
 
       {/* Content */}
       <div className="p-4 space-y-6">
+        {/* Achievements Button */}
+        <Button
+          onClick={() => navigate('/achievements')}
+          className="w-full flex items-center justify-center gap-2"
+          size="lg"
+        >
+          <Trophy size={20} />
+          Ver Minhas Conquistas
+        </Button>
+
         {loading ? (
           <div className="text-center py-8 text-muted-foreground">
             Carregando estatísticas...
