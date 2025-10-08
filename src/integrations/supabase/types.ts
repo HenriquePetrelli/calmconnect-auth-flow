@@ -498,6 +498,42 @@ export type Database = {
           },
         ]
       }
+      patient_achievements: {
+        Row: {
+          achieved: boolean
+          achieved_at: string | null
+          created_at: string
+          description: string
+          icon: string
+          id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          achieved?: boolean
+          achieved_at?: string | null
+          created_at?: string
+          description: string
+          icon: string
+          id?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          achieved?: boolean
+          achieved_at?: string | null
+          created_at?: string
+          description?: string
+          icon?: string
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       patient_progress: {
         Row: {
           anxiety_level: number | null
@@ -1494,6 +1530,10 @@ export type Database = {
       }
       increment_emergency_rejected: {
         Args: { p_psychologist_id: string }
+        Returns: undefined
+      }
+      initialize_patient_achievements: {
+        Args: { p_user_id: string }
         Returns: undefined
       }
       is_super_admin: {

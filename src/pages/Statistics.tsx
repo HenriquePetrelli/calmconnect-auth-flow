@@ -4,16 +4,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Clock, Calendar, Activity, Zap, Wind, Music } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { usePatientStatistics } from "@/hooks/usePatientStatistics";
+import { useAchievements } from "@/hooks/useAchievements";
 import { getRelativeTime, formatDateTime } from "@/utils/dateFormatters";
 
 const Statistics = () => {
   const navigate = useNavigate();
   const { recentActivities, statistics, loading, updateStreak } = usePatientStatistics();
+  const { checkAchievements } = useAchievements();
 
-  // Update streak when page loads
+  // Update streak and check achievements when page loads
   useEffect(() => {
     updateStreak();
-  }, [updateStreak]);
+    checkAchievements();
+  }, [updateStreak, checkAchievements]);
 
   return (
     <div className="min-h-screen bg-background">

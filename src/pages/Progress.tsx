@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Trophy } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ProgressChart } from '@/components/progress/ProgressChart';
 
@@ -18,7 +18,17 @@ const Progress = () => {
       </div>
 
       {/* Content */}
-      <div className="p-4">
+      <div className="p-4 space-y-4">
+        {/* Achievements Button */}
+        <Button
+          onClick={() => navigate('/achievements')}
+          className="w-full flex items-center justify-center gap-2"
+          size="lg"
+        >
+          <Trophy size={20} />
+          Ver Minhas Conquistas
+        </Button>
+
         <ProgressChart />
       </div>
     </div>
