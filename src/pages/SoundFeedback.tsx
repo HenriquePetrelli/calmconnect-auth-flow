@@ -4,17 +4,20 @@ import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle, RotateCcw, Home } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { usePatientStatistics } from "@/hooks/usePatientStatistics";
+import { useAchievements } from "@/hooks/useAchievements";
 
 const SoundFeedback = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { sound, duration, isPlaylist } = location.state || {};
   const { addActivity, updateActivityTime } = usePatientStatistics();
+  const { checkAchievements } = useAchievements();
 
   useEffect(() => {
     if (sound) {
       addActivity(`Sons Terapêuticos: ${sound.name}`);
       updateActivityTime('sound', parseInt(duration) || 10);
+      checkAchievements();
     }
   }, []);
 

@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
 import { usePatientStatistics } from "@/hooks/usePatientStatistics";
+import { useAchievements } from "@/hooks/useAchievements";
 
 interface CompletionScreenProps {
   onViewOtherOptions: () => void;
@@ -11,10 +12,12 @@ interface CompletionScreenProps {
 
 const CompletionScreen = ({ onViewOtherOptions, onBackToHome, duration = 5 }: CompletionScreenProps) => {
   const { addActivity, updateActivityTime } = usePatientStatistics();
+  const { checkAchievements } = useAchievements();
 
   useEffect(() => {
     addActivity("Respiração Guiada");
     updateActivityTime('breathing', duration);
+    checkAchievements();
   }, []);
 
   return (

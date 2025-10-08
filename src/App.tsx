@@ -30,6 +30,7 @@ import Appointments from "./pages/Appointments";
 import Notifications from "./pages/Notifications";
 import Statistics from "./pages/Statistics";
 import Progress from "./pages/Progress";
+import Achievements from "./pages/Achievements";
 import SubscriptionPlans from "./pages/SubscriptionPlans";
 import SubscriptionSuccess from "./pages/SubscriptionSuccess";
 import SubscriptionCancel from "./pages/SubscriptionCancel";
@@ -208,6 +209,11 @@ const App = () => {
                   <Route path="/progress" element={
                     <RouteGuard allowedUserTypes={['patient']}>
                       <Progress />
+                    </RouteGuard>
+                  } />
+                  <Route path="/achievements" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <Achievements />
                     </RouteGuard>
                   } />
                   <Route path="/subscription-plans" element={
