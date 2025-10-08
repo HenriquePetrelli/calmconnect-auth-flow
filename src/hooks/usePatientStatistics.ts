@@ -69,9 +69,6 @@ export const usePatientStatistics = () => {
       });
 
       if (error) throw error;
-
-      // Refresh activities after adding
-      await fetchStatistics();
     } catch (error) {
       console.error('Error adding activity:', error);
     }
@@ -88,13 +85,10 @@ export const usePatientStatistics = () => {
       });
 
       if (error) throw error;
-
-      // Refresh statistics after updating
-      await fetchStatistics();
     } catch (error) {
       console.error('Error updating activity time:', error);
     }
-  }, [user, fetchStatistics]);
+  }, [user]);
 
   const updateStreak = useCallback(async () => {
     if (!user) return;
@@ -105,16 +99,13 @@ export const usePatientStatistics = () => {
       });
 
       if (error) throw error;
-
-      // Refresh statistics after updating
-      await fetchStatistics();
       
       return data;
     } catch (error) {
       console.error('Error updating streak:', error);
       return null;
     }
-  }, [user, fetchStatistics]);
+  }, [user]);
 
   useEffect(() => {
     fetchStatistics();

@@ -12,11 +12,16 @@ const Statistics = () => {
   const { recentActivities, statistics, loading, updateStreak } = usePatientStatistics();
   const { checkAchievements } = useAchievements();
 
-  // Update streak and check achievements when page loads
+  // Update streak and check achievements when page loads (only once)
   useEffect(() => {
-    updateStreak();
-    checkAchievements();
-  }, [updateStreak, checkAchievements]);
+    const initializePage = async () => {
+      await updateStreak();
+      await checkAchievements();
+    };
+    
+    initializePage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
