@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useWeeklyGoals } from './useWeeklyGoals';
 
 interface Activity {
   name: string;
@@ -19,6 +20,7 @@ interface PatientStatistics {
 
 export const usePatientStatistics = () => {
   const { user } = useAuth();
+  const { checkAndUpdateGoals } = useWeeklyGoals();
   const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
   const [statistics, setStatistics] = useState<Omit<PatientStatistics, 'recent_activities'> | null>(null);
   const [loading, setLoading] = useState(true);
@@ -81,10 +83,24 @@ export const usePatientStatistics = () => {
       });
 
       if (quarterlyError) throw quarterlyError;
+
+      // Check and update weekly goals based on activity
+      const categoryMap: Record<string, string> = {
+        'Respiração Guiada': 'Respiração',
+        'Sons Terapêuticos': 'Sono',
+        'Registro de Humor': 'Humor',
+        'Diário Privado': 'Diário',
+        'Consulta Agendada': 'Consulta',
+      };
+
+      const category = categoryMap[activityName];
+      if (category) {
+        await checkAndUpdateGoals(category);
+      }
     } catch (error) {
       console.error('Error adding activity:', error);
     }
-  }, [user]);
+  }, [user, checkAndUpdateGoals]);
 
   const updateActivityTime = useCallback(async (activityType: 'breathing' | 'sound', durationMinutes: number) => {
     if (!user) return;

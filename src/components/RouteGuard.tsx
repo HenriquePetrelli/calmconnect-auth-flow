@@ -34,6 +34,7 @@ export const ROUTE_PERMISSIONS = {
     '/notifications',
     '/statistics',
     '/statistics/activity-history',
+    '/goals',
     '/progress',
     '/achievements',
     '/subscription-plans',

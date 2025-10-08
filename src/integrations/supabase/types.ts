@@ -1383,6 +1383,51 @@ export type Database = {
           },
         ]
       }
+      weekly_goals: {
+        Row: {
+          category: string | null
+          completed: boolean
+          created_at: string
+          description: string
+          end_date: string
+          id: string
+          progress: number
+          start_date: string
+          target: number
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          completed?: boolean
+          created_at?: string
+          description: string
+          end_date: string
+          id?: string
+          progress?: number
+          start_date: string
+          target: number
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          completed?: boolean
+          created_at?: string
+          description?: string
+          end_date?: string
+          id?: string
+          progress?: number
+          start_date?: string
+          target?: number
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
