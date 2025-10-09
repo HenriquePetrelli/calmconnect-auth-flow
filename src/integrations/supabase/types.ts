@@ -648,6 +648,53 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_weekly_goals: {
+        Row: {
+          completed: boolean | null
+          created_at: string | null
+          goal_id: string
+          id: string
+          progress: number | null
+          target: number
+          updated_at: string | null
+          user_id: string
+          week_end_date: string
+          week_start_date: string
+        }
+        Insert: {
+          completed?: boolean | null
+          created_at?: string | null
+          goal_id: string
+          id?: string
+          progress?: number | null
+          target: number
+          updated_at?: string | null
+          user_id: string
+          week_end_date: string
+          week_start_date: string
+        }
+        Update: {
+          completed?: boolean | null
+          created_at?: string | null
+          goal_id?: string
+          id?: string
+          progress?: number | null
+          target?: number
+          updated_at?: string | null
+          user_id?: string
+          week_end_date?: string
+          week_start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_weekly_goals_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_goals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patients: {
         Row: {
           city: string
@@ -1421,46 +1468,34 @@ export type Database = {
       }
       weekly_goals: {
         Row: {
-          category: string | null
-          completed: boolean
-          created_at: string
+          active: boolean | null
+          category: string
+          created_at: string | null
           description: string
-          end_date: string
           id: string
-          progress: number
-          start_date: string
           target: number
           title: string
-          updated_at: string
-          user_id: string
+          type: string
         }
         Insert: {
-          category?: string | null
-          completed?: boolean
-          created_at?: string
+          active?: boolean | null
+          category: string
+          created_at?: string | null
           description: string
-          end_date: string
           id?: string
-          progress?: number
-          start_date: string
-          target: number
+          target?: number
           title: string
-          updated_at?: string
-          user_id: string
+          type: string
         }
         Update: {
-          category?: string | null
-          completed?: boolean
-          created_at?: string
+          active?: boolean | null
+          category?: string
+          created_at?: string | null
           description?: string
-          end_date?: string
           id?: string
-          progress?: number
-          start_date?: string
           target?: number
           title?: string
-          updated_at?: string
-          user_id?: string
+          type?: string
         }
         Relationships: []
       }
@@ -1643,6 +1678,10 @@ export type Database = {
       promote_to_admin: {
         Args: { target_user_email: string }
         Returns: boolean
+      }
+      reset_patient_weekly_goals: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       reset_weekly_goals: {
         Args: Record<PropertyKey, never>

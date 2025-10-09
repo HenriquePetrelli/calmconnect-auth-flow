@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Clock, Calendar, Activity, Zap, Wind, Music, Trophy, History, Target } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { ArrowLeft, Clock, Calendar, Activity, Zap, Wind, Music, Trophy, History, Target, CheckCircle2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { usePatientStatistics } from "@/hooks/usePatientStatistics";
 import { useAchievements } from "@/hooks/useAchievements";
@@ -39,32 +40,80 @@ const Statistics = () => {
 
       {/* Content */}
       <div className="p-4 space-y-6">
+        {/* Weekly Goals Section */}
+        {!goalsLoading && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Target className="text-primary" size={20} />
+                Metas Semanais
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {goals.length === 0 ? (
+                <div className="text-center py-8 space-y-4">
+                  <div className="text-4xl mb-2">🎯</div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground mb-2">
+                      Ainda sem metas semanais
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Adicione metas para acompanhar seu progresso durante a semana
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => setGoalModalOpen(true)}
+                    className="flex items-center justify-center gap-2"
+                    size="lg"
+                  >
+                    <Target size={20} />
+                    Adicionar metas da semana
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <div className="space-y-3">
+                    {goals.map((goal) => (
+                      <div key={goal.id} className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-foreground">
+                              {goal.weekly_goals.title}
+                            </span>
+                            {goal.completed && (
+                              <CheckCircle2 size={18} className="text-green-500" />
+                            )}
+                          </div>
+                          <span className="text-sm text-muted-foreground">
+                            {goal.progress}/{goal.target}
+                          </span>
+                        </div>
+                        <Progress 
+                          value={(goal.progress / goal.target) * 100} 
+                          className="h-2"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          {goal.weekly_goals.description}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                  <Button
+                    onClick={() => setGoalModalOpen(true)}
+                    variant="outline"
+                    className="w-full flex items-center justify-center gap-2"
+                  >
+                    <Target size={18} />
+                    Editar metas semanais
+                  </Button>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Action Buttons */}
         <div className="grid grid-cols-1 gap-3">
-          {goals.length === 0 && !goalsLoading && (
-            <Card className="border-2 border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
-              <CardContent className="p-6 text-center space-y-4">
-                <div className="text-4xl mb-2">🎯</div>
-                <div>
-                  <h3 className="text-lg font-semibold text-foreground mb-2">
-                    Ainda sem metas semanais
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Adicione metas para acompanhar seu progresso durante a semana
-                  </p>
-                </div>
-                <Button
-                  onClick={() => setGoalModalOpen(true)}
-                  className="w-full flex items-center justify-center gap-2"
-                  size="lg"
-                >
-                  <Target size={20} />
-                  Adicionar metas semanais
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <Button
               onClick={() => navigate('/achievements')}
