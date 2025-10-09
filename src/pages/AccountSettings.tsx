@@ -8,15 +8,11 @@ import { ArrowLeft, Save } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useWeeklyGoals } from "@/hooks/useWeeklyGoals";
-
 const AccountSettings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<any>(null);
-  const [showGoalModal, setShowGoalModalState] = useState(true);
-  const { getShowGoalModalPreference, setShowGoalModal } = useWeeklyGoals();
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -27,18 +23,7 @@ const AccountSettings = () => {
 
   useEffect(() => {
     fetchUserData();
-    loadGoalModalPreference();
   }, []);
-
-  const loadGoalModalPreference = async () => {
-    const preference = await getShowGoalModalPreference();
-    setShowGoalModalState(preference);
-  };
-
-  const handleToggleGoalModal = async (checked: boolean) => {
-    setShowGoalModalState(checked);
-    await setShowGoalModal(checked);
-  };
 
   const fetchUserData = async () => {
     try {

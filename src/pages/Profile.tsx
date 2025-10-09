@@ -27,7 +27,18 @@ const Profile = () => {
 
   useEffect(() => {
     fetchUserData();
+    loadGoalModalPreference();
   }, []);
+
+  const loadGoalModalPreference = async () => {
+    const preference = await getShowGoalModalPreference();
+    setShowWeeklyGoalModalState(preference);
+  };
+
+  const handleToggleWeeklyGoalModal = async (checked: boolean) => {
+    setShowWeeklyGoalModalState(checked);
+    await setShowGoalModal(checked);
+  };
 
   const fetchUserData = async () => {
     try {
