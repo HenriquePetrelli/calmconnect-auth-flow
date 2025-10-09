@@ -16,6 +16,8 @@ export interface WeeklyGoal {
   category?: string;
   created_at: string;
   updated_at: string;
+  show_weekly_goal_modal?: boolean;
+  show_goal_modal?: boolean;
 }
 
 export const useWeeklyGoals = () => {
@@ -129,6 +131,87 @@ export const useWeeklyGoals = () => {
     fetchGoals();
   }, [fetchGoals]);
 
+  const checkShouldShowModal = useCallback(async () => {
+    if (!user) return { shouldShow: false, showGoalModal: true };
+
+    try {
+      const { data, error } = await supabase
+        .from('weekly_goals')
+        .select('show_weekly_goal_modal, show_goal_modal')
+        .eq('user_id', user.id)
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (!data) {
+        return { shouldShow: false, showGoalModal: true };
+      }
+
+      return {
+        shouldShow: data.show_weekly_goal_modal && data.show_goal_modal,
+        showGoalModal: data.show_goal_modal
+      };
+    } catch (error) {
+      console.error('Error checking modal status:', error);
+      return { shouldShow: false, showGoalModal: true };
+    }
+  }, [user]);
+
+  const setShowWeeklyGoalModal = useCallback(async (value: boolean) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('weekly_goals')
+        .update({ show_weekly_goal_modal: value })
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating show_weekly_goal_modal:', error);
+    }
+  }, [user]);
+
+  const setShowGoalModal = useCallback(async (value: boolean) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('weekly_goals')
+        .update({ show_goal_modal: value })
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      
+      if (!value) {
+        toast.success('Você poderá reativar a exibição nas configurações do perfil.');
+      }
+    } catch (error) {
+      console.error('Error updating show_goal_modal:', error);
+      toast.error('Erro ao atualizar configuração');
+    }
+  }, [user]);
+
+  const getShowGoalModalPreference = useCallback(async () => {
+    if (!user) return true;
+
+    try {
+      const { data, error } = await supabase
+        .from('weekly_goals')
+        .select('show_goal_modal')
+        .eq('user_id', user.id)
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data?.show_goal_modal ?? true;
+    } catch (error) {
+      console.error('Error fetching show_goal_modal:', error);
+      return true;
+    }
+  }, [user]);
+
   return {
     goals,
     loading,
@@ -137,6 +220,10 @@ export const useWeeklyGoals = () => {
     checkAndUpdateGoals,
     createGoal,
     dismissCompletionModal,
-    refreshGoals: fetchGoals
+    refreshGoals: fetchGoals,
+    checkShouldShowModal,
+    setShowWeeklyGoalModal,
+    setShowGoalModal,
+    getShowGoalModalPreference
   };
 };

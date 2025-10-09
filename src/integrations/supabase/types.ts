@@ -1392,6 +1392,8 @@ export type Database = {
           end_date: string
           id: string
           progress: number
+          show_goal_modal: boolean
+          show_weekly_goal_modal: boolean
           start_date: string
           target: number
           title: string
@@ -1406,6 +1408,8 @@ export type Database = {
           end_date: string
           id?: string
           progress?: number
+          show_goal_modal?: boolean
+          show_weekly_goal_modal?: boolean
           start_date: string
           target: number
           title: string
@@ -1420,6 +1424,8 @@ export type Database = {
           end_date?: string
           id?: string
           progress?: number
+          show_goal_modal?: boolean
+          show_weekly_goal_modal?: boolean
           start_date?: string
           target?: number
           title?: string
@@ -1607,6 +1613,10 @@ export type Database = {
       promote_to_admin: {
         Args: { target_user_email: string }
         Returns: boolean
+      }
+      reset_weekly_goals: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       sync_consultation_counts: {
         Args: Record<PropertyKey, never>

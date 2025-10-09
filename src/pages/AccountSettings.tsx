@@ -3,16 +3,20 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Save } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useWeeklyGoals } from "@/hooks/useWeeklyGoals";
 
 const AccountSettings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [showGoalModal, setShowGoalModalState] = useState(true);
+  const { getShowGoalModalPreference, setShowGoalModal } = useWeeklyGoals();
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -23,7 +27,18 @@ const AccountSettings = () => {
 
   useEffect(() => {
     fetchUserData();
+    loadGoalModalPreference();
   }, []);
+
+  const loadGoalModalPreference = async () => {
+    const preference = await getShowGoalModalPreference();
+    setShowGoalModalState(preference);
+  };
+
+  const handleToggleGoalModal = async (checked: boolean) => {
+    setShowGoalModalState(checked);
+    await setShowGoalModal(checked);
+  };
 
   const fetchUserData = async () => {
     try {
@@ -219,6 +234,28 @@ const AccountSettings = () => {
               <Save size={16} className="mr-2" />
               {loading ? "Alterando..." : "Alterar Senha"}
             </Button>
+          </CardContent>
+        </Card>
+
+        {/* Weekly Goals Preference */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Preferências de Metas</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="goal-modal">Exibir modal de metas semanais</Label>
+                <p className="text-sm text-muted-foreground">
+                  Receba lembretes automáticos toda segunda-feira
+                </p>
+              </div>
+              <Switch
+                id="goal-modal"
+                checked={showGoalModal}
+                onCheckedChange={handleToggleGoalModal}
+              />
+            </div>
           </CardContent>
         </Card>
       </div>

@@ -1,5 +1,8 @@
 project_id = "ihrrgmmsfuvlasmzdmwf"
 
+[functions.reset-weekly-goals]
+verify_jwt = false
+
 [api]
 enabled = true
 port = 54321

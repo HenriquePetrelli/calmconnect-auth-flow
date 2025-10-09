@@ -10,9 +10,12 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { MoodSelectionModal } from "@/components/MoodSelectionModal";
+import { WeeklyGoalModal } from "@/components/goals/WeeklyGoalModal";
+import { GoalSelectionModal } from "@/components/goals/GoalSelectionModal";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useWeeklyGoals } from "@/hooks/useWeeklyGoals";
 import React from "react";
 import PageSkeleton from "@/components/PageSkeleton";
 
@@ -25,13 +28,17 @@ const HomeContent = () => {
   const [moodEnabled, setMoodEnabled] = useState(true);
   const [todayMoodValue, setTodayMoodValue] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showWeeklyGoalModal, setShowWeeklyGoalModal] = useState(false);
+  const [showGoalSelection, setShowGoalSelection] = useState(false);
+  const { checkShouldShowModal, setShowWeeklyGoalModal: updateShowWeeklyGoalModal, setShowGoalModal } = useWeeklyGoals();
 
   useEffect(() => {
     const loadHomeData = async () => {
       setIsLoading(true);
       await Promise.all([
         fetchUserProfile(),
-        checkTodayMood()
+        checkTodayMood(),
+        checkWeeklyGoalModal()
       ]);
       setIsLoading(false);
     };
@@ -48,6 +55,33 @@ const HomeContent = () => {
       window.removeEventListener('moodToggleChanged', handleMoodToggleChange as EventListener);
     };
   }, []);
+
+  const checkWeeklyGoalModal = async () => {
+    const { shouldShow } = await checkShouldShowModal();
+    if (shouldShow) {
+      // Small delay to show modal after page loads
+      setTimeout(() => setShowWeeklyGoalModal(true), 500);
+    }
+  };
+
+  const handleCloseWeeklyGoalModal = () => {
+    setShowWeeklyGoalModal(false);
+    updateShowWeeklyGoalModal(false);
+  };
+
+  const handleAddGoals = () => {
+    setShowWeeklyGoalModal(false);
+    setShowGoalSelection(true);
+  };
+
+  const handleDontShowAgain = async () => {
+    await setShowGoalModal(false);
+    setShowWeeklyGoalModal(false);
+  };
+
+  const handleGoalsAdded = () => {
+    updateShowWeeklyGoalModal(false);
+  };
 
   const fetchUserProfile = async () => {
     try {
