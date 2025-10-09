@@ -33,6 +33,46 @@ export const useWeeklyGoals = () => {
   const [goals, setGoals] = useState<PatientWeeklyGoal[]>([]);
   const [loading, setLoading] = useState(true);
   const [newlyCompleted, setNewlyCompleted] = useState<PatientWeeklyGoal | null>(null);
+  const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
+
+  const fetchSelectedGoals = useCallback(async () => {
+    if (!user?.id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('patients')
+        .select('weekly_goals')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      setSelectedGoals(data?.weekly_goals || []);
+    } catch (error) {
+      console.error('Error fetching selected goals:', error);
+      setSelectedGoals([]);
+    }
+  }, [user]);
+
+  const updateSelectedGoals = useCallback(async (goalIds: string[]) => {
+    if (!user?.id) return;
+
+    try {
+      const { error } = await supabase
+        .from('patients')
+        .update({ weekly_goals: goalIds })
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      setSelectedGoals(goalIds);
+      await setShowWeeklyGoalModal(false);
+      toast.success('Metas semanais atualizadas');
+    } catch (error) {
+      console.error('Error updating selected goals:', error);
+      toast.error('Erro ao atualizar metas');
+      throw error;
+    }
+  }, [user]);
 
   const fetchGoals = useCallback(async () => {
     if (!user?.id) {
@@ -202,7 +242,8 @@ export const useWeeklyGoals = () => {
 
   useEffect(() => {
     fetchGoals();
-  }, [fetchGoals]);
+    fetchSelectedGoals();
+  }, [fetchGoals, fetchSelectedGoals]);
 
   return {
     goals,
@@ -216,5 +257,8 @@ export const useWeeklyGoals = () => {
     setShowWeeklyGoalModal,
     setShowGoalModal,
     getShowGoalModalPreference,
+    selectedGoals,
+    fetchSelectedGoals,
+    updateSelectedGoals,
   };
 };
