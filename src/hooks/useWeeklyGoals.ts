@@ -3,35 +3,36 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
-export interface DefaultWeeklyGoal {
+export interface WeeklyGoalTemplate {
   id: string;
   category: string;
   title: string;
   description: string;
-  icon: string;
+  type: string;
   target: number;
+  active: boolean;
+  created_at: string;
 }
 
-export interface WeeklyGoal {
+export interface PatientWeeklyGoal {
   id: string;
   user_id: string;
-  title: string;
-  description: string;
-  category: string;
+  goal_id: string;
   target: number;
   progress: number;
+  completed: boolean;
+  week_start_date: string;
+  week_end_date: string;
   created_at: string;
   updated_at: string;
-  start_date: string;
-  end_date: string;
-  completed: boolean;
+  weekly_goals: WeeklyGoalTemplate;
 }
 
 export const useWeeklyGoals = () => {
   const { user } = useAuth();
-  const [goals, setGoals] = useState<WeeklyGoal[]>([]);
+  const [goals, setGoals] = useState<PatientWeeklyGoal[]>([]);
   const [loading, setLoading] = useState(true);
-  const [newlyCompleted, setNewlyCompleted] = useState<WeeklyGoal | null>(null);
+  const [newlyCompleted, setNewlyCompleted] = useState<PatientWeeklyGoal | null>(null);
 
   const fetchGoals = useCallback(async () => {
     if (!user?.id) {
@@ -47,11 +48,11 @@ export const useWeeklyGoals = () => {
       endOfWeek.setDate(startOfWeek.getDate() + 6);
 
       const { data, error } = await supabase
-        .from('weekly_goals')
-        .select('*')
+        .from('patient_weekly_goals')
+        .select('*, weekly_goals(*)')
         .eq('user_id', user.id)
-        .gte('start_date', startOfWeek.toISOString().split('T')[0])
-        .lte('end_date', endOfWeek.toISOString().split('T')[0])
+        .gte('week_start_date', startOfWeek.toISOString().split('T')[0])
+        .lte('week_end_date', endOfWeek.toISOString().split('T')[0])
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -74,7 +75,7 @@ export const useWeeklyGoals = () => {
       const isCompleted = newProgress >= goal.target;
 
       const { error } = await supabase
-        .from('weekly_goals')
+        .from('patient_weekly_goals')
         .update({ 
           progress: newProgress,
           completed: isCompleted 
@@ -94,24 +95,27 @@ export const useWeeklyGoals = () => {
   }, [goals, fetchGoals]);
 
   const checkAndUpdateGoals = useCallback(async (category: string) => {
-    const categoryGoals = goals.filter(g => g.category === category && !g.completed);
+    const categoryGoals = goals.filter(g => g.weekly_goals.category === category && !g.completed);
     
     for (const goal of categoryGoals) {
       await updateGoalProgress(goal.id, 1);
     }
   }, [goals, updateGoalProgress]);
 
-  const createGoal = useCallback(async (goalData: Omit<WeeklyGoal, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'progress' | 'completed'>) => {
+  const createGoal = useCallback(async (goalId: string, target: number, weekStart: string, weekEnd: string) => {
     if (!user?.id) return;
 
     try {
       const { error } = await supabase
-        .from('weekly_goals')
+        .from('patient_weekly_goals')
         .insert({
-          ...goalData,
           user_id: user.id,
+          goal_id: goalId,
+          target,
           progress: 0,
-          completed: false
+          completed: false,
+          week_start_date: weekStart,
+          week_end_date: weekEnd
         });
 
       if (error) throw error;
@@ -126,12 +130,13 @@ export const useWeeklyGoals = () => {
   const fetchDefaultGoals = useCallback(async () => {
     try {
       const { data, error } = await supabase
-        .from('default_weekly_goals')
+        .from('weekly_goals')
         .select('*')
+        .eq('active', true)
         .order('category');
 
       if (error) throw error;
-      return data as DefaultWeeklyGoal[];
+      return data as WeeklyGoalTemplate[];
     } catch (error) {
       console.error('Error fetching default goals:', error);
       return [];
