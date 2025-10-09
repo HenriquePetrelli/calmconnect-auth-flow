@@ -9,13 +9,18 @@ import { useAchievements } from "@/hooks/useAchievements";
 import { getRelativeTime, formatDateTime } from "@/utils/dateFormatters";
 import { useWeeklyGoals } from "@/hooks/useWeeklyGoals";
 import { GoalSelectionModal } from "@/components/goals/GoalSelectionModal";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Statistics = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { recentActivities, statistics, loading, updateStreak } = usePatientStatistics();
   const { checkAchievements } = useAchievements();
-  const { goals, loading: goalsLoading } = useWeeklyGoals();
+  const { selectedGoals, fetchDefaultGoals, loading: goalsLoading } = useWeeklyGoals();
   const [goalModalOpen, setGoalModalOpen] = useState(false);
+  const [goalTemplates, setGoalTemplates] = useState<any[]>([]);
+  const [goalsWithProgress, setGoalsWithProgress] = useState<any[]>([]);
 
   // Update streak and check achievements when page loads (only once)
   useEffect(() => {
@@ -27,6 +32,37 @@ const Statistics = () => {
     initializePage();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Load goal templates and combine with selected goals
+  useEffect(() => {
+    const loadGoalsData = async () => {
+      const templates = await fetchDefaultGoals();
+      setGoalTemplates(templates);
+      
+      // Get goals with their progress
+      const goalsWithProgressData = selectedGoals.map(goalId => {
+        const template = templates.find(t => t.id === goalId);
+        if (!template) return null;
+        
+        // TODO: Fetch actual progress from database or calculate it
+        // For now, using dummy progress
+        return {
+          id: goalId,
+          title: template.title,
+          description: template.description,
+          target: template.target,
+          progress: 0, // This should come from actual tracking
+          completed: false
+        };
+      }).filter(Boolean);
+      
+      setGoalsWithProgress(goalsWithProgressData);
+    };
+
+    if (!goalsLoading) {
+      loadGoalsData();
+    }
+  }, [selectedGoals, goalsLoading, fetchDefaultGoals]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -50,7 +86,7 @@ const Statistics = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {goals.length === 0 ? (
+              {selectedGoals.length === 0 ? (
                 <div className="text-center py-8 space-y-4">
                   <div className="text-4xl mb-2">🎯</div>
                   <div>
@@ -73,12 +109,12 @@ const Statistics = () => {
               ) : (
                 <>
                   <div className="space-y-3">
-                    {goals.map((goal) => (
+                    {goalsWithProgress.map((goal) => (
                       <div key={goal.id} className="space-y-2">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <span className="font-medium text-foreground">
-                              {goal.weekly_goals.title}
+                              {goal.title}
                             </span>
                             {goal.completed && (
                               <CheckCircle2 size={18} className="text-green-500" />
@@ -93,7 +129,7 @@ const Statistics = () => {
                           className="h-2"
                         />
                         <p className="text-xs text-muted-foreground">
-                          {goal.weekly_goals.description}
+                          {goal.description}
                         </p>
                       </div>
                     ))}

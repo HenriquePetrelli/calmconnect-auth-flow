@@ -715,6 +715,7 @@ export type Database = {
           state: string
           updated_at: string | null
           user_id: string | null
+          weekly_goals: string[] | null
         }
         Insert: {
           city: string
@@ -735,6 +736,7 @@ export type Database = {
           state: string
           updated_at?: string | null
           user_id?: string | null
+          weekly_goals?: string[] | null
         }
         Update: {
           city?: string
@@ -755,6 +757,7 @@ export type Database = {
           state?: string
           updated_at?: string | null
           user_id?: string | null
+          weekly_goals?: string[] | null
         }
         Relationships: []
       }
@@ -1679,7 +1682,7 @@ export type Database = {
         Args: { target_user_email: string }
         Returns: boolean
       }
-      reset_patient_weekly_goals: {
+      reset_patient_weekly_goals_array: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }

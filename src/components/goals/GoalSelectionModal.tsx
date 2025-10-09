@@ -5,9 +5,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { motion } from 'framer-motion';
 import { useWeeklyGoals, WeeklyGoalTemplate } from '@/hooks/useWeeklyGoals';
-import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 
 interface GoalSelectionModalProps {
   open: boolean;
@@ -20,16 +18,18 @@ export const GoalSelectionModal = ({
   onOpenChange,
   onGoalsAdded 
 }: GoalSelectionModalProps) => {
-  const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
+  const [tempSelectedGoals, setTempSelectedGoals] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [goalOptions, setGoalOptions] = useState<WeeklyGoalTemplate[]>([]);
-  const { createGoal, fetchDefaultGoals } = useWeeklyGoals();
+  const { selectedGoals, fetchDefaultGoals, updateSelectedGoals } = useWeeklyGoals();
 
   useEffect(() => {
     if (open) {
       loadGoals();
+      // Pre-select goals that are already in the patient's weekly_goals array
+      setTempSelectedGoals(selectedGoals);
     }
-  }, [open]);
+  }, [open, selectedGoals]);
 
   const loadGoals = async () => {
     const goals = await fetchDefaultGoals();
@@ -37,52 +37,23 @@ export const GoalSelectionModal = ({
   };
 
   const handleToggleGoal = (goalId: string) => {
-    setSelectedGoals(prev => 
+    setTempSelectedGoals(prev => 
       prev.includes(goalId) 
         ? prev.filter(id => id !== goalId)
         : [...prev, goalId]
     );
   };
 
-  const handleAddGoals = async () => {
-    if (selectedGoals.length === 0) return;
+  const handleSaveGoals = async () => {
+    if (tempSelectedGoals.length === 0) return;
 
     setLoading(true);
     try {
-      const today = new Date();
-      const startOfWeek = new Date(today);
-      startOfWeek.setDate(today.getDate() - today.getDay());
-      const endOfWeek = new Date(startOfWeek);
-      endOfWeek.setDate(startOfWeek.getDate() + 6);
-
-      for (const goalId of selectedGoals) {
-        const goal = goalOptions.find(g => g.id === goalId);
-        if (goal) {
-          await createGoal(
-            goal.id,
-            goal.target,
-            startOfWeek.toISOString().split('T')[0],
-            endOfWeek.toISOString().split('T')[0]
-          );
-        }
-      }
-
-      // Update patient to hide modal
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase
-          .from('patients')
-          .update({ show_weekly_goal_modal: false })
-          .eq('user_id', user.id);
-      }
-
-      toast.success('Metas semanais adicionadas com sucesso! Boa sorte nesta semana 🌱');
+      await updateSelectedGoals(tempSelectedGoals);
       onGoalsAdded();
       onOpenChange(false);
-      setSelectedGoals([]);
     } catch (error) {
-      console.error('Error adding goals:', error);
-      toast.error('Erro ao adicionar metas');
+      console.error('Error saving goals:', error);
     } finally {
       setLoading(false);
     }
@@ -97,7 +68,7 @@ export const GoalSelectionModal = ({
 
         <div className="grid gap-4 py-4">
           {goalOptions.map((goal, index) => {
-            const isSelected = selectedGoals.includes(goal.id);
+            const isSelected = tempSelectedGoals.includes(goal.id);
 
             return (
               <motion.div
@@ -136,18 +107,18 @@ export const GoalSelectionModal = ({
 
         <DialogFooter>
           <Button
-            onClick={handleAddGoals}
-            disabled={selectedGoals.length === 0 || loading}
+            onClick={handleSaveGoals}
+            disabled={tempSelectedGoals.length === 0 || loading}
             size="lg"
             className="w-full"
           >
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Adicionando...
+                Salvando...
               </>
             ) : (
-              `Adicionar ${selectedGoals.length > 0 ? `(${selectedGoals.length})` : ''}`
+              `Salvar ${tempSelectedGoals.length > 0 ? `(${tempSelectedGoals.length})` : ''}`
             )}
           </Button>
         </DialogFooter>
