@@ -15,7 +15,7 @@ import { GoalSelectionModal } from "@/components/goals/GoalSelectionModal";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useWeeklyGoals } from "@/hooks/useWeeklyGoals";
+import { toast } from 'sonner';
 import React from "react";
 import PageSkeleton from "@/components/PageSkeleton";
 
@@ -30,15 +30,13 @@ const HomeContent = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showWeeklyGoalModal, setShowWeeklyGoalModal] = useState(false);
   const [showGoalSelection, setShowGoalSelection] = useState(false);
-  const { checkShouldShowModal, setShowWeeklyGoalModal: updateShowWeeklyGoalModal, setShowGoalModal } = useWeeklyGoals();
 
   useEffect(() => {
     const loadHomeData = async () => {
       setIsLoading(true);
       await Promise.all([
         fetchUserProfile(),
-        checkTodayMood(),
-        checkWeeklyGoalModal()
+        checkTodayMood()
       ]);
       setIsLoading(false);
     };
@@ -56,31 +54,48 @@ const HomeContent = () => {
     };
   }, []);
 
-  const checkWeeklyGoalModal = async () => {
-    const { shouldShow } = await checkShouldShowModal();
-    if (shouldShow) {
-      // Small delay to show modal after page loads
-      setTimeout(() => setShowWeeklyGoalModal(true), 500);
+  const checkTodayMood = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const today = new Date().toISOString().split('T')[0];
+      const { data: patientData } = await supabase
+        .from('patients')
+        .select('last_mood_date, last_mood_value, daily_mood_enabled, show_weekly_goal_modal, show_goal_modal')
+        .eq('user_id', user.id)
+        .single();
+
+      // Check if mood tracking is enabled
+      setMoodEnabled(patientData?.daily_mood_enabled !== false);
+
+      // Verificar se deve mostrar modal de metas semanais
+      if (patientData?.show_weekly_goal_modal && patientData?.show_goal_modal) {
+        setTimeout(() => setShowWeeklyGoalModal(true), 500);
+      }
+
+      // Reset mood daily at 00:01 Brazil time
+      if (!patientData?.last_mood_date || patientData.last_mood_date !== today) {
+        setCurrentMood(null);
+        setTodayMoodValue(null);
+      } else {
+        // Show today's mood if it exists
+        setTodayMoodValue(patientData.last_mood_value);
+        const moods = [
+          { emoji: '😀', label: 'Feliz', value: 5 },
+          { emoji: '🙂', label: 'Calmo', value: 4 },
+          { emoji: '😐', label: 'Neutro', value: 3 },
+          { emoji: '😔', label: 'Triste', value: 2 },
+          { emoji: '😡', label: 'Irritado', value: 1 }
+        ];
+        const todayMood = moods.find(mood => mood.value === patientData.last_mood_value);
+        if (todayMood) {
+          setCurrentMood(todayMood.emoji);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking today mood:', error);
     }
-  };
-
-  const handleCloseWeeklyGoalModal = () => {
-    setShowWeeklyGoalModal(false);
-    updateShowWeeklyGoalModal(false);
-  };
-
-  const handleAddGoals = () => {
-    setShowWeeklyGoalModal(false);
-    setShowGoalSelection(true);
-  };
-
-  const handleDontShowAgain = async () => {
-    await setShowGoalModal(false);
-    setShowWeeklyGoalModal(false);
-  };
-
-  const handleGoalsAdded = () => {
-    updateShowWeeklyGoalModal(false);
   };
 
   const fetchUserProfile = async () => {
@@ -105,43 +120,56 @@ const HomeContent = () => {
     return moods.find(mood => mood.value === value)?.label || '';
   };
 
-  const checkTodayMood = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const today = new Date().toISOString().split('T')[0];
-      const { data: patientData } = await supabase
-        .from('patients')
-        .select('last_mood_date, last_mood_value, daily_mood_enabled')
-        .eq('user_id', user.id)
-        .single();
-
-      // Check if mood tracking is enabled
-      setMoodEnabled(patientData?.daily_mood_enabled !== false);
-
-      // Reset mood daily at 00:01 Brazil time
-      if (!patientData?.last_mood_date || patientData.last_mood_date !== today) {
-        setCurrentMood(null);
-        setTodayMoodValue(null);
-      } else {
-        // Show today's mood if it exists
-        setTodayMoodValue(patientData.last_mood_value);
-        const moods = [
-          { emoji: '😀', label: 'Feliz', value: 5 },
-          { emoji: '🙂', label: 'Calmo', value: 4 },
-          { emoji: '😐', label: 'Neutro', value: 3 },
-          { emoji: '😔', label: 'Triste', value: 2 },
-          { emoji: '😡', label: 'Irritado', value: 1 }
-        ];
-        const todayMood = moods.find(mood => mood.value === patientData.last_mood_value);
-        if (todayMood) {
-          setCurrentMood(todayMood.emoji);
-        }
+  const handleCloseWeeklyGoalModal = async () => {
+    setShowWeeklyGoalModal(false);
+    // Atualizar a flag no banco para não mostrar mais nesta semana
+    if (userProfile?.id) {
+      try {
+        await supabase
+          .from('patients')
+          .update({ show_weekly_goal_modal: false })
+          .eq('user_id', userProfile.id);
+      } catch (error) {
+        console.error('Error updating weekly goal modal preference:', error);
       }
-    } catch (error) {
-      console.error('Error checking today mood:', error);
     }
+  };
+
+  const handleAddGoals = () => {
+    setShowWeeklyGoalModal(false);
+    setShowGoalSelection(true);
+  };
+
+  const handleDontShowAgain = async () => {
+    setShowWeeklyGoalModal(false);
+    if (userProfile?.id) {
+      try {
+        await supabase
+          .from('patients')
+          .update({ show_goal_modal: false, show_weekly_goal_modal: false })
+          .eq('user_id', userProfile.id);
+        toast.success('Você poderá reativar essa opção nas configurações do perfil.');
+      } catch (error) {
+        console.error('Error updating goal modal preference:', error);
+        toast.error('Erro ao atualizar preferência');
+      }
+    }
+  };
+
+  const handleGoalsAdded = async () => {
+    setShowGoalSelection(false);
+    // Atualizar show_weekly_goal_modal para false após adicionar metas
+    if (userProfile?.id) {
+      try {
+        await supabase
+          .from('patients')
+          .update({ show_weekly_goal_modal: false })
+          .eq('user_id', userProfile.id);
+      } catch (error) {
+        console.error('Error updating weekly goal modal:', error);
+      }
+    }
+    toast.success('Metas semanais adicionadas com sucesso! 🌱');
   };
 
   const handleMoodSelected = (mood: string, value: number) => {

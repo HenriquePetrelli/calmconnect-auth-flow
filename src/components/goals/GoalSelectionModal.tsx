@@ -1,72 +1,12 @@
-import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Wind, Music, Users, BookOpen, Heart, Calendar } from 'lucide-react';
+import { useWeeklyGoals, DefaultWeeklyGoal } from '@/hooks/useWeeklyGoals';
 import { toast } from 'sonner';
-import { useWeeklyGoals } from '@/hooks/useWeeklyGoals';
-
-interface GoalOption {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  icon: typeof Wind;
-  target: number;
-}
-
-const goalOptions: GoalOption[] = [
-  {
-    id: 'breathing',
-    title: 'Respiração Guiada',
-    description: 'Respirar conscientemente 5x nesta semana',
-    category: 'Respiração',
-    icon: Wind,
-    target: 5
-  },
-  {
-    id: 'sounds',
-    title: 'Sons Terapêuticos',
-    description: 'Ouvir sons relaxantes 15 minutos por dia',
-    category: 'Sono',
-    icon: Music,
-    target: 7
-  },
-  {
-    id: 'support-groups',
-    title: 'Grupos de Apoio',
-    description: 'Participar de 1 grupo de apoio esta semana',
-    category: 'Humor',
-    icon: Users,
-    target: 1
-  },
-  {
-    id: 'journal',
-    title: 'Diário',
-    description: 'Registrar 3 pensamentos positivos durante a semana',
-    category: 'Diário',
-    icon: BookOpen,
-    target: 3
-  },
-  {
-    id: 'mood',
-    title: 'Humor Diário',
-    description: 'Registrar meu humor todos os dias desta semana',
-    category: 'Humor',
-    icon: Heart,
-    target: 7
-  },
-  {
-    id: 'consultation',
-    title: 'Consultas',
-    description: 'Concluir minha consulta agendada',
-    category: 'Consulta',
-    icon: Calendar,
-    target: 1
-  }
-];
+import { Loader2 } from 'lucide-react';
 
 interface GoalSelectionModalProps {
   open: boolean;
@@ -81,7 +21,19 @@ export const GoalSelectionModal = ({
 }: GoalSelectionModalProps) => {
   const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const { createGoal } = useWeeklyGoals();
+  const [goalOptions, setGoalOptions] = useState<DefaultWeeklyGoal[]>([]);
+  const { createGoal, fetchDefaultGoals } = useWeeklyGoals();
+
+  useEffect(() => {
+    if (open) {
+      loadGoals();
+    }
+  }, [open]);
+
+  const loadGoals = async () => {
+    const goals = await fetchDefaultGoals();
+    setGoalOptions(goals);
+  };
 
   const handleToggleGoal = (goalId: string) => {
     setSelectedGoals(prev => 
@@ -137,7 +89,6 @@ export const GoalSelectionModal = ({
 
         <div className="grid gap-4 py-4">
           {goalOptions.map((goal, index) => {
-            const Icon = goal.icon;
             const isSelected = selectedGoals.includes(goal.id);
 
             return (
@@ -163,7 +114,7 @@ export const GoalSelectionModal = ({
                   />
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <Icon className="h-5 w-5 text-primary" />
+                      <span className="text-2xl">{goal.icon}</span>
                       <span className="font-semibold">{goal.title}</span>
                     </div>
                     <p className="text-sm text-muted-foreground">
@@ -183,7 +134,14 @@ export const GoalSelectionModal = ({
             size="lg"
             className="w-full"
           >
-            {loading ? 'Adicionando...' : `Adicionar ${selectedGoals.length > 0 ? `(${selectedGoals.length})` : ''}`}
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Adicionando...
+              </>
+            ) : (
+              `Adicionar ${selectedGoals.length > 0 ? `(${selectedGoals.length})` : ''}`
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -6,6 +6,7 @@ import { ArrowLeft, Crown, LogOut, Settings, User as UserIcon, MessageCircle, Ed
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { DailyMoodToggle } from "@/components/DailyMoodToggle";
+import { Switch } from "@/components/ui/switch";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -23,6 +24,7 @@ const Profile = () => {
   const [editSymptomsOpen, setEditSymptomsOpen] = useState(false);
   const [planDropdownOpen, setPlanDropdownOpen] = useState(false);
   const [settingsDropdownOpen, setSettingsDropdownOpen] = useState(false);
+  const [showGoalModal, setShowGoalModal] = useState(true);
 
   useEffect(() => {
     fetchUserData();
@@ -37,6 +39,16 @@ const Profile = () => {
           .select('*')
           .eq('user_id', user.id)
           .single();
+
+        const { data: patientData } = await supabase
+          .from('patients')
+          .select('show_goal_modal')
+          .eq('user_id', user.id)
+          .single();
+        
+        if (patientData) {
+          setShowGoalModal(patientData.show_goal_modal);
+        }
         
         setUser({
           ...user,
@@ -47,6 +59,36 @@ const Profile = () => {
       console.error('Error fetching user data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleToggleGoalModal = async (checked: boolean) => {
+    if (!user?.id) return;
+    
+    setShowGoalModal(checked);
+    
+    try {
+      const { error } = await supabase
+        .from('patients')
+        .update({ show_goal_modal: checked })
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: checked ? "Modal ativada" : "Modal desativada",
+        description: checked 
+          ? "Você receberá lembretes para adicionar metas semanais"
+          : "Você não receberá mais lembretes automáticos de metas semanais"
+      });
+    } catch (error) {
+      console.error('Error updating goal modal preference:', error);
+      setShowGoalModal(!checked);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar a preferência",
+        variant: "destructive"
+      });
     }
   };
 
@@ -247,6 +289,19 @@ const Profile = () => {
                   </div>
                   
                   <DailyMoodToggle />
+
+                  <div className="flex items-center justify-between p-4 rounded-lg border bg-gradient-to-r from-muted/30 to-transparent">
+                    <div className="space-y-1">
+                      <div className="text-base font-semibold">Metas Semanais</div>
+                      <div className="text-sm text-muted-foreground">
+                        Receber lembretes para adicionar metas toda segunda-feira
+                      </div>
+                    </div>
+                    <Switch 
+                      checked={showGoalModal}
+                      onCheckedChange={handleToggleGoalModal}
+                    />
+                  </div>
                   
                   <div className="flex items-center justify-between p-4 rounded-lg border bg-gradient-to-r from-muted/30 to-transparent">
                     <div className="space-y-1">

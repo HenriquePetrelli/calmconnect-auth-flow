@@ -32,7 +32,6 @@ import Statistics from "./pages/Statistics";
 import Progress from "./pages/Progress";
 import Achievements from "./pages/Achievements";
 import ActivityHistory from "./pages/ActivityHistory";
-import WeeklyGoals from "./pages/WeeklyGoals";
 import SubscriptionPlans from "./pages/SubscriptionPlans";
 import SubscriptionSuccess from "./pages/SubscriptionSuccess";
 import SubscriptionCancel from "./pages/SubscriptionCancel";
@@ -221,11 +220,6 @@ const App = () => {
                   <Route path="/statistics/activity-history" element={
                     <RouteGuard allowedUserTypes={['patient']}>
                       <ActivityHistory />
-                    </RouteGuard>
-                  } />
-                  <Route path="/goals" element={
-                    <RouteGuard allowedUserTypes={['patient']}>
-                      <WeeklyGoals />
                     </RouteGuard>
                   } />
                   <Route path="/subscription-plans" element={

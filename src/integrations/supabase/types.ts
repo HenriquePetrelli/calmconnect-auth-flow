@@ -187,6 +187,36 @@ export type Database = {
         }
         Relationships: []
       }
+      default_weekly_goals: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string
+          icon: string
+          id: string
+          target: number
+          title: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description: string
+          icon: string
+          id?: string
+          target?: number
+          title: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string
+          icon?: string
+          id?: string
+          target?: number
+          title?: string
+        }
+        Relationships: []
+      }
       emergency_requests: {
         Row: {
           accepted_at: string | null
@@ -632,6 +662,8 @@ export type Database = {
           last_mood_date: string | null
           last_mood_value: number | null
           phone: string | null
+          show_goal_modal: boolean | null
+          show_weekly_goal_modal: boolean | null
           sintomas_selecionados: string[] | null
           state: string
           updated_at: string | null
@@ -650,6 +682,8 @@ export type Database = {
           last_mood_date?: string | null
           last_mood_value?: number | null
           phone?: string | null
+          show_goal_modal?: boolean | null
+          show_weekly_goal_modal?: boolean | null
           sintomas_selecionados?: string[] | null
           state: string
           updated_at?: string | null
@@ -668,6 +702,8 @@ export type Database = {
           last_mood_date?: string | null
           last_mood_value?: number | null
           phone?: string | null
+          show_goal_modal?: boolean | null
+          show_weekly_goal_modal?: boolean | null
           sintomas_selecionados?: string[] | null
           state?: string
           updated_at?: string | null
@@ -1392,8 +1428,6 @@ export type Database = {
           end_date: string
           id: string
           progress: number
-          show_goal_modal: boolean
-          show_weekly_goal_modal: boolean
           start_date: string
           target: number
           title: string
@@ -1408,8 +1442,6 @@ export type Database = {
           end_date: string
           id?: string
           progress?: number
-          show_goal_modal?: boolean
-          show_weekly_goal_modal?: boolean
           start_date: string
           target: number
           title: string
@@ -1424,8 +1456,6 @@ export type Database = {
           end_date?: string
           id?: string
           progress?: number
-          show_goal_modal?: boolean
-          show_weekly_goal_modal?: boolean
           start_date?: string
           target?: number
           title?: string
