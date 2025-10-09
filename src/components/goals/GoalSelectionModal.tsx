@@ -1,8 +1,8 @@
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useWeeklyGoals, DefaultWeeklyGoal } from '@/hooks/useWeeklyGoals';
 import { toast } from 'sonner';
