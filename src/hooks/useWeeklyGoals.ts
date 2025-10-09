@@ -57,7 +57,7 @@ export const useWeeklyGoals = () => {
 
       if (error) throw error;
 
-      setGoals(data || []);
+      setGoals((data as PatientWeeklyGoal[]) || []);
     } catch (error) {
       console.error('Error fetching goals:', error);
       setGoals([]);
