@@ -297,6 +297,19 @@ const HomeContent = () => {
             currentMood={currentMood}
           />
         )}
+
+        <WeeklyGoalModal
+          open={showWeeklyGoalModal}
+          onOpenChange={handleCloseWeeklyGoalModal}
+          onAddGoals={handleAddGoals}
+          onDontShowAgain={handleDontShowAgain}
+        />
+
+        <GoalSelectionModal
+          open={showGoalSelection}
+          onOpenChange={setShowGoalSelection}
+          onGoalsAdded={handleGoalsAdded}
+        />
       </div>
     </div>
   );
