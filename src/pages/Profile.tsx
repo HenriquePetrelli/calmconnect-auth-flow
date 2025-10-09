@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useToast } from "@/hooks/use-toast";
+import { useWeeklyGoals } from "@/hooks/useWeeklyGoals";
 import BottomNavigation from "@/components/BottomNavigation";
 import ProfileSkeleton from "@/components/ProfileSkeleton";
 import EditSymptomsModal from "@/components/EditSymptomsModal";
@@ -19,11 +20,13 @@ const Profile = () => {
   const navigate = useNavigate();
   const { subscribed, subscriptionTier } = useSubscription();
   const { toast } = useToast();
+  const { getShowGoalModalPreference, setShowGoalModal } = useWeeklyGoals();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [editSymptomsOpen, setEditSymptomsOpen] = useState(false);
   const [planDropdownOpen, setPlanDropdownOpen] = useState(false);
   const [settingsDropdownOpen, setSettingsDropdownOpen] = useState(false);
+  const [showWeeklyGoalModal, setShowWeeklyGoalModal] = useState(true);
 
   useEffect(() => {
     fetchUserData();
@@ -32,11 +35,11 @@ const Profile = () => {
 
   const loadGoalModalPreference = async () => {
     const preference = await getShowGoalModalPreference();
-    setShowWeeklyGoalModalState(preference);
+    setShowWeeklyGoalModal(preference);
   };
 
   const handleToggleWeeklyGoalModal = async (checked: boolean) => {
-    setShowWeeklyGoalModalState(checked);
+    setShowWeeklyGoalModal(checked);
     await setShowGoalModal(checked);
   };
 
@@ -260,6 +263,19 @@ const Profile = () => {
                   </div>
                   
                   <DailyMoodToggle />
+                  
+                  <div className="flex items-center justify-between p-4 rounded-lg border bg-gradient-to-r from-muted/30 to-transparent">
+                    <div className="space-y-1">
+                      <div className="text-base font-semibold">Modal de Metas Semanais</div>
+                      <div className="text-sm text-muted-foreground">
+                        Exibir modal toda segunda-feira para adicionar metas
+                      </div>
+                    </div>
+                    <Switch
+                      checked={showWeeklyGoalModal}
+                      onCheckedChange={handleToggleWeeklyGoalModal}
+                    />
+                  </div>
                   
                   <div className="flex items-center justify-between p-4 rounded-lg border bg-gradient-to-r from-muted/30 to-transparent">
                     <div className="space-y-1">
