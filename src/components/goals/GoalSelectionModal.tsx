@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { motion } from 'framer-motion';
-import { useWeeklyGoals, DefaultWeeklyGoal } from '@/hooks/useWeeklyGoals';
+import { useWeeklyGoals, WeeklyGoalTemplate } from '@/hooks/useWeeklyGoals';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface GoalSelectionModalProps {
   open: boolean;
@@ -21,7 +22,7 @@ export const GoalSelectionModal = ({
 }: GoalSelectionModalProps) => {
   const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [goalOptions, setGoalOptions] = useState<DefaultWeeklyGoal[]>([]);
+  const [goalOptions, setGoalOptions] = useState<WeeklyGoalTemplate[]>([]);
   const { createGoal, fetchDefaultGoals } = useWeeklyGoals();
 
   useEffect(() => {
@@ -57,15 +58,22 @@ export const GoalSelectionModal = ({
       for (const goalId of selectedGoals) {
         const goal = goalOptions.find(g => g.id === goalId);
         if (goal) {
-          await createGoal({
-            title: goal.title,
-            description: goal.description,
-            category: goal.category,
-            target: goal.target,
-            start_date: startOfWeek.toISOString().split('T')[0],
-            end_date: endOfWeek.toISOString().split('T')[0]
-          });
+          await createGoal(
+            goal.id,
+            goal.target,
+            startOfWeek.toISOString().split('T')[0],
+            endOfWeek.toISOString().split('T')[0]
+          );
         }
+      }
+
+      // Update patient to hide modal
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase
+          .from('patients')
+          .update({ show_weekly_goal_modal: false })
+          .eq('user_id', user.id);
       }
 
       toast.success('Metas semanais adicionadas com sucesso! Boa sorte nesta semana 🌱');
@@ -114,7 +122,6 @@ export const GoalSelectionModal = ({
                   />
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-2xl">{goal.icon}</span>
                       <span className="font-semibold">{goal.title}</span>
                     </div>
                     <p className="text-sm text-muted-foreground">

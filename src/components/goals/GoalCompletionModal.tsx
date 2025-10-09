@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Trophy, Sparkles, CheckCircle2 } from 'lucide-react';
-import { WeeklyGoal } from '@/hooks/useWeeklyGoals';
+import { PatientWeeklyGoal } from '@/hooks/useWeeklyGoals';
 import Confetti from 'react-confetti';
 import { motion } from 'framer-motion';
 
 interface GoalCompletionModalProps {
-  goal: WeeklyGoal | null;
+  goal: PatientWeeklyGoal | null;
   onClose: () => void;
 }
 
@@ -84,8 +84,8 @@ export const GoalCompletionModal = ({ goal, onClose }: GoalCompletionModalProps)
               </div>
 
               <div className="bg-background rounded-md p-4 border">
-                <p className="font-semibold text-foreground mb-1">{goal.title}</p>
-                <p className="text-sm text-muted-foreground">{goal.description}</p>
+                <p className="font-semibold text-foreground mb-1">{goal.weekly_goals.title}</p>
+                <p className="text-sm text-muted-foreground">{goal.weekly_goals.description}</p>
               </div>
             </div>
 

@@ -2,10 +2,10 @@ import { Target, CheckCircle2, TrendingUp, Music, BookOpen, Heart, Calendar } fr
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { WeeklyGoal } from '@/hooks/useWeeklyGoals';
+import { PatientWeeklyGoal } from '@/hooks/useWeeklyGoals';
 
 interface GoalCardProps {
-  goal: WeeklyGoal;
+  goal: PatientWeeklyGoal;
 }
 
 const categoryIcons: Record<string, typeof Target> = {
@@ -25,9 +25,9 @@ const categoryColors: Record<string, string> = {
 };
 
 export const GoalCard = ({ goal }: GoalCardProps) => {
-  const Icon = goal.category ? categoryIcons[goal.category] || Target : Target;
+  const Icon = goal.weekly_goals.category ? categoryIcons[goal.weekly_goals.category] || Target : Target;
   const progressPercentage = Math.round((goal.progress / goal.target) * 100);
-  const categoryColor = goal.category ? categoryColors[goal.category] || 'bg-primary/10 text-primary border-primary/20' : 'bg-primary/10 text-primary border-primary/20';
+  const categoryColor = goal.weekly_goals.category ? categoryColors[goal.weekly_goals.category] || 'bg-primary/10 text-primary border-primary/20' : 'bg-primary/10 text-primary border-primary/20';
 
   return (
     <Card className="relative overflow-hidden hover:shadow-lg transition-all duration-300 border-2">
@@ -46,13 +46,13 @@ export const GoalCard = ({ goal }: GoalCardProps) => {
             <Icon className="h-6 w-6" />
           </div>
           <div className="flex-1">
-            <CardTitle className="text-lg font-semibold mb-1">{goal.title}</CardTitle>
-            {goal.category && (
+            <CardTitle className="text-lg font-semibold mb-1">{goal.weekly_goals.title}</CardTitle>
+            {goal.weekly_goals.category && (
               <Badge variant="outline" className="mb-2">
-                {goal.category}
+                {goal.weekly_goals.category}
               </Badge>
             )}
-            <CardDescription className="text-sm">{goal.description}</CardDescription>
+            <CardDescription className="text-sm">{goal.weekly_goals.description}</CardDescription>
           </div>
         </div>
       </CardHeader>
