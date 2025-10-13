@@ -17,10 +17,11 @@ const Statistics = () => {
   const { user } = useAuth();
   const { recentActivities, statistics, loading, updateStreak } = usePatientStatistics();
   const { checkAchievements } = useAchievements();
-  const { selectedGoals, fetchDefaultGoals, loading: goalsLoading } = useWeeklyGoals();
+  const { selectedGoals, fetchDefaultGoals, loading: goalsLoading, fetchSelectedGoals } = useWeeklyGoals();
   const [goalModalOpen, setGoalModalOpen] = useState(false);
   const [goalTemplates, setGoalTemplates] = useState<any[]>([]);
   const [goalsWithProgress, setGoalsWithProgress] = useState<any[]>([]);
+  const [localSelectedGoals, setLocalSelectedGoals] = useState<string[]>(selectedGoals);
 
   // Update streak and check achievements when page loads (only once)
   useEffect(() => {
@@ -33,6 +34,11 @@ const Statistics = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Sync local state with hook state
+  useEffect(() => {
+    setLocalSelectedGoals(selectedGoals);
+  }, [selectedGoals]);
+
   // Load goal templates and combine with selected goals
   useEffect(() => {
     const loadGoalsData = async () => {
@@ -40,7 +46,7 @@ const Statistics = () => {
       setGoalTemplates(templates);
       
       // Get goals with their progress
-      const goalsWithProgressData = selectedGoals.map(goalId => {
+      const goalsWithProgressData = localSelectedGoals.map(goalId => {
         const template = templates.find(t => t.id === goalId);
         if (!template) return null;
         
@@ -62,7 +68,35 @@ const Statistics = () => {
     if (!goalsLoading) {
       loadGoalsData();
     }
-  }, [selectedGoals, goalsLoading, fetchDefaultGoals]);
+  }, [localSelectedGoals, goalsLoading, fetchDefaultGoals]);
+
+  // Realtime subscription to detect changes in weekly_goals
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel('patients-weekly-goals-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'patients',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Weekly goals updated in realtime:', payload);
+          const newGoals = (payload.new as any)?.weekly_goals || [];
+          setLocalSelectedGoals(newGoals);
+          fetchSelectedGoals();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, fetchSelectedGoals]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -86,7 +120,7 @@ const Statistics = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {selectedGoals.length === 0 ? (
+              {localSelectedGoals.length === 0 ? (
                 <div className="text-center py-8 space-y-4">
                   <div className="text-4xl mb-2">🎯</div>
                   <div>
@@ -284,8 +318,9 @@ const Statistics = () => {
       <GoalSelectionModal 
         open={goalModalOpen}
         onOpenChange={setGoalModalOpen}
-        onGoalsAdded={() => {
+        onGoalsAdded={async () => {
           setGoalModalOpen(false);
+          await fetchSelectedGoals();
         }}
       />
     </div>
