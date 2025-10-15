@@ -81,6 +81,8 @@ serve(async (req) => {
       }
 
       // Create emergency request
+      console.log('🆘 Creating emergency request for patient:', user.id);
+      
       const { data: emergencyRequest, error: insertError } = await supabase
         .from('emergency_requests')
         .insert({
@@ -91,11 +93,16 @@ serve(async (req) => {
         .single();
 
       if (insertError) {
-        console.error('Error creating emergency request:', insertError);
+        console.error('❌ Error creating emergency request:', insertError);
         throw new Error(`Erro ao criar solicitação: ${insertError.message}`);
       }
 
-      console.log('Emergency request created successfully:', emergencyRequest.id);
+      console.log('✅ Emergency request created successfully:', {
+        id: emergencyRequest.id,
+        patient_id: emergencyRequest.patient_id,
+        status: emergencyRequest.status,
+        created_at: emergencyRequest.created_at
+      });
 
       // Get online psychologists (for now, we'll get all psychologists)
       const { data: psychologists, error: psychError } = await supabase

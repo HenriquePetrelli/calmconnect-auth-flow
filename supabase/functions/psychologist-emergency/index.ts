@@ -99,30 +99,43 @@ serve(async (req) => {
     }
 
     if (req.method === 'GET' || req.method === 'POST') {
-      // Get pending emergency requests
+      console.log('📋 Psychologist requesting emergency list');
+      
+      // Get pending/waiting emergency requests (aligned with frontend filter)
       const { data: emergencyRequests, error } = await supabase
         .from('emergency_requests')
         .select('*')
-        .eq('status', 'pending')
+        .in('status', ['pending', 'waiting'])
         .order('created_at', { ascending: true });
 
       if (error) {
-        console.error('Error fetching emergency requests:', error);
+        console.error('❌ Error fetching emergency requests:', error);
         throw error;
       }
 
-      console.log(`Found ${emergencyRequests?.length || 0} pending emergency requests`);
+      console.log(`✅ Found ${emergencyRequests?.length || 0} emergency requests with status pending/waiting`);
+      
+      if (emergencyRequests && emergencyRequests.length > 0) {
+        console.log('📝 Emergency request IDs:', emergencyRequests.map(r => r.id));
+        console.log('📝 Emergency request statuses:', emergencyRequests.map(r => `${r.id}: ${r.status}`));
+      }
 
       // Enhance requests with patient information - show ALL emergency requests
       const enhancedRequests = [];
       
       for (const request of emergencyRequests || []) {
+        console.log(`🔍 Processing emergency ${request.id} for patient ${request.patient_id}`);
+        
         // Get patient profile for display
         const { data: patientProfile, error: profileError } = await supabase
           .from('profiles')
           .select('full_name')
           .eq('user_id', request.patient_id)
           .maybeSingle();
+
+        if (profileError) {
+          console.error(`❌ Error fetching patient profile for ${request.patient_id}:`, profileError);
+        }
 
         // Get patient symptoms for additional context (optional)
         const { data: patient } = await supabase
@@ -139,9 +152,11 @@ serve(async (req) => {
             symptoms: patient?.sintomas_selecionados || []
           }
         });
+        
+        console.log(`✅ Enhanced emergency ${request.id} with patient name: ${patientProfile?.full_name || 'Paciente'}`);
       }
 
-      console.log(`Returning ${enhancedRequests.length} emergency requests to psychologist`);
+      console.log(`📤 Returning ${enhancedRequests.length} emergency requests to psychologist`);
 
       return new Response(
         JSON.stringify(enhancedRequests),
