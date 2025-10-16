@@ -6,47 +6,49 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import SplashScreen from "@/components/SplashScreen";
 import RouteGuard from "@/components/RouteGuard";
 import MainLayout from "@/components/MainLayout";
 import BackgroundWrapper from "@/components/BackgroundWrapper";
-import Index from "./pages/Index";
-import SignupType from "./pages/SignupType";
-import PatientSignUp from "./pages/PatientSignUp";
-import PsychologistSignUpPublic from "./pages/PsychologistSignUpPublic";
-import Home from "./pages/Home";
-import SoundsLibrary from "./pages/SoundsLibrary";
-import SoundCategory from "./pages/SoundCategory";
-import SoundPlayer from "./pages/SoundPlayer";
-import SoundFeedback from "./pages/SoundFeedback";
-import GuidedBreathing from "./pages/GuidedBreathing";
-import SOS from "./pages/SOS";
-import Profile from "./pages/Profile";
-import AccountSettings from "./pages/AccountSettings";
-import Support from "./pages/Support";
-import PsychologistSupport from "./pages/PsychologistSupport";
-import Appointments from "./pages/Appointments";
-import Notifications from "./pages/Notifications";
-import Statistics from "./pages/Statistics";
-import Progress from "./pages/Progress";
-import Achievements from "./pages/Achievements";
-import ActivityHistory from "./pages/ActivityHistory";
-import SubscriptionPlans from "./pages/SubscriptionPlans";
-import SubscriptionSuccess from "./pages/SubscriptionSuccess";
-import SubscriptionCancel from "./pages/SubscriptionCancel";
-import AdminDashboard from "./pages/AdminDashboard";
-import PsychologistDashboard from "./pages/PsychologistDashboard";
-import PsychologistProfile from "./pages/PsychologistProfile";
-import EmergencyCall from "./pages/EmergencyCall";
-import WebRTCTest from "./pages/WebRTCTest";
-import Chat from "./pages/Chat";
-import ConsultationCall from "./pages/ConsultationCall";
-import SupportGroups from "./pages/SupportGroups";
-import SupportGroupDetail from "./pages/SupportGroupDetail";
-import PrivateJournal from "./pages/PrivateJournal";
+import PageSkeleton from "@/components/PageSkeleton";
 
-import NotFound from "./pages/NotFound";
+// Lazy load all pages for better performance
+const Index = lazy(() => import("./pages/Index"));
+const SignupType = lazy(() => import("./pages/SignupType"));
+const PatientSignUp = lazy(() => import("./pages/PatientSignUp"));
+const PsychologistSignUpPublic = lazy(() => import("./pages/PsychologistSignUpPublic"));
+const Home = lazy(() => import("./pages/Home"));
+const SoundsLibrary = lazy(() => import("./pages/SoundsLibrary"));
+const SoundCategory = lazy(() => import("./pages/SoundCategory"));
+const SoundPlayer = lazy(() => import("./pages/SoundPlayer"));
+const SoundFeedback = lazy(() => import("./pages/SoundFeedback"));
+const GuidedBreathing = lazy(() => import("./pages/GuidedBreathing"));
+const SOS = lazy(() => import("./pages/SOS"));
+const Profile = lazy(() => import("./pages/Profile"));
+const AccountSettings = lazy(() => import("./pages/AccountSettings"));
+const Support = lazy(() => import("./pages/Support"));
+const PsychologistSupport = lazy(() => import("./pages/PsychologistSupport"));
+const Appointments = lazy(() => import("./pages/Appointments"));
+const Notifications = lazy(() => import("./pages/Notifications"));
+const Statistics = lazy(() => import("./pages/Statistics"));
+const Progress = lazy(() => import("./pages/Progress"));
+const Achievements = lazy(() => import("./pages/Achievements"));
+const ActivityHistory = lazy(() => import("./pages/ActivityHistory"));
+const SubscriptionPlans = lazy(() => import("./pages/SubscriptionPlans"));
+const SubscriptionSuccess = lazy(() => import("./pages/SubscriptionSuccess"));
+const SubscriptionCancel = lazy(() => import("./pages/SubscriptionCancel"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const PsychologistDashboard = lazy(() => import("./pages/PsychologistDashboard"));
+const PsychologistProfile = lazy(() => import("./pages/PsychologistProfile"));
+const EmergencyCall = lazy(() => import("./pages/EmergencyCall"));
+const WebRTCTest = lazy(() => import("./pages/WebRTCTest"));
+const Chat = lazy(() => import("./pages/Chat"));
+const ConsultationCall = lazy(() => import("./pages/ConsultationCall"));
+const SupportGroups = lazy(() => import("./pages/SupportGroups"));
+const SupportGroupDetail = lazy(() => import("./pages/SupportGroupDetail"));
+const PrivateJournal = lazy(() => import("./pages/PrivateJournal"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
 
@@ -76,7 +78,8 @@ const App = () => {
             ) : (
               <BrowserRouter>
                 <BackgroundWrapper>
-                  <Routes>
+                  <Suspense fallback={<PageSkeleton />}>
+                    <Routes>
                   {/* Rotas Públicas */}
                   <Route path="/" element={
                     <RouteGuard allowedUserTypes={['public']}>
@@ -300,9 +303,10 @@ const App = () => {
                     </RouteGuard>
                   } />
 
-                  {/* Rota 404 */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
+                    {/* Rota 404 */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                  </Suspense>
                 </BackgroundWrapper>
               </BrowserRouter>
             )}
