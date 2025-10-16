@@ -82,7 +82,7 @@ const EmergencyNotifications = () => {
     );
   }
 
-  const pendingRequests = emergencyRequests.filter(req => req.status === 'pending');
+  const pendingRequests = emergencyRequests.filter(req => req.status === 'pending' || req.status === 'waiting');
 
   if (pendingRequests.length === 0) {
     return (
