@@ -21,8 +21,11 @@ serve(async (req) => {
   const origin = req.headers.get('origin');
   const corsHeaders = getCorsHeaders(origin);
   
+  console.log('🆘 emergency-sos function called, method:', req.method);
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log('🆘 Handling OPTIONS request');
     return new Response(null, { headers: corsHeaders });
   }
 
@@ -33,6 +36,8 @@ serve(async (req) => {
     );
 
     const authHeader = req.headers.get('Authorization');
+    console.log('🆘 Authorization header present:', !!authHeader);
+    
     if (!authHeader) {
       throw new Error('No authorization header');
     }
@@ -41,6 +46,8 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser(
       authHeader.replace('Bearer ', '')
     );
+
+    console.log('🆘 User authentication result:', { userId: user?.id, error: authError?.message });
 
     if (authError || !user) {
       throw new Error('Invalid authentication');
@@ -53,11 +60,15 @@ serve(async (req) => {
       .eq('user_id', user.id)
       .single();
 
+    console.log('🆘 User profile:', { userId: user.id, userType: profile?.user_type });
+
     if (!profile || (profile.user_type !== 'patient' && profile.user_type !== 'psychologist')) {
       throw new Error('Access denied. Invalid user type.');
     }
 
     if (req.method === 'POST') {
+      console.log('🆘 POST request - Creating emergency request for patient:', user.id);
+      
       // Check if user already has pending emergency request
       const { data: existingRequest } = await supabase
         .from('emergency_requests')
@@ -67,7 +78,10 @@ serve(async (req) => {
         .limit(1)
         .maybeSingle();
 
+      console.log('🆘 Existing request check:', existingRequest);
+
       if (existingRequest) {
+        console.log('🆘 User already has active request:', existingRequest.id);
         return new Response(
           JSON.stringify({
             success: true,

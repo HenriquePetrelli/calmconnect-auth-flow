@@ -30,24 +30,39 @@ const SOSButton = () => {
   };
 
   const handleButtonClick = async () => {
-    const { data } = await supabase.functions.invoke('check-subscription');
+    console.log('🆘 SOS Button clicked');
+    const { data, error } = await supabase.functions.invoke('check-subscription');
+    console.log('🆘 Subscription check:', { data, error });
     const allowed = Boolean(data?.can_use_sos);
+    console.log('🆘 SOS allowed:', allowed);
     if (!allowed) {
-      // Just prevent action, no toast notification
+      console.log('❌ SOS not allowed, showing toast');
+      toast({
+        title: 'SOS Bloqueado',
+        description: 'Você precisa de uma assinatura Premium para usar o SOS',
+        variant: 'destructive',
+      });
       return;
     }
+    console.log('✅ Opening SOS confirmation modal');
     setShowModal(true);
   };
 
   const handleConfirm = async () => {
+    console.log('🆘 SOS Confirmed, closing modal and creating request');
     setShowModal(false);
     try {
+      console.log('🆘 Calling createEmergencyRequest()...');
       const requestId = await createEmergencyRequest();
+      console.log('🆘 Request created with ID:', requestId);
       if (requestId) {
+        console.log('🆘 Navigating to /sos with requestId:', requestId);
         navigate('/sos', { state: { requestId } });
+      } else {
+        console.error('❌ No requestId returned from createEmergencyRequest');
       }
     } catch (error) {
-      console.error('Error creating emergency request:', error);
+      console.error('❌ Error creating emergency request:', error);
     }
   };
 

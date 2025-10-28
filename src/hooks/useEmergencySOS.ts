@@ -39,18 +39,21 @@ export const useEmergencySOS = () => {
         throw new Error(errorMsg);
       }
 
-      console.log('Creating emergency request for user:', user.id);
+      console.log('🆘 Creating emergency request for user:', user.id);
 
       const { data, error } = await supabase.functions.invoke('emergency-sos', {
+        method: 'POST',
         body: { patient_id: user.id },
       });
       
+      console.log('🆘 Emergency SOS raw response:', { data, error });
+      
       if (error) {
-        console.error('Edge function error:', error);
+        console.error('❌ Edge function error:', error);
         throw new Error(error.message || 'Erro de comunicação com o servidor');
       }
       
-      console.log('Emergency SOS response:', data);
+      console.log('✅ Emergency SOS response:', data);
       
       if (!data?.success) {
         const errorMsg = data?.message || 'Erro desconhecido ao criar solicitação';
