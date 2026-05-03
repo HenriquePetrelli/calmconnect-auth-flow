@@ -231,13 +231,13 @@
     --shadow-sounds: 0 10px 25px -5px hsl(var(--sounds-primary) / 0.3);
     --shadow-evolution: 0 10px 25px -5px hsl(var(--evolution-primary) / 0.3);
 
-    --sidebar-background: 222 47% 11%;
+    --sidebar-background: 256 44% 14%;
     --sidebar-foreground: 220 20% 98%;
     --sidebar-primary: 27 96% 61%;
-    --sidebar-primary-foreground: 222 47% 11%;
-    --sidebar-accent: 217 33% 20%;
-    --sidebar-accent-foreground: 220 20% 98%;
-    --sidebar-border: 217 33% 17%;
+    --sidebar-primary-foreground: 260 44% 7%;
+    --sidebar-accent: 22 60% 18%;
+    --sidebar-accent-foreground: 27 96% 75%;
+    --sidebar-border: 256 41% 21%;
     --sidebar-ring: 27 96% 61%;
   }
 }
