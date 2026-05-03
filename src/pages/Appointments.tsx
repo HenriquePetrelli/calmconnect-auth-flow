@@ -10,7 +10,7 @@ import { AppointmentHistory } from '@/components/appointments/AppointmentHistory
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import BottomNavigation from '@/components/BottomNavigation';
+
 
 const Appointments = () => {
   const navigate = useNavigate();
@@ -106,9 +106,6 @@ const Appointments = () => {
           <AppointmentHistory />
         </main>
       </div>
-
-      {/* Bottom Navigation */}
-      <BottomNavigation />
 
       {/* Upgrade Modal */}
       <Dialog open={showUpgradeModal} onOpenChange={setShowUpgradeModal}>

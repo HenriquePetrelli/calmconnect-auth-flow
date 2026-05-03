@@ -207,7 +207,9 @@ const App = () => {
                   } />
                   <Route path="/statistics" element={
                     <RouteGuard allowedUserTypes={['patient']}>
-                      <Statistics />
+                      <MainLayout>
+                        <Statistics />
+                      </MainLayout>
                     </RouteGuard>
                   } />
                   <Route path="/progress" element={
