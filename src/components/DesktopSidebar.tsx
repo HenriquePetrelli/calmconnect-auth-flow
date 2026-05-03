@@ -5,7 +5,7 @@ import {
   MessageCircle, 
   Calendar, 
   AlertTriangle,
-  User
+  BarChart3
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/Logo';
@@ -15,7 +15,7 @@ const sidebarItems = [
   { icon: MessageCircle, label: 'Chat', path: '/chat' },
   { icon: Calendar, label: 'Consultas', path: '/appointments' },
   { icon: AlertTriangle, label: 'Ajuda Emergencial', path: '/sos' },
-  { icon: User, label: 'Perfil', path: '/profile' },
+  { icon: BarChart3, label: 'Meu Progresso', path: '/statistics' },
 ];
 
 export const DesktopSidebar: React.FC = () => {
