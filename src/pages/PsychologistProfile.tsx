@@ -83,7 +83,7 @@ const PsychologistProfile = () => {
 
   const updatePsych = async (values: Record<string, any>) => {
     if (!userId) return;
-    const { error } = await supabase.from('psychologists').update(values).eq('user_id', userId);
+    const { error } = await supabase.from('psychologists').update(values as any).eq('user_id', userId);
     if (error) throw error;
   };
 

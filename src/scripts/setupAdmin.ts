@@ -33,7 +33,7 @@ export const executeAdminSetup = async () => {
 };
 
 // Auto-execute if in development
-if (process.env.NODE_ENV === 'development') {
+if (import.meta.env.DEV) {
   console.log('🔧 Script de configuração admin carregado.');
   console.log('Execute executeAdminSetup() no console para criar a conta admin.');
 }

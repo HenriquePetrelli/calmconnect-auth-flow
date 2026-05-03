@@ -364,8 +364,8 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     }
     
     // 6. Force garbage collection and memory cleanup
-    if (window.gc) {
-      setTimeout(() => window.gc(), 100);
+    if ((window as any).gc) {
+      setTimeout(() => (window as any).gc(), 100);
     }
     
     console.log('✅ Enhanced cleanup completed');
@@ -569,7 +569,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
           .update({ 
             [`${userType}_muted`]: muted,
             updated_at: new Date().toISOString()
-          })
+          } as any)
           .eq('id', sessionId);
         
         if (error) {
@@ -604,7 +604,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
             .update({ 
               [`${userType}_camera_off`]: cameraOff,
               updated_at: new Date().toISOString()
-            })
+            } as any)
             .eq('id', sessionId);
           
           if (error) {

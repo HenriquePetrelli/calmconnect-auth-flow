@@ -360,7 +360,7 @@ export const WebRTCVideoCall = ({ sessionId, userType, onEndCall }: WebRTCVideoC
           .from('webrtc_sessions')
           .update({ 
             [`${userType}_muted`]: muted
-          })
+          } as any)
           .eq('id', sessionId)
           .then(() => console.log('🎤 Mute status communicated:', muted ? 'muted' : 'unmuted'));
       }
@@ -380,7 +380,7 @@ export const WebRTCVideoCall = ({ sessionId, userType, onEndCall }: WebRTCVideoC
           .from('webrtc_sessions')
           .update({ 
             [`${userType}_camera_off`]: cameraOff
-          })
+          } as any)
           .eq('id', sessionId)
           .then(() => console.log('📹 Camera status communicated:', cameraOff ? 'off' : 'on'));
       }

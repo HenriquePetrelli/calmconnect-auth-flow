@@ -43,7 +43,7 @@ const VideoCallInitializer: React.FC<VideoCallInitializerProps> = ({
 
   useEffect(() => {
     let startTime = Date.now();
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: ReturnType<typeof setTimeout>;
     
     const updateTimer = () => {
       const elapsed = Date.now() - startTime;

@@ -123,7 +123,7 @@ export const useEmergencySOS = () => {
   };
 
   const startStatusPolling = (requestId: string) => {
-    let pollingInterval: NodeJS.Timeout | null = null;
+    let pollingInterval: ReturnType<typeof setTimeout> | null = null;
     let consecutiveFailures = 0;
     let temporaryFailures = 0;
     const maxConsecutiveFailures = 5; // Allow more failures before stopping

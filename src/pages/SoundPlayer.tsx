@@ -66,7 +66,7 @@ const SoundPlayer = () => {
 
   // cronômetro da sessão
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setTimeout>;
     if (isPlaying && currentTime < duration) {
       interval = setInterval(() => {
         setCurrentTime((prev) => prev + 1);
