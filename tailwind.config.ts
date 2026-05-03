@@ -35,12 +35,14 @@ export default {
 					foreground: 'hsl(var(--primary-foreground))',
 					hover: 'hsl(var(--primary-hover))',
 					active: 'hsl(var(--primary-active))',
+					glow: 'hsl(var(--primary-glow))',
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
 					foreground: 'hsl(var(--secondary-foreground))',
 					hover: 'hsl(var(--secondary-hover))',
 					active: 'hsl(var(--secondary-active))',
+					glow: 'hsl(var(--secondary-glow))',
 				},
 				
 				// Cores de estado
