@@ -5,8 +5,7 @@ import {
   Activity, 
   Headphones, 
   TrendingUp, 
-  BookOpen,
-  BarChart3
+  BookOpen
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { MoodSelectionModal } from "@/components/MoodSelectionModal";
