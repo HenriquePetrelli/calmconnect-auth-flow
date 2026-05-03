@@ -44,8 +44,10 @@
     --muted: 220 14% 96%;             /* #F3F4F6 */
     --muted-foreground: 220 9% 46%;   /* #6B7280 */
 
-    --accent: 262 83% 96%;            /* light purple tint */
-    --accent-foreground: 263 69% 42%;
+    /* Accent — neutral hover surface (NOT purple).
+       Purple is reserved for explicit secondary elements only. */
+    --accent: 220 14% 94%;            /* neutral gray hover */
+    --accent-foreground: 222 47% 11%; /* keep foreground readable */
 
     --destructive: 0 84% 60%;         /* #EF4444 */
     --destructive-foreground: 0 0% 100%;
@@ -125,8 +127,8 @@
     --sidebar-foreground: 222 47% 11%;
     --sidebar-primary: 25 95% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 14% 96%;
-    --sidebar-accent-foreground: 25 95% 53%;
+    --sidebar-accent: 220 14% 94%;
+    --sidebar-accent-foreground: 222 47% 11%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 25 95% 53%;
   }
@@ -157,8 +159,8 @@
     --muted: 217 33% 17%;
     --muted-foreground: 220 9% 65%;
 
-    --accent: 217 33% 17%;
-    --accent-foreground: 32 97% 72%;
+    --accent: 217 33% 20%;            /* neutral elevated surface */
+    --accent-foreground: 220 20% 98%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
@@ -232,8 +234,8 @@
     --sidebar-foreground: 220 20% 98%;
     --sidebar-primary: 27 96% 61%;
     --sidebar-primary-foreground: 222 47% 11%;
-    --sidebar-accent: 217 33% 17%;
-    --sidebar-accent-foreground: 27 96% 61%;
+    --sidebar-accent: 217 33% 20%;
+    --sidebar-accent-foreground: 220 20% 98%;
     --sidebar-border: 217 33% 17%;
     --sidebar-ring: 27 96% 61%;
   }
