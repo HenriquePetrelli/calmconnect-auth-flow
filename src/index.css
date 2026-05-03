@@ -179,8 +179,8 @@
     --gradient-primary: linear-gradient(135deg, hsl(25 95% 53%), hsl(27 96% 61%));
     --gradient-secondary: linear-gradient(135deg, hsl(262 83% 58%), hsl(258 90% 66%));
     --gradient-brand: linear-gradient(135deg, hsl(25 95% 53%), hsl(262 83% 58%));
-    --gradient-card: linear-gradient(180deg, hsl(222 47% 11%), hsl(222 39% 9%));
-    --gradient-calm: linear-gradient(180deg, hsl(222 39% 8%), hsl(222 47% 11%));
+    --gradient-card: linear-gradient(180deg, hsl(256 44% 14%), hsl(260 44% 9%));
+    --gradient-calm: linear-gradient(180deg, hsl(260 44% 7%), hsl(256 44% 12%));
     --gradient-professional: linear-gradient(135deg, hsl(27 96% 61%), hsl(25 95% 53%));
     --gradient-breathing: linear-gradient(135deg, hsl(199 89% 60%), hsl(160 84% 49%));
     --gradient-sounds: linear-gradient(135deg, hsl(258 90% 70%), hsl(252 95% 78%));
@@ -192,7 +192,7 @@
     --breathing-inhale: 142 71% 55%;
     --breathing-hold: 199 89% 55%;
     --breathing-exhale: 199 92% 70%;
-    --breathing-pause: 217 33% 17%;
+    --breathing-pause: 256 35% 18%;
 
     --sounds-primary: 258 90% 70%;
     --sounds-secondary: 252 95% 78%;
