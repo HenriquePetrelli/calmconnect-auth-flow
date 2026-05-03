@@ -5,8 +5,7 @@ import {
   Activity, 
   Headphones, 
   TrendingUp, 
-  BookOpen,
-  BarChart3
+  BookOpen
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { MoodSelectionModal } from "@/components/MoodSelectionModal";
@@ -214,13 +213,6 @@ const HomeContent = () => {
       subtitle: "Diário pessoal",
       onClick: () => navigate('/journal'),
       color: 'hsl(48,96%,53%)'
-    },
-    {
-      icon: BarChart3,
-      title: "Meu Progresso", 
-      subtitle: "Acompanhe sua jornada",
-      onClick: () => navigate('/statistics'),
-      color: 'hsl(187,85%,53%)'
     }
   ];
 

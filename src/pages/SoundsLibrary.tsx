@@ -5,6 +5,7 @@ import { ArrowLeft, Search, Moon, Brain, Target, Leaf, Music, Waves, Heart } fro
 import { useNavigate } from "react-router-dom";
 import CategoryCard from "@/components/sounds/CategoryCard";
 import PlaylistCard from "@/components/sounds/PlaylistCard";
+import PatientBottomNav from "@/components/PatientBottomNav";
 
 const SoundsLibrary = () => {
   const navigate = useNavigate();
@@ -65,7 +66,8 @@ const SoundsLibrary = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-blue-50/30">
+    <div className="min-h-screen bg-background pb-24 lg:pb-0">
+      <PatientBottomNav />
       {/* Header */}
       <div className="flex items-center gap-4 p-4 bg-white/80 backdrop-blur-sm border-b border-border">
         <Button variant="ghost" size="sm" onClick={() => navigate('/home')}>

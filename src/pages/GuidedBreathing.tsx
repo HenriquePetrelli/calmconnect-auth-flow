@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import BreathingTechniques from "@/components/breathing/BreathingTechniques";
 import PracticeScreen from "@/components/breathing/PracticeScreen";
 import CompletionScreen from "@/components/breathing/CompletionScreen";
+import PatientBottomNav from "@/components/PatientBottomNav";
 
 interface Technique {
   id: string;
@@ -159,7 +160,7 @@ const GuidedBreathing = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-24 lg:pb-0">
       {/* Header */}
       <div className="flex items-center gap-4 p-4 border-b border-border">
         <Button variant="ghost" size="sm" onClick={() => navigate('/home')}>
@@ -167,6 +168,7 @@ const GuidedBreathing = () => {
         </Button>
         <h1 className="text-xl font-semibold text-foreground">Respiração Guiada</h1>
       </div>
+      <PatientBottomNav />
 
       {/* Content */}
       <div className="p-4 space-y-6">

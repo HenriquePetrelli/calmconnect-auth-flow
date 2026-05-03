@@ -1,6 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Home, Calendar, User, MessageCircle } from "lucide-react";
+import { Home, Calendar, BarChart3 } from "lucide-react";
 
 interface BottomNavigationProps {
   onSOSClick?: () => void;
@@ -15,61 +14,54 @@ const BottomNavigation = ({ onSOSClick }: BottomNavigationProps) => {
       icon: Home,
       label: "Home",
       path: "/home",
-      isActive: location.pathname === "/home"
-    },
-    {
-      icon: MessageCircle,
-      label: "Chat",
-      path: "/chat",
-      isActive: location.pathname.startsWith("/chat"),
-      isSpecial: false
+      isActive: location.pathname === "/home",
     },
     {
       icon: () => <span className="text-sm font-bold">SOS</span>,
       label: "",
       path: "/sos",
       isActive: location.pathname === "/sos",
-      isSpecial: true
+      isSpecial: true,
     },
     {
       icon: Calendar,
       label: "Consultas",
       path: "/appointments",
-      isActive: location.pathname === "/appointments"
+      isActive: location.pathname === "/appointments",
     },
     {
-      icon: User,
-      label: "Perfil",
-      path: "/profile",
-      isActive: location.pathname === "/profile"
-    }
+      icon: BarChart3,
+      label: "Progresso",
+      path: "/statistics",
+      isActive: location.pathname.startsWith("/statistics") || location.pathname === "/progress",
+    },
   ];
 
   return (
     <nav className="tabs">
       {navItems.map((item) => {
         const Icon = item.icon;
-        
+
         if (item.isSpecial) {
           return (
             <button
               key={item.path}
               onClick={onSOSClick || (() => navigate(item.path))}
-              className="tab-item sos bg-primary hover:bg-primary/90 text-white shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-105"
+              className="tab-item sos bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-105"
             >
               <Icon />
             </button>
           );
         }
-        
+
         return (
-          <button 
+          <button
             key={item.path}
             onClick={() => navigate(item.path)}
             className={`tab-item flex flex-col items-center justify-center flex-1 h-full p-2 transition-all duration-200 relative rounded-lg ${
-              item.isActive 
-                ? 'text-primary bg-primary/10' 
-                : 'text-muted-foreground hover:text-foreground'
+              item.isActive
+                ? "text-primary bg-primary/10"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             {item.isActive && (
