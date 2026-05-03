@@ -17,12 +17,6 @@ const BottomNavigation = ({ onSOSClick }: BottomNavigationProps) => {
       isActive: location.pathname === "/home",
     },
     {
-      icon: Calendar,
-      label: "Consultas",
-      path: "/appointments",
-      isActive: location.pathname === "/appointments",
-    },
-    {
       icon: MessageCircle,
       label: "Chat",
       path: "/chat",
@@ -34,6 +28,12 @@ const BottomNavigation = ({ onSOSClick }: BottomNavigationProps) => {
       path: "/sos",
       isActive: location.pathname === "/sos",
       isSpecial: true,
+    },
+    {
+      icon: Calendar,
+      label: "Consultas",
+      path: "/appointments",
+      isActive: location.pathname === "/appointments",
     },
     {
       icon: BarChart3,
