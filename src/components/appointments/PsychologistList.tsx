@@ -82,7 +82,7 @@ export const PsychologistList: React.FC<PsychologistListProps> = ({
                         {psychologist.full_name}
                       </h4>
                       {psychologist.approved && (
-                        <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                        <CheckCircle className="w-4 h-4 text-success flex-shrink-0" />
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground truncate">
@@ -113,7 +113,7 @@ export const PsychologistList: React.FC<PsychologistListProps> = ({
                     {/* Rating display - placeholder for future implementation */}
                     <div className="flex items-center gap-1 mt-1">
                       {[...Array(5)].map((_, i) => (
-                        <span key={i} className="text-yellow-400 text-xs">
+                        <span key={i} className="text-warning text-xs">
                           {i < 4 ? '★' : '☆'}
                         </span>
                       ))}

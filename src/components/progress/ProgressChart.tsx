@@ -64,7 +64,7 @@ export const ProgressChart = () => {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <TrendingDown className="h-4 w-4 text-green-600" />
+              <TrendingDown className="h-4 w-4 text-success" />
               <div>
                 <p className="text-sm text-muted-foreground">Ansiedade Média</p>
                 <p className="text-2xl font-bold">
@@ -78,7 +78,7 @@ export const ProgressChart = () => {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <TrendingUp className="h-4 w-4 text-blue-600" />
+              <TrendingUp className="h-4 w-4 text-secondary" />
               <div>
                 <p className="text-sm text-muted-foreground">Humor Médio</p>
                 <p className="text-2xl font-bold">
@@ -92,7 +92,7 @@ export const ProgressChart = () => {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <Clock className="h-4 w-4 text-purple-600" />
+              <Clock className="h-4 w-4 text-secondary" />
               <div>
                 <p className="text-sm text-muted-foreground">Tempo Total</p>
                 <p className="text-2xl font-bold">

@@ -35,12 +35,14 @@ export default {
 					foreground: 'hsl(var(--primary-foreground))',
 					hover: 'hsl(var(--primary-hover))',
 					active: 'hsl(var(--primary-active))',
+					glow: 'hsl(var(--primary-glow))',
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
 					foreground: 'hsl(var(--secondary-foreground))',
 					hover: 'hsl(var(--secondary-hover))',
 					active: 'hsl(var(--secondary-active))',
+					glow: 'hsl(var(--secondary-glow))',
 				},
 				
 				// Cores de estado
@@ -108,12 +110,23 @@ export default {
 				}
 			},
 			boxShadow: {
+				xs: 'var(--shadow-xs)',
 				sm: 'var(--shadow-sm)',
 				DEFAULT: 'var(--shadow-md)',
 				md: 'var(--shadow-md)',
 				lg: 'var(--shadow-lg)',
+				xl: 'var(--shadow-xl)',
 				primary: 'var(--shadow-primary)',
+				secondary: 'var(--shadow-secondary)',
 				success: 'var(--shadow-success)',
+				warning: 'var(--shadow-warning)',
+				destructive: 'var(--shadow-destructive)',
+			},
+			backgroundImage: {
+				'gradient-primary': 'var(--gradient-primary)',
+				'gradient-secondary': 'var(--gradient-secondary)',
+				'gradient-brand': 'var(--gradient-brand)',
+				'gradient-card': 'var(--gradient-card)',
 			},
 			animation: {
 				'fade-in': 'fadeIn 0.5s ease-in-out',

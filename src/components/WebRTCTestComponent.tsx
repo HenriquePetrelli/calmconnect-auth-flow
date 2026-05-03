@@ -301,18 +301,18 @@ export const WebRTCTestComponent: React.FC = () => {
   const getStatusIcon = (status: TestResult['status']) => {
     switch (status) {
       case 'success':
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
+        return <CheckCircle className="w-4 h-4 text-success" />;
       case 'error':
-        return <AlertCircle className="w-4 h-4 text-red-500" />;
+        return <AlertCircle className="w-4 h-4 text-destructive" />;
       default:
-        return <Clock className="w-4 h-4 text-yellow-500" />;
+        return <Clock className="w-4 h-4 text-warning" />;
     }
   };
 
   const getStatusBadge = (status: TestResult['status']) => {
     switch (status) {
       case 'success':
-        return <Badge variant="default" className="bg-green-500">Sucesso</Badge>;
+        return <Badge variant="default" className="bg-success">Sucesso</Badge>;
       case 'error':
         return <Badge variant="destructive">Erro</Badge>;
       default:
@@ -356,11 +356,11 @@ export const WebRTCTestComponent: React.FC = () => {
             {testResults.length > 0 && (
               <div className="flex items-center gap-4 text-sm">
                 <div className="flex items-center gap-1">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
+                  <CheckCircle className="w-4 h-4 text-success" />
                   <span>{successCount} sucessos</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <AlertCircle className="w-4 h-4 text-red-500" />
+                  <AlertCircle className="w-4 h-4 text-destructive" />
                   <span>{errorCount} erros</span>
                 </div>
               </div>

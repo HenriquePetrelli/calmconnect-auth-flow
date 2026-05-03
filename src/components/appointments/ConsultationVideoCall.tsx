@@ -235,10 +235,10 @@ const ConsultationVideoCall = ({ appointment, onEndCall }: ConsultationVideoCall
                               <p className="text-muted-foreground text-sm">
                                 {appointment.psychologist.specialty || appointment.psychologist.specialization || 'Psicólogo'}
                               </p>
-                              <div className="mt-4 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
+                              <div className="mt-4 p-3 bg-primary/10 dark:bg-primary/10 rounded-lg border border-primary/20 dark:border-primary/30">
                                 <div className="flex items-center justify-center gap-2">
-                                  <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
-                                  <p className="text-orange-700 dark:text-orange-400 text-sm font-medium">
+                                  <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+                                  <p className="text-primary-hover dark:text-primary text-sm font-medium">
                                     {connectionState === 'connected' ? 'Conectado' : 'Conectando...'}
                                   </p>
                                 </div>

@@ -27,15 +27,15 @@ const SoundAnimation = ({ type, isPlaying, soundName }: SoundAnimationProps) => 
   const getGradient = () => {
     switch (type) {
       case "waves":
-        return "from-blue-400 via-blue-500 to-blue-600";
+        return "from-secondary via-secondary to-secondary-hover";
       case "forest":
         return "from-green-400 via-green-500 to-green-600";
       case "clouds":
-        return "from-gray-300 via-white to-gray-300";
+        return "from-gray-300 via-white to-muted";
       case "spirals":
         return "from-purple-400 via-pink-500 to-red-500";
       default:
-        return "from-blue-400 via-blue-500 to-blue-600";
+        return "from-secondary via-secondary to-secondary-hover";
     }
   };
 

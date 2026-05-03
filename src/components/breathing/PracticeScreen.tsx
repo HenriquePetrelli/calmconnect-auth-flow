@@ -319,22 +319,22 @@ const PracticeScreen = ({ technique, onBack, onComplete }: PracticeScreenProps) 
           <div className="text-sm text-muted-foreground mb-3">{breathingPattern.description}</div>
           <div className="flex gap-2 text-xs">
             <div className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded bg-blue-400"></div>
+              <div className="w-3 h-3 rounded bg-secondary"></div>
               <span>Inspirar {breathingPattern.inhale}s</span>
             </div>
             {breathingPattern.hold > 0 && (
               <div className="flex items-center gap-1">
-                <div className="w-3 h-3 rounded bg-green-400"></div>
+                <div className="w-3 h-3 rounded bg-success"></div>
                 <span>Segurar {breathingPattern.hold}s</span>
               </div>
             )}
             <div className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded bg-orange-400"></div>
+              <div className="w-3 h-3 rounded bg-primary"></div>
               <span>Expirar {breathingPattern.exhale}s</span>
             </div>
             {breathingPattern.pause > 0 && (
               <div className="flex items-center gap-1">
-                <div className="w-3 h-3 rounded bg-gray-400"></div>
+                <div className="w-3 h-3 rounded bg-muted-foreground"></div>
                 <span>Pausar {breathingPattern.pause}s</span>
               </div>
             )}

@@ -22,21 +22,21 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
     switch (status) {
       case 'confirmed':
       case 'scheduled':
-        return 'bg-green-100 text-green-800 border-green-200';
+        return 'bg-success/15 text-success border-success/20';
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        return 'bg-warning/15 text-warning border-warning/20';
       case 'completed':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return 'bg-secondary/15 text-secondary border-secondary/20';
       case 'cancelled':
-        return 'bg-red-100 text-red-800 border-red-200';
+        return 'bg-destructive/15 text-destructive border-destructive/20';
       case 'declined':
-        return 'bg-red-100 text-red-800 border-red-200';
+        return 'bg-destructive/15 text-destructive border-destructive/20';
       case 'reschedule_proposed':
-        return 'bg-purple-100 text-purple-800 border-purple-200';
+        return 'bg-secondary/15 text-secondary-active border-secondary/20';
       case 'in_progress':
-        return 'bg-orange-100 text-orange-800 border-orange-200';
+        return 'bg-primary/15 text-primary-active border-primary/20';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-muted text-foreground border-border';
     }
   };
 
@@ -86,15 +86,15 @@ const StarRating: React.FC<{
           onClick={() => !readonly && onChange?.(star)}
           disabled={readonly}
           className={`transition-colors ${
-            readonly ? 'cursor-default' : 'cursor-pointer hover:text-yellow-400'
+            readonly ? 'cursor-default' : 'cursor-pointer hover:text-warning'
           }`}
         >
           <Star
             size={16}
             className={
               star <= value
-                ? 'text-yellow-400 fill-yellow-400'
-                : 'text-gray-300'
+                ? 'text-warning fill-yellow-400'
+                : 'text-muted-foreground'
             }
           />
         </button>

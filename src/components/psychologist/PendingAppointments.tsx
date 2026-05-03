@@ -163,12 +163,12 @@ const PendingAppointments = () => {
       .toUpperCase();
 
     return (
-      <Card key={appointment.id} className="border-amber-200 bg-amber-50/50">
+      <Card key={appointment.id} className="border-warning/20 bg-amber-50/50">
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
               <Avatar className="w-10 h-10">
-                <AvatarFallback className="bg-amber-100 text-amber-800 font-medium">
+                <AvatarFallback className="bg-warning/15 text-warning font-medium">
                   {patientInitials}
                 </AvatarFallback>
               </Avatar>
@@ -213,7 +213,7 @@ const PendingAppointments = () => {
                 <Button
                   onClick={() => handleAccept(appointment.id)}
                   disabled={isProcessing}
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                  className="flex-1 bg-success hover:bg-success/90 text-white"
                 >
                   {isProcessing ? (
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
@@ -270,7 +270,7 @@ const PendingAppointments = () => {
               <AlertTriangle className="w-5 h-5 text-amber-600" />
               Consultas Pendentes de Confirmação
               {pendingAppointments.length > 0 && (
-                <Badge variant="secondary" className="ml-auto bg-amber-100 text-amber-800">
+                <Badge variant="secondary" className="ml-auto bg-warning/15 text-warning">
                   {pendingAppointments.length}
                 </Badge>
               )}
@@ -281,8 +281,8 @@ const PendingAppointments = () => {
         {pendingAppointments.length === 0 ? (
           <Card>
             <CardContent className="p-6 text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="w-8 h-8 text-green-600" />
+              <div className="w-16 h-16 bg-success/15 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-8 h-8 text-success" />
               </div>
               <h3 className="text-lg font-medium text-foreground mb-2">
                 Nenhuma consulta pendente

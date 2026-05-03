@@ -88,7 +88,7 @@ export const DocumentViewer = ({ documentPath }: DocumentViewerProps) => {
              {error?.message || 'Erro ao carregar documento'}
            </p>
            {error?.message?.includes('403') && (
-             <p className="text-xs text-red-600 mb-4">
+             <p className="text-xs text-destructive mb-4">
                Erro de permissão - verifique se você tem acesso
              </p>
            )}

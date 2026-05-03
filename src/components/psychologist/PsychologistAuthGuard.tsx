@@ -50,13 +50,13 @@ export const PsychologistAuthGuard = ({ children }: { children: React.ReactNode 
           <CardHeader className="text-center">
             <div className="mx-auto mb-4">
               {approvalStatus?.status === 'pending' && (
-                <Clock className="h-16 w-16 text-orange-500" />
+                <Clock className="h-16 w-16 text-primary" />
               )}
               {approvalStatus?.status === 'rejected' && (
-                <XCircle className="h-16 w-16 text-red-500" />
+                <XCircle className="h-16 w-16 text-destructive" />
               )}
               {approvalStatus?.status === 'not_registered' && (
-                <AlertTriangle className="h-16 w-16 text-yellow-500" />
+                <AlertTriangle className="h-16 w-16 text-warning" />
               )}
             </div>
             <CardTitle className="text-2xl">

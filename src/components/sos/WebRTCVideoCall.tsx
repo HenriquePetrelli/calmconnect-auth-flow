@@ -500,11 +500,11 @@ export const WebRTCVideoCall = ({ sessionId, userType, onEndCall }: WebRTCVideoC
   return (
     <div className="min-h-screen bg-[#202124] flex flex-col relative">
       {/* Header com informações do usuário e timer */}
-      <div className="bg-[#303134]/95 backdrop-blur-sm text-white p-4 z-10 border-b border-gray-600/30">
+      <div className="bg-[#303134]/95 backdrop-blur-sm text-white p-4 z-10 border-b border-border/30">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           {/* Informações do participante */}
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-secondary to-secondary-hover flex items-center justify-center shadow-lg">
               <span className="text-white font-semibold text-lg">
                 {userType === 'patient' ? (userInfo.name?.charAt(0) || 'Dr') : (userInfo.name?.charAt(0) || 'P')}
               </span>
@@ -516,20 +516,20 @@ export const WebRTCVideoCall = ({ sessionId, userType, onEndCall }: WebRTCVideoC
                  'Conectando...'}
               </div>
               {userInfo.details && (
-                <div className="text-sm text-gray-300 max-w-md">
+                <div className="text-sm text-muted-foreground max-w-md">
                   {userType === 'patient' ? (
                     <span>{userInfo.details}</span>
                   ) : (
                     <div className="space-y-1">
-                      <div className="font-medium text-blue-400">Sintomas relatados:</div>
-                      <div className="text-gray-300 leading-relaxed">{userInfo.details}</div>
+                      <div className="font-medium text-secondary">Sintomas relatados:</div>
+                      <div className="text-muted-foreground leading-relaxed">{userInfo.details}</div>
                     </div>
                   )}
                 </div>
               )}
               {/* Additional info for psychologist viewing patient */}
               {userType === 'psychologist' && userInfo.name && (
-                <div className="flex items-center gap-4 text-xs text-gray-400">
+                <div className="flex items-center gap-4 text-xs text-muted-foreground">
                   <span>Consultas: {userInfo.consultations || 0}</span>
                   <span>SOS: {userInfo.sosCount || 0}</span>
                   <span className="flex items-center gap-1">
@@ -539,7 +539,7 @@ export const WebRTCVideoCall = ({ sessionId, userType, onEndCall }: WebRTCVideoC
               )}
               {/* Additional info for patient viewing psychologist */}
               {userType === 'patient' && userInfo.consultations !== undefined && (
-                <div className="flex items-center gap-4 text-xs text-gray-400">
+                <div className="flex items-center gap-4 text-xs text-muted-foreground">
                   <span>Consultas realizadas: {userInfo.consultations}</span>
                   <span className="flex items-center gap-1">
                     Avaliação: {userInfo.rating || 0}⭐
@@ -552,15 +552,15 @@ export const WebRTCVideoCall = ({ sessionId, userType, onEndCall }: WebRTCVideoC
           {/* Timer centralizado */}
           <div className="text-center">
             <div className="flex items-center gap-2 justify-center mb-1">
-              <div className={`w-3 h-3 rounded-full ${status === 'connected' ? 'bg-green-400' : 'bg-yellow-400'} animate-pulse shadow-lg`}></div>
-              <span className="text-sm text-gray-300 font-medium">
+              <div className={`w-3 h-3 rounded-full ${status === 'connected' ? 'bg-success' : 'bg-yellow-400'} animate-pulse shadow-lg`}></div>
+              <span className="text-sm text-muted-foreground font-medium">
                 {status === 'connected' ? 'Conectado' : 'Conectando...'}
               </span>
             </div>
             <div className="text-3xl font-mono font-bold text-white bg-black/20 px-4 py-2 rounded-lg">
               {formatTime(timeLeft)}
             </div>
-            <div className="text-xs text-gray-400 mt-1">Tempo restante</div>
+            <div className="text-xs text-muted-foreground mt-1">Tempo restante</div>
           </div>
 
           {/* Spacer para manter layout equilibrado */}
@@ -572,8 +572,8 @@ export const WebRTCVideoCall = ({ sessionId, userType, onEndCall }: WebRTCVideoC
       <div className="flex-1 relative bg-[#202124] overflow-hidden">
         {/* Vídeo remoto */}
         {remoteIsCameraOff ? (
-          <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-            <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-2xl">
+          <div className="w-full h-full bg-card flex items-center justify-center">
+            <div className="w-32 h-32 rounded-full bg-gradient-to-br from-secondary to-secondary-hover flex items-center justify-center shadow-2xl">
               <span className="text-white font-bold text-4xl">
                 {userType === 'patient' ? 'Dr' : (userInfo.name?.charAt(0)?.toUpperCase() || 'P')}
               </span>
@@ -595,7 +595,7 @@ export const WebRTCVideoCall = ({ sessionId, userType, onEndCall }: WebRTCVideoC
               <div className="flex items-center gap-2">
                 <span className="text-white font-medium">{userInfo.name || 'Participante'}</span>
                 {remoteMuted && (
-                  <MicOff className="w-4 h-4 text-red-400" />
+                  <MicOff className="w-4 h-4 text-destructive" />
                 )}
               </div>
               {/* Voice meter for remote user */}
@@ -614,7 +614,7 @@ export const WebRTCVideoCall = ({ sessionId, userType, onEndCall }: WebRTCVideoC
           <div className="absolute inset-0 flex items-center justify-center bg-[#202124]">
             <div className="text-center space-y-8 max-w-md mx-4">
               <div className="relative">
-                <div className="w-40 h-40 mx-auto rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-2xl">
+                <div className="w-40 h-40 mx-auto rounded-full bg-gradient-to-br from-secondary to-secondary-hover flex items-center justify-center shadow-2xl">
                   <span className="text-white font-bold text-5xl">
                     {userType === 'patient' ? 'Dr' : (userInfo.name?.charAt(0) || 'P')}
                   </span>
@@ -628,13 +628,13 @@ export const WebRTCVideoCall = ({ sessionId, userType, onEndCall }: WebRTCVideoC
                 <h3 className="text-3xl font-semibold text-white">
                   {userType === 'psychologist' ? 'Aguardando paciente...' : 'Conectando com psicólogo...'}
                 </h3>
-                <p className="text-gray-400 text-lg">
+                <p className="text-muted-foreground text-lg">
                   {status === 'connecting' ? 'Estabelecendo conexão segura...' : 'Aguardando participante'}
                 </p>
                 <div className="flex items-center justify-center gap-2 mt-4">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                  <div className="w-2 h-2 bg-secondary rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-secondary rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                  <div className="w-2 h-2 bg-secondary rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
                 </div>
               </div>
             </div>
@@ -642,17 +642,17 @@ export const WebRTCVideoCall = ({ sessionId, userType, onEndCall }: WebRTCVideoC
         )}
 
         {/* Vídeo próprio (self-view) - Estilo Google Meet */}
-        <div className="absolute bottom-8 right-8 w-48 h-36 bg-gray-800 rounded-2xl border-2 border-gray-600/50 overflow-hidden shadow-2xl transition-transform hover:scale-105 cursor-pointer">
+        <div className="absolute bottom-8 right-8 w-48 h-36 bg-card rounded-2xl border-2 border-border/50 overflow-hidden shadow-2xl transition-transform hover:scale-105 cursor-pointer">
           {isCameraOff ? (
-            <div className="w-full h-full flex items-center justify-center bg-gray-800">
+            <div className="w-full h-full flex items-center justify-center bg-card">
               <div className="text-center">
-                <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-gray-600 to-gray-700 flex items-center justify-center mb-2">
+                <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-gray-600 to-card flex items-center justify-center mb-2">
                   <span className="text-white font-semibold text-lg">
                     {userType === 'patient' ? (userInfo.name?.charAt(0) || 'P') : 'Dr'}
                   </span>
                 </div>
-                <CameraOff className="text-gray-400 mx-auto mb-1" size={24} />
-                <div className="text-xs text-gray-400 font-medium">Câmera desligada</div>
+                <CameraOff className="text-muted-foreground mx-auto mb-1" size={24} />
+                <div className="text-xs text-muted-foreground font-medium">Câmera desligada</div>
               </div>
             </div>
           ) : (
@@ -667,7 +667,7 @@ export const WebRTCVideoCall = ({ sessionId, userType, onEndCall }: WebRTCVideoC
               {/* Status indicators overlay */}
               <div className="absolute inset-0 pointer-events-none">
                 {isMuted && (
-                  <div className="absolute top-2 left-2 bg-red-500/90 backdrop-blur-sm rounded-full p-2 shadow-lg">
+                  <div className="absolute top-2 left-2 bg-destructive/90 backdrop-blur-sm rounded-full p-2 shadow-lg">
                     <MicOff className="text-white" size={16} />
                   </div>
                 )}
@@ -684,15 +684,15 @@ export const WebRTCVideoCall = ({ sessionId, userType, onEndCall }: WebRTCVideoC
       </div>
 
       {/* Barra de controles inferior - Estilo Google Meet */}
-      <div className="bg-[#202124] border-t border-gray-600/30 p-6">
+      <div className="bg-[#202124] border-t border-border/30 p-6">
         {/* Indicadores de segurança no topo */}
-        <div className="flex justify-center items-center gap-6 mb-6 text-gray-400 text-sm">
+        <div className="flex justify-center items-center gap-6 mb-6 text-muted-foreground text-sm">
           <div className="flex items-center gap-2">
-            <Shield className="w-4 h-4 text-green-400" />
+            <Shield className="w-4 h-4 text-success" />
             <span>Conexão criptografada</span>
           </div>
           <div className="flex items-center gap-2">
-            <Video className="w-4 h-4 text-blue-400" />
+            <Video className="w-4 h-4 text-secondary" />
             <span>Qualidade HD</span>
           </div>
         </div>
@@ -704,8 +704,8 @@ export const WebRTCVideoCall = ({ sessionId, userType, onEndCall }: WebRTCVideoC
             onClick={toggleMute}
             className={`group relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-200 ${
               isMuted 
-                ? 'bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/30' 
-                : 'bg-gray-600 hover:bg-gray-500 shadow-lg'
+                ? 'bg-destructive hover:bg-destructive/90 shadow-lg shadow-red-500/30' 
+                : 'bg-muted-foreground hover:bg-muted shadow-lg'
             }`}
           >
             {isMuted ? (
@@ -714,7 +714,7 @@ export const WebRTCVideoCall = ({ sessionId, userType, onEndCall }: WebRTCVideoC
               <Mic className="text-white" size={20} />
             )}
             {/* Tooltip */}
-            <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-3 py-1 rounded-md text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+            <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-card text-white px-3 py-1 rounded-md text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
               {isMuted ? 'Ativar microfone' : 'Desativar microfone'}
             </div>
           </button>
@@ -724,8 +724,8 @@ export const WebRTCVideoCall = ({ sessionId, userType, onEndCall }: WebRTCVideoC
             onClick={toggleCamera}
             className={`group relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-200 ${
               isCameraOff 
-                ? 'bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/30' 
-                : 'bg-gray-600 hover:bg-gray-500 shadow-lg'
+                ? 'bg-destructive hover:bg-destructive/90 shadow-lg shadow-red-500/30' 
+                : 'bg-muted-foreground hover:bg-muted shadow-lg'
             }`}
           >
             {isCameraOff ? (
@@ -733,7 +733,7 @@ export const WebRTCVideoCall = ({ sessionId, userType, onEndCall }: WebRTCVideoC
             ) : (
               <Camera className="text-white" size={20} />
             )}
-            <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-3 py-1 rounded-md text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+            <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-card text-white px-3 py-1 rounded-md text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
               {isCameraOff ? 'Ativar câmera' : 'Desativar câmera'}
             </div>
           </button>
@@ -741,10 +741,10 @@ export const WebRTCVideoCall = ({ sessionId, userType, onEndCall }: WebRTCVideoC
           {/* Botão de configurações */}
           <button
             onClick={() => setShowSettingsModal(true)}
-            className="group relative w-14 h-14 rounded-full bg-gray-600 hover:bg-gray-500 flex items-center justify-center transition-all duration-200 shadow-lg"
+            className="group relative w-14 h-14 rounded-full bg-muted-foreground hover:bg-muted flex items-center justify-center transition-all duration-200 shadow-lg"
           >
             <Settings className="text-white" size={20} />
-            <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-3 py-1 rounded-md text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+            <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-card text-white px-3 py-1 rounded-md text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
               Configurações
             </div>
           </button>
@@ -752,10 +752,10 @@ export const WebRTCVideoCall = ({ sessionId, userType, onEndCall }: WebRTCVideoC
           {/* Botão de encerrar chamada */}
           <button
             onClick={handleEndCall}
-            className="group relative w-16 h-16 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center transition-all duration-200 shadow-lg shadow-red-500/30 ml-2"
+            className="group relative w-16 h-16 rounded-full bg-destructive hover:bg-destructive/90 flex items-center justify-center transition-all duration-200 shadow-lg shadow-red-500/30 ml-2"
           >
             <PhoneOff className="text-white" size={24} />
-            <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-3 py-1 rounded-md text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+            <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-card text-white px-3 py-1 rounded-md text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
               Encerrar
             </div>
           </button>

@@ -73,13 +73,13 @@ const AppointmentsContent: React.FC = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'confirmed':
-        return <Badge className="bg-green-100 text-green-800">Confirmada</Badge>;
+        return <Badge className="bg-success/15 text-success">Confirmada</Badge>;
       case 'pending':
         return <Badge variant="outline">Pendente</Badge>;
       case 'cancelled':
         return <Badge variant="destructive">Cancelada</Badge>;
       case 'completed':
-        return <Badge className="bg-blue-100 text-blue-800">Concluída</Badge>;
+        return <Badge className="bg-secondary/15 text-secondary">Concluída</Badge>;
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }

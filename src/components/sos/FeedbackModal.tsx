@@ -175,8 +175,8 @@ export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerNam
                     <Star
                       className={`w-8 h-8 ${
                         star <= rating
-                          ? 'fill-yellow-400 text-yellow-400'
-                          : 'text-gray-300 hover:text-yellow-300'
+                          ? 'fill-yellow-400 text-warning'
+                          : 'text-muted-foreground hover:text-yellow-300'
                       }`}
                     />
                   </button>

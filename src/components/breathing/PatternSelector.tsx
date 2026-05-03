@@ -22,13 +22,13 @@ const PatternSelector = ({ onSelect, currentPattern }: PatternSelectorProps) => 
 
   const getPatternColor = (type: string) => {
     switch (type) {
-      case 'relaxation': return 'border-green-200 bg-green-50 hover:bg-green-100';
-      case 'balance': return 'border-blue-200 bg-blue-50 hover:bg-blue-100';
-      case 'focus': return 'border-purple-200 bg-purple-50 hover:bg-purple-100';
-      case 'control': return 'border-orange-200 bg-orange-50 hover:bg-orange-100';
+      case 'relaxation': return 'border-success/20 bg-success/10 hover:bg-success/15';
+      case 'balance': return 'border-secondary/20 bg-secondary/10 hover:bg-secondary/15';
+      case 'focus': return 'border-secondary/20 bg-secondary/10 hover:bg-accent';
+      case 'control': return 'border-primary/20 bg-primary/10 hover:bg-primary/20';
       case 'calm': return 'border-emerald-200 bg-emerald-50 hover:bg-emerald-100';
-      case 'crisis': return 'border-red-200 bg-red-50 hover:bg-red-100';
-      default: return 'border-gray-200 bg-gray-50 hover:bg-gray-100';
+      case 'crisis': return 'border-destructive/20 bg-destructive/10 hover:bg-destructive/15';
+      default: return 'border-border bg-gray-50 hover:bg-muted';
     }
   };
 
@@ -60,22 +60,22 @@ const PatternSelector = ({ onSelect, currentPattern }: PatternSelectorProps) => 
             <CardContent className="pt-0">
               <div className="flex gap-2 text-xs">
                 <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 rounded bg-blue-400"></div>
+                  <div className="w-3 h-3 rounded bg-secondary"></div>
                   <span>{pattern.inhale}s</span>
                 </div>
                 {pattern.hold > 0 && (
                   <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 rounded bg-green-400"></div>
+                    <div className="w-3 h-3 rounded bg-success"></div>
                     <span>{pattern.hold}s</span>
                   </div>
                 )}
                 <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 rounded bg-orange-400"></div>
+                  <div className="w-3 h-3 rounded bg-primary"></div>
                   <span>{pattern.exhale}s</span>
                 </div>
                 {pattern.pause > 0 && (
                   <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 rounded bg-gray-400"></div>
+                    <div className="w-3 h-3 rounded bg-muted-foreground"></div>
                     <span>{pattern.pause}s</span>
                   </div>
                 )}

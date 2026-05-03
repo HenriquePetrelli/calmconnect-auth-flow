@@ -103,10 +103,10 @@ export const PaymentsPanel = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Pendente</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-orange-500" />
+            <AlertTriangle className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
+            <div className="text-2xl font-bold text-primary">
               {formatCurrency(totalPending)}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -118,10 +118,10 @@ export const PaymentsPanel = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Pago</CardTitle>
-            <Check className="h-4 w-4 text-green-500" />
+            <Check className="h-4 w-4 text-success" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-2xl font-bold text-success">
               {formatCurrency(totalPaid)}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -133,7 +133,7 @@ export const PaymentsPanel = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Psicólogos Ativos</CardTitle>
-            <DollarSign className="h-4 w-4 text-blue-500" />
+            <DollarSign className="h-4 w-4 text-secondary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{payments.length}</div>
@@ -211,7 +211,7 @@ export const PaymentsPanel = () => {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right font-medium">
-                        <span className={payment.total_pending_amount > 0 ? "text-orange-600" : "text-muted-foreground"}>
+                        <span className={payment.total_pending_amount > 0 ? "text-primary" : "text-muted-foreground"}>
                           {formatCurrency(payment.total_pending_amount)}
                         </span>
                       </TableCell>

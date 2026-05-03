@@ -87,7 +87,7 @@ export const PsychologistModal: React.FC<PsychologistModalProps> = ({
                     <Star
                       key={i}
                       size={16}
-                      className={i < 4 ? "text-yellow-400 fill-current" : "text-gray-300"}
+                      className={i < 4 ? "text-warning fill-current" : "text-muted-foreground"}
                     />
                   ))}
                 </div>

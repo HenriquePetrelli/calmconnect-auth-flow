@@ -155,14 +155,14 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
       </Card>
 
       {/* Appointment Rules Info */}
-      <Card className="border-blue-200 bg-blue-50/50">
+      <Card className="border-secondary/20 bg-secondary/10/50">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-blue-800">
+          <CardTitle className="flex items-center gap-2 text-secondary">
             <AlertTriangle className="w-5 h-5" />
             Regras de Agendamento
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2 text-sm text-blue-700">
+        <CardContent className="space-y-2 text-sm text-secondary">
           <p>• Agendamento <strong>imediato</strong> - sem necessidade de antecedência</p>
           <p>• Horários disponíveis: <strong>07h às 23:50</strong> (intervalos de 10 minutos)</p>
           <p>• Duração da consulta: <strong>50 minutos</strong></p>
@@ -224,7 +224,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
                     disabled={!isValidTime || !isAvailable || slotsLoading}
                     className={`text-sm relative ${
                       isOccupied 
-                        ? 'bg-red-50 border-red-200 text-red-500 cursor-not-allowed' 
+                        ? 'bg-destructive/10 border-destructive/20 text-destructive cursor-not-allowed' 
                         : isAvailable 
                           ? 'hover:bg-primary/10' 
                           : ''
@@ -239,7 +239,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
                   >
                     {time}
                     {isOccupied && (
-                      <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                      <span className="absolute -top-1 -right-1 w-2 h-2 bg-destructive rounded-full"></span>
                     )}
                   </Button>
                 );
@@ -253,16 +253,16 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
                 <span>Disponível</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-red-200 border border-red-300 rounded relative">
-                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                <div className="w-3 h-3 bg-red-200 border border-destructive/30 rounded relative">
+                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-destructive rounded-full"></span>
                 </div>
                 <span>Ocupado</span>
               </div>
             </div>
             
             {occupiedSlots.length > 0 && (
-              <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                <p className="text-sm text-amber-800">
+              <div className="mt-3 p-3 bg-amber-50 border border-warning/20 rounded-lg">
+                <p className="text-sm text-warning">
                   <strong>Horários ocupados:</strong> {occupiedSlots.sort().join(', ')}
                 </p>
                 <p className="text-xs text-amber-700 mt-1">

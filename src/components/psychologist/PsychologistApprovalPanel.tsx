@@ -86,7 +86,7 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
       case 'pending':
         return <Badge variant="secondary">Pendente</Badge>;
       case 'approved':
-        return <Badge variant="default" className="bg-green-500">Aprovado</Badge>;
+        return <Badge variant="default" className="bg-success">Aprovado</Badge>;
       case 'rejected':
         return <Badge variant="destructive">Rejeitado</Badge>;
       default:
@@ -221,7 +221,7 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
                           {selectedPsychologist.rejection_reason && (
                             <div className="mt-4">
                               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Motivo da Rejeição</label>
-                              <div className="text-sm p-3 bg-red-50 border border-red-200 rounded-md mt-1">
+                              <div className="text-sm p-3 bg-destructive/10 border border-destructive/20 rounded-md mt-1">
                                 {selectedPsychologist.rejection_reason}
                               </div>
                             </div>

@@ -45,7 +45,7 @@ const SoundCategory = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-blue-50/30">
+    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/5">
       {/* Header */}
       <div className="bg-white/80 backdrop-blur-sm border-b border-border">
         <div className="flex items-center gap-4 p-4">
