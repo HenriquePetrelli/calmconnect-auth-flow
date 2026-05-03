@@ -159,8 +159,8 @@
     --muted: 217 33% 17%;
     --muted-foreground: 220 9% 65%;
 
-    --accent: 217 33% 17%;
-    --accent-foreground: 32 97% 72%;
+    --accent: 217 33% 20%;            /* neutral elevated surface */
+    --accent-foreground: 220 20% 98%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
