@@ -36,10 +36,12 @@ export const DesktopSidebar: React.FC = () => {
           return (
             <Button
               key={item.path}
-              variant={isActive ? "secondary" : "ghost"}
+              variant="ghost"
               className={`
-                w-full justify-start gap-3 h-12 text-left
-                ${isActive ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}
+                w-full justify-start gap-3 h-12 text-left transition-all duration-200
+                ${isActive
+                  ? 'bg-secondary text-secondary-foreground hover:bg-secondary-hover hover:text-secondary-foreground'
+                  : 'hover:bg-secondary-hover hover:text-secondary-foreground'}
               `}
               onClick={() => navigate(item.path)}
             >
