@@ -1,49 +1,28 @@
 import React from 'react';
-import { useIsMobile } from '@/hooks/use-mobile';
-
-// Import background images
-import mobileLight from '@/assets/backgrounds/mobile_light.png';
-import tabletLight from '@/assets/backgrounds/tablet_light.png';
-import desktopLight from '@/assets/backgrounds/desktop_light.png';
-import mobileDark from '@/assets/backgrounds/mobile_dark.jpg';
-import tabletDark from '@/assets/backgrounds/tablet_dark.jpg';
-import desktopDark from '@/assets/backgrounds/desktop_dark.jpg';
 
 interface BackgroundWrapperProps {
   children: React.ReactNode;
   className?: string;
 }
 
+/**
+ * Theme-driven background. No hardcoded images — uses semantic tokens
+ * so it adapts perfectly to light/dark mode.
+ */
 const BackgroundWrapper: React.FC<BackgroundWrapperProps> = ({ children, className = "" }) => {
-  const isMobile = useIsMobile();
-  
-  // Determine which background image to use based on screen size and theme
-  const getBackgroundImage = () => {
-    const isDark = document.documentElement.classList.contains('dark');
-    
-    if (window.innerWidth <= 767) {
-      return isDark ? mobileDark : mobileLight;
-    } else if (window.innerWidth <= 1023) {
-      return isDark ? tabletDark : tabletLight;
-    } else {
-      return isDark ? desktopDark : desktopLight;
-    }
-  };
-
-  const backgroundStyle = {
-    backgroundImage: `url(${getBackgroundImage()})`,
-    backgroundRepeat: 'no-repeat',
-    backgroundSize: 'cover',
-    backgroundPosition: 'bottom center',
-    backgroundAttachment: 'fixed',
-    minHeight: '100vh'
-  };
-
   return (
-    <div 
-      className={`relative ${className}`} 
-      style={backgroundStyle}
+    <div
+      className={`relative min-h-screen bg-background text-foreground ${className}`}
     >
+      {/* Subtle brand glow (orange + purple) */}
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 -z-10 opacity-[0.35] dark:opacity-25"
+        style={{
+          backgroundImage:
+            'radial-gradient(60% 50% at 15% 0%, hsl(var(--primary) / 0.18), transparent 60%), radial-gradient(50% 40% at 85% 100%, hsl(var(--secondary) / 0.18), transparent 60%)',
+        }}
+      />
       {children}
     </div>
   );
