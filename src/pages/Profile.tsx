@@ -12,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useToast } from "@/hooks/use-toast";
 import { useWeeklyGoals } from "@/hooks/useWeeklyGoals";
-import BottomNavigation from "@/components/BottomNavigation";
+
 import ProfileSkeleton from "@/components/ProfileSkeleton";
 import EditSymptomsModal from "@/components/EditSymptomsModal";
 
@@ -334,8 +334,6 @@ const Profile = () => {
         </main>
       </div>
 
-      {/* Bottom Navigation */}
-      <BottomNavigation />
       
       {/* Edit Symptoms Modal */}
       {user && (
