@@ -11,7 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import BottomNavigation from '@/components/BottomNavigation';
+import PatientBottomNav from '@/components/PatientBottomNav';
 import BackButton from '@/components/BackButton';
 import AddTestimonialForm from '@/components/support-groups/AddTestimonialForm';
 import EditTestimonialForm from '@/components/support-groups/EditTestimonialForm';
@@ -490,7 +490,7 @@ const SupportGroupDetail = () => {
           </div>
         </main>
       </div>
-      <BottomNavigation />
+      <PatientBottomNav />
     </div>
   );
 };

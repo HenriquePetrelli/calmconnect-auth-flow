@@ -5,7 +5,7 @@ import { usePrivateJournal, JournalEntry } from '@/hooks/usePrivateJournal';
 import JournalEntryCard from '@/components/journal/JournalEntryCard';
 import JournalEntryModal from '@/components/journal/JournalEntryModal';
 import MoodFilter from '@/components/journal/MoodFilter';
-import BottomNavigation from '@/components/BottomNavigation';
+import PatientBottomNav from '@/components/PatientBottomNav';
 import BackButton from '@/components/BackButton';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -159,7 +159,7 @@ const PrivateJournal = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      <BottomNavigation />
+      <PatientBottomNav />
     </div>
   );
 };
