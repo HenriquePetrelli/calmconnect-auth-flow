@@ -17,11 +17,11 @@ const categoryIcons: Record<string, typeof Target> = {
 };
 
 const categoryColors: Record<string, string> = {
-  'Respiração': 'bg-blue-500/10 text-blue-600 border-blue-500/20',
-  'Diário': 'bg-purple-500/10 text-purple-600 border-purple-500/20',
+  'Respiração': 'bg-secondary/10 text-secondary border-blue-500/20',
+  'Diário': 'bg-secondary/10 text-secondary border-secondary/20',
   'Sono': 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20',
   'Humor': 'bg-pink-500/10 text-pink-600 border-pink-500/20',
-  'Consulta': 'bg-green-500/10 text-green-600 border-green-500/20',
+  'Consulta': 'bg-success/10 text-success border-success/20',
 };
 
 export const GoalCard = ({ goal }: GoalCardProps) => {
@@ -33,7 +33,7 @@ export const GoalCard = ({ goal }: GoalCardProps) => {
     <Card className="relative overflow-hidden hover:shadow-lg transition-all duration-300 border-2">
       {goal.completed && (
         <div className="absolute top-3 right-3 z-10">
-          <Badge className="bg-green-500/90 text-white flex items-center gap-1 px-3 py-1.5">
+          <Badge className="bg-success/90 text-white flex items-center gap-1 px-3 py-1.5">
             <CheckCircle2 className="h-4 w-4" />
             Concluída
           </Badge>

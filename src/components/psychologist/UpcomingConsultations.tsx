@@ -201,7 +201,7 @@ const UpcomingConsultations = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Clock className="w-5 h-5 text-blue-600" />
+              <Clock className="w-5 h-5 text-secondary" />
               Próximas Consultas
               {upcomingAppointments.length > 0 && (
                 <Badge variant="outline" className="ml-auto">
@@ -215,8 +215,8 @@ const UpcomingConsultations = () => {
         {upcomingAppointments.length === 0 ? (
           <Card>
             <CardContent className="p-6 text-center">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Clock className="w-8 h-8 text-blue-600" />
+              <div className="w-16 h-16 bg-secondary/15 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Clock className="w-8 h-8 text-secondary" />
               </div>
               <h3 className="text-lg font-medium text-foreground mb-2">
                 Nenhuma consulta próxima

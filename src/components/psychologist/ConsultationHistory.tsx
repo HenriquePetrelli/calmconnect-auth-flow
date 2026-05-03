@@ -94,12 +94,12 @@ const ConsultationHistory = () => {
 
   const getTypeBadge = (type: string) => {
     const typeMap: Record<string, { label: string; className: string }> = {
-      regular: { label: 'Regular', className: 'bg-blue-100 text-blue-800' },
-      emergency: { label: 'Emergência', className: 'bg-red-100 text-red-800' },
-      follow_up: { label: 'Retorno', className: 'bg-green-100 text-green-800' }
+      regular: { label: 'Regular', className: 'bg-secondary/15 text-secondary' },
+      emergency: { label: 'Emergência', className: 'bg-destructive/15 text-destructive' },
+      follow_up: { label: 'Retorno', className: 'bg-success/15 text-success' }
     };
 
-    const typeInfo = typeMap[type] || { label: type, className: 'bg-gray-100 text-gray-800' };
+    const typeInfo = typeMap[type] || { label: type, className: 'bg-muted text-foreground' };
     return (
       <span className={`px-2 py-1 rounded-full text-xs font-medium ${typeInfo.className}`}>
         {typeInfo.label}

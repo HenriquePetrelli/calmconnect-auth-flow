@@ -48,17 +48,17 @@ interface PsychologistDetailProps {
 const getStatusIcon = (status?: string) => {
   switch (status) {
     case 'approved':
-      return <CheckCircle className="h-4 w-4 text-green-500" />;
+      return <CheckCircle className="h-4 w-4 text-success" />;
     case 'rejected':
-      return <XCircle className="h-4 w-4 text-red-500" />;
+      return <XCircle className="h-4 w-4 text-destructive" />;
     default:
-      return <Clock className="h-4 w-4 text-yellow-500" />;
+      return <Clock className="h-4 w-4 text-warning" />;
   }
 };
 
 const getStatusBadge = (status?: string, approved?: boolean) => {
   if (approved || status === 'approved') {
-    return <Badge variant="default" className="bg-green-100 text-green-800">Aprovado</Badge>;
+    return <Badge variant="default" className="bg-success/15 text-success">Aprovado</Badge>;
   }
   if (status === 'rejected') {
     return <Badge variant="destructive">Rejeitado</Badge>;
@@ -124,7 +124,7 @@ export const PsychologistDetail = ({ psychologist }: PsychologistDetailProps) =>
               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                 Motivo da Rejeição
               </label>
-              <div className="text-sm p-3 bg-red-50 border border-red-200 rounded-md mt-1">
+              <div className="text-sm p-3 bg-destructive/10 border border-destructive/20 rounded-md mt-1">
                 {psychologist.rejection_reason}
               </div>
             </div>

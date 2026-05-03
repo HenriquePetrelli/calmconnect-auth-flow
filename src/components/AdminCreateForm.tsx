@@ -81,21 +81,21 @@ const AdminCreateForm: React.FC<AdminCreateFormProps> = ({ onSuccess }) => {
     return (
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-center text-green-600">
+          <CardTitle className="text-center text-success">
             ✅ Conta Criada com Sucesso!
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-3">
-            <h3 className="font-semibold text-green-800">Credenciais da Conta Admin:</h3>
+          <div className="bg-success/10 border border-success/20 rounded-lg p-4 space-y-3">
+            <h3 className="font-semibold text-success">Credenciais da Conta Admin:</h3>
             
             <div className="space-y-2">
-              <Label className="text-green-700">Email:</Label>
+              <Label className="text-success">Email:</Label>
               <div className="flex items-center gap-2">
                 <Input 
                   value={createdAccount.email} 
                   readOnly 
-                  className="bg-white text-green-800"
+                  className="bg-white text-success"
                 />
                 <Button
                   size="sm"
@@ -108,13 +108,13 @@ const AdminCreateForm: React.FC<AdminCreateFormProps> = ({ onSuccess }) => {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-green-700">Senha:</Label>
+              <Label className="text-success">Senha:</Label>
               <div className="flex items-center gap-2">
                 <Input 
                   type={showPassword ? "text" : "password"}
                   value={createdAccount.password} 
                   readOnly 
-                  className="bg-white text-green-800 font-mono"
+                  className="bg-white text-success font-mono"
                 />
                 <Button
                   size="sm"
@@ -134,8 +134,8 @@ const AdminCreateForm: React.FC<AdminCreateFormProps> = ({ onSuccess }) => {
             </div>
           </div>
 
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-            <p className="text-yellow-800 text-sm">
+          <div className="bg-yellow-50 border border-warning/20 rounded-lg p-3">
+            <p className="text-warning text-sm">
               ⚠️ <strong>Importante:</strong> Salve essas credenciais em local seguro. 
               A senha deve ser alterada no primeiro acesso.
             </p>

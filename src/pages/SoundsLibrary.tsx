@@ -17,7 +17,7 @@ const SoundsLibrary = () => {
       icon: <Moon className="w-8 h-8" />,
       title: "Para Dormir",
       description: "Sons que induzem relaxamento profundo e sono reparador",
-      gradient: "from-blue-500 to-purple-600",
+      gradient: "from-secondary to-secondary-hover",
       sounds: 12
     },
     {
@@ -33,7 +33,7 @@ const SoundsLibrary = () => {
       icon: <Target className="w-8 h-8" />,
       title: "Para Focar",
       description: "Ambiente sonoro ideal para concentração e produtividade",
-      gradient: "from-orange-500 to-red-600", 
+      gradient: "from-primary to-red-600", 
       sounds: 6
     }
   ];

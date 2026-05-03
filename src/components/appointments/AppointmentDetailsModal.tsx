@@ -35,17 +35,17 @@ export const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = (
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
-        return 'bg-green-100 text-green-800 border-green-200';
+        return 'bg-success/15 text-success border-success/20';
       case 'scheduled':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return 'bg-secondary/15 text-secondary border-secondary/20';
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        return 'bg-warning/15 text-warning border-warning/20';
       case 'declined':
-        return 'bg-red-100 text-red-800 border-red-200';
+        return 'bg-destructive/15 text-destructive border-destructive/20';
       case 'reschedule_proposed':
-        return 'bg-purple-100 text-purple-800 border-purple-200';
+        return 'bg-secondary/15 text-secondary-active border-secondary/20';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-muted text-foreground border-border';
     }
   };
 
@@ -183,21 +183,21 @@ export const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = (
 
           {/* Proposed Reschedule */}
           {appointment.status === 'reschedule_proposed' && appointment.proposed_scheduled_at && (
-            <div className="space-y-3 border border-purple-200 bg-purple-50 p-4 rounded-lg">
-              <div className="flex items-center gap-2 text-sm font-medium text-purple-800">
+            <div className="space-y-3 border border-secondary/20 bg-secondary/10 p-4 rounded-lg">
+              <div className="flex items-center gap-2 text-sm font-medium text-secondary-active">
                 <Calendar className="h-4 w-4" />
                 Novo horário proposto
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm font-medium">Nova Data</p>
-                  <p className="text-sm text-purple-800">
+                  <p className="text-sm text-secondary-active">
                     {format(new Date(appointment.proposed_scheduled_at), 'PPP', { locale: ptBR })}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm font-medium">Novo Horário</p>
-                  <p className="text-sm text-purple-800">
+                  <p className="text-sm text-secondary-active">
                     {format(new Date(appointment.proposed_scheduled_at), 'HH:mm')}
                   </p>
                 </div>
@@ -206,7 +206,7 @@ export const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = (
               {appointment.proposal_notes && (
                 <div>
                   <p className="text-sm font-medium">Observações</p>
-                  <p className="text-sm text-purple-700">{appointment.proposal_notes}</p>
+                  <p className="text-sm text-secondary-hover">{appointment.proposal_notes}</p>
                 </div>
               )}
 

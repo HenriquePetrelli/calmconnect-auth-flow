@@ -89,14 +89,14 @@ const EmergencyNotifications = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-green-600" />
+            <AlertTriangle className="w-5 h-5 text-success" />
             Solicitações de Emergência
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertTriangle className="w-8 h-8 text-green-600" />
+            <div className="w-16 h-16 bg-success/15 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle className="w-8 h-8 text-success" />
             </div>
             <h3 className="text-lg font-medium text-foreground mb-2">
               Nenhuma emergência no momento
@@ -163,7 +163,7 @@ const EmergencyNotifications = () => {
               <Button
                 onClick={() => handleAccept(request.id)}
                 disabled={processingRequests.has(request.id)}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                className="flex-1 bg-success hover:bg-success/90 text-white"
               >
                 {processingRequests.has(request.id) ? (
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
@@ -195,7 +195,7 @@ const EmergencyNotifications = () => {
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <div className="w-2 h-2 bg-success rounded-full animate-pulse"></div>
               <span className="text-sm font-medium">Notificações em tempo real ativas</span>
             </div>
             <Badge variant="secondary" className="text-xs">

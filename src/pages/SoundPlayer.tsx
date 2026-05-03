@@ -138,7 +138,7 @@ const SoundPlayer = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-blue-50/30">
+    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/5">
       <div className="flex items-center gap-4 p-4 bg-white/80 backdrop-blur-sm border-b border-border">
         <Button variant="ghost" size="sm" onClick={() => navigate("/sounds")}>
           <ArrowLeft className="w-5 h-5" />

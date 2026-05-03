@@ -56,7 +56,7 @@ export const GoalCompletionModal = ({ goal, onClose }: GoalCompletionModalProps)
                 stiffness: 260,
                 damping: 20,
               }}
-              className="mx-auto mb-4 w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center"
+              className="mx-auto mb-4 w-20 h-20 bg-gradient-to-br from-yellow-400 to-primary rounded-full flex items-center justify-center"
             >
               <Trophy className="h-10 w-10 text-white" />
             </motion.div>
@@ -74,7 +74,7 @@ export const GoalCompletionModal = ({ goal, onClose }: GoalCompletionModalProps)
           >
             <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-lg p-6 border border-primary/20">
               <div className="flex items-start gap-3 mb-4">
-                <CheckCircle2 className="h-6 w-6 text-green-600 flex-shrink-0 mt-1" />
+                <CheckCircle2 className="h-6 w-6 text-success flex-shrink-0 mt-1" />
                 <div>
                   <h3 className="font-semibold text-lg mb-1">Meta Concluída!</h3>
                   <p className="text-sm text-muted-foreground">
@@ -89,9 +89,9 @@ export const GoalCompletionModal = ({ goal, onClose }: GoalCompletionModalProps)
               </div>
             </div>
 
-            <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+            <div className="bg-gradient-to-r from-blue-50 to-secondary/10 dark:from-blue-950/20 dark:to-purple-950/20 rounded-lg p-4 border border-secondary/20 dark:border-blue-800">
               <div className="flex items-center gap-2 text-sm">
-                <Sparkles className="h-5 w-5 text-yellow-500" />
+                <Sparkles className="h-5 w-5 text-warning" />
                 <p className="font-medium text-foreground">
                   Continue assim! Cada pequena conquista te leva mais longe no seu autocuidado.
                 </p>

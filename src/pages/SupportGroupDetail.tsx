@@ -182,8 +182,8 @@ const TestimonialCard = ({ testimonial, symptomName, onLike, onEdit, onDelete, c
                 disabled={!isPremiumUser}
                 className={`flex items-center gap-2 h-9 px-4 transition-all ${
                   userLikeType === 'positivo' 
-                    ? 'bg-green-600 hover:bg-green-700 text-white border-green-600' 
-                    : 'text-muted-foreground hover:text-green-600 hover:border-green-600'
+                    ? 'bg-success hover:bg-success/90 text-white border-green-600' 
+                    : 'text-muted-foreground hover:text-success hover:border-green-600'
                 } ${!isPremiumUser ? 'opacity-60' : ''}`}
               >
                 <ThumbsUp className="w-4 h-4" />
@@ -198,8 +198,8 @@ const TestimonialCard = ({ testimonial, symptomName, onLike, onEdit, onDelete, c
                 disabled={!isPremiumUser}
                 className={`flex items-center gap-2 h-9 px-4 transition-all ${
                   userLikeType === 'negativo' 
-                    ? 'bg-red-600 hover:bg-red-700 text-white border-red-600' 
-                    : 'text-muted-foreground hover:text-red-600 hover:border-red-600'
+                    ? 'bg-destructive hover:bg-destructive/90 text-white border-red-600' 
+                    : 'text-muted-foreground hover:text-destructive hover:border-red-600'
                 } ${!isPremiumUser ? 'opacity-60' : ''}`}
               >
                 <ThumbsDown className="w-4 h-4" />

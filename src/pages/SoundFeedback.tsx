@@ -30,13 +30,13 @@ const SoundFeedback = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-blue-50/30 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/5 flex items-center justify-center p-6">
       <Card className="w-full max-w-md mx-auto">
         <CardContent className="p-8 text-center space-y-6">
           {/* Success Icon */}
           <div className="flex justify-center">
-            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
-              <CheckCircle className="w-10 h-10 text-green-600" />
+            <div className="w-20 h-20 bg-success/15 rounded-full flex items-center justify-center">
+              <CheckCircle className="w-10 h-10 text-success" />
             </div>
           </div>
 

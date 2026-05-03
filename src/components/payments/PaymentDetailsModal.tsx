@@ -137,7 +137,7 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-orange-500" />
+                    <Clock className="h-4 w-4 text-primary" />
                     Pagamentos Pendentes
                   </CardTitle>
                 </CardHeader>
@@ -157,7 +157,7 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
                   <Separator />
                   <div className="flex justify-between items-center font-medium">
                     <span>Total Pendente</span>
-                    <span className="text-orange-600">
+                    <span className="text-primary">
                       {formatCurrency(payment.total_pending_amount)}
                     </span>
                   </div>
@@ -167,7 +167,7 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <CheckCircle className="h-4 w-4 text-success" />
                     Pagamentos Confirmados
                   </CardTitle>
                 </CardHeader>
@@ -187,7 +187,7 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
                   <Separator />
                   <div className="flex justify-between items-center font-medium">
                     <span>Total Pago</span>
-                    <span className="text-green-600">
+                    <span className="text-success">
                       {formatCurrency(payment.total_paid_amount)}
                     </span>
                   </div>
@@ -207,11 +207,11 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
                 <div className="grid grid-cols-2 gap-4 text-center">
                   <div className="p-4 bg-muted rounded-lg">
                     <p className="text-sm text-muted-foreground">Valor por Consulta Agendada</p>
-                    <p className="text-2xl font-bold text-green-600">R$ 90,00</p>
+                    <p className="text-2xl font-bold text-success">R$ 90,00</p>
                   </div>
                   <div className="p-4 bg-muted rounded-lg">
                     <p className="text-sm text-muted-foreground">Valor por Emergência</p>
-                    <p className="text-2xl font-bold text-orange-600">R$ 50,00</p>
+                    <p className="text-2xl font-bold text-primary">R$ 50,00</p>
                   </div>
                 </div>
                 

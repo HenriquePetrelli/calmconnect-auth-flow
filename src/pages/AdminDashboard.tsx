@@ -279,12 +279,12 @@ const AdminDashboard = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {metrics?.pending_psychologists && metrics.pending_psychologists > 0 && (
-                    <div className="flex items-center justify-between p-3 bg-orange-50 dark:bg-orange-950/20 rounded-lg border border-orange-200 dark:border-orange-800">
+                    <div className="flex items-center justify-between p-3 bg-primary/10 dark:bg-orange-950/20 rounded-lg border border-primary/20 dark:border-primary/30">
                       <div>
-                        <p className="font-medium text-orange-800 dark:text-orange-200">
+                        <p className="font-medium text-primary-active dark:text-orange-200">
                           {metrics.pending_psychologists} psicólogo(s) pendente(s)
                         </p>
-                        <p className="text-sm text-orange-600 dark:text-orange-300">
+                        <p className="text-sm text-primary dark:text-orange-300">
                           Necessita aprovação
                         </p>
                       </div>
@@ -295,12 +295,12 @@ const AdminDashboard = () => {
                   )}
                   
                   {metrics?.sos_requests_last_30_days && metrics.sos_requests_last_30_days > 10 && (
-                    <div className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-800">
+                    <div className="flex items-center justify-between p-3 bg-destructive/10 dark:bg-red-950/20 rounded-lg border border-destructive/20 dark:border-red-800">
                       <div>
-                        <p className="font-medium text-red-800 dark:text-red-200">
+                        <p className="font-medium text-destructive dark:text-red-200">
                           Alto volume de SOS
                         </p>
-                        <p className="text-sm text-red-600 dark:text-red-300">
+                        <p className="text-sm text-destructive dark:text-red-300">
                           {metrics.sos_requests_last_30_days} nos últimos 30 dias
                         </p>
                       </div>
@@ -311,7 +311,7 @@ const AdminDashboard = () => {
                    (!metrics?.sos_requests_last_30_days || metrics.sos_requests_last_30_days <= 10) && (
                     <div className="flex items-center justify-center p-6 text-center">
                       <div>
-                        <Check className="h-8 w-8 text-green-500 mx-auto mb-2" />
+                        <Check className="h-8 w-8 text-success mx-auto mb-2" />
                         <p className="text-sm text-muted-foreground">
                           Tudo em ordem! Nenhuma ação urgente necessária.
                         </p>

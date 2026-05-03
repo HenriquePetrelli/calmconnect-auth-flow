@@ -258,7 +258,7 @@ export const VideoCallSettingsModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-[#202124] border-gray-600 text-white max-w-md">
+      <DialogContent className="bg-[#202124] border-border text-white max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-white">
             <Settings className="w-5 h-5" />
@@ -270,7 +270,7 @@ export const VideoCallSettingsModal = ({
           {/* Device Status Indicator */}
           {isTestingDevices && (
             <div className="flex items-center gap-2 p-3 bg-blue-900/30 border border-blue-500/30 rounded-lg">
-              <Loader2 className="w-4 h-4 animate-spin text-blue-400" />
+              <Loader2 className="w-4 h-4 animate-spin text-secondary" />
               <span className="text-sm text-blue-200">Testando dispositivos selecionados...</span>
             </div>
           )}
@@ -278,8 +278,8 @@ export const VideoCallSettingsModal = ({
           {/* Device Error Warnings */}
           {(!audioDevices.length || !videoDevices.length) && (
             <div className="flex items-center gap-2 p-3 bg-yellow-900/30 border border-yellow-500/30 rounded-lg">
-              <AlertTriangle className="w-4 h-4 text-yellow-400" />
-              <span className="text-sm text-yellow-200">
+              <AlertTriangle className="w-4 h-4 text-warning" />
+              <span className="text-sm text-warning">
                 {!audioDevices.length && 'Nenhum microfone detectado. '}
                 {!videoDevices.length && 'Nenhuma câmera detectada. '}
                 Verifique se os dispositivos estão conectados.
@@ -288,20 +288,20 @@ export const VideoCallSettingsModal = ({
           )}
           {/* Audio Device Selection */}
           <div className="space-y-2">
-            <Label className="flex items-center gap-2 text-sm font-medium text-gray-200">
+            <Label className="flex items-center gap-2 text-sm font-medium text-foreground">
               <Mic className="w-4 h-4" />
               Microfone
             </Label>
             <Select value={tempAudioDevice} onValueChange={handleAudioDeviceChange}>
-              <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+              <SelectTrigger className="bg-card border-border text-white">
                 <SelectValue placeholder="Selecionar microfone" />
               </SelectTrigger>
-              <SelectContent className="bg-gray-700 border-gray-600 z-50">
+              <SelectContent className="bg-card border-border z-50">
                 {audioDevices.map((device) => (
                   <SelectItem 
                     key={device.deviceId} 
                     value={device.deviceId}
-                    className="text-white hover:bg-gray-600"
+                    className="text-white hover:bg-accent"
                   >
                     {device.label || `Microfone ${device.deviceId.slice(0, 8)}...`}
                   </SelectItem>
@@ -312,20 +312,20 @@ export const VideoCallSettingsModal = ({
 
           {/* Video Device Selection */}
           <div className="space-y-2">
-            <Label className="flex items-center gap-2 text-sm font-medium text-gray-200">
+            <Label className="flex items-center gap-2 text-sm font-medium text-foreground">
               <Camera className="w-4 h-4" />
               Câmera
             </Label>
             <Select value={tempVideoDevice} onValueChange={handleVideoDeviceChange}>
-              <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+              <SelectTrigger className="bg-card border-border text-white">
                 <SelectValue placeholder="Selecionar câmera" />
               </SelectTrigger>
-              <SelectContent className="bg-gray-700 border-gray-600 z-50">
+              <SelectContent className="bg-card border-border z-50">
                 {videoDevices.map((device) => (
                   <SelectItem 
                     key={device.deviceId} 
                     value={device.deviceId}
-                    className="text-white hover:bg-gray-600"
+                    className="text-white hover:bg-accent"
                   >
                     {device.label || `Câmera ${device.deviceId.slice(0, 8)}...`}
                   </SelectItem>
@@ -336,20 +336,20 @@ export const VideoCallSettingsModal = ({
 
           {/* Audio Output Device Selection */}
           <div className="space-y-2">
-            <Label className="flex items-center gap-2 text-sm font-medium text-gray-200">
+            <Label className="flex items-center gap-2 text-sm font-medium text-foreground">
               <Volume2 className="w-4 h-4" />
               Alto-falante
             </Label>
             <Select value={tempAudioOutputDevice} onValueChange={handleAudioOutputDeviceChange}>
-              <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+              <SelectTrigger className="bg-card border-border text-white">
                 <SelectValue placeholder="Selecionar alto-falante" />
               </SelectTrigger>
-              <SelectContent className="bg-gray-700 border-gray-600 z-50">
+              <SelectContent className="bg-card border-border z-50">
                 {audioOutputDevices.map((device) => (
                   <SelectItem 
                     key={device.deviceId} 
                     value={device.deviceId}
-                    className="text-white hover:bg-gray-600"
+                    className="text-white hover:bg-accent"
                   >
                     {device.label || `Alto-falante ${device.deviceId.slice(0, 8)}...`}
                   </SelectItem>
@@ -364,7 +364,7 @@ export const VideoCallSettingsModal = ({
           <Button 
             variant="outline" 
             onClick={handleCancel}
-            className="bg-gray-700 border-gray-600 text-white hover:bg-gray-600"
+            className="bg-card border-border text-white hover:bg-accent"
           >
             Cancelar
           </Button>

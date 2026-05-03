@@ -191,9 +191,9 @@ const PsychologistDashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Próximas</p>
-                  <p className="text-2xl font-bold text-blue-600">{upcomingConsultations}</p>
+                  <p className="text-2xl font-bold text-secondary">{upcomingConsultations}</p>
                 </div>
-                <Clock className="w-8 h-8 text-blue-600" />
+                <Clock className="w-8 h-8 text-secondary" />
               </div>
             </CardContent>
           </Card>
@@ -203,9 +203,9 @@ const PsychologistDashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Status</p>
-                  <p className="text-sm font-medium text-green-600">Online</p>
+                  <p className="text-sm font-medium text-success">Online</p>
                 </div>
-                <CheckCircle className="w-8 h-8 text-green-600" />
+                <CheckCircle className="w-8 h-8 text-success" />
               </div>
             </CardContent>
           </Card>

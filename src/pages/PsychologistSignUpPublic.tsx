@@ -166,7 +166,7 @@ const PsychologistSignUpPublic = () => {
           
           <Card>
             <CardHeader className="text-center">
-              <CardTitle className="text-green-600">Cadastro Realizado!</CardTitle>
+              <CardTitle className="text-success">Cadastro Realizado!</CardTitle>
               <CardDescription>
                 Seu cadastro foi enviado para análise. Você receberá um email quando for aprovado.
               </CardDescription>
@@ -371,7 +371,7 @@ const PsychologistSignUpPublic = () => {
                     Envie documento de identidade, CNH ou CRP (PDF, JPG ou PNG - máx. 5MB)
                   </FormDescription>
                   {documentFile && (
-                    <p className="text-sm text-green-600">
+                    <p className="text-sm text-success">
                       Arquivo selecionado: {documentFile.name}
                     </p>
                   )}

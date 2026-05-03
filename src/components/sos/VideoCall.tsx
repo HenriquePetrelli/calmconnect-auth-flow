@@ -49,7 +49,7 @@ const VideoCall = ({ onEndCall }: VideoCallProps) => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header com timer */}
-      <div className="bg-green-500 text-white p-4 text-center">
+      <div className="bg-success text-white p-4 text-center">
         <div className="text-lg font-semibold">Chamada Conectada</div>
         <div className="text-2xl font-mono font-bold">{formatTime(timeLeft)}</div>
       </div>
@@ -60,8 +60,8 @@ const VideoCall = ({ onEndCall }: VideoCallProps) => {
         <div className="w-full h-full flex items-center justify-center">
           <Card className="w-full max-w-md mx-4">
             <CardContent className="p-8 text-center space-y-4">
-              <div className="w-24 h-24 mx-auto rounded-full bg-green-500/20 flex items-center justify-center">
-                <div className="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center">
+              <div className="w-24 h-24 mx-auto rounded-full bg-success/20 flex items-center justify-center">
+                <div className="w-16 h-16 rounded-full bg-success flex items-center justify-center">
                   <span className="text-white font-bold text-xl">DS</span>
                 </div>
               </div>
@@ -73,8 +73,8 @@ const VideoCall = ({ onEndCall }: VideoCallProps) => {
                 <p className="text-muted-foreground text-sm">
                   Psicóloga Especialista em Crise
                 </p>
-                <div className="mt-3 p-2 bg-green-100 rounded-lg">
-                  <p className="text-green-700 text-sm">
+                <div className="mt-3 p-2 bg-success/15 rounded-lg">
+                  <p className="text-success text-sm">
                     🟢 Conectado e ouvindo
                   </p>
                 </div>
@@ -84,13 +84,13 @@ const VideoCall = ({ onEndCall }: VideoCallProps) => {
         </div>
 
         {/* Vídeo próprio (canto inferior direito) */}
-        <div className="absolute bottom-4 right-4 w-32 h-24 bg-gray-800 rounded-lg border-2 border-white overflow-hidden">
+        <div className="absolute bottom-4 right-4 w-32 h-24 bg-card rounded-lg border-2 border-white overflow-hidden">
           {isCameraOff ? (
-            <div className="w-full h-full flex items-center justify-center bg-gray-800">
-              <CameraOff className="text-gray-400" size={24} />
+            <div className="w-full h-full flex items-center justify-center bg-card">
+              <CameraOff className="text-muted-foreground" size={24} />
             </div>
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+            <div className="w-full h-full bg-gradient-to-br from-secondary to-secondary-hover flex items-center justify-center">
               <span className="text-white font-bold">Você</span>
             </div>
           )}

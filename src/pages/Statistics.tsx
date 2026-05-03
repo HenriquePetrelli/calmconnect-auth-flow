@@ -151,7 +151,7 @@ const Statistics = () => {
                               {goal.title}
                             </span>
                             {goal.completed && (
-                              <CheckCircle2 size={18} className="text-green-500" />
+                              <CheckCircle2 size={18} className="text-success" />
                             )}
                           </div>
                           <span className="text-sm text-muted-foreground">
