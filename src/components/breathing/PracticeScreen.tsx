@@ -49,7 +49,7 @@ const PracticeScreen = ({ technique, onBack, onComplete }: PracticeScreenProps) 
 
   // Timer principal da sessão
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setTimeout>;
 
     if (currentPhase === 'preparation' && preparationTime > 0) {
       interval = setInterval(() => {

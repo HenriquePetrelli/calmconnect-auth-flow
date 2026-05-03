@@ -24,7 +24,7 @@ const BreathingTimer = ({ pattern, isActive, onPhaseChange, onCycleComplete }: B
   }, [pattern]);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setTimeout>;
 
     if (isActive) {
       interval = setInterval(() => {

@@ -1151,7 +1151,7 @@ export type Database = {
           action: string
           created_at: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           new_values: Json | null
           old_values: Json | null
           record_id: string | null
@@ -1163,7 +1163,7 @@ export type Database = {
           action: string
           created_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           new_values?: Json | null
           old_values?: Json | null
           record_id?: string | null
@@ -1175,7 +1175,7 @@ export type Database = {
           action?: string
           created_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           new_values?: Json | null
           old_values?: Json | null
           record_id?: string | null
@@ -1543,10 +1543,7 @@ export type Database = {
           reason: string
         }[]
       }
-      cleanup_quarterly_activities: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      cleanup_quarterly_activities: { Args: never; Returns: undefined }
       cleanup_rejected_psychologist: {
         Args: { p_user_id: string }
         Returns: boolean
@@ -1559,9 +1556,9 @@ export type Database = {
         }
         Returns: Json
       }
-      create_psychologist_profile: {
-        Args:
-          | {
+      create_psychologist_profile:
+        | {
+            Args: {
               p_accepts_presential: boolean
               p_address?: string
               p_bio: string
@@ -1576,7 +1573,26 @@ export type Database = {
               p_state: string
               p_user_id: string
             }
-          | {
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_address?: string
+              p_bio: string
+              p_city: string
+              p_cpf?: string
+              p_crp_number: string
+              p_document_url?: string
+              p_email: string
+              p_full_name: string
+              p_specialization: string
+              p_state: string
+              p_user_id: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
               p_address?: string
               p_area_atendimento?: string
               p_bio: string
@@ -1590,27 +1606,11 @@ export type Database = {
               p_state: string
               p_user_id: string
             }
-          | {
-              p_address?: string
-              p_bio: string
-              p_city: string
-              p_cpf?: string
-              p_crp_number: string
-              p_document_url?: string
-              p_email: string
-              p_full_name: string
-              p_specialization: string
-              p_state: string
-              p_user_id: string
-            }
-        Returns: Json
-      }
-      gerenciar_expiracao_conversas: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+            Returns: Json
+          }
+      gerenciar_expiracao_conversas: { Args: never; Returns: undefined }
       get_admin_metrics: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           active_psychologists: number
           active_subscribers: number
@@ -1642,10 +1642,7 @@ export type Database = {
           should_show_rejection_message: boolean
         }[]
       }
-      get_user_type: {
-        Args: { user_id_param: string }
-        Returns: string
-      }
+      get_user_type: { Args: { user_id_param: string }; Returns: string }
       handle_psychologist_approval: {
         Args: { admin_id: string; psychologist_id: string }
         Returns: undefined
@@ -1670,10 +1667,7 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: undefined
       }
-      is_super_admin: {
-        Args: { user_id_param?: string }
-        Returns: boolean
-      }
+      is_super_admin: { Args: { user_id_param?: string }; Returns: boolean }
       pode_criar_conversa: {
         Args: { p_paciente_id: string; p_psicologo_id: string }
         Returns: boolean
@@ -1682,22 +1676,10 @@ export type Database = {
         Args: { target_user_email: string }
         Returns: boolean
       }
-      reset_patient_weekly_goals_array: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      reset_weekly_goals: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      sync_consultation_counts: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      sync_psychologist_payments: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      reset_patient_weekly_goals_array: { Args: never; Returns: undefined }
+      reset_weekly_goals: { Args: never; Returns: undefined }
+      sync_consultation_counts: { Args: never; Returns: undefined }
+      sync_psychologist_payments: { Args: never; Returns: undefined }
       update_patient_activity_time: {
         Args: {
           p_activity_type: string
@@ -1706,18 +1688,9 @@ export type Database = {
         }
         Returns: undefined
       }
-      update_patient_streak: {
-        Args: { p_patient_id: string }
-        Returns: Json
-      }
-      validate_cpf: {
-        Args: { cpf_input: string }
-        Returns: boolean
-      }
-      validate_crp: {
-        Args: { crp_input: string }
-        Returns: boolean
-      }
+      update_patient_streak: { Args: { p_patient_id: string }; Returns: Json }
+      validate_cpf: { Args: { cpf_input: string }; Returns: boolean }
+      validate_crp: { Args: { crp_input: string }; Returns: boolean }
       validate_route_access: {
         Args: { route_path: string; user_id_param: string }
         Returns: boolean
