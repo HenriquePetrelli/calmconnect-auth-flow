@@ -2,72 +2,63 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Modern Design System - Mental Health App
-   Blue to Purple gradient with enhanced accessibility and responsive design
+/* Soliv Design System — Orange + Purple, Light & Dark
+   Inspired by Stripe (UI) + Google Meet (video)
+   All colors HSL. Use semantic tokens only.
 */
 
-/* Custom scrollbar styles */
-::-webkit-scrollbar {
-  width: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: hsl(var(--muted) / 0.3);
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: hsl(var(--primary) / 0.4);
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--primary) / 0.6);
-}
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: hsl(var(--muted) / 0.3); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: hsl(var(--primary) / 0.4); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--primary) / 0.6); }
 
 @layer base {
   :root {
-    /* Tab bar height */
     --tab-height: 72px;
-    
-    /* Base Colors - New Soliv Palette */
-    --background: 240 33% 98%;        /* #f9f9fb */
-    --foreground: 0 0% 7%;            /* #111111 */
-    
-    --card: 0 0% 100%;                /* #ffffff */
-    --card-foreground: 0 0% 7%;       /* #111111 */
-    
-    --popover: 0 0% 100%;             /* #ffffff */
-    --popover-foreground: 0 0% 7%;    /* #111111 */
-    
-    --primary: 230 100% 66%;          /* #5572ff */
-    --primary-foreground: 0 0% 100%;  /* #ffffff */
-    --primary-hover: 230 100% 56%;    /* Darker primary */
-    --primary-active: 230 100% 46%;   /* Even darker primary */
-    
-    --secondary: 0 0% 33%;            /* #555555 */
-    --secondary-foreground: 0 0% 100%; /* #ffffff */
-    --secondary-hover: 0 0% 25%;      /* Darker secondary */
-    --secondary-active: 0 0% 20%;     /* Even darker secondary */
-    
-    --muted: 230 20% 92%;             /* #e4e6f0 */
-    --muted-foreground: 0 0% 33%;     /* #555555 */
-    
-    --accent: 230 20% 92%;            /* #e4e6f0 */
-    --accent-foreground: 0 0% 7%;     /* #111111 */
-    
-    --destructive: 0 84% 60%;         /* #dc2626 */
-    --destructive-foreground: 0 0% 100%; /* #ffffff */
-    
-    --success: 142 76% 36%;           /* #16a34a */
-    --success-foreground: 0 0% 100%;  /* #ffffff */
-    
-    --warning: 48 96% 53%;            /* #facc15 */
-    --warning-foreground: 0 0% 7%;    /* #111111 */
-    
-    --border: 230 20% 92%;            /* #e4e6f0 */
-    --input: 230 20% 92%;             /* #e4e6f0 */
-    --ring: 230 100% 66%;             /* #5572ff */
+
+    /* Base — Light */
+    --background: 220 20% 98%;        /* #F9FAFB */
+    --foreground: 222 47% 11%;        /* #111827 */
+
+    --card: 0 0% 100%;                /* #FFFFFF */
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    /* Primary — Orange #F97316 */
+    --primary: 25 95% 53%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 21 90% 48%;      /* #EA580C */
+    --primary-active: 17 88% 40%;     /* #C2410C */
+    --primary-glow: 27 96% 61%;       /* #FB923C */
+
+    /* Secondary — Purple #7C3AED */
+    --secondary: 262 83% 58%;
+    --secondary-foreground: 0 0% 100%;
+    --secondary-hover: 263 70% 50%;   /* #6D28D9 */
+    --secondary-active: 263 69% 42%;  /* #5B21B6 */
+    --secondary-glow: 258 90% 66%;    /* #8B5CF6 */
+
+    --muted: 220 14% 96%;             /* #F3F4F6 */
+    --muted-foreground: 220 9% 46%;   /* #6B7280 */
+
+    --accent: 262 83% 96%;            /* light purple tint */
+    --accent-foreground: 263 69% 42%;
+
+    --destructive: 0 84% 60%;         /* #EF4444 */
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 222 47% 11%;
+
+    --border: 220 13% 91%;            /* #E5E7EB */
+    --input: 220 13% 91%;
+    --ring: 25 95% 53%;
     
     /* Category Colors */
     --category-appointments: 230 100% 66%;  /* #5572ff - Primary blue */
