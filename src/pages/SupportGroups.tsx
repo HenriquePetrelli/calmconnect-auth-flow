@@ -7,7 +7,7 @@ import { Heart, Info, ChevronDown, ChevronRight, Users } from 'lucide-react';
 import { useSupportGroups, useGroupSymptoms } from '@/hooks/useSupportGroups';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import BottomNavigation from '@/components/BottomNavigation';
+import PatientBottomNav from '@/components/PatientBottomNav';
 import BackButton from '@/components/BackButton';
 
 interface GroupCardProps {
@@ -163,7 +163,7 @@ const SupportGroups = () => {
             </div>
           </main>
         </div>
-        <BottomNavigation />
+        <PatientBottomNav />
       </div>
     );
   }
@@ -213,7 +213,7 @@ const SupportGroups = () => {
           </div>
         </main>
       </div>
-      <BottomNavigation />
+      <PatientBottomNav />
     </div>
   );
 };

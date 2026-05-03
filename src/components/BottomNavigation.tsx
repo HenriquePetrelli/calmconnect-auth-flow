@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Calendar, BarChart3 } from "lucide-react";
+import { Home, Calendar, BarChart3, MessageCircle } from "lucide-react";
 
 interface BottomNavigationProps {
   onSOSClick?: () => void;
@@ -28,6 +28,12 @@ const BottomNavigation = ({ onSOSClick }: BottomNavigationProps) => {
       label: "Consultas",
       path: "/appointments",
       isActive: location.pathname === "/appointments",
+    },
+    {
+      icon: MessageCircle,
+      label: "Chat",
+      path: "/chat",
+      isActive: location.pathname === "/chat",
     },
     {
       icon: BarChart3,
