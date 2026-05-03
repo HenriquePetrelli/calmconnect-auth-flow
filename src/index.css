@@ -44,10 +44,10 @@
     --muted: 220 14% 96%;             /* #F3F4F6 */
     --muted-foreground: 220 9% 46%;   /* #6B7280 */
 
-    /* Accent — neutral hover surface (NOT purple).
+    /* Accent — subtle ORANGE tint hover surface (primary brand).
        Purple is reserved for explicit secondary elements only. */
-    --accent: 220 14% 94%;            /* neutral gray hover */
-    --accent-foreground: 222 47% 11%; /* keep foreground readable */
+    --accent: 25 100% 96%;            /* very light orange tint ≈ rgba(249,115,22,0.08) */
+    --accent-foreground: 21 90% 40%;  /* primary-ish foreground on hover */
 
     --destructive: 0 84% 60%;         /* #EF4444 */
     --destructive-foreground: 0 0% 100%;
