@@ -44,8 +44,10 @@
     --muted: 220 14% 96%;             /* #F3F4F6 */
     --muted-foreground: 220 9% 46%;   /* #6B7280 */
 
-    --accent: 262 83% 96%;            /* light purple tint */
-    --accent-foreground: 263 69% 42%;
+    /* Accent — neutral hover surface (NOT purple).
+       Purple is reserved for explicit secondary elements only. */
+    --accent: 220 14% 94%;            /* neutral gray hover */
+    --accent-foreground: 222 47% 11%; /* keep foreground readable */
 
     --destructive: 0 84% 60%;         /* #EF4444 */
     --destructive-foreground: 0 0% 100%;
