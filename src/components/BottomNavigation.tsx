@@ -17,13 +17,6 @@ const BottomNavigation = ({ onSOSClick }: BottomNavigationProps) => {
       isActive: location.pathname === "/home",
     },
     {
-      icon: () => <span className="text-sm font-bold">SOS</span>,
-      label: "",
-      path: "/sos",
-      isActive: location.pathname === "/sos",
-      isSpecial: true,
-    },
-    {
       icon: Calendar,
       label: "Consultas",
       path: "/appointments",
@@ -34,6 +27,13 @@ const BottomNavigation = ({ onSOSClick }: BottomNavigationProps) => {
       label: "Chat",
       path: "/chat",
       isActive: location.pathname === "/chat",
+    },
+    {
+      icon: () => <span className="text-sm font-bold">SOS</span>,
+      label: "",
+      path: "/sos",
+      isActive: location.pathname === "/sos",
+      isSpecial: true,
     },
     {
       icon: BarChart3,
@@ -53,7 +53,7 @@ const BottomNavigation = ({ onSOSClick }: BottomNavigationProps) => {
             <button
               key={item.path}
               onClick={onSOSClick || (() => navigate(item.path))}
-              className="tab-item sos bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-105"
+              className="tab-item sos bg-primary hover:bg-primary-hover text-primary-foreground shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-105"
             >
               <Icon />
             </button>
@@ -66,12 +66,12 @@ const BottomNavigation = ({ onSOSClick }: BottomNavigationProps) => {
             onClick={() => navigate(item.path)}
             className={`tab-item flex flex-col items-center justify-center flex-1 h-full p-2 transition-all duration-200 relative rounded-lg ${
               item.isActive
-                ? "text-primary bg-primary/10"
+                ? "text-secondary bg-secondary/10"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
             {item.isActive && (
-              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-primary rounded-full transition-all duration-200"></div>
+              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-secondary rounded-full transition-all duration-200"></div>
             )}
             <Icon className="w-5 h-5 transition-all duration-200" />
             <span className="text-xs mt-1 transition-all duration-200">{item.label}</span>
