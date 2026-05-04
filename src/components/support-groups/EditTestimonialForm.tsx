@@ -103,24 +103,27 @@ const EditTestimonialForm = ({ groupName, testimonial, onSave, onCancel }: EditT
       <div className="space-y-3">
         <Label>Como você está se sentindo?</Label>
         <div className="grid grid-cols-3 gap-2">
-          {moodEmojis.map((emoji, index) => (
-            <Card
-              key={index}
-              className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
-                mood === index 
-                  ? 'ring-2 ring-primary bg-primary/10' 
-                  : 'hover:bg-accent'
-              }`}
-              onClick={() => setMood(index)}
-            >
-              <CardContent className="p-3 text-center">
-                <div className="text-2xl mb-1">{emoji}</div>
-                <div className="text-xs text-muted-foreground">
-                  {moodLabels[index]}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+          {JOURNAL_MOODS.map((m) => {
+            const Icon = m.Icon;
+            const isSelected = mood === m.value;
+            return (
+              <Card
+                key={m.value}
+                className={cn(
+                  'cursor-pointer transition-all duration-200 hover:shadow-md',
+                  isSelected ? `ring-2 ${m.borderClass} ${m.bgClass}` : 'hover:bg-accent'
+                )}
+                onClick={() => setMood(m.value)}
+              >
+                <CardContent className="p-3 text-center flex flex-col items-center gap-1">
+                  <Icon className={cn('w-6 h-6', isSelected ? m.colorClass : 'text-muted-foreground')} />
+                  <div className={cn('text-xs', isSelected ? m.colorClass : 'text-muted-foreground')}>
+                    {m.label}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </div>
 
