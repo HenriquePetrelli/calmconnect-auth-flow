@@ -134,6 +134,11 @@ const EditTestimonialForm = ({ groupName, testimonial, onSave, onCancel }: EditT
           placeholder="Compartilhe sua experiência, sentimentos ou qualquer coisa que possa ajudar outras pessoas..."
           value={text}
           onChange={(e) => setText(e.target.value)}
+          onFocus={(e) => {
+            setTimeout(() => {
+              e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 300);
+          }}
           rows={4}
           required
         />
