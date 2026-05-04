@@ -156,35 +156,40 @@ const HomeContent = () => {
       title: "Consultas",
       subtitle: "Agende suas consultas",
       onClick: () => navigate('/appointments'),
-      color: 'hsl(230,100%,66%)'
+      color: 'hsl(230,100%,66%)',
+      borderColor: 'hsl(230,100%,85%)'
     },
     {
       icon: Activity,
-      title: "Respiração Guiada", 
+      title: "Respiração Guiada",
       subtitle: "Exercícios de relaxamento",
       onClick: () => navigate('/breathing'),
-      color: 'hsl(142,76%,66%)'
+      color: 'hsl(142,76%,66%)',
+      borderColor: 'hsl(142,60%,85%)'
     },
     {
       icon: Headphones,
       title: "Sons Terapêuticos",
       subtitle: "Biblioteca de áudios calmantes",
       onClick: () => navigate('/sounds'),
-      color: 'hsl(271,91%,65%)'
+      color: 'hsl(271,91%,65%)',
+      borderColor: 'hsl(271,80%,88%)'
     },
     {
       icon: Users2,
       title: "Grupos de Apoio",
       subtitle: "Suporte da comunidade",
       onClick: () => navigate('/support-groups'),
-      color: 'hsl(45,93%,51%)'
+      color: 'hsl(45,93%,51%)',
+      borderColor: 'hsl(45,90%,80%)'
     },
     {
       icon: BookOpen,
       title: "Meu Diário",
       subtitle: "Diário pessoal",
       onClick: () => navigate('/journal'),
-      color: 'hsl(48,96%,53%)'
+      color: 'hsl(48,96%,53%)',
+      borderColor: 'hsl(48,90%,82%)'
     }
   ];
 
