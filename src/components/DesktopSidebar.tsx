@@ -70,6 +70,19 @@ export const DesktopSidebar: React.FC = () => {
         })}
       </nav>
 
+      {/* SOS / Ajuda Emergencial */}
+      <div className="px-4 pb-2">
+        <Button
+          variant="ghost"
+          className="w-full justify-start gap-3 h-12 text-left transition-all duration-200 text-white hover:opacity-90 hover:text-white"
+          style={{ backgroundColor: SOS_COLOR }}
+          onClick={() => navigate('/sos')}
+        >
+          <Heart className="w-5 h-5" fill="currentColor" />
+          <span className="font-medium">Ajuda Emergencial</span>
+        </Button>
+      </div>
+
       {/* Profile Card */}
       <div className="p-4 border-t border-primary-foreground/15">
         <button
