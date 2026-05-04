@@ -85,8 +85,8 @@ const GroupCard = ({ group, onToggleFavorite, onViewGroup }: GroupCardProps) => 
         </CardHeader>
 
         <CollapsibleContent>
-          <CardContent className="pt-0 border-t border-border/50">
-            <div className="flex items-center gap-2 mb-3">
+          <CardContent className="pt-3 border-t border-border/50">
+            <div className="flex items-center gap-2 mb-3 pt-3">
               {isOpen ? (
                 <ChevronDown className="w-4 h-4 text-muted-foreground" />
               ) : (
