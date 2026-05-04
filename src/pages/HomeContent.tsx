@@ -96,17 +96,6 @@ const HomeContent = () => {
     }
   };
 
-  const fetchUserProfile = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUserProfile(user);
-      }
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-    }
-  };
-
   const getMoodLabel = (value: number) => {
     const moods = [
       { emoji: '😀', label: 'Feliz', value: 5 },
