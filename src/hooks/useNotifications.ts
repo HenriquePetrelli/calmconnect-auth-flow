@@ -148,8 +148,9 @@ export const useNotifications = () => {
   useEffect(() => {
     if (!user) return;
 
-    const channel = supabase
-      .channel(`notifications-changes-${user.id}-${Date.now()}`)
+    const channel = supabase.channel(`notifications-changes-${user.id}-${Math.random().toString(36).slice(2)}`);
+
+    channel
       .on(
         'postgres_changes',
         {
@@ -159,7 +160,6 @@ export const useNotifications = () => {
           filter: `patient_id=eq.${user.id}`
         },
         (payload) => {
-          console.log('New notification received:', payload);
           const newNotification = payload.new as Notification;
           setNotifications(prev => [newNotification, ...prev]);
           setUnreadCount(prev => prev + 1);
@@ -170,7 +170,7 @@ export const useNotifications = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user?.id]);
 
   return {
     notifications,
