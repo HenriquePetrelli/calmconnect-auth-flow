@@ -101,8 +101,8 @@ const EditTestimonialForm = ({ groupName, testimonial, onSave, onCancel }: EditT
 
       {/* Mood Selection */}
       <div className="space-y-3">
-        <Label>Como você está se sentindo?</Label>
-        <div className="grid grid-cols-3 gap-2">
+        <Label>Como está se sentindo hoje?</Label>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-2">
           {JOURNAL_MOODS.map((m) => {
             const Icon = m.Icon;
             const isSelected = mood === m.value;
