@@ -37,8 +37,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const checkSubscription = async () => {
     try {
-      const { data: session } = await supabase.auth.getSession();
-      if (!session?.session) {
+      if (!user) {
         setLoading(false);
         return;
       }
