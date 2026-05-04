@@ -53,7 +53,7 @@ const BottomNavigation = ({ onSOSClick }: BottomNavigationProps) => {
             <button
               key={item.path}
               onClick={onSOSClick || (() => navigate(item.path))}
-              className="tab-item sos bg-primary hover:bg-primary-hover text-primary-foreground shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-105"
+              className="tab-item sos bg-primary-foreground hover:bg-primary-foreground/90 text-primary shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-105"
             >
               <Icon />
             </button>
