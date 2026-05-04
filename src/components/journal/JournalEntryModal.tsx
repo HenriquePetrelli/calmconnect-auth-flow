@@ -24,7 +24,7 @@ const JournalEntryModal = ({
   loading = false 
 }: JournalEntryModalProps) => {
   const [texto, setTexto] = useState('');
-  const [humor, setHumor] = useState(2); // Neutro como padrão
+  const [humor, setHumor] = useState<number>(DEFAULT_JOURNAL_MOOD);
   const { addActivity } = usePatientStatistics();
 
   useEffect(() => {
@@ -33,7 +33,7 @@ const JournalEntryModal = ({
       setHumor(editingEntry.humor);
     } else {
       setTexto('');
-      setHumor(2);
+      setHumor(DEFAULT_JOURNAL_MOOD);
     }
   }, [editingEntry]);
 
@@ -51,7 +51,7 @@ const JournalEntryModal = ({
 
   const handleClose = () => {
     setTexto('');
-    setHumor(2);
+    setHumor(DEFAULT_JOURNAL_MOOD);
     onClose();
   };
 
