@@ -6,7 +6,7 @@ import { NotificationButton } from "@/components/notifications/NotificationButto
 import BottomNavigation from "@/components/BottomNavigation";
 import ConfirmationModal from "@/components/sos/ConfirmationModal";
 import { DesktopSidebar } from "@/components/DesktopSidebar";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -15,30 +15,15 @@ interface MainLayoutProps {
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [showSOSModal, setShowSOSModal] = useState(false);
-  const [userProfile, setUserProfile] = useState<any>(null);
-
-  useEffect(() => {
-    fetchUserProfile();
-  }, []);
-
-  const fetchUserProfile = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUserProfile(user);
-      }
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-    }
-  };
 
   const handleSOSConfirm = () => {
     setShowSOSModal(false);
     navigate('/sos');
   };
 
-  const firstName = userProfile?.user_metadata?.full_name?.split(' ')[0] || 'Usuário';
+  const firstName = user?.user_metadata?.full_name?.split(' ')[0] || 'Usuário';
 
   const getPageTitle = () => {
     switch (location.pathname) {
