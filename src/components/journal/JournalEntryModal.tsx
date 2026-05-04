@@ -91,18 +91,22 @@ const JournalEntryModal = ({
           <div className="space-y-2">
             <Label>Como está seu humor?</Label>
             <div className="grid grid-cols-3 gap-2">
-              {moodEmojis.map((emoji, index) => (
-                <Button
-                  key={index}
-                  type="button"
-                  variant={humor === index ? "default" : "outline"}
-                  onClick={() => setHumor(index)}
-                  className="flex flex-col items-center gap-1 h-auto py-3"
-                >
-                  <span className="text-2xl">{emoji}</span>
-                  <span className="text-xs">{moodLabels[index]}</span>
-                </Button>
-              ))}
+              {JOURNAL_MOODS.map((mood) => {
+                const Icon = mood.Icon;
+                const isSelected = humor === mood.value;
+                return (
+                  <Button
+                    key={mood.value}
+                    type="button"
+                    variant={isSelected ? "default" : "outline"}
+                    onClick={() => setHumor(mood.value)}
+                    className="flex flex-col items-center gap-1 h-auto py-3"
+                  >
+                    <Icon className={cn('w-6 h-6', !isSelected && mood.colorClass)} />
+                    <span className="text-xs">{mood.label}</span>
+                  </Button>
+                );
+              })}
             </div>
           </div>
         </div>
