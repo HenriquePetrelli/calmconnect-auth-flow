@@ -107,21 +107,20 @@ const EditTestimonialForm = ({ groupName, testimonial, onSave, onCancel }: EditT
             const Icon = m.Icon;
             const isSelected = mood === m.value;
             return (
-              <Card
+              <button
                 key={m.value}
-                className={cn(
-                  'cursor-pointer transition-all duration-200 hover:shadow-md',
-                  isSelected ? `ring-2 ${m.borderClass} ${m.bgClass}` : 'hover:bg-accent'
-                )}
+                type="button"
                 onClick={() => setMood(m.value)}
+                className={cn(
+                  'flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all duration-200 hover:scale-[1.02] bg-background',
+                  isSelected ? `${m.borderClass} ${m.bgClass}` : 'border-border hover:border-foreground/20'
+                )}
               >
-                <CardContent className="p-3 text-center flex flex-col items-center gap-1">
-                  <Icon className={cn('w-6 h-6', isSelected ? m.colorClass : 'text-muted-foreground')} />
-                  <div className={cn('text-xs', isSelected ? m.colorClass : 'text-muted-foreground')}>
-                    {m.label}
-                  </div>
-                </CardContent>
-              </Card>
+                <Icon className={cn('w-7 h-7', isSelected ? m.colorClass : 'text-muted-foreground')} />
+                <span className={cn('text-sm font-medium', isSelected ? m.colorClass : 'text-muted-foreground')}>
+                  {m.label}
+                </span>
+              </button>
             );
           })}
         </div>
