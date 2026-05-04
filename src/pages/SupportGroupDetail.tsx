@@ -389,7 +389,7 @@ const SupportGroupDetail = () => {
                     {!isPremiumUser && <Crown className="w-4 h-4 ml-2" />}
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-lg">
+                <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Adicionar Depoimento</DialogTitle>
                   </DialogHeader>
@@ -404,7 +404,7 @@ const SupportGroupDetail = () => {
 
             {/* Edit Testimonial Dialog */}
             <Dialog open={showEditTestimonial} onOpenChange={setShowEditTestimonial}>
-              <DialogContent className="max-w-lg">
+              <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Editar Depoimento</DialogTitle>
                 </DialogHeader>
