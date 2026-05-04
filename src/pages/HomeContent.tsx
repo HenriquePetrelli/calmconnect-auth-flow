@@ -8,7 +8,7 @@ import {
   BookOpen
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { MoodSelectionModal } from "@/components/MoodSelectionModal";
+import { MoodAccordion } from "@/components/MoodAccordion";
 import { WeeklyGoalModal } from "@/components/goals/WeeklyGoalModal";
 import { GoalSelectionModal } from "@/components/goals/GoalSelectionModal";
 import { useEffect, useState } from "react";
@@ -24,8 +24,6 @@ const HomeContent = () => {
   const isMobile = useIsMobile();
   const { user } = useAuth();
   const userProfile = user;
-  const [currentMood, setCurrentMood] = useState<string | null>(null);
-  const [showMoodModal, setShowMoodModal] = useState(false);
   const [moodEnabled, setMoodEnabled] = useState(true);
   const [todayMoodValue, setTodayMoodValue] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -74,22 +72,9 @@ const HomeContent = () => {
 
       // Reset mood daily at 00:01 Brazil time
       if (!patientData?.last_mood_date || patientData.last_mood_date !== today) {
-        setCurrentMood(null);
         setTodayMoodValue(null);
       } else {
-        // Show today's mood if it exists
         setTodayMoodValue(patientData.last_mood_value);
-        const moods = [
-          { emoji: '😀', label: 'Feliz', value: 5 },
-          { emoji: '🙂', label: 'Calmo', value: 4 },
-          { emoji: '😐', label: 'Neutro', value: 3 },
-          { emoji: '😔', label: 'Triste', value: 2 },
-          { emoji: '😡', label: 'Irritado', value: 1 }
-        ];
-        const todayMood = moods.find(mood => mood.value === patientData.last_mood_value);
-        if (todayMood) {
-          setCurrentMood(todayMood.emoji);
-        }
       }
     } catch (error) {
       console.error('Error checking today mood:', error);
