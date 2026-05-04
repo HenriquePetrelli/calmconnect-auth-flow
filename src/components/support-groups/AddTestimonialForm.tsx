@@ -141,18 +141,7 @@ const AddTestimonialForm = ({ groupId, groupName, onSuccess, onCancel }: AddTest
       </div>
 
       {/* Action Buttons */}
-      <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
-        {onCancel && (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onCancel}
-            disabled={isSubmitting}
-            className="w-full sm:w-auto"
-          >
-            Cancelar
-          </Button>
-        )}
+      <div className="flex justify-end">
         <Button
           type="submit"
           disabled={!text.trim() || text.length > 500 || isSubmitting}
