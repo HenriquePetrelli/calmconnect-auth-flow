@@ -58,8 +58,8 @@ export const DesktopSidebar: React.FC = () => {
               variant="ghost"
               className={`
                 w-full justify-start gap-3 h-12 text-left transition-all duration-200
-                text-primary-foreground hover:bg-primary-foreground/15 hover:text-primary-foreground
-                ${isActive ? 'bg-primary-foreground/20' : ''}
+                text-secondary-foreground hover:bg-secondary-foreground/15 hover:text-secondary-foreground
+                ${isActive ? 'bg-secondary-foreground/20' : ''}
               `}
               onClick={() => navigate(item.path)}
             >
