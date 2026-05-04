@@ -397,6 +397,7 @@ const SupportGroupDetail = () => {
                     groupId={groupId}
                     groupName={groupName}
                     onSuccess={handleTestimonialAdded}
+                    onCancel={() => setShowAddTestimonial(false)}
                   />
                 </DialogContent>
               </Dialog>
