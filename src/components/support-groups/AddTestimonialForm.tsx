@@ -9,7 +9,7 @@ import { useGroupTestimonials, useGroupSymptoms } from '@/hooks/useSupportGroups
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { usePatientStatistics } from '@/hooks/usePatientStatistics';
 import { Loader2 } from 'lucide-react';
-import { JOURNAL_MOODS } from '@/components/journal/journalMoods';
+import { JOURNAL_MOODS, DEFAULT_JOURNAL_MOOD } from '@/components/journal/journalMoods';
 import { cn } from '@/lib/utils';
 
 interface AddTestimonialFormProps {
