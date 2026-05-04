@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Calendar, BarChart3, MessageCircle, Heart } from "lucide-react";
+import { Home, Calendar, BarChart3, MessageCircle, Sun } from "lucide-react";
 
 const SOS_COLOR = '#a55355';
 
@@ -25,7 +25,7 @@ const BottomNavigation = ({ onSOSClick }: BottomNavigationProps) => {
       isActive: location.pathname === "/chat",
     },
     {
-      icon: () => <Heart className="w-7 h-7 text-white" fill="currentColor" />,
+      icon: () => <Sun className="w-7 h-7 text-white" />,
       label: "",
       path: "/sos",
       isActive: location.pathname === "/sos",

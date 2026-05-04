@@ -152,14 +152,6 @@ const HomeContent = () => {
 
   const features = [
     {
-      icon: Calendar,
-      title: "Consultas",
-      subtitle: "Agende suas consultas",
-      onClick: () => navigate('/appointments'),
-      color: 'hsl(230,100%,66%)',
-      borderColor: 'hsl(230,100%,85%)'
-    },
-    {
       icon: Activity,
       title: "Respiração Guiada",
       subtitle: "Exercícios de relaxamento",
@@ -180,16 +172,16 @@ const HomeContent = () => {
       title: "Grupos de Apoio",
       subtitle: "Suporte da comunidade",
       onClick: () => navigate('/support-groups'),
-      color: 'hsl(45,93%,51%)',
-      borderColor: 'hsl(45,90%,80%)'
+      color: 'hsl(230,100%,66%)',
+      borderColor: 'hsl(230,100%,85%)'
     },
     {
       icon: BookOpen,
       title: "Meu Diário",
       subtitle: "Diário pessoal",
       onClick: () => navigate('/journal'),
-      color: 'hsl(48,96%,53%)',
-      borderColor: 'hsl(48,90%,82%)'
+      color: 'hsl(45,93%,51%)',
+      borderColor: 'hsl(45,90%,80%)'
     }
   ];
 
