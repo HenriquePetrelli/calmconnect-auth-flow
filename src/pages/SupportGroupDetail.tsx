@@ -93,10 +93,16 @@ const TestimonialCard = ({ testimonial, symptomName, onLike, onEdit, onDelete, c
             </div>
             <div className="flex items-center gap-3 text-sm text-muted-foreground">
               <span>{formatDate(testimonial.criado_em)}</span>
-              <div className="flex items-center gap-1">
-                <span>{moodEmojis[testimonial.humor]}</span>
-                <span>{moodLabels[testimonial.humor]}</span>
-              </div>
+              {(() => {
+                const m = getJournalMood(testimonial.humor);
+                const Icon = m.Icon;
+                return (
+                  <div className="flex items-center gap-1">
+                    <Icon className={cn('w-4 h-4', m.colorClass)} />
+                    <span>{m.label}</span>
+                  </div>
+                );
+              })()}
             </div>
           </div>
 
