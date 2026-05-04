@@ -1,7 +1,6 @@
 import { Button } from '@/components/ui/button';
-
-const moodEmojis = ['😞', '😔', '😐', '🙂', '😊', '😄'];
-const moodLabels = ['Muito triste', 'Triste', 'Neutro', 'Bem', 'Feliz', 'Muito feliz'];
+import { JOURNAL_MOODS } from './journalMoods';
+import { cn } from '@/lib/utils';
 
 interface MoodFilterProps {
   selectedMood: number | null;
@@ -19,20 +18,24 @@ const MoodFilter = ({ selectedMood, onMoodSelect }: MoodFilterProps) => {
       >
         Todos
       </Button>
-      
-      {moodEmojis.map((emoji, index) => (
-        <Button
-          key={index}
-          variant={selectedMood === index ? "default" : "outline"}
-          size="sm"
-          onClick={() => onMoodSelect(index)}
-          className="flex items-center gap-1 flex-shrink-0"
-          title={moodLabels[index]}
-        >
-          <span>{emoji}</span>
-          <span className="text-xs hidden sm:inline">{moodLabels[index]}</span>
-        </Button>
-      ))}
+
+      {JOURNAL_MOODS.map((mood) => {
+        const Icon = mood.Icon;
+        const isSelected = selectedMood === mood.value;
+        return (
+          <Button
+            key={mood.value}
+            variant={isSelected ? "default" : "outline"}
+            size="sm"
+            onClick={() => onMoodSelect(mood.value)}
+            className="flex items-center gap-1 flex-shrink-0"
+            title={mood.label}
+          >
+            <Icon className={cn('w-4 h-4', !isSelected && mood.colorClass)} />
+            <span className="text-xs hidden sm:inline">{mood.label}</span>
+          </Button>
+        );
+      })}
     </div>
   );
 };
