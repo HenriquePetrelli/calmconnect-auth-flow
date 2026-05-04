@@ -396,7 +396,7 @@ const SupportGroupDetail = () => {
                       Compartilhe sua experiência com o grupo.
                     </DialogDescription>
                   </DialogHeader>
-                  <div className="flex-1 overflow-y-auto px-6 py-4 pb-12">
+                  <div className="flex-1 overflow-y-auto px-6 py-4 pb-32 sm:pb-12">
                     <AddTestimonialForm
                       groupId={groupId}
                       groupName={groupName}
@@ -417,7 +417,7 @@ const SupportGroupDetail = () => {
                     Atualize as informações do seu depoimento.
                   </DialogDescription>
                 </DialogHeader>
-                <div className="flex-1 overflow-y-auto px-6 py-4 pb-12">
+                <div className="flex-1 overflow-y-auto px-6 py-4 pb-32 sm:pb-12">
                   {editingTestimonial && (
                     <EditTestimonialForm
                       groupName={groupName}
