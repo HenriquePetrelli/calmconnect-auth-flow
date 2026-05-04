@@ -22,10 +22,14 @@ export const preloadRoute = (path: string) => {
 export const preloadCoreRoutesWhenIdle = () => {
   const preload = () => ["/home", "/chat", "/sos", "/appointments", "/statistics"].forEach(preloadRoute);
 
-  if ("requestIdleCallback" in window) {
-    window.requestIdleCallback(preload, { timeout: 2500 });
+  const requestIdleCallback = (globalThis as typeof globalThis & {
+    requestIdleCallback?: (callback: () => void, options?: { timeout?: number }) => void;
+  }).requestIdleCallback;
+
+  if (requestIdleCallback) {
+    requestIdleCallback(preload, { timeout: 2500 });
     return;
   }
 
-  window.setTimeout(preload, 1200);
+  globalThis.setTimeout(preload, 1200);
 };
