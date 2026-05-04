@@ -4,7 +4,7 @@ import {
   Home,
   MessageCircle,
   Calendar,
-  Heart,
+  Sun,
   BarChart3,
   ChevronRight
 } from 'lucide-react';
@@ -78,7 +78,7 @@ export const DesktopSidebar: React.FC = () => {
           style={{ backgroundColor: SOS_COLOR }}
           onClick={() => navigate('/sos')}
         >
-          <Heart className="w-5 h-5" fill="currentColor" />
+          <Sun className="w-5 h-5" />
           <span className="font-medium">Ajuda Emergencial</span>
         </Button>
       </div>

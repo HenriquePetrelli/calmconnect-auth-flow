@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Bell, Sun, User } from "lucide-react";
+import { Bell, User } from "lucide-react";
+import logoImg from '@/assets/soliv-logo.webp';
 import { Button } from "@/components/ui/button";
 import { NotificationButton } from "@/components/notifications/NotificationButton";
 import BottomNavigation from "@/components/BottomNavigation";
@@ -87,7 +88,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               
               {/* SOLIV CENTRALIZADO */}
               <div className="flex items-center space-x-2 absolute left-1/2 transform -translate-x-1/2">
-                <Sun className="w-6 h-6 text-primary" />
+                <img src={logoImg} alt="Soliv" className="w-7 h-7 object-contain select-none" draggable={false} />
                 <span className="text-xl font-bold text-foreground">Soliv</span>
               </div>
               
