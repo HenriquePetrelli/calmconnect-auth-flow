@@ -55,7 +55,9 @@ const BottomNavigation = ({ onSOSClick }: BottomNavigationProps) => {
             <button
               key={item.path}
               onClick={onSOSClick || (() => navigate(item.path))}
-              className="tab-item sos bg-primary-foreground hover:bg-primary-foreground/90 text-primary shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-105"
+              className="tab-item sos hover:opacity-90 text-white shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-105"
+              style={{ backgroundColor: SOS_COLOR }}
+              aria-label="Ajuda Emergencial"
             >
               <Icon />
             </button>
