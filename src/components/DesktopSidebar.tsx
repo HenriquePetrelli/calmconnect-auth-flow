@@ -33,10 +33,10 @@ export const DesktopSidebar: React.FC = () => {
   return (
     <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:bg-secondary lg:text-secondary-foreground lg:border-r lg:border-secondary/40">
       {/* Logo Section */}
-      <div className="flex items-center justify-center p-6 border-b border-primary-foreground/15">
+      <div className="flex items-center justify-center p-6 border-b border-secondary-foreground/15">
         <div
           className="bg-white rounded-full p-3 flex items-center justify-center shadow-md"
-          style={{ border: '2px solid hsl(var(--primary-glow))' }}
+          style={{ border: '2px solid hsl(var(--secondary-glow))' }}
         >
           <img
             src={logoImg}
