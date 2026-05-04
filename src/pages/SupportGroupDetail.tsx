@@ -17,9 +17,8 @@ import AddTestimonialForm from '@/components/support-groups/AddTestimonialForm';
 import EditTestimonialForm from '@/components/support-groups/EditTestimonialForm';
 import SubscriptionUpgradeModal from '@/components/SubscriptionUpgradeModal';
 import { useSubscription } from '@/contexts/SubscriptionContext';
-
-const moodEmojis = ['😞', '😔', '😐', '🙂', '😊', '😄'];
-const moodLabels = ['Muito triste', 'Triste', 'Neutro', 'Bem', 'Feliz', 'Muito feliz'];
+import { getJournalMood } from '@/components/journal/journalMoods';
+import { cn } from '@/lib/utils';
 
 interface TestimonialCardProps {
   testimonial: {
