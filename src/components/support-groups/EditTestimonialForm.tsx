@@ -7,9 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent } from '@/components/ui/card';
 import { useGroupSymptoms } from '@/hooks/useSupportGroups';
 import { Loader2 } from 'lucide-react';
-
-const moodEmojis = ['😞', '😔', '😐', '🙂', '😊', '😄'];
-const moodLabels = ['Muito triste', 'Triste', 'Neutro', 'Bem', 'Feliz', 'Muito feliz'];
+import { JOURNAL_MOODS } from '@/components/journal/journalMoods';
+import { cn } from '@/lib/utils';
 
 interface EditTestimonialFormProps {
   groupName: string;
