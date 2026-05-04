@@ -239,7 +239,7 @@ const HomeContent = () => {
                 <div
                   key={index}
                   className="bg-card/80 backdrop-blur-sm rounded-xl p-4 border-2 transition-all group cursor-pointer shadow-sm hover:shadow-md flex items-center gap-4"
-                  style={{ borderColor: feature.color }}
+                  style={{ borderColor: feature.borderColor }}
                   onClick={feature.onClick}
                 >
                   <div
