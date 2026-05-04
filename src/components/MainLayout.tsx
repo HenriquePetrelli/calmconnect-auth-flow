@@ -103,14 +103,14 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           </header>
 
           {/* Desktop Header */}
-          <header className="hidden lg:block bg-card/80 backdrop-blur-md border-b border-border p-6">
+          <header className="hidden lg:block bg-card/80 backdrop-blur-md border-b border-border px-6 py-3">
             <div className="max-w-6xl mx-auto flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold text-foreground mb-2">
+                <h1 className="text-2xl font-bold text-foreground">
                   {getPageTitle()}
                 </h1>
-                {location.pathname === '/home' && (
-                  <p className="text-muted-foreground">Como você está se sentindo hoje?</p>
+                {location.pathname === '/home' && moodEnabled && (
+                  <p className="text-sm text-muted-foreground">Como você está se sentindo hoje?</p>
                 )}
               </div>
               <div className="flex items-center gap-4">
