@@ -83,19 +83,19 @@ export const DesktopSidebar: React.FC = () => {
       </div>
 
       {/* Profile Card */}
-      <div className="p-4 border-t border-primary-foreground/15">
+      <div className="p-4 border-t border-secondary-foreground/15">
         <button
           onClick={() => navigate('/profile')}
-          className="w-full flex items-center gap-3 p-3 rounded-2xl bg-primary-foreground/10 hover:bg-primary-foreground/20 transition-colors text-left"
+          className="w-full flex items-center gap-3 p-3 rounded-2xl bg-secondary-foreground/10 hover:bg-secondary-foreground/20 transition-colors text-left"
         >
-          <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
-            <span className="text-secondary-foreground font-semibold">{initial}</span>
+          <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+            <span className="text-primary-foreground font-semibold">{initial}</span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-semibold text-primary-foreground truncate">{firstName}</p>
-            <p className="text-xs text-primary-foreground/70">Ver perfil</p>
+            <p className="font-semibold text-secondary-foreground truncate">{firstName}</p>
+            <p className="text-xs text-secondary-foreground/70">Ver perfil</p>
           </div>
-          <ChevronRight className="w-4 h-4 text-primary-foreground/70 flex-shrink-0" />
+          <ChevronRight className="w-4 h-4 text-secondary-foreground/70 flex-shrink-0" />
         </button>
       </div>
     </aside>
