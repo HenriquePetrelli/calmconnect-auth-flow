@@ -9,7 +9,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import Logo from '@/components/Logo';
+import logoImg from '@/assets/soliv-logo.webp';
 import { useAuth } from '@/contexts/AuthContext';
 
 const sidebarItems = [
@@ -33,8 +33,17 @@ export const DesktopSidebar: React.FC = () => {
     <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:bg-primary lg:text-primary-foreground lg:border-r lg:border-primary/40">
       {/* Logo Section */}
       <div className="flex items-center justify-center p-6 border-b border-primary-foreground/15">
-        <div className="bg-white rounded-full p-3 flex items-center justify-center shadow-md">
-          <Logo className="scale-75" />
+        <div
+          className="bg-white rounded-full p-3 flex items-center justify-center shadow-md"
+          style={{ border: '2px solid hsl(var(--primary-glow))' }}
+        >
+          <img
+            src={logoImg}
+            alt="Soliv"
+            style={{ width: '80px', height: '80px' }}
+            className="object-contain select-none"
+            draggable={false}
+          />
         </div>
       </div>
 
