@@ -21,7 +21,7 @@ interface AddTestimonialFormProps {
 const AddTestimonialForm = ({ groupId, groupName, onSuccess }: AddTestimonialFormProps) => {
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [selectedSymptom, setSelectedSymptom] = useState<string>('');
-  const [mood, setMood] = useState<number>(2);
+  const [mood, setMood] = useState<number>(DEFAULT_JOURNAL_MOOD);
   const [text, setText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
