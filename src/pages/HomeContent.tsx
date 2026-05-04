@@ -222,31 +222,54 @@ const HomeContent = () => {
           </div>
         )}
 
-        {/* Resources Section - Improved Grid */}
+        {/* Resources Section */}
         <section className="mb-8">
           <h2 className="text-lg font-semibold text-foreground mb-4">Seus recursos</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+
+          {/* Desktop: horizontal cards in 2 columns */}
+          <div className="hidden lg:grid grid-cols-2 gap-4">
             {features.map((feature, index) => {
               const Icon = feature.icon;
               return (
-                <div 
-                  key={index} 
-                  className="bg-card/80 backdrop-blur-sm rounded-xl p-4 border transition-colors group cursor-pointer shadow-sm hover:border-primary/50"
+                <div
+                  key={index}
+                  className="bg-card/80 backdrop-blur-sm rounded-xl p-4 border-2 transition-all group cursor-pointer shadow-sm hover:shadow-md flex items-center gap-4"
                   style={{ borderColor: feature.color }}
                   onClick={feature.onClick}
                 >
-                  <div className="flex flex-col items-center text-center">
-                    <div 
-                      className="w-12 h-12 rounded-lg flex items-center justify-center mb-3 group-hover:scale-105 transition-transform"
-                      style={{ backgroundColor: `${feature.color}20` }}
-                    >
-                      <Icon className="w-6 h-6 opacity-60" style={{ color: feature.color }} />
-                    </div>
-                    <h3 className="font-semibold text-foreground mb-1 text-sm lg:text-base opacity-60">{feature.title}</h3>
-                    {!isMobile && (
-                      <p className="text-xs text-muted-foreground opacity-60">{feature.subtitle}</p>
-                    )}
+                  <div
+                    className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform"
+                    style={{ backgroundColor: feature.color }}
+                  >
+                    <Icon className="w-6 h-6 text-white" />
                   </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-foreground text-base leading-tight">{feature.title}</h3>
+                    <p className="text-sm text-muted-foreground mt-0.5">{feature.subtitle}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Mobile/Tablet: square cards */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 lg:hidden">
+            {features.map((feature, index) => {
+              const Icon = feature.icon;
+              return (
+                <div
+                  key={index}
+                  className="bg-card/80 backdrop-blur-sm rounded-xl p-3 border-2 transition-all group cursor-pointer shadow-sm hover:shadow-md aspect-square flex flex-col items-center justify-center text-center"
+                  style={{ borderColor: feature.color }}
+                  onClick={feature.onClick}
+                >
+                  <div
+                    className="w-12 h-12 rounded-lg flex items-center justify-center mb-2 group-hover:scale-105 transition-transform"
+                    style={{ backgroundColor: feature.color }}
+                  >
+                    <Icon className="w-6 h-6 text-white" />
+                  </div>
+                  <h3 className="font-semibold text-foreground text-sm leading-tight">{feature.title}</h3>
                 </div>
               );
             })}
