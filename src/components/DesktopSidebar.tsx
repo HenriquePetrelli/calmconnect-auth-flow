@@ -33,7 +33,9 @@ export const DesktopSidebar: React.FC = () => {
     <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:bg-primary lg:text-primary-foreground lg:border-r lg:border-primary/40">
       {/* Logo Section */}
       <div className="flex items-center justify-center p-6 border-b border-primary-foreground/15">
-        <Logo className="scale-75" />
+        <div className="bg-white rounded-full p-3 flex items-center justify-center shadow-md">
+          <Logo className="scale-75" />
+        </div>
       </div>
 
       {/* Navigation */}
