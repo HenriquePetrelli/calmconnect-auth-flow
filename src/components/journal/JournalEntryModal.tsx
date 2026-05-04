@@ -57,8 +57,8 @@ const JournalEntryModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="p-0 gap-0 max-w-full w-screen h-[100dvh] sm:h-auto sm:max-h-[90vh] sm:max-w-[500px] sm:rounded-lg rounded-none flex flex-col">
+        <DialogHeader className="sticky top-0 z-10 bg-background border-b px-6 py-4 text-left">
           <DialogTitle>
             {editingEntry ? 'Editar Anotação' : 'Nova Anotação do Diário'}
           </DialogTitle>
@@ -70,60 +70,62 @@ const JournalEntryModal = ({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
-          {/* Seletor de humor — mesmo layout do registro de humor */}
-          <div className="space-y-2">
-            <Label>Como está se sentindo hoje?</Label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-2">
-              {JOURNAL_MOODS.map((mood) => {
-                const Icon = mood.Icon;
-                const isSelected = humor === mood.value;
-                return (
-                  <button
-                    key={mood.value}
-                    type="button"
-                    onClick={() => setHumor(mood.value)}
-                    className={cn(
-                      'flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all duration-200 hover:scale-[1.02] bg-background',
-                      isSelected ? `${mood.borderClass} ${mood.bgClass}` : 'border-border hover:border-foreground/20'
-                    )}
-                  >
-                    <Icon className={cn('w-7 h-7', isSelected ? mood.colorClass : 'text-muted-foreground')} />
-                    <span className={cn('text-sm font-medium', isSelected ? mood.colorClass : 'text-muted-foreground')}>
-                      {mood.label}
-                    </span>
-                  </button>
-                );
-              })}
+        <div className="flex-1 overflow-y-auto px-6 py-4">
+          <div className="space-y-4">
+            {/* Seletor de humor — mesmo layout do registro de humor */}
+            <div className="space-y-2">
+              <Label>Como está se sentindo hoje?</Label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-2">
+                {JOURNAL_MOODS.map((mood) => {
+                  const Icon = mood.Icon;
+                  const isSelected = humor === mood.value;
+                  return (
+                    <button
+                      key={mood.value}
+                      type="button"
+                      onClick={() => setHumor(mood.value)}
+                      className={cn(
+                        'flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all duration-200 hover:scale-[1.02] bg-background',
+                        isSelected ? `${mood.borderClass} ${mood.bgClass}` : 'border-border hover:border-foreground/20'
+                      )}
+                    >
+                      <Icon className={cn('w-7 h-7', isSelected ? mood.colorClass : 'text-muted-foreground')} />
+                      <span className={cn('text-sm font-medium', isSelected ? mood.colorClass : 'text-muted-foreground')}>
+                        {mood.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
 
-          {/* Campo de texto */}
-          <div className="space-y-2">
-            <Label htmlFor="texto">Sua anotação</Label>
-            <Textarea
-              id="texto"
-              placeholder="Escreva seus pensamentos e sentimentos..."
-              value={texto}
-              onChange={(e) => setTexto(e.target.value)}
-              className="min-h-[120px] resize-none"
-              maxLength={1000}
-            />
-            <div className="text-xs text-muted-foreground text-right">
-              {texto.length}/1000 caracteres
+            {/* Campo de texto */}
+            <div className="space-y-2">
+              <Label htmlFor="texto">Sua anotação</Label>
+              <Textarea
+                id="texto"
+                placeholder="Escreva seus pensamentos e sentimentos..."
+                value={texto}
+                onChange={(e) => setTexto(e.target.value)}
+                className="min-h-[120px] resize-none"
+                maxLength={1000}
+              />
+              <div className="text-xs text-muted-foreground text-right">
+                {texto.length}/1000 caracteres
+              </div>
             </div>
+
+            <DialogFooter className="pt-2 pb-8 sm:pb-2">
+              <Button 
+                onClick={handleSave} 
+                disabled={!texto.trim() || loading}
+                className="w-full sm:w-auto"
+              >
+                {loading ? 'Salvando...' : 'Salvar'}
+              </Button>
+            </DialogFooter>
           </div>
         </div>
-
-        <DialogFooter>
-          <Button 
-            onClick={handleSave} 
-            disabled={!texto.trim() || loading}
-            className="w-full sm:w-auto"
-          >
-            {loading ? 'Salvando...' : 'Salvar'}
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
