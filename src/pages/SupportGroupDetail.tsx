@@ -8,7 +8,7 @@ import { Info, Plus, User, ThumbsUp, ThumbsDown, Edit, Trash2, Filter, Crown } f
 import { supabase } from '@/integrations/supabase/client';
 import { useGroupTestimonials, useGroupSymptoms } from '@/hooks/useSupportGroups';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import PatientBottomNav from '@/components/PatientBottomNav';
@@ -389,37 +389,47 @@ const SupportGroupDetail = () => {
                     {!isPremiumUser && <Crown className="w-4 h-4 ml-2" />}
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
+                <DialogContent className="p-0 gap-0 max-w-full w-screen h-[100dvh] sm:h-auto sm:max-h-[90vh] sm:max-w-lg sm:rounded-lg rounded-none flex flex-col">
+                  <DialogHeader className="sticky top-0 z-10 bg-background border-b px-6 py-4 text-left">
                     <DialogTitle>Adicionar Depoimento</DialogTitle>
+                    <DialogDescription>
+                      Compartilhe sua experiência com o grupo.
+                    </DialogDescription>
                   </DialogHeader>
-                  <AddTestimonialForm
-                    groupId={groupId}
-                    groupName={groupName}
-                    onSuccess={handleTestimonialAdded}
-                    onCancel={() => setShowAddTestimonial(false)}
-                  />
+                  <div className="flex-1 overflow-y-auto px-6 py-4 pb-12">
+                    <AddTestimonialForm
+                      groupId={groupId}
+                      groupName={groupName}
+                      onSuccess={handleTestimonialAdded}
+                      onCancel={() => setShowAddTestimonial(false)}
+                    />
+                  </div>
                 </DialogContent>
               </Dialog>
             </div>
 
             {/* Edit Testimonial Dialog */}
             <Dialog open={showEditTestimonial} onOpenChange={setShowEditTestimonial}>
-              <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
+              <DialogContent className="p-0 gap-0 max-w-full w-screen h-[100dvh] sm:h-auto sm:max-h-[90vh] sm:max-w-lg sm:rounded-lg rounded-none flex flex-col">
+                <DialogHeader className="sticky top-0 z-10 bg-background border-b px-6 py-4 text-left">
                   <DialogTitle>Editar Depoimento</DialogTitle>
+                  <DialogDescription>
+                    Atualize as informações do seu depoimento.
+                  </DialogDescription>
                 </DialogHeader>
-                {editingTestimonial && (
-                  <EditTestimonialForm
-                    groupName={groupName}
-                    testimonial={editingTestimonial}
-                    onSave={handleUpdateTestimonial}
-                    onCancel={() => {
-                      setShowEditTestimonial(false);
-                      setEditingTestimonial(null);
-                    }}
-                  />
-                )}
+                <div className="flex-1 overflow-y-auto px-6 py-4 pb-12">
+                  {editingTestimonial && (
+                    <EditTestimonialForm
+                      groupName={groupName}
+                      testimonial={editingTestimonial}
+                      onSave={handleUpdateTestimonial}
+                      onCancel={() => {
+                        setShowEditTestimonial(false);
+                        setEditingTestimonial(null);
+                      }}
+                    />
+                  )}
+                </div>
               </DialogContent>
             </Dialog>
 
