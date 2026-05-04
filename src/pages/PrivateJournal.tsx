@@ -27,7 +27,7 @@ const PrivateJournal = () => {
   const [modalLoading, setModalLoading] = useState(false);
 
   useEffect(() => {
-    fetchEntries(selectedMood || undefined);
+    fetchEntries(selectedMood ?? undefined);
   }, [fetchEntries, selectedMood]);
 
   const handleCreateEntry = () => {
