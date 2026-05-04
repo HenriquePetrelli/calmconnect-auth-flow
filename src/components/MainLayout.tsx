@@ -7,6 +7,7 @@ import BottomNavigation from "@/components/BottomNavigation";
 import ConfirmationModal from "@/components/sos/ConfirmationModal";
 import { DesktopSidebar } from "@/components/DesktopSidebar";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface MainLayoutProps {
   children: React.ReactNode;
