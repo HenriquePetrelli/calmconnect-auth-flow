@@ -143,19 +143,20 @@ const EditTestimonialForm = ({ groupName, testimonial, onSave, onCancel }: EditT
       </div>
 
       {/* Action Buttons */}
-      <div className="flex justify-end gap-3">
+      <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
         <Button
           type="button"
           variant="outline"
           onClick={onCancel}
           disabled={isSubmitting}
+          className="w-full sm:w-auto"
         >
           Cancelar
         </Button>
         <Button
           type="submit"
           disabled={!text.trim() || text.length > 500 || isSubmitting}
-          className="bg-primary hover:bg-primary/90 text-primary-foreground"
+          className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground"
         >
           {isSubmitting ? (
             <>
