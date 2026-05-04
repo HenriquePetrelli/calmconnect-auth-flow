@@ -25,7 +25,7 @@ const BottomNavigation = ({ onSOSClick }: BottomNavigationProps) => {
       isActive: location.pathname === "/chat",
     },
     {
-      icon: () => <span className="text-sm font-bold">SOS</span>,
+      icon: () => <Heart className="w-7 h-7 text-white" fill="currentColor" />,
       label: "",
       path: "/sos",
       isActive: location.pathname === "/sos",
