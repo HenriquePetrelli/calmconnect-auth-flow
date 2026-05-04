@@ -184,8 +184,8 @@ export const MoodAccordion: React.FC<MoodAccordionProps> = ({ currentValue, onMo
                     isSelected ? `${mood.borderClass} ${mood.bgClass}` : 'border-border hover:border-foreground/20'
                   )}
                 >
-                  <Icon className={cn('w-7 h-7', mood.colorClass)} />
-                  <span className={cn('text-sm font-medium', isSelected ? mood.colorClass : 'text-foreground')}>
+                  <Icon className={cn('w-7 h-7', isSelected ? mood.colorClass : 'text-muted-foreground')} />
+                  <span className={cn('text-sm font-medium', isSelected ? mood.colorClass : 'text-muted-foreground')}>
                     {mood.label}
                   </span>
                 </button>
