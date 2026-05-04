@@ -71,9 +71,36 @@ const JournalEntryModal = ({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
+          {/* Seletor de humor — mesmo layout do registro de humor */}
+          <div className="space-y-2">
+            <Label>Como está se sentindo hoje?</Label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-2">
+              {JOURNAL_MOODS.map((mood) => {
+                const Icon = mood.Icon;
+                const isSelected = humor === mood.value;
+                return (
+                  <button
+                    key={mood.value}
+                    type="button"
+                    onClick={() => setHumor(mood.value)}
+                    className={cn(
+                      'flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all duration-200 hover:scale-[1.02] bg-background',
+                      isSelected ? `${mood.borderClass} ${mood.bgClass}` : 'border-border hover:border-foreground/20'
+                    )}
+                  >
+                    <Icon className={cn('w-7 h-7', isSelected ? mood.colorClass : 'text-muted-foreground')} />
+                    <span className={cn('text-sm font-medium', isSelected ? mood.colorClass : 'text-muted-foreground')}>
+                      {mood.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Campo de texto */}
           <div className="space-y-2">
-            <Label htmlFor="texto">Como você está se sentindo?</Label>
+            <Label htmlFor="texto">Sua anotação</Label>
             <Textarea
               id="texto"
               placeholder="Escreva seus pensamentos e sentimentos..."
@@ -84,29 +111,6 @@ const JournalEntryModal = ({
             />
             <div className="text-xs text-muted-foreground text-right">
               {texto.length}/1000 caracteres
-            </div>
-          </div>
-
-          {/* Seletor de humor */}
-          <div className="space-y-2">
-            <Label>Como está seu humor?</Label>
-            <div className="grid grid-cols-3 gap-2">
-              {JOURNAL_MOODS.map((mood) => {
-                const Icon = mood.Icon;
-                const isSelected = humor === mood.value;
-                return (
-                  <Button
-                    key={mood.value}
-                    type="button"
-                    variant={isSelected ? "default" : "outline"}
-                    onClick={() => setHumor(mood.value)}
-                    className="flex flex-col items-center gap-1 h-auto py-3"
-                  >
-                    <Icon className={cn('w-6 h-6', !isSelected && mood.colorClass)} />
-                    <span className="text-xs">{mood.label}</span>
-                  </Button>
-                );
-              })}
             </div>
           </div>
         </div>
