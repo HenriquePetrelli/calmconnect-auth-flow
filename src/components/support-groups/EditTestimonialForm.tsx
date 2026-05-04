@@ -134,6 +134,11 @@ const EditTestimonialForm = ({ groupName, testimonial, onSave, onCancel }: EditT
           placeholder="Compartilhe sua experiência, sentimentos ou qualquer coisa que possa ajudar outras pessoas..."
           value={text}
           onChange={(e) => setText(e.target.value)}
+          onFocus={(e) => {
+            setTimeout(() => {
+              e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 300);
+          }}
           rows={4}
           required
         />
@@ -143,16 +148,7 @@ const EditTestimonialForm = ({ groupName, testimonial, onSave, onCancel }: EditT
       </div>
 
       {/* Action Buttons */}
-      <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onCancel}
-          disabled={isSubmitting}
-          className="w-full sm:w-auto"
-        >
-          Cancelar
-        </Button>
+      <div className="flex justify-end">
         <Button
           type="submit"
           disabled={!text.trim() || text.length > 500 || isSubmitting}

@@ -115,13 +115,11 @@ const JournalEntryModal = ({
           </div>
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="outline" onClick={handleClose} disabled={loading}>
-            Cancelar
-          </Button>
+        <DialogFooter>
           <Button 
             onClick={handleSave} 
             disabled={!texto.trim() || loading}
+            className="w-full sm:w-auto"
           >
             {loading ? 'Salvando...' : 'Salvar'}
           </Button>
