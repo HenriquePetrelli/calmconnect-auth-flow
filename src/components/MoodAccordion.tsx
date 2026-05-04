@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, Smile, Heart, Meh, Frown, CloudRain, X } from 'lucide-react';
+import { ChevronDown, Smile, Heart, Meh, Frown, CloudRain } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
