@@ -5,12 +5,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense } from "react";
 import RouteGuard from "@/components/RouteGuard";
 import MainLayout from "@/components/MainLayout";
 import BackgroundWrapper from "@/components/BackgroundWrapper";
 import PageSkeleton from "@/components/PageSkeleton";
-import { preloadCoreRoutesWhenIdle } from "@/lib/routePreload";
 
 // Lazy load all pages for better performance
 const Index = lazy(() => import("./pages/Index"));
@@ -61,10 +60,6 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
-  useEffect(() => {
-    preloadCoreRoutesWhenIdle();
-  }, []);
-
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider
