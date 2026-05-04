@@ -2,9 +2,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Edit, Trash2 } from 'lucide-react';
 import { JournalEntry } from '@/hooks/usePrivateJournal';
-
-const moodEmojis = ['😞', '😔', '😐', '🙂', '😊', '😄'];
-const moodLabels = ['Muito triste', 'Triste', 'Neutro', 'Bem', 'Feliz', 'Muito feliz'];
+import { getJournalMood } from './journalMoods';
+import { cn } from '@/lib/utils';
 
 interface JournalEntryCardProps {
   entry: JournalEntry;
