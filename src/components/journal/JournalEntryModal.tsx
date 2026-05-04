@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { JournalEntry } from '@/hooks/usePrivateJournal';
 import { usePatientStatistics } from '@/hooks/usePatientStatistics';
-import { JOURNAL_MOODS } from './journalMoods';
+import { JOURNAL_MOODS, DEFAULT_JOURNAL_MOOD } from './journalMoods';
 import { cn } from '@/lib/utils';
 
 interface JournalEntryModalProps {
