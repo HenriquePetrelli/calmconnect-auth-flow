@@ -89,16 +89,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 )}
               </div>
               <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <NotificationButton />
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => navigate('/profile')}
-                  >
-                    <User className="w-5 h-5" />
-                  </Button>
-                </div>
+                <NotificationButton />
               </div>
             </div>
           </header>

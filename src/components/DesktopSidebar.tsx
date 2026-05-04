@@ -5,10 +5,12 @@ import {
   MessageCircle, 
   Calendar, 
   AlertTriangle,
-  BarChart3
+  BarChart3,
+  ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/Logo';
+import { useAuth } from '@/contexts/AuthContext';
 
 const sidebarItems = [
   { icon: Home, label: 'Home', path: '/home' },
@@ -21,11 +23,16 @@ const sidebarItems = [
 export const DesktopSidebar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
+
+  const fullName = user?.user_metadata?.full_name || 'Paciente';
+  const firstName = fullName.split(' ')[0] || 'Paciente';
+  const initial = firstName.charAt(0).toUpperCase();
 
   return (
-    <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:bg-card lg:border-r lg:border-border">
+    <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:bg-primary lg:text-primary-foreground lg:border-r lg:border-primary/40">
       {/* Logo Section */}
-      <div className="flex items-center justify-center p-6 border-b border-border">
+      <div className="flex items-center justify-center p-6 border-b border-primary-foreground/15">
         <Logo className="scale-75" />
       </div>
 
@@ -39,9 +46,8 @@ export const DesktopSidebar: React.FC = () => {
               variant="ghost"
               className={`
                 w-full justify-start gap-3 h-12 text-left transition-all duration-200
-                ${isActive
-                  ? 'bg-secondary text-secondary-foreground hover:bg-secondary-hover hover:text-secondary-foreground'
-                  : 'hover:bg-secondary-hover hover:text-secondary-foreground'}
+                text-primary-foreground hover:bg-primary-foreground/15 hover:text-primary-foreground
+                ${isActive ? 'bg-primary-foreground/20' : ''}
               `}
               onClick={() => navigate(item.path)}
             >
@@ -52,6 +58,22 @@ export const DesktopSidebar: React.FC = () => {
         })}
       </nav>
 
+      {/* Profile Card */}
+      <div className="p-4 border-t border-primary-foreground/15">
+        <button
+          onClick={() => navigate('/profile')}
+          className="w-full flex items-center gap-3 p-3 rounded-2xl bg-primary-foreground/10 hover:bg-primary-foreground/20 transition-colors text-left"
+        >
+          <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+            <span className="text-secondary-foreground font-semibold">{initial}</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-primary-foreground truncate">{firstName}</p>
+            <p className="text-xs text-primary-foreground/70">Ver perfil</p>
+          </div>
+          <ChevronRight className="w-4 h-4 text-primary-foreground/70 flex-shrink-0" />
+        </button>
+      </div>
     </aside>
   );
 };
