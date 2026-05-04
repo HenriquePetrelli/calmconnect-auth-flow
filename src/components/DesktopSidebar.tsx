@@ -31,7 +31,7 @@ export const DesktopSidebar: React.FC = () => {
   const initial = firstName.charAt(0).toUpperCase();
 
   return (
-    <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:bg-primary lg:text-primary-foreground lg:border-r lg:border-primary/40">
+    <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:bg-secondary lg:text-secondary-foreground lg:border-r lg:border-secondary/40">
       {/* Logo Section */}
       <div className="flex items-center justify-center p-6 border-b border-primary-foreground/15">
         <div
