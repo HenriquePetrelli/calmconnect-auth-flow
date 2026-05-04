@@ -1,5 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Calendar, BarChart3, MessageCircle } from "lucide-react";
+import { Home, Calendar, BarChart3, MessageCircle, Heart } from "lucide-react";
+
+const SOS_COLOR = '#a55355';
 
 interface BottomNavigationProps {
   onSOSClick?: () => void;
