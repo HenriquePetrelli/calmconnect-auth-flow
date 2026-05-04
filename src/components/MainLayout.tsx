@@ -18,6 +18,30 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [showSOSModal, setShowSOSModal] = useState(false);
+  const [moodEnabled, setMoodEnabled] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadMoodEnabled = async () => {
+      if (!user?.id) return;
+      const { data } = await supabase
+        .from('patients')
+        .select('daily_mood_enabled')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (!cancelled) setMoodEnabled(data?.daily_mood_enabled !== false);
+    };
+    loadMoodEnabled();
+
+    const handleMoodToggleChange = (event: CustomEvent) => {
+      setMoodEnabled(event.detail.enabled);
+    };
+    window.addEventListener('moodToggleChanged', handleMoodToggleChange as EventListener);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('moodToggleChanged', handleMoodToggleChange as EventListener);
+    };
+  }, [user?.id]);
 
   const handleSOSConfirm = () => {
     setShowSOSModal(false);
