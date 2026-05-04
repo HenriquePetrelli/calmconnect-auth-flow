@@ -1,10 +1,10 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { 
-  Home, 
-  MessageCircle, 
-  Calendar, 
-  AlertTriangle,
+import {
+  Home,
+  MessageCircle,
+  Calendar,
+  Heart,
   BarChart3,
   ChevronRight
 } from 'lucide-react';
@@ -16,9 +16,10 @@ const sidebarItems = [
   { icon: Home, label: 'Home', path: '/home' },
   { icon: MessageCircle, label: 'Chat', path: '/chat' },
   { icon: Calendar, label: 'Consultas', path: '/appointments' },
-  { icon: AlertTriangle, label: 'Ajuda Emergencial', path: '/sos' },
   { icon: BarChart3, label: 'Meu Progresso', path: '/statistics' },
 ];
+
+const SOS_COLOR = '#a55355';
 
 export const DesktopSidebar: React.FC = () => {
   const navigate = useNavigate();
