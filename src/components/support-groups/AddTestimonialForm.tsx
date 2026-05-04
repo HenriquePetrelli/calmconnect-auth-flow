@@ -9,7 +9,7 @@ import { useGroupTestimonials, useGroupSymptoms } from '@/hooks/useSupportGroups
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { usePatientStatistics } from '@/hooks/usePatientStatistics';
 import { Loader2 } from 'lucide-react';
-import { JOURNAL_MOODS } from '@/components/journal/journalMoods';
+import { JOURNAL_MOODS, DEFAULT_JOURNAL_MOOD } from '@/components/journal/journalMoods';
 import { cn } from '@/lib/utils';
 
 interface AddTestimonialFormProps {
@@ -21,7 +21,7 @@ interface AddTestimonialFormProps {
 const AddTestimonialForm = ({ groupId, groupName, onSuccess }: AddTestimonialFormProps) => {
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [selectedSymptom, setSelectedSymptom] = useState<string>('');
-  const [mood, setMood] = useState<number>(2);
+  const [mood, setMood] = useState<number>(DEFAULT_JOURNAL_MOOD);
   const [text, setText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -93,8 +93,8 @@ const AddTestimonialForm = ({ groupId, groupName, onSuccess }: AddTestimonialFor
 
       {/* Mood Selection */}
       <div className="space-y-3">
-        <Label>Como você está se sentindo?</Label>
-        <div className="grid grid-cols-3 gap-2">
+        <Label>Como está se sentindo hoje?</Label>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-2">
           {JOURNAL_MOODS.map((m) => {
             const Icon = m.Icon;
             const isSelected = mood === m.value;
