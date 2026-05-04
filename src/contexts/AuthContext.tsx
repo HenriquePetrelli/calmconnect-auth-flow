@@ -37,18 +37,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userType, setUserType] = useState<UserType>('unknown');
   const [loading, setLoading] = useState(true);
 
-  const getUserType = async (userId: string): Promise<UserType> => {
+  const getUserType = async (authUser: User): Promise<UserType> => {
+    const userId = authUser.id;
+
     try {
-      // Get user data to check metadata
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
-      if (userError || !user) {
-        return 'unknown';
+      // Check if super admin
+      if (authUser.user_metadata?.is_super_admin === true) {
+        return 'admin';
       }
 
-      // Check if super admin
-      if (user.user_metadata?.is_super_admin === true) {
-        return 'admin';
+      // Fast path: user type is already present in the JWT metadata.
+      if (authUser.user_metadata?.user_type === 'patient') return 'patient';
+      if (
+        authUser.user_metadata?.user_type === 'psychologist' &&
+        authUser.user_metadata?.account_status === 'approved'
+      ) {
+        return 'psychologist';
       }
 
       // Check if psychologist is rejected and show specific message
@@ -85,7 +89,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .eq('user_id', userId)
           .single();
 
-        if (registrationData?.status === 'approved' || user.user_metadata?.account_status === 'approved') {
+        if (registrationData?.status === 'approved' || authUser.user_metadata?.account_status === 'approved') {
           return 'psychologist';
         }
         
@@ -113,40 +117,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const refreshUserType = async () => {
-    if (user?.id) {
-      const type = await getUserType(user.id);
+    if (user) {
+      const type = await getUserType(user);
       setUserType(type);
     }
   };
 
   const handleAuthStateChange = async (event: string, session: Session | null) => {
-    console.log('Auth state changed:', event, session?.user?.id);
-    
     setSession(session);
     setUser(session?.user ?? null);
 
     if (session?.user) {
-      console.log('User metadata:', session.user.user_metadata);
-      
       // Check if super admin immediately from metadata
       if (session.user.user_metadata?.is_super_admin === true) {
-        console.log('User is super admin, setting userType to admin');
         setUserType('admin');
         setLoading(false);
         return;
       }
 
-      // Defer user type determination to prevent deadlocks
-      setTimeout(async () => {
-        try {
-          const type = await getUserType(session.user.id);
-          console.log('Determined user type:', type);
-          setUserType(type);
-        } catch (error) {
-          console.error('Error getting user type:', error);
-          setUserType('unknown');
-        }
-      }, 0);
+      const fastUserType = session.user.user_metadata?.user_type as UserType | undefined;
+      if (fastUserType === 'patient') {
+        setUserType('patient');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const type = await getUserType(session.user);
+        setUserType(type);
+      } catch (error) {
+        console.error('Error getting user type:', error);
+        setUserType('unknown');
+      }
     } else {
       setUserType('unknown');
     }
@@ -170,11 +172,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
-
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      handleAuthStateChange('INITIAL_SESSION', session);
-    });
 
     return () => subscription.unsubscribe();
   }, []);
