@@ -2,9 +2,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Edit, Trash2 } from 'lucide-react';
 import { JournalEntry } from '@/hooks/usePrivateJournal';
-
-const moodEmojis = ['😞', '😔', '😐', '🙂', '😊', '😄'];
-const moodLabels = ['Muito triste', 'Triste', 'Neutro', 'Bem', 'Feliz', 'Muito feliz'];
+import { getJournalMood } from './journalMoods';
+import { cn } from '@/lib/utils';
 
 interface JournalEntryCardProps {
   entry: JournalEntry;
@@ -29,6 +28,8 @@ const JournalEntryCard = ({ entry, onEdit, onDelete }: JournalEntryCardProps) =>
   };
 
   const { date, time } = formatDateTime(entry.criado_em);
+  const mood = getJournalMood(entry.humor);
+  const MoodIcon = mood.Icon;
 
   return (
     <Card className="mb-4 hover:shadow-md transition-shadow">
@@ -36,8 +37,8 @@ const JournalEntryCard = ({ entry, onEdit, onDelete }: JournalEntryCardProps) =>
         {/* Header com humor */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <span className="text-2xl">{moodEmojis[entry.humor]}</span>
-            <span className="text-sm text-muted-foreground">{moodLabels[entry.humor]}</span>
+            <MoodIcon className={cn('w-6 h-6', mood.colorClass)} />
+            <span className="text-sm text-muted-foreground">{mood.label}</span>
           </div>
           <div className="flex gap-2">
             <Button
