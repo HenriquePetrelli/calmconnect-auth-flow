@@ -8,6 +8,15 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    headers: {
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    },
+  },
+  optimizeDeps: {
+    // Force re-bundle on each dev start to avoid stale Vite cache issues
+    force: true,
   },
   plugins: [
     react(),
