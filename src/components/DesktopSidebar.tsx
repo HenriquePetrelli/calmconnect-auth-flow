@@ -19,7 +19,6 @@ const sidebarItems = [
   { icon: BarChart3, label: 'Meu Progresso', path: '/statistics' },
 ];
 
-const SOS_COLOR = '#a55355';
 
 export const DesktopSidebar: React.FC = () => {
   const navigate = useNavigate();
