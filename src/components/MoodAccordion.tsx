@@ -79,11 +79,6 @@ export const MoodAccordion: React.FC<MoodAccordionProps> = ({ currentValue, onMo
 
       onMoodSelected(mood.value);
       setShowFeedback(true);
-      // Close accordion after a brief feedback display
-      setTimeout(() => {
-        setOpen(false);
-        setTimeout(() => setShowFeedback(false), 400);
-      }, 1500);
     } catch (e) {
       console.error(e);
       toast({ title: 'Erro', description: 'Não foi possível salvar seu humor.', variant: 'destructive' });
@@ -124,48 +119,56 @@ export const MoodAccordion: React.FC<MoodAccordionProps> = ({ currentValue, onMo
       )}
     >
       {/* Header (trigger) */}
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between p-4 text-left"
-        aria-expanded={open}
+      <div
+        className="w-full flex items-center justify-between p-4 gap-3"
       >
-        <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="flex items-center gap-3 text-left flex-1 min-w-0"
+          aria-expanded={open}
+        >
           {selected && HeaderIcon ? (
             <>
-              <HeaderIcon className={cn('w-6 h-6', selected.colorClass)} />
-              <div>
+              <HeaderIcon className={cn('w-6 h-6 shrink-0', selected.colorClass)} />
+              <div className="min-w-0">
                 <p className="text-sm text-muted-foreground">Humor de hoje</p>
-                <p className={cn('font-semibold', selected.colorClass)}>{selected.label}</p>
+                <p className={cn('font-semibold truncate', selected.colorClass)}>{selected.label}</p>
               </div>
             </>
           ) : (
-            <div>
+            <div className="min-w-0">
               <p className="font-semibold text-foreground">Registre seu humor</p>
               <p className="text-sm text-muted-foreground">Como você está se sentindo hoje?</p>
             </div>
           )}
-        </div>
-        <ChevronDown
-          className={cn('w-5 h-5 text-muted-foreground transition-transform', open && 'rotate-180')}
-        />
-      </button>
+        </button>
 
-      {/* Content */}
-      {open && (
-        <div className="relative px-4 pb-4">
-          {/* Hide button - top right inside content */}
+        <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
             onClick={handleHideMoodDaily}
             disabled={isHiding}
-            title="Ocultar humor diário"
-            className="absolute -top-1 right-3 p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50"
-            aria-label="Ocultar humor diário"
+            className="text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-md border border-border hover:bg-muted transition-colors disabled:opacity-50"
           >
-            <X className="w-4 h-4" />
+            {isHiding ? 'Ocultando...' : 'Ocultar registro de humor'}
           </button>
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            aria-label={open ? 'Recolher' : 'Expandir'}
+            className="p-1 text-muted-foreground"
+          >
+            <ChevronDown
+              className={cn('w-5 h-5 transition-transform', open && 'rotate-180')}
+            />
+          </button>
+        </div>
+      </div>
 
+      {/* Content */}
+      {open && (
+        <div className="relative px-4 pb-4">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-2">
             {MOOD_OPTIONS.map((mood) => {
               const Icon = mood.Icon;
