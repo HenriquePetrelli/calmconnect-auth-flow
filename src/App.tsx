@@ -50,7 +50,16 @@ const SupportGroupDetail = lazy(() => import("./pages/SupportGroupDetail"));
 const PrivateJournal = lazy(() => import("./pages/PrivateJournal"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60, // 1 min cache - reduces redundant Supabase calls
+      gcTime: 1000 * 60 * 5,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 const App = () => {
   const [showSplash, setShowSplash] = useState(true);
