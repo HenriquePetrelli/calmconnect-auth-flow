@@ -265,7 +265,7 @@ const HomeContent = () => {
                 <div
                   key={index}
                   className="bg-card/80 backdrop-blur-sm rounded-xl p-3 border-2 transition-all group cursor-pointer shadow-sm hover:shadow-md aspect-square flex flex-col items-center justify-center text-center"
-                  style={{ borderColor: feature.color }}
+                  style={{ borderColor: feature.borderColor }}
                   onClick={feature.onClick}
                 >
                   <div
