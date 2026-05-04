@@ -16,9 +16,10 @@ interface AddTestimonialFormProps {
   groupId: string;
   groupName: string;
   onSuccess: () => void;
+  onCancel?: () => void;
 }
 
-const AddTestimonialForm = ({ groupId, groupName, onSuccess }: AddTestimonialFormProps) => {
+const AddTestimonialForm = ({ groupId, groupName, onSuccess, onCancel }: AddTestimonialFormProps) => {
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [selectedSymptom, setSelectedSymptom] = useState<string>('');
   const [mood, setMood] = useState<number>(DEFAULT_JOURNAL_MOOD);
@@ -134,12 +135,23 @@ const AddTestimonialForm = ({ groupId, groupName, onSuccess }: AddTestimonialFor
         </div>
       </div>
 
-      {/* Submit Button */}
-      <div className="flex justify-end gap-3">
+      {/* Action Buttons */}
+      <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+        {onCancel && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+            disabled={isSubmitting}
+            className="w-full sm:w-auto"
+          >
+            Cancelar
+          </Button>
+        )}
         <Button
           type="submit"
           disabled={!text.trim() || text.length > 500 || isSubmitting}
-          className="bg-primary hover:bg-primary/90 text-primary-foreground"
+          className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground"
         >
           {isSubmitting ? (
             <>

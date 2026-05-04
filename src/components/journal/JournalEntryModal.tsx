@@ -57,7 +57,7 @@ const JournalEntryModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {editingEntry ? 'Editar Anotação' : 'Nova Anotação do Diário'}
@@ -115,7 +115,7 @@ const JournalEntryModal = ({
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="gap-2 sm:gap-0">
           <Button variant="outline" onClick={handleClose} disabled={loading}>
             Cancelar
           </Button>

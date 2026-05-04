@@ -323,23 +323,29 @@ const SupportGroupDetail = () => {
                       Ver sintomas
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Sintomas relacionados - {groupName}</DialogTitle>
+                  <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+                    <DialogHeader className="pt-3">
+                      <DialogTitle className="text-base sm:text-lg leading-snug">
+                        Sintomas relacionados
+                      </DialogTitle>
+                      <p className="text-sm text-muted-foreground">{groupName}</p>
                     </DialogHeader>
                     <div className="space-y-2">
                       {symptomsLoading ? (
                         <div className="space-y-2">
                           {[...Array(5)].map((_, i) => (
-                            <Skeleton key={i} className="h-4 w-full" />
+                            <Skeleton key={i} className="h-10 w-full rounded-md" />
                           ))}
                         </div>
                       ) : symptoms.length > 0 ? (
                         <ul className="space-y-2">
                           {symptoms.map((symptom, index) => (
-                            <li key={index} className="flex items-start gap-2 text-sm">
-                              <span className="w-1 h-1 bg-primary rounded-full mt-2 flex-shrink-0" />
-                              <span>{symptom}</span>
+                            <li
+                              key={index}
+                              className="flex items-start gap-3 text-sm p-3 rounded-lg bg-muted/50 border border-border/50"
+                            >
+                              <span className="w-2 h-2 bg-primary rounded-full mt-1.5 flex-shrink-0" />
+                              <span className="leading-relaxed">{symptom}</span>
                             </li>
                           ))}
                         </ul>
@@ -383,7 +389,7 @@ const SupportGroupDetail = () => {
                     {!isPremiumUser && <Crown className="w-4 h-4 ml-2" />}
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-lg">
+                <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Adicionar Depoimento</DialogTitle>
                   </DialogHeader>
@@ -391,6 +397,7 @@ const SupportGroupDetail = () => {
                     groupId={groupId}
                     groupName={groupName}
                     onSuccess={handleTestimonialAdded}
+                    onCancel={() => setShowAddTestimonial(false)}
                   />
                 </DialogContent>
               </Dialog>
@@ -398,7 +405,7 @@ const SupportGroupDetail = () => {
 
             {/* Edit Testimonial Dialog */}
             <Dialog open={showEditTestimonial} onOpenChange={setShowEditTestimonial}>
-              <DialogContent className="max-w-lg">
+              <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Editar Depoimento</DialogTitle>
                 </DialogHeader>
