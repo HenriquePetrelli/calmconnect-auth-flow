@@ -1,13 +1,11 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "next-themes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { useEffect, useState, lazy, Suspense } from "react";
-import SplashScreen from "@/components/SplashScreen";
+import { lazy, Suspense } from "react";
 import RouteGuard from "@/components/RouteGuard";
 import MainLayout from "@/components/MainLayout";
 import BackgroundWrapper from "@/components/BackgroundWrapper";
@@ -62,13 +60,6 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
-  const [showSplash, setShowSplash] = useState(true);
-
-  useEffect(() => {
-    const t = setTimeout(() => setShowSplash(false), 2500);
-    return () => clearTimeout(t);
-  }, []);
-
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider
@@ -77,14 +68,10 @@ const App = () => {
         enableSystem
         disableTransitionOnChange
       >
-        <TooltipProvider>
           <AuthProvider>
             <SubscriptionProvider>
               <Toaster />
               <Sonner />
-            {showSplash ? (
-              <SplashScreen />
-            ) : (
               <BrowserRouter>
                 <BackgroundWrapper>
                   <Suspense fallback={<PageSkeleton />}>
@@ -320,10 +307,8 @@ const App = () => {
                   </Suspense>
                 </BackgroundWrapper>
               </BrowserRouter>
-            )}
           </SubscriptionProvider>
         </AuthProvider>
-      </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>
   );
