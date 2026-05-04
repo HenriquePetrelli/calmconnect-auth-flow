@@ -38,7 +38,7 @@ export const DesktopSidebar: React.FC = () => {
           style={{ border: '2px solid hsl(var(--primary-glow))' }}
         >
           <img
-            src={(new URL('@/assets/soliv-logo.webp', import.meta.url)).href}
+            src={logoImg}
             alt="Soliv"
             style={{ width: '80px', height: '80px' }}
             className="object-contain select-none"
