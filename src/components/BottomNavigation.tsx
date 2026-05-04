@@ -1,5 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Calendar, BarChart3, MessageCircle } from "lucide-react";
+import { Home, Calendar, BarChart3, MessageCircle, Heart } from "lucide-react";
+
+const SOS_COLOR = '#a55355';
 
 interface BottomNavigationProps {
   onSOSClick?: () => void;
@@ -23,7 +25,7 @@ const BottomNavigation = ({ onSOSClick }: BottomNavigationProps) => {
       isActive: location.pathname === "/chat",
     },
     {
-      icon: () => <span className="text-sm font-bold">SOS</span>,
+      icon: () => <Heart className="w-7 h-7 text-white" fill="currentColor" />,
       label: "",
       path: "/sos",
       isActive: location.pathname === "/sos",
@@ -53,7 +55,9 @@ const BottomNavigation = ({ onSOSClick }: BottomNavigationProps) => {
             <button
               key={item.path}
               onClick={onSOSClick || (() => navigate(item.path))}
-              className="tab-item sos bg-primary-foreground hover:bg-primary-foreground/90 text-primary shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-105"
+              className="tab-item sos hover:opacity-90 text-white shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-105"
+              style={{ backgroundColor: SOS_COLOR }}
+              aria-label="Ajuda Emergencial"
             >
               <Icon />
             </button>
