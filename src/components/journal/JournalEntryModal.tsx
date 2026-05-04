@@ -5,9 +5,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { JournalEntry } from '@/hooks/usePrivateJournal';
 import { usePatientStatistics } from '@/hooks/usePatientStatistics';
-
-const moodEmojis = ['😞', '😔', '😐', '🙂', '😊', '😄'];
-const moodLabels = ['Muito triste', 'Triste', 'Neutro', 'Bem', 'Feliz', 'Muito feliz'];
+import { JOURNAL_MOODS } from './journalMoods';
+import { cn } from '@/lib/utils';
 
 interface JournalEntryModalProps {
   isOpen: boolean;
