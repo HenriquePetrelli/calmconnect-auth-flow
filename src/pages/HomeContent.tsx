@@ -13,6 +13,7 @@ import { WeeklyGoalModal } from "@/components/goals/WeeklyGoalModal";
 import { GoalSelectionModal } from "@/components/goals/GoalSelectionModal";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from 'sonner';
 import React from "react";
@@ -21,7 +22,8 @@ import PageSkeleton from "@/components/PageSkeleton";
 const HomeContent = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const [userProfile, setUserProfile] = useState<any>(null);
+  const { user } = useAuth();
+  const userProfile = user;
   const [currentMood, setCurrentMood] = useState<string | null>(null);
   const [showMoodModal, setShowMoodModal] = useState(false);
   const [moodEnabled, setMoodEnabled] = useState(true);
@@ -31,12 +33,10 @@ const HomeContent = () => {
   const [showGoalSelection, setShowGoalSelection] = useState(false);
 
   useEffect(() => {
+    if (!user?.id) return;
     const loadHomeData = async () => {
       setIsLoading(true);
-      await Promise.all([
-        fetchUserProfile(),
-        checkTodayMood()
-      ]);
+      await checkTodayMood();
       setIsLoading(false);
     };
     
@@ -51,11 +51,10 @@ const HomeContent = () => {
     return () => {
       window.removeEventListener('moodToggleChanged', handleMoodToggleChange as EventListener);
     };
-  }, []);
+  }, [user?.id]);
 
   const checkTodayMood = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       const today = new Date().toISOString().split('T')[0];
