@@ -1,8 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { Home, Calendar, BarChart3, MessageCircle, Sun } from "lucide-react";
 
-const SOS_COLOR = '#a55355';
-
 interface BottomNavigationProps {
   onSOSClick?: () => void;
 }
@@ -19,23 +17,23 @@ const BottomNavigation = ({ onSOSClick }: BottomNavigationProps) => {
       isActive: location.pathname === "/home",
     },
     {
-      icon: MessageCircle,
-      label: "Chat",
-      path: "/chat",
-      isActive: location.pathname === "/chat",
+      icon: Calendar,
+      label: "Consultas",
+      path: "/appointments",
+      isActive: location.pathname === "/appointments",
     },
     {
-      icon: () => <Sun className="w-7 h-7 text-white" />,
+      icon: () => <Sun className="w-7 h-7 text-primary-foreground" />,
       label: "",
       path: "/sos",
       isActive: location.pathname === "/sos",
       isSpecial: true,
     },
     {
-      icon: Calendar,
-      label: "Consultas",
-      path: "/appointments",
-      isActive: location.pathname === "/appointments",
+      icon: MessageCircle,
+      label: "Chat",
+      path: "/chat",
+      isActive: location.pathname === "/chat",
     },
     {
       icon: BarChart3,
@@ -46,21 +44,21 @@ const BottomNavigation = ({ onSOSClick }: BottomNavigationProps) => {
   ];
 
   return (
-    <nav className="tabs">
+    <nav className="tabs grid grid-cols-5 !gap-0 !justify-normal px-2">
       {navItems.map((item) => {
         const Icon = item.icon;
 
         if (item.isSpecial) {
           return (
-            <button
-              key={item.path}
-              onClick={onSOSClick || (() => navigate(item.path))}
-              className="tab-item sos hover:opacity-90 text-white shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-105"
-              style={{ backgroundColor: SOS_COLOR }}
-              aria-label="Ajuda Emergencial"
-            >
-              <Icon />
-            </button>
+            <div key={item.path} className="flex items-center justify-center">
+              <button
+                onClick={onSOSClick || (() => navigate(item.path))}
+                className="tab-item sos bg-primary hover:opacity-90 text-primary-foreground shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-105"
+                aria-label="Ajuda Emergencial"
+              >
+                <Icon />
+              </button>
+            </div>
           );
         }
 
@@ -68,14 +66,14 @@ const BottomNavigation = ({ onSOSClick }: BottomNavigationProps) => {
           <button
             key={item.path}
             onClick={() => navigate(item.path)}
-            className={`tab-item flex flex-col items-center justify-center flex-1 h-full p-2 transition-all duration-200 relative rounded-lg ${
+            className={`tab-item flex flex-col items-center justify-center h-full p-2 transition-all duration-200 relative rounded-lg ${
               item.isActive
-                ? "text-primary-foreground bg-primary-foreground/20"
-                : "text-primary-foreground/70 hover:text-primary-foreground"
+                ? "text-secondary-foreground bg-secondary-foreground/20"
+                : "text-secondary-foreground/70 hover:text-secondary-foreground"
             }`}
           >
             {item.isActive && (
-              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-primary-foreground rounded-full transition-all duration-200"></div>
+              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-secondary-foreground rounded-full transition-all duration-200"></div>
             )}
             <Icon className="w-5 h-5 transition-all duration-200" />
             <span className="text-xs mt-1 transition-all duration-200">{item.label}</span>
