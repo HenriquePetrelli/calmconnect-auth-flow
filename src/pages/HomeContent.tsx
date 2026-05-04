@@ -144,8 +144,7 @@ const HomeContent = () => {
     toast.success('Metas semanais adicionadas com sucesso! 🌱');
   };
 
-  const handleMoodSelected = (mood: string, value: number) => {
-    setCurrentMood(mood);
+  const handleMoodSelected = (value: number) => {
     setTodayMoodValue(value);
   };
 
@@ -206,47 +205,20 @@ const HomeContent = () => {
               </div>
             </div>
 
-            {/* Mood Button */}
-            <button
-              onClick={() => setShowMoodModal(true)}
-              className="w-full p-4 rounded-xl bg-card/80 backdrop-blur-sm border border-border hover:border-primary transition-all duration-200 active:scale-95"
-            >
-              <div className="flex items-center justify-center space-x-3">
-                {currentMood ? (
-                  <>
-                    <span className="text-3xl">{currentMood}</span>
-                    <span className="text-foreground font-medium">{getMoodLabel(todayMoodValue || 0)}</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-3xl">😊</span>
-                    <span className="text-foreground font-medium">Registrar humor do dia</span>
-                  </>
-                )}
-              </div>
-            </button>
+            <MoodAccordion
+              currentValue={todayMoodValue}
+              onMoodSelected={handleMoodSelected}
+            />
           </section>
         )}
 
         {/* Desktop Mood Section */}
         {moodEnabled && (
-          <div className="hidden lg:flex items-center gap-4 mb-8">
-            <button
-              onClick={() => setShowMoodModal(true)}
-              className="flex items-center gap-2 p-3 rounded-xl bg-card/80 backdrop-blur-sm border border-border hover:border-primary transition-all duration-200"
-            >
-              {currentMood ? (
-                <>
-                  <span className="text-2xl">{currentMood}</span>
-                  <span className="text-sm font-medium text-foreground">{getMoodLabel(todayMoodValue || 0)}</span>
-                </>
-              ) : (
-                <>
-                  <span className="text-2xl">😊</span>
-                  <span className="text-sm font-medium text-foreground">Registrar humor</span>
-                </>
-              )}
-            </button>
+          <div className="hidden lg:block mb-8">
+            <MoodAccordion
+              currentValue={todayMoodValue}
+              onMoodSelected={handleMoodSelected}
+            />
           </div>
         )}
 
@@ -282,14 +254,6 @@ const HomeContent = () => {
         </section>
 
         {/* Modals */}
-        {moodEnabled && (
-          <MoodSelectionModal
-            open={showMoodModal}
-            onOpenChange={setShowMoodModal}
-            onMoodSelected={handleMoodSelected}
-            currentMood={currentMood}
-          />
-        )}
 
         <WeeklyGoalModal
           open={showWeeklyGoalModal}
