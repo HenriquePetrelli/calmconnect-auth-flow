@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface SubscriptionContextType {
   subscribed: boolean;
@@ -32,6 +33,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [currentUsage, setCurrentUsage] = useState({ appointments: 0, sos_uses: 0 });
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const checkSubscription = async () => {
     try {
@@ -96,37 +98,29 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   };
 
   useEffect(() => {
-    // Primeiro, verificar se há sessão inicial
-    const initializeSubscription = async () => {
-      const { data: session } = await supabase.auth.getSession();
-      if (session?.session?.user) {
-        // Só fazer a verificação se o usuário estiver logado
-        checkSubscription();
-      } else {
-        setLoading(false);
-      }
-    };
+    if (!user) {
+      setSubscribed(false);
+      setSubscriptionTier(null);
+      setSubscriptionEnd(null);
+      setPlanLimits({ appointments: 0, sos_uses: 0 });
+      setCurrentUsage({ appointments: 0, sos_uses: 0 });
+      setLoading(false);
+      return;
+    }
 
-    initializeSubscription();
+    const scheduleCheck = () => checkSubscription();
+    const requestIdleCallback = (globalThis as typeof globalThis & {
+      requestIdleCallback?: (callback: () => void, options?: { timeout?: number }) => void;
+    }).requestIdleCallback;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        // Usar setTimeout para evitar problemas de concorrência
-        setTimeout(() => {
-          checkSubscription();
-        }, 0);
-      } else if (event === 'SIGNED_OUT') {
-        setSubscribed(false);
-        setSubscriptionTier(null);
-        setSubscriptionEnd(null);
-        setPlanLimits({ appointments: 0, sos_uses: 0 });
-        setCurrentUsage({ appointments: 0, sos_uses: 0 });
-        setLoading(false);
-      }
-    });
+    if (requestIdleCallback) {
+      requestIdleCallback(scheduleCheck, { timeout: 1500 });
+      return;
+    }
 
-    return () => subscription.unsubscribe();
-  }, []);
+    const timeout = globalThis.setTimeout(scheduleCheck, 500);
+    return () => globalThis.clearTimeout(timeout);
+  }, [user?.id]);
 
   return (
     <SubscriptionContext.Provider
