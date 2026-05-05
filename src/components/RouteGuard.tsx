@@ -98,29 +98,14 @@ const isRouteAllowed = (pathname: string, userType: string): boolean => {
   });
 };
 
-// Persistência de sessão
-const saveLastRoute = (path: string, userType: string) => {
-  if (userType !== 'unknown') {
-    localStorage.setItem('lastRoute', path);
-    localStorage.setItem('lastUserType', userType);
-  }
+// Limpa qualquer rota persistida legada (lógica antiga causava redirects indevidos)
+const clearLegacyLastRoute = () => {
+  try {
+    localStorage.removeItem('lastRoute');
+    localStorage.removeItem('lastUserType');
+  } catch {}
 };
-
-const getLastRoute = (): { path: string; userType: string } | null => {
-  const path = localStorage.getItem('lastRoute');
-  const userType = localStorage.getItem('lastUserType');
-  
-  if (path && userType) {
-    return { path, userType };
-  }
-  
-  return null;
-};
-
-const clearLastRoute = () => {
-  localStorage.removeItem('lastRoute');
-  localStorage.removeItem('lastUserType');
-};
+clearLegacyLastRoute();
 
 const RouteGuard: React.FC<RouteGuardProps> = ({ 
   children, 
