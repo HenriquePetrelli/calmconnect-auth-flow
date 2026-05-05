@@ -158,31 +158,8 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
       return;
     }
 
-    // Salvar rota atual como última rota válida
-    saveLastRoute(currentPath, userType);
-
   }, [user, userType, loading, location.pathname, navigate, allowedUserTypes, redirectTo]);
 
-  // Restaurar sessão ao carregar a página
-  useEffect(() => {
-    if (!loading && user && userType !== 'unknown') {
-      const savedSession = getLastRoute();
-      
-      if (savedSession && savedSession.userType === userType) {
-        // Verificar se a rota salva ainda é válida
-        if (isRouteAllowed(savedSession.path, userType) && location.pathname === '/') {
-          navigate(savedSession.path);
-        }
-      }
-    }
-  }, [loading, user, userType, location.pathname, navigate]);
-
-  // Limpar sessão ao fazer logout
-  useEffect(() => {
-    if (!user) {
-      clearLastRoute();
-    }
-  }, [user]);
 
   if (loading) {
     return (
