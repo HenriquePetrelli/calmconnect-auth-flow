@@ -98,29 +98,14 @@ const isRouteAllowed = (pathname: string, userType: string): boolean => {
   });
 };
 
-// Persistência de sessão
-const saveLastRoute = (path: string, userType: string) => {
-  if (userType !== 'unknown') {
-    localStorage.setItem('lastRoute', path);
-    localStorage.setItem('lastUserType', userType);
-  }
+// Limpa qualquer rota persistida legada (lógica antiga causava redirects indevidos)
+const clearLegacyLastRoute = () => {
+  try {
+    localStorage.removeItem('lastRoute');
+    localStorage.removeItem('lastUserType');
+  } catch {}
 };
-
-const getLastRoute = (): { path: string; userType: string } | null => {
-  const path = localStorage.getItem('lastRoute');
-  const userType = localStorage.getItem('lastUserType');
-  
-  if (path && userType) {
-    return { path, userType };
-  }
-  
-  return null;
-};
-
-const clearLastRoute = () => {
-  localStorage.removeItem('lastRoute');
-  localStorage.removeItem('lastUserType');
-};
+clearLegacyLastRoute();
 
 const RouteGuard: React.FC<RouteGuardProps> = ({ 
   children, 
@@ -173,31 +158,8 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
       return;
     }
 
-    // Salvar rota atual como última rota válida
-    saveLastRoute(currentPath, userType);
-
   }, [user, userType, loading, location.pathname, navigate, allowedUserTypes, redirectTo]);
 
-  // Restaurar sessão ao carregar a página
-  useEffect(() => {
-    if (!loading && user && userType !== 'unknown') {
-      const savedSession = getLastRoute();
-      
-      if (savedSession && savedSession.userType === userType) {
-        // Verificar se a rota salva ainda é válida
-        if (isRouteAllowed(savedSession.path, userType) && location.pathname === '/') {
-          navigate(savedSession.path);
-        }
-      }
-    }
-  }, [loading, user, userType, location.pathname, navigate]);
-
-  // Limpar sessão ao fazer logout
-  useEffect(() => {
-    if (!user) {
-      clearLastRoute();
-    }
-  }, [user]);
 
   if (loading) {
     return (
