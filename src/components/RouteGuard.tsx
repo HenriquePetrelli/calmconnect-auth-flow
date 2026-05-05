@@ -116,52 +116,43 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
   const navigate = useNavigate();
   const location = useLocation();
 
-  useEffect(() => {
-    if (loading) return;
+  // Computa permissão de acesso de forma síncrona para evitar
+  // renderizar a página protegida (que poderia disparar seus próprios redirects)
+  const currentPath = location.pathname;
+  const isPublicRoute = allowedUserTypes.includes('public');
 
-    const currentPath = location.pathname;
+  let accessState: 'loading' | 'allowed' | 'denied' = 'loading';
+  let redirectTarget: string | null = null;
 
-    // Se não há usuário logado
+  if (!loading) {
     if (!user) {
-      // Permitir rotas públicas
-      if (allowedUserTypes.includes('public')) {
-        return;
-      }
-      
-      // Para rotas protegidas, redirecionar para login apropriado
-      if (redirectTo) {
-        navigate(redirectTo);
+      if (isPublicRoute) {
+        accessState = 'allowed';
       } else {
-        // Redirecionar para login genérico sempre
-        navigate('/');
+        accessState = 'denied';
+        redirectTarget = redirectTo || '/';
       }
-      return;
+    } else if (userType === 'unknown') {
+      // Aguarda resolução do tipo
+      accessState = 'loading';
+    } else if (!allowedUserTypes.includes(userType as any)) {
+      accessState = 'denied';
+      redirectTarget = redirectTo || getDefaultRouteForUserType(userType);
+    } else if (!isRouteAllowed(currentPath, userType)) {
+      accessState = 'denied';
+      redirectTarget = getDefaultRouteForUserType(userType);
+    } else {
+      accessState = 'allowed';
     }
+  }
 
-    // Se usuário está logado mas tipo ainda é desconhecido
-    if (userType === 'unknown') {
-      return;
+  useEffect(() => {
+    if (accessState === 'denied' && redirectTarget && redirectTarget !== currentPath) {
+      navigate(redirectTarget, { replace: true });
     }
+  }, [accessState, redirectTarget, currentPath, navigate]);
 
-    // Verificar se o tipo de usuário é permitido para esta rota
-    if (!allowedUserTypes.includes(userType as any)) {
-      // Redirecionar para a rota apropriada do usuário
-      const userRedirect = redirectTo || getDefaultRouteForUserType(userType);
-      navigate(userRedirect);
-      return;
-    }
-
-    // Verificar permissões específicas da rota
-    if (!isRouteAllowed(currentPath, userType)) {
-      const userRedirect = getDefaultRouteForUserType(userType);
-      navigate(userRedirect);
-      return;
-    }
-
-  }, [user, userType, loading, location.pathname, navigate, allowedUserTypes, redirectTo]);
-
-
-  if (loading) {
+  if (accessState !== 'allowed') {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
