@@ -128,7 +128,7 @@ const SoundsLibrary = () => {
             </div>
           </div>
 
-          <h2 className="text-2xl sm:text-4xl font-bold leading-tight mb-2">
+          <h2 className="text-2xl sm:text-4xl font-bold leading-tight mb-2 text-white">
             Encontre o som perfeito para o seu momento
           </h2>
           <p className="text-white/85 text-sm sm:text-base mb-6">
@@ -295,7 +295,7 @@ const SoundsLibrary = () => {
                       <Sparkles className="w-3.5 h-3.5" />
                       Mais ouvido
                     </div>
-                    <h3 className="text-2xl sm:text-3xl font-bold mb-2">
+                    <h3 className="text-2xl sm:text-3xl font-bold mb-2 text-white">
                       {featuredSound.name}
                     </h3>
                     <p className="text-white/90 text-sm mb-5">
