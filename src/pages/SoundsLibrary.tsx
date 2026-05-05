@@ -10,6 +10,7 @@ import {
   Music,
   Headphones,
   Heart,
+  Flower2,
   Play,
   Clock,
 } from "lucide-react";
@@ -73,7 +74,7 @@ const SoundsLibrary = () => {
     },
     {
       id: "meditation",
-      icon: Heart,
+      icon: Flower2,
       title: "Meditação e Mantras",
       iconBg: "bg-[#EC4899]",
       count: soundsData.subcategories.meditation.sounds.length,
@@ -123,7 +124,7 @@ const SoundsLibrary = () => {
             </Button>
             <div className="flex items-center gap-2">
               <Headphones className="w-5 h-5" />
-              <h1 className="text-lg sm:text-xl font-semibold">Biblioteca de Sons</h1>
+              <h1 className="text-lg sm:text-xl font-semibold text-white">Biblioteca de Sons</h1>
             </div>
           </div>
 
