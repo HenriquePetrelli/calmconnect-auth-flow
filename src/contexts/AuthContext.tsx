@@ -192,8 +192,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    // Set up auth state listener
+    // 1. Listener para mudanças futuras (login/logout/refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
+
+    // 2. Restaura sessão existente do storage IMEDIATAMENTE
+    //    (necessário porque INITIAL_SESSION nem sempre dispara antes do primeiro render)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      handleAuthStateChange('INITIAL_SESSION', session);
+    });
 
     return () => subscription.unsubscribe();
   }, []);
