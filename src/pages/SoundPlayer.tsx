@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Play, Pause, SkipBack, SkipForward } from "lucide-react";
+import { ArrowLeft, Play, Pause, SkipBack, SkipForward, Heart, Share2, Clock } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { soundsData } from "@/data/soundsData";
 import AnimationSelector from "@/components/sounds/AnimationSelector";
@@ -15,7 +14,7 @@ const SoundPlayer = () => {
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(600); // padrão 10 min
+  const [duration, setDuration] = useState(600);
   const [selectedDuration, setSelectedDuration] = useState("10");
   const [selectedAnimation, setSelectedAnimation] = useState<AnimationType>("waves");
   const [currentSoundIndex, setCurrentSoundIndex] = useState(0);
@@ -24,7 +23,6 @@ const SoundPlayer = () => {
     enabled: isPlaying,
   });
 
-  // pega os dados do som
   const isPlaylist = playlistId !== undefined;
   let currentSound, playlist;
 
@@ -53,22 +51,19 @@ const SoundPlayer = () => {
     }
   }
 
-  // inicializa o áudio quando troca de som
   useEffect(() => {
     if (currentSound && audioRef.current) {
       audioRef.current.src = currentSound.file;
-      audioRef.current.loop = true;        // loop nativo sem pausas
+      audioRef.current.loop = true;
       audioRef.current.volume = 0.7;
-      audioRef.current.onended = null;     // garante que não tem handler manual
+      audioRef.current.onended = null;
     }
   }, [currentSound]);
 
-  // converte minutos em segundos dinamicamente
   useEffect(() => {
     setDuration(parseInt(selectedDuration) * 60);
   }, [selectedDuration]);
 
-  // cronômetro da sessão
   useEffect(() => {
     let interval: ReturnType<typeof setTimeout>;
     if (isPlaying && currentTime < duration) {
@@ -76,15 +71,9 @@ const SoundPlayer = () => {
         setCurrentTime((prev) => prev + 1);
       }, 1000);
     } else if (currentTime >= duration) {
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
+      if (audioRef.current) audioRef.current.pause();
       navigate("/sounds/feedback", {
-        state: {
-          sound: currentSound,
-          duration: selectedDuration,
-          isPlaylist,
-        },
+        state: { sound: currentSound, duration: selectedDuration, isPlaylist },
       });
     }
     return () => clearInterval(interval);
@@ -95,7 +84,6 @@ const SoundPlayer = () => {
       if (isPlaying) {
         audioRef.current.pause();
       } else {
-        // Resume AudioContext (necessário em alguns browsers após gesto)
         void resume();
         audioRef.current.play().catch(console.error);
       }
@@ -143,84 +131,100 @@ const SoundPlayer = () => {
     );
   }
 
+  const progressPct = (currentTime / duration) * 100;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/5">
-      <div className="flex items-center gap-4 p-4 bg-white/80 backdrop-blur-sm border-b border-border">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/sounds")}>
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        <div className="flex-1">
-          <h1 className="text-lg font-semibold text-foreground">{currentSound.name}</h1>
-          {isPlaylist && (
-            <p className="text-sm text-muted-foreground">
-              {currentSoundIndex + 1} de {playlist?.length} • Playlist
-            </p>
-          )}
-        </div>
-      </div>
-
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] p-6 space-y-8">
-        <div className="w-full max-w-md aspect-square relative">
-          <SoundAnimation
-            type={selectedAnimation}
-            isPlaying={isPlaying}
-            levelsRef={levelsRef}
-          />
-        </div>
-
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-foreground mb-2">{currentSound.name}</h2>
-          <p className="text-muted-foreground">{currentSound.category}</p>
-        </div>
-
-        <div className="text-center">
-          <div className="text-3xl font-mono font-bold text-foreground mb-2">
-            {formatTime(currentTime)} / {formatTime(duration)}
+    <div className="h-screen flex flex-col bg-gradient-to-br from-background to-secondary/5 overflow-hidden">
+      {/* Header */}
+      <header className="flex items-center justify-between px-4 py-3 bg-background/80 backdrop-blur-sm border-b border-border shrink-0">
+        <div className="flex items-center gap-3 min-w-0">
+          <Button variant="ghost" size="icon-sm" onClick={() => navigate("/sounds")}>
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+          <div className="min-w-0">
+            <p className="text-xs text-muted-foreground truncate">{currentSound.category}</p>
+            <h1 className="text-sm font-semibold text-foreground truncate">Reproduzindo</h1>
           </div>
-          <div className="w-80 mb-4">
-            <Slider value={[currentTime]} max={duration} step={1} className="w-full" disabled />
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon-sm" className="rounded-full">
+            <Heart className="w-4 h-4" />
+          </Button>
+          <Button variant="ghost" size="icon-sm" className="rounded-full">
+            <Share2 className="w-4 h-4" />
+          </Button>
+        </div>
+      </header>
+
+      {/* Main content */}
+      <div className="flex-1 min-h-0 flex flex-col items-center justify-between px-4 py-4 max-w-2xl w-full mx-auto">
+        {/* Animation circle */}
+        <div className="flex-1 min-h-0 flex items-center justify-center w-full py-2">
+          <div className="aspect-square h-full max-h-[42vh] max-w-[42vh]">
+            <SoundAnimation
+              type={selectedAnimation}
+              isPlaying={isPlaying}
+              levelsRef={levelsRef}
+              circular
+            />
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
-          {isPlaylist && (
+        {/* Title */}
+        <div className="text-center shrink-0">
+          <h2 className="text-xl font-bold text-foreground leading-tight">{currentSound.name}</h2>
+          <p className="text-sm text-muted-foreground mt-0.5">{currentSound.category}</p>
+        </div>
+
+        {/* Progress + controls */}
+        <div className="w-full shrink-0 mt-3 space-y-2">
+          <div className="relative h-1.5 bg-muted rounded-full overflow-hidden">
+            <div
+              className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all"
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
+          <div className="flex justify-between text-xs text-muted-foreground font-mono">
+            <span>{formatTime(currentTime)}</span>
+            <span>{formatTime(duration)}</span>
+          </div>
+
+          <div className="flex items-center justify-center gap-3 pt-1">
             <Button
-              variant="outline"
-              size="icon"
+              variant="ghost"
+              size="icon-sm"
               onClick={prevTrack}
-              disabled={currentSoundIndex === 0}
+              disabled={!isPlaylist || currentSoundIndex === 0}
+              className="rounded-full bg-muted/60 hover:bg-muted"
             >
               <SkipBack className="w-4 h-4" />
             </Button>
-          )}
-
-          <Button
-            size="icon"
-            className="w-16 h-16 rounded-full bg-sounds-primary hover:bg-sounds-secondary"
-            onClick={togglePlay}
-          >
-            {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
-          </Button>
-
-          {isPlaylist && (
             <Button
-              variant="outline"
-              size="icon"
+              size="icon-lg"
+              className="w-14 h-14 rounded-full bg-primary hover:bg-primary-hover text-primary-foreground shadow-lg"
+              onClick={togglePlay}
+            >
+              {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-sm"
               onClick={nextTrack}
-              disabled={!playlist || currentSoundIndex === playlist.length - 1}
+              disabled={!isPlaylist || !playlist || currentSoundIndex === playlist.length - 1}
+              className="rounded-full bg-muted/60 hover:bg-muted"
             >
               <SkipForward className="w-4 h-4" />
             </Button>
-          )}
+          </div>
         </div>
 
-        <div className="w-full max-w-md space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              Duração da Sessão
-            </label>
+        {/* Animation + duration options */}
+        <div className="w-full shrink-0 mt-3 grid gap-2">
+          <AnimationSelector selected={selectedAnimation} onChange={setSelectedAnimation} />
+          <div className="flex items-center gap-2">
+            <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
             <Select value={selectedDuration} onValueChange={setSelectedDuration}>
-              <SelectTrigger>
+              <SelectTrigger className="h-9 text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -235,18 +239,7 @@ const SoundPlayer = () => {
               </SelectContent>
             </Select>
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              Animação Sincronizada
-            </label>
-            <AnimationSelector selected={selectedAnimation} onChange={setSelectedAnimation} />
-          </div>
         </div>
-
-        <Button variant="outline" onClick={resetTimer} className="mt-4">
-          Reiniciar Sessão
-        </Button>
       </div>
 
       <audio ref={audioRef} preload="auto" />

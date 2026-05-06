@@ -13,6 +13,8 @@ interface SoundAnimationProps {
   isPlaying: boolean;
   /** Ref vivo para os níveis de áudio (não causa re-render) */
   levelsRef: React.MutableRefObject<AudioLevels>;
+  /** Renderiza em formato circular com fundo sólido primary */
+  circular?: boolean;
 }
 
 // Paleta da identidade do app (laranja + roxo)
@@ -24,7 +26,7 @@ const COLORS = {
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
-const SoundAnimation = ({ type, isPlaying, levelsRef }: SoundAnimationProps) => {
+const SoundAnimation = ({ type, isPlaying, levelsRef, circular = false }: SoundAnimationProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rafRef = useRef<number | null>(null);
   const stateRef = useRef<{
@@ -96,7 +98,7 @@ const SoundAnimation = ({ type, isPlaying, levelsRef }: SoundAnimationProps) => 
 
       // Background com fade (cria trilha de partículas)
       ctx.globalCompositeOperation = "source-over";
-      ctx.fillStyle = "rgba(15, 8, 30, 0.18)";
+      ctx.fillStyle = circular ? "rgba(234, 88, 12, 0.22)" : "rgba(15, 8, 30, 0.18)";
       ctx.fillRect(0, 0, w, h);
 
       switch (type) {
@@ -138,7 +140,29 @@ const SoundAnimation = ({ type, isPlaying, levelsRef }: SoundAnimationProps) => 
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [type, isPlaying, levelsRef]);
+  }, [type, isPlaying, levelsRef, circular]);
+
+  if (circular) {
+    return (
+      <div className="relative w-full h-full rounded-full overflow-hidden shadow-[0_20px_60px_-15px_hsl(var(--primary)/0.55)] ring-1 ring-white/20">
+        {/* Fundo sólido primary (laranja) */}
+        <div className="absolute inset-0 bg-primary" />
+        <canvas
+          ref={canvasRef}
+          className="relative w-full h-full block"
+          aria-hidden
+        />
+        {/* Highlight sutil para profundidade */}
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(circle at 30% 25%, rgba(255,255,255,0.18), transparent 55%)",
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full h-full rounded-[28px] overflow-hidden border border-white/10 shadow-[0_20px_60px_-20px_rgba(124,58,237,0.6)]">
