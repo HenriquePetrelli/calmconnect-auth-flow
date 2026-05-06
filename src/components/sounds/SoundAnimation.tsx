@@ -13,6 +13,8 @@ interface SoundAnimationProps {
   isPlaying: boolean;
   /** Ref vivo para os níveis de áudio (não causa re-render) */
   levelsRef: React.MutableRefObject<AudioLevels>;
+  /** Renderiza em formato circular com fundo sólido primary */
+  circular?: boolean;
 }
 
 // Paleta da identidade do app (laranja + roxo)
