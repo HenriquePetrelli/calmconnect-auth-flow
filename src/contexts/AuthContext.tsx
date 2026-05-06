@@ -39,20 +39,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const getUserType = async (authUser: User): Promise<UserType> => {
     const userId = authUser.id;
+    const meta = authUser.user_metadata ?? {};
 
     try {
-      // Check if super admin
-      if (authUser.user_metadata?.is_super_admin === true) {
-        return 'admin';
-      }
-
-      // Fast path: user type is already present in the JWT metadata.
-      if (authUser.user_metadata?.user_type === 'patient') return 'patient';
+      // Prioridade: user_type explícito SEMPRE vence is_super_admin.
+      // (Existem contas legadas com is_super_admin=true + user_type=patient,
+      // que devem ser tratadas como pacientes.)
+      if (meta.user_type === 'patient') return 'patient';
       if (
-        authUser.user_metadata?.user_type === 'psychologist' &&
-        authUser.user_metadata?.account_status === 'approved'
+        meta.user_type === 'psychologist' &&
+        meta.account_status === 'approved'
       ) {
         return 'psychologist';
+      }
+
+      // Só considera admin quando NÃO há user_type paciente/psicólogo
+      if (meta.is_super_admin === true && !meta.user_type) {
+        return 'admin';
       }
 
       // Check if psychologist is rejected and show specific message
@@ -128,16 +131,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(session?.user ?? null);
 
     if (session?.user) {
-      // Check if super admin immediately from metadata
-      if (session.user.user_metadata?.is_super_admin === true) {
-        setUserType('admin');
+      const meta = session.user.user_metadata ?? {};
+
+      // Mesma regra de prioridade do getUserType:
+      // user_type explícito vence is_super_admin (flag legada).
+      if (meta.user_type === 'patient') {
+        setUserType('patient');
         setLoading(false);
         return;
       }
 
-      const fastUserType = session.user.user_metadata?.user_type as UserType | undefined;
-      if (fastUserType === 'patient') {
-        setUserType('patient');
+      if (
+        meta.user_type === 'psychologist' &&
+        meta.account_status === 'approved'
+      ) {
+        setUserType('psychologist');
+        setLoading(false);
+        return;
+      }
+
+      if (meta.is_super_admin === true && !meta.user_type) {
+        setUserType('admin');
         setLoading(false);
         return;
       }
