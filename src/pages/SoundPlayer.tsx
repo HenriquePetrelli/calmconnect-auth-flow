@@ -20,6 +20,9 @@ const SoundPlayer = () => {
   const [selectedAnimation, setSelectedAnimation] = useState<AnimationType>("waves");
   const [currentSoundIndex, setCurrentSoundIndex] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const { levelsRef, resume } = useAudioAnalyser(audioRef.current, {
+    enabled: isPlaying,
+  });
 
   // pega os dados do som
   const isPlaylist = playlistId !== undefined;
@@ -92,6 +95,8 @@ const SoundPlayer = () => {
       if (isPlaying) {
         audioRef.current.pause();
       } else {
+        // Resume AudioContext (necessário em alguns browsers após gesto)
+        void resume();
         audioRef.current.play().catch(console.error);
       }
     }
@@ -155,11 +160,11 @@ const SoundPlayer = () => {
       </div>
 
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] p-6 space-y-8">
-        <div className="w-80 h-80 relative">
+        <div className="w-full max-w-md aspect-square relative">
           <SoundAnimation
             type={selectedAnimation}
             isPlaying={isPlaying}
-            soundName={currentSound.name}
+            levelsRef={levelsRef}
           />
         </div>
 
