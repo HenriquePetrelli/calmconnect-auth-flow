@@ -140,7 +140,29 @@ const SoundAnimation = ({ type, isPlaying, levelsRef, circular = false }: SoundA
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [type, isPlaying, levelsRef]);
+  }, [type, isPlaying, levelsRef, circular]);
+
+  if (circular) {
+    return (
+      <div className="relative w-full h-full rounded-full overflow-hidden shadow-[0_20px_60px_-15px_hsl(var(--primary)/0.55)] ring-1 ring-white/20">
+        {/* Fundo sólido primary (laranja) */}
+        <div className="absolute inset-0 bg-primary" />
+        <canvas
+          ref={canvasRef}
+          className="relative w-full h-full block"
+          aria-hidden
+        />
+        {/* Highlight sutil para profundidade */}
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(circle at 30% 25%, rgba(255,255,255,0.18), transparent 55%)",
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full h-full rounded-[28px] overflow-hidden border border-white/10 shadow-[0_20px_60px_-20px_rgba(124,58,237,0.6)]">
