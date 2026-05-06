@@ -42,20 +42,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const meta = authUser.user_metadata ?? {};
 
     try {
-      // Prioridade: user_type explícito SEMPRE vence is_super_admin.
-      // (Existem contas legadas com is_super_admin=true + user_type=patient,
-      // que devem ser tratadas como pacientes.)
-      if (meta.user_type === 'patient') return 'patient';
+      // Super admin (flag legada de metadata)
+      if (meta.is_super_admin === true) {
+        console.log('[AuthContext] getUserType -> admin (is_super_admin meta)', { userId, email: authUser.email });
+        return 'admin';
+      }
+
+      // Fast path: user type já presente no JWT
+      if (meta.user_type === 'patient') {
+        console.log('[AuthContext] getUserType -> patient (meta)', { userId, email: authUser.email });
+        return 'patient';
+      }
       if (
         meta.user_type === 'psychologist' &&
         meta.account_status === 'approved'
       ) {
         return 'psychologist';
-      }
-
-      // Só considera admin quando NÃO há user_type paciente/psicólogo
-      if (meta.is_super_admin === true && !meta.user_type) {
-        return 'admin';
       }
 
       // Check if psychologist is rejected and show specific message
@@ -127,37 +129,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const handleAuthStateChange = async (event: string, session: Session | null) => {
+    console.log('[AuthContext] event:', event, 'user:', session?.user?.email, 'meta:', session?.user?.user_metadata);
     setSession(session);
     setUser(session?.user ?? null);
 
     if (session?.user) {
       const meta = session.user.user_metadata ?? {};
 
-      // Mesma regra de prioridade do getUserType:
-      // user_type explícito vence is_super_admin (flag legada).
+      // Super admin via metadata (precedência máxima)
+      if (meta.is_super_admin === true) {
+        console.log('[AuthContext] -> admin (fast path)');
+        setUserType('admin');
+        setLoading(false);
+        return;
+      }
+
+      // Paciente via metadata
       if (meta.user_type === 'patient') {
+        console.log('[AuthContext] -> patient (fast path)');
         setUserType('patient');
         setLoading(false);
         return;
       }
 
+      // Psicólogo aprovado via metadata
       if (
         meta.user_type === 'psychologist' &&
         meta.account_status === 'approved'
       ) {
+        console.log('[AuthContext] -> psychologist (fast path)');
         setUserType('psychologist');
-        setLoading(false);
-        return;
-      }
-
-      if (meta.is_super_admin === true && !meta.user_type) {
-        setUserType('admin');
         setLoading(false);
         return;
       }
 
       try {
         const type = await getUserType(session.user);
+        console.log('[AuthContext] -> resolved via DB:', type);
         setUserType(type);
       } catch (error) {
         console.error('Error getting user type:', error);
@@ -184,8 +192,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    // Set up auth state listener
+    // 1. Listener para mudanças futuras (login/logout/refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
+
+    // 2. Restaura sessão existente do storage IMEDIATAMENTE
+    //    (necessário porque INITIAL_SESSION nem sempre dispara antes do primeiro render)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      handleAuthStateChange('INITIAL_SESSION', session);
+    });
 
     return () => subscription.unsubscribe();
   }, []);
