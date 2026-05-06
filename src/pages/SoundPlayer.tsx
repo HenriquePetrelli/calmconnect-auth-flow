@@ -17,7 +17,7 @@ const SoundPlayer = () => {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(600); // padrão 10 min
   const [selectedDuration, setSelectedDuration] = useState("10");
-  const [selectedAnimation, setSelectedAnimation] = useState("waves");
+  const [selectedAnimation, setSelectedAnimation] = useState<AnimationType>("waves");
   const [currentSoundIndex, setCurrentSoundIndex] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 

@@ -39,7 +39,7 @@ export function useAudioAnalyser(
   const ctxRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
-  const dataRef = useRef<Uint8Array | null>(null);
+  const dataRef = useRef<Uint8Array<ArrayBuffer> | null>(null);
   const rafRef = useRef<number | null>(null);
   const levelsRef = useRef<AudioLevels>({ ...EMPTY_LEVELS });
   const [isReady, setIsReady] = useState(false);
