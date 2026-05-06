@@ -98,7 +98,7 @@ const SoundAnimation = ({ type, isPlaying, levelsRef, circular = false }: SoundA
 
       // Background com fade (cria trilha de partículas)
       ctx.globalCompositeOperation = "source-over";
-      ctx.fillStyle = "rgba(15, 8, 30, 0.18)";
+      ctx.fillStyle = circular ? "rgba(234, 88, 12, 0.22)" : "rgba(15, 8, 30, 0.18)";
       ctx.fillRect(0, 0, w, h);
 
       switch (type) {
