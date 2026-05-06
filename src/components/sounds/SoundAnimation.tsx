@@ -26,7 +26,7 @@ const COLORS = {
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
-const SoundAnimation = ({ type, isPlaying, levelsRef }: SoundAnimationProps) => {
+const SoundAnimation = ({ type, isPlaying, levelsRef, circular = false }: SoundAnimationProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rafRef = useRef<number | null>(null);
   const stateRef = useRef<{
