@@ -83,7 +83,9 @@ export function useAudioAnalyser(
           }
         }
 
-        dataRef.current = new Uint8Array(analyserRef.current.frequencyBinCount);
+        dataRef.current = new Uint8Array(
+          new ArrayBuffer(analyserRef.current.frequencyBinCount)
+        );
         setIsReady(true);
       } catch (err) {
         // Fallback silencioso — animação usará valores zerados

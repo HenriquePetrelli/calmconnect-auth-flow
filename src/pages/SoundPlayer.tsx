@@ -6,7 +6,8 @@ import { ArrowLeft, Play, Pause, SkipBack, SkipForward } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { soundsData } from "@/data/soundsData";
 import AnimationSelector from "@/components/sounds/AnimationSelector";
-import SoundAnimation from "@/components/sounds/SoundAnimation";
+import SoundAnimation, { type AnimationType } from "@/components/sounds/SoundAnimation";
+import { useAudioAnalyser } from "@/hooks/useAudioAnalyser";
 
 const SoundPlayer = () => {
   const navigate = useNavigate();
