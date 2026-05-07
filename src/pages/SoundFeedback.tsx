@@ -9,7 +9,7 @@ import { useAchievements } from "@/hooks/useAchievements";
 const SoundFeedback = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { sound, duration, isPlaylist } = location.state || {};
+  const { sound, duration, isPlaylist, totalSounds } = location.state || {};
   const { addActivity, updateActivityTime } = usePatientStatistics();
   const { checkAchievements } = useAchievements();
 
@@ -57,7 +57,7 @@ const SoundFeedback = () => {
               <p className="font-medium text-foreground">{sound.name}</p>
               {isPlaylist && (
                 <p className="text-sm text-muted-foreground">
-                  Modo playlist
+                  Playlist concluída — {totalSounds || 1} {(totalSounds || 1) === 1 ? 'som ouvido' : 'sons ouvidos'}
                 </p>
               )}
               <p className="text-sm text-muted-foreground">

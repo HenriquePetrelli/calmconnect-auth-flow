@@ -71,10 +71,23 @@ const SoundPlayer = () => {
         setCurrentTime((prev) => prev + 1);
       }, 1000);
     } else if (currentTime >= duration) {
-      if (audioRef.current) audioRef.current.pause();
-      navigate("/sounds/feedback", {
-        state: { sound: currentSound, duration: selectedDuration, isPlaylist },
-      });
+      if (isPlaylist && playlist && currentSoundIndex < playlist.length - 1) {
+        // Auto advance to next track in playlist
+        setCurrentSoundIndex((prev) => prev + 1);
+        setCurrentTime(0);
+        if (audioRef.current) audioRef.current.currentTime = 0;
+      } else {
+        if (audioRef.current) audioRef.current.pause();
+        const totalPlayed = isPlaylist && playlist ? playlist.length : 1;
+        navigate("/sounds/feedback", {
+          state: {
+            sound: currentSound,
+            duration: selectedDuration,
+            isPlaylist,
+            totalSounds: totalPlayed,
+          },
+        });
+      }
     }
     return () => clearInterval(interval);
   }, [isPlaying, currentTime, duration, navigate, currentSound, selectedDuration, isPlaylist]);
@@ -186,15 +199,17 @@ const SoundPlayer = () => {
           </div>
 
           <div className="flex items-center justify-center gap-3 pt-1">
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={prevTrack}
-              disabled={!isPlaylist || currentSoundIndex === 0}
-              className="rounded-full bg-muted/60 hover:bg-muted"
-            >
-              <SkipBack className="w-4 h-4" />
-            </Button>
+            {isPlaylist && (
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={prevTrack}
+                disabled={currentSoundIndex === 0}
+                className="rounded-full bg-muted/60 hover:bg-muted"
+              >
+                <SkipBack className="w-4 h-4" />
+              </Button>
+            )}
             <Button
               size="icon-lg"
               className="w-14 h-14 rounded-full bg-primary hover:bg-primary-hover text-primary-foreground shadow-lg"
@@ -202,15 +217,17 @@ const SoundPlayer = () => {
             >
               {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
             </Button>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={nextTrack}
-              disabled={!isPlaylist || !playlist || currentSoundIndex === playlist.length - 1}
-              className="rounded-full bg-muted/60 hover:bg-muted"
-            >
-              <SkipForward className="w-4 h-4" />
-            </Button>
+            {isPlaylist && (
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={nextTrack}
+                disabled={!playlist || currentSoundIndex === playlist.length - 1}
+                className="rounded-full bg-muted/60 hover:bg-muted"
+              >
+                <SkipForward className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         </div>
 
