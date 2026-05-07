@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Play, Pause, SkipBack, SkipForward, Clock } from "lucide-react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { soundsData } from "@/data/soundsData";
 import AnimationSelector from "@/components/sounds/AnimationSelector";
 import SoundAnimation, { type AnimationType } from "@/components/sounds/SoundAnimation";
@@ -10,14 +10,16 @@ import { useAudioAnalyser } from "@/hooks/useAudioAnalyser";
 
 const SoundPlayer = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { soundId, playlistId } = useParams<{ soundId: string; playlistId?: string }>();
+  const startIndex = (location.state as { startIndex?: number } | null)?.startIndex ?? 0;
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(600);
   const [selectedDuration, setSelectedDuration] = useState("10");
   const [selectedAnimation, setSelectedAnimation] = useState<AnimationType>("waves");
-  const [currentSoundIndex, setCurrentSoundIndex] = useState(0);
+  const [currentSoundIndex, setCurrentSoundIndex] = useState(startIndex);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { levelsRef, resume } = useAudioAnalyser(audioRef.current, {
     enabled: isPlaying,
