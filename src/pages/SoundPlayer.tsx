@@ -59,7 +59,12 @@ const SoundPlayer = () => {
       audioRef.current.loop = true;
       audioRef.current.volume = 0.7;
       audioRef.current.onended = null;
+      if (isPlaying) {
+        void resume();
+        audioRef.current.play().catch(console.error);
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSound]);
 
   useEffect(() => {
