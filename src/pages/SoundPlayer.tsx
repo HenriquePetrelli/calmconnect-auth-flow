@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Play, Pause, SkipBack, SkipForward, Heart, Share2, Clock } from "lucide-react";
+import { ArrowLeft, Play, Pause, SkipBack, SkipForward, Clock } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { soundsData } from "@/data/soundsData";
 import AnimationSelector from "@/components/sounds/AnimationSelector";
