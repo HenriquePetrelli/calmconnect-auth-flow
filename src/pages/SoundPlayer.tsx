@@ -111,9 +111,9 @@ const SoundPlayer = () => {
     setIsPlaying(!isPlaying);
   };
 
-  const resetTimer = () => {
+  const resetTimer = (autoPlay = false) => {
     setCurrentTime(0);
-    setIsPlaying(false);
+    setIsPlaying(autoPlay);
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
@@ -123,14 +123,14 @@ const SoundPlayer = () => {
   const nextTrack = () => {
     if (isPlaylist && playlist && currentSoundIndex < playlist.length - 1) {
       setCurrentSoundIndex((prev) => prev + 1);
-      resetTimer();
+      resetTimer(true);
     }
   };
 
   const prevTrack = () => {
     if (isPlaylist && currentSoundIndex > 0) {
       setCurrentSoundIndex((prev) => prev - 1);
-      resetTimer();
+      resetTimer(true);
     }
   };
 
