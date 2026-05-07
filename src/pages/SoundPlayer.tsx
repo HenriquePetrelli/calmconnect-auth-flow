@@ -14,7 +14,7 @@ const SoundPlayer = () => {
   const { soundId, playlistId } = useParams<{ soundId: string; playlistId?: string }>();
   const startIndex = (location.state as { startIndex?: number } | null)?.startIndex ?? 0;
 
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(true);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(600);
   const [selectedDuration, setSelectedDuration] = useState("10");
