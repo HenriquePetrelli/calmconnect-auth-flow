@@ -146,14 +146,6 @@ const SoundPlayer = () => {
             <h1 className="text-sm font-semibold text-foreground truncate">Reproduzindo</h1>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon-sm" className="rounded-full">
-            <Heart className="w-4 h-4" />
-          </Button>
-          <Button variant="ghost" size="icon-sm" className="rounded-full">
-            <Share2 className="w-4 h-4" />
-          </Button>
-        </div>
       </header>
 
       {/* Main content */}
@@ -178,10 +170,14 @@ const SoundPlayer = () => {
 
         {/* Progress + controls */}
         <div className="w-full shrink-0 mt-3 space-y-2">
-          <div className="relative h-1.5 bg-muted rounded-full overflow-hidden">
+          <div className="relative h-2 bg-muted rounded-full border border-border">
             <div
               className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all"
               style={{ width: `${progressPct}%` }}
+            />
+            <div
+              className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-primary border-2 border-background shadow-md transition-all"
+              style={{ left: `${progressPct}%` }}
             />
           </div>
           <div className="flex justify-between text-xs text-muted-foreground font-mono">
@@ -228,7 +224,6 @@ const SoundPlayer = () => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="0.25">15 segundos</SelectItem>
                 <SelectItem value="5">5 minutos</SelectItem>
                 <SelectItem value="10">10 minutos</SelectItem>
                 <SelectItem value="15">15 minutos</SelectItem>
