@@ -71,10 +71,23 @@ const SoundPlayer = () => {
         setCurrentTime((prev) => prev + 1);
       }, 1000);
     } else if (currentTime >= duration) {
-      if (audioRef.current) audioRef.current.pause();
-      navigate("/sounds/feedback", {
-        state: { sound: currentSound, duration: selectedDuration, isPlaylist },
-      });
+      if (isPlaylist && playlist && currentSoundIndex < playlist.length - 1) {
+        // Auto advance to next track in playlist
+        setCurrentSoundIndex((prev) => prev + 1);
+        setCurrentTime(0);
+        if (audioRef.current) audioRef.current.currentTime = 0;
+      } else {
+        if (audioRef.current) audioRef.current.pause();
+        const totalPlayed = isPlaylist && playlist ? playlist.length : 1;
+        navigate("/sounds/feedback", {
+          state: {
+            sound: currentSound,
+            duration: selectedDuration,
+            isPlaylist,
+            totalSounds: totalPlayed,
+          },
+        });
+      }
     }
     return () => clearInterval(interval);
   }, [isPlaying, currentTime, duration, navigate, currentSound, selectedDuration, isPlaylist]);
