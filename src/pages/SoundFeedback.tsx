@@ -61,24 +61,18 @@ const SoundFeedback = () => {
                 </p>
               )}
               <p className="text-sm text-muted-foreground">
-                Duração: {duration} minutos
+                Duração: {(() => {
+                  const d = parseFloat(duration);
+                  if (isNaN(d)) return `${duration} minutos`;
+                  if (d < 1) {
+                    const sec = Math.round(d * 60);
+                    return `${sec} ${sec === 1 ? 'segundo' : 'segundos'}`;
+                  }
+                  return `${d} ${d === 1 ? 'minuto' : 'minutos'}`;
+                })()}
               </p>
             </div>
           )}
-
-          {/* Emotional Check */}
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Escolha como você se sente agora:
-            </p>
-            <div className="flex justify-center gap-4 text-2xl">
-              <button className="hover:scale-110 transition-transform">😌</button>
-              <button className="hover:scale-110 transition-transform">😊</button>
-              <button className="hover:scale-110 transition-transform">🥰</button>
-              <button className="hover:scale-110 transition-transform">😴</button>
-              <button className="hover:scale-110 transition-transform">🧘</button>
-            </div>
-          </div>
 
           {/* Action Buttons */}
           <div className="space-y-3 pt-4">
