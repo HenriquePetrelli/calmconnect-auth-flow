@@ -9,7 +9,7 @@ import { useAchievements } from "@/hooks/useAchievements";
 const SoundFeedback = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { sound, duration, isPlaylist } = location.state || {};
+  const { sound, duration, isPlaylist, totalSounds } = location.state || {};
   const { addActivity, updateActivityTime } = usePatientStatistics();
   const { checkAchievements } = useAchievements();
 
