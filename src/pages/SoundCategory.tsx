@@ -45,12 +45,12 @@ const SoundCategory = () => {
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5" />
-              <h1 className="text-lg sm:text-xl font-semibold">{category.title}</h1>
+              <Sparkles className="w-5 h-5 text-white" />
+              <h1 className="text-lg sm:text-xl font-semibold text-white">{category.title}</h1>
             </div>
           </div>
           {(category as any).description && (
-            <p className="text-secondary-foreground/85 text-sm sm:text-base mt-3 ml-13 sm:ml-14">
+            <p className="text-white/85 text-sm sm:text-base mt-3 ml-13 sm:ml-14">
               {(category as any).description}
             </p>
           )}
