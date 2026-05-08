@@ -280,43 +280,6 @@ const GuidedBreathing = () => {
           })}
         </div>
 
-        {/* Featured technique */}
-        {!searchQuery && activeFilter === "all" && featuredTechnique && (
-          <section className="space-y-4">
-            <div>
-              <h2 className="text-xl font-bold text-foreground">Recomendado para você</h2>
-              <p className="text-sm text-muted-foreground">A técnica mais usada para relaxar</p>
-            </div>
-
-            <div className="relative overflow-hidden rounded-2xl bg-[#F97316] text-white p-6 sm:p-8 shadow-lg">
-              <div className="absolute -right-6 -bottom-6 w-40 h-40 rounded-full bg-white/10 pointer-events-none" />
-              <div className="absolute right-10 top-6 w-20 h-20 rounded-2xl bg-white/15 flex items-center justify-center pointer-events-none">
-                <featuredTechnique.icon className="w-10 h-10 text-white/80" />
-              </div>
-
-              <div className="relative max-w-md">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-xs font-medium mb-4">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  Mais praticada
-                </div>
-                <h3 className="text-2xl sm:text-3xl font-bold mb-2 text-white">
-                  {featuredTechnique.name}
-                </h3>
-                <p className="text-white/90 text-sm mb-5">
-                  {featuredTechnique.category} • {featuredTechnique.duration}
-                </p>
-                <Button
-                  onClick={() => handleSelectTechnique(featuredTechnique)}
-                  className="bg-white text-[#F97316] hover:bg-white/90 rounded-full font-semibold h-11 px-5 shadow-md"
-                >
-                  <Play className="w-4 h-4 mr-2 fill-current" />
-                  Iniciar prática
-                </Button>
-              </div>
-            </div>
-          </section>
-        )}
-
         {/* Techniques list */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">
@@ -384,6 +347,43 @@ const GuidedBreathing = () => {
             </div>
           )}
         </section>
+
+        {/* Featured technique */}
+        {!searchQuery && activeFilter === "all" && featuredTechnique && (
+          <section className="space-y-4">
+            <div>
+              <h2 className="text-xl font-bold text-foreground">Recomendado para você</h2>
+              <p className="text-sm text-muted-foreground">A técnica mais usada para relaxar</p>
+            </div>
+
+            <div className="relative overflow-hidden rounded-2xl bg-[#F97316] text-white p-6 sm:p-8 shadow-lg">
+              <div className="absolute -right-6 -bottom-6 w-40 h-40 rounded-full bg-white/10 pointer-events-none" />
+              <div className="absolute right-10 top-6 w-20 h-20 rounded-2xl bg-white/15 flex items-center justify-center pointer-events-none">
+                <featuredTechnique.icon className="w-10 h-10 text-white/80" />
+              </div>
+
+              <div className="relative max-w-md">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-xs font-medium mb-4">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Mais praticada
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-bold mb-2 text-white">
+                  {featuredTechnique.name}
+                </h3>
+                <p className="text-white/90 text-sm mb-5">
+                  {featuredTechnique.category} • {featuredTechnique.duration}
+                </p>
+                <Button
+                  onClick={() => handleSelectTechnique(featuredTechnique)}
+                  className="bg-white text-[#F97316] hover:bg-white/90 rounded-full font-semibold h-11 px-5 shadow-md"
+                >
+                  <Play className="w-4 h-4 mr-2 fill-current" />
+                  Iniciar prática
+                </Button>
+              </div>
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );
