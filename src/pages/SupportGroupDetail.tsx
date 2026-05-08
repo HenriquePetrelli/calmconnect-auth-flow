@@ -303,61 +303,65 @@ const SupportGroupDetail = () => {
   return (
     <div className="has-tabs">
       <div className="screen">
+        <PageHeader
+          title={groupName}
+          backTo="/support-groups"
+          rightAction={
+            <Button
+              onClick={handleAddTestimonialClick}
+              size="icon"
+              variant="ghost"
+              aria-label="Adicionar depoimento"
+              className="rounded-full bg-white/15 text-white hover:bg-white/25 hover:text-white h-10 w-10"
+            >
+              <Plus className="w-5 h-5" />
+            </Button>
+          }
+        />
         <main className="container mx-auto px-4 py-6">
-          <div className="mb-6">
-            <BackButton to="/support-groups" label="Voltar para Grupos" />
-          </div>
-          
           <div className="space-y-6">
-            {/* Header */}
-            <div className="text-center space-y-3">
-              <h1 className="text-2xl font-bold text-foreground">
-                {groupName}
-              </h1>
-              
-              <div className="flex items-center justify-center gap-2">
-                <Dialog open={showSymptoms} onOpenChange={setShowSymptoms}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <Info className="w-4 h-4 mr-2" />
-                      Ver sintomas
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
-                    <DialogHeader className="pt-3">
-                      <DialogTitle className="text-base sm:text-lg leading-snug">
-                        Sintomas relacionados
-                      </DialogTitle>
-                      <p className="text-sm text-muted-foreground">{groupName}</p>
-                    </DialogHeader>
-                    <div className="space-y-2">
-                      {symptomsLoading ? (
-                        <div className="space-y-2">
-                          {[...Array(5)].map((_, i) => (
-                            <Skeleton key={i} className="h-10 w-full rounded-md" />
-                          ))}
-                        </div>
-                      ) : symptoms.length > 0 ? (
-                        <ul className="space-y-2">
-                          {symptoms.map((symptom, index) => (
-                            <li
-                              key={index}
-                              className="flex items-start gap-3 text-sm p-3 rounded-lg bg-muted/50 border border-border/50"
-                            >
-                              <span className="w-2 h-2 bg-primary rounded-full mt-1.5 flex-shrink-0" />
-                              <span className="leading-relaxed">{symptom}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="text-muted-foreground text-sm">
-                          Nenhum sintoma específico cadastrado para este grupo.
-                        </p>
-                      )}
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </div>
+            <div className="flex items-center justify-center">
+              <Dialog open={showSymptoms} onOpenChange={setShowSymptoms}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Info className="w-4 h-4 mr-2" />
+                    Ver sintomas
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+                  <DialogHeader className="pt-3">
+                    <DialogTitle className="text-base sm:text-lg leading-snug">
+                      Sintomas relacionados
+                    </DialogTitle>
+                    <p className="text-sm text-muted-foreground">{groupName}</p>
+                  </DialogHeader>
+                  <div className="space-y-2">
+                    {symptomsLoading ? (
+                      <div className="space-y-2">
+                        {[...Array(5)].map((_, i) => (
+                          <Skeleton key={i} className="h-10 w-full rounded-md" />
+                        ))}
+                      </div>
+                    ) : symptoms.length > 0 ? (
+                      <ul className="space-y-2">
+                        {symptoms.map((symptom, index) => (
+                          <li
+                            key={index}
+                            className="flex items-start gap-3 text-sm p-3 rounded-lg bg-muted/50 border border-border/50"
+                          >
+                            <span className="w-2 h-2 bg-primary rounded-full mt-1.5 flex-shrink-0" />
+                            <span className="leading-relaxed">{symptom}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-muted-foreground text-sm">
+                        Nenhum sintoma específico cadastrado para este grupo.
+                      </p>
+                    )}
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
 
             {/* Filter and Add Testimonial */}
