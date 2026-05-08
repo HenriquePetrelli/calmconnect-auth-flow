@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import PatientBottomNav from '@/components/PatientBottomNav';
-import BackButton from '@/components/BackButton';
+import PageHeader from '@/components/PageHeader';
 import AddTestimonialForm from '@/components/support-groups/AddTestimonialForm';
 import EditTestimonialForm from '@/components/support-groups/EditTestimonialForm';
 import SubscriptionUpgradeModal from '@/components/SubscriptionUpgradeModal';
