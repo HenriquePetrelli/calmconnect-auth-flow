@@ -177,19 +177,8 @@ const PracticeScreen = ({ technique, onBack, onComplete }: PracticeScreenProps) 
   if (currentPhase === "exercise") {
     return (
       <div className="h-screen flex flex-col bg-gradient-to-br from-background to-secondary/5 overflow-hidden">
-        <header className="flex items-center justify-between px-4 py-3 bg-background/80 backdrop-blur-sm border-b border-border shrink-0">
-          <div className="flex items-center gap-3 min-w-0">
-            <Button variant="ghost" size="icon-sm" onClick={onBack}>
-              <ArrowLeft className="w-4 h-4" />
-            </Button>
-            <div className="min-w-0">
-              <p className="text-xs text-muted-foreground truncate">{technique.category}</p>
-              <h1 className="text-sm font-semibold text-foreground truncate">
-                {breathingPattern.name}
-              </h1>
-            </div>
-          </div>
-        </header>
+        <PageHeader title={breathingPattern.name} onBack={onBack} />
+
 
         <div className="flex-1 min-h-0 flex flex-col items-center justify-between px-4 py-4 max-w-2xl w-full mx-auto">
           {/* Animation circle */}
