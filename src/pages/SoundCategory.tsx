@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Play, Sparkles, Clock, Music } from "lucide-react";
+import { Play, Clock, Music } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { soundsData } from "@/data/soundsData";
+import PageHeader from "@/components/PageHeader";
 
 const SoundCategory = () => {
   const navigate = useNavigate();
@@ -32,30 +33,17 @@ const SoundCategory = () => {
 
   return (
     <div className="min-h-screen bg-background pb-12">
-      {/* Header — solid secondary */}
-      <div className="bg-secondary text-secondary-foreground">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-5 pb-10">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate("/sounds")}
-              className="rounded-full bg-white/15 text-secondary-foreground hover:bg-white/25 hover:text-secondary-foreground h-10 w-10"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-white" />
-              <h1 className="text-lg sm:text-xl font-semibold text-white">{category.title}</h1>
-            </div>
-          </div>
-          {(category as any).description && (
-            <p className="text-white/85 text-sm sm:text-base mt-3 ml-13 sm:ml-14">
+      <PageHeader title={category.title} backTo="/sounds" />
+
+      {(category as any).description && (
+        <div className="bg-card border-b border-border">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4">
+            <p className="text-sm sm:text-base text-muted-foreground">
               {(category as any).description}
             </p>
-          )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Stats + Play all */}
       <div className="bg-card border-b border-border">
