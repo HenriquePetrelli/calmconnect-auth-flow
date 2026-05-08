@@ -365,18 +365,15 @@ const SupportGroupDetail = () => {
             </div>
 
             {/* Filter */}
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-muted-foreground" />
-              <Select value={filter} onValueChange={(value: 'all' | 'mine') => handleFilterChange(value)}>
-                <SelectTrigger className="w-48">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os depoimentos</SelectItem>
-                  <SelectItem value="mine">Meus depoimentos</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <Select value={filter} onValueChange={(value: 'all' | 'mine') => handleFilterChange(value)}>
+              <SelectTrigger className="w-full h-12 text-base">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os depoimentos</SelectItem>
+                <SelectItem value="mine">Meus depoimentos</SelectItem>
+              </SelectContent>
+            </Select>
 
             {/* Add Testimonial Dialog (triggered from header button) */}
             <Dialog open={showAddTestimonial} onOpenChange={setShowAddTestimonial}>

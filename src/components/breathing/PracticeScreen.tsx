@@ -20,6 +20,7 @@ import BreathingTimer from "./BreathingTimer";
 import PatternSelector from "./PatternSelector";
 import { BreathingPattern, getPatternByTechniqueId } from "./BreathingPatterns";
 import { cn } from "@/lib/utils";
+import PageHeader from "@/components/PageHeader";
 
 interface Technique {
   id: string;
@@ -124,24 +125,8 @@ const PracticeScreen = ({ technique, onBack, onComplete }: PracticeScreenProps) 
   if (currentPhase === "pattern-selection") {
     return (
       <div className="min-h-screen bg-background">
-        <div className="bg-[#7C3AED] text-white">
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-5 pb-8">
-            <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setCurrentPhase("setup")}
-                className="rounded-full bg-white/15 text-white hover:bg-white/25 hover:text-white h-10 w-10"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-              <div className="flex items-center gap-2">
-                <Settings2 className="w-5 h-5" />
-                <h1 className="text-lg sm:text-xl font-semibold text-white">Escolher Padrão</h1>
-              </div>
-            </div>
-          </div>
-        </div>
+        <PageHeader title="Escolher Padrão" onBack={() => setCurrentPhase("setup")} />
+
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6">
           <PatternSelector onSelect={handlePatternSelect} currentPattern={selectedPatternKey} />
         </div>
@@ -177,19 +162,8 @@ const PracticeScreen = ({ technique, onBack, onComplete }: PracticeScreenProps) 
   if (currentPhase === "exercise") {
     return (
       <div className="h-screen flex flex-col bg-gradient-to-br from-background to-secondary/5 overflow-hidden">
-        <header className="flex items-center justify-between px-4 py-3 bg-background/80 backdrop-blur-sm border-b border-border shrink-0">
-          <div className="flex items-center gap-3 min-w-0">
-            <Button variant="ghost" size="icon-sm" onClick={onBack}>
-              <ArrowLeft className="w-4 h-4" />
-            </Button>
-            <div className="min-w-0">
-              <p className="text-xs text-muted-foreground truncate">{technique.category}</p>
-              <h1 className="text-sm font-semibold text-foreground truncate">
-                {breathingPattern.name}
-              </h1>
-            </div>
-          </div>
-        </header>
+        <PageHeader title={breathingPattern.name} onBack={onBack} />
+
 
         <div className="flex-1 min-h-0 flex flex-col items-center justify-between px-4 py-4 max-w-2xl w-full mx-auto">
           {/* Animation circle */}
@@ -258,28 +232,17 @@ const PracticeScreen = ({ technique, onBack, onComplete }: PracticeScreenProps) 
   const Icon = technique.icon;
   return (
     <div className="min-h-screen bg-background pb-12">
-      {/* Header — solid purple */}
-      <div className="bg-[#7C3AED] text-white">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-5 pb-10">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onBack}
-              className="rounded-full bg-white/15 text-white hover:bg-white/25 hover:text-white h-10 w-10"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <div className="flex items-center gap-2">
-              <Wind className="w-5 h-5 text-white" />
-              <h1 className="text-lg sm:text-xl font-semibold text-white">{technique.name}</h1>
-            </div>
-          </div>
-          <p className="text-white/85 text-sm sm:text-base mt-3 ml-13 sm:ml-14">
+      <PageHeader title={technique.name} onBack={onBack} />
+
+      {/* Description */}
+      <div className="bg-card border-b border-border">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4">
+          <p className="text-sm sm:text-base text-muted-foreground">
             {technique.description}
           </p>
         </div>
       </div>
+
 
       {/* Hero card */}
       <div className="bg-card border-b border-border">

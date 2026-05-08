@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Play, Pause, SkipBack, SkipForward, Clock } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Clock } from "lucide-react";
+import PageHeader from "@/components/PageHeader";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { soundsData } from "@/data/soundsData";
 import AnimationSelector from "@/components/sounds/AnimationSelector";
@@ -155,18 +156,8 @@ const SoundPlayer = () => {
 
   return (
     <div className="h-screen flex flex-col bg-gradient-to-br from-background to-secondary/5 overflow-hidden">
-      {/* Header */}
-      <header className="flex items-center justify-between px-4 py-3 bg-background/80 backdrop-blur-sm border-b border-border shrink-0">
-        <div className="flex items-center gap-3 min-w-0">
-          <Button variant="ghost" size="icon-sm" onClick={() => navigate("/sounds")}>
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
-          <div className="min-w-0">
-            <p className="text-xs text-muted-foreground truncate">{currentSound.category}</p>
-            <h1 className="text-sm font-semibold text-foreground truncate">Reproduzindo</h1>
-          </div>
-        </div>
-      </header>
+      <PageHeader title={currentSound.name} onBack={() => navigate("/sounds")} />
+
 
       {/* Main content */}
       <div className="flex-1 min-h-0 flex flex-col items-center justify-between px-4 py-4 max-w-2xl w-full mx-auto">
