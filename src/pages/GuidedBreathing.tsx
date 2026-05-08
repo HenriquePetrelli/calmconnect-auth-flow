@@ -2,7 +2,6 @@ import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  ArrowLeft,
   Search,
   Wind,
   Heart,
@@ -23,6 +22,7 @@ import type { LucideIcon } from "lucide-react";
 import PracticeScreen from "@/components/breathing/PracticeScreen";
 import CompletionScreen from "@/components/breathing/CompletionScreen";
 import PatientBottomNav from "@/components/PatientBottomNav";
+import PageHeader from "@/components/PageHeader";
 import { cn } from "@/lib/utils";
 
 export interface Technique {
@@ -227,39 +227,32 @@ const GuidedBreathing = () => {
     <div className="min-h-screen bg-background pb-24 lg:pb-0">
       <PatientBottomNav />
 
-      {/* Hero header — solid purple */}
-      <div className="bg-[#7C3AED] text-white">
-        <div className="px-4 sm:px-6 pt-5 pb-10 max-w-5xl mx-auto">
-          <div className="flex items-center gap-3 mb-6">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate("/home")}
-              className="rounded-full bg-white/15 text-white hover:bg-white/25 hover:text-white h-10 w-10"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <div className="flex items-center gap-2">
+      <PageHeader title="Respiração Guiada" backTo="/home" />
+
+      {/* Intro card + search */}
+      <div className="px-4 sm:px-6 pt-6 max-w-5xl mx-auto">
+        <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm">
+          <div className="flex items-start gap-3 mb-4">
+            <div className="w-11 h-11 rounded-xl bg-secondary/10 text-secondary flex items-center justify-center shrink-0">
               <Wind className="w-5 h-5" />
-              <h1 className="text-lg sm:text-xl font-semibold text-white">Respiração Guiada</h1>
+            </div>
+            <div>
+              <h2 className="text-lg sm:text-xl font-bold text-foreground leading-tight">
+                Respire com calma e equilibre sua mente
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Técnicas guiadas para reduzir ansiedade, focar e relaxar
+              </p>
             </div>
           </div>
 
-          <h2 className="text-2xl sm:text-4xl font-bold leading-tight mb-2 text-white">
-            Respire com calma e equilibre sua mente
-          </h2>
-          <p className="text-white/85 text-sm sm:text-base mb-6">
-            Técnicas guiadas para reduzir ansiedade, focar e relaxar
-          </p>
-
-          {/* Search */}
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
             <Input
               placeholder="Busque uma técnica para relaxar"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 h-14 bg-white text-foreground border-0 rounded-2xl shadow-lg text-base"
+              className="pl-12 h-12 bg-background border-border rounded-xl text-base"
             />
           </div>
         </div>
