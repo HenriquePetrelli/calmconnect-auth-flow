@@ -8,7 +8,7 @@ import { useSupportGroups, useGroupSymptoms } from '@/hooks/useSupportGroups';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import PatientBottomNav from '@/components/PatientBottomNav';
-import BackButton from '@/components/BackButton';
+import PageHeader from '@/components/PageHeader';
 
 interface GroupCardProps {
   group: {
@@ -138,17 +138,12 @@ const SupportGroups = () => {
     return (
       <div className="has-tabs">
         <div className="screen">
+          <PageHeader title="Grupos de Apoio" backTo="/home" />
           <main className="container mx-auto px-4 py-6">
-            <div className="mb-6">
-              <BackButton to="/home" label="Voltar para Home" />
-            </div>
-              
             <div className="space-y-6">
               <div className="text-center space-y-2">
-                <Skeleton className="h-8 w-64 mx-auto" />
                 <Skeleton className="h-4 w-96 mx-auto" />
               </div>
-              
               <div className="space-y-4">
                 {[...Array(6)].map((_, i) => (
                   <Card key={i}>
@@ -171,20 +166,12 @@ const SupportGroups = () => {
   return (
     <div className="has-tabs">
       <div className="screen">
+        <PageHeader title="Grupos de Apoio" backTo="/home" />
         <main className="container mx-auto px-4 py-6">
-          <div className="mb-6">
-            <BackButton to="/home" label="Voltar para Home" />
-          </div>
-          
           <div className="space-y-6">
-            <div className="text-center space-y-2">
-              <h1 className="text-2xl font-bold text-foreground">
-                Grupos de Apoio
-              </h1>
-              <p className="text-muted-foreground">
-                Conecte-se com pessoas que enfrentam desafios similares aos seus
-              </p>
-            </div>
+            <p className="text-center text-muted-foreground">
+              Conecte-se com pessoas que enfrentam desafios similares aos seus
+            </p>
 
             {groups.length === 0 ? (
               <Card>
