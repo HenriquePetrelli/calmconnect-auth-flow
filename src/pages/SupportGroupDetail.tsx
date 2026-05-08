@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import PatientBottomNav from '@/components/PatientBottomNav';
-import BackButton from '@/components/BackButton';
+import PageHeader from '@/components/PageHeader';
 import AddTestimonialForm from '@/components/support-groups/AddTestimonialForm';
 import EditTestimonialForm from '@/components/support-groups/EditTestimonialForm';
 import SubscriptionUpgradeModal from '@/components/SubscriptionUpgradeModal';
@@ -303,110 +303,100 @@ const SupportGroupDetail = () => {
   return (
     <div className="has-tabs">
       <div className="screen">
+        <PageHeader
+          title={groupName}
+          backTo="/support-groups"
+          rightAction={
+            <Button
+              onClick={handleAddTestimonialClick}
+              size="icon"
+              variant="ghost"
+              aria-label="Adicionar depoimento"
+              className="rounded-full bg-white/15 text-white hover:bg-white/25 hover:text-white h-10 w-10"
+            >
+              <Plus className="w-5 h-5" />
+            </Button>
+          }
+        />
         <main className="container mx-auto px-4 py-6">
-          <div className="mb-6">
-            <BackButton to="/support-groups" label="Voltar para Grupos" />
-          </div>
-          
           <div className="space-y-6">
-            {/* Header */}
-            <div className="text-center space-y-3">
-              <h1 className="text-2xl font-bold text-foreground">
-                {groupName}
-              </h1>
-              
-              <div className="flex items-center justify-center gap-2">
-                <Dialog open={showSymptoms} onOpenChange={setShowSymptoms}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <Info className="w-4 h-4 mr-2" />
-                      Ver sintomas
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
-                    <DialogHeader className="pt-3">
-                      <DialogTitle className="text-base sm:text-lg leading-snug">
-                        Sintomas relacionados
-                      </DialogTitle>
-                      <p className="text-sm text-muted-foreground">{groupName}</p>
-                    </DialogHeader>
-                    <div className="space-y-2">
-                      {symptomsLoading ? (
-                        <div className="space-y-2">
-                          {[...Array(5)].map((_, i) => (
-                            <Skeleton key={i} className="h-10 w-full rounded-md" />
-                          ))}
-                        </div>
-                      ) : symptoms.length > 0 ? (
-                        <ul className="space-y-2">
-                          {symptoms.map((symptom, index) => (
-                            <li
-                              key={index}
-                              className="flex items-start gap-3 text-sm p-3 rounded-lg bg-muted/50 border border-border/50"
-                            >
-                              <span className="w-2 h-2 bg-primary rounded-full mt-1.5 flex-shrink-0" />
-                              <span className="leading-relaxed">{symptom}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="text-muted-foreground text-sm">
-                          Nenhum sintoma específico cadastrado para este grupo.
-                        </p>
-                      )}
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </div>
-            </div>
-
-            {/* Filter and Add Testimonial */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              {/* Filter */}
-              <div className="flex items-center gap-2">
-                <Filter className="w-4 h-4 text-muted-foreground" />
-                <Select value={filter} onValueChange={(value: 'all' | 'mine') => handleFilterChange(value)}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os depoimentos</SelectItem>
-                    <SelectItem value="mine">Meus depoimentos</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Add Testimonial Button */}
-              <Dialog open={showAddTestimonial} onOpenChange={setShowAddTestimonial}>
+            <div className="flex items-center justify-center">
+              <Dialog open={showSymptoms} onOpenChange={setShowSymptoms}>
                 <DialogTrigger asChild>
-                  <Button 
-                    onClick={handleAddTestimonialClick}
-                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                    disabled={!isPremiumUser}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Adicionar Depoimento
-                    {!isPremiumUser && <Crown className="w-4 h-4 ml-2" />}
+                  <Button variant="outline" size="sm">
+                    <Info className="w-4 h-4 mr-2" />
+                    Ver sintomas
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="p-0 gap-0 max-w-full w-screen h-[100dvh] sm:h-auto sm:max-h-[90vh] sm:max-w-lg sm:rounded-lg rounded-none flex flex-col">
-                  <DialogHeader className="sticky top-0 z-10 bg-background border-b px-6 py-4 text-left">
-                    <DialogTitle>Adicionar Depoimento</DialogTitle>
-                    <DialogDescription>
-                      Compartilhe sua experiência com o grupo.
-                    </DialogDescription>
+                <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+                  <DialogHeader className="pt-3">
+                    <DialogTitle className="text-base sm:text-lg leading-snug">
+                      Sintomas relacionados
+                    </DialogTitle>
+                    <p className="text-sm text-muted-foreground">{groupName}</p>
                   </DialogHeader>
-                  <div className="flex-1 overflow-y-auto px-6 py-4 pb-32 sm:pb-12">
-                    <AddTestimonialForm
-                      groupId={groupId}
-                      groupName={groupName}
-                      onSuccess={handleTestimonialAdded}
-                      onCancel={() => setShowAddTestimonial(false)}
-                    />
+                  <div className="space-y-2">
+                    {symptomsLoading ? (
+                      <div className="space-y-2">
+                        {[...Array(5)].map((_, i) => (
+                          <Skeleton key={i} className="h-10 w-full rounded-md" />
+                        ))}
+                      </div>
+                    ) : symptoms.length > 0 ? (
+                      <ul className="space-y-2">
+                        {symptoms.map((symptom, index) => (
+                          <li
+                            key={index}
+                            className="flex items-start gap-3 text-sm p-3 rounded-lg bg-muted/50 border border-border/50"
+                          >
+                            <span className="w-2 h-2 bg-primary rounded-full mt-1.5 flex-shrink-0" />
+                            <span className="leading-relaxed">{symptom}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-muted-foreground text-sm">
+                        Nenhum sintoma específico cadastrado para este grupo.
+                      </p>
+                    )}
                   </div>
                 </DialogContent>
               </Dialog>
             </div>
+
+            {/* Filter */}
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-muted-foreground" />
+              <Select value={filter} onValueChange={(value: 'all' | 'mine') => handleFilterChange(value)}>
+                <SelectTrigger className="w-48">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os depoimentos</SelectItem>
+                  <SelectItem value="mine">Meus depoimentos</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Add Testimonial Dialog (triggered from header button) */}
+            <Dialog open={showAddTestimonial} onOpenChange={setShowAddTestimonial}>
+              <DialogContent className="p-0 gap-0 max-w-full w-screen h-[100dvh] sm:h-auto sm:max-h-[90vh] sm:max-w-lg sm:rounded-lg rounded-none flex flex-col">
+                <DialogHeader className="sticky top-0 z-10 bg-background border-b px-6 py-4 text-left">
+                  <DialogTitle>Adicionar Depoimento</DialogTitle>
+                  <DialogDescription>
+                    Compartilhe sua experiência com o grupo.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="flex-1 overflow-y-auto px-6 py-4 pb-32 sm:pb-12">
+                  <AddTestimonialForm
+                    groupId={groupId}
+                    groupName={groupName}
+                    onSuccess={handleTestimonialAdded}
+                    onCancel={() => setShowAddTestimonial(false)}
+                  />
+                </div>
+              </DialogContent>
+            </Dialog>
 
             {/* Edit Testimonial Dialog */}
             <Dialog open={showEditTestimonial} onOpenChange={setShowEditTestimonial}>

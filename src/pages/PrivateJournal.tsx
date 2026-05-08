@@ -6,7 +6,7 @@ import JournalEntryCard from '@/components/journal/JournalEntryCard';
 import JournalEntryModal from '@/components/journal/JournalEntryModal';
 import MoodFilter from '@/components/journal/MoodFilter';
 import PatientBottomNav from '@/components/PatientBottomNav';
-import BackButton from '@/components/BackButton';
+import PageHeader from '@/components/PageHeader';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
@@ -72,17 +72,23 @@ const PrivateJournal = () => {
     <div className="has-tabs">
       <div className="screen">
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b">
-          <div className="flex items-center justify-between p-4">
-            <BackButton to="/home" label="Home" />
-            <h1 className="text-xl font-semibold">Meu Diário</h1>
-            <Button onClick={handleCreateEntry} size="icon">
-              <Plus className="h-5 w-5" />
-            </Button>
-          </div>
-
-          {/* Filtro de humor */}
-          <div className="px-4 pb-4">
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm">
+          <PageHeader
+            title="Meu Diário"
+            backTo="/home"
+            rightAction={
+              <Button
+                onClick={handleCreateEntry}
+                size="icon"
+                aria-label="Adicionar anotação"
+                className="rounded-full bg-white/15 text-white hover:bg-white/25 hover:text-white h-10 w-10"
+                variant="ghost"
+              >
+                <Plus className="h-5 w-5" />
+              </Button>
+            }
+          />
+          <div className="px-4 py-4 border-b">
             <MoodFilter
               selectedMood={selectedMood}
               onMoodSelect={handleMoodFilter}
