@@ -364,53 +364,39 @@ const SupportGroupDetail = () => {
               </Dialog>
             </div>
 
-            {/* Filter and Add Testimonial */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              {/* Filter */}
-              <div className="flex items-center gap-2">
-                <Filter className="w-4 h-4 text-muted-foreground" />
-                <Select value={filter} onValueChange={(value: 'all' | 'mine') => handleFilterChange(value)}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os depoimentos</SelectItem>
-                    <SelectItem value="mine">Meus depoimentos</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Add Testimonial Button */}
-              <Dialog open={showAddTestimonial} onOpenChange={setShowAddTestimonial}>
-                <DialogTrigger asChild>
-                  <Button 
-                    onClick={handleAddTestimonialClick}
-                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                    disabled={!isPremiumUser}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Adicionar Depoimento
-                    {!isPremiumUser && <Crown className="w-4 h-4 ml-2" />}
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="p-0 gap-0 max-w-full w-screen h-[100dvh] sm:h-auto sm:max-h-[90vh] sm:max-w-lg sm:rounded-lg rounded-none flex flex-col">
-                  <DialogHeader className="sticky top-0 z-10 bg-background border-b px-6 py-4 text-left">
-                    <DialogTitle>Adicionar Depoimento</DialogTitle>
-                    <DialogDescription>
-                      Compartilhe sua experiência com o grupo.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="flex-1 overflow-y-auto px-6 py-4 pb-32 sm:pb-12">
-                    <AddTestimonialForm
-                      groupId={groupId}
-                      groupName={groupName}
-                      onSuccess={handleTestimonialAdded}
-                      onCancel={() => setShowAddTestimonial(false)}
-                    />
-                  </div>
-                </DialogContent>
-              </Dialog>
+            {/* Filter */}
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-muted-foreground" />
+              <Select value={filter} onValueChange={(value: 'all' | 'mine') => handleFilterChange(value)}>
+                <SelectTrigger className="w-48">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os depoimentos</SelectItem>
+                  <SelectItem value="mine">Meus depoimentos</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+
+            {/* Add Testimonial Dialog (triggered from header button) */}
+            <Dialog open={showAddTestimonial} onOpenChange={setShowAddTestimonial}>
+              <DialogContent className="p-0 gap-0 max-w-full w-screen h-[100dvh] sm:h-auto sm:max-h-[90vh] sm:max-w-lg sm:rounded-lg rounded-none flex flex-col">
+                <DialogHeader className="sticky top-0 z-10 bg-background border-b px-6 py-4 text-left">
+                  <DialogTitle>Adicionar Depoimento</DialogTitle>
+                  <DialogDescription>
+                    Compartilhe sua experiência com o grupo.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="flex-1 overflow-y-auto px-6 py-4 pb-32 sm:pb-12">
+                  <AddTestimonialForm
+                    groupId={groupId}
+                    groupName={groupName}
+                    onSuccess={handleTestimonialAdded}
+                    onCancel={() => setShowAddTestimonial(false)}
+                  />
+                </div>
+              </DialogContent>
+            </Dialog>
 
             {/* Edit Testimonial Dialog */}
             <Dialog open={showEditTestimonial} onOpenChange={setShowEditTestimonial}>
