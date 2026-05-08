@@ -1,6 +1,8 @@
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { breathingPatterns, BreathingPattern } from "./BreathingPatterns";
+import { Flower2, Scale, Target, Shield, Heart, Flame, Wind } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface PatternSelectorProps {
   onSelect: (pattern: BreathingPattern, patternKey: string) => void;
@@ -8,27 +10,27 @@ interface PatternSelectorProps {
 }
 
 const PatternSelector = ({ onSelect, currentPattern }: PatternSelectorProps) => {
-  const getPatternIcon = (type: string) => {
+  const getPatternIcon = (type: string): LucideIcon => {
     switch (type) {
-      case 'relaxation': return '🌿';
-      case 'balance': return '⚖️';
-      case 'focus': return '🎯';
-      case 'control': return '🛡️';
-      case 'calm': return '💚';
-      case 'crisis': return '🚨';
-      default: return '🫁';
+      case 'relaxation': return Flower2;
+      case 'balance': return Scale;
+      case 'focus': return Target;
+      case 'control': return Shield;
+      case 'calm': return Heart;
+      case 'crisis': return Flame;
+      default: return Wind;
     }
   };
 
-  const getPatternColor = (type: string) => {
+  const getPatternBg = (type: string) => {
     switch (type) {
-      case 'relaxation': return 'border-success/20 bg-success/10 hover:bg-success/15';
-      case 'balance': return 'border-secondary/20 bg-secondary/10 hover:bg-secondary/15';
-      case 'focus': return 'border-secondary/20 bg-secondary/10 hover:bg-accent';
-      case 'control': return 'border-primary/20 bg-primary/10 hover:bg-primary/20';
-      case 'calm': return 'border-emerald-200 bg-emerald-50 hover:bg-emerald-100';
-      case 'crisis': return 'border-destructive/20 bg-destructive/10 hover:bg-destructive/15';
-      default: return 'border-border bg-gray-50 hover:bg-muted';
+      case 'relaxation': return 'bg-[#10B981]';
+      case 'balance': return 'bg-[#A855F7]';
+      case 'focus': return 'bg-[#F97316]';
+      case 'control': return 'bg-[#3B82F6]';
+      case 'calm': return 'bg-[#EC4899]';
+      case 'crisis': return 'bg-[#EF4444]';
+      default: return 'bg-[#7C3AED]';
     }
   };
 
