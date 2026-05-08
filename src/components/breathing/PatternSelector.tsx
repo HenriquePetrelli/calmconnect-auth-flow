@@ -1,6 +1,8 @@
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { breathingPatterns, BreathingPattern } from "./BreathingPatterns";
+import { Flower2, Scale, Target, Shield, Heart, Flame, Wind } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface PatternSelectorProps {
   onSelect: (pattern: BreathingPattern, patternKey: string) => void;
@@ -8,27 +10,27 @@ interface PatternSelectorProps {
 }
 
 const PatternSelector = ({ onSelect, currentPattern }: PatternSelectorProps) => {
-  const getPatternIcon = (type: string) => {
+  const getPatternIcon = (type: string): LucideIcon => {
     switch (type) {
-      case 'relaxation': return '🌿';
-      case 'balance': return '⚖️';
-      case 'focus': return '🎯';
-      case 'control': return '🛡️';
-      case 'calm': return '💚';
-      case 'crisis': return '🚨';
-      default: return '🫁';
+      case 'relaxation': return Flower2;
+      case 'balance': return Scale;
+      case 'focus': return Target;
+      case 'control': return Shield;
+      case 'calm': return Heart;
+      case 'crisis': return Flame;
+      default: return Wind;
     }
   };
 
-  const getPatternColor = (type: string) => {
+  const getPatternBg = (type: string) => {
     switch (type) {
-      case 'relaxation': return 'border-success/20 bg-success/10 hover:bg-success/15';
-      case 'balance': return 'border-secondary/20 bg-secondary/10 hover:bg-secondary/15';
-      case 'focus': return 'border-secondary/20 bg-secondary/10 hover:bg-accent';
-      case 'control': return 'border-primary/20 bg-primary/10 hover:bg-primary/20';
-      case 'calm': return 'border-emerald-200 bg-emerald-50 hover:bg-emerald-100';
-      case 'crisis': return 'border-destructive/20 bg-destructive/10 hover:bg-destructive/15';
-      default: return 'border-border bg-gray-50 hover:bg-muted';
+      case 'relaxation': return 'bg-[#10B981]';
+      case 'balance': return 'bg-[#A855F7]';
+      case 'focus': return 'bg-[#F97316]';
+      case 'control': return 'bg-[#3B82F6]';
+      case 'calm': return 'bg-[#EC4899]';
+      case 'crisis': return 'bg-[#EF4444]';
+      default: return 'bg-[#7C3AED]';
     }
   };
 
@@ -40,49 +42,57 @@ const PatternSelector = ({ onSelect, currentPattern }: PatternSelectorProps) => 
       </div>
       
       <div className="grid gap-3">
-        {Object.entries(breathingPatterns).map(([key, pattern]) => (
-          <Card 
-            key={key}
-            className={`cursor-pointer transition-all duration-200 ${getPatternColor(pattern.type)} ${
-              currentPattern === key ? 'ring-2 ring-primary ring-offset-2' : ''
-            }`}
-            onClick={() => onSelect(pattern, key)}
-          >
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">{getPatternIcon(pattern.type)}</span>
-                <div className="flex-1">
-                  <CardTitle className="text-base">{pattern.name}</CardTitle>
-                  <CardDescription className="text-xs">{pattern.description}</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="flex gap-2 text-xs">
-                <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 rounded bg-secondary"></div>
-                  <span>{pattern.inhale}s</span>
-                </div>
-                {pattern.hold > 0 && (
-                  <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 rounded bg-success"></div>
-                    <span>{pattern.hold}s</span>
+        {Object.entries(breathingPatterns).map(([key, pattern]) => {
+          const Icon = getPatternIcon(pattern.type);
+          const isActive = currentPattern === key;
+          return (
+            <Card
+              key={key}
+              className={cn(
+                "cursor-pointer transition-all duration-200 hover:shadow-md hover:border-[#7C3AED]/40",
+                isActive && "ring-2 ring-[#7C3AED] ring-offset-2"
+              )}
+              onClick={() => onSelect(pattern, key)}
+            >
+              <CardHeader className="pb-2">
+                <div className="flex items-center gap-3">
+                  <div
+                    className={cn(
+                      "w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-sm shrink-0",
+                      getPatternBg(pattern.type)
+                    )}
+                  >
+                    <Icon className="w-5 h-5" />
                   </div>
-                )}
-                <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 rounded bg-primary"></div>
-                  <span>{pattern.exhale}s</span>
-                </div>
-                {pattern.pause > 0 && (
-                  <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 rounded bg-muted-foreground"></div>
-                    <span>{pattern.pause}s</span>
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-base">{pattern.name}</CardTitle>
+                    <CardDescription className="text-xs">{pattern.description}</CardDescription>
                   </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="flex gap-2 text-xs flex-wrap">
+                  <span className="px-2 py-1 rounded-full bg-[#3B82F6]/15 text-[#3B82F6] font-medium">
+                    Inspirar {pattern.inhale}s
+                  </span>
+                  {pattern.hold > 0 && (
+                    <span className="px-2 py-1 rounded-full bg-[#10B981]/15 text-[#059669] font-medium">
+                      Segurar {pattern.hold}s
+                    </span>
+                  )}
+                  <span className="px-2 py-1 rounded-full bg-[#F97316]/15 text-[#EA580C] font-medium">
+                    Expirar {pattern.exhale}s
+                  </span>
+                  {pattern.pause > 0 && (
+                    <span className="px-2 py-1 rounded-full bg-[#7C3AED]/15 text-[#7C3AED] font-medium">
+                      Pausar {pattern.pause}s
+                    </span>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );
