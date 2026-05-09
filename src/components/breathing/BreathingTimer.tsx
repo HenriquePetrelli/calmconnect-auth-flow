@@ -119,7 +119,7 @@ const BreathingTimer = ({ pattern, isActive, onPhaseChange, onCycleComplete }: B
               style={{ width: `${widthPct}%` }}
             >
               <div
-                className="absolute inset-y-0 left-0 rounded-full transition-all duration-1000 ease-linear"
+                className="absolute inset-y-0 left-0 rounded-full"
                 style={{
                   width: `${fillPct}%`,
                   backgroundColor: phaseMeta[p].color,
