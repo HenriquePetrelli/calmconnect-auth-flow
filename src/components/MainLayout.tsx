@@ -106,13 +106,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           {/* Desktop Header */}
           <header className="hidden lg:block bg-card/80 backdrop-blur-md border-b border-border px-6 py-3">
             <div className="max-w-6xl mx-auto flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold text-foreground">
-                  {getPageTitle()}
-                </h1>
-                {location.pathname === '/home' && moodEnabled && (
-                  <p className="text-sm text-muted-foreground">Como você está se sentindo hoje?</p>
-                )}
+              <div className="flex items-center gap-3">
+                <img src={logoImg} alt="Soliv" className="w-12 h-12 object-contain select-none" draggable={false} />
+                <span className="text-3xl font-semibold text-foreground lowercase" style={{ fontFamily: "'El Messiri', sans-serif" }}>soliv</span>
               </div>
               <div className="flex items-center gap-4">
                 <NotificationButton />
