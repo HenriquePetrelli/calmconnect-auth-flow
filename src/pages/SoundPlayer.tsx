@@ -182,16 +182,12 @@ const SoundPlayer = () => {
 
         {/* Progress + controls */}
         <div className="w-full shrink-0 mt-3 space-y-2">
-          <div className="relative h-2 bg-muted rounded-full border border-border">
-            <div
-              className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all"
-              style={{ width: `${progressPct}%` }}
-            />
-            <div
-              className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-primary border-2 border-background shadow-md transition-all"
-              style={{ left: `${progressPct}%` }}
-            />
-          </div>
+          <Slider
+            value={[Math.min(currentTime, duration)]}
+            max={duration}
+            step={1}
+            onValueChange={(v) => setCurrentTime(v[0])}
+          />
           <div className="flex justify-between text-xs text-muted-foreground font-mono">
             <span>{formatTime(currentTime)}</span>
             <span>{formatTime(duration)}</span>
