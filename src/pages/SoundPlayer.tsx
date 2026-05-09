@@ -77,7 +77,7 @@ const SoundPlayer = () => {
 
   useEffect(() => {
     let interval: ReturnType<typeof setTimeout>;
-    if (isPlaying && currentTime < duration) {
+    if (isPlaying && !isScrubbing && currentTime < duration) {
       interval = setInterval(() => {
         setCurrentTime((prev) => prev + 1);
       }, 1000);
