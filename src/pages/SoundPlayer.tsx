@@ -22,6 +22,8 @@ const SoundPlayer = () => {
   const [selectedDuration, setSelectedDuration] = useState("10");
   const [selectedAnimation, setSelectedAnimation] = useState<AnimationType>("waves");
   const [currentSoundIndex, setCurrentSoundIndex] = useState(startIndex);
+  const [isScrubbing, setIsScrubbing] = useState(false);
+  const [scrubValue, setScrubValue] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { levelsRef, resume } = useAudioAnalyser(audioRef.current, {
     enabled: isPlaying,
