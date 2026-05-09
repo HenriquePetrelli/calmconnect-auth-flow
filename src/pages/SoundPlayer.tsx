@@ -24,6 +24,7 @@ const SoundPlayer = () => {
   const [currentSoundIndex, setCurrentSoundIndex] = useState(startIndex);
   const [isScrubbing, setIsScrubbing] = useState(false);
   const [scrubValue, setScrubValue] = useState(0);
+  const pendingSeekRef = useRef<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { levelsRef, resume } = useAudioAnalyser(audioRef.current, {
     enabled: isPlaying,
@@ -57,12 +58,30 @@ const SoundPlayer = () => {
     }
   }
 
+  const seekAudioToSessionTime = (sessionSeconds: number) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const audioDuration = Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : 0;
+    if (!audioDuration) {
+      pendingSeekRef.current = sessionSeconds;
+      return;
+    }
+
+    const targetTime = sessionSeconds % audioDuration;
+    audio.currentTime = Math.min(Math.max(targetTime, 0), Math.max(audioDuration - 0.05, 0));
+    pendingSeekRef.current = null;
+  };
+
   useEffect(() => {
     if (currentSound && audioRef.current) {
       audioRef.current.src = currentSound.file;
       audioRef.current.loop = true;
       audioRef.current.volume = 0.7;
       audioRef.current.onended = null;
+      audioRef.current.onloadedmetadata = () => {
+        seekAudioToSessionTime(pendingSeekRef.current ?? currentTime);
+      };
       if (isPlaying) {
         void resume();
         audioRef.current.play().catch(console.error);
@@ -189,12 +208,21 @@ const SoundPlayer = () => {
             max={duration}
             step={1}
             onValueChange={(v) => {
+              const nextValue = v[0];
               setIsScrubbing(true);
-              setScrubValue(v[0]);
+              setScrubValue(nextValue);
+              seekAudioToSessionTime(nextValue);
             }}
             onValueCommit={(v) => {
-              setCurrentTime(v[0]);
+              const nextValue = v[0];
+              setCurrentTime(nextValue);
+              setScrubValue(nextValue);
+              seekAudioToSessionTime(nextValue);
               setIsScrubbing(false);
+              if (isPlaying && audioRef.current?.paused) {
+                void resume();
+                audioRef.current.play().catch(console.error);
+              }
             }}
           />
           <div className="flex justify-between text-xs text-muted-foreground font-mono">
