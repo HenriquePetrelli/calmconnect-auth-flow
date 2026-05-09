@@ -86,10 +86,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 </span>
               </div>
               
-              {/* SOLIV CENTRALIZADO */}
+              {/* SOLIV CENTRALIZADO - Tablet/Mobile */}
               <div className="flex items-center space-x-2 absolute left-1/2 transform -translate-x-1/2">
                 <img src={logoImg} alt="Soliv" className="w-10 h-10 object-contain select-none" draggable={false} />
-                <span className="text-2xl font-semibold text-foreground lowercase" style={{ fontFamily: "'El Messiri', sans-serif" }}>soliv</span>
+                <span className="text-[48px] font-black text-secondary lowercase leading-none" style={{ fontFamily: "'El Messiri', sans-serif" }}>soliv</span>
               </div>
               
               {/* NOTIFICAÇÕES À DIREITA */}
@@ -104,12 +104,19 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           </header>
 
           {/* Desktop Header */}
-          <header className="hidden lg:block bg-card/80 backdrop-blur-md border-b border-border px-6 py-3">
-            <div className="max-w-6xl mx-auto flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <img src={logoImg} alt="Soliv" className="w-12 h-12 object-contain select-none" draggable={false} />
-                <span className="text-3xl font-semibold text-foreground lowercase" style={{ fontFamily: "'El Messiri', sans-serif" }}>soliv</span>
+          <header className="hidden lg:block bg-card/80 backdrop-blur-md border-b border-border px-6 py-3 relative">
+            <div className="max-w-6xl mx-auto flex items-center justify-between relative h-16">
+              {/* SPACER ESQUERDO */}
+              <div className="flex items-center gap-3 opacity-0 pointer-events-none select-none">
+                <img src={logoImg} alt="" className="w-12 h-12 object-contain" draggable={false} />
+                <span className="text-[48px] font-black lowercase">soliv</span>
               </div>
+              
+              {/* SOLIV CENTRALIZADO - Desktop */}
+              <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                <span className="text-[48px] font-black text-secondary lowercase leading-none" style={{ fontFamily: "'El Messiri', sans-serif" }}>soliv</span>
+              </div>
+              
               <div className="flex items-center gap-4">
                 <NotificationButton />
               </div>
