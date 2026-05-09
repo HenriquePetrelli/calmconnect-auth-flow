@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { BreathingPattern } from "./BreathingPatterns";
 import { Wind, Heart, Waves, Pause as PauseIcon } from "lucide-react";
 
@@ -20,42 +20,63 @@ const phaseMeta: Record<Phase, { label: string; color: string; icon: JSX.Element
 
 const BreathingTimer = ({ pattern, isActive, onPhaseChange, onCycleComplete }: BreathingTimerProps) => {
   const [currentPhase, setCurrentPhase] = useState<Phase>('inhale');
-  const [remainingTime, setRemainingTime] = useState(pattern.inhale);
+  const [phaseElapsedMs, setPhaseElapsedMs] = useState(0);
+  const phaseStartRef = useRef<number>(performance.now());
+  const pausedAccumRef = useRef<number>(0);
+  const lastTickRef = useRef<number>(performance.now());
 
-  useEffect(() => {
-    setCurrentPhase('inhale');
-    setRemainingTime(pattern.inhale);
-  }, [pattern]);
-
-  useEffect(() => {
-    if (!isActive) return;
-    const interval = setInterval(() => {
-      setRemainingTime((prev) => {
-        if (prev <= 1) {
-          const nextPhase = getNextPhase(currentPhase, pattern);
-          setCurrentPhase(nextPhase);
-          onPhaseChange?.(nextPhase);
-          if (nextPhase === 'inhale') onCycleComplete?.();
-          return pattern[nextPhase] || pattern.inhale;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [isActive, currentPhase, pattern, onPhaseChange, onCycleComplete]);
-
-  const getNextPhase = (phase: Phase, pattern: BreathingPattern): Phase => {
+  const getNextPhase = (phase: Phase, pat: BreathingPattern): Phase => {
     switch (phase) {
-      case 'inhale': return pattern.hold > 0 ? 'hold' : 'exhale';
+      case 'inhale': return pat.hold > 0 ? 'hold' : 'exhale';
       case 'hold':   return 'exhale';
-      case 'exhale': return pattern.pause > 0 ? 'pause' : 'inhale';
+      case 'exhale': return pat.pause > 0 ? 'pause' : 'inhale';
       case 'pause':  return 'inhale';
     }
   };
 
+  // Reset on pattern change
+  useEffect(() => {
+    setCurrentPhase('inhale');
+    setPhaseElapsedMs(0);
+    phaseStartRef.current = performance.now();
+    pausedAccumRef.current = 0;
+    lastTickRef.current = performance.now();
+  }, [pattern]);
+
+  useEffect(() => {
+    if (!isActive) {
+      lastTickRef.current = performance.now();
+      return;
+    }
+    // When resuming, shift phaseStart so accumulated elapsed remains the same
+    phaseStartRef.current = performance.now() - phaseElapsedMs;
+
+    let raf = 0;
+    const tick = () => {
+      const now = performance.now();
+      const elapsed = now - phaseStartRef.current;
+      const totalMs = pattern[currentPhase] * 1000;
+
+      if (elapsed >= totalMs) {
+        const nextPhase = getNextPhase(currentPhase, pattern);
+        setCurrentPhase(nextPhase);
+        onPhaseChange?.(nextPhase);
+        if (nextPhase === 'inhale') onCycleComplete?.();
+        phaseStartRef.current = now;
+        setPhaseElapsedMs(0);
+      } else {
+        setPhaseElapsedMs(elapsed);
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [isActive, currentPhase, pattern, onPhaseChange, onCycleComplete]);
+
   const total = pattern[currentPhase];
-  const elapsed = total - remainingTime;
-  const progress = total > 0 ? elapsed / total : 0;
+  const totalMs = total * 1000;
+  const progress = totalMs > 0 ? Math.min(1, phaseElapsedMs / totalMs) : 0;
+  const remainingTime = Math.max(1, Math.ceil((totalMs - phaseElapsedMs) / 1000));
 
   // Build segments for all active phases
   const segments = (['inhale', 'hold', 'exhale', 'pause'] as Phase[])
@@ -98,7 +119,7 @@ const BreathingTimer = ({ pattern, isActive, onPhaseChange, onCycleComplete }: B
               style={{ width: `${widthPct}%` }}
             >
               <div
-                className="absolute inset-y-0 left-0 rounded-full transition-all duration-1000 ease-linear"
+                className="absolute inset-y-0 left-0 rounded-full"
                 style={{
                   width: `${fillPct}%`,
                   backgroundColor: phaseMeta[p].color,
