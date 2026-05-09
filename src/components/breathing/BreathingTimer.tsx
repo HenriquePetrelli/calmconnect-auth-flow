@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { BreathingPattern } from "./BreathingPatterns";
-import { Wind, Heart, Waves } from "lucide-react";
-import BreathingProgressBar from "./BreathingProgressBar";
-import BreathingSteps from "./BreathingSteps";
+import { Wind, Heart, Waves, Pause as PauseIcon } from "lucide-react";
 
 interface BreathingTimerProps {
   pattern: BreathingPattern;
@@ -11,12 +9,18 @@ interface BreathingTimerProps {
   onCycleComplete?: () => void;
 }
 
+type Phase = 'inhale' | 'hold' | 'exhale' | 'pause';
+
+const phaseMeta: Record<Phase, { label: string; color: string; icon: JSX.Element }> = {
+  inhale: { label: 'Inspirar', color: 'hsl(var(--primary))', icon: <Wind className="w-5 h-5" /> },
+  hold:   { label: 'Segurar', color: 'hsl(var(--secondary))', icon: <Heart className="w-5 h-5" /> },
+  exhale: { label: 'Expirar', color: 'hsl(var(--primary))', icon: <Waves className="w-5 h-5" /> },
+  pause:  { label: 'Pausa',   color: 'hsl(var(--muted-foreground))', icon: <PauseIcon className="w-5 h-5" /> },
+};
+
 const BreathingTimer = ({ pattern, isActive, onPhaseChange, onCycleComplete }: BreathingTimerProps) => {
-  const [currentPhase, setCurrentPhase] = useState<'inhale' | 'hold' | 'exhale' | 'pause'>('inhale');
+  const [currentPhase, setCurrentPhase] = useState<Phase>('inhale');
   const [remainingTime, setRemainingTime] = useState(pattern.inhale);
-  
-  // Calculate active step for visual feedback
-  const activeStep = pattern[currentPhase] - remainingTime;
 
   useEffect(() => {
     setCurrentPhase('inhale');
@@ -24,133 +28,118 @@ const BreathingTimer = ({ pattern, isActive, onPhaseChange, onCycleComplete }: B
   }, [pattern]);
 
   useEffect(() => {
-    let interval: ReturnType<typeof setTimeout>;
-
-    if (isActive) {
-      interval = setInterval(() => {
-        setRemainingTime(prev => {
-          if (prev <= 1) {
-            const nextPhase = getNextPhase(currentPhase, pattern);
-            setCurrentPhase(nextPhase);
-            onPhaseChange?.(nextPhase);
-            
-            if (nextPhase === 'inhale') {
-              onCycleComplete?.();
-            }
-            
-            return pattern[nextPhase] || pattern.inhale;
-          }
-          return prev - 1;
-        });
-
-      }, 1000);
-    }
-
+    if (!isActive) return;
+    const interval = setInterval(() => {
+      setRemainingTime((prev) => {
+        if (prev <= 1) {
+          const nextPhase = getNextPhase(currentPhase, pattern);
+          setCurrentPhase(nextPhase);
+          onPhaseChange?.(nextPhase);
+          if (nextPhase === 'inhale') onCycleComplete?.();
+          return pattern[nextPhase] || pattern.inhale;
+        }
+        return prev - 1;
+      });
+    }, 1000);
     return () => clearInterval(interval);
-  }, [isActive, currentPhase, pattern, remainingTime, onPhaseChange, onCycleComplete]);
+  }, [isActive, currentPhase, pattern, onPhaseChange, onCycleComplete]);
 
-  const getNextPhase = (phase: 'inhale' | 'hold' | 'exhale' | 'pause', pattern: BreathingPattern) => {
+  const getNextPhase = (phase: Phase, pattern: BreathingPattern): Phase => {
     switch (phase) {
-      case 'inhale':
-        return pattern.hold > 0 ? 'hold' : 'exhale';
-      case 'hold':
-        return 'exhale';
-      case 'exhale':
-        return pattern.pause > 0 ? 'pause' : 'inhale';
-      case 'pause':
-        return 'inhale';
-      default:
-        return 'inhale';
+      case 'inhale': return pattern.hold > 0 ? 'hold' : 'exhale';
+      case 'hold':   return 'exhale';
+      case 'exhale': return pattern.pause > 0 ? 'pause' : 'inhale';
+      case 'pause':  return 'inhale';
     }
   };
 
+  const total = pattern[currentPhase];
+  const elapsed = total - remainingTime;
+  const progress = total > 0 ? elapsed / total : 0;
 
-  const getPhaseIcon = (phase: string) => {
-    switch (phase) {
-      case 'inhale':
-        return <Wind className="w-6 h-6 animate-pulse" style={{ color: 'hsl(var(--breathing-inhale))' }} />;
-      case 'hold':
-        return <Heart className="w-6 h-6 animate-pulse" style={{ color: 'hsl(var(--breathing-hold))' }} />;
-      case 'exhale':
-        return <Waves className="w-6 h-6 animate-pulse" style={{ color: 'hsl(var(--breathing-exhale))' }} />;
-      case 'pause':
-        return <div className="w-6 h-6 rounded-full border-2 animate-pulse" style={{ borderColor: 'hsl(var(--breathing-pause))' }} />;
-      default:
-        return <Wind className="w-6 h-6 animate-pulse" style={{ color: 'hsl(var(--breathing-inhale))' }} />;
-    }
-  };
+  // Build segments for all active phases
+  const segments = (['inhale', 'hold', 'exhale', 'pause'] as Phase[])
+    .filter((p) => pattern[p] > 0);
+  const totalDuration = segments.reduce((sum, p) => sum + pattern[p], 0);
 
-  const getPhaseLabel = (phase: string) => {
-    switch (phase) {
-      case 'inhale': return 'Inspirar';
-      case 'hold': return 'Segurar';
-      case 'exhale': return 'Expirar';
-      case 'pause': return 'Pausa';
-      default: return 'Inspirar';
-    }
-  };
-
-  const renderTimeBlocks = () => {
-    const total = pattern[currentPhase];
-    const remaining = remainingTime;
-    
-    return (
-      <div className="flex gap-1 justify-center mb-4">
-        {Array.from({ length: total }).map((_, i) => (
-          <div
-            key={i}
-            className={`h-2 rounded-full transition-all duration-300 ${
-              i < remaining ? 'bg-current opacity-100' : 'bg-current opacity-30'
-            }`}
-            style={{ 
-              width: `${Math.max(8, 100 / total)}px`,
-              color: currentPhase === 'inhale' ? '#3b82f6' :
-                     currentPhase === 'hold' ? '#10b981' :
-                     currentPhase === 'exhale' ? '#f59e0b' : '#6b7280'
-            }}
-          />
-        ))}
-      </div>
-    );
-  };
+  const meta = phaseMeta[currentPhase];
 
   return (
-    <div className="w-full max-w-sm space-y-6">
-      {/* Phase Indicator */}
-      <div className="flex items-center justify-center gap-3 mb-4">
-        {getPhaseIcon(currentPhase)}
-        <span className="text-lg font-semibold" style={{
-          color: currentPhase === 'inhale' ? 'hsl(var(--breathing-inhale))' :
-                 currentPhase === 'hold' ? 'hsl(var(--breathing-hold))' :
-                 currentPhase === 'exhale' ? 'hsl(var(--breathing-exhale))' : 'hsl(var(--breathing-pause))'
-        }}>
-          {getPhaseLabel(currentPhase)}
-        </span>
-      </div>
-
-      {/* Time Blocks */}
-      {renderTimeBlocks()}
-
-      {/* Time Display */}
-      <div className="text-center">
-        <div className="text-3xl font-bold mb-2" style={{
-          color: currentPhase === 'inhale' ? 'hsl(var(--breathing-inhale))' :
-                 currentPhase === 'hold' ? 'hsl(var(--breathing-hold))' :
-                 currentPhase === 'exhale' ? 'hsl(var(--breathing-exhale))' : 'hsl(var(--breathing-pause))'
-        }}>
-          {remainingTime}s
+    <div className="w-full max-w-md mx-auto space-y-4">
+      {/* Phase indicator */}
+      <div className="flex items-center justify-center gap-3">
+        <div
+          className="w-10 h-10 rounded-full flex items-center justify-center text-white shadow-md transition-colors"
+          style={{ backgroundColor: meta.color }}
+        >
+          {meta.icon}
+        </div>
+        <div className="text-center">
+          <p className="text-base font-semibold leading-none" style={{ color: meta.color }}>
+            {meta.label}
+          </p>
+          <p className="text-2xl font-bold tabular-nums mt-1" style={{ color: meta.color }}>
+            {remainingTime}s
+          </p>
         </div>
       </div>
 
-      {/* Progress Bar */}
-      <BreathingProgressBar 
-        phase={currentPhase}
-        duration={pattern[currentPhase]}
-        elapsed={pattern[currentPhase] - remainingTime}
-      />
+      {/* Segmented progress bar */}
+      <div className="flex gap-1 w-full">
+        {segments.map((p) => {
+          const widthPct = (pattern[p] / totalDuration) * 100;
+          const isCurrent = p === currentPhase;
+          const isPast = segments.indexOf(p) < segments.indexOf(currentPhase);
+          const fillPct = isCurrent ? progress * 100 : isPast ? 100 : 0;
+          return (
+            <div
+              key={p}
+              className="relative h-2.5 rounded-full overflow-hidden bg-muted border border-border/50"
+              style={{ width: `${widthPct}%` }}
+            >
+              <div
+                className="absolute inset-y-0 left-0 rounded-full transition-all duration-1000 ease-linear"
+                style={{
+                  width: `${fillPct}%`,
+                  backgroundColor: phaseMeta[p].color,
+                }}
+              />
+            </div>
+          );
+        })}
+      </div>
 
-      {/* Breathing Steps */}
-      <BreathingSteps pattern={pattern} currentPhase={currentPhase} activeStep={activeStep} />
+      {/* Phase labels under segments */}
+      <div className="flex gap-1 w-full">
+        {segments.map((p) => {
+          const widthPct = (pattern[p] / totalDuration) * 100;
+          const isCurrent = p === currentPhase;
+          return (
+            <div
+              key={p}
+              className="text-center"
+              style={{ width: `${widthPct}%` }}
+            >
+              <p
+                className="text-[10px] font-semibold uppercase tracking-wide truncate"
+                style={{
+                  color: isCurrent ? phaseMeta[p].color : 'hsl(var(--muted-foreground))',
+                }}
+              >
+                {phaseMeta[p].label}
+              </p>
+              <p
+                className="text-xs font-bold tabular-nums"
+                style={{
+                  color: isCurrent ? phaseMeta[p].color : 'hsl(var(--muted-foreground))',
+                }}
+              >
+                {pattern[p]}s
+              </p>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };
