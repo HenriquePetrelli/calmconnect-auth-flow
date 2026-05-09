@@ -22,6 +22,8 @@ const SoundPlayer = () => {
   const [selectedDuration, setSelectedDuration] = useState("10");
   const [selectedAnimation, setSelectedAnimation] = useState<AnimationType>("waves");
   const [currentSoundIndex, setCurrentSoundIndex] = useState(startIndex);
+  const [isScrubbing, setIsScrubbing] = useState(false);
+  const [scrubValue, setScrubValue] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { levelsRef, resume } = useAudioAnalyser(audioRef.current, {
     enabled: isPlaying,
@@ -75,7 +77,7 @@ const SoundPlayer = () => {
 
   useEffect(() => {
     let interval: ReturnType<typeof setTimeout>;
-    if (isPlaying && currentTime < duration) {
+    if (isPlaying && !isScrubbing && currentTime < duration) {
       interval = setInterval(() => {
         setCurrentTime((prev) => prev + 1);
       }, 1000);
@@ -99,7 +101,7 @@ const SoundPlayer = () => {
       }
     }
     return () => clearInterval(interval);
-  }, [isPlaying, currentTime, duration, navigate, currentSound, selectedDuration, isPlaylist]);
+  }, [isPlaying, isScrubbing, currentTime, duration, navigate, currentSound, selectedDuration, isPlaylist]);
 
   const togglePlay = () => {
     if (audioRef.current) {
@@ -183,13 +185,20 @@ const SoundPlayer = () => {
         {/* Progress + controls */}
         <div className="w-full shrink-0 mt-3 space-y-2">
           <Slider
-            value={[Math.min(currentTime, duration)]}
+            value={[isScrubbing ? scrubValue : Math.min(currentTime, duration)]}
             max={duration}
             step={1}
-            onValueChange={(v) => setCurrentTime(v[0])}
+            onValueChange={(v) => {
+              setIsScrubbing(true);
+              setScrubValue(v[0]);
+            }}
+            onValueCommit={(v) => {
+              setCurrentTime(v[0]);
+              setIsScrubbing(false);
+            }}
           />
           <div className="flex justify-between text-xs text-muted-foreground font-mono">
-            <span>{formatTime(currentTime)}</span>
+            <span>{formatTime(isScrubbing ? scrubValue : currentTime)}</span>
             <span>{formatTime(duration)}</span>
           </div>
 
