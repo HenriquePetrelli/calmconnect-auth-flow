@@ -34,7 +34,7 @@ const AnimationSelector = ({ selected, onChange }: AnimationSelectorProps) => {
             className={cn(
               "flex items-center gap-2 transition-all",
               isActive &&
-                "bg-gradient-to-r from-[#7C3AED] to-[#F97316] text-white border-0 shadow-md hover:opacity-90"
+                "bg-primary hover:bg-primary-hover text-primary-foreground border-0 shadow-md"
             )}
           >
             {animation.icon}
