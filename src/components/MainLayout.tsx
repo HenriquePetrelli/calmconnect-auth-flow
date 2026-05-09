@@ -88,8 +88,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               
               {/* SOLIV CENTRALIZADO */}
               <div className="flex items-center space-x-2 absolute left-1/2 transform -translate-x-1/2">
-                <img src={logoImg} alt="Soliv" className="w-7 h-7 object-contain select-none" draggable={false} />
-                <span className="text-xl font-bold text-foreground">Soliv</span>
+                <img src={logoImg} alt="Soliv" className="w-10 h-10 object-contain select-none" draggable={false} />
+                <span className="text-2xl font-semibold text-foreground lowercase" style={{ fontFamily: "'El Messiri', sans-serif" }}>soliv</span>
               </div>
               
               {/* NOTIFICAÇÕES À DIREITA */}
