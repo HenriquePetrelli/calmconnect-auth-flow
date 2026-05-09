@@ -185,13 +185,20 @@ const SoundPlayer = () => {
         {/* Progress + controls */}
         <div className="w-full shrink-0 mt-3 space-y-2">
           <Slider
-            value={[Math.min(currentTime, duration)]}
+            value={[isScrubbing ? scrubValue : Math.min(currentTime, duration)]}
             max={duration}
             step={1}
-            onValueChange={(v) => setCurrentTime(v[0])}
+            onValueChange={(v) => {
+              setIsScrubbing(true);
+              setScrubValue(v[0]);
+            }}
+            onValueCommit={(v) => {
+              setCurrentTime(v[0]);
+              setIsScrubbing(false);
+            }}
           />
           <div className="flex justify-between text-xs text-muted-foreground font-mono">
-            <span>{formatTime(currentTime)}</span>
+            <span>{formatTime(isScrubbing ? scrubValue : currentTime)}</span>
             <span>{formatTime(duration)}</span>
           </div>
 
