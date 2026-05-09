@@ -138,18 +138,17 @@ const PracticeScreen = ({ technique, onBack, onComplete }: PracticeScreenProps) 
   if (currentPhase === "preparation") {
     const Icon = technique.icon;
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#7C3AED] via-[#5B21B6] to-[#1E1B4B] flex items-center justify-center p-6">
-        <div className="text-center text-white space-y-6">
+      <div className="min-h-screen bg-gradient-to-br from-primary via-secondary to-secondary-active flex items-center justify-center p-6">
+        <div className="text-center space-y-6">
           <div
             className={cn(
-              "w-20 h-20 mx-auto rounded-2xl flex items-center justify-center shadow-xl",
-              technique.iconBg
+              "w-20 h-20 mx-auto rounded-2xl flex items-center justify-center shadow-xl bg-white/15 backdrop-blur-sm"
             )}
           >
             <Icon className="w-10 h-10 text-white" />
           </div>
-          <h2 className="text-2xl font-semibold">Prepare-se...</h2>
-          <div className="text-7xl font-bold tabular-nums animate-scale-in" key={preparationTime}>
+          <h2 className="text-2xl font-semibold text-white">Prepare-se...</h2>
+          <div className="text-7xl font-bold tabular-nums animate-scale-in text-white" key={preparationTime}>
             {preparationTime}
           </div>
           <p className="text-white/80">Encontre uma posição confortável</p>
