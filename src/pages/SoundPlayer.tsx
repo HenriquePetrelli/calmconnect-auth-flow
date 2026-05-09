@@ -101,7 +101,7 @@ const SoundPlayer = () => {
       }
     }
     return () => clearInterval(interval);
-  }, [isPlaying, currentTime, duration, navigate, currentSound, selectedDuration, isPlaylist]);
+  }, [isPlaying, isScrubbing, currentTime, duration, navigate, currentSound, selectedDuration, isPlaylist]);
 
   const togglePlay = () => {
     if (audioRef.current) {
