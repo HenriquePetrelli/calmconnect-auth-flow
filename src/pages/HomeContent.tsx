@@ -192,16 +192,9 @@ const HomeContent = () => {
   return (
     <div className="px-4 lg:p-6">
       <div className="max-w-6xl mx-auto">
-        {/* Mobile/Tablet Greeting Section */}
+        {/* Mobile/Tablet Mood Section */}
         {moodEnabled && (
           <section className="lg:hidden mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h1 className="text-2xl font-bold text-foreground">Olá, <span className="text-primary">{firstName}</span>! 👋</h1>
-                <p className="text-muted-foreground">Como você está se sentindo hoje?</p>
-              </div>
-            </div>
-
             <MoodAccordion
               currentValue={todayMoodValue}
               onMoodSelected={handleMoodSelected}
