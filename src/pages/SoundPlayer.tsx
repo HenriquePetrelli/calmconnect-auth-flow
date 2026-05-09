@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 import { Play, Pause, SkipBack, SkipForward, Clock } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
