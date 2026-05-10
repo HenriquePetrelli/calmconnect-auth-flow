@@ -997,34 +997,6 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
           </div>
         )}
 
-        {/* Real-time local video stream updater */}
-        {localStream && (
-          <div className="absolute inset-0 pointer-events-none">
-            <video
-              key={`local-stream-${Date.now()}`}
-              ref={(el) => {
-                if (el && localStream) {
-                  // Continuously update to ensure live video feed
-                  const updateVideo = () => {
-                    if (el.srcObject !== localStream) {
-                      el.srcObject = localStream;
-                      el.play().catch(console.error);
-                    }
-                  };
-                  updateVideo();
-                  // Update every second to ensure stream continuity
-                  const interval = setInterval(updateVideo, 1000);
-                  return () => clearInterval(interval);
-                }
-              }}
-              style={{ display: 'none' }}
-              autoPlay
-              playsInline
-              muted
-            />
-          </div>
-        )}
-
         {/* Vídeo próprio (self-view) - Responsivo e sobreposto */}
         <div className="absolute bottom-20 md:bottom-24 right-4 w-32 h-24 md:w-48 md:h-36 bg-card rounded-xl md:rounded-2xl border-2 border-border overflow-hidden shadow-2xl transition-transform hover:scale-105 cursor-pointer z-20">
           {isCameraOff ? (
