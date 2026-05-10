@@ -463,6 +463,17 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
         }
       }
       
+      // Stop OLD stream tracks to release devices
+      const oldStream = localStream;
+      oldStream.getTracks().forEach(track => {
+        try {
+          track.stop();
+          console.log(`🛑 Stopped old ${track.kind} track after device change`);
+        } catch (e) {
+          console.warn('Failed stopping old track:', e);
+        }
+      });
+      
       // Update local stream
       setLocalStream(newStream);
       
