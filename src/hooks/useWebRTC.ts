@@ -660,12 +660,8 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
       }
     };
 
-    // Only initialize once preferences are loaded
-    if (!prefsLoading) {
-      initialize();
-    }
-  }, [sessionId, userType]); // Remove prefsLoading from dependencies to prevent restart
-  
+  }, [sessionId, userType, prefsLoading]);
+
   // (Removed duplicate delayed-initialize effect that caused duplicate realtime
   //  channel subscriptions and orphan media streams.)
 
