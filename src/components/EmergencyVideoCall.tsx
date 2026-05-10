@@ -547,12 +547,29 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     }
   };
 
-  // Timer countdown
+  // Timer countdown with 5-min and 1-min warnings
+  const warned5MinRef = React.useRef(false);
+  const warned1MinRef = React.useRef(false);
   useEffect(() => {
     if (!isConnected) return;
 
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
+        if (prev === 300 && !warned5MinRef.current) {
+          warned5MinRef.current = true;
+          toast({
+            title: 'Aviso',
+            description: 'A chamada será encerrada em 5 minutos.',
+          });
+        }
+        if (prev === 60 && !warned1MinRef.current) {
+          warned1MinRef.current = true;
+          toast({
+            title: 'Atenção',
+            description: 'A chamada será encerrada em 1 minuto.',
+            variant: 'destructive',
+          });
+        }
         if (prev <= 1) {
           handleEndCall();
           return 0;
