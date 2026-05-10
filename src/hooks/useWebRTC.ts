@@ -137,14 +137,23 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
         setIsConnected(state === 'connected');
         onConnectionStateChange?.(state);
 
-        if (state === 'failed' || state === 'disconnected') {
-          // Check if call was ended by someone instead of connection failure
+        if (state === 'failed') {
+          // Only show reconnect message on hard failure when no manual end was signalled
           if (callEndedBy) {
             const endedByName = callEndedBy.userType === 'psychologist' ? 'O psicólogo' : 'O paciente';
             setError(`${endedByName} finalizou a chamada.`);
           } else {
             setError('Conexão perdida. Tentando reconectar...');
+            // Attempt ICE restart once before giving up
+            try {
+              pc.restartIce?.();
+            } catch (e) {
+              console.warn('restartIce failed:', e);
+            }
           }
+        } else if (state === 'disconnected') {
+          // Transient — don't alarm the user, let it self-heal
+          console.log('⏳ Connection transient disconnect, awaiting recovery...');
         } else if (state === 'connected') {
           setError(null);
           setCallEndedBy(null);
