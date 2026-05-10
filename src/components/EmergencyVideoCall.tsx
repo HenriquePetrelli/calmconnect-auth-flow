@@ -547,12 +547,29 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     }
   };
 
-  // Timer countdown
+  // Timer countdown with 5-min and 1-min warnings
+  const warned5MinRef = React.useRef(false);
+  const warned1MinRef = React.useRef(false);
   useEffect(() => {
     if (!isConnected) return;
 
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
+        if (prev === 300 && !warned5MinRef.current) {
+          warned5MinRef.current = true;
+          toast({
+            title: 'Aviso',
+            description: 'A chamada será encerrada em 5 minutos.',
+          });
+        }
+        if (prev === 60 && !warned1MinRef.current) {
+          warned1MinRef.current = true;
+          toast({
+            title: 'Atenção',
+            description: 'A chamada será encerrada em 1 minuto.',
+            variant: 'destructive',
+          });
+        }
         if (prev <= 1) {
           handleEndCall();
           return 0;
@@ -898,9 +915,18 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
             </div>
           </div>
           
-          {/* Timer - Responsivo */}
+          {/* Timer com destaque progressivo */}
           <div className="text-center px-2">
-            <div className="text-lg md:text-2xl font-mono font-bold bg-muted px-2 md:px-4 py-1 md:py-2 rounded-lg">
+            <div
+              className={`text-lg md:text-2xl font-mono font-bold px-2 md:px-4 py-1 md:py-2 rounded-lg transition-colors ${
+                timeLeft <= 60
+                  ? 'bg-destructive text-destructive-foreground animate-pulse'
+                  : timeLeft <= 300
+                  ? 'bg-warning/20 text-warning-foreground'
+                  : 'bg-muted'
+              }`}
+              title="Tempo restante da sessão SOS"
+            >
               {formatTime(timeLeft)}
             </div>
           </div>
@@ -909,23 +935,6 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
 
       {/* Área principal do vídeo - Tela inteira */}
       <div className="absolute inset-0 top-[72px] md:top-[88px] bottom-[100px] md:bottom-[120px] bg-background overflow-hidden">
-        
-        {/* Continuous local video stream updater */}
-        {localStream && (
-          <div style={{ display: 'none' }}>
-            <video
-              ref={(el) => {
-                if (el && localVideoRef.current !== el) {
-                  localVideoRef.current = el;
-                }
-                if (el && localStream) {
-                  el.srcObject = localStream;
-                  el.play().catch(console.error);
-                }
-              }}
-            />
-          </div>
-        )}
         {/* Vídeo remoto - Tela inteira */}
         <div className="absolute inset-0">
           <video 
@@ -1011,34 +1020,6 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
                 </div>
               </div>
             </div>
-          </div>
-        )}
-
-        {/* Real-time local video stream updater */}
-        {localStream && (
-          <div className="absolute inset-0 pointer-events-none">
-            <video
-              key={`local-stream-${Date.now()}`}
-              ref={(el) => {
-                if (el && localStream) {
-                  // Continuously update to ensure live video feed
-                  const updateVideo = () => {
-                    if (el.srcObject !== localStream) {
-                      el.srcObject = localStream;
-                      el.play().catch(console.error);
-                    }
-                  };
-                  updateVideo();
-                  // Update every second to ensure stream continuity
-                  const interval = setInterval(updateVideo, 1000);
-                  return () => clearInterval(interval);
-                }
-              }}
-              style={{ display: 'none' }}
-              autoPlay
-              playsInline
-              muted
-            />
           </div>
         )}
 
