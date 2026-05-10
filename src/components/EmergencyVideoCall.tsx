@@ -244,46 +244,56 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     validateSessionWithDelay();
   }, [sessionId, navigate, toast]);
 
-  // Load and apply user preferences on connection
+  // Load and apply user preferences on connection (only once, and only if needed)
+  const appliedPrefsRef = React.useRef(false);
   useEffect(() => {
     const applySavedSettings = async () => {
-      if (!isConnected || prefsLoading) return;
-      
+      if (!isConnected || prefsLoading || !localStream || !updateDeviceStream) return;
+      if (appliedPrefsRef.current) return;
+
       try {
-        console.log('🔧 Applying saved device preferences...');
-        
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        const { data: preferences } = await supabase
+        const { data: prefs } = await supabase
           .from('user_preferences')
           .select('*')
           .eq('user_id', user.id)
           .single();
-        
-        if (preferences && updateDeviceStream) {
-          console.log('📱 Found saved preferences, applying them...');
-          
-          // Get new stream with preferred devices
-          const newStream = await navigator.mediaDevices.getUserMedia({
-            video: preferences.camera_device_id ? 
-              { deviceId: preferences.camera_device_id } : true,
-            audio: preferences.mic_device_id ? 
-              { deviceId: preferences.mic_device_id } : true
-          });
-          
-          // Update the stream in the peer connection
-          await updateDeviceStream(newStream);
-          
-          console.log('✅ Device preferences applied successfully');
+
+        if (!prefs) {
+          appliedPrefsRef.current = true;
+          return;
         }
+
+        // Skip if current tracks already match the preferred devices
+        const currentVideoSettings = localStream.getVideoTracks()[0]?.getSettings();
+        const currentAudioSettings = localStream.getAudioTracks()[0]?.getSettings();
+        const videoMatches = !prefs.camera_device_id || currentVideoSettings?.deviceId === prefs.camera_device_id;
+        const audioMatches = !prefs.mic_device_id || currentAudioSettings?.deviceId === prefs.mic_device_id;
+
+        if (videoMatches && audioMatches) {
+          appliedPrefsRef.current = true;
+          return;
+        }
+
+        console.log('📱 Applying saved device preferences...');
+        const newStream = await navigator.mediaDevices.getUserMedia({
+          video: prefs.camera_device_id ? { deviceId: { exact: prefs.camera_device_id } } : true,
+          audio: prefs.mic_device_id ? { deviceId: { exact: prefs.mic_device_id } } : true,
+        });
+
+        await updateDeviceStream(newStream);
+        appliedPrefsRef.current = true;
+        console.log('✅ Device preferences applied successfully');
       } catch (error) {
         console.warn('⚠️ Could not apply saved device preferences:', error);
+        appliedPrefsRef.current = true;
       }
     };
 
     applySavedSettings();
-  }, [isConnected, prefsLoading, updateDeviceStream]);
+  }, [isConnected, prefsLoading, localStream, updateDeviceStream]);
 
   // Enhanced cleanup function - defined early to avoid dependency issues
   const enhancedCleanup = useCallback(async () => {
