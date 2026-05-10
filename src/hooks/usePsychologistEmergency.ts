@@ -182,7 +182,7 @@ export const usePsychologistEmergency = () => {
 
     // Subscribe to real-time changes
     const channel = supabase
-      .channel('emergency-requests-changes')
+      .channel(`emergency-requests-changes-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         {
