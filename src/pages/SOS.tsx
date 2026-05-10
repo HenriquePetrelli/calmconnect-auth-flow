@@ -16,7 +16,7 @@ const SOS = () => {
   const [requestId, setRequestId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string>('');
-  const { cancelRequest } = useEmergencySOS();
+  const { cancelRequest, createEmergencyRequest } = useEmergencySOS();
   
   // Get requestId from navigation state (passed from SOSButton)
   const expectedRequestId = location.state?.requestId;
