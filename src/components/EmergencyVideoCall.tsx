@@ -915,9 +915,18 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
             </div>
           </div>
           
-          {/* Timer - Responsivo */}
+          {/* Timer com destaque progressivo */}
           <div className="text-center px-2">
-            <div className="text-lg md:text-2xl font-mono font-bold bg-muted px-2 md:px-4 py-1 md:py-2 rounded-lg">
+            <div
+              className={`text-lg md:text-2xl font-mono font-bold px-2 md:px-4 py-1 md:py-2 rounded-lg transition-colors ${
+                timeLeft <= 60
+                  ? 'bg-destructive text-destructive-foreground animate-pulse'
+                  : timeLeft <= 300
+                  ? 'bg-warning/20 text-warning-foreground'
+                  : 'bg-muted'
+              }`}
+              title="Tempo restante da sessão SOS"
+            >
               {formatTime(timeLeft)}
             </div>
           </div>
