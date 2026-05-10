@@ -93,6 +93,27 @@ const SOS = () => {
         data = latestRequest;
       }
 
+      // If no existing request, create one now
+      if (!data) {
+        try {
+          console.log('🆘 No existing request found, creating one from SOS page...');
+          const newId = await createEmergencyRequest();
+          if (newId) {
+            const { data: created } = await supabase
+              .from('emergency_requests')
+              .select('id, status, room_url, video_room_id, created_at')
+              .eq('id', newId)
+              .maybeSingle();
+            data = created;
+          }
+        } catch (err) {
+          console.error('❌ Failed to create emergency request from SOS page:', err);
+          setLoading(false);
+          navigate('/home');
+          return;
+        }
+      }
+
       if (data) {
         const id = (data as any).id as string;
         setRequestId(id);
