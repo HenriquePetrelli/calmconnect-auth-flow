@@ -16,7 +16,7 @@ const SOS = () => {
   const [requestId, setRequestId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string>('');
-  const { cancelRequest } = useEmergencySOS();
+  const { cancelRequest, createEmergencyRequest } = useEmergencySOS();
   
   // Get requestId from navigation state (passed from SOSButton)
   const expectedRequestId = location.state?.requestId;
@@ -91,6 +91,27 @@ const SOS = () => {
           .limit(1)
           .maybeSingle();
         data = latestRequest;
+      }
+
+      // If no existing request, create one now
+      if (!data) {
+        try {
+          console.log('🆘 No existing request found, creating one from SOS page...');
+          const newId = await createEmergencyRequest();
+          if (newId) {
+            const { data: created } = await supabase
+              .from('emergency_requests')
+              .select('id, status, room_url, video_room_id, created_at')
+              .eq('id', newId)
+              .maybeSingle();
+            data = created;
+          }
+        } catch (err) {
+          console.error('❌ Failed to create emergency request from SOS page:', err);
+          setLoading(false);
+          navigate('/home');
+          return;
+        }
       }
 
       if (data) {
