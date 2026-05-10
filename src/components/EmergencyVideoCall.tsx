@@ -909,23 +909,6 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
 
       {/* Área principal do vídeo - Tela inteira */}
       <div className="absolute inset-0 top-[72px] md:top-[88px] bottom-[100px] md:bottom-[120px] bg-background overflow-hidden">
-        
-        {/* Continuous local video stream updater */}
-        {localStream && (
-          <div style={{ display: 'none' }}>
-            <video
-              ref={(el) => {
-                if (el && localVideoRef.current !== el) {
-                  localVideoRef.current = el;
-                }
-                if (el && localStream) {
-                  el.srcObject = localStream;
-                  el.play().catch(console.error);
-                }
-              }}
-            />
-          </div>
-        )}
         {/* Vídeo remoto - Tela inteira */}
         <div className="absolute inset-0">
           <video 
