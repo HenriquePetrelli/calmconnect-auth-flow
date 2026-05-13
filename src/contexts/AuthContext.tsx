@@ -60,6 +60,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return 'psychologist';
       }
 
+      // Check if user is a super admin (admin_users table)
+      try {
+        const { data: isAdminData, error: isAdminError } = await supabase
+          .rpc('is_super_admin', { user_id_param: userId });
+        if (!isAdminError && isAdminData === true) {
+          console.log('[AuthContext] getUserType -> admin (admin_users)', { userId });
+          return 'admin';
+        }
+      } catch (e) {
+        console.warn('[AuthContext] is_super_admin check failed', e);
+      }
+
       // Check if psychologist is rejected and show specific message
       const { data: rejectionStatus, error: rejectionError } = await supabase
         .rpc('get_psychologist_rejection_status', { p_user_id: userId });
