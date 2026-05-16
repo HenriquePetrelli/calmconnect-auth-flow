@@ -268,9 +268,6 @@ const ConsultationHistory = () => {
                       </div>
                     </TableCell>
                     <TableCell>
-                      {getTypeBadge(appointment.appointment_type)}
-                    </TableCell>
-                    <TableCell>
                       {getStatusBadge(appointment.status)}
                     </TableCell>
                     <TableCell>
