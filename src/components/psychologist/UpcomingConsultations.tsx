@@ -24,6 +24,7 @@ const formatTimeUntil = (minutes: number): string => {
 };
 
 const UpcomingConsultations = () => {
+  const navigate = useNavigate();
   const { 
     todayAppointments: todayRaw, 
     upcomingAppointments: upcomingRaw, 
@@ -32,17 +33,26 @@ const UpcomingConsultations = () => {
     updateAppointment 
   } = usePsychologistSchedule();
 
+  const now = new Date();
   const acceptedStatuses = ['scheduled', 'confirmed', 'in_progress'];
-  const todayAppointments = todayRaw.filter((a: any) => acceptedStatuses.includes(a.status));
+  const isAppointmentActive = (a: any) => {
+    const start = new Date(a.scheduled_at);
+    const durationMin = a.duration || 50;
+    const end = new Date(start.getTime() + durationMin * 60 * 1000);
+    return end.getTime() > now.getTime();
+  };
+  const todayAppointments = todayRaw
+    .filter((a: any) => acceptedStatuses.includes(a.status))
+    .filter(isAppointmentActive);
   const todayIds = new Set(todayAppointments.map((a: any) => a.id));
   const isSameLocalDay = (d1: Date, d2: Date) =>
     d1.getFullYear() === d2.getFullYear() &&
     d1.getMonth() === d2.getMonth() &&
     d1.getDate() === d2.getDate();
-  const now = new Date();
   const upcomingAppointments = upcomingRaw.filter((a: any) => {
     if (todayIds.has(a.id)) return false;
-    return !isSameLocalDay(new Date(a.scheduled_at), now);
+    if (isSameLocalDay(new Date(a.scheduled_at), now)) return false;
+    return isAppointmentActive(a);
   });
   
   const [startingAppointments, setStartingAppointments] = useState<Set<string>>(new Set());
