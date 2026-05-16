@@ -2,12 +2,25 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Clock, User, Video, Calendar, Phone, MessageSquare, AlertTriangle } from 'lucide-react';
+import { Clock, User, Calendar, MessageSquare } from 'lucide-react';
 import { usePsychologistSchedule } from '@/hooks/usePsychologistSchedule';
-import { format, isToday, isTomorrow, formatDistanceToNow } from 'date-fns';
+import { format, isToday, isTomorrow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { formatBrazilTime, formatTimeOnly } from '@/utils/timezone';
+import { Badge as BadgeUI } from '@/components/ui/badge';
 import PendingAppointments from './PendingAppointments';
+
+const formatTimeUntil = (minutes: number): string => {
+  const total = Math.max(0, Math.floor(minutes));
+  const days = Math.floor(total / (60 * 24));
+  const hours = Math.floor((total % (60 * 24)) / 60);
+  const mins = total % 60;
+  const parts: string[] = [];
+  if (days > 0) parts.push(`${days}d`);
+  if (hours > 0) parts.push(`${hours}h`);
+  if (mins > 0 || parts.length === 0) parts.push(`${mins}min`);
+  return parts.join(' ');
+};
 
 const UpcomingConsultations = () => {
   const { 
