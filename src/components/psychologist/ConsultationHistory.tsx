@@ -271,7 +271,15 @@ const ConsultationHistory = () => {
                       {getStatusBadge(appointment.status)}
                     </TableCell>
                     <TableCell>
-                      <Dialog>
+                      <Dialog
+                        open={selectedAppointment?.id === appointment.id}
+                        onOpenChange={(open) => {
+                          if (!open) {
+                            setSelectedAppointment(null);
+                            setSessionSummary('');
+                          }
+                        }}
+                      >
                         <DialogTrigger asChild>
                           <Button
                             variant="outline"
@@ -289,7 +297,7 @@ const ConsultationHistory = () => {
                           <DialogHeader>
                             <DialogTitle>Detalhes da Consulta</DialogTitle>
                           </DialogHeader>
-                          {selectedAppointment && (
+                          {selectedAppointment?.id === appointment.id && (
                             <div className="space-y-4">
                               <div className="grid grid-cols-2 gap-4">
                                 <div>
@@ -301,10 +309,6 @@ const ConsultationHistory = () => {
                                   <p className="text-sm">
                                     {format(new Date(selectedAppointment.scheduled_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
                                   </p>
-                                </div>
-                                <div>
-                                  <Label className="font-medium">Tipo</Label>
-                                  <p className="text-sm">{selectedAppointment.appointment_type}</p>
                                 </div>
                                 <div>
                                   <Label className="font-medium">Status</Label>
