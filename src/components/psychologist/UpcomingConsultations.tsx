@@ -1,8 +1,9 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clock, User, Calendar, MessageSquare } from 'lucide-react';
+import { Clock, User, Calendar, MessageSquare, Video } from 'lucide-react';
 import { usePsychologistSchedule } from '@/hooks/usePsychologistSchedule';
 import { format, isToday, isTomorrow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -23,6 +24,7 @@ const formatTimeUntil = (minutes: number): string => {
 };
 
 const UpcomingConsultations = () => {
+  const navigate = useNavigate();
   const { 
     todayAppointments: todayRaw, 
     upcomingAppointments: upcomingRaw, 
@@ -31,17 +33,26 @@ const UpcomingConsultations = () => {
     updateAppointment 
   } = usePsychologistSchedule();
 
+  const now = new Date();
   const acceptedStatuses = ['scheduled', 'confirmed', 'in_progress'];
-  const todayAppointments = todayRaw.filter((a: any) => acceptedStatuses.includes(a.status));
+  const isAppointmentActive = (a: any) => {
+    const start = new Date(a.scheduled_at);
+    const durationMin = a.duration || 50;
+    const end = new Date(start.getTime() + durationMin * 60 * 1000);
+    return end.getTime() > now.getTime();
+  };
+  const todayAppointments = todayRaw
+    .filter((a: any) => acceptedStatuses.includes(a.status))
+    .filter(isAppointmentActive);
   const todayIds = new Set(todayAppointments.map((a: any) => a.id));
   const isSameLocalDay = (d1: Date, d2: Date) =>
     d1.getFullYear() === d2.getFullYear() &&
     d1.getMonth() === d2.getMonth() &&
     d1.getDate() === d2.getDate();
-  const now = new Date();
   const upcomingAppointments = upcomingRaw.filter((a: any) => {
     if (todayIds.has(a.id)) return false;
-    return !isSameLocalDay(new Date(a.scheduled_at), now);
+    if (isSameLocalDay(new Date(a.scheduled_at), now)) return false;
+    return isAppointmentActive(a);
   });
   
   const [startingAppointments, setStartingAppointments] = useState<Set<string>>(new Set());
@@ -131,10 +142,31 @@ const UpcomingConsultations = () => {
               )}
 
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" disabled className="flex-1">
-                  <Clock className="w-4 h-4 mr-2" />
-                  Aguardando horário da chamada
-                </Button>
+                {(() => {
+                  const start = new Date(appointment.scheduled_at).getTime();
+                  const durationMin = appointment.duration || 50;
+                  const end = start + durationMin * 60 * 1000;
+                  const nowMs = Date.now();
+                  const canJoin = nowMs >= start && nowMs <= end;
+                  if (canJoin) {
+                    return (
+                      <Button
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => navigate(`/consultation-call/${appointment.id}`)}
+                      >
+                        <Video className="w-4 h-4 mr-2" />
+                        Entrar na chamada
+                      </Button>
+                    );
+                  }
+                  return (
+                    <Button variant="outline" size="sm" disabled className="flex-1">
+                      <Clock className="w-4 h-4 mr-2" />
+                      Aguardando horário da chamada
+                    </Button>
+                  );
+                })()}
               </div>
             </div>
           </div>
