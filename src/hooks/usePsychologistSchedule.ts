@@ -50,7 +50,9 @@ export const usePsychologistSchedule = () => {
       }
       
       const data = await response.json();
-      setTodayAppointments(data || []);
+      const { data: { user } } = await supabase.auth.getUser();
+      const filtered = (data || []).filter((a: any) => a.psychologist_id === user?.id);
+      setTodayAppointments(filtered);
     } catch (error: any) {
       console.error('Error fetching today\'s appointments:', error);
       toast({
