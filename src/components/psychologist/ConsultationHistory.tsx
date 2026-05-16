@@ -81,11 +81,16 @@ const ConsultationHistory = () => {
 
   const getStatusBadge = (status: string) => {
     const statusMap: Record<string, { label: string; variant: any }> = {
+      pending: { label: 'Pendente', variant: 'outline' },
       scheduled: { label: 'Agendada', variant: 'secondary' },
+      confirmed: { label: 'Confirmada', variant: 'secondary' },
+      in_progress: { label: 'Em andamento', variant: 'secondary' },
       completed: { label: 'Concluída', variant: 'default' },
       cancelled: { label: 'Cancelada', variant: 'destructive' },
-      in_progress: { label: 'Em andamento', variant: 'secondary' },
-      no_show: { label: 'Faltou', variant: 'outline' }
+      declined: { label: 'Recusada', variant: 'destructive' },
+      no_show: { label: 'Faltou', variant: 'outline' },
+      reschedule_proposed: { label: 'Reagendamento proposto', variant: 'outline' },
+      expired: { label: 'Expirada', variant: 'outline' },
     };
 
     const statusInfo = statusMap[status] || { label: status, variant: 'outline' };
