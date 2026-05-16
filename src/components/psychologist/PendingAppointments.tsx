@@ -263,26 +263,25 @@ const PendingAppointments = () => {
 
   return (
     <>
-      <Card className="border-l-4 border-l-warning">
-        <CardHeader className="bg-gradient-to-r from-warning/5 to-transparent">
-          <CardTitle className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-warning/20 rounded-full flex items-center justify-center">
-              <AlertTriangle className="text-warning" size={18} />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-foreground">Consultas Pendentes de Confirmação</h3>
-              <p className="text-sm text-muted-foreground font-normal">Solicitações aguardando sua resposta</p>
-            </div>
-            {pendingAppointments.length > 0 && (
-              <Badge variant="secondary" className="bg-warning/15 text-warning">
-                {pendingAppointments.length}
-              </Badge>
-            )}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-6">
-          {pendingAppointments.length === 0 ? (
-            <div className="p-6 text-center">
+      <div className="space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-warning/20 rounded-full flex items-center justify-center">
+            <AlertTriangle className="text-warning" size={18} />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold text-foreground">Consultas Pendentes de Confirmação</h3>
+            <p className="text-sm text-muted-foreground font-normal">Solicitações aguardando sua resposta</p>
+          </div>
+          {pendingAppointments.length > 0 && (
+            <Badge variant="secondary" className="bg-warning/15 text-warning">
+              {pendingAppointments.length}
+            </Badge>
+          )}
+        </div>
+
+        {pendingAppointments.length === 0 ? (
+          <Card>
+            <CardContent className="p-6 text-center">
               <CheckCircle className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium text-foreground mb-2">
                 Nenhuma consulta pendente
@@ -290,14 +289,14 @@ const PendingAppointments = () => {
               <p className="text-muted-foreground">
                 Todas as suas consultas foram confirmadas ou você não tem solicitações aguardando resposta.
               </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {pendingAppointments.map((appointment) => renderPendingCard(appointment))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {pendingAppointments.map((appointment) => renderPendingCard(appointment))}
+          </div>
+        )}
+      </div>
 
       <RejectAppointmentModal
         isOpen={!!selectedAppointmentId}
