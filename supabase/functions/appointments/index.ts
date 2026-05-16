@@ -288,12 +288,16 @@ serve(async (req) => {
     return new Response('Method not allowed', { status: 405, headers: corsHeaders });
 
   } catch (error: any) {
-    // Log error without sensitive data
     console.error('Error in appointments function:', error.message);
+    const msg = error?.message || 'Erro interno';
+    // Validation/business errors → 400/409 (not 500)
+    const isConflict = /ocupado/i.test(msg);
+    const isValidation = /obrigat|inválid|intervalo|entre 07h|10 minutos|required/i.test(msg);
+    const status = isConflict ? 409 : isValidation ? 400 : 500;
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: msg }),
       {
-        status: 500,
+        status,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
