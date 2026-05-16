@@ -142,10 +142,31 @@ const UpcomingConsultations = () => {
               )}
 
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" disabled className="flex-1">
-                  <Clock className="w-4 h-4 mr-2" />
-                  Aguardando horário da chamada
-                </Button>
+                {(() => {
+                  const start = new Date(appointment.scheduled_at).getTime();
+                  const durationMin = appointment.duration || 50;
+                  const end = start + durationMin * 60 * 1000;
+                  const nowMs = Date.now();
+                  const canJoin = nowMs >= start && nowMs <= end;
+                  if (canJoin) {
+                    return (
+                      <Button
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => navigate(`/consultation-call/${appointment.id}`)}
+                      >
+                        <Video className="w-4 h-4 mr-2" />
+                        Entrar na chamada
+                      </Button>
+                    );
+                  }
+                  return (
+                    <Button variant="outline" size="sm" disabled className="flex-1">
+                      <Clock className="w-4 h-4 mr-2" />
+                      Aguardando horário da chamada
+                    </Button>
+                  );
+                })()}
               </div>
             </div>
           </div>
