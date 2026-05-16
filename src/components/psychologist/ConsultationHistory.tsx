@@ -247,7 +247,6 @@ const ConsultationHistory = () => {
                 <TableRow>
                   <TableHead>Data/Hora</TableHead>
                   <TableHead>Paciente</TableHead>
-                  <TableHead>Tipo</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Ações</TableHead>
                 </TableRow>
