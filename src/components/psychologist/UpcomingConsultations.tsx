@@ -24,12 +24,25 @@ const formatTimeUntil = (minutes: number): string => {
 
 const UpcomingConsultations = () => {
   const { 
-    todayAppointments, 
-    upcomingAppointments, 
+    todayAppointments: todayRaw, 
+    upcomingAppointments: upcomingRaw, 
     loading, 
     canStartAppointment,
     updateAppointment 
   } = usePsychologistSchedule();
+
+  const acceptedStatuses = ['scheduled', 'confirmed', 'in_progress'];
+  const todayAppointments = todayRaw.filter((a: any) => acceptedStatuses.includes(a.status));
+  const todayIds = new Set(todayAppointments.map((a: any) => a.id));
+  const isSameLocalDay = (d1: Date, d2: Date) =>
+    d1.getFullYear() === d2.getFullYear() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getDate() === d2.getDate();
+  const now = new Date();
+  const upcomingAppointments = upcomingRaw.filter((a: any) => {
+    if (todayIds.has(a.id)) return false;
+    return !isSameLocalDay(new Date(a.scheduled_at), now);
+  });
   
   const [startingAppointments, setStartingAppointments] = useState<Set<string>>(new Set());
 
@@ -120,10 +133,7 @@ const UpcomingConsultations = () => {
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" disabled className="flex-1">
                   <Clock className="w-4 h-4 mr-2" />
-                  Aguardando paciente
-                </Button>
-                <Button variant="outline" size="sm">
-                  <MessageSquare className="w-4 h-4" />
+                  Aguardando horário da chamada
                 </Button>
               </div>
             </div>
