@@ -53,101 +53,80 @@ const UpcomingConsultations = () => {
   const getAppointmentTimeInfo = (scheduledAt: string) => {
     const appointmentDate = new Date(scheduledAt);
     const now = new Date();
-    const timeDifference = appointmentDate.getTime() - now.getTime();
-    const minutesUntilAppointment = timeDifference / (1000 * 60);
+    const minutesUntilAppointment = (appointmentDate.getTime() - now.getTime()) / (1000 * 60);
 
-    if (isToday(appointmentDate)) {
-      if (minutesUntilAppointment <= 15 && minutesUntilAppointment > 0) {
-        return {
-          badge: 'Disponível agora',
-          badgeVariant: 'default' as const,
-          canStart: true
-        };
-      } else if (minutesUntilAppointment <= 0 && minutesUntilAppointment > -60) {
-        return {
-          badge: 'Em andamento',
-          badgeVariant: 'destructive' as const,
-          canStart: true
-        };
-      } else {
-        return {
-          badge: `Em ${Math.ceil(minutesUntilAppointment)} min`,
-          badgeVariant: 'secondary' as const,
-          canStart: false
-        };
-      }
-    } else if (isTomorrow(appointmentDate)) {
+    if (minutesUntilAppointment <= 15 && minutesUntilAppointment > 0) {
+      return { badge: 'Disponível agora', style: 'bg-success/15 text-success border-success/20' };
+    }
+    if (minutesUntilAppointment <= 0 && minutesUntilAppointment > -60) {
+      return { badge: 'Em andamento', style: 'bg-primary/15 text-primary-active border-primary/20' };
+    }
+    if (minutesUntilAppointment > 0) {
       return {
-        badge: 'Amanhã',
-        badgeVariant: 'outline' as const,
-        canStart: false
-      };
-    } else {
-      return {
-        badge: format(appointmentDate, 'dd/MM', { locale: ptBR }),
-        badgeVariant: 'outline' as const,
-        canStart: false
+        badge: `Em ${formatTimeUntil(minutesUntilAppointment)}`,
+        style: 'bg-secondary/15 text-secondary-active border-secondary/20',
       };
     }
+    return { badge: 'Encerrada', style: 'bg-muted text-foreground border-border' };
   };
 
-  const renderAppointmentCard = (appointment: any, isToday = false) => {
+  const renderAppointmentCard = (appointment: any, highlight = false) => {
     const timeInfo = getAppointmentTimeInfo(appointment.scheduled_at);
-    const appointmentTime = format(new Date(appointment.scheduled_at), 'HH:mm', { locale: ptBR });
-    const patientInitials = appointment.patient.full_name
-      .split(' ')
-      .map((name: string) => name[0])
-      .join('')
-      .substring(0, 2)
-      .toUpperCase();
 
     return (
-      <Card key={appointment.id} className={isToday ? 'border-primary/20 bg-primary/5' : ''}>
+      <Card key={appointment.id} className={highlight ? 'border-l-4 border-l-primary' : ''}>
         <CardContent className="p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-3">
-              <Avatar className="w-10 h-10">
-                <AvatarFallback className="bg-primary/10 text-primary font-medium">
-                  {patientInitials}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <h3 className="font-medium text-foreground">
-                  {appointment.patient.full_name}
-                </h3>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Clock className="w-4 h-4" />
-                  {appointmentTime}
-                  {appointment.appointment_type && (
-                    <>
-                      <span>•</span>
-                      <span className="capitalize">{appointment.appointment_type}</span>
-                    </>
-                  )}
+          <div className="flex items-start gap-3">
+            <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+              <User className="text-primary" size={20} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between mb-2 gap-2">
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-semibold text-foreground truncate">
+                    {appointment.patient.full_name}
+                  </h4>
+                  <p className="text-sm text-muted-foreground truncate">
+                    {appointment.appointment_type === 'emergency' ? 'Consulta de emergência' : 'Consulta online'}
+                  </p>
                 </div>
+                <BadgeUI variant="outline" className={timeInfo.style}>
+                  {timeInfo.badge}
+                </BadgeUI>
+              </div>
+
+              <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
+                <div className="flex items-center gap-1">
+                  <Calendar size={14} />
+                  {formatBrazilTime(appointment.scheduled_at, "dd 'de' MMM")}
+                </div>
+                <div className="flex items-center gap-1">
+                  <Clock size={14} />
+                  {formatTimeOnly(appointment.scheduled_at)}
+                </div>
+                {appointment.duration && (
+                  <span className="text-xs bg-muted px-2 py-1 rounded">
+                    {appointment.duration}min
+                  </span>
+                )}
+              </div>
+
+              {appointment.notes && (
+                <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
+                  {appointment.notes}
+                </p>
+              )}
+
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" disabled className="flex-1">
+                  <Clock className="w-4 h-4 mr-2" />
+                  Aguardando paciente
+                </Button>
+                <Button variant="outline" size="sm">
+                  <MessageSquare className="w-4 h-4" />
+                </Button>
               </div>
             </div>
-            <Badge variant={timeInfo.badgeVariant}>
-              {timeInfo.badge}
-            </Badge>
-          </div>
-
-          {appointment.notes && (
-            <div className="bg-card/50 rounded-lg p-3 mb-3">
-              <p className="text-sm text-foreground">
-                <strong>Notas:</strong> {appointment.notes}
-              </p>
-            </div>
-          )}
-
-          <div className="flex gap-2">
-            <Button variant="outline" disabled className="flex-1">
-              <Clock className="w-4 h-4 mr-2" />
-              Aguardando paciente
-            </Button>
-            <Button variant="outline" size="sm">
-              <MessageSquare className="w-4 h-4" />
-            </Button>
           </div>
         </CardContent>
       </Card>
