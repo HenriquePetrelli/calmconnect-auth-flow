@@ -70,11 +70,11 @@ const UpcomingConsultations = () => {
     return { badge: 'Encerrada', style: 'bg-muted text-foreground border-border' };
   };
 
-  const renderAppointmentCard = (appointment: any, highlight = false) => {
+  const renderAppointmentCard = (appointment: any) => {
     const timeInfo = getAppointmentTimeInfo(appointment.scheduled_at);
 
     return (
-      <Card key={appointment.id} className={highlight ? 'border-l-4 border-l-primary' : ''}>
+      <Card key={appointment.id}>
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
             <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
@@ -180,7 +180,7 @@ const UpcomingConsultations = () => {
             </div>
           ) : (
             <div className="space-y-3">
-              {todayAppointments.map((appointment) => renderAppointmentCard(appointment, true))}
+              {todayAppointments.map((appointment) => renderAppointmentCard(appointment))}
             </div>
           )}
         </CardContent>
