@@ -219,9 +219,16 @@ const ConsultationHistory = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="pending">Pendente</SelectItem>
+                  <SelectItem value="scheduled">Agendada</SelectItem>
+                  <SelectItem value="confirmed">Confirmada</SelectItem>
+                  <SelectItem value="in_progress">Em andamento</SelectItem>
                   <SelectItem value="completed">Concluída</SelectItem>
                   <SelectItem value="cancelled">Cancelada</SelectItem>
+                  <SelectItem value="declined">Recusada</SelectItem>
                   <SelectItem value="no_show">Faltou</SelectItem>
+                  <SelectItem value="reschedule_proposed">Reagendamento proposto</SelectItem>
+                  <SelectItem value="expired">Expirada</SelectItem>
                 </SelectContent>
               </Select>
             </div>
