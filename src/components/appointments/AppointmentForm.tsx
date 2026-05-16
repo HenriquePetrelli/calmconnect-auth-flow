@@ -224,10 +224,10 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
                     disabled={!isValidTime || !isAvailable || slotsLoading}
                     className={`text-sm relative ${
                       isOccupied 
-                        ? 'bg-destructive/10 border-destructive/20 text-destructive cursor-not-allowed' 
-                        : isAvailable 
-                          ? 'hover:bg-primary/10' 
-                          : ''
+                        ? 'bg-destructive/10 border-destructive/20 text-destructive hover:bg-destructive/10 hover:text-destructive cursor-not-allowed' 
+                        : selectedTime === time
+                          ? ''
+                          : 'hover:bg-secondary/10 hover:text-secondary hover:border-secondary/40'
                     }`}
                     title={
                       isOccupied 
