@@ -162,39 +162,27 @@ const UpcomingConsultations = () => {
       <PendingAppointments />
       
       {/* Today's Appointments */}
-      <Card className="border-l-4 border-l-primary">
-        <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">
-          <CardTitle className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
-              <Calendar className="text-primary" size={18} />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-foreground">Consultas de Hoje</h3>
-              <p className="text-sm text-muted-foreground font-normal">Pacientes agendados para hoje</p>
-            </div>
-            {todayAppointments.length > 0 && (
+      {todayAppointments.length > 0 && (
+        <Card className="border-l-4 border-l-primary">
+          <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">
+            <CardTitle className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
+                <Calendar className="text-primary" size={18} />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-foreground">Consultas de Hoje</h3>
+                <p className="text-sm text-muted-foreground font-normal">Pacientes agendados para hoje</p>
+              </div>
               <Badge variant="secondary">{todayAppointments.length}</Badge>
-            )}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-6">
-          {todayAppointments.length === 0 ? (
-            <div className="p-6 text-center">
-              <Calendar className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium text-foreground mb-2">
-                Nenhuma consulta hoje
-              </h3>
-              <p className="text-muted-foreground">
-                Você não tem consultas agendadas para hoje.
-              </p>
-            </div>
-          ) : (
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
             <div className="space-y-3">
               {todayAppointments.map((appointment) => renderAppointmentCard(appointment))}
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Upcoming Appointments */}
       <Card className="border-l-4 border-l-secondary">
