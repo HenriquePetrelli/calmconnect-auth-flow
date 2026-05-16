@@ -1,8 +1,9 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clock, User, Calendar, MessageSquare } from 'lucide-react';
+import { Clock, User, Calendar, MessageSquare, Video } from 'lucide-react';
 import { usePsychologistSchedule } from '@/hooks/usePsychologistSchedule';
 import { format, isToday, isTomorrow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
