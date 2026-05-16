@@ -58,68 +58,66 @@ export const RejectAppointmentModal: React.FC<RejectAppointmentModalProps> = ({
       <Dialog open={isOpen && !showRescheduleModal} onOpenChange={handleClose}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-destructive">
-              <AlertCircle className="h-5 w-5" />
+            <div className="mx-auto w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mb-2">
+              <AlertCircle className="h-6 w-6 text-destructive" />
+            </div>
+            <DialogTitle className="text-center text-xl">
               Recusar Consulta
             </DialogTitle>
-            <DialogDescription>
-              Você pode simplesmente recusar ou sugerir um novo horário para o paciente.
+            <DialogDescription className="text-center">
+              Escolha como deseja responder a essa solicitação.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
-            <div className="bg-muted p-4 rounded-lg">
-              <p className="text-sm text-muted-foreground">
-                O que você gostaria de fazer com esta consulta?
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Button
-                variant="outline"
-                className="w-full justify-start h-auto p-4"
-                onClick={handleSuggestReschedule}
-                disabled={loading}
-              >
-                <div className="flex items-center gap-3">
+          <div className="space-y-3 pt-2">
+            <button
+              type="button"
+              onClick={handleSuggestReschedule}
+              disabled={loading}
+              className="w-full text-left p-4 rounded-lg border-2 border-border hover:border-primary hover:bg-primary/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                   <Calendar className="h-5 w-5 text-primary" />
-                  <div className="text-left">
-                    <p className="font-medium">Sugerir novo horário</p>
-                    <p className="text-sm text-muted-foreground">
-                      Propor uma nova data e horário para o paciente
-                    </p>
-                  </div>
                 </div>
-              </Button>
-
-              <Button
-                variant="destructive"
-                className="w-full justify-start h-auto p-4"
-                onClick={handleRejectOnly}
-                disabled={loading}
-              >
-                <div className="flex items-center gap-3">
-                  <AlertCircle className="h-5 w-5" />
-                  <div className="text-left">
-                    <p className="font-medium">Recusar consulta</p>
-                    <p className="text-sm text-destructive-foreground/80">
-                      Recusar definitivamente sem sugestão
-                    </p>
-                  </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-foreground">Sugerir novo horário</p>
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    Propor uma nova data e horário para o paciente
+                  </p>
                 </div>
-              </Button>
-            </div>
+              </div>
+            </button>
 
-            <div className="flex gap-2 pt-4 border-t">
-              <Button
-                variant="ghost"
-                onClick={handleClose}
-                className="flex-1"
-                disabled={loading}
-              >
-                Cancelar
-              </Button>
-            </div>
+            <button
+              type="button"
+              onClick={handleRejectOnly}
+              disabled={loading}
+              className="w-full text-left p-4 rounded-lg border-2 border-border hover:border-destructive hover:bg-destructive/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center flex-shrink-0">
+                  <AlertCircle className="h-5 w-5 text-destructive" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-foreground">Recusar consulta</p>
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    Recusar definitivamente sem sugerir alternativa
+                  </p>
+                </div>
+              </div>
+            </button>
+          </div>
+
+          <div className="flex pt-4 border-t">
+            <Button
+              variant="ghost"
+              onClick={handleClose}
+              className="w-full"
+              disabled={loading}
+            >
+              Cancelar
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
