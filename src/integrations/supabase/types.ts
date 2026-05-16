@@ -98,6 +98,13 @@ export type Database = {
             referencedRelation: "psychologists"
             referencedColumns: ["user_id"]
           },
+          {
+            foreignKeyName: "appointments_psychologist_fk"
+            columns: ["psychologist_id"]
+            isOneToOne: false
+            referencedRelation: "psychologists_public"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       brazilian_cities: {
@@ -803,6 +810,13 @@ export type Database = {
             referencedRelation: "psychologists"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "payment_logs_psychologist_id_fkey"
+            columns: ["psychologist_id"]
+            isOneToOne: false
+            referencedRelation: "psychologists_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       private_journals: {
@@ -967,6 +981,13 @@ export type Database = {
             referencedRelation: "psychologists"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "psychologist_payments_psychologist_id_fkey"
+            columns: ["psychologist_id"]
+            isOneToOne: true
+            referencedRelation: "psychologists_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       psychologist_presence: {
@@ -1010,6 +1031,13 @@ export type Database = {
             columns: ["psychologist_id"]
             isOneToOne: true
             referencedRelation: "psychologists"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "psychologist_presence_psychologist_id_fkey"
+            columns: ["psychologist_id"]
+            isOneToOne: true
+            referencedRelation: "psychologists_public"
             referencedColumns: ["user_id"]
           },
         ]
@@ -1504,7 +1532,63 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      psychologists_public: {
+        Row: {
+          approval_status: string | null
+          approved: boolean | null
+          area_atendimento: string | null
+          average_rating: number | null
+          bio: string | null
+          city: string | null
+          created_at: string | null
+          crp_number: string | null
+          full_name: string | null
+          id: string | null
+          ratings_count: number | null
+          specialization: string | null
+          state: string | null
+          total_appointments: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          approval_status?: string | null
+          approved?: boolean | null
+          area_atendimento?: string | null
+          average_rating?: number | null
+          bio?: string | null
+          city?: string | null
+          created_at?: string | null
+          crp_number?: string | null
+          full_name?: string | null
+          id?: string | null
+          ratings_count?: number | null
+          specialization?: string | null
+          state?: string | null
+          total_appointments?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          approval_status?: string | null
+          approved?: boolean | null
+          area_atendimento?: string | null
+          average_rating?: number | null
+          bio?: string | null
+          city?: string | null
+          created_at?: string | null
+          crp_number?: string | null
+          full_name?: string | null
+          id?: string | null
+          ratings_count?: number | null
+          specialization?: string | null
+          state?: string | null
+          total_appointments?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       add_patient_activity: {
