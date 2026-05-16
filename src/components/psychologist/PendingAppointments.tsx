@@ -163,7 +163,7 @@ const PendingAppointments = () => {
       .toUpperCase();
 
     return (
-      <Card key={appointment.id} className="border-warning/20 bg-amber-50/50">
+      <Card key={appointment.id}>
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
@@ -200,7 +200,7 @@ const PendingAppointments = () => {
           </div>
 
           {appointment.notes && (
-            <div className="bg-card/50 rounded-lg p-3 mb-3">
+            <div className="bg-muted/50 rounded-lg p-3 mb-3">
               <p className="text-sm text-foreground">
                 <strong>Observações do paciente:</strong> {appointment.notes}
               </p>
