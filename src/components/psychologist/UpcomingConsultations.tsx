@@ -133,10 +133,7 @@ const UpcomingConsultations = () => {
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" disabled className="flex-1">
                   <Clock className="w-4 h-4 mr-2" />
-                  Aguardando paciente
-                </Button>
-                <Button variant="outline" size="sm">
-                  <MessageSquare className="w-4 h-4" />
+                  Aguardando horário da chamada
                 </Button>
               </div>
             </div>
