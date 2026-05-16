@@ -5,8 +5,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { LogOut, Mail, Lock, User, FileText, Pencil, Check, MessageCircle } from 'lucide-react';
+import { LogOut, Mail, Lock, User, FileText, Pencil, Check, MessageCircle, Settings } from 'lucide-react';
 import BackButton from '@/components/BackButton';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SPECIALIZATIONS } from '@/data/specializations';
 import { PasswordChangeModal } from '@/components/psychologist/PasswordChangeModal';
@@ -264,6 +265,21 @@ const PsychologistProfile = () => {
                 <Button size="sm" variant="ghost" onClick={() => setEditBio(true)} className="shrink-0 mt-1"><Pencil className="w-4 h-4" /></Button>
               )}
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><Settings className="w-4 h-4" /> Configurações</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">Modo escuro</p>
+              <p className="text-xs text-muted-foreground">Alterne entre tema claro e escuro</p>
+            </div>
+            <ThemeToggle />
           </div>
         </CardContent>
       </Card>
