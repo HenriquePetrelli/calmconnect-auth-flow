@@ -214,7 +214,7 @@ const PsychologistDashboard = () => {
         {/* Main Content */}
         <Tabs defaultValue="emergency" className="space-y-4">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="emergency" className="flex items-center gap-2">
+            <TabsTrigger value="emergency" className="flex items-center gap-2 data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground">
               <Bell className="w-4 h-4" />
               Emergências
               {pendingEmergencies > 0 && (
@@ -223,11 +223,11 @@ const PsychologistDashboard = () => {
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="consultations" className="flex items-center gap-2">
+            <TabsTrigger value="consultations" className="flex items-center gap-2 data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground">
               <Users className="w-4 h-4" />
               Consultas
             </TabsTrigger>
-            <TabsTrigger value="history" className="flex items-center gap-2">
+            <TabsTrigger value="history" className="flex items-center gap-2 data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground">
               <History className="w-4 h-4" />
               Histórico
             </TabsTrigger>
