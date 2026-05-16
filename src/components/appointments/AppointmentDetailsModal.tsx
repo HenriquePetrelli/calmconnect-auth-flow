@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -29,6 +30,7 @@ export const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = (
   onUpdate
 }) => {
   const { toast } = useToast();
+  const [respondingAction, setRespondingAction] = useState<'accept' | 'reject' | null>(null);
 
   if (!appointment) return null;
 
@@ -67,6 +69,8 @@ export const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = (
   };
 
   const handleRescheduleResponse = async (accept: boolean) => {
+    if (respondingAction) return;
+    setRespondingAction(accept ? 'accept' : 'reject');
     try {
       const { data, error } = await supabase.functions.invoke('psychologist-schedule', {
         method: 'PUT',
@@ -96,6 +100,8 @@ export const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = (
         description: 'Erro ao responder reagendamento. Tente novamente.',
         variant: 'destructive',
       });
+    } finally {
+      setRespondingAction(null);
     }
   };
 
@@ -215,18 +221,28 @@ export const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = (
                   size="sm"
                   onClick={() => handleRescheduleResponse(true)}
                   className="flex-1"
+                  disabled={respondingAction !== null}
                 >
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Aceitar
+                  {respondingAction === 'accept' ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                  )}
+                  {respondingAction === 'accept' ? 'Aceitando...' : 'Aceitar'}
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => handleRescheduleResponse(false)}
                   className="flex-1"
+                  disabled={respondingAction !== null}
                 >
-                  <XCircle className="h-4 w-4 mr-2" />
-                  Recusar
+                  {respondingAction === 'reject' ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <XCircle className="h-4 w-4 mr-2" />
+                  )}
+                  {respondingAction === 'reject' ? 'Recusando...' : 'Recusar'}
                 </Button>
               </div>
             </div>
