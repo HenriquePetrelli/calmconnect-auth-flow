@@ -193,11 +193,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     try {
       cleanupAuthState();
+      // Always reset to light mode on logout; dark mode is per-logged-in-user
+      try {
+        localStorage.setItem('theme', 'light');
+        document.documentElement.classList.remove('dark');
+        document.documentElement.classList.add('light');
+      } catch {}
       await supabase.auth.signOut({ scope: 'global' });
       // Force page reload for clean state
       window.location.href = '/';
     } catch (error) {
       console.error('Sign out error:', error);
+      try {
+        localStorage.setItem('theme', 'light');
+      } catch {}
       // Force reload even if sign out fails
       window.location.href = '/';
     }
