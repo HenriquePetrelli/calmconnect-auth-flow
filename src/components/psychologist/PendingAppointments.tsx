@@ -248,9 +248,18 @@ const PendingAppointments = () => {
     );
   };
 
-  if (loading) return null;
-
-  if (pendingAppointments.length === 0) return null;
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-center justify-center">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mr-3"></div>
+            <span className="text-muted-foreground">Carregando consultas pendentes...</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <>
@@ -263,14 +272,30 @@ const PendingAppointments = () => {
             <h3 className="text-lg font-semibold text-foreground">Consultas Pendentes de Confirmação</h3>
             <p className="text-sm text-muted-foreground font-normal">Solicitações aguardando sua resposta</p>
           </div>
-          <Badge variant="secondary" className="bg-warning/15 text-warning">
-            {pendingAppointments.length}
-          </Badge>
+          {pendingAppointments.length > 0 && (
+            <Badge variant="secondary" className="bg-warning/15 text-warning">
+              {pendingAppointments.length}
+            </Badge>
+          )}
         </div>
 
-        <div className="space-y-3">
-          {pendingAppointments.map((appointment) => renderPendingCard(appointment))}
-        </div>
+        {pendingAppointments.length === 0 ? (
+          <Card>
+            <CardContent className="p-6 text-center">
+              <CheckCircle className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium text-foreground mb-2">
+                Nenhuma consulta pendente
+              </h3>
+              <p className="text-muted-foreground">
+                Todas as suas consultas foram confirmadas ou você não tem solicitações aguardando resposta.
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {pendingAppointments.map((appointment) => renderPendingCard(appointment))}
+          </div>
+        )}
       </div>
 
       <RejectAppointmentModal
