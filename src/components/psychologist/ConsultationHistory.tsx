@@ -81,11 +81,16 @@ const ConsultationHistory = () => {
 
   const getStatusBadge = (status: string) => {
     const statusMap: Record<string, { label: string; variant: any }> = {
+      pending: { label: 'Pendente', variant: 'outline' },
       scheduled: { label: 'Agendada', variant: 'secondary' },
+      confirmed: { label: 'Confirmada', variant: 'secondary' },
+      in_progress: { label: 'Em andamento', variant: 'secondary' },
       completed: { label: 'Concluída', variant: 'default' },
       cancelled: { label: 'Cancelada', variant: 'destructive' },
-      in_progress: { label: 'Em andamento', variant: 'secondary' },
-      no_show: { label: 'Faltou', variant: 'outline' }
+      declined: { label: 'Recusada', variant: 'destructive' },
+      no_show: { label: 'Faltou', variant: 'outline' },
+      reschedule_proposed: { label: 'Reagendamento proposto', variant: 'outline' },
+      expired: { label: 'Expirada', variant: 'outline' },
     };
 
     const statusInfo = statusMap[status] || { label: status, variant: 'outline' };
@@ -214,9 +219,16 @@ const ConsultationHistory = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="pending">Pendente</SelectItem>
+                  <SelectItem value="scheduled">Agendada</SelectItem>
+                  <SelectItem value="confirmed">Confirmada</SelectItem>
+                  <SelectItem value="in_progress">Em andamento</SelectItem>
                   <SelectItem value="completed">Concluída</SelectItem>
                   <SelectItem value="cancelled">Cancelada</SelectItem>
+                  <SelectItem value="declined">Recusada</SelectItem>
                   <SelectItem value="no_show">Faltou</SelectItem>
+                  <SelectItem value="reschedule_proposed">Reagendamento proposto</SelectItem>
+                  <SelectItem value="expired">Expirada</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -235,7 +247,6 @@ const ConsultationHistory = () => {
                 <TableRow>
                   <TableHead>Data/Hora</TableHead>
                   <TableHead>Paciente</TableHead>
-                  <TableHead>Tipo</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Ações</TableHead>
                 </TableRow>
@@ -257,13 +268,18 @@ const ConsultationHistory = () => {
                       </div>
                     </TableCell>
                     <TableCell>
-                      {getTypeBadge(appointment.appointment_type)}
-                    </TableCell>
-                    <TableCell>
                       {getStatusBadge(appointment.status)}
                     </TableCell>
                     <TableCell>
-                      <Dialog>
+                      <Dialog
+                        open={selectedAppointment?.id === appointment.id}
+                        onOpenChange={(open) => {
+                          if (!open) {
+                            setSelectedAppointment(null);
+                            setSessionSummary('');
+                          }
+                        }}
+                      >
                         <DialogTrigger asChild>
                           <Button
                             variant="outline"
@@ -281,7 +297,7 @@ const ConsultationHistory = () => {
                           <DialogHeader>
                             <DialogTitle>Detalhes da Consulta</DialogTitle>
                           </DialogHeader>
-                          {selectedAppointment && (
+                          {selectedAppointment?.id === appointment.id && (
                             <div className="space-y-4">
                               <div className="grid grid-cols-2 gap-4">
                                 <div>
@@ -293,10 +309,6 @@ const ConsultationHistory = () => {
                                   <p className="text-sm">
                                     {format(new Date(selectedAppointment.scheduled_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
                                   </p>
-                                </div>
-                                <div>
-                                  <Label className="font-medium">Tipo</Label>
-                                  <p className="text-sm">{selectedAppointment.appointment_type}</p>
                                 </div>
                                 <div>
                                   <Label className="font-medium">Status</Label>
@@ -352,20 +364,20 @@ const ConsultationHistory = () => {
           </div>
 
           {/* Pagination */}
-          <div className="flex items-center justify-between mt-6">
+          <div className="flex flex-col items-center gap-3 mt-6">
             <p className="text-sm text-muted-foreground">
               Mostrando {((currentPage - 1) * itemsPerPage) + 1} a {Math.min(currentPage * itemsPerPage, totalCount)} de {totalCount} consultas
             </p>
-            
+
             <Pagination>
               <PaginationContent>
                 <PaginationItem>
-                  <PaginationPrevious 
+                  <PaginationPrevious
                     onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                     className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                   />
                 </PaginationItem>
-                
+
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                   <PaginationItem key={page}>
                     <PaginationLink
@@ -377,9 +389,9 @@ const ConsultationHistory = () => {
                     </PaginationLink>
                   </PaginationItem>
                 ))}
-                
+
                 <PaginationItem>
-                  <PaginationNext 
+                  <PaginationNext
                     onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                     className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                   />
