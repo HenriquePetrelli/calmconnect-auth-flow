@@ -1,57 +1,67 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useSyncExternalStore } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+// Shared module-level store so every consumer of the hook stays in sync
+// instantly, without relying on postgres realtime round-trips.
+type State = { isOnline: boolean; initialized: boolean; userId: string | null };
+let state: State = { isOnline: false, initialized: false, userId: null };
+const listeners = new Set<() => void>();
+const subscribe = (cb: () => void) => {
+  listeners.add(cb);
+  return () => listeners.delete(cb);
+};
+const getSnapshot = () => state;
+const setState = (patch: Partial<State>) => {
+  state = { ...state, ...patch };
+  listeners.forEach((l) => l());
+};
+
+let bootstrapped = false;
+const bootstrap = async () => {
+  if (bootstrapped) return;
+  bootstrapped = true;
+
+  const { data: auth } = await supabase.auth.getUser();
+  const userId = auth.user?.id ?? null;
+  if (!userId) {
+    setState({ initialized: true, userId: null, isOnline: false });
+    return;
+  }
+
+  const { data } = await supabase
+    .from('psychologist_presence')
+    .select('psychologist_id')
+    .eq('psychologist_id', userId)
+    .maybeSingle();
+
+  setState({ initialized: true, userId, isOnline: !!data });
+
+  supabase
+    .channel(`psychologist_presence_shared_${userId}`)
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'psychologist_presence' },
+      (payload) => {
+        const newRow: any = payload.new;
+        const oldRow: any = payload.old;
+        if (payload.eventType === 'DELETE') {
+          if (oldRow?.psychologist_id === userId) setState({ isOnline: false });
+        } else if (newRow?.psychologist_id === userId) {
+          setState({ isOnline: true });
+        }
+      }
+    )
+    .subscribe();
+};
+
 export const usePsychologistPresence = () => {
-  const [isOnline, setIsOnline] = useState(false);
+  const snapshot = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
   const [loading, setLoading] = useState(false);
-  const [initialized, setInitialized] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    let userId: string | undefined;
-
-    const fetchStatus = async () => {
-      const { data: auth } = await supabase.auth.getUser();
-      userId = auth.user?.id;
-      if (!userId) {
-        setInitialized(true);
-        return;
-      }
-
-      const { data } = await supabase
-        .from('psychologist_presence')
-        .select('psychologist_id')
-        .eq('psychologist_id', userId)
-        .maybeSingle();
-
-      setIsOnline(!!data);
-      setInitialized(true);
-    };
-
-    fetchStatus();
-
-    const channel = supabase
-      .channel(`psychologist_presence_shared_${Math.random().toString(36).slice(2)}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'psychologist_presence' },
-        (payload) => {
-          if (!userId) return;
-          const newRow: any = payload.new;
-          const oldRow: any = payload.old;
-          if (payload.eventType === 'DELETE') {
-            if (oldRow?.psychologist_id === userId) setIsOnline(false);
-          } else if (newRow?.psychologist_id === userId) {
-            setIsOnline(true);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    bootstrap();
   }, []);
 
   const setOnlineStatus = useCallback(async (nextStatus: boolean) => {
@@ -79,7 +89,8 @@ export const usePsychologistPresence = () => {
         if (error) throw error;
       }
 
-      setIsOnline(nextStatus);
+      // Update shared store immediately so every consumer re-renders.
+      setState({ isOnline: nextStatus, userId });
       toast({
         title: 'Status atualizado',
         description: `Você está agora ${nextStatus ? 'online' : 'offline'}`,
@@ -96,7 +107,16 @@ export const usePsychologistPresence = () => {
     }
   }, [toast]);
 
-  const toggle = useCallback(() => setOnlineStatus(!isOnline), [isOnline, setOnlineStatus]);
+  const toggle = useCallback(
+    () => setOnlineStatus(!snapshot.isOnline),
+    [snapshot.isOnline, setOnlineStatus]
+  );
 
-  return { isOnline, loading, initialized, setOnlineStatus, toggle };
+  return {
+    isOnline: snapshot.isOnline,
+    initialized: snapshot.initialized,
+    loading,
+    setOnlineStatus,
+    toggle,
+  };
 };

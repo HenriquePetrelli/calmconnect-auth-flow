@@ -8,6 +8,7 @@ import { Bell, Calendar, User, History, AlertTriangle, Clock, Users, CheckCircle
 import { supabase } from '@/integrations/supabase/client';
 import { usePsychologistEmergency } from '@/hooks/usePsychologistEmergency';
 import { usePsychologistSchedule } from '@/hooks/usePsychologistSchedule';
+import { usePsychologistPresence } from '@/hooks/usePsychologistPresence';
 import EmergencyNotifications from '@/components/psychologist/EmergencyNotifications';
 import UpcomingConsultations from '@/components/psychologist/UpcomingConsultations';
 import ConsultationHistory from '@/components/psychologist/ConsultationHistory';
@@ -23,6 +24,7 @@ const PsychologistDashboard = () => {
   
   const { emergencyRequests } = usePsychologistEmergency();
   const { todayAppointments, upcomingAppointments } = usePsychologistSchedule();
+  const { isOnline } = usePsychologistPresence();
 
   useEffect(() => {
     checkUserProfile();
@@ -203,9 +205,11 @@ const PsychologistDashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Status</p>
-                  <p className="text-sm font-medium text-success">Online</p>
+                  <p className={`text-sm font-medium ${isOnline ? 'text-success' : 'text-muted-foreground'}`}>
+                    {isOnline ? 'Online' : 'Offline'}
+                  </p>
                 </div>
-                <CheckCircle className="w-8 h-8 text-success" />
+                <CheckCircle className={`w-8 h-8 ${isOnline ? 'text-success' : 'text-muted-foreground'}`} />
               </div>
             </CardContent>
           </Card>
