@@ -102,17 +102,15 @@ const EmergencyNotifications = () => {
               Você está offline
             </h3>
             <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              Você só receberá chamadas de emergência quando estiver online. Fique online para começar a atender pacientes.
+              Você só receberá chamadas de emergência quando estiver online.
             </p>
             <Button
               onClick={() => setOnlineStatus(true)}
               disabled={presenceLoading}
               className="bg-primary hover:bg-primary/90 text-primary-foreground"
             >
-              {presenceLoading ? (
+              {presenceLoading && (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
-              ) : (
-                <Phone className="w-4 h-4 mr-2" />
               )}
               Ficar Online
             </Button>
