@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const EmergencyNotifications = () => {
   const { emergencyRequests, loading, acceptEmergencyRequest, declineEmergencyRequest } = usePsychologistEmergency();
+  const { isOnline, loading: presenceLoading, initialized: presenceInitialized, setOnlineStatus } = usePsychologistPresence();
   const [processingRequests, setProcessingRequests] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
   const { toast } = useToast();
