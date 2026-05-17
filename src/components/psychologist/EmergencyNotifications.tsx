@@ -84,6 +84,44 @@ const EmergencyNotifications = () => {
     );
   }
 
+  if (presenceInitialized && !isOnline) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-muted-foreground" />
+            Solicitações de Emergência
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+              <WifiOff className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-medium text-foreground mb-2">
+              Você está offline
+            </h3>
+            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+              Você só receberá chamadas de emergência quando estiver online. Fique online para começar a atender pacientes.
+            </p>
+            <Button
+              onClick={() => setOnlineStatus(true)}
+              disabled={presenceLoading}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
+            >
+              {presenceLoading ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+              ) : (
+                <Phone className="w-4 h-4 mr-2" />
+              )}
+              Ficar Online
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const pendingRequests = emergencyRequests.filter(req => req.status === 'pending' || req.status === 'waiting');
 
   if (pendingRequests.length === 0) {
