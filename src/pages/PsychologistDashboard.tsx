@@ -24,6 +24,7 @@ const PsychologistDashboard = () => {
   
   const { emergencyRequests } = usePsychologistEmergency();
   const { todayAppointments, upcomingAppointments } = usePsychologistSchedule();
+  const { isOnline } = usePsychologistPresence();
 
   useEffect(() => {
     checkUserProfile();
