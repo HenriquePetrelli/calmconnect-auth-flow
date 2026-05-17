@@ -8,6 +8,7 @@ import { Bell, Calendar, User, History, AlertTriangle, Clock, Users, CheckCircle
 import { supabase } from '@/integrations/supabase/client';
 import { usePsychologistEmergency } from '@/hooks/usePsychologistEmergency';
 import { usePsychologistSchedule } from '@/hooks/usePsychologistSchedule';
+import { usePsychologistPresence } from '@/hooks/usePsychologistPresence';
 import EmergencyNotifications from '@/components/psychologist/EmergencyNotifications';
 import UpcomingConsultations from '@/components/psychologist/UpcomingConsultations';
 import ConsultationHistory from '@/components/psychologist/ConsultationHistory';
