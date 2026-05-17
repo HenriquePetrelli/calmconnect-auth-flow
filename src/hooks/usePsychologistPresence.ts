@@ -91,10 +91,6 @@ export const usePsychologistPresence = () => {
 
       // Update shared store immediately so every consumer re-renders.
       setState({ isOnline: nextStatus, userId });
-      toast({
-        title: 'Status atualizado',
-        description: `Você está agora ${nextStatus ? 'online' : 'offline'}`,
-      });
     } catch (err: any) {
       console.error('Error updating presence:', err);
       toast({
