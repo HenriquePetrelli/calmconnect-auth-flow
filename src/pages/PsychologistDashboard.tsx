@@ -205,9 +205,11 @@ const PsychologistDashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Status</p>
-                  <p className="text-sm font-medium text-success">Online</p>
+                  <p className={`text-sm font-medium ${isOnline ? 'text-success' : 'text-muted-foreground'}`}>
+                    {isOnline ? 'Online' : 'Offline'}
+                  </p>
                 </div>
-                <CheckCircle className="w-8 h-8 text-success" />
+                <CheckCircle className={`w-8 h-8 ${isOnline ? 'text-success' : 'text-muted-foreground'}`} />
               </div>
             </CardContent>
           </Card>
