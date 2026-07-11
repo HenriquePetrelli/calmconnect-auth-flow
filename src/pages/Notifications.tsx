@@ -70,24 +70,6 @@ const Notifications = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-calm">
-        {/* Header */}
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border">
-          <div className="flex items-center justify-between px-4 py-3">
-            <div className="flex items-center gap-3">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => navigate('/home')}
-                className="hover-lift"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <h1 className="text-xl font-semibold text-foreground">Notificações</h1>
-            </div>
-            <ThemeToggle />
-          </div>
-        </div>
-
         {/* Loading Content */}
         <div className="container mx-auto px-4 py-6 max-w-2xl">
           <div className="space-y-4">
@@ -110,6 +92,7 @@ const Notifications = () => {
       </div>
     );
   }
+
 
   return (
     <div className="has-tabs">
