@@ -106,42 +106,40 @@ const App = () => {
                     </RouteGuard>
                   } />
 
-                  {/* Rotas do Paciente com Layout Principal */}
-                  <Route path="/home" element={
-                    <RouteGuard allowedUserTypes={['patient']}>
-                      <MainLayout>
+                  {/* Rotas do Paciente com Layout Principal persistente */}
+                  <Route element={<MainLayoutOutlet />}>
+                    <Route path="/home" element={
+                      <RouteGuard allowedUserTypes={['patient']}>
                         <Home />
-                      </MainLayout>
-                    </RouteGuard>
-                  } />
-                  <Route path="/chat" element={
-                    <RouteGuard allowedUserTypes={['patient', 'psychologist']}>
-                      <MainLayout>
+                      </RouteGuard>
+                    } />
+                    <Route path="/chat" element={
+                      <RouteGuard allowedUserTypes={['patient', 'psychologist']}>
                         <Chat />
-                      </MainLayout>
-                    </RouteGuard>
-                  } />
-                  <Route path="/profile" element={
-                    <RouteGuard allowedUserTypes={['patient']}>
-                      <MainLayout>
+                      </RouteGuard>
+                    } />
+                    <Route path="/profile" element={
+                      <RouteGuard allowedUserTypes={['patient']}>
                         <Profile />
-                      </MainLayout>
-                    </RouteGuard>
-                  } />
-                  <Route path="/appointments" element={
-                    <RouteGuard allowedUserTypes={['patient']}>
-                      <MainLayout>
+                      </RouteGuard>
+                    } />
+                    <Route path="/appointments" element={
+                      <RouteGuard allowedUserTypes={['patient']}>
                         <Appointments />
-                      </MainLayout>
-                    </RouteGuard>
-                  } />
-                  <Route path="/notifications" element={
-                    <RouteGuard allowedUserTypes={['patient']}>
-                      <MainLayout>
+                      </RouteGuard>
+                    } />
+                    <Route path="/notifications" element={
+                      <RouteGuard allowedUserTypes={['patient']}>
                         <Notifications />
-                      </MainLayout>
-                    </RouteGuard>
-                  } />
+                      </RouteGuard>
+                    } />
+                    <Route path="/statistics" element={
+                      <RouteGuard allowedUserTypes={['patient']}>
+                        <Statistics />
+                      </RouteGuard>
+                    } />
+                  </Route>
+
 
                   {/* Outras rotas do Paciente sem Layout Principal */}
                   <Route path="/support-groups" element={
