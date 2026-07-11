@@ -146,16 +146,9 @@ const Profile = () => {
   return (
     <div className="has-tabs">
       <div className="screen">
-        {/* Header */}
-        <div className="flex items-center gap-4 p-4 border-b border-border">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/home')}>
-            <ArrowLeft size={20} />
-          </Button>
-          <h1 className="text-xl font-semibold text-foreground">Perfil</h1>
-        </div>
-
         {/* Content */}
         <main className="p-4 space-y-6">
+
           {/* User Info */}
           <Card className="overflow-hidden">
             <div className="bg-gradient-to-r from-primary/10 to-primary/5 p-6">
