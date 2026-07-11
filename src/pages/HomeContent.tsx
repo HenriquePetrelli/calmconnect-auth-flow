@@ -5,7 +5,8 @@ import {
   Activity, 
   Headphones, 
   TrendingUp, 
-  BookOpen
+  BookOpen,
+  ArrowUpRight
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { MoodAccordion } from "@/components/MoodAccordion";
