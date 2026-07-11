@@ -157,20 +157,20 @@ const HomeContent = () => {
       title: "Respiração Guiada",
       subtitle: "Exercícios de relaxamento",
       onClick: () => navigate('/breathing'),
-      color: 'hsl(158,64%,42%)',      // esmeralda — calma
-      bg: 'hsl(152,68%,96%)',
-      border: 'hsl(152,55%,86%)',
-      iconBg: 'hsl(158,64%,42%)',
+      color: '#9B9ECE',
+      bg: '#F2F3FA',
+      border: '#D9DBEC',
+      iconBg: '#9B9ECE',
     },
     {
       icon: Headphones,
       title: "Sons Terapêuticos",
       subtitle: "Áudios calmantes",
       onClick: () => navigate('/sounds'),
-      color: '#9B9ECE',
-      bg: '#F2F3FA',
-      border: '#D9DBEC',
-      iconBg: '#9B9ECE',
+      color: 'hsl(158,64%,42%)',      // esmeralda — calma
+      bg: 'hsl(152,68%,96%)',
+      border: 'hsl(152,55%,86%)',
+      iconBg: 'hsl(158,64%,42%)',
     },
     {
       icon: Users2,
