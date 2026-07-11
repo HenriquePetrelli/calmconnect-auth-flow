@@ -157,32 +157,40 @@ const HomeContent = () => {
       title: "Respiração Guiada",
       subtitle: "Exercícios de relaxamento",
       onClick: () => navigate('/breathing'),
-      color: 'hsl(142,71%,45%)',
-      tint: 'hsl(142,71%,45%,0.10)',
+      color: 'hsl(158,64%,42%)',      // esmeralda — calma
+      bg: 'hsl(152,68%,96%)',
+      border: 'hsl(152,55%,86%)',
+      iconBg: 'hsl(158,64%,42%)',
     },
     {
       icon: Headphones,
       title: "Sons Terapêuticos",
       subtitle: "Áudios calmantes",
       onClick: () => navigate('/sounds'),
-      color: 'hsl(271,81%,56%)',
-      tint: 'hsl(271,81%,56%,0.10)',
+      color: 'hsl(262,72%,52%)',      // violeta — foco/relaxamento
+      bg: 'hsl(268,80%,97%)',
+      border: 'hsl(268,60%,90%)',
+      iconBg: 'hsl(262,72%,52%)',
     },
     {
       icon: Users2,
       title: "Grupos de Apoio",
       subtitle: "Suporte da comunidade",
       onClick: () => navigate('/support-groups'),
-      color: 'hsl(221,83%,53%)',
-      tint: 'hsl(221,83%,53%,0.10)',
+      color: 'hsl(199,89%,42%)',      // azul-céu — conexão
+      bg: 'hsl(204,94%,96%)',
+      border: 'hsl(204,80%,88%)',
+      iconBg: 'hsl(199,89%,42%)',
     },
     {
       icon: BookOpen,
       title: "Meu Diário",
       subtitle: "Registros pessoais",
       onClick: () => navigate('/journal'),
-      color: 'hsl(38,92%,50%)',
-      tint: 'hsl(38,92%,50%,0.10)',
+      color: 'hsl(14,86%,52%)',       // coral quente — expressão
+      bg: 'hsl(24,100%,96%)',
+      border: 'hsl(24,90%,88%)',
+      iconBg: 'hsl(14,86%,52%)',
     }
   ];
 
