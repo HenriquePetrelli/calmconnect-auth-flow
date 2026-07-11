@@ -92,14 +92,14 @@ const AppointmentsContent: React.FC = () => {
   return (
     <div className="px-4 lg:p-6">
       <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-foreground">Minhas Consultas</h1>
+        {/* Actions */}
+        <div className="flex items-center justify-end">
           <Button onClick={() => navigate('/appointments/schedule')}>
             <Calendar className="w-4 h-4 mr-2" />
             Agendar Consulta
           </Button>
         </div>
+
 
         {/* Appointments List */}
         {appointments.length === 0 ? (

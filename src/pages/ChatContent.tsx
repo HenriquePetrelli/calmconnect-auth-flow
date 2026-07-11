@@ -49,12 +49,12 @@ const ChatContent: React.FC = () => {
           </div>
         ) : (
           <div className="space-y-6">
-            <h1 className="text-2xl font-bold text-foreground">Chat</h1>
             <Card className="shadow-sm">
               <CardContent className="p-6">
                 <ListaConversas onSelectConversa={handleSelectConversa} />
               </CardContent>
             </Card>
+
           </div>
         )}
       </div>

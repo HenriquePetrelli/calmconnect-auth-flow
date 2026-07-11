@@ -70,24 +70,6 @@ const Notifications = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-calm">
-        {/* Header */}
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border">
-          <div className="flex items-center justify-between px-4 py-3">
-            <div className="flex items-center gap-3">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => navigate('/home')}
-                className="hover-lift"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <h1 className="text-xl font-semibold text-foreground">Notificações</h1>
-            </div>
-            <ThemeToggle />
-          </div>
-        </div>
-
         {/* Loading Content */}
         <div className="container mx-auto px-4 py-6 max-w-2xl">
           <div className="space-y-4">
@@ -111,60 +93,41 @@ const Notifications = () => {
     );
   }
 
+
   return (
     <div className="has-tabs">
       <div className="screen">
-        {/* Header */}
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border">
-          <div className="flex items-center justify-between px-4 py-3">
-            <div className="flex items-center gap-3">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => navigate('/home')}
-                className="hover-lift"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <div className="flex items-center gap-3">
-                <h1 className="text-xl font-semibold text-foreground">Notificações</h1>
-                {unreadCount > 0 && (
-                  <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
-                    {unreadCount}
-                  </Badge>
-                )}
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-2">
-                {unreadCount > 0 && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={markAllAsRead}
-                    className="hover-scale"
-                  >
-                    <CheckCheck className="h-4 w-4 mr-2" />
-                    Marcar todas
-                  </Button>
-                )}
-                {notifications.length > 0 && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleDeleteAllNotifications}
-                    className="hover-scale text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Excluir todas
-                  </Button>
-                )}
-              </div>
+        {/* Actions bar (no title/back) */}
+        {(unreadCount > 0 || notifications.length > 0) && (
+          <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border">
+            <div className="flex items-center justify-end gap-2 px-4 py-3">
+              {unreadCount > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={markAllAsRead}
+                  className="hover-scale"
+                >
+                  <CheckCheck className="h-4 w-4 mr-2" />
+                  Marcar todas
+                </Button>
+              )}
+              {notifications.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDeleteAllNotifications}
+                  className="hover-scale text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Excluir todas
+                </Button>
+              )}
               <ThemeToggle />
             </div>
           </div>
-        </div>
+        )}
+
 
         {/* Content */}
         <main className="container mx-auto px-4 py-6 max-w-2xl">
