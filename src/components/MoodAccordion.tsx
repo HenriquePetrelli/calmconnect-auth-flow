@@ -113,10 +113,10 @@ export const MoodAccordion: React.FC<MoodAccordionProps> = ({ currentValue, onMo
 
   return (
     <div
-      className="w-full rounded-2xl border shadow-sm transition-all bg-primary text-primary-foreground"
-      style={{
-        borderColor: open ? 'hsl(0 0% 100% / 0.35)' : 'hsl(0 0% 100% / 0.15)',
-      }}
+      className={cn(
+        'w-full rounded-2xl border bg-card/80 backdrop-blur-sm shadow-sm transition-all',
+        open ? 'border-border' : 'border-border/70'
+      )}
     >
       {/* Header (trigger) */}
       <div
@@ -130,18 +130,16 @@ export const MoodAccordion: React.FC<MoodAccordionProps> = ({ currentValue, onMo
         >
           {selected && HeaderIcon ? (
             <>
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/20 text-primary-foreground">
-                <HeaderIcon className="w-6 h-6" />
-              </span>
+              <HeaderIcon className={cn('w-6 h-6 shrink-0', selected.colorClass)} />
               <div className="min-w-0">
-                <p className="text-sm text-primary-foreground/80">Humor de hoje</p>
-                <p className="font-semibold truncate text-primary-foreground">{selected.label}</p>
+                <p className="text-sm text-muted-foreground">Humor de hoje</p>
+                <p className={cn('font-semibold truncate', selected.colorClass)}>{selected.label}</p>
               </div>
             </>
           ) : (
             <div className="min-w-0">
-              <p className="font-semibold text-primary-foreground">Registre seu humor</p>
-              <p className="text-sm text-primary-foreground/80">Como você está se sentindo hoje?</p>
+              <p className="font-semibold text-foreground">Registre seu humor</p>
+              <p className="text-sm text-muted-foreground">Como você está se sentindo hoje?</p>
             </div>
           )}
         </button>
@@ -151,7 +149,7 @@ export const MoodAccordion: React.FC<MoodAccordionProps> = ({ currentValue, onMo
             type="button"
             onClick={handleHideMoodDaily}
             disabled={isHiding}
-            className="text-xs sm:text-sm font-medium text-primary-foreground/90 hover:text-primary-foreground px-3 py-1.5 rounded-md border border-white/25 hover:bg-white/15 transition-colors disabled:opacity-50"
+            className="text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-md border border-border hover:bg-muted transition-colors disabled:opacity-50"
           >
             {isHiding ? 'Ocultando...' : 'Ocultar registro de humor'}
           </button>
@@ -159,7 +157,7 @@ export const MoodAccordion: React.FC<MoodAccordionProps> = ({ currentValue, onMo
             type="button"
             onClick={() => setOpen((v) => !v)}
             aria-label={open ? 'Recolher' : 'Expandir'}
-            className="p-1 text-primary-foreground/90 hover:text-primary-foreground"
+            className="p-1 text-muted-foreground hover:text-foreground"
           >
             <ChevronDown
               className={cn('w-5 h-5 transition-transform', open && 'rotate-180')}
@@ -167,6 +165,7 @@ export const MoodAccordion: React.FC<MoodAccordionProps> = ({ currentValue, onMo
           </button>
         </div>
       </div>
+
 
 
       {/* Content */}
