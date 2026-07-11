@@ -110,7 +110,7 @@ const SoundsLibrary = () => {
     <div className="min-h-screen bg-background pb-24 lg:pb-0">
       <PatientBottomNav />
 
-      <PageHeader title="Biblioteca de Sons" backTo="/home" />
+      <PageHeader title="Sons terapêuticos" backTo="/home" />
 
       {/* Intro card + search */}
       <div className="px-4 sm:px-6 pt-6 max-w-5xl mx-auto">
