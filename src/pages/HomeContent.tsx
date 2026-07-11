@@ -167,10 +167,10 @@ const HomeContent = () => {
       title: "Sons Terapêuticos",
       subtitle: "Áudios calmantes",
       onClick: () => navigate('/sounds'),
-      color: 'hsl(262,72%,52%)',      // violeta — foco/relaxamento
-      bg: 'hsl(268,80%,97%)',
-      border: 'hsl(268,60%,90%)',
-      iconBg: 'hsl(262,72%,52%)',
+      color: '#9B9ECE',
+      bg: '#F2F3FA',
+      border: '#D9DBEC',
+      iconBg: '#9B9ECE',
     },
     {
       icon: Users2,
