@@ -207,13 +207,6 @@ const App = () => {
                       <Support />
                     </RouteGuard>
                   } />
-                  <Route path="/statistics" element={
-                    <RouteGuard allowedUserTypes={['patient']}>
-                      <MainLayout>
-                        <Statistics />
-                      </MainLayout>
-                    </RouteGuard>
-                  } />
                   <Route path="/progress" element={
                     <RouteGuard allowedUserTypes={['patient']}>
                       <Progress />
