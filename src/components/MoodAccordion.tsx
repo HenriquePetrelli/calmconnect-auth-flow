@@ -113,10 +113,11 @@ export const MoodAccordion: React.FC<MoodAccordionProps> = ({ currentValue, onMo
 
   return (
     <div
-      className={cn(
-        'w-full rounded-xl border bg-card/80 backdrop-blur-sm transition-colors',
-        open ? 'border-primary/40' : 'border-border'
-      )}
+      className="w-full rounded-2xl border shadow-sm transition-all"
+      style={{
+        backgroundColor: 'hsl(24,100%,96%)',
+        borderColor: open ? 'hsl(24,95%,53%)' : 'hsl(24,90%,88%)',
+      }}
     >
       {/* Header (trigger) */}
       <div
