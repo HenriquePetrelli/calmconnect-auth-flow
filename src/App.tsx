@@ -13,9 +13,12 @@ import PageSkeleton from "@/components/PageSkeleton";
 
 // Persistent layout: MainLayout stays mounted across nested routes,
 // so sidebar/bottom nav never re-render when switching between them.
+// Suspense is inside the layout so lazy page swaps don't unmount the nav.
 const MainLayoutOutlet = () => (
   <MainLayout>
-    <Outlet />
+    <Suspense fallback={<PageSkeleton />}>
+      <Outlet />
+    </Suspense>
   </MainLayout>
 );
 
