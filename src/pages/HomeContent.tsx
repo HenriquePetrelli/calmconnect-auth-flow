@@ -266,11 +266,6 @@ const HomeContent = () => {
                   className="group relative overflow-hidden flex aspect-square flex-col items-start justify-between rounded-2xl border p-4 text-left shadow-sm transition-all duration-200 active:scale-[0.98] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                   style={{ backgroundColor: feature.bg, borderColor: feature.border }}
                 >
-                  <span
-                    aria-hidden
-                    className="pointer-events-none absolute -right-6 -top-8 h-24 w-24 rounded-full opacity-25 blur-xl"
-                    style={{ backgroundColor: feature.color }}
-                  />
                   <div
                     className="relative flex h-11 w-11 items-center justify-center rounded-xl text-white shadow-sm transition-transform duration-200 group-active:scale-95"
                     style={{ backgroundColor: feature.iconBg, boxShadow: `0 6px 16px -6px ${feature.color}` }}
