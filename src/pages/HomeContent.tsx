@@ -5,7 +5,8 @@ import {
   Activity, 
   Headphones, 
   TrendingUp, 
-  BookOpen
+  BookOpen,
+  ArrowUpRight
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { MoodAccordion } from "@/components/MoodAccordion";
@@ -156,32 +157,32 @@ const HomeContent = () => {
       title: "Respiração Guiada",
       subtitle: "Exercícios de relaxamento",
       onClick: () => navigate('/breathing'),
-      color: 'hsl(142,76%,66%)',
-      borderColor: 'hsl(142,60%,85%)'
+      color: 'hsl(142,71%,45%)',
+      tint: 'hsl(142,71%,45%,0.10)',
     },
     {
       icon: Headphones,
       title: "Sons Terapêuticos",
-      subtitle: "Biblioteca de áudios calmantes",
+      subtitle: "Áudios calmantes",
       onClick: () => navigate('/sounds'),
-      color: 'hsl(271,91%,65%)',
-      borderColor: 'hsl(271,80%,88%)'
+      color: 'hsl(271,81%,56%)',
+      tint: 'hsl(271,81%,56%,0.10)',
     },
     {
       icon: Users2,
       title: "Grupos de Apoio",
       subtitle: "Suporte da comunidade",
       onClick: () => navigate('/support-groups'),
-      color: 'hsl(230,100%,66%)',
-      borderColor: 'hsl(230,100%,85%)'
+      color: 'hsl(221,83%,53%)',
+      tint: 'hsl(221,83%,53%,0.10)',
     },
     {
       icon: BookOpen,
       title: "Meu Diário",
-      subtitle: "Diário pessoal",
+      subtitle: "Registros pessoais",
       onClick: () => navigate('/journal'),
-      color: 'hsl(45,93%,51%)',
-      borderColor: 'hsl(45,90%,80%)'
+      color: 'hsl(38,92%,50%)',
+      tint: 'hsl(38,92%,50%,0.10)',
     }
   ];
 
@@ -221,23 +222,23 @@ const HomeContent = () => {
             {features.map((feature, index) => {
               const Icon = feature.icon;
               return (
-                <div
+                <button
                   key={index}
-                  className="bg-card/80 backdrop-blur-sm rounded-xl p-4 border-2 transition-all group cursor-pointer shadow-sm hover:shadow-md flex items-center gap-4"
-                  style={{ borderColor: feature.borderColor }}
                   onClick={feature.onClick}
+                  className="group relative flex items-center gap-4 rounded-2xl border border-border/60 bg-card p-5 text-left shadow-sm ring-1 ring-transparent transition-all duration-200 hover:-translate-y-0.5 hover:border-border hover:shadow-md hover:ring-border/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                 >
                   <div
-                    className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform"
-                    style={{ backgroundColor: feature.color }}
+                    className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl transition-transform duration-200 group-hover:scale-105"
+                    style={{ backgroundColor: feature.tint, color: feature.color }}
                   >
-                    <Icon className="w-6 h-6 text-white" />
+                    <Icon className="h-6 w-6" strokeWidth={2.25} />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-foreground text-base leading-tight">{feature.title}</h3>
-                    <p className="text-sm text-muted-foreground mt-0.5">{feature.subtitle}</p>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-[15px] font-semibold leading-tight text-foreground">{feature.title}</h3>
+                    <p className="mt-1 text-sm leading-snug text-muted-foreground">{feature.subtitle}</p>
                   </div>
-                </div>
+                  <ArrowUpRight className="h-4 w-4 flex-shrink-0 text-muted-foreground/50 transition-all duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-foreground" />
+                </button>
               );
             })}
           </div>
@@ -247,20 +248,22 @@ const HomeContent = () => {
             {features.map((feature, index) => {
               const Icon = feature.icon;
               return (
-                <div
+                <button
                   key={index}
-                  className="bg-card/80 backdrop-blur-sm rounded-xl p-3 border-2 transition-all group cursor-pointer shadow-sm hover:shadow-md aspect-square flex flex-col items-center justify-center text-center"
-                  style={{ borderColor: feature.borderColor }}
                   onClick={feature.onClick}
+                  className="group flex aspect-square flex-col items-start justify-between rounded-2xl border border-border/60 bg-card p-4 text-left shadow-sm transition-all duration-200 active:scale-[0.98] hover:border-border hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                 >
                   <div
-                    className="w-12 h-12 rounded-lg flex items-center justify-center mb-2 group-hover:scale-105 transition-transform"
-                    style={{ backgroundColor: feature.color }}
+                    className="flex h-11 w-11 items-center justify-center rounded-xl transition-transform duration-200 group-active:scale-95"
+                    style={{ backgroundColor: feature.tint, color: feature.color }}
                   >
-                    <Icon className="w-6 h-6 text-white" />
+                    <Icon className="h-[22px] w-[22px]" strokeWidth={2.25} />
                   </div>
-                  <h3 className="font-semibold text-foreground text-sm leading-tight">{feature.title}</h3>
-                </div>
+                  <div className="w-full">
+                    <h3 className="text-sm font-semibold leading-tight text-foreground">{feature.title}</h3>
+                    <p className="mt-0.5 text-xs leading-snug text-muted-foreground line-clamp-2">{feature.subtitle}</p>
+                  </div>
+                </button>
               );
             })}
           </div>
