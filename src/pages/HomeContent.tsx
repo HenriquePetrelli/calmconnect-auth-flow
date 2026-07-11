@@ -233,19 +233,29 @@ const HomeContent = () => {
                 <button
                   key={index}
                   onClick={feature.onClick}
-                  className="group relative flex items-center gap-4 rounded-2xl border border-border/60 bg-card p-5 text-left shadow-sm ring-1 ring-transparent transition-all duration-200 hover:-translate-y-0.5 hover:border-border hover:shadow-md hover:ring-border/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                  className="group relative overflow-hidden flex items-center gap-4 rounded-2xl border p-5 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                  style={{ backgroundColor: feature.bg, borderColor: feature.border }}
                 >
+                  {/* decorative accent blob */}
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full opacity-30 blur-xl transition-opacity duration-300 group-hover:opacity-50"
+                    style={{ backgroundColor: feature.color }}
+                  />
                   <div
-                    className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl transition-transform duration-200 group-hover:scale-105"
-                    style={{ backgroundColor: feature.tint, color: feature.color }}
+                    className="relative flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl text-white shadow-sm transition-transform duration-200 group-hover:scale-105 group-hover:rotate-3"
+                    style={{ backgroundColor: feature.iconBg, boxShadow: `0 6px 16px -6px ${feature.color}` }}
                   >
                     <Icon className="h-6 w-6" strokeWidth={2.25} />
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="text-[15px] font-semibold leading-tight text-foreground">{feature.title}</h3>
-                    <p className="mt-1 text-sm leading-snug text-muted-foreground">{feature.subtitle}</p>
+                  <div className="relative min-w-0 flex-1">
+                    <h3 className="text-[15px] font-semibold leading-tight" style={{ color: feature.color }}>{feature.title}</h3>
+                    <p className="mt-1 text-sm leading-snug text-foreground/70">{feature.subtitle}</p>
                   </div>
-                  <ArrowUpRight className="h-4 w-4 flex-shrink-0 text-muted-foreground/50 transition-all duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-foreground" />
+                  <ArrowUpRight
+                    className="relative h-4 w-4 flex-shrink-0 opacity-60 transition-all duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:opacity-100"
+                    style={{ color: feature.color }}
+                  />
                 </button>
               );
             })}
@@ -259,17 +269,23 @@ const HomeContent = () => {
                 <button
                   key={index}
                   onClick={feature.onClick}
-                  className="group flex aspect-square flex-col items-start justify-between rounded-2xl border border-border/60 bg-card p-4 text-left shadow-sm transition-all duration-200 active:scale-[0.98] hover:border-border hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                  className="group relative overflow-hidden flex aspect-square flex-col items-start justify-between rounded-2xl border p-4 text-left shadow-sm transition-all duration-200 active:scale-[0.98] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                  style={{ backgroundColor: feature.bg, borderColor: feature.border }}
                 >
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute -right-6 -top-8 h-24 w-24 rounded-full opacity-25 blur-xl"
+                    style={{ backgroundColor: feature.color }}
+                  />
                   <div
-                    className="flex h-11 w-11 items-center justify-center rounded-xl transition-transform duration-200 group-active:scale-95"
-                    style={{ backgroundColor: feature.tint, color: feature.color }}
+                    className="relative flex h-11 w-11 items-center justify-center rounded-xl text-white shadow-sm transition-transform duration-200 group-active:scale-95"
+                    style={{ backgroundColor: feature.iconBg, boxShadow: `0 6px 16px -6px ${feature.color}` }}
                   >
                     <Icon className="h-[22px] w-[22px]" strokeWidth={2.25} />
                   </div>
-                  <div className="w-full">
-                    <h3 className="text-sm font-semibold leading-tight text-foreground">{feature.title}</h3>
-                    <p className="mt-0.5 text-xs leading-snug text-muted-foreground line-clamp-2">{feature.subtitle}</p>
+                  <div className="relative w-full">
+                    <h3 className="text-sm font-semibold leading-tight" style={{ color: feature.color }}>{feature.title}</h3>
+                    <p className="mt-0.5 text-xs leading-snug text-foreground/70 line-clamp-2">{feature.subtitle}</p>
                   </div>
                 </button>
               );
