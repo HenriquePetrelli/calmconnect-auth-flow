@@ -187,10 +187,10 @@ const HomeContent = () => {
       title: "Meu Diário",
       subtitle: "Registros pessoais",
       onClick: () => navigate('/journal'),
-      color: 'hsl(14,86%,52%)',       // coral quente — expressão
-      bg: 'hsl(24,100%,96%)',
-      border: 'hsl(24,90%,88%)',
-      iconBg: 'hsl(14,86%,52%)',
+      color: 'hsl(41,96%,40%)',       // amarelo âmbar — expressão
+      bg: 'hsl(48,100%,96%)',
+      border: 'hsl(45,93%,85%)',
+      iconBg: 'hsl(41,96%,45%)',
     }
   ];
 
