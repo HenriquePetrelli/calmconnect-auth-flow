@@ -180,7 +180,7 @@ const Notifications = () => {
                           ? 'bg-primary/10'
                           : 'bg-muted/50'
                       }`}>
-                        {getNotificationIcon(notification.title)}
+                        {getNotificationIcon(notification.title, notification.message)}
                       </div>
 
                       {/* Content */}
