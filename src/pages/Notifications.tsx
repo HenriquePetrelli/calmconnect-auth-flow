@@ -138,7 +138,7 @@ const Notifications = () => {
                   Excluir todas
                 </Button>
               )}
-              <ThemeToggle />
+              
             </div>
           </div>
         )}
