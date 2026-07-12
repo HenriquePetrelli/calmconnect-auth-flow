@@ -161,8 +161,50 @@ export const useNotifications = () => {
         },
         (payload) => {
           const newNotification = payload.new as Notification;
-          setNotifications(prev => [newNotification, ...prev]);
-          setUnreadCount(prev => prev + 1);
+          setNotifications(prev => {
+            if (prev.some(n => n.id === newNotification.id)) return prev;
+            return [newNotification, ...prev];
+          });
+          if (newNotification.status === 'unread') {
+            setUnreadCount(prev => prev + 1);
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'notifications',
+          filter: `patient_id=eq.${user.id}`
+        },
+        (payload) => {
+          const updated = payload.new as Notification;
+          const old = payload.old as Notification;
+          setNotifications(prev =>
+            prev.map(n => (n.id === updated.id ? { ...n, ...updated } : n))
+          );
+          if (old?.status === 'unread' && updated.status === 'read') {
+            setUnreadCount(prev => Math.max(0, prev - 1));
+          } else if (old?.status === 'read' && updated.status === 'unread') {
+            setUnreadCount(prev => prev + 1);
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'notifications',
+          filter: `patient_id=eq.${user.id}`
+        },
+        (payload) => {
+          const removed = payload.old as Notification;
+          setNotifications(prev => prev.filter(n => n.id !== removed.id));
+          if (removed?.status === 'unread') {
+            setUnreadCount(prev => Math.max(0, prev - 1));
+          }
         }
       )
       .subscribe();
