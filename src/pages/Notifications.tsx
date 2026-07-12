@@ -1,18 +1,24 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { ThemeToggle } from '@/components/ThemeToggle';
-import { 
-  ArrowLeft, 
-  Bell, 
-  CheckCheck, 
-  CalendarCheck, 
-  AlertCircle, 
+import {
+  Bell,
+  CheckCheck,
+  CalendarCheck,
+  CalendarClock,
+  CalendarX,
+  AlertCircle,
+  AlertTriangle,
   Info,
   Trash2,
-  Settings
+  MessageCircle,
+  CreditCard,
+  Star,
+  Heart,
+  Video,
+  UserCheck,
+  Sparkles,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -23,24 +29,33 @@ import { toast } from 'sonner';
 
 const Notifications = () => {
   const navigate = useNavigate();
-  const { 
-    notifications, 
-    unreadCount, 
-    loading, 
-    markAsRead, 
-    markAllAsRead, 
-    deleteNotification, 
-    deleteAllNotifications 
+  const {
+    notifications,
+    unreadCount,
+    loading,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+    deleteAllNotifications
   } = useNotifications();
 
-  const getNotificationIcon = (title: string) => {
-    const lowerTitle = title.toLowerCase();
-    if (lowerTitle.includes('consulta') || lowerTitle.includes('agendamento')) {
-      return <CalendarCheck className="h-5 w-5 text-primary" />;
-    }
-    if (lowerTitle.includes('importante') || lowerTitle.includes('urgente')) {
-      return <AlertCircle className="h-5 w-5 text-warning" />;
-    }
+  const getNotificationIcon = (title: string, message: string = '') => {
+    const text = `${title} ${message}`.toLowerCase();
+
+    if (text.includes('cancel')) return <CalendarX className="h-5 w-5 text-destructive" />;
+    if (text.includes('remarc') || text.includes('reagend')) return <CalendarClock className="h-5 w-5 text-primary" />;
+    if (text.includes('videochamada') || text.includes('vídeo') || text.includes('video')) return <Video className="h-5 w-5 text-primary" />;
+    if (text.includes('lembrete') || text.includes('em breve') || text.includes('próxim')) return <CalendarClock className="h-5 w-5 text-primary" />;
+    if (text.includes('confirm') || text.includes('aprovad') || text.includes('aceit')) return <CalendarCheck className="h-5 w-5 text-primary" />;
+    if (text.includes('consulta') || text.includes('agendamento') || text.includes('agend')) return <CalendarCheck className="h-5 w-5 text-primary" />;
+    if (text.includes('mensagem') || text.includes('chat') || text.includes('conversa')) return <MessageCircle className="h-5 w-5 text-primary" />;
+    if (text.includes('pagamento') || text.includes('assinatura') || text.includes('plano') || text.includes('cobran')) return <CreditCard className="h-5 w-5 text-primary" />;
+    if (text.includes('avali') || text.includes('feedback')) return <Star className="h-5 w-5 text-primary" />;
+    if (text.includes('conquista') || text.includes('meta')) return <Sparkles className="h-5 w-5 text-primary" />;
+    if (text.includes('humor') || text.includes('bem-estar')) return <Heart className="h-5 w-5 text-primary" />;
+    if (text.includes('sos') || text.includes('emerg')) return <AlertTriangle className="h-5 w-5 text-destructive" />;
+    if (text.includes('psicólog') || text.includes('psicolog') || text.includes('profissional')) return <UserCheck className="h-5 w-5 text-primary" />;
+    if (text.includes('importante') || text.includes('urgente') || text.includes('atenção')) return <AlertCircle className="h-5 w-5 text-warning" />;
     return <Info className="h-5 w-5 text-muted-foreground" />;
   };
 
