@@ -11,7 +11,7 @@ const SignupType = () => {
         <div>
           <Logo />
   
-          <h1 className="mt-3 text-3xl md:text-4xl font-bold text-primary animate-fade-in">soliv</h1>
+          <h1 className="mt-3 text-5xl md:text-6xl font-black text-secondary lowercase leading-none animate-fade-in" style={{ fontFamily: "'El Messiri', sans-serif" }}>soliv</h1>
         </div>
         
         <div className="space-y-4">
