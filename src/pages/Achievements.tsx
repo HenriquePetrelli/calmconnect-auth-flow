@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Sprout } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAchievements } from '@/hooks/useAchievements';
 import { AchievementCard } from '@/components/achievements/AchievementCard';
