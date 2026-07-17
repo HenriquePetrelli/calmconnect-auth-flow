@@ -43,12 +43,11 @@ export const AchievementCard = ({
         <CardContent className="p-6">
           <div className="flex flex-col items-center text-center space-y-4">
             {/* Icon */}
-            <div
-              className={`text-6xl ${
-                achieved ? 'animate-bounce' : ''
-              }`}
-            >
-              {iconMap[icon] || '🏆'}
+            <div className={achieved ? 'animate-bounce' : ''}>
+              {(() => {
+                const IconComp = iconMap[icon] || Trophy;
+                return <IconComp className="w-16 h-16 text-primary" />;
+              })()}
             </div>
 
             {/* Status Badge */}
