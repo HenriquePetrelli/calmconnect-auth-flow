@@ -67,13 +67,13 @@ const Appointments = () => {
                   <Calendar className="w-6 h-6 text-primary" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-foreground mb-1">Schedule New Appointment</h3>
-                  <p className="text-sm text-muted-foreground">Book a session with a psychologist</p>
+                  <h3 className="font-semibold text-foreground mb-1">Agendar Nova Consulta</h3>
+                  <p className="text-sm text-muted-foreground">Marque uma sessão com um psicólogo</p>
                 </div>
               </div>
               <div className="mt-4 flex items-center gap-2">
                 <Button 
-                  className="flex-1 flex items-center gap-2 transition-all duration-200 hover:scale-105" 
+                  className="flex-1 flex items-center gap-2 transition-colors duration-200" 
                   size="lg"
                   onClick={handleScheduleClick}
                   disabled={subscriptionTier !== 'Premium'}
