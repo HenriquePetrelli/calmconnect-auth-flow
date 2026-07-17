@@ -10,6 +10,7 @@ import RouteGuard from "@/components/RouteGuard";
 import MainLayout from "@/components/MainLayout";
 import BackgroundWrapper from "@/components/BackgroundWrapper";
 import PageSkeleton from "@/components/PageSkeleton";
+import SplashScreen from "@/components/SplashScreen";
 
 // Persistent layout: MainLayout stays mounted across nested routes,
 // so sidebar/bottom nav never re-render when switching between them.
