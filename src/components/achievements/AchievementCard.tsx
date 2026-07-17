@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Lock, Check } from 'lucide-react';
+import { Lock, Check, User as UserIcon, Wind, NotebookPen, MessageCircle, BarChart3, PartyPopper, Trophy } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 interface AchievementCardProps {
@@ -10,14 +10,14 @@ interface AchievementCardProps {
   achieved_at: string | null;
 }
 
-// Map icon names to emoji representations
-const iconMap: Record<string, string> = {
-  undraw_meditation: '🧘',
-  undraw_yoga: '🌬️',
-  undraw_note_list: '📝',
-  undraw_chat: '💬',
-  undraw_profile_data: '📊',
-  undraw_celebration: '🎉',
+// Map icon names to Lucide icon components
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  undraw_meditation: UserIcon,
+  undraw_yoga: Wind,
+  undraw_note_list: NotebookPen,
+  undraw_chat: MessageCircle,
+  undraw_profile_data: BarChart3,
+  undraw_celebration: PartyPopper,
 };
 
 export const AchievementCard = ({
