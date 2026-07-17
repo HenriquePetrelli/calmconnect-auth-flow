@@ -136,7 +136,7 @@ const HomeContent = () => {
         console.error('Error updating weekly goal modal:', error);
       }
     }
-    toast.success('Metas semanais adicionadas com sucesso! 🌱');
+    toast.success('Metas semanais adicionadas com sucesso!');
   };
 
   const handleMoodSelected = (value: number) => {
