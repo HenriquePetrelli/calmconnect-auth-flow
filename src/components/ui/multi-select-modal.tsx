@@ -92,7 +92,7 @@ const MultiSelectModal = ({
             <DialogTitle>{title}</DialogTitle>
           </DialogHeader>
           
-          <ScrollArea className="flex-1 min-h-0 pr-4">
+          <div className="flex-1 min-h-0 overflow-y-auto pr-4 pb-4">
             <div className="space-y-3">
               {options.map((option) => (
                 <div key={option} className="flex items-start space-x-3 py-1">
@@ -111,7 +111,7 @@ const MultiSelectModal = ({
                 </div>
               ))}
             </div>
-          </ScrollArea>
+          </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={handleCancel}>
