@@ -32,7 +32,7 @@ const JournalEntryCard = ({ entry, onEdit, onDelete }: JournalEntryCardProps) =>
   const MoodIcon = mood.Icon;
 
   return (
-    <Card className="mb-4 hover:shadow-md transition-shadow">
+    <Card className="mb-4 transition-shadow">
       <CardContent className="p-4">
         {/* Header com humor */}
         <div className="flex items-center justify-between mb-3">

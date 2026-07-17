@@ -21,7 +21,7 @@ interface SoundCardProps {
 
 const SoundCard = ({ sound, isPlaying, onTogglePlay, onSoundClick }: SoundCardProps) => {
   return (
-    <Card className="transition-all duration-300 hover:shadow-md">
+    <Card className="transition-all duration-300">
       <CardContent className="p-4">
         <div className="flex items-center gap-4">
           {/* Sound Info */}
