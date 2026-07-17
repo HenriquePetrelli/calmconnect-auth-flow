@@ -34,7 +34,7 @@ export const DesktopSidebar: React.FC = () => {
       {/* Logo Section */}
       <div className="flex items-center justify-center p-6 border-b border-secondary-foreground/15">
         <div
-          className="bg-white rounded-full p-3 flex items-center justify-center shadow-md"
+          className="bg-white dark:bg-[#2a2438] rounded-full p-3 flex items-center justify-center shadow-md"
           style={{ border: '2px solid hsl(var(--secondary-glow))' }}
         >
           <img
