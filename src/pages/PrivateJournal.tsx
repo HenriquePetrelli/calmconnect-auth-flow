@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, BookOpen } from 'lucide-react';
 import { usePrivateJournal, JournalEntry } from '@/hooks/usePrivateJournal';
 import JournalEntryCard from '@/components/journal/JournalEntryCard';
 import JournalEntryModal from '@/components/journal/JournalEntryModal';
