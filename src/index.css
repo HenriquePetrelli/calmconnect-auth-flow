@@ -136,54 +136,56 @@
 
   .dark {
     /* Base — Dark (purple-tinted, NOT blue) */
-    --background: 260 30% 13%;        /* lighter purple-tinted dark */
-    --foreground: 220 20% 98%;        /* #F9FAFB */
+    --background: 258 22% 18%;        /* lighter dark surface */
+    --foreground: 0 0% 100%;          /* pure white for max contrast */
 
-    --card: 256 32% 20%;              /* lighter card */
-    --card-foreground: 220 20% 98%;
+    --card: 256 22% 24%;              /* raised card */
+    --card-foreground: 0 0% 100%;
 
-    --popover: 256 32% 20%;
-    --popover-foreground: 220 20% 98%;
+    --popover: 256 22% 24%;
+    --popover-foreground: 0 0% 100%;
 
-    --primary: 27 96% 61%;
-    --primary-foreground: 260 44% 7%;
-    --primary-hover: 25 95% 53%;
-    --primary-active: 21 90% 48%;
-    --primary-glow: 32 97% 72%;
+    --primary: 27 96% 64%;
+    --primary-foreground: 260 44% 10%;
+    --primary-hover: 27 96% 58%;
+    --primary-active: 25 95% 52%;
+    --primary-glow: 32 97% 74%;
 
-    --secondary: 258 90% 66%;
-    --secondary-foreground: 0 0% 100%;
-    --secondary-hover: 262 83% 58%;
-    --secondary-active: 263 70% 50%;
-    --secondary-glow: 252 95% 78%;
+    --secondary: 258 92% 74%;
+    --secondary-foreground: 260 44% 10%;
+    --secondary-hover: 258 90% 68%;
+    --secondary-active: 262 83% 60%;
+    --secondary-glow: 252 95% 82%;
 
-    --muted: 256 28% 25%;             /* lighter muted */
-    --muted-foreground: 255 40% 82%;
+    --muted: 256 20% 30%;             /* lighter muted surface */
+    --muted-foreground: 255 25% 88%;  /* higher contrast secondary text */
 
-    /* Accent — subtle ORANGE tint hover surface to match brand primary */
-    --accent: 22 55% 25%;             /* warm dark orange tint, lighter */
-    --accent-foreground: 27 96% 78%;
+    /* Accent — subtle ORANGE tint hover surface */
+    --accent: 22 45% 30%;
+    --accent-foreground: 27 96% 82%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 84% 65%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 142 71% 45%;
+    --success: 142 65% 52%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 92% 50%;
+    --warning: 38 92% 58%;
     --warning-foreground: 222 47% 11%;
 
-    --border: 256 30% 30%;            /* lighter border */
-    --input: 256 30% 28%;
-    --ring: 27 96% 61%;
+    --border: 256 20% 36%;            /* visible border on cards */
+    --input: 256 20% 34%;
+    --ring: 27 96% 64%;
+
 
     --progress-track: 255 18% 42%;     /* neutral muted gray for dark sliders */
 
     --gradient-primary: linear-gradient(135deg, hsl(25 95% 53%), hsl(27 96% 61%));
     --gradient-secondary: linear-gradient(135deg, hsl(262 83% 58%), hsl(258 90% 66%));
     --gradient-brand: linear-gradient(135deg, hsl(25 95% 53%), hsl(262 83% 58%));
-    --gradient-card: linear-gradient(180deg, hsl(256 32% 20%), hsl(260 30% 16%));
-    --gradient-calm: linear-gradient(180deg, hsl(260 30% 13%), hsl(256 32% 18%));
+    --gradient-card: linear-gradient(180deg, hsl(256 22% 24%), hsl(258 22% 20%));
+    --gradient-calm: linear-gradient(180deg, hsl(258 22% 18%), hsl(256 22% 22%));
+
 
     --gradient-professional: linear-gradient(135deg, hsl(27 96% 61%), hsl(25 95% 53%));
     --gradient-breathing: linear-gradient(135deg, hsl(199 89% 60%), hsl(160 84% 49%));
