@@ -213,7 +213,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversaId, onVolt
                     }
                   }}
                 >
-                  ✕
+                  <X className="w-4 h-4" />
                 </Button>
               </div>
             )}
