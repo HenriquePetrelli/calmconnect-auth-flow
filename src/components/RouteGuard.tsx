@@ -154,6 +154,10 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
   }, [accessState, redirectTarget, currentPath, navigate]);
 
   if (accessState !== 'allowed') {
+    if (isPublicRoute) {
+      const SplashScreen = require('@/components/SplashScreen').default;
+      return <SplashScreen />;
+    }
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
