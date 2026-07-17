@@ -252,7 +252,7 @@ const Statistics = () => {
             {/* Streak Card */}
             <Card className="bg-gradient-to-r from-primary/10 to-primary/5">
               <CardContent className="p-6 text-center">
-                <div className="text-4xl mb-2">🔥</div>
+                <Flame className="w-12 h-12 mx-auto mb-2 text-orange-500" />
                 <div className="text-3xl font-bold text-primary mb-1">
                   {statistics?.streak_days || 0}
                 </div>
