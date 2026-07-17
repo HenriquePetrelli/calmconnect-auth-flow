@@ -111,11 +111,12 @@ export const PsychologistList: React.FC<PsychologistListProps> = ({
                       </>
                     )}
                     {/* Rating display - placeholder for future implementation */}
-                    <div className="flex items-center gap-1 mt-1">
+                    <div className="flex items-center gap-0.5 mt-1">
                       {[...Array(5)].map((_, i) => (
-                        <span key={i} className="text-warning text-xs">
-                          {i < 4 ? '★' : '☆'}
-                        </span>
+                        <Star
+                          key={i}
+                          className={`w-3 h-3 ${i < 4 ? 'fill-warning text-warning' : 'text-warning'}`}
+                        />
                       ))}
                       <span className="text-xs text-muted-foreground ml-1">(4.0)</span>
                     </div>
