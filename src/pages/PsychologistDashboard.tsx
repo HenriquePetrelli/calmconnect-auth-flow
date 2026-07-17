@@ -137,7 +137,7 @@ const PsychologistDashboard = () => {
               Área do Psicólogo
             </p>
             <h1 className="text-lg md:text-xl font-semibold text-foreground truncate">
-              Olá, Dr.(a) {profile?.full_name?.split(' ')[0]} 👋
+              Olá, Dr.(a) {profile?.full_name?.split(' ')[0]}
             </h1>
           </div>
           <div className="flex items-center gap-2">
@@ -160,7 +160,7 @@ const PsychologistDashboard = () => {
 
       <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
           <Card className="border-destructive/20 bg-gradient-to-br from-destructive/5 to-transparent hover:shadow-md transition-shadow">
             <CardContent className="p-4">
               <div className="flex items-start justify-between gap-2">
@@ -201,25 +201,6 @@ const PsychologistDashboard = () => {
                 </div>
                 <div className="rounded-lg bg-secondary/20 p-2">
                   <Clock className="w-5 h-5 text-secondary-foreground" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className={`hover:shadow-md transition-shadow ${isOnline ? 'border-success/30 bg-gradient-to-br from-success/5 to-transparent' : 'bg-muted/30'}`}>
-            <CardContent className="p-4">
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Status</p>
-                  <p className={`text-lg font-semibold mt-1 ${isOnline ? 'text-success' : 'text-muted-foreground'}`}>
-                    {isOnline ? 'Online' : 'Offline'}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {isOnline ? 'disponível' : 'indisponível'}
-                  </p>
-                </div>
-                <div className={`rounded-lg p-2 ${isOnline ? 'bg-success/10' : 'bg-muted'}`}>
-                  <CheckCircle className={`w-5 h-5 ${isOnline ? 'text-success' : 'text-muted-foreground'}`} />
                 </div>
               </div>
             </CardContent>
