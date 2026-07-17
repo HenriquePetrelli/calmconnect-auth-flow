@@ -64,9 +64,11 @@ export const AchievementModal = ({
                     damping: 10,
                     stiffness: 200,
                   }}
-                  className="text-8xl"
                 >
-                  {iconMap[icon] || '🏆'}
+                  {(() => {
+                    const IconComp = iconMap[icon] || Trophy;
+                    return <IconComp className="w-24 h-24 text-primary" />;
+                  })()}
                 </motion.div>
 
                 {/* Badge */}
@@ -74,9 +76,11 @@ export const AchievementModal = ({
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.3 }}
-                  className="text-2xl font-bold text-primary"
+                  className="text-2xl font-bold text-primary inline-flex items-center gap-2"
                 >
-                  🎉 Parabéns! 🎉
+                  <PartyPopper className="w-6 h-6" />
+                  Parabéns!
+                  <PartyPopper className="w-6 h-6" />
                 </motion.div>
 
                 {/* Title */}
