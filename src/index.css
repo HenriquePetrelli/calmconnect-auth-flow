@@ -136,13 +136,13 @@
 
   .dark {
     /* Base — Dark (purple-tinted, NOT blue) */
-    --background: 260 44% 7%;         /* #0F0A1A */
+    --background: 260 30% 13%;        /* lighter purple-tinted dark */
     --foreground: 220 20% 98%;        /* #F9FAFB */
 
-    --card: 256 44% 14%;              /* #1A1333 */
+    --card: 256 32% 20%;              /* lighter card */
     --card-foreground: 220 20% 98%;
 
-    --popover: 256 44% 14%;
+    --popover: 256 32% 20%;
     --popover-foreground: 220 20% 98%;
 
     --primary: 27 96% 61%;
@@ -157,12 +157,12 @@
     --secondary-active: 263 70% 50%;
     --secondary-glow: 252 95% 78%;
 
-    --muted: 256 35% 18%;             /* purple-tinted muted */
-    --muted-foreground: 255 47% 76%;  /* #B3A6E0 */
+    --muted: 256 28% 25%;             /* lighter muted */
+    --muted-foreground: 255 40% 82%;
 
     /* Accent — subtle ORANGE tint hover surface to match brand primary */
-    --accent: 22 60% 18%;             /* warm dark orange tint */
-    --accent-foreground: 27 96% 75%;
+    --accent: 22 55% 25%;             /* warm dark orange tint, lighter */
+    --accent-foreground: 27 96% 78%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
@@ -173,9 +173,10 @@
     --warning: 38 92% 50%;
     --warning-foreground: 222 47% 11%;
 
-    --border: 256 41% 21%;            /* #2A1F4A */
-    --input: 256 41% 21%;
+    --border: 256 30% 30%;            /* lighter border */
+    --input: 256 30% 28%;
     --ring: 27 96% 61%;
+
     --progress-track: 255 18% 42%;     /* neutral muted gray for dark sliders */
 
     --gradient-primary: linear-gradient(135deg, hsl(25 95% 53%), hsl(27 96% 61%));
