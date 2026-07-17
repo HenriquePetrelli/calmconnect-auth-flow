@@ -67,7 +67,7 @@ export const PsychologistList: React.FC<PsychologistListProps> = ({
         approvedPsychologists.map((psychologist) => (
           <Card 
             key={psychologist.id} 
-            className="cursor-pointer hover:shadow-md transition-shadow"
+            className="cursor-pointer transition-shadow"
             onClick={() => onSelect(psychologist)}
           >
             <CardContent className="p-4">

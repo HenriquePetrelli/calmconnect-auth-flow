@@ -201,7 +201,7 @@ const SubscriptionPlans = () => {
           {plans.map((plan) => (
             <Card 
               key={plan.id} 
-              className={`relative transition-all duration-300 hover:shadow-xl ${
+              className={`relative transition-all duration-300 ${
                 plan.popular 
                   ? 'border-primary shadow-2xl scale-105 bg-gradient-to-b from-primary/5 to-accent/5' 
                   : 'border-border hover:border-primary/50'

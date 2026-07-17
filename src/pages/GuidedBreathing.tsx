@@ -307,7 +307,7 @@ const GuidedBreathing = () => {
                   <button
                     key={technique.id}
                     onClick={() => handleSelectTechnique(technique)}
-                    className="group flex items-start gap-4 p-4 rounded-2xl border border-border bg-card hover:border-[#7C3AED]/40 hover:shadow-md transition-all text-left"
+                    className="group flex items-start gap-4 p-4 rounded-2xl border border-border bg-card hover:border-[#7C3AED]/40 transition-all text-left"
                   >
                     <div
                       className={cn(

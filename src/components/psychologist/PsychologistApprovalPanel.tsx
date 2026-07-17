@@ -124,7 +124,7 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {filteredPsychologists.map((psychologist) => (
-          <Card key={psychologist.id} className="hover:shadow-lg transition-shadow">
+          <Card key={psychologist.id} className=" transition-shadow">
             <CardHeader className="pb-4">
               <div className="flex items-start justify-between">
                 <div className="flex items-center space-x-3">

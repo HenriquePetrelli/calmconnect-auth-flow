@@ -49,7 +49,7 @@ const PatternSelector = ({ onSelect, currentPattern }: PatternSelectorProps) => 
             <Card
               key={key}
               className={cn(
-                "cursor-pointer transition-all duration-200 hover:shadow-md hover:border-[#7C3AED]/40",
+                "cursor-pointer transition-all duration-200 hover:border-[#7C3AED]/40",
                 isActive && "ring-2 ring-[#7C3AED] ring-offset-2"
               )}
               onClick={() => onSelect(pattern, key)}
