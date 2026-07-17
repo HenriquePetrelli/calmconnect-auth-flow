@@ -143,124 +143,145 @@ const Profile = () => {
 
   const planInfo = getPlanInfo();
 
+  const initials = (user?.profile?.full_name || user?.email || 'U')
+    .split(' ')
+    .map((s: string) => s[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+
   return (
     <div className="has-tabs">
       <div className="screen">
-        {/* Content */}
-        <main className="p-4 space-y-6">
-
-          {/* User Info */}
-          <Card className="overflow-hidden">
-            <div className="bg-gradient-to-r from-primary/10 to-primary/5 p-6">
-              <div className="flex items-center gap-6">
-                <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center border-4 border-primary/30 shadow-lg">
-                  <UserIcon className="text-primary" size={36} />
+        <main className="mx-auto w-full max-w-3xl px-4 py-6 space-y-5">
+          {/* Hero identity card */}
+          <Card className="overflow-hidden border-border/60">
+            <div className="relative p-6 sm:p-7">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+                <div className="relative">
+                  <div className="w-20 h-20 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+                    <span className="text-2xl font-semibold text-primary tracking-wide">
+                      {initials}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <h2 className="text-2xl font-bold text-foreground mb-1">
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-2xl font-semibold text-foreground truncate">
                     {user?.profile?.full_name || 'Usuário'}
                   </h2>
-                  <p className="text-muted-foreground text-base">{user?.email}</p>
-                  <div className="mt-2">
-                    <Badge variant="outline" className="text-xs">
+                  <p className="text-sm text-muted-foreground truncate">{user?.email}</p>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <Badge variant="secondary" className="gap-1.5 font-medium">
+                      <Crown size={12} className="text-premium-primary" />
                       {subscribed ? `Plano ${subscriptionTier}` : 'Plano Grátis'}
                     </Badge>
                   </div>
+                </div>
+                <div className="hidden sm:flex">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate('/account-settings')}
+                  >
+                    <Edit size={14} className="mr-2" />
+                    Editar perfil
+                  </Button>
                 </div>
               </div>
             </div>
           </Card>
 
-          {/* Current Plan */}
+          {/* Plan */}
           <Collapsible open={planDropdownOpen} onOpenChange={setPlanDropdownOpen}>
-            <Card className="border-2 border-primary/20 shadow-lg overflow-hidden">
-              <CollapsibleTrigger className="w-full">
-                <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 pb-4 cursor-pointer hover:from-primary/10 hover:to-primary/15 transition-all duration-200">
-                  <CardTitle className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-premium-primary/20 rounded-full flex items-center justify-center">
-                        <Crown className="text-premium-primary" size={24} />
-                      </div>
-                      <div className="text-left">
-                        <h3 className="text-xl font-bold text-foreground">{planInfo.name}</h3>
-                        <p className="text-sm text-muted-foreground font-normal">{planInfo.price}/mês</p>
-                      </div>
+            <Card className="overflow-hidden border-border/60">
+              <CollapsibleTrigger className="w-full text-left">
+                <div className="flex items-center justify-between p-5">
+                  <div className="flex items-center gap-4">
+                    <div className="w-11 h-11 rounded-xl bg-premium-primary/10 flex items-center justify-center">
+                      <Crown className="text-premium-primary" size={20} />
                     </div>
-                    <ChevronDown 
-                      className={`text-primary transition-transform duration-300 ${planDropdownOpen ? 'rotate-180' : ''}`} 
-                      size={24} 
-                    />
-                  </CardTitle>
-                </CardHeader>
+                    <div>
+                      <h3 className="text-base font-semibold text-foreground">{planInfo.name}</h3>
+                      <p className="text-xs text-muted-foreground">{planInfo.price}/mês</p>
+                    </div>
+                  </div>
+                  <ChevronDown
+                    className={`text-muted-foreground transition-transform duration-300 ${planDropdownOpen ? 'rotate-180' : ''}`}
+                    size={18}
+                  />
+                </div>
               </CollapsibleTrigger>
-              
+
               <CollapsibleContent className="animate-accordion-down">
-                <CardContent className="pt-6 space-y-6">
-                  <div className="space-y-3">
-                    <h4 className="font-semibold text-foreground">Benefícios do Plano:</h4>
-                    <div className="space-y-2">
+                <div className="px-5 pb-5 space-y-5 border-t border-border/60 pt-5">
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-semibold text-foreground">Benefícios inclusos</h4>
+                    <ul className="space-y-1.5">
                       {planInfo.features.map((feature, index) => (
-                        <div key={index} className="flex items-center gap-3 p-2 rounded-lg hover:bg-primary/5 transition-colors duration-200">
-                          <div className="w-2 h-2 rounded-full bg-primary"></div>
-                          <span className="text-sm text-muted-foreground">{feature.replace('• ', '')}</span>
-                        </div>
+                        <li key={index} className="flex items-start gap-2.5 text-sm text-muted-foreground">
+                          <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                          <span>{feature.replace('• ', '')}</span>
+                        </li>
                       ))}
-                    </div>
+                    </ul>
                   </div>
-                  
-                  <div className="border-t pt-4">
-                    {!subscribed ? (
-                      <Button className="w-full h-12 text-base font-semibold transition-all duration-200" onClick={handleManageSubscription}>
-                        <Crown size={18} className="mr-2" />
-                        Fazer Upgrade
-                      </Button>
-                    ) : (
-                      <Button variant="outline" className="w-full h-12 text-base font-semibold hover:bg-primary/5" onClick={handleManageSubscription}>
-                        Gerenciar Assinatura
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
+
+                  {!subscribed ? (
+                    <Button className="w-full h-11" onClick={handleManageSubscription}>
+                      <Crown size={16} className="mr-2" />
+                      Fazer upgrade
+                    </Button>
+                  ) : (
+                    <Button variant="outline" className="w-full h-11" onClick={handleManageSubscription}>
+                      Gerenciar assinatura
+                    </Button>
+                  )}
+                </div>
               </CollapsibleContent>
             </Card>
           </Collapsible>
 
           {/* Settings */}
           <Collapsible open={settingsDropdownOpen} onOpenChange={setSettingsDropdownOpen}>
-            <Card className="overflow-hidden">
-              <CollapsibleTrigger className="w-full">
-                <CardHeader className="cursor-pointer hover:bg-primary/5 transition-all duration-200">
-                  <CardTitle className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Settings size={20} className="text-primary" />
-                      <span>Configurações</span>
+            <Card className="overflow-hidden border-border/60">
+              <CollapsibleTrigger className="w-full text-left">
+                <div className="flex items-center justify-between p-5">
+                  <div className="flex items-center gap-4">
+                    <div className="w-11 h-11 rounded-xl bg-muted flex items-center justify-center">
+                      <Settings size={20} className="text-foreground" />
                     </div>
-                    <ChevronDown 
-                      className={`text-primary transition-transform duration-300 ${settingsDropdownOpen ? 'rotate-180' : ''}`} 
-                      size={20} 
-                    />
-                  </CardTitle>
-                </CardHeader>
+                    <div>
+                      <h3 className="text-base font-semibold text-foreground">Configurações</h3>
+                      <p className="text-xs text-muted-foreground">Preferências do aplicativo</p>
+                    </div>
+                  </div>
+                  <ChevronDown
+                    className={`text-muted-foreground transition-transform duration-300 ${settingsDropdownOpen ? 'rotate-180' : ''}`}
+                    size={18}
+                  />
+                </div>
               </CollapsibleTrigger>
-              
+
               <CollapsibleContent className="animate-accordion-down">
-                <CardContent className="space-y-6 pt-6">
-                  <div className="flex items-center justify-between p-4 rounded-lg border bg-gradient-to-r from-muted/30 to-transparent">
-                    <div className="space-y-1">
-                      <div className="text-base font-semibold">Tema do Aplicativo</div>
-                      <div className="text-sm text-muted-foreground">
+                <div className="px-5 pb-5 pt-5 border-t border-border/60 divide-y divide-border/60">
+                  <div className="flex items-center justify-between py-4">
+                    <div className="space-y-0.5 pr-4">
+                      <div className="text-sm font-medium">Tema do aplicativo</div>
+                      <div className="text-xs text-muted-foreground">
                         Alternar entre modo claro e escuro
                       </div>
                     </div>
                     <ThemeToggle />
                   </div>
-                  
-                  <DailyMoodToggle />
-                  
-                  <div className="flex items-center justify-between p-4 rounded-lg border bg-gradient-to-r from-muted/30 to-transparent">
-                    <div className="space-y-1">
-                      <div className="text-base font-semibold">Modal de Metas Semanais</div>
-                      <div className="text-sm text-muted-foreground">
+
+                  <div className="py-4">
+                    <DailyMoodToggle />
+                  </div>
+
+                  <div className="flex items-center justify-between py-4">
+                    <div className="space-y-0.5 pr-4">
+                      <div className="text-sm font-medium">Modal de metas semanais</div>
+                      <div className="text-xs text-muted-foreground">
                         Exibir modal toda segunda-feira para adicionar metas
                       </div>
                     </div>
@@ -269,68 +290,78 @@ const Profile = () => {
                       onCheckedChange={handleToggleWeeklyGoalModal}
                     />
                   </div>
-                  
-                  <div className="flex items-center justify-between p-4 rounded-lg border bg-gradient-to-r from-muted/30 to-transparent">
-                    <div className="space-y-1">
-                      <div className="text-base font-semibold">Meus Sintomas</div>
-                      <div className="text-sm text-muted-foreground">
+
+                  <div className="flex items-center justify-between py-4">
+                    <div className="space-y-0.5 pr-4">
+                      <div className="text-sm font-medium">Meus sintomas</div>
+                      <div className="text-xs text-muted-foreground">
                         Configure os sintomas que você apresenta
                       </div>
                     </div>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={() => setEditSymptomsOpen(true)}
                     >
-                      <Edit size={16} className="mr-2" />
+                      <Edit size={14} className="mr-2" />
                       Editar
                     </Button>
                   </div>
-                </CardContent>
+                </div>
               </CollapsibleContent>
             </Card>
           </Collapsible>
 
-          {/* Account Actions */}
-          <Card>
-            <CardContent className="p-6 space-y-4">
-              <Button 
-                variant="outline" 
-                className="w-full justify-start h-12 text-base transition-all duration-200 hover:bg-primary/5" 
+          {/* Account actions */}
+          <Card className="overflow-hidden border-border/60">
+            <div className="divide-y divide-border/60">
+              <button
                 onClick={() => navigate('/account-settings')}
+                className="w-full flex items-center gap-4 p-4 text-left hover:bg-muted/50 transition-colors"
               >
-                <Settings size={18} className="mr-3" />
-                Alterar Dados da Conta
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                className="w-full justify-start h-12 text-base transition-all duration-200 hover:bg-primary/5" 
+                <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                  <Settings size={18} className="text-foreground" />
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm font-medium">Alterar dados da conta</div>
+                  <div className="text-xs text-muted-foreground">Nome, e-mail e senha</div>
+                </div>
+                <ChevronDown size={16} className="-rotate-90 text-muted-foreground" />
+              </button>
+
+              <button
                 onClick={() => navigate('/paciente/suporte')}
+                className="w-full flex items-center gap-4 p-4 text-left hover:bg-muted/50 transition-colors"
               >
-                <MessageCircle size={18} className="mr-3" />
-                Suporte
-              </Button>
-              
-              <div className="pt-2 border-t">
-                <Button 
-                  variant="destructive" 
-                  className="w-full justify-start h-12 text-base font-semibold transition-all duration-200" 
-                  onClick={handleLogout}
-                >
-                  <LogOut size={18} className="mr-3" />
-                  Sair da Conta
-                </Button>
-              </div>
-            </CardContent>
+                <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                  <MessageCircle size={18} className="text-foreground" />
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm font-medium">Suporte</div>
+                  <div className="text-xs text-muted-foreground">Fale com nossa equipe</div>
+                </div>
+                <ChevronDown size={16} className="-rotate-90 text-muted-foreground" />
+              </button>
+
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-4 p-4 text-left hover:bg-destructive/5 transition-colors"
+              >
+                <div className="w-10 h-10 rounded-lg bg-destructive/10 flex items-center justify-center">
+                  <LogOut size={18} className="text-destructive" />
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm font-medium text-destructive">Sair da conta</div>
+                  <div className="text-xs text-muted-foreground">Encerrar sessão neste dispositivo</div>
+                </div>
+              </button>
+            </div>
           </Card>
         </main>
       </div>
 
-      
-      {/* Edit Symptoms Modal */}
       {user && (
-        <EditSymptomsModal 
+        <EditSymptomsModal
           open={editSymptomsOpen}
           onOpenChange={setEditSymptomsOpen}
           userId={user.id}
