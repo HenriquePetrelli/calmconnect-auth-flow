@@ -22,28 +22,40 @@ const NovoChat: React.FC = () => {
         
         <div className="space-y-3">
           <div className="bg-muted/50 p-3 rounded-lg">
-            <h4 className="font-medium text-sm mb-1">💬 Chat em tempo real</h4>
+            <h4 className="font-medium text-sm mb-1 inline-flex items-center gap-2">
+              <MessageCircle className="w-4 h-4" />
+              Chat em tempo real
+            </h4>
             <p className="text-xs text-muted-foreground">
               Troque mensagens instantaneamente com seus psicólogos
             </p>
           </div>
           
           <div className="bg-muted/50 p-3 rounded-lg">
-            <h4 className="font-medium text-sm mb-1">📷 Compartilhe imagens</h4>
+            <h4 className="font-medium text-sm mb-1 inline-flex items-center gap-2">
+              <Camera className="w-4 h-4" />
+              Compartilhe imagens
+            </h4>
             <p className="text-xs text-muted-foreground">
               Envie fotos e documentos quando necessário
             </p>
           </div>
           
           <div className="bg-muted/50 p-3 rounded-lg">
-            <h4 className="font-medium text-sm mb-1">🔒 Seguro e privado</h4>
+            <h4 className="font-medium text-sm mb-1 inline-flex items-center gap-2">
+              <Lock className="w-4 h-4" />
+              Seguro e privado
+            </h4>
             <p className="text-xs text-muted-foreground">
               Suas conversas são protegidas e confidenciais
             </p>
           </div>
           
           <div className="bg-muted/50 p-3 rounded-lg">
-            <h4 className="font-medium text-sm mb-1">⏰ Disponível por 30 dias</h4>
+            <h4 className="font-medium text-sm mb-1 inline-flex items-center gap-2">
+              <Clock className="w-4 h-4" />
+              Disponível por 30 dias
+            </h4>
             <p className="text-xs text-muted-foreground">
               Converse por até 1 mês após sua consulta
             </p>
