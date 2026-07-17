@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Clock, Calendar, Activity, Zap, Wind, Music, Trophy, History, Target, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Clock, Calendar, Activity, Zap, Wind, Music, Trophy, History, Target, CheckCircle2, Flame } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { usePatientStatistics } from "@/hooks/usePatientStatistics";
 import { useAchievements } from "@/hooks/useAchievements";
