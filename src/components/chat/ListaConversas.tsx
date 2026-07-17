@@ -152,11 +152,12 @@ export const ListaConversas: React.FC<ListaConversasProps> = ({ onSelectConversa
                       </Badge>
                     </div>
                     {conversa.ultima_mensagem && (
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {conversa.ultima_mensagem.tipo === 'imagem' 
-                          ? '📷 Imagem' 
-                          : conversa.ultima_mensagem.conteudo
-                        }
+                      <p className="text-sm text-muted-foreground line-clamp-2 inline-flex items-center gap-1">
+                        {conversa.ultima_mensagem.tipo === 'imagem' ? (
+                          <><Camera className="w-3.5 h-3.5" /> Imagem</>
+                        ) : (
+                          conversa.ultima_mensagem.conteudo
+                        )}
                       </p>
                     )}
                   </div>
