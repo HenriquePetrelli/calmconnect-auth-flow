@@ -19,6 +19,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from 'sonner';
 import React from "react";
 import PageSkeleton from "@/components/PageSkeleton";
+import { useTheme } from "next-themes";
+
 
 const HomeContent = () => {
   const navigate = useNavigate();
