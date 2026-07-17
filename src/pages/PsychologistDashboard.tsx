@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Bell, Calendar, User, History, AlertTriangle, Clock, Users, CheckCircle } from 'lucide-react';
+import { Bell, Calendar, User, History, AlertTriangle, Clock, Users, CheckCircle, LogOut } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { usePsychologistEmergency } from '@/hooks/usePsychologistEmergency';
 import { usePsychologistSchedule } from '@/hooks/usePsychologistSchedule';
@@ -131,9 +131,9 @@ const PsychologistDashboard = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-30 backdrop-blur bg-card/80 border-b border-border">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 px-4 py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 px-4 py-3 md:py-4">
           <div className="min-w-0">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
               Área do Psicólogo
             </p>
             <h1 className="text-lg md:text-xl font-semibold text-foreground truncate">
@@ -142,34 +142,44 @@ const PsychologistDashboard = () => {
           </div>
           <div className="flex items-center gap-2">
             <OnlineStatusToggle />
+            <div className="hidden sm:block w-px h-6 bg-border" aria-hidden />
             <Button
-              variant="outline"
-              size="sm"
+              variant="ghost"
+              size="icon"
+              className="rounded-full hover:bg-primary/10 hover:text-primary"
               onMouseEnter={() => import('./PsychologistProfile')}
               onClick={() => navigate('/psychologist-profile')}
+              title="Perfil"
+              aria-label="Perfil"
             >
-              <User className="w-4 h-4 mr-2" />
-              <span className="hidden sm:inline">Perfil</span>
+              <User className="w-[18px] h-[18px]" />
             </Button>
-            <Button variant="ghost" size="sm" onClick={handleLogout}>
-              Sair
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full hover:bg-destructive/10 hover:text-destructive"
+              onClick={handleLogout}
+              title="Sair"
+              aria-label="Sair"
+            >
+              <LogOut className="w-[18px] h-[18px]" />
             </Button>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
+      <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-5 md:space-y-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
           <Card className="border-destructive/20 bg-gradient-to-br from-destructive/5 to-transparent hover:shadow-md transition-shadow">
-            <CardContent className="p-4">
-              <div className="flex items-start justify-between gap-2">
+            <CardContent className="p-5">
+              <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Emergências</p>
-                  <p className="text-3xl font-bold text-destructive mt-1">{pendingEmergencies}</p>
+                  <p className="text-3xl font-bold text-destructive mt-1.5">{pendingEmergencies}</p>
                   <p className="text-xs text-muted-foreground mt-1">pendentes</p>
                 </div>
-                <div className="rounded-lg bg-destructive/10 p-2">
+                <div className="rounded-lg bg-destructive/10 p-2.5 shrink-0">
                   <AlertTriangle className="w-5 h-5 text-destructive" />
                 </div>
               </div>
@@ -177,14 +187,14 @@ const PsychologistDashboard = () => {
           </Card>
 
           <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent hover:shadow-md transition-shadow">
-            <CardContent className="p-4">
-              <div className="flex items-start justify-between gap-2">
+            <CardContent className="p-5">
+              <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Hoje</p>
-                  <p className="text-3xl font-bold text-primary mt-1">{todayConsultations}</p>
+                  <p className="text-3xl font-bold text-primary mt-1.5">{todayConsultations}</p>
                   <p className="text-xs text-muted-foreground mt-1">consultas</p>
                 </div>
-                <div className="rounded-lg bg-primary/10 p-2">
+                <div className="rounded-lg bg-primary/10 p-2.5 shrink-0">
                   <Calendar className="w-5 h-5 text-primary" />
                 </div>
               </div>
@@ -192,14 +202,14 @@ const PsychologistDashboard = () => {
           </Card>
 
           <Card className="border-secondary/30 bg-gradient-to-br from-secondary/10 to-transparent hover:shadow-md transition-shadow">
-            <CardContent className="p-4">
-              <div className="flex items-start justify-between gap-2">
+            <CardContent className="p-5">
+              <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Próximas</p>
-                  <p className="text-3xl font-bold text-secondary-foreground mt-1">{upcomingConsultations}</p>
+                  <p className="text-3xl font-bold text-secondary-foreground mt-1.5">{upcomingConsultations}</p>
                   <p className="text-xs text-muted-foreground mt-1">agendadas</p>
                 </div>
-                <div className="rounded-lg bg-secondary/20 p-2">
+                <div className="rounded-lg bg-secondary/20 p-2.5 shrink-0">
                   <Clock className="w-5 h-5 text-secondary-foreground" />
                 </div>
               </div>
