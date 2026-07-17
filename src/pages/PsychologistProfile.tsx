@@ -51,11 +51,18 @@ const PsychologistProfile = () => {
   useEffect(() => {
     const load = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+        // Use getSession() – reads from local storage (no network) vs getUser() which hits the server
+        const { data: { session } } = await supabase.auth.getSession();
+        const user = session?.user;
+        if (!user) {
+          setLoading(false);
+          return;
+        }
         setUserId(user.id);
         setEmail(user.email || '');
         setTempEmail(user.email || '');
+        // Reveal UI immediately with auth data; hydrate psychologist row in background
+        setLoading(false);
 
         const { data: psych } = await supabase
           .from('psychologists')
@@ -71,7 +78,7 @@ const PsychologistProfile = () => {
           setBio(psych.bio || '');
           setTempBio(psych.bio || '');
         }
-      } finally {
+      } catch {
         setLoading(false);
       }
     };
