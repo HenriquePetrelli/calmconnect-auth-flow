@@ -87,7 +87,8 @@ const App = () => {
               <Sonner />
               <BrowserRouter>
                 <BackgroundWrapper>
-                  <Suspense fallback={<PageSkeleton />}>
+                  <Suspense fallback={<SplashScreen />}>
+
                     <Routes>
                   {/* Rotas Públicas */}
                   <Route path="/" element={
