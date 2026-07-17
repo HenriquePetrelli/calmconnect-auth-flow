@@ -233,7 +233,7 @@ const HomeContent = () => {
                 <button
                   key={index}
                   onClick={feature.onClick}
-                  className="group relative overflow-hidden flex items-center gap-4 rounded-2xl border p-5 text-left shadow-sm transition-all duration-200 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                  className="group relative overflow-hidden flex items-center gap-4 rounded-2xl border p-5 text-left shadow-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                   style={{ backgroundColor: feature.bg, borderColor: feature.border }}
                 >
                   <div
@@ -263,7 +263,7 @@ const HomeContent = () => {
                 <button
                   key={index}
                   onClick={feature.onClick}
-                  className="group relative overflow-hidden flex aspect-square flex-col items-start justify-between rounded-2xl border p-4 text-left shadow-sm transition-all duration-200 active:scale-[0.98] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                  className="group relative overflow-hidden flex aspect-square flex-col items-start justify-between rounded-2xl border p-4 text-left shadow-sm transition-all duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                   style={{ backgroundColor: feature.bg, borderColor: feature.border }}
                 >
                   <div

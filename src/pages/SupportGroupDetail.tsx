@@ -67,7 +67,7 @@ const TestimonialCard = ({ testimonial, symptomName, onLike, onEdit, onDelete, c
   const userLikeType = testimonial.user_like?.tipo;
 
   return (
-    <Card className="hover:shadow-md transition-shadow duration-200">
+    <Card className=" transition-shadow duration-200">
       <CardHeader className="pb-3">
         <div className="flex items-center gap-3">
           <Avatar className="w-10 h-10">

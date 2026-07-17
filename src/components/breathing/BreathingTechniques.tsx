@@ -60,7 +60,7 @@ const BreathingTechniques = ({
         filteredTechniques.map((technique) => (
           <Card 
             key={technique.id}
-            className="cursor-pointer transition-all duration-300 hover:shadow-calm"
+            className="cursor-pointer transition-all duration-300"
             onClick={() => onSelectTechnique(technique)}
           >
             <CardContent className="p-6">

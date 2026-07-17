@@ -26,7 +26,7 @@ const GroupCard = ({ group, onToggleFavorite, onViewGroup }: GroupCardProps) => 
   const { symptoms, loading: symptomsLoading } = useGroupSymptoms(group.nome);
 
   return (
-    <Card className="group hover:shadow-md transition-all duration-200 border-border/50">
+    <Card className="group transition-all duration-200 border-border/50">
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <CardHeader className="space-y-3">
           <div className="flex items-start gap-3">

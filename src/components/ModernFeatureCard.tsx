@@ -34,11 +34,11 @@ const getVariantStyles = () => {
     }
     
     const variants = {
-      breathing: "bg-card border-l-4 border-l-breathing-primary shadow-sm hover:shadow-md hover:border-l-breathing-primary/80",
-      sounds: "bg-card border-l-4 border-l-sounds-primary shadow-sm hover:shadow-md hover:border-l-sounds-primary/80",
-      evolution: "bg-card border-l-4 border-l-evolution-primary shadow-sm hover:shadow-md hover:border-l-evolution-primary/80",
-      professional: "bg-card border-l-4 border-l-professional-primary shadow-sm hover:shadow-md hover:border-l-professional-primary/80",
-      default: "bg-card border-l-4 border-l-border shadow-sm hover:shadow-md hover:border-l-primary/80"
+      breathing: "bg-card border-l-4 border-l-breathing-primary shadow-sm hover:border-l-breathing-primary/80",
+      sounds: "bg-card border-l-4 border-l-sounds-primary shadow-sm hover:border-l-sounds-primary/80",
+      evolution: "bg-card border-l-4 border-l-evolution-primary shadow-sm hover:border-l-evolution-primary/80",
+      professional: "bg-card border-l-4 border-l-professional-primary shadow-sm hover:border-l-professional-primary/80",
+      default: "bg-card border-l-4 border-l-border shadow-sm hover:border-l-primary/80"
     };
     
     return cn(

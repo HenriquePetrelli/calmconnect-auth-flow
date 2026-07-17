@@ -30,7 +30,7 @@ export const GoalCard = ({ goal }: GoalCardProps) => {
   const categoryColor = goal.weekly_goals.category ? categoryColors[goal.weekly_goals.category] || 'bg-primary/10 text-primary border-primary/20' : 'bg-primary/10 text-primary border-primary/20';
 
   return (
-    <Card className="relative overflow-hidden hover:shadow-lg transition-all duration-300 border-2">
+    <Card className="relative overflow-hidden transition-all duration-300 border-2">
       {goal.completed && (
         <div className="absolute top-3 right-3 z-10">
           <Badge className="bg-success/90 text-white flex items-center gap-1 px-3 py-1.5">
