@@ -238,7 +238,7 @@ const HomeContent = () => {
                 >
                   <div
                     className="relative flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl text-white shadow-sm transition-transform duration-200 group-"
-                    style={{ backgroundColor: feature.iconBg, boxShadow: `0 6px 16px -6px ${feature.color}` }}
+                    style={{ backgroundColor: feature.iconBg, boxShadow: isDark ? 'none' : `0 6px 16px -6px ${feature.color}` }}
                   >
                     <Icon className="h-6 w-6" strokeWidth={2.25} />
                   </div>
@@ -268,7 +268,7 @@ const HomeContent = () => {
                 >
                   <div
                     className="relative flex h-11 w-11 items-center justify-center rounded-xl text-white shadow-sm transition-transform duration-200 group-active:scale-95"
-                    style={{ backgroundColor: feature.iconBg, boxShadow: `0 6px 16px -6px ${feature.color}` }}
+                    style={{ backgroundColor: feature.iconBg, boxShadow: isDark ? 'none' : `0 6px 16px -6px ${feature.color}` }}
                   >
                     <Icon className="h-[22px] w-[22px]" strokeWidth={2.25} />
                   </div>
