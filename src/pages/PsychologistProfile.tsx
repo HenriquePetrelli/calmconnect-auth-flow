@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { LogOut, Mail, Lock, User, FileText, Pencil, Check, MessageCircle, Settings } from 'lucide-react';
+import { LogOut, Mail, Lock, User, FileText, Pencil, Check, MessageCircle, Settings, Wallet, ChevronRight } from 'lucide-react';
 import BackButton from '@/components/BackButton';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -292,24 +292,48 @@ const PsychologistProfile = () => {
       </Card>
 
       <Card>
-        <CardContent className="p-6 space-y-3">
-          <Button 
-            variant="outline" 
-            className="w-full justify-start" 
+        <CardContent className="p-4 space-y-2">
+          <button
+            onClick={() => navigate('/psychologist-payments')}
+            className="w-full flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-left hover:bg-accent hover:border-primary/30 transition-colors group"
+          >
+            <div className="rounded-md bg-primary/10 p-2 group-hover:bg-primary/15 transition-colors">
+              <Wallet className="w-4 h-4 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium">Meus pagamentos</p>
+              <p className="text-xs text-muted-foreground">Acompanhe repasses e valores a receber</p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+          </button>
+
+          <button
             onClick={() => navigate('/psicologo/suporte')}
+            className="w-full flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-left hover:bg-accent hover:border-primary/30 transition-colors group"
           >
-            <MessageCircle size={16} className="mr-2" />
-            Suporte
-          </Button>
-          
-          <Button 
-            variant="destructive" 
-            className="w-full justify-start" 
+            <div className="rounded-md bg-secondary/20 p-2 group-hover:bg-secondary/30 transition-colors">
+              <MessageCircle className="w-4 h-4 text-secondary-foreground" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium">Suporte</p>
+              <p className="text-xs text-muted-foreground">Fale com a equipe Soliv</p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+          </button>
+
+          <button
             onClick={handleLogout}
+            className="w-full flex items-center gap-3 rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3 text-left hover:bg-destructive/10 hover:border-destructive/40 transition-colors group"
           >
-            <LogOut size={16} className="mr-2" />
-            Sair da Conta
-          </Button>
+            <div className="rounded-md bg-destructive/10 p-2 group-hover:bg-destructive/15 transition-colors">
+              <LogOut className="w-4 h-4 text-destructive" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-destructive">Sair da conta</p>
+              <p className="text-xs text-muted-foreground">Encerrar sessão neste dispositivo</p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-destructive/60 group-hover:text-destructive transition-colors" />
+          </button>
         </CardContent>
       </Card>
 
