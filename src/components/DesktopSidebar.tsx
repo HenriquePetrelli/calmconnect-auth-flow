@@ -73,7 +73,7 @@ export const DesktopSidebar: React.FC = () => {
       <div className="px-4 pb-2">
         <Button
           variant="ghost"
-          className="w-full justify-start gap-3 h-12 text-left transition-all duration-200 bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"
+          className="w-full justify-start gap-3 h-12 text-left transition-all duration-200 bg-primary text-white hover:bg-primary/90 hover:text-white"
           onClick={() => navigate('/sos')}
         >
           <Sun className="w-5 h-5" />
@@ -88,7 +88,7 @@ export const DesktopSidebar: React.FC = () => {
           className="w-full flex items-center gap-3 p-3 rounded-2xl bg-secondary-foreground/10 hover:bg-secondary-foreground/20 transition-colors text-left"
         >
           <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-            <span className="text-primary-foreground font-semibold">{initial}</span>
+            <span className="text-white font-semibold">{initial}</span>
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-secondary-foreground truncate">{firstName}</p>
