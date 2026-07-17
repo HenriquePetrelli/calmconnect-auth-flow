@@ -130,86 +130,97 @@ const PsychologistDashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-card border-b border-border px-4 py-3">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-semibold text-foreground">
+      <header className="sticky top-0 z-30 backdrop-blur bg-card/80 border-b border-border">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 px-4 py-4">
+          <div className="min-w-0">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Área do Psicólogo
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Dr.(a) {profile?.full_name}
             </p>
+            <h1 className="text-lg md:text-xl font-semibold text-foreground truncate">
+              Olá, Dr.(a) {profile?.full_name?.split(' ')[0]} 👋
+            </h1>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
             <OnlineStatusToggle />
             <Button
               variant="outline"
               size="sm"
+              onMouseEnter={() => import('./PsychologistProfile')}
               onClick={() => navigate('/psychologist-profile')}
             >
               <User className="w-4 h-4 mr-2" />
-              Perfil
+              <span className="hidden sm:inline">Perfil</span>
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleLogout}
-            >
+            <Button variant="ghost" size="sm" onClick={handleLogout}>
               Sair
             </Button>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto p-4">
+      <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <Card>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+          <Card className="border-destructive/20 bg-gradient-to-br from-destructive/5 to-transparent hover:shadow-md transition-shadow">
             <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Emergências</p>
-                  <p className="text-2xl font-bold text-destructive">{pendingEmergencies}</p>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Emergências</p>
+                  <p className="text-3xl font-bold text-destructive mt-1">{pendingEmergencies}</p>
+                  <p className="text-xs text-muted-foreground mt-1">pendentes</p>
                 </div>
-                <AlertTriangle className="w-8 h-8 text-destructive" />
+                <div className="rounded-lg bg-destructive/10 p-2">
+                  <AlertTriangle className="w-5 h-5 text-destructive" />
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent hover:shadow-md transition-shadow">
             <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Hoje</p>
-                  <p className="text-2xl font-bold text-primary">{todayConsultations}</p>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Hoje</p>
+                  <p className="text-3xl font-bold text-primary mt-1">{todayConsultations}</p>
+                  <p className="text-xs text-muted-foreground mt-1">consultas</p>
                 </div>
-                <Calendar className="w-8 h-8 text-primary" />
+                <div className="rounded-lg bg-primary/10 p-2">
+                  <Calendar className="w-5 h-5 text-primary" />
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-secondary/30 bg-gradient-to-br from-secondary/10 to-transparent hover:shadow-md transition-shadow">
             <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Próximas</p>
-                  <p className="text-2xl font-bold text-secondary">{upcomingConsultations}</p>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Próximas</p>
+                  <p className="text-3xl font-bold text-secondary-foreground mt-1">{upcomingConsultations}</p>
+                  <p className="text-xs text-muted-foreground mt-1">agendadas</p>
                 </div>
-                <Clock className="w-8 h-8 text-secondary" />
+                <div className="rounded-lg bg-secondary/20 p-2">
+                  <Clock className="w-5 h-5 text-secondary-foreground" />
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className={`hover:shadow-md transition-shadow ${isOnline ? 'border-success/30 bg-gradient-to-br from-success/5 to-transparent' : 'bg-muted/30'}`}>
             <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Status</p>
-                  <p className={`text-sm font-medium ${isOnline ? 'text-success' : 'text-muted-foreground'}`}>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Status</p>
+                  <p className={`text-lg font-semibold mt-1 ${isOnline ? 'text-success' : 'text-muted-foreground'}`}>
                     {isOnline ? 'Online' : 'Offline'}
                   </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {isOnline ? 'disponível' : 'indisponível'}
+                  </p>
                 </div>
-                <CheckCircle className={`w-8 h-8 ${isOnline ? 'text-success' : 'text-muted-foreground'}`} />
+                <div className={`rounded-lg p-2 ${isOnline ? 'bg-success/10' : 'bg-muted'}`}>
+                  <CheckCircle className={`w-5 h-5 ${isOnline ? 'text-success' : 'text-muted-foreground'}`} />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -217,35 +228,35 @@ const PsychologistDashboard = () => {
 
         {/* Main Content */}
         <Tabs defaultValue="emergency" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="emergency" className="flex items-center gap-2 data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground">
+          <TabsList className="w-full h-auto p-1 bg-muted/50 grid grid-cols-3 gap-1">
+            <TabsTrigger value="emergency" className="flex items-center gap-2 py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm">
               <Bell className="w-4 h-4" />
-              Emergências
+              <span className="hidden sm:inline">Emergências</span>
               {pendingEmergencies > 0 && (
-                <Badge variant="destructive" className="ml-1">
+                <Badge variant="destructive" className="ml-1 h-5 px-1.5">
                   {pendingEmergencies}
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="consultations" className="flex items-center gap-2 data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground">
+            <TabsTrigger value="consultations" className="flex items-center gap-2 py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm">
               <Users className="w-4 h-4" />
-              Consultas
+              <span className="hidden sm:inline">Consultas</span>
             </TabsTrigger>
-            <TabsTrigger value="history" className="flex items-center gap-2 data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground">
+            <TabsTrigger value="history" className="flex items-center gap-2 py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm">
               <History className="w-4 h-4" />
-              Histórico
+              <span className="hidden sm:inline">Histórico</span>
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="emergency">
+          <TabsContent value="emergency" className="mt-4">
             <EmergencyNotifications />
           </TabsContent>
 
-          <TabsContent value="consultations">
+          <TabsContent value="consultations" className="mt-4">
             <UpcomingConsultations />
           </TabsContent>
 
-          <TabsContent value="history">
+          <TabsContent value="history" className="mt-4">
             <ConsultationHistory />
           </TabsContent>
         </Tabs>
