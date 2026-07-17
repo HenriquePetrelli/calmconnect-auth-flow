@@ -81,8 +81,9 @@ const AdminCreateForm: React.FC<AdminCreateFormProps> = ({ onSuccess }) => {
     return (
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-center text-success">
-            ✅ Conta Criada com Sucesso!
+          <CardTitle className="text-center text-success inline-flex items-center justify-center gap-2">
+            <CheckCircle className="w-5 h-5" />
+            Conta Criada com Sucesso!
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
