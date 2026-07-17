@@ -183,8 +183,9 @@
     --gradient-primary: linear-gradient(135deg, hsl(25 95% 53%), hsl(27 96% 61%));
     --gradient-secondary: linear-gradient(135deg, hsl(262 83% 58%), hsl(258 90% 66%));
     --gradient-brand: linear-gradient(135deg, hsl(25 95% 53%), hsl(262 83% 58%));
-    --gradient-card: linear-gradient(180deg, hsl(256 32% 20%), hsl(260 30% 16%));
-    --gradient-calm: linear-gradient(180deg, hsl(260 30% 13%), hsl(256 32% 18%));
+    --gradient-card: linear-gradient(180deg, hsl(256 22% 24%), hsl(258 22% 20%));
+    --gradient-calm: linear-gradient(180deg, hsl(258 22% 18%), hsl(256 22% 22%));
+
 
     --gradient-professional: linear-gradient(135deg, hsl(27 96% 61%), hsl(25 95% 53%));
     --gradient-breathing: linear-gradient(135deg, hsl(199 89% 60%), hsl(160 84% 49%));
