@@ -156,7 +156,6 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
 
   if (accessState !== 'allowed') {
     if (isPublicRoute) {
-      const SplashScreen = require('@/components/SplashScreen').default;
       return <SplashScreen />;
     }
     return (
