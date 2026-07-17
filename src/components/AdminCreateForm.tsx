@@ -136,9 +136,9 @@ const AdminCreateForm: React.FC<AdminCreateFormProps> = ({ onSuccess }) => {
           </div>
 
           <div className="bg-yellow-50 border border-warning/20 rounded-lg p-3">
-            <p className="text-warning text-sm">
-              ⚠️ <strong>Importante:</strong> Salve essas credenciais em local seguro. 
-              A senha deve ser alterada no primeiro acesso.
+            <p className="text-warning text-sm inline-flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+              <span><strong>Importante:</strong> Salve essas credenciais em local seguro. A senha deve ser alterada no primeiro acesso.</span>
             </p>
           </div>
 
