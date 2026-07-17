@@ -147,15 +147,18 @@ const HomeContent = () => {
 
   const firstName = userProfile?.user_metadata?.full_name?.split(' ')[0] || 'Usuário';
 
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
+
   const features = [
     {
       icon: Activity,
       title: "Respiração Guiada",
       subtitle: "Exercícios de relaxamento",
       onClick: () => navigate('/breathing'),
-      color: '#5D61A6',
-      bg: '#DDE0F0',
-      border: '#B4B8D8',
+      color: isDark ? '#B4B8D8' : '#5D61A6',
+      bg: isDark ? 'hsl(232, 20%, 22%)' : '#DDE0F0',
+      border: isDark ? 'hsl(232, 20%, 32%)' : '#B4B8D8',
       iconBg: '#6B6FB5',
     },
     {
@@ -163,9 +166,9 @@ const HomeContent = () => {
       title: "Sons Terapêuticos",
       subtitle: "Áudios calmantes",
       onClick: () => navigate('/sounds'),
-      color: 'hsl(158,64%,42%)',      // esmeralda — calma
-      bg: 'hsl(152,68%,96%)',
-      border: 'hsl(152,55%,86%)',
+      color: isDark ? 'hsl(152, 55%, 75%)' : 'hsl(158,64%,42%)',
+      bg: isDark ? 'hsl(158, 25%, 18%)' : 'hsl(152,68%,96%)',
+      border: isDark ? 'hsl(158, 25%, 28%)' : 'hsl(152,55%,86%)',
       iconBg: 'hsl(158,64%,42%)',
     },
     {
@@ -173,9 +176,9 @@ const HomeContent = () => {
       title: "Grupos de Apoio",
       subtitle: "Suporte da comunidade",
       onClick: () => navigate('/support-groups'),
-      color: 'hsl(199,89%,42%)',      // azul-céu — conexão
-      bg: 'hsl(204,94%,96%)',
-      border: 'hsl(204,80%,88%)',
+      color: isDark ? 'hsl(204, 80%, 78%)' : 'hsl(199,89%,42%)',
+      bg: isDark ? 'hsl(204, 30%, 20%)' : 'hsl(204,94%,96%)',
+      border: isDark ? 'hsl(204, 30%, 30%)' : 'hsl(204,80%,88%)',
       iconBg: 'hsl(199,89%,42%)',
     },
     {
@@ -183,12 +186,13 @@ const HomeContent = () => {
       title: "Meu Diário",
       subtitle: "Registros pessoais",
       onClick: () => navigate('/journal'),
-      color: 'hsl(41,96%,40%)',       // amarelo âmbar — expressão
-      bg: 'hsl(48,100%,96%)',
-      border: 'hsl(45,93%,85%)',
+      color: isDark ? 'hsl(45, 85%, 72%)' : 'hsl(41,96%,40%)',
+      bg: isDark ? 'hsl(38, 28%, 20%)' : 'hsl(48,100%,96%)',
+      border: isDark ? 'hsl(38, 28%, 30%)' : 'hsl(45,93%,85%)',
       iconBg: 'hsl(41,96%,45%)',
     }
   ];
+
 
   if (isLoading) {
     return <PageSkeleton type="home" />;
