@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Laugh, Smile, Meh, Frown, Angry } from "lucide-react";
 
 interface MoodSelectionModalProps {
   open: boolean;
@@ -17,11 +18,11 @@ interface MoodSelectionModalProps {
 }
 
 const moods = [
-  { emoji: '😀', label: 'Feliz', value: 5 },
-  { emoji: '🙂', label: 'Calmo', value: 4 },
-  { emoji: '😐', label: 'Neutro', value: 3 },
-  { emoji: '😔', label: 'Triste', value: 2 },
-  { emoji: '😡', label: 'Irritado', value: 1 }
+  { emoji: '😀', Icon: Laugh, label: 'Feliz', value: 5, color: 'text-green-600' },
+  { emoji: '🙂', Icon: Smile, label: 'Calmo', value: 4, color: 'text-emerald-600' },
+  { emoji: '😐', Icon: Meh, label: 'Neutro', value: 3, color: 'text-yellow-600' },
+  { emoji: '😔', Icon: Frown, label: 'Triste', value: 2, color: 'text-orange-600' },
+  { emoji: '😡', Icon: Angry, label: 'Irritado', value: 1, color: 'text-red-600' }
 ];
 
 export const MoodSelectionModal: React.FC<MoodSelectionModalProps> = ({
