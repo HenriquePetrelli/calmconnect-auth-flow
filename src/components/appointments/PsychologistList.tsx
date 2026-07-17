@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { ChevronRight, MapPin, User, CheckCircle } from 'lucide-react';
+import { ChevronRight, MapPin, User, CheckCircle, Star } from 'lucide-react';
 
 export interface PsychologistData {
   id: string;
