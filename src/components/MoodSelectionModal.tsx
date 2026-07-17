@@ -213,7 +213,7 @@ export const MoodSelectionModal: React.FC<MoodSelectionModalProps> = ({
               {isLoading ? (
                 <div className="w-12 h-12 mb-2 border-2 border-primary border-t-transparent rounded-full animate-spin" />
               ) : (
-                {(() => { const M = moods[2].Icon; return <M className={`w-12 h-12 mb-2 ${moods[2].color}`} />; })()}
+                (() => { const M = moods[2].Icon; return <M className={`w-12 h-12 mb-2 ${moods[2].color}`} />; })()
               )}
               <span className="text-base font-medium">{moods[2].label}</span>
             </button>
