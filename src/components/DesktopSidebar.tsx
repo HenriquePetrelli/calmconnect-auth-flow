@@ -9,7 +9,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import logoImg from '@/assets/soliv-logo.webp';
+import logoImg from '@/assets/soliv-logo.svg';
 import { useAuth } from '@/contexts/AuthContext';
 
 const sidebarItems = [
