@@ -115,7 +115,7 @@ const Statistics = () => {
             <CardContent className="space-y-4">
               {localSelectedGoals.length === 0 ? (
                 <div className="text-center py-8 space-y-4">
-                  <div className="text-4xl mb-2">🎯</div>
+                  <Target className="w-12 h-12 mx-auto mb-2 text-primary" />
                   <div>
                     <h3 className="text-lg font-semibold text-foreground mb-2">
                       Ainda sem metas semanais
