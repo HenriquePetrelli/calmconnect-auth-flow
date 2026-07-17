@@ -10,8 +10,11 @@ const SplashScreen = () => {
           className="h-24 w-auto select-none animate-scale-in"
           draggable={false}
         />
-        <span className="text-2xl font-semibold tracking-wide text-foreground">
-          Soliv
+        <span
+          className="text-[64px] font-black text-secondary lowercase leading-none"
+          style={{ fontFamily: "'El Messiri', sans-serif" }}
+        >
+          soliv
         </span>
         <div className="mt-6 h-1 w-24 overflow-hidden rounded-full bg-muted">
           <div className="h-full w-1/2 animate-[shimmer_1.2s_ease-in-out_infinite] rounded-full bg-primary" />
