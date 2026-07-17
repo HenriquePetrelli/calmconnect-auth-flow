@@ -1,6 +1,7 @@
 import { useEffect, ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import SplashScreen from '@/components/SplashScreen';
 
 interface RouteGuardProps {
   children: ReactNode;
@@ -154,6 +155,9 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
   }, [accessState, redirectTarget, currentPath, navigate]);
 
   if (accessState !== 'allowed') {
+    if (isPublicRoute) {
+      return <SplashScreen />;
+    }
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>

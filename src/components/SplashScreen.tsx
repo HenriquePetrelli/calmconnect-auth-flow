@@ -2,10 +2,27 @@ import logoImg from '@/assets/soliv-logo.webp';
 
 const SplashScreen = () => {
   return (
-    <div role="dialog" aria-label="Tela de abertura Soliv" className="min-h-screen bg-background flex flex-col items-center justify-center p-8">
-      <img src={logoImg} alt="Logotipo Soliv" className="w-32 h-32 md:w-40 md:h-40 animate-fade-in" />
-      <h1 className="mt-6 text-3xl md:text-4xl font-bold text-primary animate-fade-in">soliv</h1>
-      <p className="mt-2 text-sm text-muted-foreground animate-fade-in">Cuidando do seu bem-estar</p>
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background">
+      <div className="flex flex-col items-center gap-4 animate-fade-in">
+        <img
+          src={logoImg}
+          alt="Soliv"
+          className="h-24 w-auto select-none animate-scale-in"
+          draggable={false}
+        />
+        <span className="text-2xl font-semibold tracking-wide text-foreground">
+          Soliv
+        </span>
+        <div className="mt-6 h-1 w-24 overflow-hidden rounded-full bg-muted">
+          <div className="h-full w-1/2 animate-[shimmer_1.2s_ease-in-out_infinite] rounded-full bg-primary" />
+        </div>
+      </div>
+      <style>{`
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(200%); }
+        }
+      `}</style>
     </div>
   );
 };
