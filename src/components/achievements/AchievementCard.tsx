@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Lock, Check } from 'lucide-react';
+import { Lock, Check, User as UserIcon, Wind, NotebookPen, MessageCircle, BarChart3, PartyPopper, Trophy } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 interface AchievementCardProps {
@@ -10,14 +10,14 @@ interface AchievementCardProps {
   achieved_at: string | null;
 }
 
-// Map icon names to emoji representations
-const iconMap: Record<string, string> = {
-  undraw_meditation: '🧘',
-  undraw_yoga: '🌬️',
-  undraw_note_list: '📝',
-  undraw_chat: '💬',
-  undraw_profile_data: '📊',
-  undraw_celebration: '🎉',
+// Map icon names to Lucide icon components
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  undraw_meditation: UserIcon,
+  undraw_yoga: Wind,
+  undraw_note_list: NotebookPen,
+  undraw_chat: MessageCircle,
+  undraw_profile_data: BarChart3,
+  undraw_celebration: PartyPopper,
 };
 
 export const AchievementCard = ({
@@ -43,12 +43,11 @@ export const AchievementCard = ({
         <CardContent className="p-6">
           <div className="flex flex-col items-center text-center space-y-4">
             {/* Icon */}
-            <div
-              className={`text-6xl ${
-                achieved ? 'animate-bounce' : ''
-              }`}
-            >
-              {iconMap[icon] || '🏆'}
+            <div className={achieved ? 'animate-bounce' : ''}>
+              {(() => {
+                const IconComp = iconMap[icon] || Trophy;
+                return <IconComp className="w-16 h-16 text-primary" />;
+              })()}
             </div>
 
             {/* Status Badge */}

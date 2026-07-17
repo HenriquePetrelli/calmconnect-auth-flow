@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Send, Image as ImageIcon, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { ArrowLeft, Send, Image as ImageIcon, CheckCircle, Clock, XCircle, X } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useMensagens } from '@/hooks/useMensagens';
@@ -213,7 +213,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversaId, onVolt
                     }
                   }}
                 >
-                  ✕
+                  <X className="w-4 h-4" />
                 </Button>
               </div>
             )}

@@ -83,14 +83,8 @@ const HomeContent = () => {
   };
 
   const getMoodLabel = (value: number) => {
-    const moods = [
-      { emoji: '😀', label: 'Feliz', value: 5 },
-      { emoji: '🙂', label: 'Calmo', value: 4 },
-      { emoji: '😐', label: 'Neutro', value: 3 },
-      { emoji: '😔', label: 'Triste', value: 2 },
-      { emoji: '😡', label: 'Irritado', value: 1 }
-    ];
-    return moods.find(mood => mood.value === value)?.label || '';
+    const labels: Record<number, string> = { 5: 'Feliz', 4: 'Calmo', 3: 'Neutro', 2: 'Triste', 1: 'Irritado' };
+    return labels[value] || '';
   };
 
   const handleCloseWeeklyGoalModal = async () => {
@@ -142,7 +136,7 @@ const HomeContent = () => {
         console.error('Error updating weekly goal modal:', error);
       }
     }
-    toast.success('Metas semanais adicionadas com sucesso! 🌱');
+    toast.success('Metas semanais adicionadas com sucesso!');
   };
 
   const handleMoodSelected = (value: number) => {

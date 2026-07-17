@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, BookOpen } from 'lucide-react';
 import { usePrivateJournal, JournalEntry } from '@/hooks/usePrivateJournal';
 import JournalEntryCard from '@/components/journal/JournalEntryCard';
 import JournalEntryModal from '@/components/journal/JournalEntryModal';
@@ -110,7 +110,7 @@ const PrivateJournal = () => {
             </div>
           ) : entries.length === 0 ? (
             <div className="text-center py-12">
-              <div className="text-6xl mb-4">📖</div>
+              <BookOpen className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
               <h2 className="text-lg font-medium mb-2">Seu diário está vazio</h2>
               <p className="text-muted-foreground mb-6">
                 {selectedMood !== null 

@@ -62,7 +62,7 @@ export const GoalCompletionModal = ({ goal, onClose }: GoalCompletionModalProps)
             </motion.div>
 
             <DialogTitle className="text-center text-2xl font-bold">
-              Parabéns! 🎉
+              Parabéns!
             </DialogTitle>
           </DialogHeader>
 

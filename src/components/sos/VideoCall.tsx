@@ -74,8 +74,9 @@ const VideoCall = ({ onEndCall }: VideoCallProps) => {
                   Psicóloga Especialista em Crise
                 </p>
                 <div className="mt-3 p-2 bg-success/15 rounded-lg">
-                  <p className="text-success text-sm">
-                    🟢 Conectado e ouvindo
+                  <p className="text-success text-sm inline-flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
+                    Conectado e ouvindo
                   </p>
                 </div>
               </div>

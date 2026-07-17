@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, Smile, Heart, Meh, Frown, CloudRain } from 'lucide-react';
+import { ChevronDown, Smile, Heart, Meh, Frown, CloudRain, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -198,13 +198,14 @@ export const MoodAccordion: React.FC<MoodAccordionProps> = ({ currentValue, onMo
           {showFeedback && selected && (
             <div
               className={cn(
-                'mt-3 rounded-lg border px-3 py-2 text-sm',
+                'mt-3 rounded-lg border px-3 py-2 text-sm inline-flex items-start gap-2 w-full',
                 selected.borderClass,
                 selected.bgClass,
                 selected.colorClass
               )}
             >
-              ✓ Humor registrado! Estamos aqui para apoiar você em cada passo da sua jornada.
+              <Check className="w-4 h-4 flex-shrink-0 mt-0.5" />
+              <span>Humor registrado! Estamos aqui para apoiar você em cada passo da sua jornada.</span>
             </div>
           )}
         </div>

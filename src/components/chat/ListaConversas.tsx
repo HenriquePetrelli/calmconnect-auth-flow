@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { MessageCircle, Plus, Trash2, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { MessageCircle, Plus, Trash2, Clock, CheckCircle, XCircle, Camera } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useConversas } from '@/hooks/useConversas';
@@ -152,11 +152,12 @@ export const ListaConversas: React.FC<ListaConversasProps> = ({ onSelectConversa
                       </Badge>
                     </div>
                     {conversa.ultima_mensagem && (
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {conversa.ultima_mensagem.tipo === 'imagem' 
-                          ? '📷 Imagem' 
-                          : conversa.ultima_mensagem.conteudo
-                        }
+                      <p className="text-sm text-muted-foreground line-clamp-2 inline-flex items-center gap-1">
+                        {conversa.ultima_mensagem.tipo === 'imagem' ? (
+                          <><Camera className="w-3.5 h-3.5" /> Imagem</>
+                        ) : (
+                          conversa.ultima_mensagem.conteudo
+                        )}
                       </p>
                     )}
                   </div>

@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Sprout } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAchievements } from '@/hooks/useAchievements';
 import { AchievementCard } from '@/components/achievements/AchievementCard';
@@ -35,7 +35,7 @@ const Achievements = () => {
           </div>
         ) : achievements.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 space-y-4">
-            <div className="text-6xl">🌱</div>
+            <Sprout className="w-16 h-16 text-primary" />
             <h2 className="text-xl font-semibold text-foreground">
               Nenhuma conquista ainda
             </h2>

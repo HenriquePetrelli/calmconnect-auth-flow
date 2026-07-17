@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Eye, EyeOff, Copy, Check } from "lucide-react";
+import { Eye, EyeOff, Copy, Check, CheckCircle, AlertTriangle } from "lucide-react";
 
 interface AdminCreateFormProps {
   onSuccess?: () => void;
@@ -81,8 +81,9 @@ const AdminCreateForm: React.FC<AdminCreateFormProps> = ({ onSuccess }) => {
     return (
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-center text-success">
-            ✅ Conta Criada com Sucesso!
+          <CardTitle className="text-center text-success inline-flex items-center justify-center gap-2">
+            <CheckCircle className="w-5 h-5" />
+            Conta Criada com Sucesso!
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -135,9 +136,9 @@ const AdminCreateForm: React.FC<AdminCreateFormProps> = ({ onSuccess }) => {
           </div>
 
           <div className="bg-yellow-50 border border-warning/20 rounded-lg p-3">
-            <p className="text-warning text-sm">
-              ⚠️ <strong>Importante:</strong> Salve essas credenciais em local seguro. 
-              A senha deve ser alterada no primeiro acesso.
+            <p className="text-warning text-sm inline-flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+              <span><strong>Importante:</strong> Salve essas credenciais em local seguro. A senha deve ser alterada no primeiro acesso.</span>
             </p>
           </div>
 

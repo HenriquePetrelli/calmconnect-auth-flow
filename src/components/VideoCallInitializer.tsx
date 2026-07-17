@@ -143,8 +143,9 @@ const VideoCallInitializer: React.FC<VideoCallInitializerProps> = ({
           )}
           
           {isComplete && (
-            <div className="text-sm text-primary font-medium">
-              ✅ Pronto! Iniciando videochamada...
+            <div className="text-sm text-primary font-medium inline-flex items-center gap-2">
+              <CheckCircle className="w-4 h-4" />
+              Pronto! Iniciando videochamada...
             </div>
           )}
           

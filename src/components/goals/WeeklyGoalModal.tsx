@@ -34,7 +34,7 @@ export const WeeklyGoalModal = ({
           </motion.div>
 
           <DialogTitle className="text-center text-2xl">
-            Defina suas metas semanais 🗓️
+            Defina suas metas semanais
           </DialogTitle>
         </DialogHeader>
 

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Clock, Calendar, Activity, Zap, Wind, Music, Trophy, History, Target, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Clock, Calendar, Activity, Zap, Wind, Music, Trophy, History, Target, CheckCircle2, Flame } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { usePatientStatistics } from "@/hooks/usePatientStatistics";
 import { useAchievements } from "@/hooks/useAchievements";
@@ -115,7 +115,7 @@ const Statistics = () => {
             <CardContent className="space-y-4">
               {localSelectedGoals.length === 0 ? (
                 <div className="text-center py-8 space-y-4">
-                  <div className="text-4xl mb-2">🎯</div>
+                  <Target className="w-12 h-12 mx-auto mb-2 text-primary" />
                   <div>
                     <h3 className="text-lg font-semibold text-foreground mb-2">
                       Ainda sem metas semanais
@@ -252,7 +252,7 @@ const Statistics = () => {
             {/* Streak Card */}
             <Card className="bg-gradient-to-r from-primary/10 to-primary/5">
               <CardContent className="p-6 text-center">
-                <div className="text-4xl mb-2">🔥</div>
+                <Flame className="w-12 h-12 mx-auto mb-2 text-orange-500" />
                 <div className="text-3xl font-bold text-primary mb-1">
                   {statistics?.streak_days || 0}
                 </div>

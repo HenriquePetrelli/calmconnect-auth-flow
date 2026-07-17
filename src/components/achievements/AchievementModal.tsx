@@ -3,6 +3,7 @@ import Confetti from 'react-confetti';
 import { useWindowSize } from '@/hooks/use-window-size';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { User as UserIcon, Wind, NotebookPen, MessageCircle, BarChart3, PartyPopper, Trophy } from 'lucide-react';
 
 interface AchievementModalProps {
   isOpen: boolean;
@@ -12,13 +13,13 @@ interface AchievementModalProps {
   icon: string;
 }
 
-const iconMap: Record<string, string> = {
-  undraw_meditation: '🧘',
-  undraw_yoga: '🌬️',
-  undraw_note_list: '📝',
-  undraw_chat: '💬',
-  undraw_profile_data: '📊',
-  undraw_celebration: '🎉',
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  undraw_meditation: UserIcon,
+  undraw_yoga: Wind,
+  undraw_note_list: NotebookPen,
+  undraw_chat: MessageCircle,
+  undraw_profile_data: BarChart3,
+  undraw_celebration: PartyPopper,
 };
 
 export const AchievementModal = ({
@@ -63,9 +64,11 @@ export const AchievementModal = ({
                     damping: 10,
                     stiffness: 200,
                   }}
-                  className="text-8xl"
                 >
-                  {iconMap[icon] || '🏆'}
+                  {(() => {
+                    const IconComp = iconMap[icon] || Trophy;
+                    return <IconComp className="w-24 h-24 text-primary" />;
+                  })()}
                 </motion.div>
 
                 {/* Badge */}
@@ -73,9 +76,11 @@ export const AchievementModal = ({
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.3 }}
-                  className="text-2xl font-bold text-primary"
+                  className="text-2xl font-bold text-primary inline-flex items-center gap-2"
                 >
-                  🎉 Parabéns! 🎉
+                  <PartyPopper className="w-6 h-6" />
+                  Parabéns!
+                  <PartyPopper className="w-6 h-6" />
                 </motion.div>
 
                 {/* Title */}
