@@ -192,7 +192,7 @@ export const MoodSelectionModal: React.FC<MoodSelectionModalProps> = ({
                 {isLoading ? (
                   <div className="w-10 h-10 mb-2 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  <span className="text-4xl mb-2">{mood.emoji}</span>
+                  <mood.Icon className={`w-10 h-10 mb-2 ${mood.color}`} />
                 )}
                 <span className="text-sm font-medium">{mood.label}</span>
               </button>
@@ -213,7 +213,7 @@ export const MoodSelectionModal: React.FC<MoodSelectionModalProps> = ({
               {isLoading ? (
                 <div className="w-12 h-12 mb-2 border-2 border-primary border-t-transparent rounded-full animate-spin" />
               ) : (
-                <span className="text-5xl mb-2">{moods[2].emoji}</span>
+                {(() => { const M = moods[2].Icon; return <M className={`w-12 h-12 mb-2 ${moods[2].color}`} />; })()}
               )}
               <span className="text-base font-medium">{moods[2].label}</span>
             </button>
@@ -235,7 +235,7 @@ export const MoodSelectionModal: React.FC<MoodSelectionModalProps> = ({
                 {isLoading ? (
                   <div className="w-10 h-10 mb-2 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  <span className="text-4xl mb-2">{mood.emoji}</span>
+                  <mood.Icon className={`w-10 h-10 mb-2 ${mood.color}`} />
                 )}
                 <span className="text-sm font-medium">{mood.label}</span>
               </button>
