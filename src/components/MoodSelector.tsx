@@ -25,7 +25,7 @@ export const MoodSelector: React.FC = () => {
               flex-shrink-0 flex flex-col items-center p-3 rounded-xl transition-all duration-200
               ${selectedMood === mood.value 
                 ? 'bg-primary text-primary-foreground scale-105 shadow-lg' 
-                : 'bg-card hover:bg-accent hover:scale-105'
+                : 'bg-card hover:bg-accent'
               }
             `}
             title={mood.label}

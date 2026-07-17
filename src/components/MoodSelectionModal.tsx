@@ -182,7 +182,7 @@ export const MoodSelectionModal: React.FC<MoodSelectionModalProps> = ({
                 key={mood.value}
                 onClick={() => handleMoodSelect(mood)}
                 disabled={isLoading}
-                className={`flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${
+                className={`flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
                   selectedMood === mood.emoji
                     ? 'border-primary bg-primary/10'
                     : 'border-border hover:border-primary/50'
@@ -203,7 +203,7 @@ export const MoodSelectionModal: React.FC<MoodSelectionModalProps> = ({
             <button
               onClick={() => handleMoodSelect(moods[2])}
               disabled={isLoading}
-              className={`w-full flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${
+              className={`w-full flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
                 selectedMood === moods[2].emoji
                   ? 'border-primary bg-primary/10'
                   : 'border-border hover:border-primary/50'
@@ -225,7 +225,7 @@ export const MoodSelectionModal: React.FC<MoodSelectionModalProps> = ({
                 key={mood.value}
                 onClick={() => handleMoodSelect(mood)}
                 disabled={isLoading}
-                className={`flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${
+                className={`flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
                   selectedMood === mood.emoji
                     ? 'border-primary bg-primary/10'
                     : 'border-border hover:border-primary/50'

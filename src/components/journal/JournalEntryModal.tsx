@@ -85,7 +85,7 @@ const JournalEntryModal = ({
                       type="button"
                       onClick={() => setHumor(mood.value)}
                       className={cn(
-                        'flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all duration-200 hover:scale-[1.02] bg-background',
+                        'flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all duration-200 bg-background',
                         isSelected ? `${mood.borderClass} ${mood.bgClass}` : 'border-border hover:border-foreground/20'
                       )}
                     >

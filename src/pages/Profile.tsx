@@ -210,7 +210,7 @@ const Profile = () => {
                   
                   <div className="border-t pt-4">
                     {!subscribed ? (
-                      <Button className="w-full h-12 text-base font-semibold transition-all duration-200 hover:scale-105" onClick={handleManageSubscription}>
+                      <Button className="w-full h-12 text-base font-semibold transition-all duration-200" onClick={handleManageSubscription}>
                         <Crown size={18} className="mr-2" />
                         Fazer Upgrade
                       </Button>
@@ -315,7 +315,7 @@ const Profile = () => {
               <div className="pt-2 border-t">
                 <Button 
                   variant="destructive" 
-                  className="w-full justify-start h-12 text-base font-semibold transition-all duration-200 hover:scale-105" 
+                  className="w-full justify-start h-12 text-base font-semibold transition-all duration-200" 
                   onClick={handleLogout}
                 >
                   <LogOut size={18} className="mr-3" />

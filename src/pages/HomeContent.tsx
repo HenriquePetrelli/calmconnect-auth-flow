@@ -233,11 +233,11 @@ const HomeContent = () => {
                 <button
                   key={index}
                   onClick={feature.onClick}
-                  className="group relative overflow-hidden flex items-center gap-4 rounded-2xl border p-5 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                  className="group relative overflow-hidden flex items-center gap-4 rounded-2xl border p-5 text-left shadow-sm transition-all duration-200 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                   style={{ backgroundColor: feature.bg, borderColor: feature.border }}
                 >
                   <div
-                    className="relative flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl text-white shadow-sm transition-transform duration-200 group-hover:scale-105 group-hover:rotate-3"
+                    className="relative flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl text-white shadow-sm transition-transform duration-200 group-"
                     style={{ backgroundColor: feature.iconBg, boxShadow: `0 6px 16px -6px ${feature.color}` }}
                   >
                     <Icon className="h-6 w-6" strokeWidth={2.25} />
@@ -247,7 +247,7 @@ const HomeContent = () => {
                     <p className="mt-1 text-sm leading-snug text-foreground/70">{feature.subtitle}</p>
                   </div>
                   <ArrowUpRight
-                    className="relative h-4 w-4 flex-shrink-0 opacity-60 transition-all duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:opacity-100"
+                    className="relative h-4 w-4 flex-shrink-0 opacity-60 transition-all duration-200 group- group- group-hover:opacity-100"
                     style={{ color: feature.color }}
                   />
                 </button>

@@ -170,7 +170,7 @@ export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerNam
                   <button
                     key={star}
                     onClick={() => handleStarClick(star)}
-                    className="transition-colors hover:scale-110"
+                    className="transition-colors"
                   >
                     <Star
                       className={`w-8 h-8 ${

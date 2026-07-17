@@ -72,7 +72,7 @@ const SoundCategory = () => {
             onClick={() => goToPlaylist(idx)}
             className="w-full group flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 hover:shadow-md transition-all text-left"
           >
-            <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-primary-foreground shrink-0 group-hover:scale-105 transition-transform">
+            <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-primary-foreground shrink-0 group- transition-transform">
               <Play className="w-5 h-5 fill-current" />
             </div>
             <div className="flex-1 min-w-0">
