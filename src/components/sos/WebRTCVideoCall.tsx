@@ -642,7 +642,7 @@ export const WebRTCVideoCall = ({ sessionId, userType, onEndCall }: WebRTCVideoC
         )}
 
         {/* Vídeo próprio (self-view) - Estilo Google Meet */}
-        <div className="absolute bottom-8 right-8 w-48 h-36 bg-card rounded-2xl border-2 border-border/50 overflow-hidden shadow-2xl transition-transform hover:scale-105 cursor-pointer">
+        <div className="absolute bottom-8 right-8 w-48 h-36 bg-card rounded-2xl border-2 border-border/50 overflow-hidden shadow-2xl transition-transform cursor-pointer">
           {isCameraOff ? (
             <div className="w-full h-full flex items-center justify-center bg-card">
               <div className="text-center">

@@ -72,7 +72,7 @@ const SOSButton = () => {
         <Button
           onClick={handleButtonClick}
           disabled={!canUse || loading}
-          className="w-16 h-16 rounded-full bg-destructive hover:bg-destructive/90 shadow-xl disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-300 hover:scale-105 animate-pulse-gentle"
+          className="w-16 h-16 rounded-full bg-destructive hover:bg-destructive/90 shadow-xl disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-300 animate-pulse-gentle"
           aria-label="Botão SOS - Emergência"
         >
           <Hand className="w-8 h-8 text-white" strokeWidth={2.5} />

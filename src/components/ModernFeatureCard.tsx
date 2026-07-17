@@ -42,7 +42,7 @@ const getVariantStyles = () => {
     };
     
     return cn(
-      "cursor-pointer transition-all duration-300 hover:scale-[1.01] hover:-translate-y-0.5",
+      "cursor-pointer transition-all duration-300",
       variants[variant]
     );
   };
@@ -61,7 +61,7 @@ const getVariantStyles = () => {
     };
     
     return cn(
-      "w-14 h-14 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-105",
+      "w-14 h-14 rounded-xl flex items-center justify-center transition-all duration-300",
       iconVariants[variant]
     );
   };

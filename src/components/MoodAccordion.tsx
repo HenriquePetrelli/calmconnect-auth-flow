@@ -182,7 +182,7 @@ export const MoodAccordion: React.FC<MoodAccordionProps> = ({ currentValue, onMo
                   onClick={() => handleSelect(mood)}
                   disabled={isSaving}
                   className={cn(
-                    'flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all duration-200 hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed bg-background',
+                    'flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed bg-background',
                     isSelected ? `${mood.borderClass} ${mood.bgClass}` : 'border-border hover:border-foreground/20'
                   )}
                 >

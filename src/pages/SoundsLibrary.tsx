@@ -170,7 +170,7 @@ const SoundsLibrary = () => {
                     onClick={() => navigate(`/sounds/player/${sound.id}`)}
                     className="group flex items-center gap-3 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 hover:shadow-md transition-all text-left"
                   >
-                    <div className="w-12 h-12 rounded-xl bg-[#7C3AED] flex items-center justify-center text-white shrink-0 group-hover:scale-105 transition-transform">
+                    <div className="w-12 h-12 rounded-xl bg-[#7C3AED] flex items-center justify-center text-white shrink-0 group- transition-transform">
                       <Play className="w-5 h-5 fill-current" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -205,11 +205,11 @@ const SoundsLibrary = () => {
                     <button
                       key={category.id}
                       onClick={() => navigate(`/sounds/category/${category.id}`)}
-                      className="group text-left p-5 rounded-2xl border border-border bg-card hover:shadow-lg hover:-translate-y-0.5 transition-all"
+                      className="group text-left p-5 rounded-2xl border border-border bg-card hover:shadow-lg transition-all"
                     >
                       <div
                         className={cn(
-                          "w-14 h-14 rounded-2xl flex items-center justify-center text-white mb-5 shadow-md group-hover:scale-105 transition-transform",
+                          "w-14 h-14 rounded-2xl flex items-center justify-center text-white mb-5 shadow-md group- transition-transform",
                           category.iconBg
                         )}
                       >
@@ -248,7 +248,7 @@ const SoundsLibrary = () => {
                     >
                       <div
                         className={cn(
-                          "w-14 h-14 rounded-2xl flex items-center justify-center text-white shrink-0 group-hover:scale-105 transition-transform",
+                          "w-14 h-14 rounded-2xl flex items-center justify-center text-white shrink-0 group- transition-transform",
                           category.iconBg
                         )}
                       >
@@ -260,7 +260,7 @@ const SoundsLibrary = () => {
                           {category.count} opções
                         </p>
                       </div>
-                      <span className="text-muted-foreground group-hover:translate-x-1 group-hover:text-primary transition-all">
+                      <span className="text-muted-foreground group- group-hover:text-primary transition-all">
                         →
                       </span>
                     </button>

@@ -105,7 +105,7 @@ const AddTestimonialForm = ({ groupId, groupName, onSuccess, onCancel }: AddTest
                 type="button"
                 onClick={() => setMood(m.value)}
                 className={cn(
-                  'flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all duration-200 hover:scale-[1.02] bg-background',
+                  'flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all duration-200 bg-background',
                   isSelected ? `${m.borderClass} ${m.bgClass}` : 'border-border hover:border-foreground/20'
                 )}
               >

@@ -1024,7 +1024,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
         )}
 
         {/* Vídeo próprio (self-view) - Responsivo e sobreposto */}
-        <div className="absolute bottom-20 md:bottom-24 right-4 w-32 h-24 md:w-48 md:h-36 bg-card rounded-xl md:rounded-2xl border-2 border-border overflow-hidden shadow-2xl transition-transform hover:scale-105 cursor-pointer z-20">
+        <div className="absolute bottom-20 md:bottom-24 right-4 w-32 h-24 md:w-48 md:h-36 bg-card rounded-xl md:rounded-2xl border-2 border-border overflow-hidden shadow-2xl transition-transform cursor-pointer z-20">
           {isCameraOff ? (
             <div className="w-full h-full flex items-center justify-center bg-muted">
               <div className="text-center">

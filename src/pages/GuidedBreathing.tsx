@@ -311,7 +311,7 @@ const GuidedBreathing = () => {
                   >
                     <div
                       className={cn(
-                        "w-14 h-14 rounded-2xl flex items-center justify-center text-white shrink-0 group-hover:scale-105 transition-transform shadow-md",
+                        "w-14 h-14 rounded-2xl flex items-center justify-center text-white shrink-0 group- transition-transform shadow-md",
                         technique.iconBg
                       )}
                     >
