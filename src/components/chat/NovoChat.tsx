@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MessageCircle, Plus } from 'lucide-react';
+import { MessageCircle, Plus, Camera, Lock, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const NovoChat: React.FC = () => {
