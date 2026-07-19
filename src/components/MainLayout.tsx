@@ -9,6 +9,7 @@ import ConfirmationModal from "@/components/sos/ConfirmationModal";
 import { DesktopSidebar } from "@/components/DesktopSidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useNotifications } from "@/hooks/useNotifications";
 
 interface MainLayoutProps {
   children: React.ReactNode;
