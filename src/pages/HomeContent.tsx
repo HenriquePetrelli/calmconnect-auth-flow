@@ -203,7 +203,7 @@ const HomeContent = () => {
       <div className="max-w-6xl mx-auto">
         {/* Mobile/Tablet Mood Section */}
         {moodEnabled && (
-          <section className="lg:hidden mb-8">
+          <section className="lg:hidden mt-4 mb-6">
             <MoodAccordion
               currentValue={todayMoodValue}
               onMoodSelected={handleMoodSelected}
@@ -213,7 +213,7 @@ const HomeContent = () => {
 
         {/* Desktop Mood Section */}
         {moodEnabled && (
-          <div className="hidden lg:block mb-8">
+          <div className="hidden lg:block mt-4 mb-8">
             <MoodAccordion
               currentValue={todayMoodValue}
               onMoodSelected={handleMoodSelected}
