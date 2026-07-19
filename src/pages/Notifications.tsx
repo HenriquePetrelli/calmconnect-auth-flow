@@ -147,19 +147,17 @@ const Notifications = () => {
         {/* Content */}
         <main className="container mx-auto px-4 py-6 max-w-2xl">
           {notifications.length === 0 ? (
-            <Card className="border-border/50 bg-gradient-card shadow-primary/5">
-              <CardContent className="p-12 text-center">
-                <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-muted/50 flex items-center justify-center">
-                  <Bell className="h-8 w-8 text-muted-foreground/60" />
-                </div>
-                <h3 className="text-lg font-semibold text-foreground mb-3">
-                  Nenhuma notificação
-                </h3>
-                <p className="text-muted-foreground text-sm max-w-sm mx-auto leading-relaxed">
-                  Você receberá notificações sobre consultas, lembretes e atualizações importantes aqui.
-                </p>
-              </CardContent>
-            </Card>
+            <div className="flex flex-col items-center justify-center text-center py-16">
+              <div className="w-16 h-16 mb-6 rounded-full bg-muted/50 flex items-center justify-center">
+                <Bell className="h-8 w-8 text-muted-foreground/60" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-3">
+                Nenhuma notificação
+              </h3>
+              <p className="text-muted-foreground text-sm max-w-sm leading-relaxed">
+                Você receberá notificações sobre consultas, lembretes e atualizações importantes aqui.
+              </p>
+            </div>
           ) : (
             <div className="space-y-3">
               {notifications.map((notification, index) => (

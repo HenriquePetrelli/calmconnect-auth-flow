@@ -9,6 +9,7 @@ import ConfirmationModal from "@/components/sos/ConfirmationModal";
 import { DesktopSidebar } from "@/components/DesktopSidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useNotifications } from "@/hooks/useNotifications";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -20,6 +21,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const { user } = useAuth();
   const [showSOSModal, setShowSOSModal] = useState(false);
   const [moodEnabled, setMoodEnabled] = useState(true);
+  const { unreadCount } = useNotifications();
+  const isNotificationsRoute = location.pathname === '/notifications';
 
   useEffect(() => {
     let cancelled = false;
@@ -94,11 +97,20 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               
               {/* NOTIFICAÇÕES À DIREITA */}
               <button 
-                className="relative p-2 text-muted-foreground hover:text-foreground transition-colors"
+                className={`relative p-2 rounded-full transition-colors ${
+                  isNotificationsRoute
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
                 onClick={() => navigate('/notifications')}
+                aria-label="Notificações"
               >
-                <Bell className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-destructive rounded-full"></span>
+                <Bell className="w-5 h-5" fill={isNotificationsRoute ? 'currentColor' : 'none'} />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 bg-destructive rounded-full text-[10px] font-semibold text-destructive-foreground flex items-center justify-center">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
               </button>
             </div>
           </header>
