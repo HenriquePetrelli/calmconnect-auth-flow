@@ -21,6 +21,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const { user } = useAuth();
   const [showSOSModal, setShowSOSModal] = useState(false);
   const [moodEnabled, setMoodEnabled] = useState(true);
+  const { unreadCount } = useNotifications();
+  const isNotificationsRoute = location.pathname === '/notifications';
 
   useEffect(() => {
     let cancelled = false;
