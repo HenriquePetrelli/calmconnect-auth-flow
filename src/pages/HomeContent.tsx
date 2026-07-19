@@ -203,7 +203,7 @@ const HomeContent = () => {
       <div className="max-w-6xl mx-auto">
         {/* Mobile/Tablet Mood Section */}
         {moodEnabled && (
-          <section className="lg:hidden mb-8">
+          <section className="lg:hidden mt-4 mb-6">
             <MoodAccordion
               currentValue={todayMoodValue}
               onMoodSelected={handleMoodSelected}
@@ -213,7 +213,7 @@ const HomeContent = () => {
 
         {/* Desktop Mood Section */}
         {moodEnabled && (
-          <div className="hidden lg:block mb-8">
+          <div className="hidden lg:block mt-4 mb-8">
             <MoodAccordion
               currentValue={todayMoodValue}
               onMoodSelected={handleMoodSelected}
@@ -225,29 +225,29 @@ const HomeContent = () => {
         <section className="mb-8">
           <h2 className="text-lg font-semibold text-foreground mb-4">Seus recursos</h2>
 
-          {/* Desktop: horizontal cards in 2 columns */}
-          <div className="hidden lg:grid grid-cols-2 gap-4">
+          {/* Desktop & Tablet: horizontal cards in 2 columns */}
+          <div className="hidden md:grid grid-cols-2 gap-4">
             {features.map((feature, index) => {
               const Icon = feature.icon;
               return (
                 <button
                   key={index}
                   onClick={feature.onClick}
-                  className="group relative overflow-hidden flex items-center gap-4 rounded-2xl border p-5 text-left shadow-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                  className="group relative overflow-hidden flex items-center gap-4 rounded-2xl border p-4 lg:p-5 text-left shadow-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                   style={{ backgroundColor: feature.bg, borderColor: feature.border }}
                 >
                   <div
-                    className="relative flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl text-white shadow-sm transition-transform duration-200 group-"
+                    className="relative flex h-11 w-11 lg:h-12 lg:w-12 flex-shrink-0 items-center justify-center rounded-xl text-white shadow-sm"
                     style={{ backgroundColor: feature.iconBg, boxShadow: isDark ? 'none' : `0 6px 16px -6px ${feature.color}` }}
                   >
-                    <Icon className="h-6 w-6" strokeWidth={2.25} />
+                    <Icon className="h-5 w-5 lg:h-6 lg:w-6" strokeWidth={2.25} />
                   </div>
                   <div className="relative min-w-0 flex-1">
-                    <h3 className="text-[15px] font-semibold leading-tight" style={{ color: feature.color }}>{feature.title}</h3>
-                    <p className="mt-1 text-sm leading-snug text-foreground/70">{feature.subtitle}</p>
+                    <h3 className="text-sm lg:text-[15px] font-semibold leading-tight" style={{ color: feature.color }}>{feature.title}</h3>
+                    <p className="mt-0.5 lg:mt-1 text-xs lg:text-sm leading-snug text-foreground/70">{feature.subtitle}</p>
                   </div>
                   <ArrowUpRight
-                    className="relative h-4 w-4 flex-shrink-0 opacity-60 transition-all duration-200 group- group- group-hover:opacity-100"
+                    className="relative h-4 w-4 flex-shrink-0 opacity-60 group-hover:opacity-100 transition-opacity"
                     style={{ color: feature.color }}
                   />
                 </button>
@@ -255,8 +255,8 @@ const HomeContent = () => {
             })}
           </div>
 
-          {/* Mobile/Tablet: square cards */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 lg:hidden">
+          {/* Mobile: square cards */}
+          <div className="grid grid-cols-2 gap-3 md:hidden">
             {features.map((feature, index) => {
               const Icon = feature.icon;
               return (
