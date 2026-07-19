@@ -227,6 +227,34 @@ const HomeContent = () => {
 
           {/* Desktop & Tablet: horizontal cards in 2 columns */}
           <div className="hidden md:grid grid-cols-2 gap-4">
+            {features.map((feature, index) => {
+              const Icon = feature.icon;
+              return (
+                <button
+                  key={index}
+                  onClick={feature.onClick}
+                  className="group relative overflow-hidden flex items-center gap-4 rounded-2xl border p-4 lg:p-5 text-left shadow-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                  style={{ backgroundColor: feature.bg, borderColor: feature.border }}
+                >
+                  <div
+                    className="relative flex h-11 w-11 lg:h-12 lg:w-12 flex-shrink-0 items-center justify-center rounded-xl text-white shadow-sm"
+                    style={{ backgroundColor: feature.iconBg, boxShadow: isDark ? 'none' : `0 6px 16px -6px ${feature.color}` }}
+                  >
+                    <Icon className="h-5 w-5 lg:h-6 lg:w-6" strokeWidth={2.25} />
+                  </div>
+                  <div className="relative min-w-0 flex-1">
+                    <h3 className="text-sm lg:text-[15px] font-semibold leading-tight" style={{ color: feature.color }}>{feature.title}</h3>
+                    <p className="mt-0.5 lg:mt-1 text-xs lg:text-sm leading-snug text-foreground/70">{feature.subtitle}</p>
+                  </div>
+                  <ArrowUpRight
+                    className="relative h-4 w-4 flex-shrink-0 opacity-60 group-hover:opacity-100 transition-opacity"
+                    style={{ color: feature.color }}
+                  />
+                </button>
+              );
+            })}
+          </div>
+
           {/* Mobile: square cards */}
           <div className="grid grid-cols-2 gap-3 md:hidden">
             {features.map((feature, index) => {
