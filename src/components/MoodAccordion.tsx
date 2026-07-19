@@ -119,9 +119,7 @@ export const MoodAccordion: React.FC<MoodAccordionProps> = ({ currentValue, onMo
       )}
     >
       {/* Header (trigger) */}
-      <div
-        className="w-full flex items-center justify-between p-4 gap-3"
-      >
+      <div className="w-full flex items-center justify-between p-3 sm:p-4 gap-2 sm:gap-3">
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
@@ -130,38 +128,38 @@ export const MoodAccordion: React.FC<MoodAccordionProps> = ({ currentValue, onMo
         >
           {selected && HeaderIcon ? (
             <>
-              <HeaderIcon className={cn('w-6 h-6 shrink-0', selected.colorClass)} />
+              <HeaderIcon className={cn('w-5 h-5 sm:w-6 sm:h-6 shrink-0', selected.colorClass)} />
               <div className="min-w-0">
-                <p className="text-sm text-muted-foreground">Humor de hoje</p>
-                <p className={cn('font-semibold truncate', selected.colorClass)}>{selected.label}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Humor de hoje</p>
+                <p className={cn('text-sm sm:text-base font-semibold truncate', selected.colorClass)}>{selected.label}</p>
               </div>
             </>
           ) : (
             <div className="min-w-0">
-              <p className="font-semibold text-foreground">Registre seu humor</p>
-              <p className="text-sm text-muted-foreground">Como você está se sentindo hoje?</p>
+              <p className="text-sm sm:text-base font-semibold text-foreground">Registre seu humor</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Como você está se sentindo hoje?</p>
             </div>
           )}
         </button>
 
         <div className="flex items-center gap-2 shrink-0">
-          <button
-            type="button"
-            onClick={handleHideMoodDaily}
-            disabled={isHiding}
-            className="text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-md border border-border hover:bg-muted transition-colors disabled:opacity-50"
-          >
-            {isHiding ? 'Ocultando...' : 'Ocultar registro de humor'}
-          </button>
+          {open && (
+            <button
+              type="button"
+              onClick={handleHideMoodDaily}
+              disabled={isHiding}
+              className="text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground px-2 sm:px-3 py-1 sm:py-1.5 rounded-md border border-border hover:bg-muted transition-colors disabled:opacity-50"
+            >
+              {isHiding ? 'Ocultando...' : 'Ocultar'}
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
             aria-label={open ? 'Recolher' : 'Expandir'}
             className="p-1 text-muted-foreground hover:text-foreground"
           >
-            <ChevronDown
-              className={cn('w-5 h-5 transition-transform', open && 'rotate-180')}
-            />
+            <ChevronDown className={cn('w-5 h-5 transition-transform', open && 'rotate-180')} />
           </button>
         </div>
       </div>
