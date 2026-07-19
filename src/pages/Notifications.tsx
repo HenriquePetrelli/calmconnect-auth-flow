@@ -110,8 +110,8 @@ const Notifications = () => {
 
 
   return (
-    <div className="has-tabs">
-      <div className="screen">
+    <div>
+      <div>
         {/* Actions bar (no title/back) */}
         {(unreadCount > 0 || notifications.length > 0) && (
           <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border">
