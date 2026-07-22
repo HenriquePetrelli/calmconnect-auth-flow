@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -24,16 +24,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Calendar, Eye, Filter } from 'lucide-react';
+import { Calendar, Eye, Filter, Download, FileText } from 'lucide-react';
 import { useAppointments, type Appointment } from '@/hooks/useAppointments';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import jsPDF from 'jspdf';
+
+const ITEMS_PER_PAGE = 10;
 
 export const AppointmentHistory = () => {
   const { appointments, psychologists, loading } = useAppointments();
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [filterPsychologist, setFilterPsychologist] = useState<string>('');
   const [filterMonth, setFilterMonth] = useState<string>('');
+  const [currentPage, setCurrentPage] = useState(1);
 
   const getStatusColor = (status: string) => {
     switch (status) {
