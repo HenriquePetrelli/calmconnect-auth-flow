@@ -149,19 +149,10 @@ const SubscriptionPlans = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-4">
+    <div className="min-h-screen bg-background">
+      <PageHeader title="Planos de Assinatura" backTo="/home" />
+      <div className="p-4">
       <div className="max-w-4xl mx-auto">
-        <div className="flex items-center gap-4 mb-8">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate("/home")}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Voltar
-          </Button>
-        </div>
 
         <div className="text-center mb-16">
           <div className="mb-8">
