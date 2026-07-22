@@ -70,9 +70,6 @@ export function useAudioAnalyser(
         }
 
         if (!sourceRef.current) {
-          // crossOrigin precisa estar setado ANTES da source ser criada
-          // para áudios servidos com CORS apropriado
-          if (!audioEl.crossOrigin) audioEl.crossOrigin = "anonymous";
           try {
             const source = ctx.createMediaElementSource(audioEl);
             source.connect(analyserRef.current);
@@ -82,6 +79,7 @@ export function useAudioAnalyser(
             // Já conectado anteriormente — ignora
           }
         }
+
 
         dataRef.current = new Uint8Array(
           new ArrayBuffer(analyserRef.current.frequencyBinCount)
