@@ -736,6 +736,38 @@
   a {
     @apply text-primary underline-offset-4 hover:underline focus-ring transition-colors;
   }
+
+  /* Consistent visible focus for keyboard navigation across the app.
+     Uses :focus-visible so mouse clicks don't trigger the ring. */
+  *:focus {
+    outline: none;
+  }
+
+  button:focus-visible,
+  a:focus-visible,
+  [role="button"]:focus-visible,
+  [role="link"]:focus-visible,
+  [role="tab"]:focus-visible,
+  [role="menuitem"]:focus-visible,
+  [role="option"]:focus-visible,
+  [tabindex]:not([tabindex="-1"]):focus-visible,
+  summary:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px hsl(var(--background)),
+      0 0 0 4px hsl(var(--ring) / 0.85);
+    border-radius: var(--radius);
+    transition: box-shadow 0.15s ease;
+  }
+
+  /* Inputs, textareas and selects keep a softer ring that fits form fields */
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.35);
+    border-color: hsl(var(--ring));
+  }
 }
 
 /* Breathing exercise styles - Keep existing functionality */
