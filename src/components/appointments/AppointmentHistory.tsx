@@ -218,14 +218,36 @@ export const AppointmentHistory = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos os meses</SelectItem>
-                  <SelectItem value="2024-01">Janeiro 2024</SelectItem>
-                  <SelectItem value="2024-02">Fevereiro 2024</SelectItem>
-                  <SelectItem value="2024-03">Março 2024</SelectItem>
-                  <SelectItem value="2024-04">Abril 2024</SelectItem>
-                  <SelectItem value="2024-05">Maio 2024</SelectItem>
-                  <SelectItem value="2024-06">Junho 2024</SelectItem>
+                  {availableMonths.map((m) => (
+                    <SelectItem key={m} value={m}>
+                      {formatMonthLabel(m).charAt(0).toUpperCase() + formatMonthLabel(m).slice(1)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
+
+              <div className="flex gap-2 sm:ml-auto">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={exportToPDF}
+                  disabled={filteredAppointments.length === 0}
+                  className="gap-1.5"
+                >
+                  <FileText className="h-4 w-4" />
+                  PDF
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={exportToCSV}
+                  disabled={filteredAppointments.length === 0}
+                  className="gap-1.5"
+                >
+                  <Download className="h-4 w-4" />
+                  CSV
+                </Button>
+              </div>
             </div>
           </div>
         </CardHeader>
