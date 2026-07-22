@@ -70,11 +70,8 @@ export const DocumentViewer = ({ documentPath }: DocumentViewerProps) => {
 
   if (loading) {
     return (
-      <div className="border rounded-lg p-8 bg-muted/30">
-        <div className="flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          <span className="ml-2 text-sm text-muted-foreground">Carregando documento...</span>
-        </div>
+      <div className="border rounded-lg overflow-hidden">
+        <Skeleton className="h-64 w-full" />
       </div>
     );
   }
