@@ -81,22 +81,64 @@ const ConsultationHistory = () => {
   };
 
   const getStatusBadge = (status: string) => {
-    const statusMap: Record<string, { label: string; variant: any }> = {
-      pending: { label: 'Pendente', variant: 'outline' },
-      scheduled: { label: 'Agendada', variant: 'secondary' },
-      confirmed: { label: 'Confirmada', variant: 'secondary' },
-      in_progress: { label: 'Em andamento', variant: 'secondary' },
-      completed: { label: 'Concluída', variant: 'default' },
-      cancelled: { label: 'Cancelada', variant: 'destructive' },
-      declined: { label: 'Recusada', variant: 'destructive' },
-      no_show: { label: 'Faltou', variant: 'outline' },
-      reschedule_proposed: { label: 'Reagendamento proposto', variant: 'outline' },
-      expired: { label: 'Expirada', variant: 'outline' },
+    // Paletas suaves e profissionais (estilo Linear/Notion/Stripe)
+    const statusMap: Record<string, { label: string; className: string }> = {
+      pending: {
+        label: 'Pendente',
+        className: 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/30',
+      },
+      scheduled: {
+        label: 'Agendada',
+        className: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-500/15 dark:text-blue-300 dark:border-blue-500/30',
+      },
+      confirmed: {
+        label: 'Confirmada',
+        className: 'bg-sky-100 text-sky-800 border-sky-200 dark:bg-sky-500/15 dark:text-sky-300 dark:border-sky-500/30',
+      },
+      in_progress: {
+        label: 'Em andamento',
+        className: 'bg-violet-100 text-violet-800 border-violet-200 dark:bg-violet-500/15 dark:text-violet-300 dark:border-violet-500/30',
+      },
+      completed: {
+        label: 'Concluída',
+        className: 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-500/30',
+      },
+      cancelled: {
+        label: 'Cancelada',
+        className: 'bg-rose-100 text-rose-800 border-rose-200 dark:bg-rose-500/15 dark:text-rose-300 dark:border-rose-500/30',
+      },
+      declined: {
+        label: 'Recusada',
+        className: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-500/15 dark:text-red-300 dark:border-red-500/30',
+      },
+      no_show: {
+        label: 'Faltou',
+        className: 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-500/15 dark:text-orange-300 dark:border-orange-500/30',
+      },
+      reschedule_proposed: {
+        label: 'Reagendamento proposto',
+        className: 'bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-500/15 dark:text-indigo-300 dark:border-indigo-500/30',
+      },
+      expired: {
+        label: 'Expirada',
+        className: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-500/15 dark:text-slate-300 dark:border-slate-500/30',
+      },
     };
 
-    const statusInfo = statusMap[status] || { label: status, variant: 'outline' };
-    return <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>;
+    const statusInfo = statusMap[status] || {
+      label: status,
+      className: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-500/15 dark:text-slate-300 dark:border-slate-500/30',
+    };
+    return (
+      <Badge
+        variant="outline"
+        className={`${statusInfo.className} font-medium rounded-full px-2.5 py-0.5 text-xs whitespace-nowrap`}
+      >
+        {statusInfo.label}
+      </Badge>
+    );
   };
+
 
   const getTypeBadge = (type: string) => {
     const typeMap: Record<string, { label: string; className: string }> = {
