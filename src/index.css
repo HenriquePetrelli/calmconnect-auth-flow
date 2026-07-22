@@ -581,12 +581,45 @@
     @apply border-border;
   }
 
+  html {
+    font-size: 16px;
+  }
+
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground font-sans text-base;
     font-feature-settings: "rlig" 1, "calt" 1;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Padrão tipográfico profissional — hierarquia consistente em todo o app */
+  h1 {
+    @apply text-3xl font-semibold tracking-tight text-foreground;
+  }
+  h2 {
+    @apply text-2xl font-semibold tracking-tight text-foreground;
+  }
+  h3 {
+    @apply text-xl font-semibold text-foreground;
+  }
+  h4 {
+    @apply text-lg font-semibold text-foreground;
+  }
+  h5 {
+    @apply text-base font-semibold text-foreground;
+  }
+  h6 {
+    @apply text-sm font-semibold uppercase tracking-wide text-muted-foreground;
+  }
+  p, li {
+    @apply text-base leading-relaxed;
+  }
+  small {
+    @apply text-xs text-muted-foreground;
+  }
+  label {
+    @apply text-sm font-medium;
   }
 
   /* garantir altura full */

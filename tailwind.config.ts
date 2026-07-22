@@ -21,6 +21,19 @@ export default {
 			fontFamily: {
 				sans: ['Poppins', 'system-ui', 'sans-serif'],
 			},
+			fontSize: {
+				// Escala tipográfica profissional padronizada (Stripe/Linear-like)
+				'xs':   ['0.75rem',  { lineHeight: '1rem',    letterSpacing: '0.01em' }],   // 12
+				'sm':   ['0.8125rem',{ lineHeight: '1.125rem'}],                            // 13
+				'base': ['0.875rem', { lineHeight: '1.375rem'}],                            // 14
+				'lg':   ['1rem',     { lineHeight: '1.5rem'  }],                            // 16
+				'xl':   ['1.125rem', { lineHeight: '1.625rem'}],                            // 18
+				'2xl':  ['1.25rem',  { lineHeight: '1.75rem', letterSpacing: '-0.01em' }],  // 20
+				'3xl':  ['1.5rem',   { lineHeight: '2rem',    letterSpacing: '-0.015em' }], // 24
+				'4xl':  ['1.875rem', { lineHeight: '2.25rem', letterSpacing: '-0.02em' }],  // 30
+				'5xl':  ['2.25rem',  { lineHeight: '2.5rem',  letterSpacing: '-0.02em' }],  // 36
+				'6xl':  ['2.75rem',  { lineHeight: '3rem',    letterSpacing: '-0.025em' }], // 44
+			},
 			colors: {
 				// Cores base do sistema (light e dark mode via CSS variables)
 				border: 'hsl(var(--border))',
