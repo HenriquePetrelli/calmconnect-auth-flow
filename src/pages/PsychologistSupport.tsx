@@ -77,16 +77,10 @@ const PsychologistSupport = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="flex items-center gap-4 p-4 border-b border-border">
-        <Button variant="ghost" size="sm" onClick={() => navigate('/psychologist-profile')}>
-          <ArrowLeft size={20} />
-        </Button>
-        <h1 className="text-xl font-semibold text-foreground">Suporte</h1>
-      </div>
+      <PageHeader title="Suporte" backTo="/psychologist-profile" />
 
       {/* Content */}
-      <div className="p-4 space-y-6 pb-24">
+      <div className="max-w-3xl mx-auto p-4 space-y-6 pb-24">
         <Card>
           <CardHeader>
             <CardTitle>Entre em contato conosco</CardTitle>
