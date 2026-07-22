@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -24,16 +24,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Calendar, Eye, Filter } from 'lucide-react';
+import { Calendar, Eye, Filter, Download, FileText } from 'lucide-react';
 import { useAppointments, type Appointment } from '@/hooks/useAppointments';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import jsPDF from 'jspdf';
+
+const ITEMS_PER_PAGE = 10;
 
 export const AppointmentHistory = () => {
   const { appointments, psychologists, loading } = useAppointments();
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [filterPsychologist, setFilterPsychologist] = useState<string>('');
   const [filterMonth, setFilterMonth] = useState<string>('');
+  const [currentPage, setCurrentPage] = useState(1);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -65,20 +69,102 @@ export const AppointmentHistory = () => {
     }
   };
 
-  const filteredAppointments = appointments.filter((appointment) => {
-    // Only show declined and completed appointments in history
-    const isHistoryAppointment = ['declined', 'completed'].includes(appointment.status);
-    
-    if (!isHistoryAppointment) return false;
+  const filteredAppointments = useMemo(() => {
+    return appointments.filter((appointment) => {
+      const isHistoryAppointment = ['declined', 'completed'].includes(appointment.status);
+      if (!isHistoryAppointment) return false;
 
-    const matchesPsychologist = filterPsychologist === 'all' || !filterPsychologist || 
-      appointment.psychologist?.full_name?.toLowerCase().includes(filterPsychologist.toLowerCase());
-    
-    const matchesMonth = filterMonth === 'all' || !filterMonth || 
-      format(new Date(appointment.scheduled_at), 'yyyy-MM') === filterMonth;
+      const matchesPsychologist = filterPsychologist === 'all' || !filterPsychologist ||
+        appointment.psychologist?.full_name?.toLowerCase().includes(filterPsychologist.toLowerCase());
 
-    return matchesPsychologist && matchesMonth;
-  });
+      const matchesMonth = filterMonth === 'all' || !filterMonth ||
+        format(new Date(appointment.scheduled_at), 'yyyy-MM') === filterMonth;
+
+      return matchesPsychologist && matchesMonth;
+    });
+  }, [appointments, filterPsychologist, filterMonth]);
+
+  const availableMonths = useMemo(() => {
+    const months = new Set<string>();
+    appointments.forEach((a) => {
+      if (['declined', 'completed'].includes(a.status)) {
+        months.add(format(new Date(a.scheduled_at), 'yyyy-MM'));
+      }
+    });
+    return Array.from(months).sort().reverse();
+  }, [appointments]);
+
+  const formatMonthLabel = (monthKey: string) => {
+    const [year, month] = monthKey.split('-');
+    const date = new Date(parseInt(year), parseInt(month) - 1);
+    return date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  };
+
+  const totalPages = Math.max(1, Math.ceil(filteredAppointments.length / ITEMS_PER_PAGE));
+  const paginatedAppointments = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredAppointments.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredAppointments, currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterPsychologist, filterMonth]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalPages]);
+
+  const exportToCSV = () => {
+    if (filteredAppointments.length === 0) return;
+    const rows = [
+      ['Data', 'Hora', 'Psicólogo', 'Especialidade', 'Status'],
+      ...filteredAppointments.map((a) => [
+        format(new Date(a.scheduled_at), 'dd/MM/yyyy'),
+        format(new Date(a.scheduled_at), 'HH:mm'),
+        a.psychologist?.full_name || 'Não identificado',
+        a.psychologist?.specialty || '',
+        getStatusText(a.status),
+      ]),
+    ];
+    const csv = rows
+      .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `historico-consultas-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    link.click();
+  };
+
+  const exportToPDF = () => {
+    if (filteredAppointments.length === 0) return;
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text('Histórico de Consultas', 20, 20);
+    doc.setFontSize(10);
+    doc.text(`Gerado em: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 20, 28);
+
+    let y = 40;
+    filteredAppointments.forEach((a, i) => {
+      if (y > 275) {
+        doc.addPage();
+        y = 20;
+      }
+      const date = format(new Date(a.scheduled_at), 'dd/MM/yyyy HH:mm');
+      const name = a.psychologist?.full_name || 'Não identificado';
+      doc.setFontSize(11);
+      doc.text(`${i + 1}. ${name}`, 20, y);
+      doc.setFontSize(9);
+      doc.text(`${date}  -  ${getStatusText(a.status)}`, 25, y + 5);
+      if (a.psychologist?.specialty) {
+        doc.text(`Especialidade: ${a.psychologist.specialty}`, 25, y + 10);
+        y += 5;
+      }
+      y += 14;
+    });
+    doc.save(`historico-consultas-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+  };
+
 
   if (loading) {
     return (
@@ -132,14 +218,36 @@ export const AppointmentHistory = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos os meses</SelectItem>
-                  <SelectItem value="2024-01">Janeiro 2024</SelectItem>
-                  <SelectItem value="2024-02">Fevereiro 2024</SelectItem>
-                  <SelectItem value="2024-03">Março 2024</SelectItem>
-                  <SelectItem value="2024-04">Abril 2024</SelectItem>
-                  <SelectItem value="2024-05">Maio 2024</SelectItem>
-                  <SelectItem value="2024-06">Junho 2024</SelectItem>
+                  {availableMonths.map((m) => (
+                    <SelectItem key={m} value={m}>
+                      {formatMonthLabel(m).charAt(0).toUpperCase() + formatMonthLabel(m).slice(1)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
+
+              <div className="flex gap-2 sm:ml-auto">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={exportToPDF}
+                  disabled={filteredAppointments.length === 0}
+                  className="gap-1.5"
+                >
+                  <FileText className="h-4 w-4" />
+                  PDF
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={exportToCSV}
+                  disabled={filteredAppointments.length === 0}
+                  className="gap-1.5"
+                >
+                  <Download className="h-4 w-4" />
+                  CSV
+                </Button>
+              </div>
             </div>
           </div>
         </CardHeader>
@@ -153,7 +261,7 @@ export const AppointmentHistory = () => {
             <>
               {/* Mobile: card list */}
               <div className="space-y-3 md:hidden">
-                {filteredAppointments.map((appointment) => (
+                {paginatedAppointments.map((appointment) => (
                   <div
                     key={appointment.id}
                     className="rounded-lg border bg-card p-4 space-y-3"
@@ -205,7 +313,7 @@ export const AppointmentHistory = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredAppointments.map((appointment) => (
+                    {paginatedAppointments.map((appointment) => (
                       <TableRow key={appointment.id}>
                         <TableCell>
                           <div className="text-sm font-medium text-foreground">
@@ -244,6 +352,30 @@ export const AppointmentHistory = () => {
                   </TableBody>
                 </Table>
               </div>
+
+              {totalPages > 1 && (
+                <div className="flex justify-center items-center gap-2 mt-6">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Anterior
+                  </Button>
+                  <span className="text-sm text-muted-foreground">
+                    Página {currentPage} de {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Próxima
+                  </Button>
+                </div>
+              )}
             </>
           )}
         </CardContent>
