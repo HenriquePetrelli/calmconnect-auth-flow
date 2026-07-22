@@ -17,27 +17,12 @@ import { useNavigate } from "react-router-dom";
 import PatientBottomNav from "@/components/PatientBottomNav";
 import PageHeader from "@/components/PageHeader";
 import { soundsData } from "@/data/soundsData";
-import { prefetchAllSounds } from "@/lib/soundPrefetch";
 import { cn } from "@/lib/utils";
 
 
 const SoundsLibrary = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
-
-  // Pré-carrega todos os sons em background (baixa prioridade) ao abrir a tela
-  useEffect(() => {
-    const idle =
-      (window as unknown as { requestIdleCallback?: (cb: () => void) => number })
-        .requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 200));
-    const id = idle(() => prefetchAllSounds());
-    return () => {
-      const cancel =
-        (window as unknown as { cancelIdleCallback?: (id: number) => void })
-          .cancelIdleCallback ?? window.clearTimeout;
-      cancel(id as number);
-    };
-  }, []);
 
 
   const mainCategories = [
