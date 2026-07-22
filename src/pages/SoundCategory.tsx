@@ -1,9 +1,7 @@
-import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Play, Clock, Music } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { soundsData } from "@/data/soundsData";
-import { prefetchCategorySounds } from "@/lib/soundPrefetch";
 import PageHeader from "@/components/PageHeader";
 
 const SoundCategory = () => {
@@ -15,10 +13,6 @@ const SoundCategory = () => {
   const category = isSubcategory
     ? soundsData.subcategories[subcategoryId as keyof typeof soundsData.subcategories]
     : soundsData.categories[categoryId as keyof typeof soundsData.categories];
-
-  useEffect(() => {
-    if (id) prefetchCategorySounds(id);
-  }, [id]);
 
 
   if (!category) {
