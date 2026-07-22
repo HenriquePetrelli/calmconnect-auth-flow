@@ -111,10 +111,8 @@ export const DocumentViewer = ({ documentPath }: DocumentViewerProps) => {
 
   if (!isClient) {
     return (
-      <div className="border rounded-lg p-8 bg-muted/30">
-        <div className="flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
+      <div className="border rounded-lg overflow-hidden">
+        <Skeleton className="h-64 w-full" />
       </div>
     );
   }
