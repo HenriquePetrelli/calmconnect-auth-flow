@@ -126,6 +126,12 @@ const SoundPlayer = () => {
     const onPlaying = () => {
       setIsBuffering(false);
       setHasStarted(true);
+      // Prefetch apenas o próximo track da playlist (baixa prioridade),
+      // depois que o atual já começou — evita competir por banda.
+      if (isPlaylist && playlist && currentSoundIndex < playlist.length - 1) {
+        const next = playlist[currentSoundIndex + 1];
+        if (next?.file) prefetchSounds([next.file]);
+      }
     };
     const onProgress = () => updateProgress();
 
