@@ -350,7 +350,6 @@ const SubscriptionPlans = () => {
           </div>
         </DialogContent>
       </Dialog>
-      </div>
     </div>
   );
 };
