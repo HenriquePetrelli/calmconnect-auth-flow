@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { LogOut, Mail, Lock, User, FileText, Pencil, Check, MessageCircle, Settings, Wallet, ChevronRight } from 'lucide-react';
-import BackButton from '@/components/BackButton';
+import PageHeader from '@/components/PageHeader';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SPECIALIZATIONS } from '@/data/specializations';
