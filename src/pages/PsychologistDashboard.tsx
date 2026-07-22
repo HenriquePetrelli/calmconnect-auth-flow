@@ -214,7 +214,7 @@ const PsychologistDashboard = () => {
         {/* Main Content */}
         <Tabs defaultValue="emergency" className="space-y-4">
           <TabsList className="w-full h-auto p-1 bg-muted/50 grid grid-cols-3 gap-1">
-            <TabsTrigger value="emergency" className="flex items-center gap-2 py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <TabsTrigger value="emergency" className="flex items-center gap-2 py-2.5 data-[state=active]:bg-secondary data-[state=active]:text-white data-[state=active]:shadow-sm">
               <Bell className="w-4 h-4" />
               <span className="hidden sm:inline">Emergências</span>
               {pendingEmergencies > 0 && (
@@ -223,11 +223,11 @@ const PsychologistDashboard = () => {
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="consultations" className="flex items-center gap-2 py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <TabsTrigger value="consultations" className="flex items-center gap-2 py-2.5 data-[state=active]:bg-secondary data-[state=active]:text-white data-[state=active]:shadow-sm">
               <Users className="w-4 h-4" />
               <span className="hidden sm:inline">Consultas</span>
             </TabsTrigger>
-            <TabsTrigger value="history" className="flex items-center gap-2 py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <TabsTrigger value="history" className="flex items-center gap-2 py-2.5 data-[state=active]:bg-secondary data-[state=active]:text-white data-[state=active]:shadow-sm">
               <History className="w-4 h-4" />
               <span className="hidden sm:inline">Histórico</span>
             </TabsTrigger>
