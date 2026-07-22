@@ -151,9 +151,8 @@ const Profile = () => {
     .toUpperCase();
 
   return (
-    <div className="has-tabs">
-      <div className="screen">
-        <main className="mx-auto w-full max-w-3xl px-4 py-6 space-y-5">
+    <div className="mx-auto w-full max-w-3xl space-y-5">
+
           {/* Hero identity card */}
           <Card className="overflow-hidden border-border/60">
             <div className="relative p-6 sm:p-7">
