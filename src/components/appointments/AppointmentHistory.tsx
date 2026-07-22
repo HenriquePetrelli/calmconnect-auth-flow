@@ -313,7 +313,7 @@ export const AppointmentHistory = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredAppointments.map((appointment) => (
+                    {paginatedAppointments.map((appointment) => (
                       <TableRow key={appointment.id}>
                         <TableCell>
                           <div className="text-sm font-medium text-foreground">
