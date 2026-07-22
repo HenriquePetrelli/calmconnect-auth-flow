@@ -77,13 +77,7 @@ const Support = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="flex items-center gap-4 p-4 border-b border-border">
-        <Button variant="ghost" size="sm" onClick={() => navigate('/profile')}>
-          <ArrowLeft size={20} />
-        </Button>
-        <h1 className="text-xl font-semibold text-foreground">Suporte</h1>
-      </div>
+      <PageHeader title="Suporte" backTo="/profile" />
 
       {/* Content */}
       <div className="p-4 space-y-6 pb-24">
