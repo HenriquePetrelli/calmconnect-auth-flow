@@ -199,8 +199,9 @@ const HomeContent = () => {
   }
 
   return (
-    <div className="px-4 lg:p-6">
-      <div className="max-w-6xl mx-auto">
+    <>
+      <div>
+
         {/* Mobile/Tablet Mood Section */}
         {moodEnabled && (
           <section className="lg:hidden mt-4 mb-6">
@@ -297,7 +298,7 @@ const HomeContent = () => {
           onGoalsAdded={handleGoalsAdded}
         />
       </div>
-    </div>
+    </>
   );
 };
 

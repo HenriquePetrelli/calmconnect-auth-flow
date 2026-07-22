@@ -20,15 +20,13 @@ const ChatContent: React.FC = () => {
   }
 
   return (
-    <div className="p-4 md:p-6">
-      <div className="max-w-5xl mx-auto">
-        {conversaSelecionada ? (
-          <ChatInterface conversaId={conversaSelecionada} onVoltar={handleVoltar} />
-        ) : (
-          <ListaConversas onSelectConversa={handleSelectConversa} />
-        )}
-      </div>
-    </div>
+    <>
+      {conversaSelecionada ? (
+        <ChatInterface conversaId={conversaSelecionada} onVoltar={handleVoltar} />
+      ) : (
+        <ListaConversas onSelectConversa={handleSelectConversa} />
+      )}
+    </>
   );
 };
 

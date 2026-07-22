@@ -133,8 +133,8 @@ const Statistics = () => {
   ];
 
   return (
-    <div>
-      <main className="p-4 md:p-6 space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-6">
+
         {/* Streak destaque */}
         <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
           <CardContent className="p-4">
@@ -403,7 +403,7 @@ const Statistics = () => {
             )}
           </CardContent>
         </Card>
-      </main>
+
 
       <GoalSelectionModal
         open={goalModalOpen}

@@ -54,8 +54,8 @@ const Appointments = () => {
   }
 
   return (
-    <div>
-      <main className="p-4 md:p-6 space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-6">
+
         {/* Schedule New Appointment */}
         <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
           <CardContent className="p-4">
@@ -88,7 +88,7 @@ const Appointments = () => {
 
         {/* Consultation History */}
         <AppointmentHistory />
-      </main>
+
 
       {/* Upgrade Modal */}
       <Dialog open={showUpgradeModal} onOpenChange={setShowUpgradeModal}>
