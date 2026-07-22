@@ -143,20 +143,31 @@ const Statistics = () => {
               <div className="flex-shrink-0 w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
                 <Flame className="w-5 h-5 text-primary" />
               </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="text-base font-semibold text-foreground leading-tight">
-                  {statistics?.streak_days || 0} dias consecutivos
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Continue firme na sua jornada
-                </p>
+              <div className="flex-1 min-w-0 space-y-1">
+                {loading ? (
+                  <>
+                    <Skeleton className="h-5 w-40" />
+                    <Skeleton className="h-4 w-56" />
+                  </>
+                ) : (
+                  <>
+                    <h3 className="text-base font-semibold text-foreground leading-tight">
+                      {statistics?.streak_days || 0} dias consecutivos
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Continue firme na sua jornada
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           </CardContent>
         </Card>
 
         {/* Metas Semanais */}
-        {!goalsLoading && (
+        {goalsLoading ? (
+          <SkeletonSectionCard rows={3} accent="primary" showAvatar={false} />
+        ) : (
           <Card className="border-l-4 border-l-primary">
             <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">
               <CardTitle className="flex items-center gap-3">
