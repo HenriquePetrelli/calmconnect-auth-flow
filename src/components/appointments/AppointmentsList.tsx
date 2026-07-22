@@ -119,10 +119,10 @@ export const AppointmentsList: React.FC<AppointmentsListProps> = ({
       <Card>
         <CardContent className="p-8 text-center">
           <Calendar className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium text-foreground mb-2">
+          <h3 className="text-base font-semibold text-foreground mb-2">
             {emptyMessage}
           </h3>
-          <p className="text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Suas consultas aparecerão aqui quando forem agendadas.
           </p>
         </CardContent>
