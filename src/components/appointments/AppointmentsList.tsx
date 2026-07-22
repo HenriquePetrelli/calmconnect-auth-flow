@@ -135,103 +135,104 @@ export const AppointmentsList: React.FC<AppointmentsListProps> = ({
       {appointments.map((appointment) => (
         <Card key={appointment.id}>
           <CardContent className="p-4">
-            <div className="flex items-start justify-between">
-              <div className="flex items-start gap-3 flex-1">
-                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                  <User className="text-primary" size={20} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between mb-2 gap-2">
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-base font-semibold text-foreground truncate">
-                        {appointment.psychologist?.full_name || 'Psicólogo não identificado'}
-                      </h4>
-                      <p className="text-sm text-muted-foreground truncate">
-                        {appointment.psychologist?.specialty || appointment.psychologist?.specialization || 'Consulta'}
-                      </p>
-                    </div>
-                    {showStatus && (
-                      <StatusBadge status={appointment.status} />
-                    )}
-                  </div>
-
-                  <div className="flex items-center flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground mb-3">
-                    <div className="flex items-center gap-1.5">
-                      <Calendar size={14} />
-                      {formatBrazilTime(appointment.scheduled_at, "dd 'de' MMM")}
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Clock size={14} />
-                      {formatTimeOnly(appointment.scheduled_at)}
-                    </div>
-                    {appointment.duration && (
-                      <span className="text-xs bg-muted px-2 py-0.5 rounded">
-                        {appointment.duration}min
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Type badge */}
-                  <div className="mb-3">
-                    <Badge variant="secondary" className="text-xs">
-                      {appointment.appointment_type === 'regular' ? 'Online' : 'Emergência'}
-                    </Badge>
-                  </div>
-
-                  {/* Notes preview */}
-                  {appointment.notes && (
-                    <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
-                      {appointment.notes}
+            <div className="flex items-start gap-3">
+              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                <User className="text-primary" size={20} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-base font-semibold text-foreground break-words">
+                      {appointment.psychologist?.full_name || 'Psicólogo não identificado'}
+                    </h4>
+                    <p className="text-sm text-muted-foreground break-words">
+                      {appointment.psychologist?.specialty || appointment.psychologist?.specialization || 'Consulta'}
                     </p>
-                  )}
-
-                  {/* Rating */}
-                  {showRating && (
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="text-xs text-muted-foreground">Avaliação:</span>
-                      <StarRating
-                        value={appointment.rating || 0}
-                        onChange={(rating) => onRate?.(appointment.id, rating)}
-                        readonly={!!appointment.rating}
-                      />
+                  </div>
+                  {showStatus && (
+                    <div className="flex-shrink-0">
+                      <StatusBadge status={appointment.status} />
                     </div>
                   )}
+                </div>
 
-                  {/* Actions */}
-                  <div className="flex gap-2">
-                    {/* Video call button for confirmed appointments */}
-                    {['scheduled', 'confirmed'].includes(appointment.status) && (
-                      <Button
-                        variant={canJoinCall(appointment) ? "default" : "outline"}
-                        size="sm"
-                        disabled={!canJoinCall(appointment) || videoCallLoading}
-                        onClick={async () => {
-                          if (canJoinCall(appointment)) {
-                            try {
-                              await startConsultation(appointment.id);
-                              navigate(`/consultation-call/${appointment.id}`);
-                            } catch (error) {
-                              console.error('Failed to start consultation:', error);
-                            }
-                          }
-                        }}
-                        className="gap-1"
-                      >
-                        <Video size={14} />
-                        {canJoinCall(appointment) ? 'Entrar na videochamada' : 'Aguardar horário'}
-                      </Button>
-                    )}
-                    
-                    {onViewDetails && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onViewDetails(appointment)}
-                      >
-                        Ver Detalhes
-                      </Button>
-                    )}
+                <div className="flex items-center flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground mb-3">
+                  <div className="flex items-center gap-1.5">
+                    <Calendar size={14} />
+                    {formatBrazilTime(appointment.scheduled_at, "dd 'de' MMM")}
                   </div>
+                  <div className="flex items-center gap-1.5">
+                    <Clock size={14} />
+                    {formatTimeOnly(appointment.scheduled_at)}
+                  </div>
+                  {appointment.duration && (
+                    <span className="text-xs bg-muted px-2 py-0.5 rounded">
+                      {appointment.duration}min
+                    </span>
+                  )}
+                </div>
+
+                {/* Type badge */}
+                <div className="mb-3">
+                  <Badge variant="secondary" className="text-xs">
+                    {appointment.appointment_type === 'regular' ? 'Online' : 'Emergência'}
+                  </Badge>
+                </div>
+
+                {/* Notes preview */}
+                {appointment.notes && (
+                  <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
+                    {appointment.notes}
+                  </p>
+                )}
+
+                {/* Rating */}
+                {showRating && (
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-xs text-muted-foreground">Avaliação:</span>
+                    <StarRating
+                      value={appointment.rating || 0}
+                      onChange={(rating) => onRate?.(appointment.id, rating)}
+                      readonly={!!appointment.rating}
+                    />
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div className="flex flex-col sm:flex-row gap-2">
+                  {/* Video call button for confirmed appointments */}
+                  {['scheduled', 'confirmed'].includes(appointment.status) && (
+                    <Button
+                      variant={canJoinCall(appointment) ? "default" : "outline"}
+                      size="sm"
+                      disabled={!canJoinCall(appointment) || videoCallLoading}
+                      onClick={async () => {
+                        if (canJoinCall(appointment)) {
+                          try {
+                            await startConsultation(appointment.id);
+                            navigate(`/consultation-call/${appointment.id}`);
+                          } catch (error) {
+                            console.error('Failed to start consultation:', error);
+                          }
+                        }
+                      }}
+                      className="gap-1.5 w-full sm:w-auto justify-center"
+                    >
+                      <Video size={14} />
+                      <span>{canJoinCall(appointment) ? 'Entrar na videochamada' : 'Aguardar horário'}</span>
+                    </Button>
+                  )}
+
+                  {onViewDetails && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onViewDetails(appointment)}
+                      className="w-full sm:w-auto justify-center"
+                    >
+                      Ver Detalhes
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
