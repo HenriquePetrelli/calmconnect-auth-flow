@@ -4,6 +4,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { useSignedDocumentUrl } from '@/hooks/useSignedDocumentUrl';
 import { useState, useEffect } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface DocumentViewerProps {
   documentPath?: string;
