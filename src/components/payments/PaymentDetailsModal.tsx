@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { PaymentRecord } from '@/hooks/usePayments';
+import { SkeletonList } from '@/components/skeletons/Skeletons';
 
 interface PaymentDetailsModalProps {
   paymentId: string;
