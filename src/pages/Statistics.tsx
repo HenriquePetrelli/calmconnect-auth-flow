@@ -25,6 +25,7 @@ import { useWeeklyGoals } from "@/hooks/useWeeklyGoals";
 import { GoalSelectionModal } from "@/components/goals/GoalSelectionModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { SkeletonList } from "@/components/skeletons/Skeletons";
 
 const Statistics = () => {
   const navigate = useNavigate();
