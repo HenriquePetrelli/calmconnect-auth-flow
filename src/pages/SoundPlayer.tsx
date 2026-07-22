@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { Play, Pause, SkipBack, SkipForward, Clock } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Clock, Loader2 } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { soundsData } from "@/data/soundsData";
@@ -24,11 +24,15 @@ const SoundPlayer = () => {
   const [currentSoundIndex, setCurrentSoundIndex] = useState(startIndex);
   const [isScrubbing, setIsScrubbing] = useState(false);
   const [scrubValue, setScrubValue] = useState(0);
+  const [isBuffering, setIsBuffering] = useState(true);
+  const [loadProgress, setLoadProgress] = useState(0);
+  const [hasStarted, setHasStarted] = useState(false);
   const pendingSeekRef = useRef<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { levelsRef, resume } = useAudioAnalyser(audioRef.current, {
     enabled: isPlaying,
   });
+
 
   const isPlaylist = playlistId !== undefined;
   let currentSound, playlist;
