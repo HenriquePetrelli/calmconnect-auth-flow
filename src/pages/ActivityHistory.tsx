@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Calendar, Clock, Download, FileText } from "lucide-react";
+import { Calendar, Clock, Download, FileText } from "lucide-react";
+import PageHeader from "@/components/PageHeader";
 import { useNavigate } from "react-router-dom";
 import { useQuarterlyActivities } from "@/hooks/useQuarterlyActivities";
 import { formatDateTime } from "@/utils/dateFormatters";
@@ -116,13 +117,7 @@ const ActivityHistory = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="flex items-center gap-4 p-4 border-b border-border">
-        <Button variant="ghost" size="sm" onClick={() => navigate('/statistics')}>
-          <ArrowLeft size={20} />
-        </Button>
-        <h1 className="text-xl font-semibold text-foreground">Histórico de Atividades</h1>
-      </div>
+      <PageHeader title="Histórico de Atividades" backTo="/statistics" />
 
       {/* Content */}
       <div className="p-4 space-y-6">

@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Save } from "lucide-react";
+import { Save } from "lucide-react";
+import PageHeader from "@/components/PageHeader";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -132,13 +133,7 @@ const AccountSettings = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="flex items-center gap-4 p-4 border-b border-border">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/profile")}>
-          <ArrowLeft size={20} />
-        </Button>
-        <h1 className="text-xl font-semibold text-foreground">Alterar Dados da Conta</h1>
-      </div>
+      <PageHeader title="Alterar Dados da Conta" backTo="/profile" />
 
       {/* Content */}
       <div className="p-4 space-y-6 max-w-md mx-auto">

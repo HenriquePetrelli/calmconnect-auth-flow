@@ -1,10 +1,10 @@
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, Sprout } from 'lucide-react';
+import { Sprout } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAchievements } from '@/hooks/useAchievements';
 import { AchievementCard } from '@/components/achievements/AchievementCard';
 import { AchievementModal } from '@/components/achievements/AchievementModal';
 import { SkeletonCardGrid } from '@/components/skeletons/Skeletons';
+import PageHeader from '@/components/PageHeader';
 
 const Achievements = () => {
   const navigate = useNavigate();
@@ -15,18 +15,7 @@ const Achievements = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="flex items-center gap-4 p-4 border-b border-border">
-        <Button variant="ghost" size="sm" onClick={() => navigate('/statistics')}>
-          <ArrowLeft size={20} />
-        </Button>
-        <div className="flex-1">
-          <h1 className="text-xl font-semibold text-foreground">Minhas Conquistas</h1>
-          <p className="text-sm text-muted-foreground">
-            {achievedCount} de {totalCount} desbloqueadas
-          </p>
-        </div>
-      </div>
+      <PageHeader title="Minhas Conquistas" backTo="/statistics" />
 
       {/* Content */}
       <div className="p-4">
