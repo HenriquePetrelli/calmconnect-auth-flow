@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAppointmentVideoCall } from '@/hooks/useAppointmentVideoCall';
 import ConsultationVideoCall from '@/components/appointments/ConsultationVideoCall';
 import { Appointment } from '@/hooks/useAppointments';
+import { SkeletonFullPage } from '@/components/skeletons/Skeletons';
 
 const ConsultationCall = () => {
   const { appointmentId } = useParams<{ appointmentId: string }>();
