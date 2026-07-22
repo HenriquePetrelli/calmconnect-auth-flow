@@ -1,4 +1,5 @@
 import { usePsychologistManagement } from '@/hooks/usePsychologistManagement';
+import { SkeletonFullPage } from '@/components/skeletons/Skeletons';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

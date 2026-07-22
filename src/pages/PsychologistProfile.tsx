@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { SkeletonFullPage } from '@/components/skeletons/Skeletons';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { SkeletonFullPage } from '@/components/skeletons/Skeletons';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
