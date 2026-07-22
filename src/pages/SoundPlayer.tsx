@@ -80,7 +80,11 @@ const SoundPlayer = () => {
   useEffect(() => {
     if (currentSound && audioRef.current) {
       const audio = audioRef.current;
-      if (audio.src !== new URL(currentSound.file, window.location.href).href) {
+      const targetSrc = new URL(currentSound.file, window.location.href).href;
+      if (audio.src !== targetSrc) {
+        setIsBuffering(true);
+        setLoadProgress(0);
+        setHasStarted(false);
         audio.src = currentSound.file;
       }
       audio.loop = true;
@@ -96,6 +100,55 @@ const SoundPlayer = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSound?.id]);
+
+  // Rastreia estado de carregamento do áudio
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const updateProgress = () => {
+      try {
+        if (audio.buffered.length && audio.duration) {
+          const end = audio.buffered.end(audio.buffered.length - 1);
+          setLoadProgress(Math.min(100, Math.round((end / audio.duration) * 100)));
+        }
+      } catch {
+        /* noop */
+      }
+    };
+
+    const onWaiting = () => setIsBuffering(true);
+    const onCanPlay = () => {
+      setIsBuffering(false);
+      updateProgress();
+    };
+    const onPlaying = () => {
+      setIsBuffering(false);
+      setHasStarted(true);
+    };
+    const onProgress = () => updateProgress();
+
+    audio.addEventListener("waiting", onWaiting);
+    audio.addEventListener("stalled", onWaiting);
+    audio.addEventListener("loadstart", onWaiting);
+    audio.addEventListener("canplay", onCanPlay);
+    audio.addEventListener("canplaythrough", onCanPlay);
+    audio.addEventListener("playing", onPlaying);
+    audio.addEventListener("progress", onProgress);
+    audio.addEventListener("loadeddata", onProgress);
+
+    return () => {
+      audio.removeEventListener("waiting", onWaiting);
+      audio.removeEventListener("stalled", onWaiting);
+      audio.removeEventListener("loadstart", onWaiting);
+      audio.removeEventListener("canplay", onCanPlay);
+      audio.removeEventListener("canplaythrough", onCanPlay);
+      audio.removeEventListener("playing", onPlaying);
+      audio.removeEventListener("progress", onProgress);
+      audio.removeEventListener("loadeddata", onProgress);
+    };
+  }, [currentSound?.id]);
+
 
 
   useEffect(() => {
