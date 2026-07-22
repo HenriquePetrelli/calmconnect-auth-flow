@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import BackButton from '@/components/BackButton';
+import PageHeader from '@/components/PageHeader';
 import {
   CreditCard,
   Wallet,
