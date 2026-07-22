@@ -88,7 +88,7 @@ const Appointments = () => {
 
         {/* Consultation History */}
         <AppointmentHistory />
-      </main>
+
 
       {/* Upgrade Modal */}
       <Dialog open={showUpgradeModal} onOpenChange={setShowUpgradeModal}>

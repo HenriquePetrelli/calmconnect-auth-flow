@@ -403,7 +403,7 @@ const Statistics = () => {
             )}
           </CardContent>
         </Card>
-      </main>
+
 
       <GoalSelectionModal
         open={goalModalOpen}

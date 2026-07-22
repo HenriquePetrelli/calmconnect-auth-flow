@@ -298,7 +298,7 @@ const HomeContent = () => {
           onGoalsAdded={handleGoalsAdded}
         />
       </div>
-    </div>
+    </>
   );
 };
 

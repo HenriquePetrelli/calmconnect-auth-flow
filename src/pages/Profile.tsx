@@ -356,8 +356,7 @@ const Profile = () => {
               </button>
             </div>
           </Card>
-        </main>
-      </div>
+
 
       {user && (
         <EditSymptomsModal
