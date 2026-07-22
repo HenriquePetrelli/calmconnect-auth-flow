@@ -141,9 +141,9 @@ export const AppointmentsList: React.FC<AppointmentsListProps> = ({
                   <User className="text-primary" size={20} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-start justify-between mb-2 gap-2">
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-foreground truncate">
+                      <h4 className="text-base font-semibold text-foreground truncate">
                         {appointment.psychologist?.full_name || 'Psicólogo não identificado'}
                       </h4>
                       <p className="text-sm text-muted-foreground truncate">
@@ -155,17 +155,17 @@ export const AppointmentsList: React.FC<AppointmentsListProps> = ({
                     )}
                   </div>
 
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
-                    <div className="flex items-center gap-1">
+                  <div className="flex items-center flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground mb-3">
+                    <div className="flex items-center gap-1.5">
                       <Calendar size={14} />
                       {formatBrazilTime(appointment.scheduled_at, "dd 'de' MMM")}
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1.5">
                       <Clock size={14} />
                       {formatTimeOnly(appointment.scheduled_at)}
                     </div>
                     {appointment.duration && (
-                      <span className="text-xs bg-muted px-2 py-1 rounded">
+                      <span className="text-xs bg-muted px-2 py-0.5 rounded">
                         {appointment.duration}min
                       </span>
                     )}
