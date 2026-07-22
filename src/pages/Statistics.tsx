@@ -292,7 +292,7 @@ const Statistics = () => {
                 {statCards.map((s, i) => (
                   <div
                     key={i}
-                    className="rounded-lg border bg-card p-4 transition-colors hover:bg-muted/30"
+                    className="rounded-lg border bg-card p-4"
                   >
                     <div className={`w-9 h-9 rounded-lg flex items-center justify-center mb-3 ${s.bg}`}>
                       <s.icon className={s.color} size={18} />
