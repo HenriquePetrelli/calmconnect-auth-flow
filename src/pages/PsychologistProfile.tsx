@@ -328,6 +328,7 @@ const PsychologistProfile = () => {
       </Card>
 
       <PasswordChangeModal open={pwdOpen} onOpenChange={setPwdOpen} currentEmail={email} />
+      </div>
     </div>
   );
 };
