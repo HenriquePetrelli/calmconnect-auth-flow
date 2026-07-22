@@ -328,11 +328,26 @@ const SoundPlayer = () => {
             )}
             <Button
               size="icon-lg"
-              className="w-14 h-14 rounded-full bg-primary hover:bg-primary-hover text-primary-foreground shadow-lg"
+              disabled={isBuffering && !hasStarted}
+              className="w-14 h-14 rounded-full bg-primary hover:bg-primary-hover text-primary-foreground shadow-lg disabled:opacity-70 disabled:cursor-wait"
               onClick={togglePlay}
+              aria-label={
+                isBuffering && !hasStarted
+                  ? "Carregando som"
+                  : isPlaying
+                  ? "Pausar"
+                  : "Reproduzir"
+              }
             >
-              {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
+              {isBuffering && !hasStarted ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : isPlaying ? (
+                <Pause className="w-5 h-5" />
+              ) : (
+                <Play className="w-5 h-5 ml-0.5" />
+              )}
             </Button>
+
             {isPlaylist && (
               <Button
                 variant="ghost"
