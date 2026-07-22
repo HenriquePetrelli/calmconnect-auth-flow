@@ -385,7 +385,13 @@ const SoundPlayer = () => {
         </div>
       </div>
 
-      <audio ref={audioRef} preload="auto" />
+      <audio
+        ref={audioRef}
+        preload="auto"
+        // @ts-expect-error fetchpriority is a valid HTML attribute
+        fetchpriority="high"
+      />
+
     </div>
   );
 };
