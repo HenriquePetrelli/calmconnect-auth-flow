@@ -363,9 +363,7 @@ const Statistics = () => {
           </CardHeader>
           <CardContent className="pt-6">
             {loading ? (
-              <div className="text-center py-8 text-sm text-muted-foreground">
-                Carregando atividades...
-              </div>
+              <SkeletonList count={4} />
             ) : recentActivities.length === 0 ? (
               <div className="text-center py-8">
                 <Clock className="w-8 h-8 mx-auto mb-2 text-muted-foreground/50" />
