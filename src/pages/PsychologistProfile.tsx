@@ -169,13 +169,9 @@ const PsychologistProfile = () => {
   }
 
   return (
-    <div className="max-w-3xl mx-auto p-4 space-y-6">
-      <header className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <BackButton to="/psychologist-dashboard" label="Voltar" />
-          <h1 className="text-2xl font-semibold">Perfil do Psicólogo</h1>
-        </div>
-      </header>
+    <div className="min-h-screen bg-background">
+      <PageHeader title="Perfil do Psicólogo" backTo="/psychologist-dashboard" />
+      <div className="max-w-3xl mx-auto p-4 space-y-6">
 
       <Card>
         <CardHeader>
