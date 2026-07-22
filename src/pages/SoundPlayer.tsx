@@ -246,15 +246,38 @@ const SoundPlayer = () => {
       <div className="flex-1 min-h-0 flex flex-col items-center justify-between px-4 py-4 max-w-2xl w-full mx-auto">
         {/* Animation circle */}
         <div className="flex-1 min-h-0 flex items-center justify-center w-full py-2">
-          <div className="aspect-square h-full max-h-[42vh] max-w-[42vh]">
+          <div className="relative aspect-square h-full max-h-[42vh] max-w-[42vh]">
             <SoundAnimation
               type={selectedAnimation}
               isPlaying={isPlaying}
               levelsRef={levelsRef}
               circular
             />
+            {/* Overlay de carregamento antes do primeiro play */}
+            {isBuffering && !hasStarted && (
+              <div className="absolute inset-0 rounded-full flex flex-col items-center justify-center bg-black/35 backdrop-blur-sm text-white animate-fade-in">
+                <Loader2 className="w-8 h-8 animate-spin mb-3" />
+                <p className="text-sm font-medium">Carregando som...</p>
+                {loadProgress > 0 && (
+                  <div className="mt-3 w-32 h-1.5 rounded-full bg-white/20 overflow-hidden">
+                    <div
+                      className="h-full bg-white transition-all duration-200"
+                      style={{ width: `${loadProgress}%` }}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+            {/* Indicador sutil de rebuffer durante a reprodução */}
+            {isBuffering && hasStarted && (
+              <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-sm text-white text-xs animate-fade-in">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                Buffer
+              </div>
+            )}
           </div>
         </div>
+
 
         {/* Title */}
         <div className="text-center shrink-0">
