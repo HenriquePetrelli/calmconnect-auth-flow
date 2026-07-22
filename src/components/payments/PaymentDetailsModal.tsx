@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { PaymentRecord } from '@/hooks/usePayments';
+import { SkeletonList } from '@/components/skeletons/Skeletons';
 
 interface PaymentDetailsModalProps {
   paymentId: string;
@@ -88,9 +89,8 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
         </DialogHeader>
 
         {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin mr-2" />
-            <span>Carregando detalhes...</span>
+          <div className="py-2">
+            <SkeletonList count={5} showAvatar={false} />
           </div>
         ) : payment ? (
           <div className="space-y-6">

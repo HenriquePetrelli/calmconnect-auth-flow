@@ -4,6 +4,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { useSignedDocumentUrl } from '@/hooks/useSignedDocumentUrl';
 import { useState, useEffect } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface DocumentViewerProps {
   documentPath?: string;
@@ -70,11 +71,8 @@ export const DocumentViewer = ({ documentPath }: DocumentViewerProps) => {
 
   if (loading) {
     return (
-      <div className="border rounded-lg p-8 bg-muted/30">
-        <div className="flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          <span className="ml-2 text-sm text-muted-foreground">Carregando documento...</span>
-        </div>
+      <div className="border rounded-lg overflow-hidden">
+        <Skeleton className="h-64 w-full" />
       </div>
     );
   }
@@ -113,10 +111,8 @@ export const DocumentViewer = ({ documentPath }: DocumentViewerProps) => {
 
   if (!isClient) {
     return (
-      <div className="border rounded-lg p-8 bg-muted/30">
-        <div className="flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
+      <div className="border rounded-lg overflow-hidden">
+        <Skeleton className="h-64 w-full" />
       </div>
     );
   }
