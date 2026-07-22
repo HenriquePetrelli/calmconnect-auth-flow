@@ -119,25 +119,15 @@ const PsychologistPayments = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-30 backdrop-blur bg-card/80 border-b border-border">
-        <div className="max-w-5xl mx-auto flex items-center justify-between gap-3 px-4 py-4">
-          <div className="flex items-center gap-3 min-w-0">
-            <BackButton to="/psychologist-profile" label="" />
-            <div className="min-w-0">
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                Financeiro
-              </p>
-              <h1 className="text-lg md:text-xl font-semibold text-foreground truncate">
-                Meus Pagamentos
-              </h1>
-            </div>
-          </div>
-          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing}>
-            <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-            Atualizar
+      <PageHeader
+        title="Meus Pagamentos"
+        backTo="/psychologist-profile"
+        rightAction={
+          <Button variant="ghost" size="icon" onClick={handleRefresh} disabled={refreshing} className="rounded-full bg-white/15 text-white hover:bg-white/25 hover:text-white h-10 w-10" aria-label="Atualizar">
+            <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
           </Button>
-        </div>
-      </header>
+        }
+      />
 
       <div className="max-w-5xl mx-auto p-4 md:p-6 space-y-6">
         {/* Summary */}
