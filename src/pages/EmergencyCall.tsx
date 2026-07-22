@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { WebRTCVideoCall } from "@/components/sos/WebRTCVideoCall";
 import EmergencyVideoCall from "@/components/EmergencyVideoCall";
+import { SkeletonFullPage } from "@/components/skeletons/Skeletons";
 
 const EmergencyCall = () => {
   const { requestId, sessionId } = useParams();
