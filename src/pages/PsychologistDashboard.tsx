@@ -124,23 +124,23 @@ const PsychologistDashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-30 backdrop-blur bg-card/80 border-b border-border">
+      <header className="sticky top-0 z-30 bg-secondary text-secondary-foreground border-b border-secondary/40 shadow-sm">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 px-4 py-3 md:py-4">
           <div className="min-w-0">
-            <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+            <p className="text-[11px] font-medium uppercase tracking-wider text-secondary-foreground/70">
               Área do Psicólogo
             </p>
-            <h1 className="text-lg md:text-xl font-semibold text-foreground truncate">
+            <h1 className="text-lg md:text-xl font-semibold text-white truncate">
               Olá, Dr.(a) {profile?.full_name?.split(' ')[0]}
             </h1>
           </div>
           <div className="flex items-center gap-2">
             <OnlineStatusToggle />
-            <div className="hidden sm:block w-px h-6 bg-border" aria-hidden />
+            <div className="hidden sm:block w-px h-6 bg-white/20" aria-hidden />
             <Button
               variant="ghost"
               size="icon"
-              className="rounded-full hover:bg-primary/10 hover:text-primary"
+              className="rounded-full text-white hover:bg-white/15 hover:text-white"
               onMouseEnter={() => import('./PsychologistProfile')}
               onClick={() => navigate('/psychologist-profile')}
               title="Perfil"
@@ -151,7 +151,7 @@ const PsychologistDashboard = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="rounded-full hover:bg-destructive/10 hover:text-destructive"
+              className="rounded-full text-white hover:bg-destructive/40 hover:text-white"
               onClick={handleLogout}
               title="Sair"
               aria-label="Sair"
@@ -214,7 +214,7 @@ const PsychologistDashboard = () => {
         {/* Main Content */}
         <Tabs defaultValue="emergency" className="space-y-4">
           <TabsList className="w-full h-auto p-1 bg-muted/50 grid grid-cols-3 gap-1">
-            <TabsTrigger value="emergency" className="flex items-center gap-2 py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <TabsTrigger value="emergency" className="flex items-center gap-2 py-2.5 data-[state=active]:bg-secondary data-[state=active]:text-white data-[state=active]:shadow-sm">
               <Bell className="w-4 h-4" />
               <span className="hidden sm:inline">Emergências</span>
               {pendingEmergencies > 0 && (
@@ -223,11 +223,11 @@ const PsychologistDashboard = () => {
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="consultations" className="flex items-center gap-2 py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <TabsTrigger value="consultations" className="flex items-center gap-2 py-2.5 data-[state=active]:bg-secondary data-[state=active]:text-white data-[state=active]:shadow-sm">
               <Users className="w-4 h-4" />
               <span className="hidden sm:inline">Consultas</span>
             </TabsTrigger>
-            <TabsTrigger value="history" className="flex items-center gap-2 py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <TabsTrigger value="history" className="flex items-center gap-2 py-2.5 data-[state=active]:bg-secondary data-[state=active]:text-white data-[state=active]:shadow-sm">
               <History className="w-4 h-4" />
               <span className="hidden sm:inline">Histórico</span>
             </TabsTrigger>
