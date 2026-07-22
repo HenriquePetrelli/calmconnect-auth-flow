@@ -54,43 +54,39 @@ const Appointments = () => {
   }
 
   return (
-    <div className="has-tabs">
-      <div className="screen">
-
-        {/* Content */}
-        <main className="p-4 space-y-6">
-          {/* Schedule New Appointment */}
-          <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
-            <CardContent className="p-3">
-              <div className="flex items-center gap-3">
-                <div className="flex-shrink-0 w-9 h-9 bg-primary/20 rounded-full flex items-center justify-center">
-                  <Calendar className="w-4 h-4 text-primary" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-semibold text-foreground leading-tight">Agendar Nova Consulta</h3>
-                  <p className="text-xs text-muted-foreground truncate">Marque uma sessão com um psicólogo</p>
-                </div>
-                <Button
-                  size="sm"
-                  className="flex items-center gap-1.5 transition-colors duration-200"
-                  onClick={handleScheduleClick}
-                  disabled={subscriptionTier !== 'Premium'}
-                >
-                  <Plus className="w-4 h-4" />
-                  <span className="hidden sm:inline">Agendar</span>
-                  {subscriptionTier !== 'Premium' && <Crown className="w-3.5 h-3.5 ml-1" />}
-                </Button>
+    <div>
+      <main className="p-4 md:p-6 space-y-6 max-w-5xl mx-auto">
+        {/* Schedule New Appointment */}
+        <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="flex-shrink-0 w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
+                <Calendar className="w-5 h-5 text-primary" />
               </div>
-            </CardContent>
-          </Card>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base font-semibold text-foreground leading-tight">Agendar Nova Consulta</h3>
+                <p className="text-sm text-muted-foreground truncate">Marque uma sessão com um psicólogo</p>
+              </div>
+              <Button
+                size="sm"
+                className="flex items-center gap-1.5"
+                onClick={handleScheduleClick}
+                disabled={subscriptionTier !== 'Premium'}
+              >
+                <Plus className="w-4 h-4" />
+                <span className="hidden sm:inline">Agendar</span>
+                {subscriptionTier !== 'Premium' && <Crown className="w-3.5 h-3.5 ml-1" />}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
-          {/* Upcoming Appointments */}
-          <UpcomingAppointments />
+        {/* Upcoming Appointments */}
+        <UpcomingAppointments />
 
-          {/* Consultation History */}
-          <AppointmentHistory />
-        </main>
-      </div>
+        {/* Consultation History */}
+        <AppointmentHistory />
+      </main>
 
       {/* Upgrade Modal */}
       <Dialog open={showUpgradeModal} onOpenChange={setShowUpgradeModal}>
