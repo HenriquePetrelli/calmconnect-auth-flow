@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { Play, Pause, SkipBack, SkipForward, Clock } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Clock, Loader2 } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { soundsData } from "@/data/soundsData";
@@ -24,11 +24,15 @@ const SoundPlayer = () => {
   const [currentSoundIndex, setCurrentSoundIndex] = useState(startIndex);
   const [isScrubbing, setIsScrubbing] = useState(false);
   const [scrubValue, setScrubValue] = useState(0);
+  const [isBuffering, setIsBuffering] = useState(true);
+  const [loadProgress, setLoadProgress] = useState(0);
+  const [hasStarted, setHasStarted] = useState(false);
   const pendingSeekRef = useRef<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { levelsRef, resume } = useAudioAnalyser(audioRef.current, {
     enabled: isPlaying,
   });
+
 
   const isPlaylist = playlistId !== undefined;
   let currentSound, playlist;
@@ -76,7 +80,11 @@ const SoundPlayer = () => {
   useEffect(() => {
     if (currentSound && audioRef.current) {
       const audio = audioRef.current;
-      if (audio.src !== new URL(currentSound.file, window.location.href).href) {
+      const targetSrc = new URL(currentSound.file, window.location.href).href;
+      if (audio.src !== targetSrc) {
+        setIsBuffering(true);
+        setLoadProgress(0);
+        setHasStarted(false);
         audio.src = currentSound.file;
       }
       audio.loop = true;
@@ -92,6 +100,55 @@ const SoundPlayer = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSound?.id]);
+
+  // Rastreia estado de carregamento do áudio
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const updateProgress = () => {
+      try {
+        if (audio.buffered.length && audio.duration) {
+          const end = audio.buffered.end(audio.buffered.length - 1);
+          setLoadProgress(Math.min(100, Math.round((end / audio.duration) * 100)));
+        }
+      } catch {
+        /* noop */
+      }
+    };
+
+    const onWaiting = () => setIsBuffering(true);
+    const onCanPlay = () => {
+      setIsBuffering(false);
+      updateProgress();
+    };
+    const onPlaying = () => {
+      setIsBuffering(false);
+      setHasStarted(true);
+    };
+    const onProgress = () => updateProgress();
+
+    audio.addEventListener("waiting", onWaiting);
+    audio.addEventListener("stalled", onWaiting);
+    audio.addEventListener("loadstart", onWaiting);
+    audio.addEventListener("canplay", onCanPlay);
+    audio.addEventListener("canplaythrough", onCanPlay);
+    audio.addEventListener("playing", onPlaying);
+    audio.addEventListener("progress", onProgress);
+    audio.addEventListener("loadeddata", onProgress);
+
+    return () => {
+      audio.removeEventListener("waiting", onWaiting);
+      audio.removeEventListener("stalled", onWaiting);
+      audio.removeEventListener("loadstart", onWaiting);
+      audio.removeEventListener("canplay", onCanPlay);
+      audio.removeEventListener("canplaythrough", onCanPlay);
+      audio.removeEventListener("playing", onPlaying);
+      audio.removeEventListener("progress", onProgress);
+      audio.removeEventListener("loadeddata", onProgress);
+    };
+  }, [currentSound?.id]);
+
 
 
   useEffect(() => {
@@ -189,15 +246,38 @@ const SoundPlayer = () => {
       <div className="flex-1 min-h-0 flex flex-col items-center justify-between px-4 py-4 max-w-2xl w-full mx-auto">
         {/* Animation circle */}
         <div className="flex-1 min-h-0 flex items-center justify-center w-full py-2">
-          <div className="aspect-square h-full max-h-[42vh] max-w-[42vh]">
+          <div className="relative aspect-square h-full max-h-[42vh] max-w-[42vh]">
             <SoundAnimation
               type={selectedAnimation}
               isPlaying={isPlaying}
               levelsRef={levelsRef}
               circular
             />
+            {/* Overlay de carregamento antes do primeiro play */}
+            {isBuffering && !hasStarted && (
+              <div className="absolute inset-0 rounded-full flex flex-col items-center justify-center bg-black/35 backdrop-blur-sm text-white animate-fade-in">
+                <Loader2 className="w-8 h-8 animate-spin mb-3" />
+                <p className="text-sm font-medium">Carregando som...</p>
+                {loadProgress > 0 && (
+                  <div className="mt-3 w-32 h-1.5 rounded-full bg-white/20 overflow-hidden">
+                    <div
+                      className="h-full bg-white transition-all duration-200"
+                      style={{ width: `${loadProgress}%` }}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+            {/* Indicador sutil de rebuffer durante a reprodução */}
+            {isBuffering && hasStarted && (
+              <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-sm text-white text-xs animate-fade-in">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                Buffer
+              </div>
+            )}
           </div>
         </div>
+
 
         {/* Title */}
         <div className="text-center shrink-0">
@@ -248,11 +328,26 @@ const SoundPlayer = () => {
             )}
             <Button
               size="icon-lg"
-              className="w-14 h-14 rounded-full bg-primary hover:bg-primary-hover text-primary-foreground shadow-lg"
+              disabled={isBuffering && !hasStarted}
+              className="w-14 h-14 rounded-full bg-primary hover:bg-primary-hover text-primary-foreground shadow-lg disabled:opacity-70 disabled:cursor-wait"
               onClick={togglePlay}
+              aria-label={
+                isBuffering && !hasStarted
+                  ? "Carregando som"
+                  : isPlaying
+                  ? "Pausar"
+                  : "Reproduzir"
+              }
             >
-              {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
+              {isBuffering && !hasStarted ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : isPlaying ? (
+                <Pause className="w-5 h-5" />
+              ) : (
+                <Play className="w-5 h-5 ml-0.5" />
+              )}
             </Button>
+
             {isPlaylist && (
               <Button
                 variant="ghost"
