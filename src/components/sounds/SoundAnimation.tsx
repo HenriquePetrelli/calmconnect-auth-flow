@@ -98,8 +98,9 @@ const SoundAnimation = ({ type, isPlaying, levelsRef, circular = false }: SoundA
 
       // Background com fade (cria trilha de partículas)
       ctx.globalCompositeOperation = "source-over";
-      ctx.fillStyle = circular ? "rgba(234, 88, 12, 0.22)" : "rgba(15, 8, 30, 0.18)";
+      ctx.fillStyle = circular ? "rgba(20, 12, 40, 0.16)" : "rgba(15, 8, 30, 0.18)";
       ctx.fillRect(0, 0, w, h);
+
 
       switch (type) {
         case "rain":
@@ -144,9 +145,15 @@ const SoundAnimation = ({ type, isPlaying, levelsRef, circular = false }: SoundA
 
   if (circular) {
     return (
-      <div className="relative w-full h-full rounded-full overflow-hidden shadow-[0_20px_60px_-15px_hsl(var(--primary)/0.55)] ring-1 ring-white/20">
-        {/* Fundo sólido primary (laranja) */}
-        <div className="absolute inset-0 bg-primary" />
+      <div className="relative w-full h-full rounded-full overflow-hidden shadow-[0_25px_70px_-20px_hsl(var(--primary)/0.45)] ring-1 ring-white/10">
+        {/* Fundo gradiente harmônico (roxo profundo → laranja sutil) */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(circle at 30% 25%, rgba(124,58,237,0.55), transparent 60%), radial-gradient(circle at 70% 80%, rgba(249,115,22,0.30), transparent 55%), linear-gradient(135deg, #1a0d3a 0%, #0f0820 100%)",
+          }}
+        />
         <canvas
           ref={canvasRef}
           className="relative w-full h-full block"
@@ -154,15 +161,17 @@ const SoundAnimation = ({ type, isPlaying, levelsRef, circular = false }: SoundA
         />
         {/* Highlight sutil para profundidade */}
         <div
-          className="pointer-events-none absolute inset-0"
+          className="pointer-events-none absolute inset-0 rounded-full"
           style={{
             background:
-              "radial-gradient(circle at 30% 25%, rgba(255,255,255,0.18), transparent 55%)",
+              "radial-gradient(circle at 30% 22%, rgba(255,255,255,0.14), transparent 45%)",
+            boxShadow: "inset 0 0 40px rgba(0,0,0,0.35), inset 0 2px 20px rgba(255,255,255,0.06)",
           }}
         />
       </div>
     );
   }
+
 
   return (
     <div className="relative w-full h-full rounded-[28px] overflow-hidden border border-white/10 shadow-[0_20px_60px_-20px_rgba(124,58,237,0.6)]">

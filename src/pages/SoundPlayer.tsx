@@ -75,20 +75,24 @@ const SoundPlayer = () => {
 
   useEffect(() => {
     if (currentSound && audioRef.current) {
-      audioRef.current.src = currentSound.file;
-      audioRef.current.loop = true;
-      audioRef.current.volume = 0.7;
-      audioRef.current.onended = null;
-      audioRef.current.onloadedmetadata = () => {
+      const audio = audioRef.current;
+      if (audio.src !== new URL(currentSound.file, window.location.href).href) {
+        audio.src = currentSound.file;
+      }
+      audio.loop = true;
+      audio.volume = 0.7;
+      audio.onended = null;
+      audio.onloadedmetadata = () => {
         seekAudioToSessionTime(pendingSeekRef.current ?? currentTime);
       };
       if (isPlaying) {
         void resume();
-        audioRef.current.play().catch(console.error);
+        audio.play().catch(console.error);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentSound]);
+  }, [currentSound?.id]);
+
 
   useEffect(() => {
     setDuration(parseInt(selectedDuration) * 60);
