@@ -199,17 +199,7 @@ const SOS = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <div className="flex items-center gap-4 p-4 border-b border-border">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => setShowCancelModal(true)}
-        >
-          <ArrowLeft size={20} />
-        </Button>
-        <h1 className="text-xl font-semibold text-foreground">Solicitar ajuda</h1>
-      </div>
+      <PageHeader title="Solicitar ajuda" onBack={() => setShowCancelModal(true)} />
 
       {/* Content */}
       <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-8">
