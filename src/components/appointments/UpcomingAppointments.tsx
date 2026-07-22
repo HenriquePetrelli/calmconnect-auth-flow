@@ -4,6 +4,7 @@ import { Calendar } from 'lucide-react';
 import { AppointmentsList } from './AppointmentsList';
 import { AppointmentDetailsModal } from './AppointmentDetailsModal';
 import { useAppointments, Appointment } from '@/hooks/useAppointments';
+import { SkeletonSectionCard } from '@/components/skeletons/Skeletons';
 
 export const UpcomingAppointments: React.FC = () => {
   const { appointments, loading } = useAppointments();
@@ -33,26 +34,7 @@ export const UpcomingAppointments: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="text-primary" size={20} />
-            Próximas Consultas
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {[...Array(2)].map((_, i) => (
-              <div key={i} className="p-4 rounded-lg border animate-pulse">
-                <div className="h-4 bg-muted rounded mb-2" />
-                <div className="h-3 bg-muted rounded w-2/3" />
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return <SkeletonSectionCard rows={2} accent="primary" />;
   }
 
   return (
