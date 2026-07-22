@@ -14,8 +14,8 @@ import {
   Target,
   CheckCircle2,
   Flame,
-  TrendingUp,
   ChevronRight,
+  BarChart3,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { usePatientStatistics } from "@/hooks/usePatientStatistics";
@@ -25,12 +25,6 @@ import { useWeeklyGoals } from "@/hooks/useWeeklyGoals";
 import { GoalSelectionModal } from "@/components/goals/GoalSelectionModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-
-const SectionLabel = ({ children }: { children: React.ReactNode }) => (
-  <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-    {children}
-  </h2>
-);
 
 const Statistics = () => {
   const navigate = useNavigate();
@@ -112,176 +106,183 @@ const Statistics = () => {
       icon: Activity,
       value: statistics?.total_scheduled_consultations || 0,
       label: "Consultas agendadas",
-      accent: "text-primary",
-      bg: "bg-primary/10",
+      color: "text-primary",
+      bg: "bg-primary/15",
     },
     {
       icon: Zap,
       value: statistics?.total_emergency_consultations || 0,
       label: "Emergenciais",
-      accent: "text-destructive",
-      bg: "bg-destructive/10",
+      color: "text-destructive",
+      bg: "bg-destructive/15",
     },
     {
       icon: Wind,
       value: `${statistics?.total_guided_breathing_time || 0} min`,
       label: "Respiração guiada",
-      accent: "text-[hsl(var(--breathing-primary))]",
-      bg: "bg-[hsl(var(--breathing-primary)/0.1)]",
+      color: "text-[hsl(var(--breathing-primary))]",
+      bg: "bg-[hsl(var(--breathing-primary)/0.15)]",
     },
     {
       icon: Music,
       value: `${statistics?.total_therapeutic_sound_time || 0} min`,
       label: "Sons terapêuticos",
-      accent: "text-secondary",
-      bg: "bg-secondary/10",
+      color: "text-secondary",
+      bg: "bg-secondary/15",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-5xl mx-auto p-4 md:p-6 space-y-8">
-        {/* HERO: Streak + Overview */}
-        <section className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-5 md:p-7">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-center">
-            <div className="md:col-span-2 space-y-1.5">
-              <p className="text-xs font-semibold uppercase tracking-wider text-primary">
-                Seu progresso
-              </p>
-              <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground">
-                Continue firme na sua jornada
-              </h1>
-              <p className="text-sm text-muted-foreground max-w-md">
-                Acompanhe sua evolução, mantenha sua sequência ativa e alcance suas metas semanais.
-              </p>
-            </div>
-            <div className="flex items-center gap-4 md:justify-end">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary-glow shadow-primary">
-                <Flame className="h-8 w-8 text-primary-foreground" />
+    <div>
+      <main className="p-4 md:p-6 space-y-6 max-w-5xl mx-auto">
+        {/* Streak destaque */}
+        <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="flex-shrink-0 w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
+                <Flame className="w-5 h-5 text-primary" />
               </div>
-              <div>
-                <div className="text-3xl font-semibold text-foreground leading-none">
-                  {statistics?.streak_days || 0}
-                </div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  dias consecutivos
-                </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base font-semibold text-foreground leading-tight">
+                  {statistics?.streak_days || 0} dias consecutivos
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Continue firme na sua jornada
+                </p>
               </div>
             </div>
-          </div>
-        </section>
+          </CardContent>
+        </Card>
 
-        {/* WEEKLY GOALS */}
+        {/* Metas Semanais */}
         {!goalsLoading && (
-          <section>
-            <div className="flex items-end justify-between mb-3">
-              <SectionLabel>Metas da semana</SectionLabel>
-              {totalGoals > 0 && (
-                <span className="text-xs text-muted-foreground">
-                  {completedGoals}/{totalGoals} concluídas
-                </span>
-              )}
-            </div>
-            <Card>
-              <CardContent className="p-5">
-                {localSelectedGoals.length === 0 ? (
-                  <div className="text-center py-6 space-y-3">
-                    <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Target className="w-6 h-6 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="text-base font-semibold text-foreground">
-                        Ainda sem metas semanais
-                      </h3>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Adicione metas para acompanhar seu progresso.
-                      </p>
-                    </div>
-                    <Button onClick={() => setGoalModalOpen(true)} className="gap-2">
-                      <Target size={16} />
-                      Adicionar metas
-                    </Button>
+          <Card className="border-l-4 border-l-primary">
+            <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">
+              <CardTitle className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
+                  <Target className="text-primary" size={18} />
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold text-foreground">Metas da semana</h3>
+                  <p className="text-sm text-muted-foreground font-normal">
+                    {totalGoals > 0
+                      ? `${completedGoals} de ${totalGoals} concluídas`
+                      : "Defina suas metas semanais"}
+                  </p>
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6">
+              {localSelectedGoals.length === 0 ? (
+                <div className="text-center py-6 space-y-3">
+                  <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Target className="w-6 h-6 text-primary" />
                   </div>
-                ) : (
-                  <div className="space-y-5">
-                    <div className="flex items-center gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-sm font-medium text-foreground">
-                            Progresso geral
-                          </span>
-                          <span className="text-sm font-semibold text-primary">
-                            {goalsPercent}%
-                          </span>
-                        </div>
-                        <Progress value={goalsPercent} className="h-2" />
-                      </div>
+                  <div>
+                    <h4 className="text-base font-semibold text-foreground">
+                      Ainda sem metas semanais
+                    </h4>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Adicione metas para acompanhar seu progresso.
+                    </p>
+                  </div>
+                  <Button onClick={() => setGoalModalOpen(true)} className="gap-2">
+                    <Target size={16} />
+                    Adicionar metas
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-5">
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-sm font-medium text-foreground">
+                        Progresso geral
+                      </span>
+                      <span className="text-sm font-semibold text-primary">
+                        {goalsPercent}%
+                      </span>
                     </div>
+                    <Progress value={goalsPercent} className="h-2" />
+                  </div>
 
-                    <div className="space-y-4 pt-1">
-                      {goalsWithProgress.map((goal) => {
-                        const pct = Math.min(
-                          100,
-                          Math.round((goal.progress / goal.target) * 100)
-                        );
-                        return (
-                          <div key={goal.id} className="space-y-2">
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="flex items-center gap-2 min-w-0">
-                                <span className="text-sm font-medium text-foreground truncate">
-                                  {goal.title}
-                                </span>
-                                {goal.completed && (
-                                  <CheckCircle2 size={16} className="text-success shrink-0" />
-                                )}
-                              </div>
-                              <span className="text-xs font-medium text-muted-foreground shrink-0">
-                                {goal.progress}/{goal.target}
+                  <div className="space-y-4">
+                    {goalsWithProgress.map((goal) => {
+                      const pct = Math.min(
+                        100,
+                        Math.round((goal.progress / goal.target) * 100)
+                      );
+                      return (
+                        <div key={goal.id} className="space-y-2">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="text-sm font-medium text-foreground truncate">
+                                {goal.title}
                               </span>
+                              {goal.completed && (
+                                <CheckCircle2 size={16} className="text-success shrink-0" />
+                              )}
                             </div>
-                            <Progress value={pct} className="h-1.5" />
-                            {goal.description && (
-                              <p className="text-xs text-muted-foreground">
-                                {goal.description}
-                              </p>
-                            )}
+                            <span className="text-xs font-medium text-muted-foreground shrink-0">
+                              {goal.progress}/{goal.target}
+                            </span>
                           </div>
-                        );
-                      })}
-                    </div>
-
-                    <Button
-                      onClick={() => setGoalModalOpen(true)}
-                      variant="outline"
-                      size="sm"
-                      className="w-full gap-2"
-                    >
-                      <Target size={14} />
-                      Editar metas
-                    </Button>
+                          <Progress value={pct} className="h-1.5" />
+                          {goal.description && (
+                            <p className="text-xs text-muted-foreground">
+                              {goal.description}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          </section>
+
+                  <Button
+                    onClick={() => setGoalModalOpen(true)}
+                    variant="outline"
+                    size="sm"
+                    className="w-full gap-2"
+                  >
+                    <Target size={14} />
+                    Editar metas
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         )}
 
-        {/* STATS OVERVIEW */}
-        <section>
-          <SectionLabel>Visão geral</SectionLabel>
-          {loading ? (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-28 rounded-xl border bg-muted/40 animate-pulse" />
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              {statCards.map((s, i) => (
-                <Card key={i} className="transition-colors hover:bg-muted/30">
-                  <CardContent className="p-4">
+        {/* Visão geral */}
+        <Card className="border-l-4 border-l-secondary">
+          <CardHeader className="bg-gradient-to-r from-secondary/5 to-transparent">
+            <CardTitle className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-secondary/20 rounded-full flex items-center justify-center">
+                <BarChart3 className="text-secondary" size={18} />
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-foreground">Visão geral</h3>
+                <p className="text-sm text-muted-foreground font-normal">
+                  Suas atividades no app
+                </p>
+              </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
+            {loading ? (
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="h-24 rounded-lg border bg-muted/40 animate-pulse" />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                {statCards.map((s, i) => (
+                  <div
+                    key={i}
+                    className="rounded-lg border bg-card p-4 transition-colors hover:bg-muted/30"
+                  >
                     <div className={`w-9 h-9 rounded-lg flex items-center justify-center mb-3 ${s.bg}`}>
-                      <s.icon className={`w-4.5 h-4.5 ${s.accent}`} size={18} />
+                      <s.icon className={s.color} size={18} />
                     </div>
                     <div className="text-2xl font-semibold text-foreground leading-none">
                       {s.value}
@@ -289,106 +290,120 @@ const Statistics = () => {
                     <div className="text-xs text-muted-foreground mt-1.5">
                       {s.label}
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </section>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-        {/* QUICK ACTIONS */}
-        <section>
-          <SectionLabel>Explorar</SectionLabel>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <button
-              onClick={() => navigate("/achievements")}
-              className="group flex items-center gap-3 rounded-xl border bg-card p-4 text-left transition-colors hover:bg-muted/40"
-            >
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Trophy className="w-5 h-5 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-semibold text-foreground">
-                  Minhas conquistas
+        {/* Explorar */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
+            <CardContent className="p-4">
+              <button
+                onClick={() => navigate("/achievements")}
+                className="flex items-center gap-3 w-full text-left"
+              >
+                <div className="flex-shrink-0 w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
+                  <Trophy className="w-5 h-5 text-primary" />
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  Veja as insígnias que você desbloqueou
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
-            </button>
-
-            <button
-              onClick={() => navigate("/statistics/activity-history")}
-              className="group flex items-center gap-3 rounded-xl border bg-card p-4 text-left transition-colors hover:bg-muted/40"
-            >
-              <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center">
-                <History className="w-5 h-5 text-secondary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-semibold text-foreground">
-                  Histórico completo
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  Todas as suas atividades registradas
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
-            </button>
-          </div>
-        </section>
-
-        {/* RECENT ACTIVITIES */}
-        <section>
-          <div className="flex items-end justify-between mb-3">
-            <SectionLabel>Atividades recentes</SectionLabel>
-            <TrendingUp className="w-4 h-4 text-muted-foreground mb-3" />
-          </div>
-          <Card>
-            <CardContent className="p-2">
-              {loading ? (
-                <div className="text-center py-10 text-sm text-muted-foreground">
-                  Carregando atividades...
-                </div>
-              ) : recentActivities.length === 0 ? (
-                <div className="text-center py-10">
-                  <Clock className="w-8 h-8 mx-auto mb-2 text-muted-foreground/50" />
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base font-semibold text-foreground leading-tight">
+                    Minhas conquistas
+                  </h3>
                   <p className="text-sm text-muted-foreground">
-                    Nenhuma atividade recente
+                    Veja suas insígnias
                   </p>
                 </div>
-              ) : (
-                <ul className="divide-y divide-border">
-                  {recentActivities.map((activity, index) => (
-                    <li
-                      key={index}
-                      className="flex items-center justify-between gap-3 px-3 py-3"
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center shrink-0">
-                          <Activity className="w-4 h-4 text-muted-foreground" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate">
-                            {activity.name}
-                          </p>
-                          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                            <Calendar size={11} />
-                            {formatDateTime(activity.date)}
-                          </p>
-                        </div>
-                      </div>
-                      <span className="text-xs font-medium text-primary shrink-0">
-                        {getRelativeTime(activity.date)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              </button>
             </CardContent>
           </Card>
-        </section>
-      </div>
+
+          <Card className="border-secondary/20 bg-gradient-to-r from-secondary/5 to-secondary/10">
+            <CardContent className="p-4">
+              <button
+                onClick={() => navigate("/statistics/activity-history")}
+                className="flex items-center gap-3 w-full text-left"
+              >
+                <div className="flex-shrink-0 w-10 h-10 bg-secondary/20 rounded-full flex items-center justify-center">
+                  <History className="w-5 h-5 text-secondary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base font-semibold text-foreground leading-tight">
+                    Histórico completo
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Todas as atividades
+                  </p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Atividades Recentes */}
+        <Card className="border-l-4 border-l-muted-foreground/30">
+          <CardHeader className="bg-gradient-to-r from-muted/30 to-transparent">
+            <CardTitle className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-muted-foreground/10 rounded-full flex items-center justify-center">
+                <Clock className="text-muted-foreground" size={18} />
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-foreground">
+                  Atividades recentes
+                </h3>
+                <p className="text-sm text-muted-foreground font-normal">
+                  Últimos registros
+                </p>
+              </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
+            {loading ? (
+              <div className="text-center py-8 text-sm text-muted-foreground">
+                Carregando atividades...
+              </div>
+            ) : recentActivities.length === 0 ? (
+              <div className="text-center py-8">
+                <Clock className="w-8 h-8 mx-auto mb-2 text-muted-foreground/50" />
+                <p className="text-sm text-muted-foreground">
+                  Nenhuma atividade recente
+                </p>
+              </div>
+            ) : (
+              <ul className="divide-y divide-border -mx-2">
+                {recentActivities.map((activity, index) => (
+                  <li
+                    key={index}
+                    className="flex items-center justify-between gap-3 px-2 py-3"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center shrink-0">
+                        <Activity className="w-4 h-4 text-muted-foreground" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">
+                          {activity.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                          <Calendar size={11} />
+                          {formatDateTime(activity.date)}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-xs font-medium text-primary shrink-0">
+                      {getRelativeTime(activity.date)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+      </main>
 
       <GoalSelectionModal
         open={goalModalOpen}
