@@ -97,23 +97,23 @@ export const AppointmentHistory = () => {
     <>
       <Card className="border-l-4 border-l-muted-foreground/30">
         <CardHeader className="bg-gradient-to-r from-muted/30 to-transparent">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <CardTitle className="flex items-center gap-3">
               <div className="w-10 h-10 bg-muted-foreground/10 rounded-full flex items-center justify-center">
                 <Calendar className="h-5 w-5 text-muted-foreground" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-foreground">Histórico de Consultas</h3>
+                <h3 className="text-base font-semibold text-foreground">Histórico de Consultas</h3>
                 <p className="text-sm text-muted-foreground font-normal">Consultas realizadas e canceladas</p>
               </div>
             </CardTitle>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-1.5 text-muted-foreground">
                 <Filter className="h-4 w-4" />
                 <span className="text-xs font-medium">Filtros:</span>
               </div>
               <Select value={filterPsychologist} onValueChange={setFilterPsychologist}>
-                <SelectTrigger className="w-44 h-9">
+                <SelectTrigger className="w-44 h-9 text-sm">
                   <SelectValue placeholder="Filtrar por psicólogo" />
                 </SelectTrigger>
                 <SelectContent>
@@ -125,9 +125,9 @@ export const AppointmentHistory = () => {
                   ))}
                 </SelectContent>
               </Select>
-              
+
               <Select value={filterMonth} onValueChange={setFilterMonth}>
-                <SelectTrigger className="w-36 h-9">
+                <SelectTrigger className="w-36 h-9 text-sm">
                   <SelectValue placeholder="Selecionar mês" />
                 </SelectTrigger>
                 <SelectContent>
@@ -143,24 +143,23 @@ export const AppointmentHistory = () => {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Data/Hora</TableHead>
-                <TableHead>Psicólogo</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Ações</TableHead>
+                <TableHead className="text-xs uppercase tracking-wide">Data/Hora</TableHead>
+                <TableHead className="text-xs uppercase tracking-wide">Psicólogo</TableHead>
+                <TableHead className="text-xs uppercase tracking-wide">Status</TableHead>
+                <TableHead className="text-xs uppercase tracking-wide text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredAppointments.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8">
+                  <TableCell colSpan={4} className="text-center py-10">
                     <div className="text-muted-foreground">
-                      <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      Nenhuma consulta encontrada
+                      <Calendar className="h-10 w-10 mx-auto mb-3 opacity-50" />
+                      <p className="text-sm">Nenhuma consulta encontrada</p>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -168,39 +167,31 @@ export const AppointmentHistory = () => {
                 filteredAppointments.map((appointment) => (
                   <TableRow key={appointment.id}>
                     <TableCell>
-                      <div>
-                        <div className="font-medium">
-                          {format(new Date(appointment.scheduled_at), 'dd/MM/yyyy', { locale: ptBR })}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {format(new Date(appointment.scheduled_at), 'HH:mm')}
-                        </div>
+                      <div className="text-sm font-medium text-foreground">
+                        {format(new Date(appointment.scheduled_at), 'dd/MM/yyyy', { locale: ptBR })}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {format(new Date(appointment.scheduled_at), 'HH:mm')}
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div>
-                        <div className="font-medium">{appointment.psychologist?.full_name || 'Psicólogo não identificado'}</div>
-                        {appointment.psychologist?.specialty && (
-                          <div className="text-sm text-muted-foreground">
-                            {appointment.psychologist.specialty}
-                          </div>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">
-                        {appointment.appointment_type === 'emergency' ? 'Emergência' : 'Regular'}
-                      </Badge>
+                      <div className="text-sm font-medium text-foreground">{appointment.psychologist?.full_name || 'Psicólogo não identificado'}</div>
+                      {appointment.psychologist?.specialty && (
+                        <div className="text-xs text-muted-foreground">
+                          {appointment.psychologist.specialty}
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell>
                       <Badge className={getStatusColor(appointment.status)}>
                         {getStatusText(appointment.status)}
                       </Badge>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-right">
                       <Button
                         variant="ghost"
                         size="sm"
+                        className="gap-1.5"
                         onClick={() => setSelectedAppointment(appointment)}
                       >
                         <Eye className="h-4 w-4" />
