@@ -9,6 +9,7 @@ import { soundsData } from "@/data/soundsData";
 import AnimationSelector from "@/components/sounds/AnimationSelector";
 import SoundAnimation, { type AnimationType } from "@/components/sounds/SoundAnimation";
 import { useAudioAnalyser } from "@/hooks/useAudioAnalyser";
+import { prefetchSounds } from "@/lib/soundPrefetch";
 
 const SoundPlayer = () => {
   const navigate = useNavigate();
