@@ -133,13 +133,7 @@ const AccountSettings = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="flex items-center gap-4 p-4 border-b border-border">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/profile")}>
-          <ArrowLeft size={20} />
-        </Button>
-        <h1 className="text-xl font-semibold text-foreground">Alterar Dados da Conta</h1>
-      </div>
+      <PageHeader title="Alterar Dados da Conta" backTo="/profile" />
 
       {/* Content */}
       <div className="p-4 space-y-6 max-w-md mx-auto">
