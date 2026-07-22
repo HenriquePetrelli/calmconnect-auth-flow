@@ -121,90 +121,96 @@ const PsychologistDashboard = () => {
   const todayConsultations = todayAppointments.length;
   const upcomingConsultations = upcomingAppointments.length;
 
+  const tabTriggerClass =
+    'flex items-center justify-center gap-1.5 sm:gap-2 py-2 sm:py-2.5 px-2 text-xs sm:text-sm font-medium rounded-md ' +
+    'data-[state=active]:bg-secondary data-[state=active]:text-white data-[state=active]:shadow-sm transition-colors';
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-30 bg-secondary text-secondary-foreground border-b border-secondary/40 shadow-sm">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 px-4 py-3 md:py-4">
-          <div className="min-w-0">
-            <p className="text-[11px] font-medium uppercase tracking-wider text-secondary-foreground/70">
-              Área do Psicólogo
-            </p>
-            <h1 className="text-lg md:text-xl font-semibold text-white truncate">
-              Olá, Dr.(a) {profile?.full_name?.split(' ')[0]}
-            </h1>
-          </div>
-          <div className="flex items-center gap-2">
-            <OnlineStatusToggle />
-            <div className="hidden sm:block w-px h-6 bg-white/20" aria-hidden />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-full text-white hover:bg-white/15 hover:text-white"
-              onMouseEnter={() => import('./PsychologistProfile')}
-              onClick={() => navigate('/psychologist-profile')}
-              title="Perfil"
-              aria-label="Perfil"
-            >
-              <User className="w-[18px] h-[18px]" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-full text-white hover:bg-destructive/40 hover:text-white"
-              onClick={handleLogout}
-              title="Sair"
-              aria-label="Sair"
-            >
-              <LogOut className="w-[18px] h-[18px]" />
-            </Button>
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3 md:py-4">
+          <div className="flex items-center justify-between gap-2 sm:gap-4">
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] sm:text-[11px] font-medium uppercase tracking-wider text-secondary-foreground/70">
+                Área do Psicólogo
+              </p>
+              <h1 className="text-base sm:text-lg md:text-xl font-semibold text-white truncate">
+                Olá, Dr.(a) {profile?.full_name?.split(' ')[0]}
+              </h1>
+            </div>
+            <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+              <OnlineStatusToggle />
+              <div className="hidden sm:block w-px h-6 bg-white/20" aria-hidden />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full text-white hover:bg-white/15 hover:text-white h-9 w-9"
+                onMouseEnter={() => import('./PsychologistProfile')}
+                onClick={() => navigate('/psychologist-profile')}
+                title="Perfil"
+                aria-label="Perfil"
+              >
+                <User className="w-[18px] h-[18px]" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full text-white hover:bg-destructive/40 hover:text-white h-9 w-9"
+                onClick={handleLogout}
+                title="Sair"
+                aria-label="Sair"
+              >
+                <LogOut className="w-[18px] h-[18px]" />
+              </Button>
+            </div>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-5 md:space-y-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-4 md:py-6 space-y-4 sm:space-y-5 md:space-y-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
-          <Card className="border-destructive/20 bg-gradient-to-br from-destructive/5 to-transparent transition-shadow">
-            <CardContent className="p-5">
-              <div className="flex items-start justify-between gap-3">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4">
+          <Card className="border-destructive/20 bg-gradient-to-br from-destructive/5 to-transparent">
+            <CardContent className="p-3 sm:p-5">
+              <div className="flex items-start justify-between gap-2 sm:gap-3">
                 <div className="min-w-0">
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Emergências</p>
-                  <p className="text-3xl font-bold text-destructive mt-1.5">{pendingEmergencies}</p>
-                  <p className="text-xs text-muted-foreground mt-1">pendentes</p>
+                  <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wide truncate">Emergências</p>
+                  <p className="text-xl sm:text-3xl font-bold text-destructive mt-1 sm:mt-1.5">{pendingEmergencies}</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 hidden sm:block">pendentes</p>
                 </div>
-                <div className="rounded-lg bg-destructive/10 p-2.5 shrink-0">
-                  <AlertTriangle className="w-5 h-5 text-destructive" />
+                <div className="rounded-lg bg-destructive/10 p-1.5 sm:p-2.5 shrink-0">
+                  <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-destructive" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent transition-shadow">
-            <CardContent className="p-5">
-              <div className="flex items-start justify-between gap-3">
+          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+            <CardContent className="p-3 sm:p-5">
+              <div className="flex items-start justify-between gap-2 sm:gap-3">
                 <div className="min-w-0">
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Hoje</p>
-                  <p className="text-3xl font-bold text-primary mt-1.5">{todayConsultations}</p>
-                  <p className="text-xs text-muted-foreground mt-1">consultas</p>
+                  <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wide truncate">Hoje</p>
+                  <p className="text-xl sm:text-3xl font-bold text-primary mt-1 sm:mt-1.5">{todayConsultations}</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 hidden sm:block">consultas</p>
                 </div>
-                <div className="rounded-lg bg-primary/10 p-2.5 shrink-0">
-                  <Calendar className="w-5 h-5 text-primary" />
+                <div className="rounded-lg bg-primary/10 p-1.5 sm:p-2.5 shrink-0">
+                  <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-secondary/30 bg-gradient-to-br from-secondary/10 to-transparent transition-shadow">
-            <CardContent className="p-5">
-              <div className="flex items-start justify-between gap-3">
+          <Card className="border-secondary/30 bg-gradient-to-br from-secondary/10 to-transparent">
+            <CardContent className="p-3 sm:p-5">
+              <div className="flex items-start justify-between gap-2 sm:gap-3">
                 <div className="min-w-0">
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Próximas</p>
-                  <p className="text-3xl font-bold text-secondary-foreground mt-1.5">{upcomingConsultations}</p>
-                  <p className="text-xs text-muted-foreground mt-1">agendadas</p>
+                  <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wide truncate">Próximas</p>
+                  <p className="text-xl sm:text-3xl font-bold text-secondary-foreground mt-1 sm:mt-1.5">{upcomingConsultations}</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 hidden sm:block">agendadas</p>
                 </div>
-                <div className="rounded-lg bg-secondary/20 p-2.5 shrink-0">
-                  <Clock className="w-5 h-5 text-secondary-foreground" />
+                <div className="rounded-lg bg-secondary/20 p-1.5 sm:p-2.5 shrink-0">
+                  <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-secondary-foreground" />
                 </div>
               </div>
             </CardContent>
@@ -213,23 +219,23 @@ const PsychologistDashboard = () => {
 
         {/* Main Content */}
         <Tabs defaultValue="emergency" className="space-y-4">
-          <TabsList className="w-full h-auto p-1 bg-muted/50 grid grid-cols-3 gap-1">
-            <TabsTrigger value="emergency" className="flex items-center gap-2 py-2.5 data-[state=active]:bg-secondary data-[state=active]:text-white data-[state=active]:shadow-sm">
-              <Bell className="w-4 h-4" />
-              <span className="hidden sm:inline">Emergências</span>
+          <TabsList className="w-full h-auto p-1 bg-muted/60 grid grid-cols-3 gap-1 rounded-lg">
+            <TabsTrigger value="emergency" className={tabTriggerClass}>
+              <Bell className="w-4 h-4 shrink-0" />
+              <span>Emergências</span>
               {pendingEmergencies > 0 && (
-                <Badge variant="destructive" className="ml-1 h-5 px-1.5">
+                <Badge variant="destructive" className="ml-0.5 h-4 sm:h-5 px-1 sm:px-1.5 text-[10px] sm:text-xs">
                   {pendingEmergencies}
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="consultations" className="flex items-center gap-2 py-2.5 data-[state=active]:bg-secondary data-[state=active]:text-white data-[state=active]:shadow-sm">
-              <Users className="w-4 h-4" />
-              <span className="hidden sm:inline">Consultas</span>
+            <TabsTrigger value="consultations" className={tabTriggerClass}>
+              <Users className="w-4 h-4 shrink-0" />
+              <span>Consultas</span>
             </TabsTrigger>
-            <TabsTrigger value="history" className="flex items-center gap-2 py-2.5 data-[state=active]:bg-secondary data-[state=active]:text-white data-[state=active]:shadow-sm">
-              <History className="w-4 h-4" />
-              <span className="hidden sm:inline">Histórico</span>
+            <TabsTrigger value="history" className={tabTriggerClass}>
+              <History className="w-4 h-4 shrink-0" />
+              <span>Histórico</span>
             </TabsTrigger>
           </TabsList>
 
