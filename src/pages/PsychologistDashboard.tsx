@@ -124,23 +124,23 @@ const PsychologistDashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-30 backdrop-blur bg-card/80 border-b border-border">
+      <header className="sticky top-0 z-30 bg-secondary text-secondary-foreground border-b border-secondary/40 shadow-sm">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 px-4 py-3 md:py-4">
           <div className="min-w-0">
-            <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+            <p className="text-[11px] font-medium uppercase tracking-wider text-secondary-foreground/70">
               Área do Psicólogo
             </p>
-            <h1 className="text-lg md:text-xl font-semibold text-foreground truncate">
+            <h1 className="text-lg md:text-xl font-semibold text-white truncate">
               Olá, Dr.(a) {profile?.full_name?.split(' ')[0]}
             </h1>
           </div>
           <div className="flex items-center gap-2">
             <OnlineStatusToggle />
-            <div className="hidden sm:block w-px h-6 bg-border" aria-hidden />
+            <div className="hidden sm:block w-px h-6 bg-white/20" aria-hidden />
             <Button
               variant="ghost"
               size="icon"
-              className="rounded-full hover:bg-primary/10 hover:text-primary"
+              className="rounded-full text-white hover:bg-white/15 hover:text-white"
               onMouseEnter={() => import('./PsychologistProfile')}
               onClick={() => navigate('/psychologist-profile')}
               title="Perfil"
@@ -151,7 +151,7 @@ const PsychologistDashboard = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="rounded-full hover:bg-destructive/10 hover:text-destructive"
+              className="rounded-full text-white hover:bg-destructive/40 hover:text-white"
               onClick={handleLogout}
               title="Sair"
               aria-label="Sair"
