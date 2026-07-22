@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { SkeletonFullPage } from '@/components/skeletons/Skeletons';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -109,14 +110,7 @@ const AdminDashboard = () => {
   };
 
   if (!isAdmin) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="flex items-center gap-2">
-          <Loader2 className="h-8 w-8 animate-spin" />
-          <span>Verificando permissões...</span>
-        </div>
-      </div>
-    );
+    return <SkeletonFullPage />;
   }
 
   return (

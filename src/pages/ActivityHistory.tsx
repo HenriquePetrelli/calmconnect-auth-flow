@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuarterlyActivities } from "@/hooks/useQuarterlyActivities";
 import { formatDateTime } from "@/utils/dateFormatters";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SkeletonSectionCard } from "@/components/skeletons/Skeletons";
 import jsPDF from 'jspdf';
 
 const ActivityHistory = () => {
@@ -126,9 +127,7 @@ const ActivityHistory = () => {
       {/* Content */}
       <div className="p-4 space-y-6">
         {loading ? (
-          <div className="text-center py-8 text-muted-foreground">
-            Carregando histórico...
-          </div>
+          <SkeletonSectionCard rows={6} accent="primary" />
         ) : availableMonths.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             Nenhuma atividade registrada nos últimos 3 meses

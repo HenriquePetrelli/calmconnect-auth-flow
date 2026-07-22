@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { SkeletonSectionCard } from '@/components/skeletons/Skeletons';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -69,14 +70,7 @@ export const PaymentsPanel = () => {
   const pendingPayments = payments.filter(p => p.total_pending_amount > 0).length;
 
   if (loading && !payments.length) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <div className="flex items-center gap-2">
-          <Loader2 className="h-6 w-6 animate-spin" />
-          <span>Carregando pagamentos...</span>
-        </div>
-      </div>
-    );
+    return <SkeletonSectionCard rows={5} accent="primary" />;
   }
 
   return (

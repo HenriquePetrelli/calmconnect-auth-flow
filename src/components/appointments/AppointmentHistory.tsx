@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { SkeletonSectionCard } from '@/components/skeletons/Skeletons';
 import {
   Table,
   TableBody,
@@ -167,16 +168,7 @@ export const AppointmentHistory = () => {
 
 
   if (loading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Carregando histórico...</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-64 bg-muted animate-pulse rounded-lg" />
-        </CardContent>
-      </Card>
-    );
+    return <SkeletonSectionCard rows={6} accent="muted" />;
   }
 
   return (

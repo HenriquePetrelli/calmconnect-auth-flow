@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SkeletonSectionCard } from '@/components/skeletons/Skeletons';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -176,16 +177,7 @@ const UpcomingConsultations = () => {
   };
 
   if (loading) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mr-3"></div>
-            <span className="text-muted-foreground">Carregando consultas...</span>
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return <SkeletonSectionCard rows={3} accent="primary" />;
   }
 
   return (
