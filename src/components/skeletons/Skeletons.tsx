@@ -64,18 +64,8 @@ export const SkeletonStatsGrid = ({ count = 4 }: { count?: number }) => (
         <Skeleton className="h-3 w-20" />
       </div>
     ))}
-  </ul>
-).type === "div" ? (
-  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-    {Array.from({ length: count }).map((_, i) => (
-      <div key={i} className="rounded-lg border bg-card p-4 space-y-3">
-        <Skeleton className="w-9 h-9 rounded-lg" />
-        <Skeleton className="h-7 w-16" />
-        <Skeleton className="h-3 w-20" />
-      </div>
-    ))}
   </div>
-) : null;
+);
 
 /** Card with header + body list. Drop-in replacement for a section spinner. */
 export const SkeletonSectionCard = ({
