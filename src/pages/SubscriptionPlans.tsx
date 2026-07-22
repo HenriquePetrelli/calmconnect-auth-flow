@@ -148,11 +148,11 @@ const SubscriptionPlans = () => {
     setShowDowngradeModal(true);
   };
 
-  return (
     <div className="min-h-screen bg-background">
       <PageHeader title="Planos de Assinatura" backTo="/home" />
-      <div className="p-4">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto p-4">
+
+
 
         <div className="text-center mb-16">
           <div className="mb-8">
