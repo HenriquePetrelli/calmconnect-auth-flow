@@ -69,20 +69,102 @@ export const AppointmentHistory = () => {
     }
   };
 
-  const filteredAppointments = appointments.filter((appointment) => {
-    // Only show declined and completed appointments in history
-    const isHistoryAppointment = ['declined', 'completed'].includes(appointment.status);
-    
-    if (!isHistoryAppointment) return false;
+  const filteredAppointments = useMemo(() => {
+    return appointments.filter((appointment) => {
+      const isHistoryAppointment = ['declined', 'completed'].includes(appointment.status);
+      if (!isHistoryAppointment) return false;
 
-    const matchesPsychologist = filterPsychologist === 'all' || !filterPsychologist || 
-      appointment.psychologist?.full_name?.toLowerCase().includes(filterPsychologist.toLowerCase());
-    
-    const matchesMonth = filterMonth === 'all' || !filterMonth || 
-      format(new Date(appointment.scheduled_at), 'yyyy-MM') === filterMonth;
+      const matchesPsychologist = filterPsychologist === 'all' || !filterPsychologist ||
+        appointment.psychologist?.full_name?.toLowerCase().includes(filterPsychologist.toLowerCase());
 
-    return matchesPsychologist && matchesMonth;
-  });
+      const matchesMonth = filterMonth === 'all' || !filterMonth ||
+        format(new Date(appointment.scheduled_at), 'yyyy-MM') === filterMonth;
+
+      return matchesPsychologist && matchesMonth;
+    });
+  }, [appointments, filterPsychologist, filterMonth]);
+
+  const availableMonths = useMemo(() => {
+    const months = new Set<string>();
+    appointments.forEach((a) => {
+      if (['declined', 'completed'].includes(a.status)) {
+        months.add(format(new Date(a.scheduled_at), 'yyyy-MM'));
+      }
+    });
+    return Array.from(months).sort().reverse();
+  }, [appointments]);
+
+  const formatMonthLabel = (monthKey: string) => {
+    const [year, month] = monthKey.split('-');
+    const date = new Date(parseInt(year), parseInt(month) - 1);
+    return date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  };
+
+  const totalPages = Math.max(1, Math.ceil(filteredAppointments.length / ITEMS_PER_PAGE));
+  const paginatedAppointments = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredAppointments.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredAppointments, currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterPsychologist, filterMonth]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalPages]);
+
+  const exportToCSV = () => {
+    if (filteredAppointments.length === 0) return;
+    const rows = [
+      ['Data', 'Hora', 'Psicólogo', 'Especialidade', 'Status'],
+      ...filteredAppointments.map((a) => [
+        format(new Date(a.scheduled_at), 'dd/MM/yyyy'),
+        format(new Date(a.scheduled_at), 'HH:mm'),
+        a.psychologist?.full_name || 'Não identificado',
+        a.psychologist?.specialty || '',
+        getStatusText(a.status),
+      ]),
+    ];
+    const csv = rows
+      .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `historico-consultas-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    link.click();
+  };
+
+  const exportToPDF = () => {
+    if (filteredAppointments.length === 0) return;
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text('Histórico de Consultas', 20, 20);
+    doc.setFontSize(10);
+    doc.text(`Gerado em: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 20, 28);
+
+    let y = 40;
+    filteredAppointments.forEach((a, i) => {
+      if (y > 275) {
+        doc.addPage();
+        y = 20;
+      }
+      const date = format(new Date(a.scheduled_at), 'dd/MM/yyyy HH:mm');
+      const name = a.psychologist?.full_name || 'Não identificado';
+      doc.setFontSize(11);
+      doc.text(`${i + 1}. ${name}`, 20, y);
+      doc.setFontSize(9);
+      doc.text(`${date}  -  ${getStatusText(a.status)}`, 25, y + 5);
+      if (a.psychologist?.specialty) {
+        doc.text(`Especialidade: ${a.psychologist.specialty}`, 25, y + 10);
+        y += 5;
+      }
+      y += 14;
+    });
+    doc.save(`historico-consultas-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+  };
+
 
   if (loading) {
     return (
