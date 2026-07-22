@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAchievements } from '@/hooks/useAchievements';
 import { AchievementCard } from '@/components/achievements/AchievementCard';
 import { AchievementModal } from '@/components/achievements/AchievementModal';
+import { SkeletonCardGrid } from '@/components/skeletons/Skeletons';
 
 const Achievements = () => {
   const navigate = useNavigate();
@@ -30,9 +31,7 @@ const Achievements = () => {
       {/* Content */}
       <div className="p-4">
         {loading ? (
-          <div className="text-center py-8 text-muted-foreground">
-            Carregando conquistas...
-          </div>
+          <SkeletonCardGrid count={6} />
         ) : achievements.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 space-y-4">
             <Sprout className="w-16 h-16 text-primary" />
