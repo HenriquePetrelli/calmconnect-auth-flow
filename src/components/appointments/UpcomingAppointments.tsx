@@ -64,7 +64,7 @@ export const UpcomingAppointments: React.FC = () => {
               <Calendar className="text-primary" size={18} />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-foreground">Próximas Consultas</h3>
+              <h3 className="text-base font-semibold text-foreground">Próximas Consultas</h3>
               <p className="text-sm text-muted-foreground font-normal">Suas consultas agendadas</p>
             </div>
           </CardTitle>
