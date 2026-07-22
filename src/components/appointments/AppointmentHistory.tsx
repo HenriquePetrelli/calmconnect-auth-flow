@@ -261,7 +261,7 @@ export const AppointmentHistory = () => {
             <>
               {/* Mobile: card list */}
               <div className="space-y-3 md:hidden">
-                {filteredAppointments.map((appointment) => (
+                {paginatedAppointments.map((appointment) => (
                   <div
                     key={appointment.id}
                     className="rounded-lg border bg-card p-4 space-y-3"
