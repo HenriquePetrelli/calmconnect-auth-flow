@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Calendar, Clock, Download, FileText } from "lucide-react";
+import { Calendar, Clock, Download, FileText } from "lucide-react";
+import PageHeader from "@/components/PageHeader";
 import { useNavigate } from "react-router-dom";
 import { useQuarterlyActivities } from "@/hooks/useQuarterlyActivities";
 import { formatDateTime } from "@/utils/dateFormatters";
