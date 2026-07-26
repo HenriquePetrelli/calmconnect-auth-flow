@@ -516,10 +516,11 @@ const SoundPlayer = () => {
               type="button"
               onClick={() => setIsFullscreen(true)}
               aria-label="Maximizar"
-              className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+              className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 hover:text-secondary-foreground"
             >
               <Maximize2 className="w-4 h-4" />
             </Button>
+
           </div>
         </div>
 
