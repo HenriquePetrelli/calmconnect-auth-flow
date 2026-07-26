@@ -521,21 +521,8 @@ const SoundPlayer = () => {
               <Maximize2 className="w-4 h-4" />
             </Button>
           </div>
-
-
-            {isPlaylist && (
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={nextTrack}
-                disabled={isLoading || !playlist || currentSoundIndex === playlist.length - 1}
-                className="rounded-full bg-muted/60 hover:bg-muted"
-              >
-                <SkipForward className="w-4 h-4" />
-              </Button>
-            )}
-          </div>
         </div>
+
 
 
 
