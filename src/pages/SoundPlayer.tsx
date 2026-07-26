@@ -520,11 +520,16 @@ const SoundPlayer = () => {
 
 
         {/* Animation + duration options */}
-        <div className="w-full shrink-0 mt-3 grid gap-2">
+        <div
+          className={`w-full shrink-0 mt-3 grid gap-2 transition-opacity ${
+            isLoading ? "opacity-50 pointer-events-none" : ""
+          }`}
+          aria-disabled={isLoading}
+        >
           <AnimationSelector selected={selectedAnimation} onChange={setSelectedAnimation} />
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
-            <Select value={selectedDuration} onValueChange={setSelectedDuration}>
+            <Select value={selectedDuration} onValueChange={setSelectedDuration} disabled={isLoading}>
               <SelectTrigger className="h-9 text-sm">
                 <SelectValue />
               </SelectTrigger>
@@ -540,6 +545,7 @@ const SoundPlayer = () => {
             </Select>
           </div>
         </div>
+
       </div>
 
       <audio
