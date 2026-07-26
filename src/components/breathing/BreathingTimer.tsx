@@ -12,17 +12,16 @@ interface BreathingTimerProps {
 type Phase = 'inhale' | 'hold' | 'exhale' | 'pause';
 
 const phaseMeta: Record<Phase, { label: string; color: string; icon: JSX.Element }> = {
-  inhale: { label: 'Inspirar', color: 'hsl(var(--primary))', icon: <Wind className="w-5 h-5" /> },
-  hold:   { label: 'Segurar', color: 'hsl(var(--secondary))', icon: <Heart className="w-5 h-5" /> },
-  exhale: { label: 'Expirar', color: 'hsl(var(--primary))', icon: <Waves className="w-5 h-5" /> },
-  pause:  { label: 'Pausa',   color: 'hsl(var(--muted-foreground))', icon: <PauseIcon className="w-5 h-5" /> },
+  inhale: { label: 'Inspirar', color: 'hsl(var(--primary))', icon: <Wind className="w-4 h-4" /> },
+  hold:   { label: 'Segurar', color: 'hsl(var(--secondary))', icon: <Heart className="w-4 h-4" /> },
+  exhale: { label: 'Expirar', color: 'hsl(var(--primary))', icon: <Waves className="w-4 h-4" /> },
+  pause:  { label: 'Pausa',   color: 'hsl(var(--muted-foreground))', icon: <PauseIcon className="w-4 h-4" /> },
 };
 
 const BreathingTimer = ({ pattern, isActive, onPhaseChange, onCycleComplete }: BreathingTimerProps) => {
   const [currentPhase, setCurrentPhase] = useState<Phase>('inhale');
   const [phaseElapsedMs, setPhaseElapsedMs] = useState(0);
   const phaseStartRef = useRef<number>(performance.now());
-  const pausedAccumRef = useRef<number>(0);
   const lastTickRef = useRef<number>(performance.now());
 
   const getNextPhase = (phase: Phase, pat: BreathingPattern): Phase => {
@@ -34,12 +33,10 @@ const BreathingTimer = ({ pattern, isActive, onPhaseChange, onCycleComplete }: B
     }
   };
 
-  // Reset on pattern change
   useEffect(() => {
     setCurrentPhase('inhale');
     setPhaseElapsedMs(0);
     phaseStartRef.current = performance.now();
-    pausedAccumRef.current = 0;
     lastTickRef.current = performance.now();
   }, [pattern]);
 
@@ -48,7 +45,6 @@ const BreathingTimer = ({ pattern, isActive, onPhaseChange, onCycleComplete }: B
       lastTickRef.current = performance.now();
       return;
     }
-    // When resuming, shift phaseStart so accumulated elapsed remains the same
     phaseStartRef.current = performance.now() - phaseElapsedMs;
 
     let raf = 0;
@@ -78,7 +74,6 @@ const BreathingTimer = ({ pattern, isActive, onPhaseChange, onCycleComplete }: B
   const progress = totalMs > 0 ? Math.min(1, phaseElapsedMs / totalMs) : 0;
   const remainingTime = Math.max(1, Math.ceil((totalMs - phaseElapsedMs) / 1000));
 
-  // Build segments for all active phases
   const segments = (['inhale', 'hold', 'exhale', 'pause'] as Phase[])
     .filter((p) => pattern[p] > 0);
   const totalDuration = segments.reduce((sum, p) => sum + pattern[p], 0);
@@ -86,27 +81,30 @@ const BreathingTimer = ({ pattern, isActive, onPhaseChange, onCycleComplete }: B
   const meta = phaseMeta[currentPhase];
 
   return (
-    <div className="w-full max-w-md mx-auto space-y-4">
-      {/* Phase indicator */}
+    <div className="w-full max-w-md mx-auto space-y-3">
+      {/* Phase indicator — elegant pill */}
       <div className="flex items-center justify-center gap-3">
         <div
-          className="w-10 h-10 rounded-full flex items-center justify-center text-white shadow-md transition-colors"
-          style={{ backgroundColor: meta.color }}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-full border transition-colors"
+          style={{
+            borderColor: `${meta.color.replace('hsl(', 'hsla(').replace(')', ', 0.25)')}`,
+            backgroundColor: `${meta.color.replace('hsl(', 'hsla(').replace(')', ', 0.08)')}`,
+            color: meta.color,
+          }}
         >
           {meta.icon}
-        </div>
-        <div className="text-center">
-          <p className="text-base font-semibold leading-none" style={{ color: meta.color }}>
+          <span className="text-xs font-semibold uppercase tracking-[0.14em]">
             {meta.label}
-          </p>
-          <p className="text-2xl font-bold tabular-nums mt-1" style={{ color: meta.color }}>
-            {remainingTime}s
-          </p>
+          </span>
+        </div>
+        <div className="flex items-baseline gap-1" style={{ color: meta.color }}>
+          <span className="text-3xl font-light tabular-nums leading-none">{remainingTime}</span>
+          <span className="text-xs font-medium opacity-70">s</span>
         </div>
       </div>
 
       {/* Segmented progress bar */}
-      <div className="flex gap-1 w-full">
+      <div className="flex gap-1.5 w-full">
         {segments.map((p) => {
           const widthPct = (pattern[p] / totalDuration) * 100;
           const isCurrent = p === currentPhase;
@@ -115,11 +113,11 @@ const BreathingTimer = ({ pattern, isActive, onPhaseChange, onCycleComplete }: B
           return (
             <div
               key={p}
-              className="relative h-2.5 rounded-full overflow-hidden bg-muted border border-border/50"
+              className="relative h-1.5 rounded-full overflow-hidden bg-muted/70"
               style={{ width: `${widthPct}%` }}
             >
               <div
-                className="absolute inset-y-0 left-0 rounded-full"
+                className="absolute inset-y-0 left-0 rounded-full transition-[width] duration-100 ease-linear"
                 style={{
                   width: `${fillPct}%`,
                   backgroundColor: phaseMeta[p].color,
@@ -131,28 +129,24 @@ const BreathingTimer = ({ pattern, isActive, onPhaseChange, onCycleComplete }: B
       </div>
 
       {/* Phase labels under segments */}
-      <div className="flex gap-1 w-full">
+      <div className="flex gap-1.5 w-full">
         {segments.map((p) => {
           const widthPct = (pattern[p] / totalDuration) * 100;
           const isCurrent = p === currentPhase;
           return (
-            <div
-              key={p}
-              className="text-center"
-              style={{ width: `${widthPct}%` }}
-            >
+            <div key={p} className="text-center" style={{ width: `${widthPct}%` }}>
               <p
-                className="text-[10px] font-semibold uppercase tracking-wide truncate"
+                className="text-[10px] font-semibold uppercase tracking-[0.12em] truncate transition-colors"
                 style={{
-                  color: isCurrent ? phaseMeta[p].color : 'hsl(var(--muted-foreground))',
+                  color: isCurrent ? phaseMeta[p].color : 'hsl(var(--muted-foreground) / 0.7)',
                 }}
               >
                 {phaseMeta[p].label}
               </p>
               <p
-                className="text-xs font-bold tabular-nums"
+                className="text-[11px] font-medium tabular-nums transition-colors"
                 style={{
-                  color: isCurrent ? phaseMeta[p].color : 'hsl(var(--muted-foreground))',
+                  color: isCurrent ? phaseMeta[p].color : 'hsl(var(--muted-foreground) / 0.5)',
                 }}
               >
                 {pattern[p]}s
