@@ -234,6 +234,70 @@ const SoundPlayer = () => {
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
+  const commitSeek = (nextValue: number) => {
+    const audio = audioRef.current;
+    const wasPlaying = isPlaying;
+    setCurrentTime(nextValue);
+    setScrubValue(nextValue);
+    setIsScrubbing(false);
+    if (!audio) return;
+    const applySeek = () => {
+      const d = Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : 0;
+      if (!d) {
+        pendingSeekRef.current = nextValue;
+        return;
+      }
+      const target = nextValue % d;
+      try {
+        audio.currentTime = Math.min(Math.max(target, 0), Math.max(d - 0.05, 0));
+      } catch {
+        pendingSeekRef.current = nextValue;
+        return;
+      }
+      pendingSeekRef.current = null;
+      if (wasPlaying) {
+        void resume();
+        audio.play().catch(console.error);
+      }
+    };
+    if (audio.readyState < 1) {
+      pendingSeekRef.current = nextValue;
+      const once = () => {
+        audio.removeEventListener("loadedmetadata", once);
+        applySeek();
+      };
+      audio.addEventListener("loadedmetadata", once);
+    } else {
+      applySeek();
+    }
+  };
+
+  // Auto-hide dos controles em fullscreen (2.5s de inatividade)
+  const bumpFsControls = () => {
+    setFsControlsVisible(true);
+    if (fsInactivityRef.current) clearTimeout(fsInactivityRef.current);
+    fsInactivityRef.current = setTimeout(() => setFsControlsVisible(false), 2500);
+  };
+
+  useEffect(() => {
+    if (!isFullscreen) {
+      if (fsInactivityRef.current) clearTimeout(fsInactivityRef.current);
+      setFsControlsVisible(true);
+      return;
+    }
+    bumpFsControls();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsFullscreen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      if (fsInactivityRef.current) clearTimeout(fsInactivityRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isFullscreen]);
+
+
   if (!currentSound) {
     return (
       <div className="min-h-screen flex items-center justify-center">
