@@ -175,6 +175,8 @@ const PracticeScreen = ({ technique, onBack, onComplete }: PracticeScreenProps) 
         onTogglePlay={togglePlayPause}
         onReset={handleReset}
         formatTime={formatTime}
+        animationType={selectedAnimation}
+        levelsRef={levelsRef}
       />
     );
   }
