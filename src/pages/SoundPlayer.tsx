@@ -468,7 +468,7 @@ const SoundPlayer = () => {
             <span>{formatTime(duration)}</span>
           </div>
 
-          <div className="flex items-center justify-center gap-3 pt-1">
+          <div className="relative flex items-center justify-center gap-3 pt-1">
             {isPlaylist && (
               <Button
                 variant="ghost"
@@ -497,6 +497,31 @@ const SoundPlayer = () => {
                 <Play className="w-5 h-5 ml-0.5" />
               )}
             </Button>
+
+            {isPlaylist && (
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={nextTrack}
+                disabled={isLoading || !playlist || currentSoundIndex === playlist.length - 1}
+                className="rounded-full bg-muted/60 hover:bg-muted"
+              >
+                <SkipForward className="w-4 h-4" />
+              </Button>
+            )}
+
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              type="button"
+              onClick={() => setIsFullscreen(true)}
+              aria-label="Maximizar"
+              className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+            >
+              <Maximize2 className="w-4 h-4" />
+            </Button>
+          </div>
+
 
             {isPlaylist && (
               <Button
