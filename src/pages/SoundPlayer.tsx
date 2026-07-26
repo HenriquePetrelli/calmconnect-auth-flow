@@ -299,20 +299,51 @@ const SoundPlayer = () => {
             max={duration}
             step={1}
             onValueChange={(v) => {
-              const nextValue = v[0];
+              // Durante o arraste, apenas atualiza a UI — não busca no áudio
+              // (evita rebuffer contínuo e drift do ponteiro).
               setIsScrubbing(true);
-              setScrubValue(nextValue);
-              seekAudioToSessionTime(nextValue);
+              setScrubValue(v[0]);
             }}
             onValueCommit={(v) => {
               const nextValue = v[0];
+              const audio = audioRef.current;
+              const wasPlaying = isPlaying;
+
               setCurrentTime(nextValue);
               setScrubValue(nextValue);
-              seekAudioToSessionTime(nextValue);
               setIsScrubbing(false);
-              if (isPlaying && audioRef.current?.paused) {
-                void resume();
-                audioRef.current.play().catch(console.error);
+
+              if (!audio) return;
+
+              const applySeek = () => {
+                const d = Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : 0;
+                if (!d) {
+                  pendingSeekRef.current = nextValue;
+                  return;
+                }
+                const target = nextValue % d;
+                try {
+                  audio.currentTime = Math.min(Math.max(target, 0), Math.max(d - 0.05, 0));
+                } catch {
+                  pendingSeekRef.current = nextValue;
+                  return;
+                }
+                pendingSeekRef.current = null;
+                if (wasPlaying) {
+                  void resume();
+                  audio.play().catch(console.error);
+                }
+              };
+
+              if (audio.readyState < 1) {
+                pendingSeekRef.current = nextValue;
+                const once = () => {
+                  audio.removeEventListener("loadedmetadata", once);
+                  applySeek();
+                };
+                audio.addEventListener("loadedmetadata", once);
+              } else {
+                applySeek();
               }
             }}
           />
