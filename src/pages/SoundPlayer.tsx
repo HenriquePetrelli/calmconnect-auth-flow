@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { Play, Pause, SkipBack, SkipForward, Clock, Loader2 } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Clock, Loader2, Maximize2, X } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { soundsData } from "@/data/soundsData";
