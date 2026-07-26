@@ -382,6 +382,7 @@ const SoundPlayer = () => {
   }
 
   const progressPct = (currentTime / duration) * 100;
+  const isLoading = isBuffering && !hasStarted;
 
   return (
     <div className="h-screen flex flex-col bg-gradient-to-br from-background to-secondary/5 overflow-hidden">
@@ -400,10 +401,10 @@ const SoundPlayer = () => {
               audioRef={audioRef}
               circular
             />
-            {/* Overlay de carregamento antes do primeiro play */}
-            {isBuffering && !hasStarted && (
-              <div className="absolute inset-0 rounded-full flex flex-col items-center justify-center bg-black/35 backdrop-blur-sm text-white animate-fade-in">
-                <Loader2 className="w-8 h-8 animate-spin mb-3" />
+            {/* Overlay de carregamento antes do primeiro play — bloqueia interação */}
+            {isLoading && (
+              <div className="absolute inset-0 rounded-full flex flex-col items-center justify-center bg-black/45 backdrop-blur-sm text-white animate-fade-in z-20">
+                <Loader2 className="w-9 h-9 animate-spin mb-3" />
                 <p className="text-sm font-medium">Carregando som...</p>
                 {loadProgress > 0 && (
                   <div className="mt-3 w-32 h-1.5 rounded-full bg-white/20 overflow-hidden">
@@ -415,22 +416,28 @@ const SoundPlayer = () => {
                 )}
               </div>
             )}
-            {/* Indicador sutil de rebuffer durante a reprodução */}
+            {/* Indicador sutil de rebuffer durante a reprodução — apenas spinner */}
             {isBuffering && hasStarted && (
-              <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-sm text-white text-xs animate-fade-in">
-                <Loader2 className="w-3 h-3 animate-spin" />
-                Buffer
+              <div
+                className="absolute inset-0 rounded-full flex items-center justify-center pointer-events-none animate-fade-in z-10"
+                aria-label="Carregando"
+              >
+                <div className="h-11 w-11 rounded-full bg-black/45 backdrop-blur-sm flex items-center justify-center ring-1 ring-white/15">
+                  <Loader2 className="w-5 h-5 animate-spin text-white" />
+                </div>
               </div>
             )}
-            {/* Botão maximizar */}
-            <button
-              type="button"
-              onClick={() => setIsFullscreen(true)}
-              aria-label="Maximizar"
-              className="absolute bottom-3 right-3 z-10 h-9 w-9 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm text-white flex items-center justify-center transition-colors ring-1 ring-white/15"
-            >
-              <Maximize2 className="w-4 h-4" />
-            </button>
+            {/* Botão maximizar — canto superior direito, mais discreto */}
+            {!isLoading && (
+              <button
+                type="button"
+                onClick={() => setIsFullscreen(true)}
+                aria-label="Maximizar"
+                className="absolute top-3 right-3 z-10 h-8 w-8 rounded-full bg-white/10 hover:bg-white/25 backdrop-blur-md text-white flex items-center justify-center transition-colors ring-1 ring-white/20"
+              >
+                <Maximize2 className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
         </div>
 
@@ -442,11 +449,17 @@ const SoundPlayer = () => {
         </div>
 
         {/* Progress + controls */}
-        <div className="w-full shrink-0 mt-3 space-y-2">
+        <div
+          className={`w-full shrink-0 mt-3 space-y-2 transition-opacity ${
+            isLoading ? "opacity-50 pointer-events-none" : ""
+          }`}
+          aria-disabled={isLoading}
+        >
           <Slider
             value={[isScrubbing ? scrubValue : Math.min(currentTime, duration)]}
             max={duration}
             step={1}
+            disabled={isLoading}
             onValueChange={(v) => {
               // Durante o arraste, apenas atualiza a UI — não busca no áudio
               // (evita rebuffer contínuo e drift do ponteiro).
@@ -466,7 +479,7 @@ const SoundPlayer = () => {
                 variant="ghost"
                 size="icon-sm"
                 onClick={prevTrack}
-                disabled={currentSoundIndex === 0}
+                disabled={isLoading || currentSoundIndex === 0}
                 className="rounded-full bg-muted/60 hover:bg-muted"
               >
                 <SkipBack className="w-4 h-4" />
@@ -474,18 +487,14 @@ const SoundPlayer = () => {
             )}
             <Button
               size="icon-lg"
-              disabled={isBuffering && !hasStarted}
+              disabled={isLoading}
               className="w-14 h-14 rounded-full bg-primary hover:bg-primary-hover text-primary-foreground shadow-lg disabled:opacity-70 disabled:cursor-wait"
               onClick={togglePlay}
               aria-label={
-                isBuffering && !hasStarted
-                  ? "Carregando som"
-                  : isPlaying
-                  ? "Pausar"
-                  : "Reproduzir"
+                isLoading ? "Carregando som" : isPlaying ? "Pausar" : "Reproduzir"
               }
             >
-              {isBuffering && !hasStarted ? (
+              {isLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : isPlaying ? (
                 <Pause className="w-5 h-5" />
@@ -499,7 +508,7 @@ const SoundPlayer = () => {
                 variant="ghost"
                 size="icon-sm"
                 onClick={nextTrack}
-                disabled={!playlist || currentSoundIndex === playlist.length - 1}
+                disabled={isLoading || !playlist || currentSoundIndex === playlist.length - 1}
                 className="rounded-full bg-muted/60 hover:bg-muted"
               >
                 <SkipForward className="w-4 h-4" />
@@ -507,6 +516,8 @@ const SoundPlayer = () => {
             )}
           </div>
         </div>
+
+
 
         {/* Animation + duration options */}
         <div className="w-full shrink-0 mt-3 grid gap-2">
