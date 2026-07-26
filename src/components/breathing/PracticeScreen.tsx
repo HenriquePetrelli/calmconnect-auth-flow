@@ -17,8 +17,10 @@ import SoundAnimation, { type AnimationType } from "@/components/sounds/SoundAni
 import AnimationSelector from "@/components/sounds/AnimationSelector";
 import ContextualPhrases from "./ContextualPhrases";
 import BreathingTimer from "./BreathingTimer";
+import BreathingOrb from "./BreathingOrb";
 import PatternSelector from "./PatternSelector";
 import { BreathingPattern, getPatternByTechniqueId } from "./BreathingPatterns";
+import { useBreathingPhase } from "@/hooks/useBreathingPhase";
 import { cn } from "@/lib/utils";
 import PageHeader from "@/components/PageHeader";
 
