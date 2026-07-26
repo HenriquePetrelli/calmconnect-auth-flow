@@ -606,8 +606,8 @@ const SoundPlayer = () => {
             </button>
 
             {/* Título */}
-            <div className="absolute top-5 left-6 text-white pointer-events-none">
-              <h3 className="text-lg font-semibold leading-tight">{currentSound.name}</h3>
+            <div className="absolute top-5 left-6 pointer-events-none">
+              <h3 className="text-lg font-semibold leading-tight text-white">{currentSound.name}</h3>
               <p className="text-xs text-white/70 mt-0.5">{currentSound.category}</p>
             </div>
 
