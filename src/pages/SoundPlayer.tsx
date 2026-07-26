@@ -142,6 +142,22 @@ const SoundPlayer = () => {
     };
     const onProgress = () => updateProgress();
 
+    const onPause = () => {
+      // Espelha pausas do elemento (ex.: browser interrompeu) para a UI.
+      if (isPlayingRef.current) setIsPlaying(false);
+    };
+    const onPlayEvent = () => {
+      // Se o usuário está com o player pausado mas algo (context resume,
+      // rebuffer, race do play() promise) tentou retomar sozinho, cancela.
+      if (!isPlayingRef.current) {
+        try {
+          audio.pause();
+        } catch {
+          /* noop */
+        }
+      }
+    };
+
     audio.addEventListener("waiting", onWaiting);
     audio.addEventListener("stalled", onWaiting);
     audio.addEventListener("loadstart", onWaiting);
@@ -150,6 +166,8 @@ const SoundPlayer = () => {
     audio.addEventListener("playing", onPlaying);
     audio.addEventListener("progress", onProgress);
     audio.addEventListener("loadeddata", onProgress);
+    audio.addEventListener("pause", onPause);
+    audio.addEventListener("play", onPlayEvent);
 
     return () => {
       audio.removeEventListener("waiting", onWaiting);
@@ -160,6 +178,8 @@ const SoundPlayer = () => {
       audio.removeEventListener("playing", onPlaying);
       audio.removeEventListener("progress", onProgress);
       audio.removeEventListener("loadeddata", onProgress);
+      audio.removeEventListener("pause", onPause);
+      audio.removeEventListener("play", onPlayEvent);
     };
   }, [currentSound?.id]);
 
