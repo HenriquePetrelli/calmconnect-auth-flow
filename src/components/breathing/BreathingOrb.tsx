@@ -10,7 +10,7 @@ interface BreathingOrbProps {
 const easeInOutSine = (t: number) => -(Math.cos(Math.PI * t) - 1) / 2;
 
 const PHASE_COLORS: Record<BreathingPhaseState["phase"], string> = {
-  inhale: "hsl(var(--primary))",
+  inhale: "hsl(var(--secondary))",
   hold: "hsl(var(--secondary))",
   exhale: "hsl(var(--primary))",
   pause: "hsl(var(--muted-foreground))",
