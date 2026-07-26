@@ -349,6 +349,15 @@ const SoundPlayer = () => {
                 Buffer
               </div>
             )}
+            {/* Botão maximizar */}
+            <button
+              type="button"
+              onClick={() => setIsFullscreen(true)}
+              aria-label="Maximizar"
+              className="absolute bottom-3 right-3 z-10 h-9 w-9 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm text-white flex items-center justify-center transition-colors ring-1 ring-white/15"
+            >
+              <Maximize2 className="w-4 h-4" />
+            </button>
           </div>
         </div>
 
