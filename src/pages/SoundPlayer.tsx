@@ -28,6 +28,9 @@ const SoundPlayer = () => {
   const [isBuffering, setIsBuffering] = useState(true);
   const [loadProgress, setLoadProgress] = useState(0);
   const [hasStarted, setHasStarted] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [fsControlsVisible, setFsControlsVisible] = useState(true);
+  const fsInactivityRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingSeekRef = useRef<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { levelsRef, resume } = useAudioAnalyser(audioRef.current, {
