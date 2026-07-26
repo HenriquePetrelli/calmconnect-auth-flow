@@ -430,15 +430,8 @@ const SoundPlayer = () => {
                 </div>
               </div>
             )}
-            {/* Botão maximizar — canto superior direito, sempre visível */}
-            <button
-              type="button"
-              onClick={() => setIsFullscreen(true)}
-              aria-label="Maximizar"
-              className="absolute top-3 right-3 z-30 h-8 w-8 rounded-full bg-white/10 hover:bg-white/25 backdrop-blur-md text-white flex items-center justify-center transition-colors ring-1 ring-white/20"
-            >
-              <Maximize2 className="w-3.5 h-3.5" />
-            </button>
+
+
 
           </div>
         </div>
@@ -475,7 +468,7 @@ const SoundPlayer = () => {
             <span>{formatTime(duration)}</span>
           </div>
 
-          <div className="flex items-center justify-center gap-3 pt-1">
+          <div className="relative flex items-center justify-center gap-3 pt-1">
             {isPlaylist && (
               <Button
                 variant="ghost"
@@ -516,8 +509,20 @@ const SoundPlayer = () => {
                 <SkipForward className="w-4 h-4" />
               </Button>
             )}
+
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              type="button"
+              onClick={() => setIsFullscreen(true)}
+              aria-label="Maximizar"
+              className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+            >
+              <Maximize2 className="w-4 h-4" />
+            </Button>
           </div>
         </div>
+
 
 
 
