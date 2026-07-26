@@ -325,9 +325,11 @@ const SoundPlayer = () => {
         return;
       }
       pendingSeekRef.current = null;
-      if (wasPlaying) {
+      if (wasPlaying && isPlayingRef.current) {
         void resume();
-        audio.play().catch(console.error);
+        audio.play().catch(() => {
+          /* noop */
+        });
       }
     };
     if (audio.readyState < 1) {
