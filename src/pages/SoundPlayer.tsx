@@ -525,6 +525,7 @@ const SoundPlayer = () => {
               type={selectedAnimation}
               isPlaying={isPlaying}
               levelsRef={levelsRef}
+              audioRef={audioRef}
             />
           </div>
 
