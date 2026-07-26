@@ -165,33 +165,75 @@ const SoundPlayer = () => {
     setDuration(parseInt(selectedDuration) * 60);
   }, [selectedDuration]);
 
+  // Avanço da sessão via requestAnimationFrame (suave e preciso), com
+  // sincronização em 'timeupdate' / 'loadedmetadata' do <audio> para
+  // manter o ponteiro alinhado com a reprodução real.
+  const rafRef = useRef<number | null>(null);
+  const lastTickRef = useRef<number | null>(null);
+
   useEffect(() => {
-    let interval: ReturnType<typeof setTimeout>;
-    if (isPlaying && !isScrubbing && currentTime < duration) {
-      interval = setInterval(() => {
-        setCurrentTime((prev) => prev + 1);
-      }, 1000);
-    } else if (currentTime >= duration) {
-      if (isPlaylist && playlist && currentSoundIndex < playlist.length - 1) {
-        // Auto advance to next track in playlist
-        setCurrentSoundIndex((prev) => prev + 1);
-        setCurrentTime(0);
-        if (audioRef.current) audioRef.current.currentTime = 0;
-      } else {
-        if (audioRef.current) audioRef.current.pause();
-        const totalPlayed = isPlaylist && playlist ? playlist.length : 1;
-        navigate("/sounds/feedback", {
-          state: {
-            sound: currentSound,
-            duration: selectedDuration,
-            isPlaylist,
-            totalSounds: totalPlayed,
-          },
-        });
-      }
+    const shouldRun = isPlaying && !isScrubbing && currentTime < duration;
+    if (!shouldRun) {
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+      lastTickRef.current = null;
+      return;
     }
-    return () => clearInterval(interval);
-  }, [isPlaying, isScrubbing, currentTime, duration, navigate, currentSound, selectedDuration, isPlaylist]);
+
+    const step = (now: number) => {
+      const last = lastTickRef.current ?? now;
+      const deltaSec = (now - last) / 1000;
+      lastTickRef.current = now;
+      setCurrentTime((prev) => Math.min(prev + deltaSec, duration));
+      rafRef.current = requestAnimationFrame(step);
+    };
+    rafRef.current = requestAnimationFrame(step);
+
+    return () => {
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+      lastTickRef.current = null;
+    };
+  }, [isPlaying, isScrubbing, duration, currentTime < duration]);
+
+  // Fim de sessão / auto-advance de playlist.
+  useEffect(() => {
+    if (currentTime < duration) return;
+    if (isPlaylist && playlist && currentSoundIndex < playlist.length - 1) {
+      setCurrentSoundIndex((prev) => prev + 1);
+      setCurrentTime(0);
+      if (audioRef.current) audioRef.current.currentTime = 0;
+      return;
+    }
+    if (audioRef.current) audioRef.current.pause();
+    const totalPlayed = isPlaylist && playlist ? playlist.length : 1;
+    navigate("/sounds/feedback", {
+      state: {
+        sound: currentSound,
+        duration: selectedDuration,
+        isPlaylist,
+        totalSounds: totalPlayed,
+      },
+    });
+  }, [currentTime, duration, navigate, currentSound, selectedDuration, isPlaylist, playlist, currentSoundIndex]);
+
+  // Sincroniza com eventos do <audio> para precisão fina do ponteiro.
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const resyncFromAudio = () => {
+      // Realinha o "drift" acumulado do rAF ao tick do áudio, sem forçar
+      // grandes saltos — mantém o slider preciso durante a reprodução.
+      lastTickRef.current = null;
+    };
+    audio.addEventListener("timeupdate", resyncFromAudio);
+    audio.addEventListener("loadedmetadata", resyncFromAudio);
+    return () => {
+      audio.removeEventListener("timeupdate", resyncFromAudio);
+      audio.removeEventListener("loadedmetadata", resyncFromAudio);
+    };
+  }, [currentSound?.id]);
+
 
   const togglePlay = () => {
     if (audioRef.current) {
@@ -229,10 +271,12 @@ const SoundPlayer = () => {
   };
 
   const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
+    const total = Math.max(0, Math.floor(seconds));
+    const mins = Math.floor(total / 60);
+    const secs = total % 60;
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
+
 
   const commitSeek = (nextValue: number) => {
     const audio = audioRef.current;
