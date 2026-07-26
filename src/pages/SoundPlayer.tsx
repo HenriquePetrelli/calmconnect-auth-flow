@@ -33,6 +33,10 @@ const SoundPlayer = () => {
   const fsInactivityRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingSeekRef = useRef<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const isPlayingRef = useRef(true);
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
   const { levelsRef, resume } = useAudioAnalyser(audioRef.current, {
     enabled: isPlaying,
   });
@@ -97,9 +101,11 @@ const SoundPlayer = () => {
       audio.onloadedmetadata = () => {
         seekAudioToSessionTime(pendingSeekRef.current ?? currentTime);
       };
-      if (isPlaying) {
+      if (isPlayingRef.current) {
         void resume();
-        audio.play().catch(console.error);
+        audio.play().catch(() => {
+          /* ignora AbortError e falhas de autoplay */
+        });
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -138,6 +144,22 @@ const SoundPlayer = () => {
     };
     const onProgress = () => updateProgress();
 
+    const onPause = () => {
+      // Espelha pausas do elemento (ex.: browser interrompeu) para a UI.
+      if (isPlayingRef.current) setIsPlaying(false);
+    };
+    const onPlayEvent = () => {
+      // Se o usuário está com o player pausado mas algo (context resume,
+      // rebuffer, race do play() promise) tentou retomar sozinho, cancela.
+      if (!isPlayingRef.current) {
+        try {
+          audio.pause();
+        } catch {
+          /* noop */
+        }
+      }
+    };
+
     audio.addEventListener("waiting", onWaiting);
     audio.addEventListener("stalled", onWaiting);
     audio.addEventListener("loadstart", onWaiting);
@@ -146,6 +168,8 @@ const SoundPlayer = () => {
     audio.addEventListener("playing", onPlaying);
     audio.addEventListener("progress", onProgress);
     audio.addEventListener("loadeddata", onProgress);
+    audio.addEventListener("pause", onPause);
+    audio.addEventListener("play", onPlayEvent);
 
     return () => {
       audio.removeEventListener("waiting", onWaiting);
@@ -156,6 +180,8 @@ const SoundPlayer = () => {
       audio.removeEventListener("playing", onPlaying);
       audio.removeEventListener("progress", onProgress);
       audio.removeEventListener("loadeddata", onProgress);
+      audio.removeEventListener("pause", onPause);
+      audio.removeEventListener("play", onPlayEvent);
     };
   }, [currentSound?.id]);
 
@@ -299,9 +325,11 @@ const SoundPlayer = () => {
         return;
       }
       pendingSeekRef.current = null;
-      if (wasPlaying) {
+      if (wasPlaying && isPlayingRef.current) {
         void resume();
-        audio.play().catch(console.error);
+        audio.play().catch(() => {
+          /* noop */
+        });
       }
     };
     if (audio.readyState < 1) {
