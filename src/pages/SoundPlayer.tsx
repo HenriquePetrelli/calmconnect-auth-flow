@@ -101,9 +101,11 @@ const SoundPlayer = () => {
       audio.onloadedmetadata = () => {
         seekAudioToSessionTime(pendingSeekRef.current ?? currentTime);
       };
-      if (isPlaying) {
+      if (isPlayingRef.current) {
         void resume();
-        audio.play().catch(console.error);
+        audio.play().catch(() => {
+          /* ignora AbortError e falhas de autoplay */
+        });
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
