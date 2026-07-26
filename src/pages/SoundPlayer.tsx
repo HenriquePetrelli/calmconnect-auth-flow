@@ -380,48 +380,7 @@ const SoundPlayer = () => {
               setIsScrubbing(true);
               setScrubValue(v[0]);
             }}
-            onValueCommit={(v) => {
-              const nextValue = v[0];
-              const audio = audioRef.current;
-              const wasPlaying = isPlaying;
-
-              setCurrentTime(nextValue);
-              setScrubValue(nextValue);
-              setIsScrubbing(false);
-
-              if (!audio) return;
-
-              const applySeek = () => {
-                const d = Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : 0;
-                if (!d) {
-                  pendingSeekRef.current = nextValue;
-                  return;
-                }
-                const target = nextValue % d;
-                try {
-                  audio.currentTime = Math.min(Math.max(target, 0), Math.max(d - 0.05, 0));
-                } catch {
-                  pendingSeekRef.current = nextValue;
-                  return;
-                }
-                pendingSeekRef.current = null;
-                if (wasPlaying) {
-                  void resume();
-                  audio.play().catch(console.error);
-                }
-              };
-
-              if (audio.readyState < 1) {
-                pendingSeekRef.current = nextValue;
-                const once = () => {
-                  audio.removeEventListener("loadedmetadata", once);
-                  applySeek();
-                };
-                audio.addEventListener("loadedmetadata", once);
-              } else {
-                applySeek();
-              }
-            }}
+            onValueCommit={(v) => commitSeek(v[0])}
           />
           <div className="flex justify-between text-xs text-muted-foreground font-mono">
             <span>{formatTime(isScrubbing ? scrubValue : currentTime)}</span>
