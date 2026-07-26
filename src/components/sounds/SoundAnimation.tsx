@@ -455,15 +455,6 @@ function drawBreathing(
   ctx.arc(cx, cy, r, 0, Math.PI * 2);
   ctx.stroke();
 
-  // Guia textual sutil
-  if (intensity > 0.4) {
-    const label = cycle > 0.7 ? "Inspire" : cycle < 0.3 ? "Expire" : "Segure";
-    ctx.fillStyle = `rgba(255,255,255,${0.35 * intensity})`;
-    ctx.font = "500 12px system-ui, -apple-system, sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(label, cx, cy);
-  }
 }
 
 function drawAmbient(
