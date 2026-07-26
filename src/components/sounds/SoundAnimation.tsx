@@ -95,7 +95,14 @@ const SoundAnimation = ({ type, isPlaying, levelsRef, circular = false, audioRef
       // Fade play/pause
       const target = isPlaying ? 1 : 0;
       stateRef.current.intensity = lerp(stateRef.current.intensity, target, 0.06 * dt);
-      stateRef.current.time += dt * 0.016;
+      // Sincroniza o "relógio" da animação com a posição do áudio quando
+      // disponível — assim o seek move a visualização junto com a música.
+      const audioEl = audioRef?.current;
+      if (audioEl && Number.isFinite(audioEl.currentTime)) {
+        stateRef.current.time = audioEl.currentTime;
+      } else {
+        stateRef.current.time += dt * 0.016;
+      }
 
       // Suaviza levels para movimento orgânico
       const raw = levelsRef.current;
