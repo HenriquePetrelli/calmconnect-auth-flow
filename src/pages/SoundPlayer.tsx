@@ -33,6 +33,10 @@ const SoundPlayer = () => {
   const fsInactivityRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingSeekRef = useRef<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const isPlayingRef = useRef(true);
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
   const { levelsRef, resume } = useAudioAnalyser(audioRef.current, {
     enabled: isPlaying,
   });
