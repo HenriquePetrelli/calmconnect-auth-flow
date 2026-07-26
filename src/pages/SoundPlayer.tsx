@@ -17,7 +17,7 @@ const SoundPlayer = () => {
   const { soundId, playlistId } = useParams<{ soundId: string; playlistId?: string }>();
   const startIndex = (location.state as { startIndex?: number } | null)?.startIndex ?? 0;
 
-  const [isPlaying, setIsPlaying] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(600);
   const [selectedDuration, setSelectedDuration] = useState("10");
@@ -33,7 +33,7 @@ const SoundPlayer = () => {
   const fsInactivityRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingSeekRef = useRef<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const isPlayingRef = useRef(true);
+  const isPlayingRef = useRef(false);
   useEffect(() => {
     isPlayingRef.current = isPlaying;
   }, [isPlaying]);
@@ -264,8 +264,10 @@ const SoundPlayer = () => {
   const togglePlay = () => {
     if (audioRef.current) {
       if (isPlaying) {
+        isPlayingRef.current = false;
         audioRef.current.pause();
       } else {
+        isPlayingRef.current = true;
         void resume();
         audioRef.current.play().catch(console.error);
       }
@@ -275,6 +277,7 @@ const SoundPlayer = () => {
 
   const resetTimer = (autoPlay = false) => {
     setCurrentTime(0);
+    isPlayingRef.current = autoPlay;
     setIsPlaying(autoPlay);
     if (audioRef.current) {
       audioRef.current.pause();
@@ -405,7 +408,7 @@ const SoundPlayer = () => {
             {isLoading && (
               <div className="absolute inset-0 rounded-full flex flex-col items-center justify-center bg-black/45 backdrop-blur-sm text-white animate-fade-in z-20">
                 <Loader2 className="w-9 h-9 animate-spin mb-3" />
-                <p className="text-sm font-medium">Carregando som...</p>
+                <p className="text-sm font-medium !text-white">Carregando som...</p>
                 {loadProgress > 0 && (
                   <div className="mt-3 w-32 h-1.5 rounded-full bg-white/20 overflow-hidden">
                     <div
