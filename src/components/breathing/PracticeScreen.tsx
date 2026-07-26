@@ -350,21 +350,6 @@ const ExerciseView = ({
   animationType,
   levelsRef,
 }: ExerciseViewProps) => {
-
-const ExerciseView = ({
-  pattern,
-  isPlaying,
-  cycleCount,
-  cyclePhase,
-  timeRemaining,
-  totalSeconds,
-  onPhaseChange,
-  onCycleComplete,
-  onBack,
-  onTogglePlay,
-  onReset,
-  formatTime,
-}: ExerciseViewProps) => {
   const state = useBreathingPhase(pattern, isPlaying, onPhaseChange, onCycleComplete);
   const sessionProgress = totalSeconds > 0 ? 1 - timeRemaining / totalSeconds : 0;
 
@@ -390,10 +375,21 @@ const ExerciseView = ({
         </div>
 
         <div className="flex-1 min-h-0 flex items-center justify-center w-full py-3">
-          <div className="aspect-square h-full max-h-[42vh] max-w-[42vh]">
-            <BreathingOrb state={state} isPlaying={isPlaying} />
+          <div className="relative aspect-square h-full max-h-[42vh] max-w-[42vh]">
+            <div className="absolute inset-0 rounded-full overflow-hidden opacity-70">
+              <SoundAnimation
+                type={animationType}
+                isPlaying={isPlaying}
+                levelsRef={levelsRef}
+                circular
+              />
+            </div>
+            <div className="absolute inset-0">
+              <BreathingOrb state={state} isPlaying={isPlaying} />
+            </div>
           </div>
         </div>
+
 
         <div className="shrink-0 min-h-[3rem] flex items-center">
           <ContextualPhrases
