@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { Play, Pause, SkipBack, SkipForward, Clock, Loader2 } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Clock, Loader2, Maximize2, X } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { soundsData } from "@/data/soundsData";
@@ -28,6 +28,9 @@ const SoundPlayer = () => {
   const [isBuffering, setIsBuffering] = useState(true);
   const [loadProgress, setLoadProgress] = useState(0);
   const [hasStarted, setHasStarted] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [fsControlsVisible, setFsControlsVisible] = useState(true);
+  const fsInactivityRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingSeekRef = useRef<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { levelsRef, resume } = useAudioAnalyser(audioRef.current, {
@@ -231,6 +234,70 @@ const SoundPlayer = () => {
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
+  const commitSeek = (nextValue: number) => {
+    const audio = audioRef.current;
+    const wasPlaying = isPlaying;
+    setCurrentTime(nextValue);
+    setScrubValue(nextValue);
+    setIsScrubbing(false);
+    if (!audio) return;
+    const applySeek = () => {
+      const d = Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : 0;
+      if (!d) {
+        pendingSeekRef.current = nextValue;
+        return;
+      }
+      const target = nextValue % d;
+      try {
+        audio.currentTime = Math.min(Math.max(target, 0), Math.max(d - 0.05, 0));
+      } catch {
+        pendingSeekRef.current = nextValue;
+        return;
+      }
+      pendingSeekRef.current = null;
+      if (wasPlaying) {
+        void resume();
+        audio.play().catch(console.error);
+      }
+    };
+    if (audio.readyState < 1) {
+      pendingSeekRef.current = nextValue;
+      const once = () => {
+        audio.removeEventListener("loadedmetadata", once);
+        applySeek();
+      };
+      audio.addEventListener("loadedmetadata", once);
+    } else {
+      applySeek();
+    }
+  };
+
+  // Auto-hide dos controles em fullscreen (2.5s de inatividade)
+  const bumpFsControls = () => {
+    setFsControlsVisible(true);
+    if (fsInactivityRef.current) clearTimeout(fsInactivityRef.current);
+    fsInactivityRef.current = setTimeout(() => setFsControlsVisible(false), 2500);
+  };
+
+  useEffect(() => {
+    if (!isFullscreen) {
+      if (fsInactivityRef.current) clearTimeout(fsInactivityRef.current);
+      setFsControlsVisible(true);
+      return;
+    }
+    bumpFsControls();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsFullscreen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      if (fsInactivityRef.current) clearTimeout(fsInactivityRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isFullscreen]);
+
+
   if (!currentSound) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -282,6 +349,15 @@ const SoundPlayer = () => {
                 Buffer
               </div>
             )}
+            {/* Botão maximizar */}
+            <button
+              type="button"
+              onClick={() => setIsFullscreen(true)}
+              aria-label="Maximizar"
+              className="absolute bottom-3 right-3 z-10 h-9 w-9 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm text-white flex items-center justify-center transition-colors ring-1 ring-white/15"
+            >
+              <Maximize2 className="w-4 h-4" />
+            </button>
           </div>
         </div>
 
@@ -304,48 +380,7 @@ const SoundPlayer = () => {
               setIsScrubbing(true);
               setScrubValue(v[0]);
             }}
-            onValueCommit={(v) => {
-              const nextValue = v[0];
-              const audio = audioRef.current;
-              const wasPlaying = isPlaying;
-
-              setCurrentTime(nextValue);
-              setScrubValue(nextValue);
-              setIsScrubbing(false);
-
-              if (!audio) return;
-
-              const applySeek = () => {
-                const d = Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : 0;
-                if (!d) {
-                  pendingSeekRef.current = nextValue;
-                  return;
-                }
-                const target = nextValue % d;
-                try {
-                  audio.currentTime = Math.min(Math.max(target, 0), Math.max(d - 0.05, 0));
-                } catch {
-                  pendingSeekRef.current = nextValue;
-                  return;
-                }
-                pendingSeekRef.current = null;
-                if (wasPlaying) {
-                  void resume();
-                  audio.play().catch(console.error);
-                }
-              };
-
-              if (audio.readyState < 1) {
-                pendingSeekRef.current = nextValue;
-                const once = () => {
-                  audio.removeEventListener("loadedmetadata", once);
-                  applySeek();
-                };
-                audio.addEventListener("loadedmetadata", once);
-              } else {
-                applySeek();
-              }
-            }}
+            onValueCommit={(v) => commitSeek(v[0])}
           />
           <div className="flex justify-between text-xs text-muted-foreground font-mono">
             <span>{formatTime(isScrubbing ? scrubValue : currentTime)}</span>
@@ -429,6 +464,113 @@ const SoundPlayer = () => {
         // @ts-expect-error fetchpriority is a valid HTML attribute
         fetchpriority="high"
       />
+
+      {/* Fullscreen modal */}
+      {isFullscreen && (
+        <div
+          className="fixed inset-0 z-[100] bg-black animate-fade-in"
+          onMouseMove={bumpFsControls}
+          onTouchStart={bumpFsControls}
+          onClick={bumpFsControls}
+          style={{ cursor: fsControlsVisible ? "default" : "none" }}
+        >
+          {/* Animação de fundo em tela cheia */}
+          <div className="absolute inset-0">
+            <SoundAnimation
+              type={selectedAnimation}
+              isPlaying={isPlaying}
+              levelsRef={levelsRef}
+            />
+          </div>
+
+          {/* Camada de controles com fade */}
+          <div
+            className={`absolute inset-0 pointer-events-none transition-opacity duration-300 ${
+              fsControlsVisible ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            {/* Gradientes para legibilidade */}
+            <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-b from-black/60 to-transparent" />
+            <div className="absolute bottom-0 inset-x-0 h-40 bg-gradient-to-t from-black/70 to-transparent" />
+
+            {/* Botão fechar */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsFullscreen(false);
+              }}
+              aria-label="Fechar"
+              className="pointer-events-auto absolute top-5 right-5 h-11 w-11 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md text-white flex items-center justify-center ring-1 ring-white/20 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Título */}
+            <div className="absolute top-5 left-6 text-white pointer-events-none">
+              <h3 className="text-lg font-semibold leading-tight">{currentSound.name}</h3>
+              <p className="text-xs text-white/70 mt-0.5">{currentSound.category}</p>
+            </div>
+
+            {/* Controles inferiores */}
+            <div className="pointer-events-auto absolute bottom-8 inset-x-0 px-6 max-w-3xl mx-auto space-y-3">
+              <Slider
+                value={[isScrubbing ? scrubValue : Math.min(currentTime, duration)]}
+                max={duration}
+                step={1}
+                onValueChange={(v) => {
+                  setIsScrubbing(true);
+                  setScrubValue(v[0]);
+                }}
+                onValueCommit={(v) => commitSeek(v[0])}
+              />
+              <div className="flex justify-between text-xs text-white/80 font-mono">
+                <span>{formatTime(isScrubbing ? scrubValue : currentTime)}</span>
+                <span>{formatTime(duration)}</span>
+              </div>
+              <div className="flex items-center justify-center gap-4 pt-1">
+                {isPlaylist && (
+                  <button
+                    type="button"
+                    onClick={prevTrack}
+                    disabled={currentSoundIndex === 0}
+                    aria-label="Anterior"
+                    className="h-11 w-11 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md text-white flex items-center justify-center ring-1 ring-white/15 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <SkipBack className="w-5 h-5" />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={togglePlay}
+                  disabled={isBuffering && !hasStarted}
+                  aria-label={isPlaying ? "Pausar" : "Reproduzir"}
+                  className="h-16 w-16 rounded-full bg-primary hover:bg-primary-hover text-primary-foreground flex items-center justify-center shadow-lg disabled:opacity-70 disabled:cursor-wait transition-colors"
+                >
+                  {isBuffering && !hasStarted ? (
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                  ) : isPlaying ? (
+                    <Pause className="w-6 h-6" />
+                  ) : (
+                    <Play className="w-6 h-6 ml-0.5" />
+                  )}
+                </button>
+                {isPlaylist && (
+                  <button
+                    type="button"
+                    onClick={nextTrack}
+                    disabled={!playlist || currentSoundIndex === playlist.length - 1}
+                    aria-label="Próximo"
+                    className="h-11 w-11 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md text-white flex items-center justify-center ring-1 ring-white/15 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <SkipForward className="w-5 h-5" />
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
