@@ -161,98 +161,21 @@ const PracticeScreen = ({ technique, onBack, onComplete }: PracticeScreenProps) 
 
   // ===== Exercise screen =====
   if (currentPhase === "exercise") {
-    const totalSeconds = duration[0] * 60;
-    const sessionProgress = totalSeconds > 0 ? 1 - timeRemaining / totalSeconds : 0;
     return (
-      <div className="h-screen flex flex-col overflow-hidden relative bg-background">
-        {/* Ambient background glow */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 -z-10 opacity-60 dark:opacity-40"
-          style={{
-            backgroundImage:
-              'radial-gradient(60% 45% at 50% 0%, hsl(var(--secondary) / 0.18), transparent 70%), radial-gradient(50% 40% at 50% 100%, hsl(var(--primary) / 0.12), transparent 70%)',
-          }}
-        />
-
-        <PageHeader title={breathingPattern.name} onBack={onBack} />
-
-        <div className="flex-1 min-h-0 flex flex-col items-center justify-between px-5 py-5 max-w-xl w-full mx-auto">
-          {/* Cycle counter */}
-          <div className="shrink-0 flex items-center gap-2 px-3 py-1 rounded-full bg-muted/60 border border-border/60">
-            <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />
-            <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-              Ciclo {cycleCount + 1}
-            </span>
-          </div>
-
-          {/* Animation circle */}
-          <div className="flex-1 min-h-0 flex items-center justify-center w-full py-3">
-            <div className="aspect-square h-full max-h-[38vh] max-w-[38vh] drop-shadow-[0_20px_60px_hsl(var(--secondary)/0.25)]">
-              <SoundAnimation
-                type={selectedAnimation}
-                isPlaying={isPlaying}
-                levelsRef={levelsRef as any}
-                circular
-              />
-            </div>
-          </div>
-
-          {/* Phrase */}
-          <div className="shrink-0 min-h-[3rem] flex items-center">
-            <ContextualPhrases
-              currentPhase={cyclePhase}
-              patternType={breathingPattern.type}
-              cycleCount={cycleCount}
-            />
-          </div>
-
-          {/* Timer */}
-          <div className="shrink-0 w-full mt-4">
-            <BreathingTimer
-              pattern={breathingPattern}
-              isActive={isPlaying}
-              onPhaseChange={setCyclePhase}
-              onCycleComplete={() => setCycleCount((p) => p + 1)}
-            />
-          </div>
-
-          {/* Session progress + timer */}
-          <div className="shrink-0 w-full mt-5 space-y-3">
-            <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-medium">
-              <span>Sessão</span>
-              <span className="tabular-nums text-foreground/80">{formatTime(timeRemaining)}</span>
-            </div>
-            <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-primary to-secondary transition-[width] duration-500 ease-linear"
-                style={{ width: `${sessionProgress * 100}%` }}
-              />
-            </div>
-
-            <div className="flex items-center justify-center gap-4 pt-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleReset}
-                className="w-11 h-11 rounded-full bg-muted/60 hover:bg-muted text-muted-foreground"
-                aria-label="Reiniciar"
-              >
-                <RotateCcw className="w-4 h-4" />
-              </Button>
-              <Button
-                size="icon"
-                className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-primary-hover text-primary-foreground shadow-xl shadow-primary/30 hover:shadow-primary/40 transition-shadow"
-                onClick={togglePlayPause}
-                aria-label={isPlaying ? "Pausar" : "Continuar"}
-              >
-                {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6 ml-0.5 fill-current" />}
-              </Button>
-              <div className="w-11" />
-            </div>
-          </div>
-        </div>
-      </div>
+      <ExerciseView
+        pattern={breathingPattern}
+        isPlaying={isPlaying}
+        cycleCount={cycleCount}
+        cyclePhase={cyclePhase}
+        timeRemaining={timeRemaining}
+        totalSeconds={duration[0] * 60}
+        onPhaseChange={setCyclePhase}
+        onCycleComplete={() => setCycleCount((p) => p + 1)}
+        onBack={onBack}
+        onTogglePlay={togglePlayPause}
+        onReset={handleReset}
+        formatTime={formatTime}
+      />
     );
   }
 
