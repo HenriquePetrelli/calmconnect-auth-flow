@@ -117,11 +117,11 @@ const BreathingOrb = ({ state, isPlaying }: BreathingOrbProps) => {
         ? 1 + Math.sin(now / 900) * 0.02
         : 1 + Math.sin(now / 1400) * 0.01;
 
-      // Layered outer glow rings
+      // Layered outer glow rings — softer, more elegant
       for (let i = 3; i >= 1; i--) {
-        const ringR = r * pulse + i * 14;
-        const grad = ctx.createRadialGradient(cx, cy, r * 0.6, cx, cy, ringR);
-        grad.addColorStop(0, color.replace("hsl(", "hsla(").replace(")", `, ${0.08 / i})`));
+        const ringR = r * pulse + i * 18;
+        const grad = ctx.createRadialGradient(cx, cy, r * 0.7, cx, cy, ringR);
+        grad.addColorStop(0, color.replace("hsl(", "hsla(").replace(")", `, ${0.05 / i})`));
         grad.addColorStop(1, color.replace("hsl(", "hsla(").replace(")", ", 0)"));
         ctx.fillStyle = grad;
         ctx.beginPath();
@@ -129,11 +129,11 @@ const BreathingOrb = ({ state, isPlaying }: BreathingOrbProps) => {
         ctx.fill();
       }
 
-      // Core orb — radial gradient
-      const core = ctx.createRadialGradient(cx - r * 0.25, cy - r * 0.3, r * 0.1, cx, cy, r);
-      core.addColorStop(0, color.replace("hsl(", "hsla(").replace(")", ", 0.55)"));
-      core.addColorStop(0.6, color.replace("hsl(", "hsla(").replace(")", ", 0.28)"));
-      core.addColorStop(1, color.replace("hsl(", "hsla(").replace(")", ", 0.05)"));
+      // Core orb — subtle radial gradient, mono-hue for elegance
+      const core = ctx.createRadialGradient(cx - r * 0.2, cy - r * 0.25, r * 0.05, cx, cy, r);
+      core.addColorStop(0, color.replace("hsl(", "hsla(").replace(")", ", 0.32)"));
+      core.addColorStop(0.65, color.replace("hsl(", "hsla(").replace(")", ", 0.16)"));
+      core.addColorStop(1, color.replace("hsl(", "hsla(").replace(")", ", 0.02)"));
       ctx.fillStyle = core;
       ctx.beginPath();
       ctx.arc(cx, cy, r * pulse, 0, Math.PI * 2);
