@@ -330,7 +330,26 @@ interface ExerciseViewProps {
   onTogglePlay: () => void;
   onReset: () => void;
   formatTime: (s: number) => string;
+  animationType: AnimationType;
+  levelsRef: React.MutableRefObject<{ volume: number; bass: number; mid: number; treble: number }>;
 }
+
+const ExerciseView = ({
+  pattern,
+  isPlaying,
+  cycleCount,
+  cyclePhase,
+  timeRemaining,
+  totalSeconds,
+  onPhaseChange,
+  onCycleComplete,
+  onBack,
+  onTogglePlay,
+  onReset,
+  formatTime,
+  animationType,
+  levelsRef,
+}: ExerciseViewProps) => {
 
 const ExerciseView = ({
   pattern,
