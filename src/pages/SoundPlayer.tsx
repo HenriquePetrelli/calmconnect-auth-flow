@@ -369,6 +369,7 @@ const SoundPlayer = () => {
               type={selectedAnimation}
               isPlaying={isPlaying}
               levelsRef={levelsRef}
+              audioRef={audioRef}
               circular
             />
             {/* Overlay de carregamento antes do primeiro play */}
