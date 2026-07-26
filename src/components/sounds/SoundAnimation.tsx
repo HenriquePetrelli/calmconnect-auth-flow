@@ -36,7 +36,7 @@ interface AnimState {
   smoothLevels: AudioLevels;
 }
 
-const SoundAnimation = ({ type, isPlaying, levelsRef, circular = false }: SoundAnimationProps) => {
+const SoundAnimation = ({ type, isPlaying, levelsRef, circular = false, audioRef }: SoundAnimationProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rafRef = useRef<number | null>(null);
   const stateRef = useRef<AnimState>({
