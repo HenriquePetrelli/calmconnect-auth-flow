@@ -465,6 +465,113 @@ const SoundPlayer = () => {
         fetchpriority="high"
       />
 
+      {/* Fullscreen modal */}
+      {isFullscreen && (
+        <div
+          className="fixed inset-0 z-[100] bg-black animate-fade-in"
+          onMouseMove={bumpFsControls}
+          onTouchStart={bumpFsControls}
+          onClick={bumpFsControls}
+          style={{ cursor: fsControlsVisible ? "default" : "none" }}
+        >
+          {/* Animação de fundo em tela cheia */}
+          <div className="absolute inset-0">
+            <SoundAnimation
+              type={selectedAnimation}
+              isPlaying={isPlaying}
+              levelsRef={levelsRef}
+            />
+          </div>
+
+          {/* Camada de controles com fade */}
+          <div
+            className={`absolute inset-0 pointer-events-none transition-opacity duration-300 ${
+              fsControlsVisible ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            {/* Gradientes para legibilidade */}
+            <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-b from-black/60 to-transparent" />
+            <div className="absolute bottom-0 inset-x-0 h-40 bg-gradient-to-t from-black/70 to-transparent" />
+
+            {/* Botão fechar */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsFullscreen(false);
+              }}
+              aria-label="Fechar"
+              className="pointer-events-auto absolute top-5 right-5 h-11 w-11 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md text-white flex items-center justify-center ring-1 ring-white/20 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Título */}
+            <div className="absolute top-5 left-6 text-white pointer-events-none">
+              <h3 className="text-lg font-semibold leading-tight">{currentSound.name}</h3>
+              <p className="text-xs text-white/70 mt-0.5">{currentSound.category}</p>
+            </div>
+
+            {/* Controles inferiores */}
+            <div className="pointer-events-auto absolute bottom-8 inset-x-0 px-6 max-w-3xl mx-auto space-y-3">
+              <Slider
+                value={[isScrubbing ? scrubValue : Math.min(currentTime, duration)]}
+                max={duration}
+                step={1}
+                onValueChange={(v) => {
+                  setIsScrubbing(true);
+                  setScrubValue(v[0]);
+                }}
+                onValueCommit={(v) => commitSeek(v[0])}
+              />
+              <div className="flex justify-between text-xs text-white/80 font-mono">
+                <span>{formatTime(isScrubbing ? scrubValue : currentTime)}</span>
+                <span>{formatTime(duration)}</span>
+              </div>
+              <div className="flex items-center justify-center gap-4 pt-1">
+                {isPlaylist && (
+                  <button
+                    type="button"
+                    onClick={prevTrack}
+                    disabled={currentSoundIndex === 0}
+                    aria-label="Anterior"
+                    className="h-11 w-11 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md text-white flex items-center justify-center ring-1 ring-white/15 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <SkipBack className="w-5 h-5" />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={togglePlay}
+                  disabled={isBuffering && !hasStarted}
+                  aria-label={isPlaying ? "Pausar" : "Reproduzir"}
+                  className="h-16 w-16 rounded-full bg-primary hover:bg-primary-hover text-primary-foreground flex items-center justify-center shadow-lg disabled:opacity-70 disabled:cursor-wait transition-colors"
+                >
+                  {isBuffering && !hasStarted ? (
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                  ) : isPlaying ? (
+                    <Pause className="w-6 h-6" />
+                  ) : (
+                    <Play className="w-6 h-6 ml-0.5" />
+                  )}
+                </button>
+                {isPlaylist && (
+                  <button
+                    type="button"
+                    onClick={nextTrack}
+                    disabled={!playlist || currentSoundIndex === playlist.length - 1}
+                    aria-label="Próximo"
+                    className="h-11 w-11 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md text-white flex items-center justify-center ring-1 ring-white/15 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <SkipForward className="w-5 h-5" />
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
