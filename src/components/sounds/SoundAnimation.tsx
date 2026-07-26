@@ -13,6 +13,8 @@ interface SoundAnimationProps {
   isPlaying: boolean;
   levelsRef: React.MutableRefObject<AudioLevels>;
   circular?: boolean;
+  /** Optional ref pointing to the <audio> element to sync visual time with playback position. */
+  audioRef?: React.MutableRefObject<HTMLAudioElement | null>;
 }
 
 // Paleta identidade
