@@ -260,6 +260,7 @@ export const usePsychologistManagement = () => {
 
   return {
     loading,
+    error,
     pendingPsychologists,
     registerPsychologist,
     getPendingPsychologists,
