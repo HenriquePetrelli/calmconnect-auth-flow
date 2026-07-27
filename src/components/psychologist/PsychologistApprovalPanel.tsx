@@ -463,18 +463,16 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
       </div>
 
       {filteredPsychologists.length === 0 && !loading && (
-        <Card>
-          <CardContent className="p-8 text-center">
-            <User className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Nenhum psicólogo encontrado</h3>
-            <p className="text-muted-foreground">
-              {filter === 'pending' 
-                ? 'Não há cadastros pendentes de aprovação no momento.'
-                : `Não há psicólogos com status "${filter}" no momento.`
-              }
-            </p>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={Users}
+          title="Nenhum psicólogo encontrado"
+          description={
+            filter === 'pending'
+              ? 'Não há cadastros pendentes de aprovação no momento.'
+              : `Não há psicólogos com status "${filter}" no momento.`
+          }
+          variant={filter === 'pending' ? 'primary' : 'muted'}
+        />
       )}
     </div>
   );
