@@ -433,12 +433,12 @@ const ExerciseView = ({
                     className="absolute inset-[-8%] rounded-full will-change-transform"
                     style={{
                       transform: "scale(1)",
-                      backgroundColor: `hsl(${phaseColor} / 0.18)`,
-                      filter: "blur(28px)",
+                      backgroundColor: `hsl(${phaseColor} / 0.28)`,
+                      filter: "blur(32px)",
                       transition: "background-color 600ms ease",
                     }}
                   />
-                  {/* Núcleo — cor muda por fase */}
+                  {/* Núcleo — cor sólida por fase, contraste reforçado */}
                   <div
                     ref={coreRef}
                     aria-hidden
@@ -446,14 +446,17 @@ const ExerciseView = ({
                     style={{
                       transform: "scale(0.6)",
                       transformOrigin: "center",
-                      backgroundColor: `hsl(${phaseColor} / 0.28)`,
-                      border: `1px solid hsl(${phaseColor} / 0.5)`,
-                      transition: "background-color 600ms ease, border-color 600ms ease",
+                      backgroundColor: `hsl(${phaseColor} / 0.55)`,
+                      border: `2px solid hsl(${phaseColor})`,
+                      boxShadow: `0 8px 32px -8px hsl(${phaseColor} / 0.5)`,
+                      transition:
+                        "background-color 600ms ease, border-color 600ms ease, box-shadow 600ms ease",
                     }}
                   />
                 </>
               );
             })()}
+
 
 
             <div className="absolute inset-0">
