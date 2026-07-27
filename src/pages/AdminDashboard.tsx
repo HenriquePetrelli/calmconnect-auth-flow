@@ -20,11 +20,13 @@ import {
   LogOut,
   LayoutDashboard,
   UserCog,
+  Menu,
 } from 'lucide-react';
 import AdminProfile from '@/components/AdminProfile';
 import { PsychologistApprovalPanel } from '@/components/psychologist/PsychologistApprovalPanel';
 import { PaymentsPanel } from '@/components/payments/PaymentsPanel';
 import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 interface AdminMetrics {
   total_patients: number;
