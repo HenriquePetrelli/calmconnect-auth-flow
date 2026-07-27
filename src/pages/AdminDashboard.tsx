@@ -44,8 +44,18 @@ const AdminDashboard = () => {
   const [metricsLoading, setMetricsLoading] = useState(true);
   const [metricsError, setMetricsError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  const navItems = [
+    { value: 'overview', label: 'Visão Geral', icon: LayoutDashboard },
+    { value: 'psychologists', label: 'Psicólogos', icon: UserCheck },
+    { value: 'payments', label: 'Pagamentos', icon: CreditCard },
+    { value: 'profile', label: 'Perfil', icon: UserCog },
+  ] as const;
+
+  const activeNav = navItems.find(n => n.value === activeTab) ?? navItems[0];
 
   useEffect(() => {
     checkAdminAccess();
