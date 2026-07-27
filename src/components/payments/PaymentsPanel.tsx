@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { SkeletonSectionCard, SkeletonTable, SkeletonStatsGrid } from '@/components/skeletons/Skeletons';
 import { EmptyState } from '@/components/EmptyState';
+import { ErrorState } from '@/components/ErrorState';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,7 +27,7 @@ import { usePayments } from '@/hooks/usePayments';
 import { PaymentDetailsModal } from './PaymentDetailsModal';
 
 export const PaymentsPanel = () => {
-  const { payments, loading, confirmPayment, syncPayments } = usePayments();
+  const { payments, loading, error, fetchPayments, confirmPayment, syncPayments } = usePayments();
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
   const [processingPayment, setProcessingPayment] = useState<string | null>(null);
 
@@ -85,6 +86,18 @@ export const PaymentsPanel = () => {
       </div>
     );
   }
+
+  if (error && !payments.length) {
+    return (
+      <ErrorState
+        title="Falha ao carregar pagamentos"
+        description="Não conseguimos buscar os dados de pagamentos agora. Verifique sua conexão e tente novamente."
+        onRetry={fetchPayments}
+        retrying={loading}
+      />
+    );
+  }
+
 
   return (
     <div className="space-y-4 sm:space-y-6">

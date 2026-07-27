@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { SkeletonFullPage, SkeletonStatsGrid } from '@/components/skeletons/Skeletons';
 import { EmptyState } from '@/components/EmptyState';
+import { ErrorState } from '@/components/ErrorState';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -39,6 +40,7 @@ const AdminDashboard = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
   const [metricsLoading, setMetricsLoading] = useState(true);
+  const [metricsError, setMetricsError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -91,11 +93,14 @@ const AdminDashboard = () => {
 
   const fetchMetrics = async () => {
     try {
+      setMetricsLoading(true);
+      setMetricsError(null);
       const { data, error } = await supabase.rpc('get_admin_metrics');
       if (error) throw error;
       if (data && data.length > 0) setMetrics(data[0]);
     } catch (error: any) {
       console.error('Error fetching metrics:', error.message);
+      setMetricsError(error?.message || 'Falha ao carregar métricas');
       toast({
         title: "Erro",
         description: "Falha ao carregar métricas do sistema",
@@ -105,6 +110,7 @@ const AdminDashboard = () => {
       setMetricsLoading(false);
     }
   };
+
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -284,16 +290,11 @@ const AdminDashboard = () => {
                 })
               ) : (
                 <div className="col-span-full">
-                  <EmptyState
-                    icon={AlertTriangle}
+                  <ErrorState
                     title="Falha ao carregar métricas"
-                    description="Não conseguimos buscar os dados agora. Tente novamente em instantes."
-                    variant="destructive"
-                    action={
-                      <Button size="sm" variant="outline" onClick={fetchMetrics}>
-                        Tentar novamente
-                      </Button>
-                    }
+                    description={metricsError || "Não conseguimos buscar os dados agora. Tente novamente em instantes."}
+                    onRetry={fetchMetrics}
+                    retrying={metricsLoading}
                   />
                 </div>
               )}

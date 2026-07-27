@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { DocumentViewer } from './DocumentViewer';
 import { SkeletonCardGrid } from '@/components/skeletons/Skeletons';
 import { EmptyState } from '@/components/EmptyState';
+import { ErrorState } from '@/components/ErrorState';
 
 const extractDocumentPath = (url?: string): string | undefined => {
   if (!url) return undefined;
@@ -50,6 +51,7 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
 
   const {
     loading,
+    error,
     pendingPsychologists,
     getPendingPsychologists,
     getPsychologistDetails,
@@ -126,6 +128,15 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
 
       {loading && pendingPsychologists.length === 0 ? (
         <SkeletonCardGrid count={6} />
+      ) : null}
+
+      {error && pendingPsychologists.length === 0 && !loading ? (
+        <ErrorState
+          title="Falha ao carregar psicólogos"
+          description="Não conseguimos buscar os cadastros agora. Verifique sua conexão e tente novamente."
+          onRetry={getPendingPsychologists}
+          retrying={loading}
+        />
       ) : null}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
