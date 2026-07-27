@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SkeletonSectionCard, SkeletonTable, SkeletonStatsGrid } from '@/components/skeletons/Skeletons';
+import { SkeletonSectionCard, SkeletonTable, SkeletonStatsGrid, SkeletonCardList } from '@/components/skeletons/Skeletons';
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -74,13 +74,26 @@ export const PaymentsPanel = () => {
   if (loading && !payments.length) {
     return (
       <div className="space-y-4 sm:space-y-6">
-        <SkeletonStatsGrid count={3} />
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="space-y-2">
+            <div className="h-5 w-56 bg-muted rounded animate-pulse" />
+            <div className="h-3 w-72 bg-muted rounded animate-pulse" />
+          </div>
+          <div className="h-9 w-full sm:w-32 bg-muted rounded animate-pulse" />
+        </div>
+        <SkeletonStatsGrid count={3} columns="grid-cols-2 md:grid-cols-3" compact />
         <Card>
-          <CardHeader>
+          <CardHeader className="p-4 sm:p-6 space-y-2">
             <div className="h-4 w-40 bg-muted rounded animate-pulse" />
+            <div className="h-3 w-64 bg-muted rounded animate-pulse" />
           </CardHeader>
-          <CardContent>
-            <SkeletonTable rows={6} cols={5} />
+          <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+            <div className="md:hidden">
+              <SkeletonCardList count={4} />
+            </div>
+            <div className="hidden md:block">
+              <SkeletonTable rows={6} cols={5} />
+            </div>
           </CardContent>
         </Card>
       </div>

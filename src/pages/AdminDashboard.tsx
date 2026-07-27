@@ -345,7 +345,11 @@ const AdminDashboard = () => {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
               {metricsLoading ? (
                 <div className="col-span-full">
-                  <SkeletonStatsGrid count={6} />
+                  <SkeletonStatsGrid
+                    count={6}
+                    columns="grid-cols-2 md:grid-cols-3"
+                    compact
+                  />
                 </div>
               ) : metrics ? (
                 metricCards.map(({ label, value, hint, icon: Icon, accent }) => {
