@@ -177,17 +177,18 @@ const BreathingOrb = ({ state, isPlaying }: BreathingOrbProps) => {
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
         <span
           key={state.phase}
-          className="text-[11px] font-semibold uppercase tracking-[0.24em] opacity-80 animate-fade-in"
+          className="text-[11px] font-semibold uppercase tracking-[0.24em] opacity-70 animate-fade-in"
           style={{ color }}
         >
           {PHASE_LABEL[state.phase]}
         </span>
         <span
-          className="text-5xl font-light tabular-nums leading-none mt-2 transition-colors"
+          className="text-5xl font-light tabular-nums leading-none mt-2 transition-colors opacity-90"
           style={{ color }}
         >
           {remaining}
         </span>
+
       </div>
     </div>
   );
