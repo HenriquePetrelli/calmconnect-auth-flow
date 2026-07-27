@@ -418,15 +418,19 @@ const ExerciseView = ({
         <div className="flex-1 min-h-0 flex items-center justify-center w-full py-3">
           <div className="relative aspect-square h-full max-h-[42vh] max-w-[42vh]">
             {(() => {
+              // Mapa exato de cor por fase — sem sobreposição
               const phaseColor =
                 state.phase === "inhale"
                   ? "var(--primary)"
                   : state.phase === "exhale"
                   ? "var(--secondary)"
-                  : "var(--muted-foreground)";
+                  : state.phase === "hold"
+                  ? "var(--muted-foreground)"
+                  : "var(--muted-foreground)"; // pause
+              const isStatic = state.phase === "hold" || state.phase === "pause";
               return (
                 <>
-                  {/* Halo externo suave — pulsa junto com a respiração */}
+                  {/* Halo externo suave */}
                   <div
                     ref={haloRef}
                     aria-hidden
@@ -438,7 +442,7 @@ const ExerciseView = ({
                       transition: "background-color 600ms ease",
                     }}
                   />
-                  {/* Núcleo — cor sólida por fase, contraste reforçado */}
+                  {/* Núcleo — cor sólida por fase */}
                   <div
                     ref={coreRef}
                     aria-hidden
@@ -453,9 +457,20 @@ const ExerciseView = ({
                         "background-color 600ms ease, border-color 600ms ease, box-shadow 600ms ease",
                     }}
                   />
+                  {/* Anel pontilhado quando está estático (segurar/pausa) — deixa claro que o círculo está pausado de propósito */}
+                  {isStatic && (
+                    <div
+                      aria-hidden
+                      className="absolute inset-[6%] rounded-full pointer-events-none animate-fade-in"
+                      style={{
+                        border: `1.5px dashed hsl(${phaseColor} / 0.7)`,
+                      }}
+                    />
+                  )}
                 </>
               );
             })()}
+
 
 
 
