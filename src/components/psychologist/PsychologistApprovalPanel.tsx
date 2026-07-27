@@ -130,6 +130,15 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
         <SkeletonCardGrid count={6} />
       ) : null}
 
+      {error && pendingPsychologists.length === 0 && !loading ? (
+        <ErrorState
+          title="Falha ao carregar psicólogos"
+          description="Não conseguimos buscar os cadastros agora. Verifique sua conexão e tente novamente."
+          onRetry={getPendingPsychologists}
+          retrying={loading}
+        />
+      ) : null}
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {filteredPsychologists.map((psychologist) => (
           <Card key={psychologist.id} className=" transition-shadow">
