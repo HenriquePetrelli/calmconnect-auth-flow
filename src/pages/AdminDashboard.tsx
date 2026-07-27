@@ -20,11 +20,13 @@ import {
   LogOut,
   LayoutDashboard,
   UserCog,
+  Menu,
 } from 'lucide-react';
 import AdminProfile from '@/components/AdminProfile';
 import { PsychologistApprovalPanel } from '@/components/psychologist/PsychologistApprovalPanel';
 import { PaymentsPanel } from '@/components/payments/PaymentsPanel';
 import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 interface AdminMetrics {
   total_patients: number;
@@ -42,8 +44,18 @@ const AdminDashboard = () => {
   const [metricsLoading, setMetricsLoading] = useState(true);
   const [metricsError, setMetricsError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  const navItems = [
+    { value: 'overview', label: 'Visão Geral', icon: LayoutDashboard },
+    { value: 'psychologists', label: 'Psicólogos', icon: UserCheck },
+    { value: 'payments', label: 'Pagamentos', icon: CreditCard },
+    { value: 'profile', label: 'Perfil', icon: UserCog },
+  ] as const;
+
+  const activeNav = navItems.find(n => n.value === activeTab) ?? navItems[0];
 
   useEffect(() => {
     checkAdminAccess();
@@ -218,10 +230,65 @@ const AdminDashboard = () => {
               </h1>
             </div>
             <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+              <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="md:hidden rounded-full text-white hover:bg-white/15 hover:text-white h-9 w-9"
+                    aria-label="Abrir menu"
+                  >
+                    <Menu className="w-[18px] h-[18px]" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-[82vw] max-w-xs p-0 bg-secondary text-secondary-foreground border-r-0">
+                  <SheetHeader className="p-4 border-b border-white/10 text-left">
+                    <SheetTitle className="text-white flex items-center gap-2 text-sm">
+                      <Shield className="w-4 h-4" /> Painel Administrativo
+                    </SheetTitle>
+                    <p className="text-xs text-white/70 truncate">{user?.email}</p>
+                  </SheetHeader>
+                  <nav className="p-2">
+                    {navItems.map((item) => {
+                      const Icon = item.icon;
+                      const isActive = activeTab === item.value;
+                      return (
+                        <button
+                          key={item.value}
+                          onClick={() => {
+                            setActiveTab(item.value);
+                            setMobileNavOpen(false);
+                          }}
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
+                            isActive
+                              ? 'bg-white/15 text-white'
+                              : 'text-white/85 hover:bg-white/10 hover:text-white'
+                          }`}
+                        >
+                          <Icon className="w-4 h-4 shrink-0" />
+                          <span>{item.label}</span>
+                        </button>
+                      );
+                    })}
+                    <div className="mt-2 pt-2 border-t border-white/10">
+                      <button
+                        onClick={() => {
+                          setMobileNavOpen(false);
+                          handleLogout();
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-white/85 hover:bg-destructive/30 hover:text-white transition-colors"
+                      >
+                        <LogOut className="w-4 h-4 shrink-0" />
+                        <span>Sair</span>
+                      </button>
+                    </div>
+                  </nav>
+                </SheetContent>
+              </Sheet>
               <Button
                 variant="ghost"
                 size="icon"
-                className="rounded-full text-white hover:bg-destructive/40 hover:text-white h-9 w-9"
+                className="hidden md:inline-flex rounded-full text-white hover:bg-destructive/40 hover:text-white h-9 w-9"
                 onClick={handleLogout}
                 title="Sair"
                 aria-label="Sair"
@@ -229,17 +296,34 @@ const AdminDashboard = () => {
                 <LogOut className="w-[18px] h-[18px]" />
               </Button>
             </div>
+
           </div>
         </div>
       </header>
 
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-4 md:py-6 space-y-4 sm:space-y-5 md:space-y-6">
+        {/* Mobile: current section indicator */}
+        <div className="md:hidden flex items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2.5">
+          <div className="flex items-center gap-2 min-w-0">
+            <activeNav.icon className="w-4 h-4 text-secondary shrink-0" />
+            <span className="text-sm font-semibold truncate">{activeNav.label}</span>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 gap-1.5 text-xs"
+            onClick={() => setMobileNavOpen(true)}
+          >
+            <Menu className="w-4 h-4" />
+            Menu
+          </Button>
+        </div>
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-          <TabsList className="w-full h-auto p-1 bg-muted/60 grid grid-cols-4 gap-1 rounded-lg">
+          <TabsList className="hidden md:grid w-full h-auto p-1 bg-muted/60 grid-cols-4 gap-1 rounded-lg">
             <TabsTrigger value="overview" className={tabTriggerClass}>
               <LayoutDashboard className="w-4 h-4 shrink-0" />
-              <span className="hidden xs:inline sm:inline">Visão Geral</span>
-              <span className="xs:hidden sm:hidden">Geral</span>
+              <span>Visão Geral</span>
             </TabsTrigger>
             <TabsTrigger value="psychologists" className={tabTriggerClass}>
               <UserCheck className="w-4 h-4 shrink-0" />
@@ -254,6 +338,7 @@ const AdminDashboard = () => {
               <span>Perfil</span>
             </TabsTrigger>
           </TabsList>
+
 
           <TabsContent value="overview" className="space-y-4 sm:space-y-6 mt-4">
             {/* Métricas Gerais */}
