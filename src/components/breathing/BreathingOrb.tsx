@@ -169,7 +169,6 @@ const BreathingOrb = ({ state, isPlaying }: BreathingOrbProps) => {
   }, []);
 
   const remaining = Math.max(1, Math.ceil((state.durationMs - state.elapsedMs) / 1000));
-  const color = PHASE_COLORS[state.phase];
 
   return (
     <div className="relative w-full h-full">
@@ -177,21 +176,17 @@ const BreathingOrb = ({ state, isPlaying }: BreathingOrbProps) => {
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
         <span
           key={state.phase}
-          className="text-[11px] font-semibold uppercase tracking-[0.24em] opacity-70 animate-fade-in"
-          style={{ color }}
+          className="text-[11px] font-semibold uppercase tracking-[0.24em] text-foreground/90 drop-shadow-sm animate-fade-in"
         >
           {PHASE_LABEL[state.phase]}
         </span>
-        <span
-          className="text-5xl font-light tabular-nums leading-none mt-2 transition-colors opacity-90"
-          style={{ color }}
-        >
+        <span className="text-5xl font-light tabular-nums leading-none mt-2 text-foreground drop-shadow-sm">
           {remaining}
         </span>
-
       </div>
     </div>
   );
+
 };
 
 export default BreathingOrb;
