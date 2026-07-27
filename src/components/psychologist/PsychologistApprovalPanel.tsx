@@ -116,7 +116,7 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
       </div>
 
       <Tabs value={filter} onValueChange={(value) => setFilter(value as any)} className="w-full">
-        <TabsList className="w-full h-auto p-1 bg-muted/60 grid grid-cols-4 gap-1 rounded-lg">
+        <TabsList className="w-full h-auto p-1 bg-muted/60 grid grid-cols-2 sm:grid-cols-4 gap-1 rounded-lg">
           <TabsTrigger value="pending" className="text-xs sm:text-sm data-[state=active]:bg-secondary data-[state=active]:text-white">Pendentes ({pendingPsychologists.filter(p => p.approval_status === 'pending').length})</TabsTrigger>
           <TabsTrigger value="approved" className="text-xs sm:text-sm data-[state=active]:bg-secondary data-[state=active]:text-white">Aprovados ({pendingPsychologists.filter(p => p.approval_status === 'approved').length})</TabsTrigger>
           <TabsTrigger value="rejected" className="text-xs sm:text-sm data-[state=active]:bg-secondary data-[state=active]:text-white">Rejeitados ({pendingPsychologists.filter(p => p.approval_status === 'rejected').length})</TabsTrigger>
@@ -198,7 +198,7 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
                             <CheckCircle className="h-4 w-4" />
                             <span className="text-sm font-medium">Status da Aprovação</span>
                           </div>
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Status Atual</label>
                               <div className="mt-1">{getStatusBadge(selectedPsychologist.approval_status)}</div>
@@ -240,7 +240,7 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
                             <UserCheck className="h-4 w-4" />
                             <span className="text-sm font-medium">Informações Básicas</span>
                           </div>
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Nome Completo</label>
                               <p className="text-sm text-muted-foreground mt-1">{selectedPsychologist.full_name}</p>
@@ -267,7 +267,7 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
                             <User className="h-4 w-4" />
                             <span className="text-sm font-medium">Dados Profissionais</span>
                           </div>
-                          <div className="grid grid-cols-2 gap-4 mb-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                             <div>
                               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">CRP</label>
                               <p className="text-sm text-muted-foreground mt-1">{selectedPsychologist.crp_number}</p>
@@ -287,7 +287,7 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
                             <FileText className="h-4 w-4" />
                             <span className="text-sm font-medium">Informações PIX</span>
                           </div>
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Tipo da chave PIX</label>
                               <p className="text-sm text-muted-foreground mt-1">
@@ -312,7 +312,7 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
                             <MapPin className="h-4 w-4" />
                             <span className="text-sm font-medium">Localização</span>
                           </div>
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Estado</label>
                               <p className="text-sm text-muted-foreground mt-1">{selectedPsychologist.state || 'Não informado'}</p>

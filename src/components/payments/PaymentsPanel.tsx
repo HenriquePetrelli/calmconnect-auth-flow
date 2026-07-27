@@ -105,45 +105,45 @@ export const PaymentsPanel = () => {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Pendente</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-primary" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-6">
+            <CardTitle className="text-xs sm:text-sm font-medium">Total Pendente</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-primary shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-primary">
+          <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+            <div className="text-lg sm:text-2xl font-bold text-primary truncate">
               {formatCurrency(totalPending)}
             </div>
-            <p className="text-xs text-muted-foreground">
-              {pendingPayments} psicólogos com pagamentos pendentes
+            <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 line-clamp-2">
+              {pendingPayments} psicólogo(s) pendente(s)
             </p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Pago</CardTitle>
-            <Check className="h-4 w-4 text-success" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-6">
+            <CardTitle className="text-xs sm:text-sm font-medium">Total Pago</CardTitle>
+            <Check className="h-4 w-4 text-success shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-success">
+          <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+            <div className="text-lg sm:text-2xl font-bold text-success truncate">
               {formatCurrency(totalPaid)}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
               Pagamentos confirmados
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Psicólogos Ativos</CardTitle>
-            <DollarSign className="h-4 w-4 text-secondary" />
+        <Card className="col-span-2 md:col-span-1">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-6">
+            <CardTitle className="text-xs sm:text-sm font-medium">Psicólogos Ativos</CardTitle>
+            <DollarSign className="h-4 w-4 text-secondary shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{payments.length}</div>
-            <p className="text-xs text-muted-foreground">
+          <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+            <div className="text-lg sm:text-2xl font-bold">{payments.length}</div>
+            <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
               Com histórico de pagamentos
             </p>
           </CardContent>
@@ -152,13 +152,13 @@ export const PaymentsPanel = () => {
 
       {/* Payments Table */}
       <Card>
-        <CardHeader>
-          <CardTitle>Lista de Pagamentos</CardTitle>
-          <CardDescription>
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="text-base sm:text-lg">Lista de Pagamentos</CardTitle>
+          <CardDescription className="text-xs sm:text-sm">
             Consultas agendadas = R$ 90,00 | Emergências = R$ 50,00
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
           {payments.length === 0 ? (
             <EmptyState
               icon={Calendar}
@@ -174,93 +174,171 @@ export const PaymentsPanel = () => {
               }
             />
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>PIX</TableHead>
-                    <TableHead className="text-center">Agendadas Pendentes</TableHead>
-                    <TableHead className="text-center">Emergências Pendentes</TableHead>
-                    <TableHead className="text-right">Valor Pendente</TableHead>
-                    <TableHead className="text-center">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {payments.map((payment) => (
-                    <TableRow key={payment.id}>
-                      <TableCell className="font-medium">
-                        <div>
-                          <div>{payment.name}</div>
-                          {payment.crp && (
-                            <div className="text-sm text-muted-foreground">
-                              CRP: {payment.crp}
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>{payment.email}</TableCell>
-                      <TableCell>
-                        {payment.pix_key ? (
-                          <div>
-                            <div className="font-mono text-sm">{payment.pix_key}</div>
-                            <Badge variant="secondary" className="text-xs">
-                              {getPixTypeLabel(payment.pix_type)}
-                            </Badge>
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground">Não informado</span>
+            <>
+              {/* Mobile: card list */}
+              <div className="md:hidden space-y-3">
+                {payments.map((payment) => (
+                  <div
+                    key={payment.id}
+                    className="rounded-lg border bg-card p-3 space-y-3"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="font-medium truncate">{payment.name}</div>
+                        {payment.crp && (
+                          <div className="text-xs text-muted-foreground">CRP: {payment.crp}</div>
                         )}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Badge variant={payment.scheduled_pending_count > 0 ? "default" : "secondary"}>
-                          {payment.scheduled_pending_count}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Badge variant={payment.emergency_pending_count > 0 ? "default" : "secondary"}>
-                          {payment.emergency_pending_count}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right font-medium">
-                        <span className={payment.total_pending_amount > 0 ? "text-primary" : "text-muted-foreground"}>
+                        <div className="text-xs text-muted-foreground truncate">{payment.email}</div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <div className="text-[10px] text-muted-foreground uppercase">Pendente</div>
+                        <div className={`text-sm font-semibold ${payment.total_pending_amount > 0 ? "text-primary" : "text-muted-foreground"}`}>
                           {formatCurrency(payment.total_pending_amount)}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setSelectedPayment(payment.id)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          {payment.total_pending_amount > 0 && (
+                        </div>
+                      </div>
+                    </div>
+
+                    {payment.pix_key && (
+                      <div className="text-xs">
+                        <span className="text-muted-foreground">PIX: </span>
+                        <span className="font-mono">{payment.pix_key}</span>
+                        <Badge variant="secondary" className="text-[10px] ml-2">
+                          {getPixTypeLabel(payment.pix_type)}
+                        </Badge>
+                      </div>
+                    )}
+
+                    <div className="flex flex-wrap items-center gap-2 text-xs">
+                      <Badge variant={payment.scheduled_pending_count > 0 ? "default" : "secondary"}>
+                        Agendadas: {payment.scheduled_pending_count}
+                      </Badge>
+                      <Badge variant={payment.emergency_pending_count > 0 ? "default" : "secondary"}>
+                        Emergências: {payment.emergency_pending_count}
+                      </Badge>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-1">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => setSelectedPayment(payment.id)}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        Detalhes
+                      </Button>
+                      {payment.total_pending_amount > 0 && (
+                        <Button
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => handleConfirmPayment(payment.psychologist_id)}
+                          disabled={processingPayment === payment.psychologist_id}
+                        >
+                          {processingPayment === payment.psychologist_id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <>
+                              <Check className="h-4 w-4 mr-1" />
+                              Confirmar
+                            </>
+                          )}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop: table */}
+              <div className="hidden md:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>PIX</TableHead>
+                      <TableHead className="text-center">Agendadas Pendentes</TableHead>
+                      <TableHead className="text-center">Emergências Pendentes</TableHead>
+                      <TableHead className="text-right">Valor Pendente</TableHead>
+                      <TableHead className="text-center">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {payments.map((payment) => (
+                      <TableRow key={payment.id}>
+                        <TableCell className="font-medium">
+                          <div>
+                            <div>{payment.name}</div>
+                            {payment.crp && (
+                              <div className="text-sm text-muted-foreground">
+                                CRP: {payment.crp}
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>{payment.email}</TableCell>
+                        <TableCell>
+                          {payment.pix_key ? (
+                            <div>
+                              <div className="font-mono text-sm">{payment.pix_key}</div>
+                              <Badge variant="secondary" className="text-xs">
+                                {getPixTypeLabel(payment.pix_type)}
+                              </Badge>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">Não informado</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant={payment.scheduled_pending_count > 0 ? "default" : "secondary"}>
+                            {payment.scheduled_pending_count}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant={payment.emergency_pending_count > 0 ? "default" : "secondary"}>
+                            {payment.emergency_pending_count}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right font-medium">
+                          <span className={payment.total_pending_amount > 0 ? "text-primary" : "text-muted-foreground"}>
+                            {formatCurrency(payment.total_pending_amount)}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
                             <Button
                               size="sm"
-                              onClick={() => handleConfirmPayment(payment.psychologist_id)}
-                              disabled={processingPayment === payment.psychologist_id}
+                              variant="outline"
+                              onClick={() => setSelectedPayment(payment.id)}
                             >
-                              {processingPayment === payment.psychologist_id ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <>
-                                  <Check className="h-4 w-4 mr-1" />
-                                  Confirmar
-                                </>
-                              )}
+                              <Eye className="h-4 w-4" />
                             </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                            {payment.total_pending_amount > 0 && (
+                              <Button
+                                size="sm"
+                                onClick={() => handleConfirmPayment(payment.psychologist_id)}
+                                disabled={processingPayment === payment.psychologist_id}
+                              >
+                                {processingPayment === payment.psychologist_id ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <>
+                                    <Check className="h-4 w-4 mr-1" />
+                                    Confirmar
+                                  </>
+                                )}
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
+
         </CardContent>
       </Card>
 
