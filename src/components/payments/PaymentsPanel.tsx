@@ -27,7 +27,7 @@ import { usePayments } from '@/hooks/usePayments';
 import { PaymentDetailsModal } from './PaymentDetailsModal';
 
 export const PaymentsPanel = () => {
-  const { payments, loading, confirmPayment, syncPayments } = usePayments();
+  const { payments, loading, error, fetchPayments, confirmPayment, syncPayments } = usePayments();
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
   const [processingPayment, setProcessingPayment] = useState<string | null>(null);
 
