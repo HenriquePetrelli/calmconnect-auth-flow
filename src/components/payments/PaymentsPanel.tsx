@@ -87,6 +87,18 @@ export const PaymentsPanel = () => {
     );
   }
 
+  if (error && !payments.length) {
+    return (
+      <ErrorState
+        title="Falha ao carregar pagamentos"
+        description="Não conseguimos buscar os dados de pagamentos agora. Verifique sua conexão e tente novamente."
+        onRetry={fetchPayments}
+        retrying={loading}
+      />
+    );
+  }
+
+
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Header with actions */}
