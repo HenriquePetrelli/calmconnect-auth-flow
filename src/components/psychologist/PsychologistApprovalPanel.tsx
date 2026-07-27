@@ -8,12 +8,14 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Eye, CheckCircle, XCircle, Mail, User, FileText, Calendar, Download, MapPin, UserCheck } from 'lucide-react';
+import { Eye, CheckCircle, XCircle, Mail, User, FileText, Calendar, Download, MapPin, UserCheck, Users } from 'lucide-react';
 import { usePsychologistManagement, PsychologistData } from '@/hooks/usePsychologistManagement';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { DocumentViewer } from './DocumentViewer';
+import { SkeletonCardGrid } from '@/components/skeletons/Skeletons';
+import { EmptyState } from '@/components/EmptyState';
 
 const extractDocumentPath = (url?: string): string | undefined => {
   if (!url) return undefined;
@@ -121,6 +123,10 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
           <TabsTrigger value="all" className="text-xs sm:text-sm data-[state=active]:bg-secondary data-[state=active]:text-white">Todos ({pendingPsychologists.length})</TabsTrigger>
         </TabsList>
       </Tabs>
+
+      {loading && pendingPsychologists.length === 0 ? (
+        <SkeletonCardGrid count={6} />
+      ) : null}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {filteredPsychologists.map((psychologist) => (
@@ -457,18 +463,16 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
       </div>
 
       {filteredPsychologists.length === 0 && !loading && (
-        <Card>
-          <CardContent className="p-8 text-center">
-            <User className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Nenhum psicólogo encontrado</h3>
-            <p className="text-muted-foreground">
-              {filter === 'pending' 
-                ? 'Não há cadastros pendentes de aprovação no momento.'
-                : `Não há psicólogos com status "${filter}" no momento.`
-              }
-            </p>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={Users}
+          title="Nenhum psicólogo encontrado"
+          description={
+            filter === 'pending'
+              ? 'Não há cadastros pendentes de aprovação no momento.'
+              : `Não há psicólogos com status "${filter}" no momento.`
+          }
+          variant={filter === 'pending' ? 'primary' : 'muted'}
+        />
       )}
     </div>
   );

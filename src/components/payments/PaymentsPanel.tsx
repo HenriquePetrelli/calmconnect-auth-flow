@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
-import { SkeletonSectionCard } from '@/components/skeletons/Skeletons';
+import { SkeletonSectionCard, SkeletonTable, SkeletonStatsGrid } from '@/components/skeletons/Skeletons';
+import { EmptyState } from '@/components/EmptyState';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from '@/components/ui/table';
-import { 
+import {
   CreditCard,
   RefreshCw,
   Eye,
@@ -70,7 +71,19 @@ export const PaymentsPanel = () => {
   const pendingPayments = payments.filter(p => p.total_pending_amount > 0).length;
 
   if (loading && !payments.length) {
-    return <SkeletonSectionCard rows={5} accent="primary" />;
+    return (
+      <div className="space-y-4 sm:space-y-6">
+        <SkeletonStatsGrid count={3} />
+        <Card>
+          <CardHeader>
+            <div className="h-4 w-40 bg-muted rounded animate-pulse" />
+          </CardHeader>
+          <CardContent>
+            <SkeletonTable rows={6} cols={5} />
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
@@ -147,12 +160,19 @@ export const PaymentsPanel = () => {
         </CardHeader>
         <CardContent>
           {payments.length === 0 ? (
-            <div className="text-center py-8">
-              <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">
-                Nenhum pagamento encontrado. Execute a sincronização para carregar dados.
-              </p>
-            </div>
+            <EmptyState
+              icon={Calendar}
+              title="Nenhum pagamento encontrado"
+              description="Execute a sincronização para carregar os dados de pagamentos dos psicólogos."
+              variant="primary"
+              inCard={false}
+              action={
+                <Button size="sm" onClick={handleSyncPayments} disabled={loading}>
+                  <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                  Sincronizar agora
+                </Button>
+              }
+            />
           ) : (
             <div className="overflow-x-auto">
               <Table>
