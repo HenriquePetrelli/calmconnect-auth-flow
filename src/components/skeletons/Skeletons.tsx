@@ -55,13 +55,58 @@ export const SkeletonList = ({
 );
 
 /** Grid of stat tiles (icon + big number + label). */
-export const SkeletonStatsGrid = ({ count = 4 }: { count?: number }) => (
-  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+export const SkeletonStatsGrid = ({
+  count = 4,
+  columns = "grid-cols-2 lg:grid-cols-4",
+  compact = false,
+}: {
+  count?: number;
+  columns?: string;
+  compact?: boolean;
+}) => (
+  <div className={`grid ${columns} gap-2 sm:gap-3 md:gap-4`}>
     {Array.from({ length: count }).map((_, i) => (
-      <div key={i} className="rounded-lg border bg-card p-4 space-y-3">
-        <Skeleton className="w-9 h-9 rounded-lg" />
-        <Skeleton className="h-7 w-16" />
-        <Skeleton className="h-3 w-20" />
+      <div
+        key={i}
+        className={`rounded-lg border bg-card ${compact ? "p-3 sm:p-5" : "p-4"} space-y-2 sm:space-y-3`}
+      >
+        <div className="flex items-start justify-between gap-2">
+          <div className="space-y-2 flex-1 min-w-0">
+            <Skeleton className="h-3 w-20" />
+            <Skeleton className="h-6 sm:h-8 w-14 sm:w-20" />
+            <Skeleton className="h-3 w-24 hidden sm:block" />
+          </div>
+          <Skeleton className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg shrink-0" />
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
+/** Stacked card list skeleton (used for mobile lists of tabular data). */
+export const SkeletonCardList = ({ count = 4 }: { count?: number }) => (
+  <div className="space-y-3">
+    {Array.from({ length: count }).map((_, i) => (
+      <div key={i} className="rounded-lg border bg-card p-3 space-y-3">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1 min-w-0 space-y-2">
+            <Skeleton className="h-4 w-2/3" />
+            <Skeleton className="h-3 w-1/3" />
+            <Skeleton className="h-3 w-1/2" />
+          </div>
+          <div className="text-right space-y-2 shrink-0">
+            <Skeleton className="h-3 w-14 ml-auto" />
+            <Skeleton className="h-4 w-20 ml-auto" />
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Skeleton className="h-5 w-24 rounded-full" />
+          <Skeleton className="h-5 w-28 rounded-full" />
+        </div>
+        <div className="flex gap-2">
+          <Skeleton className="h-9 flex-1 rounded-md" />
+          <Skeleton className="h-9 flex-1 rounded-md" />
+        </div>
       </div>
     ))}
   </div>
