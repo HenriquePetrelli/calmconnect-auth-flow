@@ -72,19 +72,19 @@ const PatternSelector = ({ onSelect, currentPattern }: PatternSelectorProps) => 
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="flex gap-2 text-xs flex-wrap">
-                  <span className="px-2 py-1 rounded-full bg-[#3B82F6]/15 text-[#3B82F6] font-medium">
+                  <span className="px-2 py-1 rounded-full bg-primary/15 text-primary font-medium">
                     Inspirar {pattern.inhale}s
                   </span>
                   {pattern.hold > 0 && (
-                    <span className="px-2 py-1 rounded-full bg-[#10B981]/15 text-[#059669] font-medium">
+                    <span className="px-2 py-1 rounded-full bg-muted text-muted-foreground font-medium">
                       Segurar {pattern.hold}s
                     </span>
                   )}
-                  <span className="px-2 py-1 rounded-full bg-[#F97316]/15 text-[#EA580C] font-medium">
+                  <span className="px-2 py-1 rounded-full bg-secondary/15 text-secondary font-medium">
                     Expirar {pattern.exhale}s
                   </span>
                   {pattern.pause > 0 && (
-                    <span className="px-2 py-1 rounded-full bg-[#7C3AED]/15 text-[#7C3AED] font-medium">
+                    <span className="px-2 py-1 rounded-full bg-muted text-muted-foreground font-medium">
                       Pausar {pattern.pause}s
                     </span>
                   )}
