@@ -11,9 +11,9 @@ type Phase = 'inhale' | 'hold' | 'exhale' | 'pause';
 
 const phaseMeta: Record<Phase, { label: string; color: string; icon: JSX.Element }> = {
   inhale: { label: 'Inspirar', color: 'hsl(var(--primary))', icon: <Wind className="w-4 h-4" /> },
-  hold:   { label: 'Segurar', color: 'hsl(var(--secondary))', icon: <Heart className="w-4 h-4" /> },
-  exhale: { label: 'Expirar', color: 'hsl(var(--primary))', icon: <Waves className="w-4 h-4" /> },
-  pause:  { label: 'Pausa',   color: 'hsl(var(--muted-foreground))', icon: <PauseIcon className="w-4 h-4" /> },
+  hold:   { label: 'Segurar', color: 'hsl(var(--muted-foreground) / 0.6)', icon: <Heart className="w-4 h-4" /> },
+  exhale: { label: 'Expirar', color: 'hsl(var(--secondary))', icon: <Waves className="w-4 h-4" /> },
+  pause:  { label: 'Pausa',   color: 'hsl(var(--muted-foreground) / 0.6)', icon: <PauseIcon className="w-4 h-4" /> },
 };
 
 const BreathingTimer = ({ pattern, state }: BreathingTimerProps) => {
