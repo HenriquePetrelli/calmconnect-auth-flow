@@ -95,13 +95,10 @@ export const DailyMoodToggle: React.FC<DailyMoodToggleProps> = ({ initialEnabled
   };
 
   return (
-    <div className="flex items-center justify-between p-4 rounded-lg border bg-gradient-to-r from-muted/30 to-transparent">
-      <div className="space-y-1">
-        <div className="flex items-center gap-2 text-base font-semibold">
-          <Heart size={16} className="text-primary" />
-          Humor Diário
-        </div>
-        <div className="text-sm text-muted-foreground">
+    <div className="flex items-center justify-between">
+      <div className="space-y-0.5 pr-4">
+        <div className="text-sm font-medium">Humor diário</div>
+        <div className="text-xs text-muted-foreground">
           Mostrar registro de humor na tela inicial
         </div>
       </div>
@@ -109,7 +106,6 @@ export const DailyMoodToggle: React.FC<DailyMoodToggleProps> = ({ initialEnabled
         checked={isEnabled}
         onCheckedChange={handleToggle}
         disabled={isLoading}
-        className="data-[state=checked]:bg-primary"
       />
     </div>
   );
