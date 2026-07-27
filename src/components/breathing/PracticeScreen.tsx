@@ -353,19 +353,19 @@ const ExerciseView = ({
   const state = useBreathingPhase(pattern, isPlaying, onPhaseChange, onCycleComplete);
   const sessionProgress = totalSeconds > 0 ? 1 - timeRemaining / totalSeconds : 0;
 
-  // Escala do fundo segue a respiração: inspira → fecha, segura → mantém, expira → abre
+  // Escala do fundo segue a respiração: inspira → expande (enche), segura → mantém, expira → contrai
   const easeInOutSine = (t: number) => -(Math.cos(Math.PI * t) - 1) / 2;
-  const minScale = 0.55;
+  const minScale = 0.6;
   const maxScale = 1;
-  let bgScale = maxScale;
+  let bgScale = minScale;
   if (state.phase === "inhale") {
-    bgScale = maxScale - (maxScale - minScale) * easeInOutSine(state.progress);
-  } else if (state.phase === "hold") {
-    bgScale = minScale;
-  } else if (state.phase === "exhale") {
     bgScale = minScale + (maxScale - minScale) * easeInOutSine(state.progress);
-  } else {
+  } else if (state.phase === "hold") {
     bgScale = maxScale;
+  } else if (state.phase === "exhale") {
+    bgScale = maxScale - (maxScale - minScale) * easeInOutSine(state.progress);
+  } else {
+    bgScale = minScale;
   }
 
   return (
@@ -391,26 +391,38 @@ const ExerciseView = ({
 
         <div className="flex-1 min-h-0 flex items-center justify-center w-full py-3">
           <div className="relative aspect-square h-full max-h-[42vh] max-w-[42vh]">
+            {/* Halo externo suave — pulsa junto com a respiração */}
             <div
-              className="absolute inset-0 rounded-full overflow-hidden opacity-30 dark:opacity-25 mix-blend-luminosity will-change-transform"
+              aria-hidden
+              className="absolute inset-[-8%] rounded-full will-change-transform"
+              style={{
+                transform: `scale(${0.9 + bgScale * 0.15})`,
+                transition: "transform 160ms linear",
+                background:
+                  "radial-gradient(circle at 50% 50%, hsl(var(--secondary) / 0.22), hsl(var(--primary) / 0.10) 55%, transparent 72%)",
+                filter: "blur(24px)",
+              }}
+            />
+            {/* Núcleo colorido primary/secondary que enche no inspirar */}
+            <div
+              aria-hidden
+              className="absolute inset-0 rounded-full overflow-hidden will-change-transform"
               style={{
                 transform: `scale(${bgScale})`,
                 transformOrigin: "center",
                 transition: "transform 120ms linear",
+                background:
+                  "radial-gradient(circle at 30% 30%, hsl(var(--secondary) / 0.55), hsl(var(--primary) / 0.35) 55%, hsl(var(--primary) / 0.10) 100%)",
+                boxShadow:
+                  "0 0 60px -10px hsl(var(--primary) / 0.35), inset 0 0 40px hsl(var(--secondary) / 0.25)",
               }}
-            >
-              <SoundAnimation
-                type={animationType}
-                isPlaying={isPlaying}
-                levelsRef={levelsRef}
-                circular
-              />
-            </div>
+            />
             <div className="absolute inset-0">
               <BreathingOrb state={state} isPlaying={isPlaying} />
             </div>
           </div>
         </div>
+
 
 
 
