@@ -503,7 +503,7 @@ const ExerciseView = ({
           </div>
           <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-primary to-secondary transition-[width] duration-500 ease-linear"
+              className="h-full bg-primary transition-[width] duration-500 ease-linear"
               style={{ width: `${sessionProgress * 100}%` }}
             />
           </div>
