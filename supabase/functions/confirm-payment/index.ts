@@ -54,17 +54,15 @@ Deno.serve(async (req) => {
     }
 
     // Check if user is super admin
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('user_type')
-      .eq('user_id', user.id)
-      .single();
+    const { data: isAdmin, error: adminError } = await supabase.rpc('is_super_admin', {
+      user_id_param: user.id,
+    });
 
-    if (!profile || profile.user_type !== 'admin') {
+    if (adminError || !isAdmin) {
       return new Response(
         JSON.stringify({ error: 'Admin access required' }),
-        { 
-          status: 403, 
+        {
+          status: 403,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
