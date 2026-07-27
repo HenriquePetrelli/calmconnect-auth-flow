@@ -376,7 +376,7 @@ const ExerciseView = ({
 
         <div className="flex-1 min-h-0 flex items-center justify-center w-full py-3">
           <div className="relative aspect-square h-full max-h-[42vh] max-w-[42vh]">
-            <div className="absolute inset-0 rounded-full overflow-hidden opacity-70">
+            <div className="absolute inset-0 rounded-full overflow-hidden opacity-30 dark:opacity-25 mix-blend-luminosity">
               <SoundAnimation
                 type={animationType}
                 isPlaying={isPlaying}
