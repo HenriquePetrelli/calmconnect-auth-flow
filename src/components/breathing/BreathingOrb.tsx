@@ -9,13 +9,18 @@ interface BreathingOrbProps {
 // Smooth easing — sine ease-in-out feels most breath-like
 const easeInOutSine = (t: number) => -(Math.cos(Math.PI * t) - 1) / 2;
 
-// Orb usa uma cor neutra única — a animação de fundo carrega a cor de acento
-const NEUTRAL = "hsl(var(--muted-foreground))";
-const PHASE_COLORS: Record<BreathingPhaseState["phase"], string> = {
-  inhale: NEUTRAL,
-  hold: NEUTRAL,
-  exhale: NEUTRAL,
-  pause: NEUTRAL,
+// Progress ring segue a fase: primary inspirar, cinza segurar/pausa, secondary expirar
+const PHASE_TOKENS: Record<BreathingPhaseState["phase"], string> = {
+  inhale: "--primary",
+  hold: "--muted-foreground",
+  exhale: "--secondary",
+  pause: "--muted-foreground",
+};
+
+const resolveHsl = (token: string) => {
+  if (typeof window === "undefined") return "0 0% 50%";
+  const v = getComputedStyle(document.documentElement).getPropertyValue(token).trim();
+  return v || "0 0% 50%";
 };
 
 const PHASE_LABEL: Record<BreathingPhaseState["phase"], string> = {
