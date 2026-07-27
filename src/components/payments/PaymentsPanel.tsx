@@ -263,22 +263,23 @@ export const PaymentsPanel = () => {
               </div>
 
               {/* Desktop: table */}
-              <div className="hidden md:block overflow-x-auto">
+              <div className="hidden md:block overflow-x-auto rounded-lg border">
                 <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Nome</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>PIX</TableHead>
-                      <TableHead className="text-center">Agendadas Pendentes</TableHead>
-                      <TableHead className="text-center">Emergências Pendentes</TableHead>
-                      <TableHead className="text-right">Valor Pendente</TableHead>
-                      <TableHead className="text-center">Ações</TableHead>
+                  <TableHeader className="bg-muted/50">
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="font-semibold">Nome</TableHead>
+                      <TableHead className="font-semibold">Email</TableHead>
+                      <TableHead className="font-semibold">PIX</TableHead>
+                      <TableHead className="text-center font-semibold">Agendadas Pendentes</TableHead>
+                      <TableHead className="text-center font-semibold">Emergências Pendentes</TableHead>
+                      <TableHead className="text-right font-semibold">Valor Pendente</TableHead>
+                      <TableHead className="text-center font-semibold">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {payments.map((payment) => (
-                      <TableRow key={payment.id}>
+                      <TableRow key={payment.id} className="hover:bg-muted/30 transition-colors">
+
                         <TableCell className="font-medium">
                           <div>
                             <div>{payment.name}</div>
