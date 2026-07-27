@@ -105,45 +105,45 @@ export const PaymentsPanel = () => {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Pendente</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-primary" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-6">
+            <CardTitle className="text-xs sm:text-sm font-medium">Total Pendente</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-primary shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-primary">
+          <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+            <div className="text-lg sm:text-2xl font-bold text-primary truncate">
               {formatCurrency(totalPending)}
             </div>
-            <p className="text-xs text-muted-foreground">
-              {pendingPayments} psicólogos com pagamentos pendentes
+            <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 line-clamp-2">
+              {pendingPayments} psicólogo(s) pendente(s)
             </p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Pago</CardTitle>
-            <Check className="h-4 w-4 text-success" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-6">
+            <CardTitle className="text-xs sm:text-sm font-medium">Total Pago</CardTitle>
+            <Check className="h-4 w-4 text-success shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-success">
+          <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+            <div className="text-lg sm:text-2xl font-bold text-success truncate">
               {formatCurrency(totalPaid)}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
               Pagamentos confirmados
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Psicólogos Ativos</CardTitle>
-            <DollarSign className="h-4 w-4 text-secondary" />
+        <Card className="col-span-2 md:col-span-1">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-6">
+            <CardTitle className="text-xs sm:text-sm font-medium">Psicólogos Ativos</CardTitle>
+            <DollarSign className="h-4 w-4 text-secondary shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{payments.length}</div>
-            <p className="text-xs text-muted-foreground">
+          <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+            <div className="text-lg sm:text-2xl font-bold">{payments.length}</div>
+            <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
               Com histórico de pagamentos
             </p>
           </CardContent>
@@ -152,13 +152,13 @@ export const PaymentsPanel = () => {
 
       {/* Payments Table */}
       <Card>
-        <CardHeader>
-          <CardTitle>Lista de Pagamentos</CardTitle>
-          <CardDescription>
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="text-base sm:text-lg">Lista de Pagamentos</CardTitle>
+          <CardDescription className="text-xs sm:text-sm">
             Consultas agendadas = R$ 90,00 | Emergências = R$ 50,00
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
           {payments.length === 0 ? (
             <EmptyState
               icon={Calendar}
