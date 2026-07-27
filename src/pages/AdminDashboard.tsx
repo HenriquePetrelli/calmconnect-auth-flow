@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { SkeletonFullPage } from '@/components/skeletons/Skeletons';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  Loader2,
+import {
   UserCheck,
   Shield,
   Users,
@@ -15,7 +14,10 @@ import {
   CreditCard,
   TrendingUp,
   Activity,
-  Check
+  Check,
+  LogOut,
+  LayoutDashboard,
+  UserCog,
 } from 'lucide-react';
 import AdminProfile from '@/components/AdminProfile';
 import { PsychologistApprovalPanel } from '@/components/psychologist/PsychologistApprovalPanel';
@@ -47,13 +49,12 @@ const AdminDashboard = () => {
   const checkAdminAccess = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (!session) {
         navigate('/');
         return;
       }
 
-      // Check if user is super admin using the new system
       const { data: isAdminResult, error: adminError } = await supabase
         .rpc('is_super_admin', { user_id_param: session.user.id });
 
@@ -89,14 +90,9 @@ const AdminDashboard = () => {
 
   const fetchMetrics = async () => {
     try {
-      const { data, error } = await supabase
-        .rpc('get_admin_metrics');
-      
+      const { data, error } = await supabase.rpc('get_admin_metrics');
       if (error) throw error;
-      
-      if (data && data.length > 0) {
-        setMetrics(data[0]);
-      }
+      if (data && data.length > 0) setMetrics(data[0]);
     } catch (error: any) {
       console.error('Error fetching metrics:', error.message);
       toast({
@@ -109,152 +105,226 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/');
+  };
+
   if (!isAdmin) {
     return <SkeletonFullPage />;
   }
 
+  const tabTriggerClass =
+    'flex items-center justify-center gap-1.5 sm:gap-2 py-2 sm:py-2.5 px-2 text-xs sm:text-sm font-medium rounded-md ' +
+    'data-[state=active]:bg-secondary data-[state=active]:text-white data-[state=active]:shadow-sm transition-colors';
+
+  const metricCards = metrics
+    ? [
+        {
+          label: 'Total de Pacientes',
+          value: metrics.total_patients,
+          hint: 'Pacientes registrados',
+          icon: Users,
+          accent: 'primary',
+        },
+        {
+          label: 'Psicólogos Ativos',
+          value: metrics.active_psychologists,
+          hint: 'Aprovados e ativos',
+          icon: UserCheck,
+          accent: 'secondary',
+        },
+        {
+          label: 'Pendentes',
+          value: metrics.pending_psychologists,
+          hint: 'Aguardando aprovação',
+          icon: AlertTriangle,
+          accent: 'warning',
+        },
+        {
+          label: 'Consultas (30d)',
+          value: metrics.appointments_last_30_days,
+          hint: 'Últimos 30 dias',
+          icon: Calendar,
+          accent: 'primary',
+        },
+        {
+          label: 'SOS (30d)',
+          value: metrics.sos_requests_last_30_days,
+          hint: 'Pedidos de emergência',
+          icon: Activity,
+          accent: 'destructive',
+        },
+        {
+          label: 'Assinantes Ativos',
+          value: metrics.active_subscribers,
+          hint: 'Planos pagos',
+          icon: CreditCard,
+          accent: 'secondary',
+        },
+      ]
+    : [];
+
+  const accentStyles: Record<string, { border: string; bg: string; iconBg: string; iconText: string; value: string }> = {
+    primary: {
+      border: 'border-primary/20',
+      bg: 'bg-gradient-to-br from-primary/5 to-transparent',
+      iconBg: 'bg-primary/10',
+      iconText: 'text-primary',
+      value: 'text-primary',
+    },
+    secondary: {
+      border: 'border-secondary/30',
+      bg: 'bg-gradient-to-br from-secondary/10 to-transparent',
+      iconBg: 'bg-secondary/20',
+      iconText: 'text-secondary-foreground',
+      value: 'text-secondary-foreground',
+    },
+    destructive: {
+      border: 'border-destructive/20',
+      bg: 'bg-gradient-to-br from-destructive/5 to-transparent',
+      iconBg: 'bg-destructive/10',
+      iconText: 'text-destructive',
+      value: 'text-destructive',
+    },
+    warning: {
+      border: 'border-warning/30',
+      bg: 'bg-gradient-to-br from-warning/10 to-transparent',
+      iconBg: 'bg-warning/15',
+      iconText: 'text-warning',
+      value: 'text-warning',
+    },
+  };
+
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto p-4">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
-            <Shield className="h-8 w-8" />
-            Painel Administrativo
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Bem-vindo, {user?.email}
-          </p>
+      {/* Header */}
+      <header className="sticky top-0 z-30 bg-secondary text-secondary-foreground border-b border-secondary/40 shadow-sm">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3 md:py-4">
+          <div className="flex items-center justify-between gap-2 sm:gap-4">
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] sm:text-[11px] font-medium uppercase tracking-wider text-secondary-foreground/70 flex items-center gap-1.5">
+                <Shield className="w-3 h-3" /> Painel Administrativo
+              </p>
+              <h1 className="text-base sm:text-lg md:text-xl font-semibold text-white truncate">
+                {user?.email}
+              </h1>
+            </div>
+            <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full text-white hover:bg-destructive/40 hover:text-white h-9 w-9"
+                onClick={handleLogout}
+                title="Sair"
+                aria-label="Sair"
+              >
+                <LogOut className="w-[18px] h-[18px]" />
+              </Button>
+            </div>
+          </div>
         </div>
+      </header>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full max-w-2xl grid-cols-4">
-            <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-            <TabsTrigger value="psychologists">Psicólogos</TabsTrigger>
-            <TabsTrigger value="payments">Pagamentos</TabsTrigger>
-            <TabsTrigger value="profile">Perfil</TabsTrigger>
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-4 md:py-6 space-y-4 sm:space-y-5 md:space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
+          <TabsList className="w-full h-auto p-1 bg-muted/60 grid grid-cols-4 gap-1 rounded-lg">
+            <TabsTrigger value="overview" className={tabTriggerClass}>
+              <LayoutDashboard className="w-4 h-4 shrink-0" />
+              <span className="hidden xs:inline sm:inline">Visão Geral</span>
+              <span className="xs:hidden sm:hidden">Geral</span>
+            </TabsTrigger>
+            <TabsTrigger value="psychologists" className={tabTriggerClass}>
+              <UserCheck className="w-4 h-4 shrink-0" />
+              <span>Psicólogos</span>
+            </TabsTrigger>
+            <TabsTrigger value="payments" className={tabTriggerClass}>
+              <CreditCard className="w-4 h-4 shrink-0" />
+              <span>Pagamentos</span>
+            </TabsTrigger>
+            <TabsTrigger value="profile" className={tabTriggerClass}>
+              <UserCog className="w-4 h-4 shrink-0" />
+              <span>Perfil</span>
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="space-y-6">
+          <TabsContent value="overview" className="space-y-4 sm:space-y-6 mt-4">
             {/* Métricas Gerais */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
               {metricsLoading ? (
                 Array.from({ length: 6 }).map((_, i) => (
                   <Card key={i} className="animate-pulse">
-                    <CardHeader className="pb-2">
-                      <div className="h-4 bg-muted rounded w-3/4"></div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="h-8 bg-muted rounded w-1/2"></div>
+                    <CardContent className="p-3 sm:p-5">
+                      <div className="h-3 bg-muted rounded w-3/4 mb-3"></div>
+                      <div className="h-6 bg-muted rounded w-1/2"></div>
                     </CardContent>
                   </Card>
                 ))
               ) : metrics ? (
-                <>
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Total de Pacientes</CardTitle>
-                      <Users className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">{metrics.total_patients}</div>
-                      <p className="text-xs text-muted-foreground">Pacientes registrados</p>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Psicólogos Ativos</CardTitle>
-                      <UserCheck className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">{metrics.active_psychologists}</div>
-                      <p className="text-xs text-muted-foreground">Aprovados e ativos</p>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Pendentes</CardTitle>
-                      <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">{metrics.pending_psychologists}</div>
-                      <p className="text-xs text-muted-foreground">Aguardando aprovação</p>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Consultas (30d)</CardTitle>
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">{metrics.appointments_last_30_days}</div>
-                      <p className="text-xs text-muted-foreground">Últimos 30 dias</p>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">SOS (30d)</CardTitle>
-                      <Activity className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">{metrics.sos_requests_last_30_days}</div>
-                      <p className="text-xs text-muted-foreground">Pedidos de emergência</p>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Assinantes Ativos</CardTitle>
-                      <CreditCard className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">{metrics.active_subscribers}</div>
-                      <p className="text-xs text-muted-foreground">Planos pagos</p>
-                    </CardContent>
-                  </Card>
-                </>
+                metricCards.map(({ label, value, hint, icon: Icon, accent }) => {
+                  const s = accentStyles[accent];
+                  return (
+                    <Card key={label} className={`${s.border} ${s.bg}`}>
+                      <CardContent className="p-3 sm:p-5">
+                        <div className="flex items-start justify-between gap-2 sm:gap-3">
+                          <div className="min-w-0">
+                            <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wide truncate">
+                              {label}
+                            </p>
+                            <p className={`text-xl sm:text-3xl font-bold mt-1 sm:mt-1.5 ${s.value}`}>
+                              {value}
+                            </p>
+                            <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 hidden sm:block">
+                              {hint}
+                            </p>
+                          </div>
+                          <div className={`rounded-lg p-1.5 sm:p-2.5 shrink-0 ${s.iconBg}`}>
+                            <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${s.iconText}`} />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })
               ) : (
                 <div className="col-span-full text-center py-8">
-                  <p className="text-muted-foreground">Falha ao carregar métricas</p>
+                  <p className="text-sm text-muted-foreground">Falha ao carregar métricas</p>
                 </div>
               )}
             </div>
 
-            {/* Alertas e Ações Rápidas */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Resumo e Ações */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5" />
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                     Resumo de Atividade
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-3">
                   {metrics && (
                     <>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm">Taxa de Aprovação</span>
-                        <span className="font-medium">
-                          {metrics.active_psychologists + metrics.pending_psychologists > 0 
+                      <div className="flex justify-between items-center py-2 border-b border-border/50">
+                        <span className="text-sm text-muted-foreground">Taxa de Aprovação</span>
+                        <span className="font-semibold text-sm">
+                          {metrics.active_psychologists + metrics.pending_psychologists > 0
                             ? Math.round((metrics.active_psychologists / (metrics.active_psychologists + metrics.pending_psychologists)) * 100)
                             : 0}%
                         </span>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm">Consultas por Psicólogo</span>
-                        <span className="font-medium">
-                          {metrics.active_psychologists > 0 
+                      <div className="flex justify-between items-center py-2 border-b border-border/50">
+                        <span className="text-sm text-muted-foreground">Consultas por Psicólogo</span>
+                        <span className="font-semibold text-sm">
+                          {metrics.active_psychologists > 0
                             ? Math.round(metrics.appointments_last_30_days / metrics.active_psychologists)
-                            : 0} média
+                            : 0} <span className="text-muted-foreground font-normal">média</span>
                         </span>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm">Taxa de Conversão</span>
-                        <span className="font-medium">
-                          {metrics.total_patients > 0 
+                      <div className="flex justify-between items-center py-2">
+                        <span className="text-sm text-muted-foreground">Taxa de Conversão</span>
+                        <span className="font-semibold text-sm">
+                          {metrics.total_patients > 0
                             ? Math.round((metrics.active_subscribers / metrics.total_patients) * 100)
                             : 0}%
                         </span>
@@ -265,67 +335,69 @@ const AdminDashboard = () => {
               </Card>
 
               <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <AlertTriangle className="h-5 w-5" />
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-warning" />
                     Ações Necessárias
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  {metrics?.pending_psychologists && metrics.pending_psychologists > 0 && (
-                    <div className="flex items-center justify-between p-3 bg-primary/10 dark:bg-orange-950/20 rounded-lg border border-primary/20 dark:border-primary/30">
-                      <div>
-                        <p className="font-medium text-primary-active dark:text-orange-200">
+                <CardContent className="space-y-3">
+                  {metrics?.pending_psychologists && metrics.pending_psychologists > 0 ? (
+                    <div className="flex items-center justify-between p-3 bg-primary/5 rounded-lg border border-primary/20">
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm text-foreground">
                           {metrics.pending_psychologists} psicólogo(s) pendente(s)
                         </p>
-                        <p className="text-sm text-primary dark:text-orange-300">
+                        <p className="text-xs text-muted-foreground mt-0.5">
                           Necessita aprovação
                         </p>
                       </div>
                       <Button size="sm" variant="outline" onClick={() => setActiveTab("psychologists")}>
-                        Ver
+                        Revisar
                       </Button>
                     </div>
-                  )}
-                  
-                  {metrics?.sos_requests_last_30_days && metrics.sos_requests_last_30_days > 10 && (
-                    <div className="flex items-center justify-between p-3 bg-destructive/10 dark:bg-red-950/20 rounded-lg border border-destructive/20 dark:border-red-800">
-                      <div>
-                        <p className="font-medium text-destructive dark:text-red-200">
+                  ) : null}
+
+                  {metrics?.sos_requests_last_30_days && metrics.sos_requests_last_30_days > 10 ? (
+                    <div className="flex items-center justify-between p-3 bg-destructive/5 rounded-lg border border-destructive/20">
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm text-destructive">
                           Alto volume de SOS
                         </p>
-                        <p className="text-sm text-destructive dark:text-red-300">
+                        <p className="text-xs text-muted-foreground mt-0.5">
                           {metrics.sos_requests_last_30_days} nos últimos 30 dias
                         </p>
                       </div>
                     </div>
-                  )}
+                  ) : null}
 
-                  {(!metrics?.pending_psychologists || metrics.pending_psychologists === 0) && 
-                   (!metrics?.sos_requests_last_30_days || metrics.sos_requests_last_30_days <= 10) && (
-                    <div className="flex items-center justify-center p-6 text-center">
-                      <div>
-                        <Check className="h-8 w-8 text-success mx-auto mb-2" />
-                        <p className="text-sm text-muted-foreground">
-                          Tudo em ordem! Nenhuma ação urgente necessária.
-                        </p>
+                  {(!metrics?.pending_psychologists || metrics.pending_psychologists === 0) &&
+                    (!metrics?.sos_requests_last_30_days || metrics.sos_requests_last_30_days <= 10) && (
+                      <div className="flex items-center justify-center py-8 text-center">
+                        <div>
+                          <div className="rounded-full bg-success/10 p-3 mx-auto w-fit mb-3">
+                            <Check className="h-6 w-6 text-success" />
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            Tudo em ordem! Nenhuma ação urgente necessária.
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
                 </CardContent>
               </Card>
             </div>
           </TabsContent>
 
-          <TabsContent value="psychologists" className="space-y-6">
+          <TabsContent value="psychologists" className="mt-4">
             <PsychologistApprovalPanel adminUserId={user?.id} />
           </TabsContent>
 
-          <TabsContent value="payments" className="space-y-6">
+          <TabsContent value="payments" className="mt-4">
             <PaymentsPanel />
           </TabsContent>
 
-          <TabsContent value="profile">
+          <TabsContent value="profile" className="mt-4">
             <AdminProfile />
           </TabsContent>
         </Tabs>

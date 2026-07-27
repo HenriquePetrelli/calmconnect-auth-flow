@@ -100,25 +100,25 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
   });
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 gap-3">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">Gestão de Psicólogos</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-lg sm:text-xl font-semibold text-foreground">Gestão de Psicólogos</h2>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
             Analise e gerencie os cadastros de psicólogos na plataforma
           </p>
         </div>
-        <Button onClick={getPendingPsychologists} disabled={loading}>
+        <Button onClick={getPendingPsychologists} disabled={loading} size="sm" className="w-full sm:w-auto">
           {loading ? 'Carregando...' : 'Atualizar'}
         </Button>
       </div>
 
       <Tabs value={filter} onValueChange={(value) => setFilter(value as any)} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="pending">Pendentes ({pendingPsychologists.filter(p => p.approval_status === 'pending').length})</TabsTrigger>
-          <TabsTrigger value="approved">Aprovados ({pendingPsychologists.filter(p => p.approval_status === 'approved').length})</TabsTrigger>
-          <TabsTrigger value="rejected">Rejeitados ({pendingPsychologists.filter(p => p.approval_status === 'rejected').length})</TabsTrigger>
-          <TabsTrigger value="all">Todos ({pendingPsychologists.length})</TabsTrigger>
+        <TabsList className="w-full h-auto p-1 bg-muted/60 grid grid-cols-4 gap-1 rounded-lg">
+          <TabsTrigger value="pending" className="text-xs sm:text-sm data-[state=active]:bg-secondary data-[state=active]:text-white">Pendentes ({pendingPsychologists.filter(p => p.approval_status === 'pending').length})</TabsTrigger>
+          <TabsTrigger value="approved" className="text-xs sm:text-sm data-[state=active]:bg-secondary data-[state=active]:text-white">Aprovados ({pendingPsychologists.filter(p => p.approval_status === 'approved').length})</TabsTrigger>
+          <TabsTrigger value="rejected" className="text-xs sm:text-sm data-[state=active]:bg-secondary data-[state=active]:text-white">Rejeitados ({pendingPsychologists.filter(p => p.approval_status === 'rejected').length})</TabsTrigger>
+          <TabsTrigger value="all" className="text-xs sm:text-sm data-[state=active]:bg-secondary data-[state=active]:text-white">Todos ({pendingPsychologists.length})</TabsTrigger>
         </TabsList>
       </Tabs>
 
