@@ -40,7 +40,9 @@ export interface PsychologistRegistration {
 
 export const usePsychologistManagement = () => {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [pendingPsychologists, setPendingPsychologists] = useState<PsychologistData[]>([]);
+
 
   const registerPsychologist = async (data: PsychologistRegistration) => {
     setLoading(true);
@@ -75,6 +77,7 @@ export const usePsychologistManagement = () => {
 
   const getPendingPsychologists = async () => {
     setLoading(true);
+    setError(null);
     try {
       const response = await fetch('https://ihrrgmmsfuvlasmzdmwf.supabase.co/functions/v1/psychologist-management?action=all', {
         method: 'GET',
@@ -93,14 +96,16 @@ export const usePsychologistManagement = () => {
       } else {
         throw new Error(result.error || 'Erro ao buscar psicólogos');
       }
-    } catch (error: any) {
-      console.error('Erro ao buscar psicólogos:', error);
-      toast.error(error.message || 'Erro ao carregar psicólogos');
+    } catch (err: any) {
+      console.error('Erro ao buscar psicólogos:', err);
+      setError(err?.message || 'Erro ao carregar psicólogos');
+      toast.error(err.message || 'Erro ao carregar psicólogos');
       return [];
     } finally {
       setLoading(false);
     }
   };
+
 
   const getPsychologistDetails = async (psychologistId: string) => {
     setLoading(true);

@@ -23,11 +23,13 @@ export interface PaymentRecord {
 export const usePayments = () => {
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const fetchPayments = async () => {
     try {
       setLoading(true);
+      setError(null);
       const { data, error } = await supabase
         .from('psychologist_payments')
         .select('*')
@@ -36,8 +38,9 @@ export const usePayments = () => {
       if (error) throw error;
       
       setPayments(data || []);
-    } catch (error: any) {
-      console.error('Error fetching payments:', error);
+    } catch (err: any) {
+      console.error('Error fetching payments:', err);
+      setError(err?.message || 'Erro ao carregar pagamentos');
       toast({
         title: 'Erro',
         description: 'Erro ao carregar pagamentos',
@@ -47,6 +50,7 @@ export const usePayments = () => {
       setLoading(false);
     }
   };
+
 
   const confirmPayment = async (psychologist_id: string) => {
     try {
@@ -111,6 +115,7 @@ export const usePayments = () => {
   return {
     payments,
     loading,
+    error,
     fetchPayments,
     confirmPayment,
     syncPayments,
