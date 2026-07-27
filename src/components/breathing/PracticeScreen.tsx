@@ -429,25 +429,23 @@ const ExerciseView = ({
               className="absolute inset-[-8%] rounded-full will-change-transform"
               style={{
                 transform: "scale(1)",
-                background:
-                  "radial-gradient(circle at 50% 50%, hsl(var(--secondary) / 0.22), hsl(var(--primary) / 0.10) 55%, transparent 72%)",
-                filter: "blur(24px)",
+                backgroundColor: "hsl(var(--secondary) / 0.18)",
+                filter: "blur(28px)",
               }}
             />
-            {/* Núcleo colorido primary/secondary que enche no inspirar */}
+            {/* Núcleo com cor sólida secondary */}
             <div
               ref={coreRef}
               aria-hidden
-              className="absolute inset-0 rounded-full overflow-hidden will-change-transform"
+              className="absolute inset-0 rounded-full will-change-transform"
               style={{
                 transform: "scale(0.6)",
                 transformOrigin: "center",
-                background:
-                  "radial-gradient(circle at 30% 30%, hsl(var(--secondary) / 0.55), hsl(var(--primary) / 0.35) 55%, hsl(var(--primary) / 0.10) 100%)",
-                boxShadow:
-                  "0 0 60px -10px hsl(var(--primary) / 0.35), inset 0 0 40px hsl(var(--secondary) / 0.25)",
+                backgroundColor: "hsl(var(--secondary) / 0.28)",
+                border: "1px solid hsl(var(--primary) / 0.35)",
               }}
             />
+
             <div className="absolute inset-0">
               <BreathingOrb state={state} isPlaying={isPlaying} />
             </div>
