@@ -417,29 +417,44 @@ const ExerciseView = ({
 
         <div className="flex-1 min-h-0 flex items-center justify-center w-full py-3">
           <div className="relative aspect-square h-full max-h-[42vh] max-w-[42vh]">
-            {/* Halo externo suave — pulsa junto com a respiração */}
-            <div
-              ref={haloRef}
-              aria-hidden
-              className="absolute inset-[-8%] rounded-full will-change-transform"
-              style={{
-                transform: "scale(1)",
-                backgroundColor: "hsl(var(--secondary) / 0.18)",
-                filter: "blur(28px)",
-              }}
-            />
-            {/* Núcleo com cor sólida secondary */}
-            <div
-              ref={coreRef}
-              aria-hidden
-              className="absolute inset-0 rounded-full will-change-transform"
-              style={{
-                transform: "scale(0.6)",
-                transformOrigin: "center",
-                backgroundColor: "hsl(var(--secondary) / 0.28)",
-                border: "1px solid hsl(var(--primary) / 0.35)",
-              }}
-            />
+            {(() => {
+              const phaseColor =
+                state.phase === "inhale"
+                  ? "var(--primary)"
+                  : state.phase === "exhale"
+                  ? "var(--secondary)"
+                  : "var(--muted-foreground)";
+              return (
+                <>
+                  {/* Halo externo suave — pulsa junto com a respiração */}
+                  <div
+                    ref={haloRef}
+                    aria-hidden
+                    className="absolute inset-[-8%] rounded-full will-change-transform"
+                    style={{
+                      transform: "scale(1)",
+                      backgroundColor: `hsl(${phaseColor} / 0.18)`,
+                      filter: "blur(28px)",
+                      transition: "background-color 600ms ease",
+                    }}
+                  />
+                  {/* Núcleo — cor muda por fase */}
+                  <div
+                    ref={coreRef}
+                    aria-hidden
+                    className="absolute inset-0 rounded-full will-change-transform"
+                    style={{
+                      transform: "scale(0.6)",
+                      transformOrigin: "center",
+                      backgroundColor: `hsl(${phaseColor} / 0.28)`,
+                      border: `1px solid hsl(${phaseColor} / 0.5)`,
+                      transition: "background-color 600ms ease, border-color 600ms ease",
+                    }}
+                  />
+                </>
+              );
+            })()}
+
 
             <div className="absolute inset-0">
               <BreathingOrb state={state} isPlaying={isPlaying} />
