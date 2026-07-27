@@ -230,10 +230,65 @@ const AdminDashboard = () => {
               </h1>
             </div>
             <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+              <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="md:hidden rounded-full text-white hover:bg-white/15 hover:text-white h-9 w-9"
+                    aria-label="Abrir menu"
+                  >
+                    <Menu className="w-[18px] h-[18px]" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-[82vw] max-w-xs p-0 bg-secondary text-secondary-foreground border-r-0">
+                  <SheetHeader className="p-4 border-b border-white/10 text-left">
+                    <SheetTitle className="text-white flex items-center gap-2 text-sm">
+                      <Shield className="w-4 h-4" /> Painel Administrativo
+                    </SheetTitle>
+                    <p className="text-xs text-white/70 truncate">{user?.email}</p>
+                  </SheetHeader>
+                  <nav className="p-2">
+                    {navItems.map((item) => {
+                      const Icon = item.icon;
+                      const isActive = activeTab === item.value;
+                      return (
+                        <button
+                          key={item.value}
+                          onClick={() => {
+                            setActiveTab(item.value);
+                            setMobileNavOpen(false);
+                          }}
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
+                            isActive
+                              ? 'bg-white/15 text-white'
+                              : 'text-white/85 hover:bg-white/10 hover:text-white'
+                          }`}
+                        >
+                          <Icon className="w-4 h-4 shrink-0" />
+                          <span>{item.label}</span>
+                        </button>
+                      );
+                    })}
+                    <div className="mt-2 pt-2 border-t border-white/10">
+                      <button
+                        onClick={() => {
+                          setMobileNavOpen(false);
+                          handleLogout();
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-white/85 hover:bg-destructive/30 hover:text-white transition-colors"
+                      >
+                        <LogOut className="w-4 h-4 shrink-0" />
+                        <span>Sair</span>
+                      </button>
+                    </div>
+                  </nav>
+                </SheetContent>
+              </Sheet>
               <Button
                 variant="ghost"
                 size="icon"
-                className="rounded-full text-white hover:bg-destructive/40 hover:text-white h-9 w-9"
+                className="hidden md:inline-flex rounded-full text-white hover:bg-destructive/40 hover:text-white h-9 w-9"
                 onClick={handleLogout}
                 title="Sair"
                 aria-label="Sair"
@@ -241,6 +296,7 @@ const AdminDashboard = () => {
                 <LogOut className="w-[18px] h-[18px]" />
               </Button>
             </div>
+
           </div>
         </div>
       </header>
