@@ -302,12 +302,28 @@ const AdminDashboard = () => {
       </header>
 
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-4 md:py-6 space-y-4 sm:space-y-5 md:space-y-6">
+        {/* Mobile: current section indicator */}
+        <div className="md:hidden flex items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2.5">
+          <div className="flex items-center gap-2 min-w-0">
+            <activeNav.icon className="w-4 h-4 text-secondary shrink-0" />
+            <span className="text-sm font-semibold truncate">{activeNav.label}</span>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 gap-1.5 text-xs"
+            onClick={() => setMobileNavOpen(true)}
+          >
+            <Menu className="w-4 h-4" />
+            Menu
+          </Button>
+        </div>
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-          <TabsList className="w-full h-auto p-1 bg-muted/60 grid grid-cols-4 gap-1 rounded-lg">
+          <TabsList className="hidden md:grid w-full h-auto p-1 bg-muted/60 grid-cols-4 gap-1 rounded-lg">
             <TabsTrigger value="overview" className={tabTriggerClass}>
               <LayoutDashboard className="w-4 h-4 shrink-0" />
-              <span className="hidden xs:inline sm:inline">Visão Geral</span>
-              <span className="xs:hidden sm:hidden">Geral</span>
+              <span>Visão Geral</span>
             </TabsTrigger>
             <TabsTrigger value="psychologists" className={tabTriggerClass}>
               <UserCheck className="w-4 h-4 shrink-0" />
@@ -322,6 +338,7 @@ const AdminDashboard = () => {
               <span>Perfil</span>
             </TabsTrigger>
           </TabsList>
+
 
           <TabsContent value="overview" className="space-y-4 sm:space-y-6 mt-4">
             {/* Métricas Gerais */}
