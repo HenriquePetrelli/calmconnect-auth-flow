@@ -119,11 +119,11 @@ const BreathingOrb = ({ state, isPlaying }: BreathingOrbProps) => {
         ? 1 + Math.sin(now / 900) * 0.02
         : 1 + Math.sin(now / 1400) * 0.01;
 
-      // Layered outer glow rings — softer, more elegant
+      // Layered outer glow rings — very subtle to match calm background
       for (let i = 3; i >= 1; i--) {
-        const ringR = r * pulse + i * 18;
-        const grad = ctx.createRadialGradient(cx, cy, r * 0.7, cx, cy, ringR);
-        grad.addColorStop(0, color.replace("hsl(", "hsla(").replace(")", `, ${0.05 / i})`));
+        const ringR = r * pulse + i * 14;
+        const grad = ctx.createRadialGradient(cx, cy, r * 0.75, cx, cy, ringR);
+        grad.addColorStop(0, color.replace("hsl(", "hsla(").replace(")", `, ${0.025 / i})`));
         grad.addColorStop(1, color.replace("hsl(", "hsla(").replace(")", ", 0)"));
         ctx.fillStyle = grad;
         ctx.beginPath();
@@ -131,19 +131,19 @@ const BreathingOrb = ({ state, isPlaying }: BreathingOrbProps) => {
         ctx.fill();
       }
 
-      // Core orb — subtle radial gradient, mono-hue for elegance
-      const core = ctx.createRadialGradient(cx - r * 0.2, cy - r * 0.25, r * 0.05, cx, cy, r);
-      core.addColorStop(0, color.replace("hsl(", "hsla(").replace(")", ", 0.32)"));
-      core.addColorStop(0.65, color.replace("hsl(", "hsla(").replace(")", ", 0.16)"));
+      // Core orb — flatter, low-contrast mono-hue
+      const core = ctx.createRadialGradient(cx - r * 0.15, cy - r * 0.2, r * 0.05, cx, cy, r);
+      core.addColorStop(0, color.replace("hsl(", "hsla(").replace(")", ", 0.14)"));
+      core.addColorStop(0.7, color.replace("hsl(", "hsla(").replace(")", ", 0.08)"));
       core.addColorStop(1, color.replace("hsl(", "hsla(").replace(")", ", 0.02)"));
       ctx.fillStyle = core;
       ctx.beginPath();
       ctx.arc(cx, cy, r * pulse, 0, Math.PI * 2);
       ctx.fill();
 
-      // Progress ring — traces the current phase
-      ctx.strokeStyle = color.replace("hsl(", "hsla(").replace(")", ", 0.9)");
-      ctx.lineWidth = 2.5;
+      // Progress ring — traces the current phase, muted contrast
+      ctx.strokeStyle = color.replace("hsl(", "hsla(").replace(")", ", 0.55)");
+      ctx.lineWidth = 2;
       ctx.lineCap = "round";
       ctx.beginPath();
       const startAngle = -Math.PI / 2;
@@ -152,11 +152,12 @@ const BreathingOrb = ({ state, isPlaying }: BreathingOrbProps) => {
       ctx.stroke();
 
       // Faint full track
-      ctx.strokeStyle = color.replace("hsl(", "hsla(").replace(")", ", 0.12)");
+      ctx.strokeStyle = color.replace("hsl(", "hsla(").replace(")", ", 0.08)");
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.arc(cx, cy, maxR - 2, 0, Math.PI * 2);
       ctx.stroke();
+
 
       raf = requestAnimationFrame(draw);
     };
