@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { DocumentViewer } from './DocumentViewer';
 import { SkeletonCardGrid } from '@/components/skeletons/Skeletons';
 import { EmptyState } from '@/components/EmptyState';
+import { ErrorState } from '@/components/ErrorState';
 
 const extractDocumentPath = (url?: string): string | undefined => {
   if (!url) return undefined;
@@ -50,6 +51,7 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
 
   const {
     loading,
+    error,
     pendingPsychologists,
     getPendingPsychologists,
     getPsychologistDetails,
