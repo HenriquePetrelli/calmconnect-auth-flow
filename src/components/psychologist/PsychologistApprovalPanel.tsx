@@ -124,6 +124,10 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
         </TabsList>
       </Tabs>
 
+      {loading && pendingPsychologists.length === 0 ? (
+        <SkeletonCardGrid count={6} />
+      ) : null}
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {filteredPsychologists.map((psychologist) => (
           <Card key={psychologist.id} className=" transition-shadow">
