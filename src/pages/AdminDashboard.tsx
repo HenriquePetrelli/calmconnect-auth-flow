@@ -253,14 +253,9 @@ const AdminDashboard = () => {
             {/* Métricas Gerais */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
               {metricsLoading ? (
-                Array.from({ length: 6 }).map((_, i) => (
-                  <Card key={i} className="animate-pulse">
-                    <CardContent className="p-3 sm:p-5">
-                      <div className="h-3 bg-muted rounded w-3/4 mb-3"></div>
-                      <div className="h-6 bg-muted rounded w-1/2"></div>
-                    </CardContent>
-                  </Card>
-                ))
+                <div className="col-span-full">
+                  <SkeletonStatsGrid count={6} />
+                </div>
               ) : metrics ? (
                 metricCards.map(({ label, value, hint, icon: Icon, accent }) => {
                   const s = accentStyles[accent];
@@ -288,8 +283,18 @@ const AdminDashboard = () => {
                   );
                 })
               ) : (
-                <div className="col-span-full text-center py-8">
-                  <p className="text-sm text-muted-foreground">Falha ao carregar métricas</p>
+                <div className="col-span-full">
+                  <EmptyState
+                    icon={AlertTriangle}
+                    title="Falha ao carregar métricas"
+                    description="Não conseguimos buscar os dados agora. Tente novamente em instantes."
+                    variant="destructive"
+                    action={
+                      <Button size="sm" variant="outline" onClick={fetchMetrics}>
+                        Tentar novamente
+                      </Button>
+                    }
+                  />
                 </div>
               )}
             </div>
