@@ -40,7 +40,7 @@ const BreathingOrb = ({ state, isPlaying }: BreathingOrbProps) => {
   const stateRef = useRef(state);
   const playRef = useRef(isPlaying);
   const smoothScaleRef = useRef(0.55);
-  const smoothColorRef = useRef({ from: PHASE_COLORS.inhale, to: PHASE_COLORS.inhale, t: 1 });
+  const smoothColorRef = useRef({ from: resolveHsl(PHASE_TOKENS.inhale), to: resolveHsl(PHASE_TOKENS.inhale), t: 1 });
   const lastPhaseRef = useRef(state.phase);
 
   useEffect(() => { stateRef.current = state; }, [state]);
@@ -50,8 +50,8 @@ const BreathingOrb = ({ state, isPlaying }: BreathingOrbProps) => {
   useEffect(() => {
     if (lastPhaseRef.current !== state.phase) {
       smoothColorRef.current = {
-        from: PHASE_COLORS[lastPhaseRef.current],
-        to: PHASE_COLORS[state.phase],
+        from: resolveHsl(PHASE_TOKENS[lastPhaseRef.current]),
+        to: resolveHsl(PHASE_TOKENS[state.phase]),
         t: 0,
       };
       lastPhaseRef.current = state.phase;
