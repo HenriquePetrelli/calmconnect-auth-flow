@@ -353,6 +353,21 @@ const ExerciseView = ({
   const state = useBreathingPhase(pattern, isPlaying, onPhaseChange, onCycleComplete);
   const sessionProgress = totalSeconds > 0 ? 1 - timeRemaining / totalSeconds : 0;
 
+  // Escala do fundo segue a respiração: inspira → fecha, segura → mantém, expira → abre
+  const easeInOutSine = (t: number) => -(Math.cos(Math.PI * t) - 1) / 2;
+  const minScale = 0.55;
+  const maxScale = 1;
+  let bgScale = maxScale;
+  if (state.phase === "inhale") {
+    bgScale = maxScale - (maxScale - minScale) * easeInOutSine(state.progress);
+  } else if (state.phase === "hold") {
+    bgScale = minScale;
+  } else if (state.phase === "exhale") {
+    bgScale = minScale + (maxScale - minScale) * easeInOutSine(state.progress);
+  } else {
+    bgScale = maxScale;
+  }
+
   return (
     <div className="h-screen flex flex-col overflow-hidden relative bg-background">
       <div
@@ -376,7 +391,14 @@ const ExerciseView = ({
 
         <div className="flex-1 min-h-0 flex items-center justify-center w-full py-3">
           <div className="relative aspect-square h-full max-h-[42vh] max-w-[42vh]">
-            <div className="absolute inset-0 rounded-full overflow-hidden opacity-30 dark:opacity-25 mix-blend-luminosity">
+            <div
+              className="absolute inset-0 rounded-full overflow-hidden opacity-30 dark:opacity-25 mix-blend-luminosity will-change-transform"
+              style={{
+                transform: `scale(${bgScale})`,
+                transformOrigin: "center",
+                transition: "transform 120ms linear",
+              }}
+            >
               <SoundAnimation
                 type={animationType}
                 isPlaying={isPlaying}
@@ -389,6 +411,7 @@ const ExerciseView = ({
             </div>
           </div>
         </div>
+
 
 
         <div className="shrink-0 min-h-[3rem] flex items-center">
