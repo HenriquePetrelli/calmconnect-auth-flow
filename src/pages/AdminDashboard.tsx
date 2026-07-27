@@ -40,6 +40,7 @@ const AdminDashboard = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
   const [metricsLoading, setMetricsLoading] = useState(true);
+  const [metricsError, setMetricsError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -92,11 +93,14 @@ const AdminDashboard = () => {
 
   const fetchMetrics = async () => {
     try {
+      setMetricsLoading(true);
+      setMetricsError(null);
       const { data, error } = await supabase.rpc('get_admin_metrics');
       if (error) throw error;
       if (data && data.length > 0) setMetrics(data[0]);
     } catch (error: any) {
       console.error('Error fetching metrics:', error.message);
+      setMetricsError(error?.message || 'Falha ao carregar métricas');
       toast({
         title: "Erro",
         description: "Falha ao carregar métricas do sistema",
@@ -106,6 +110,7 @@ const AdminDashboard = () => {
       setMetricsLoading(false);
     }
   };
+
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
