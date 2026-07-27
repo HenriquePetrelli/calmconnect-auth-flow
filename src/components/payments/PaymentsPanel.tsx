@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { SkeletonSectionCard, SkeletonTable, SkeletonStatsGrid } from '@/components/skeletons/Skeletons';
 import { EmptyState } from '@/components/EmptyState';
+import { ErrorState } from '@/components/ErrorState';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
