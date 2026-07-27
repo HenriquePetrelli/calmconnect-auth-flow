@@ -274,13 +274,8 @@ const PracticeScreen = ({ technique, onBack, onComplete }: PracticeScreenProps) 
           <Slider value={duration} onValueChange={setDuration} max={20} min={1} step={1} />
         </div>
 
-        {/* Animation selector */}
-        <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            Animação
-          </p>
-          <AnimationSelector selected={selectedAnimation} onChange={setSelectedAnimation} />
-        </div>
+
+
 
         {/* Start */}
         <Button
