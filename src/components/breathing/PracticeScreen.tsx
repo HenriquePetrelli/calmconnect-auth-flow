@@ -252,11 +252,11 @@ const PracticeScreen = ({ technique, onBack, onComplete }: PracticeScreenProps) 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             <PatternStep icon={<Wind className="w-3.5 h-3.5" />} label="Inspirar" value={breathingPattern.inhale} color="bg-primary" />
             {breathingPattern.hold > 0 && (
-              <PatternStep icon={<Heart className="w-3.5 h-3.5" />} label="Segurar" value={breathingPattern.hold} color="bg-secondary" />
+              <PatternStep icon={<Heart className="w-3.5 h-3.5" />} label="Segurar" value={breathingPattern.hold} color="bg-muted-foreground/60" />
             )}
-            <PatternStep icon={<Waves className="w-3.5 h-3.5" />} label="Expirar" value={breathingPattern.exhale} color="bg-primary" />
+            <PatternStep icon={<Waves className="w-3.5 h-3.5" />} label="Expirar" value={breathingPattern.exhale} color="bg-secondary" />
             {breathingPattern.pause > 0 && (
-              <PatternStep icon={<Pause className="w-3.5 h-3.5" />} label="Pausar" value={breathingPattern.pause} color="bg-secondary" />
+              <PatternStep icon={<Pause className="w-3.5 h-3.5" />} label="Pausar" value={breathingPattern.pause} color="bg-muted-foreground/60" />
             )}
           </div>
         </div>
