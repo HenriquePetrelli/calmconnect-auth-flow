@@ -290,16 +290,11 @@ const AdminDashboard = () => {
                 })
               ) : (
                 <div className="col-span-full">
-                  <EmptyState
-                    icon={AlertTriangle}
+                  <ErrorState
                     title="Falha ao carregar métricas"
-                    description="Não conseguimos buscar os dados agora. Tente novamente em instantes."
-                    variant="destructive"
-                    action={
-                      <Button size="sm" variant="outline" onClick={fetchMetrics}>
-                        Tentar novamente
-                      </Button>
-                    }
+                    description={metricsError || "Não conseguimos buscar os dados agora. Tente novamente em instantes."}
+                    onRetry={fetchMetrics}
+                    retrying={metricsLoading}
                   />
                 </div>
               )}
