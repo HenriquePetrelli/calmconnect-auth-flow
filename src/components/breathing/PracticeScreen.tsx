@@ -353,20 +353,51 @@ const ExerciseView = ({
   const state = useBreathingPhase(pattern, isPlaying, onPhaseChange, onCycleComplete);
   const sessionProgress = totalSeconds > 0 ? 1 - timeRemaining / totalSeconds : 0;
 
-  // Escala do fundo segue a respiração: inspira → expande (enche), segura → mantém, expira → contrai
-  const easeInOutSine = (t: number) => -(Math.cos(Math.PI * t) - 1) / 2;
-  const minScale = 0.6;
-  const maxScale = 1;
-  let bgScale = minScale;
-  if (state.phase === "inhale") {
-    bgScale = minScale + (maxScale - minScale) * easeInOutSine(state.progress);
-  } else if (state.phase === "hold") {
-    bgScale = maxScale;
-  } else if (state.phase === "exhale") {
-    bgScale = maxScale - (maxScale - minScale) * easeInOutSine(state.progress);
-  } else {
-    bgScale = minScale;
-  }
+  // Refs para animação direta via rAF (evita repaints do React a cada frame)
+  const stateRef = useRef(state);
+  useEffect(() => { stateRef.current = state; }, [state]);
+  const coreRef = useRef<HTMLDivElement | null>(null);
+  const haloRef = useRef<HTMLDivElement | null>(null);
+  const smoothScaleRef = useRef(0.6);
+
+  useEffect(() => {
+    // Easing suave (cubic in-out) — mais orgânico que sine nas bordas de fase
+    const easeInOutCubic = (t: number) =>
+      t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    const minScale = 0.6;
+    const maxScale = 1;
+
+    let raf = 0;
+    let last = performance.now();
+    const tick = (now: number) => {
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+
+      const s = stateRef.current;
+      let target = smoothScaleRef.current;
+      if (s.phase === "inhale") {
+        target = minScale + (maxScale - minScale) * easeInOutCubic(s.progress);
+      } else if (s.phase === "hold") {
+        target = maxScale;
+      } else if (s.phase === "exhale") {
+        target = maxScale - (maxScale - minScale) * easeInOutCubic(s.progress);
+      } else {
+        target = minScale;
+      }
+
+      // Smoothing critically-damped — remove qualquer "salto" nas trocas de fase
+      const k = 1 - Math.exp(-dt * 6);
+      smoothScaleRef.current += (target - smoothScaleRef.current) * k;
+
+      const sc = smoothScaleRef.current;
+      if (coreRef.current) coreRef.current.style.transform = `scale(${sc})`;
+      if (haloRef.current) haloRef.current.style.transform = `scale(${0.9 + sc * 0.15})`;
+
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
   return (
     <div className="h-screen flex flex-col overflow-hidden relative bg-background">
@@ -393,11 +424,11 @@ const ExerciseView = ({
           <div className="relative aspect-square h-full max-h-[42vh] max-w-[42vh]">
             {/* Halo externo suave — pulsa junto com a respiração */}
             <div
+              ref={haloRef}
               aria-hidden
               className="absolute inset-[-8%] rounded-full will-change-transform"
               style={{
-                transform: `scale(${0.9 + bgScale * 0.15})`,
-                transition: "transform 160ms linear",
+                transform: "scale(1)",
                 background:
                   "radial-gradient(circle at 50% 50%, hsl(var(--secondary) / 0.22), hsl(var(--primary) / 0.10) 55%, transparent 72%)",
                 filter: "blur(24px)",
@@ -405,12 +436,12 @@ const ExerciseView = ({
             />
             {/* Núcleo colorido primary/secondary que enche no inspirar */}
             <div
+              ref={coreRef}
               aria-hidden
               className="absolute inset-0 rounded-full overflow-hidden will-change-transform"
               style={{
-                transform: `scale(${bgScale})`,
+                transform: "scale(0.6)",
                 transformOrigin: "center",
-                transition: "transform 120ms linear",
                 background:
                   "radial-gradient(circle at 30% 30%, hsl(var(--secondary) / 0.55), hsl(var(--primary) / 0.35) 55%, hsl(var(--primary) / 0.10) 100%)",
                 boxShadow:
@@ -422,6 +453,7 @@ const ExerciseView = ({
             </div>
           </div>
         </div>
+
 
 
 
