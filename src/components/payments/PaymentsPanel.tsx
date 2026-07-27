@@ -71,7 +71,19 @@ export const PaymentsPanel = () => {
   const pendingPayments = payments.filter(p => p.total_pending_amount > 0).length;
 
   if (loading && !payments.length) {
-    return <SkeletonSectionCard rows={5} accent="primary" />;
+    return (
+      <div className="space-y-4 sm:space-y-6">
+        <SkeletonStatsGrid count={3} />
+        <Card>
+          <CardHeader>
+            <div className="h-4 w-40 bg-muted rounded animate-pulse" />
+          </CardHeader>
+          <CardContent>
+            <SkeletonTable rows={6} cols={5} />
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
