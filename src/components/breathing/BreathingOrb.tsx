@@ -9,13 +9,18 @@ interface BreathingOrbProps {
 // Smooth easing — sine ease-in-out feels most breath-like
 const easeInOutSine = (t: number) => -(Math.cos(Math.PI * t) - 1) / 2;
 
-// Orb usa uma cor neutra única — a animação de fundo carrega a cor de acento
-const NEUTRAL = "hsl(var(--muted-foreground))";
-const PHASE_COLORS: Record<BreathingPhaseState["phase"], string> = {
-  inhale: NEUTRAL,
-  hold: NEUTRAL,
-  exhale: NEUTRAL,
-  pause: NEUTRAL,
+// Progress ring segue a fase: primary inspirar, cinza segurar/pausa, secondary expirar
+const PHASE_TOKENS: Record<BreathingPhaseState["phase"], string> = {
+  inhale: "--primary",
+  hold: "--muted-foreground",
+  exhale: "--secondary",
+  pause: "--muted-foreground",
+};
+
+const resolveHsl = (token: string) => {
+  if (typeof window === "undefined") return "0 0% 50%";
+  const v = getComputedStyle(document.documentElement).getPropertyValue(token).trim();
+  return v || "0 0% 50%";
 };
 
 const PHASE_LABEL: Record<BreathingPhaseState["phase"], string> = {
@@ -35,7 +40,7 @@ const BreathingOrb = ({ state, isPlaying }: BreathingOrbProps) => {
   const stateRef = useRef(state);
   const playRef = useRef(isPlaying);
   const smoothScaleRef = useRef(0.55);
-  const smoothColorRef = useRef({ from: PHASE_COLORS.inhale, to: PHASE_COLORS.inhale, t: 1 });
+  const smoothColorRef = useRef({ from: resolveHsl(PHASE_TOKENS.inhale), to: resolveHsl(PHASE_TOKENS.inhale), t: 1 });
   const lastPhaseRef = useRef(state.phase);
 
   useEffect(() => { stateRef.current = state; }, [state]);
@@ -45,8 +50,8 @@ const BreathingOrb = ({ state, isPlaying }: BreathingOrbProps) => {
   useEffect(() => {
     if (lastPhaseRef.current !== state.phase) {
       smoothColorRef.current = {
-        from: PHASE_COLORS[lastPhaseRef.current],
-        to: PHASE_COLORS[state.phase],
+        from: resolveHsl(PHASE_TOKENS[lastPhaseRef.current]),
+        to: resolveHsl(PHASE_TOKENS[state.phase]),
         t: 0,
       };
       lastPhaseRef.current = state.phase;
@@ -107,7 +112,8 @@ const BreathingOrb = ({ state, isPlaying }: BreathingOrbProps) => {
       smoothColorRef.current.t = Math.min(1, smoothColorRef.current.t + dt * 2.5);
       const color = smoothColorRef.current.t >= 1
         ? smoothColorRef.current.to
-        : smoothColorRef.current.to; // canvas gradient uses CSS var, browser resolves current
+        : smoothColorRef.current.to;
+      const hsla = (a: number) => `hsla(${color} / ${a})`;
 
       ctx.clearRect(0, 0, w, h);
 
@@ -123,8 +129,8 @@ const BreathingOrb = ({ state, isPlaying }: BreathingOrbProps) => {
       for (let i = 3; i >= 1; i--) {
         const ringR = r * pulse + i * 14;
         const grad = ctx.createRadialGradient(cx, cy, r * 0.75, cx, cy, ringR);
-        grad.addColorStop(0, color.replace("hsl(", "hsla(").replace(")", `, ${0.025 / i})`));
-        grad.addColorStop(1, color.replace("hsl(", "hsla(").replace(")", ", 0)"));
+        grad.addColorStop(0, hsla(0.025 / i));
+        grad.addColorStop(1, hsla(0));
         ctx.fillStyle = grad;
         ctx.beginPath();
         ctx.arc(cx, cy, ringR, 0, Math.PI * 2);
@@ -133,17 +139,17 @@ const BreathingOrb = ({ state, isPlaying }: BreathingOrbProps) => {
 
       // Core orb — flatter, low-contrast mono-hue
       const core = ctx.createRadialGradient(cx - r * 0.15, cy - r * 0.2, r * 0.05, cx, cy, r);
-      core.addColorStop(0, color.replace("hsl(", "hsla(").replace(")", ", 0.14)"));
-      core.addColorStop(0.7, color.replace("hsl(", "hsla(").replace(")", ", 0.08)"));
-      core.addColorStop(1, color.replace("hsl(", "hsla(").replace(")", ", 0.02)"));
+      core.addColorStop(0, hsla(0.14));
+      core.addColorStop(0.7, hsla(0.08));
+      core.addColorStop(1, hsla(0.02));
       ctx.fillStyle = core;
       ctx.beginPath();
       ctx.arc(cx, cy, r * pulse, 0, Math.PI * 2);
       ctx.fill();
 
-      // Progress ring — traces the current phase, muted contrast
-      ctx.strokeStyle = color.replace("hsl(", "hsla(").replace(")", ", 0.55)");
-      ctx.lineWidth = 2;
+      // Progress ring — traces the current phase, phase-colored
+      ctx.strokeStyle = hsla(0.9);
+      ctx.lineWidth = 3;
       ctx.lineCap = "round";
       ctx.beginPath();
       const startAngle = -Math.PI / 2;
@@ -152,11 +158,12 @@ const BreathingOrb = ({ state, isPlaying }: BreathingOrbProps) => {
       ctx.stroke();
 
       // Faint full track
-      ctx.strokeStyle = color.replace("hsl(", "hsla(").replace(")", ", 0.08)");
+      ctx.strokeStyle = hsla(0.12);
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.arc(cx, cy, maxR - 2, 0, Math.PI * 2);
       ctx.stroke();
+
 
 
       raf = requestAnimationFrame(draw);
