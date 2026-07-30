@@ -408,15 +408,14 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
                                   </Button>
                                 </div>
                               </div>
-                             {selectedPsychologist.document_url ? (
-                                <div className="space-y-4">
-                                  <DocumentViewer 
-                                    documentPath={extractDocumentPath(selectedPsychologist.document_url)} 
-                                  />
-                                </div>
-                              ) : (
-                                <p className="text-sm text-muted-foreground">Nenhum documento anexado</p>
-                                )}
+                              <div className="space-y-4">
+                                <DocumentViewer
+                                  documentPath={extractDocumentRef(selectedPsychologist.document_url)?.path}
+                                  bucket={extractDocumentRef(selectedPsychologist.document_url)?.bucket}
+                                  fallbackUrl={selectedPsychologist.document_url}
+                                />
+                              </div>
+
                                 </div>
                           ) : (
                             <p className="text-sm text-muted-foreground">Nenhum documento anexado</p>
