@@ -214,6 +214,13 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
                     </DialogHeader>
                     {selectedPsychologist && (
                       <div className="space-y-6">
+                        <div className="flex justify-end">
+                          <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+                            <Pencil className="h-4 w-4 mr-2" />
+                            Editar informações
+                          </Button>
+                        </div>
+
                         {/* Seção de Status da Aprovação */}
                         <div className="border rounded-lg p-4 bg-muted/20">
                           <div className="flex items-center gap-2 mb-3">
