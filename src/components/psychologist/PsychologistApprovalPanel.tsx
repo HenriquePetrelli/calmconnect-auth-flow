@@ -8,12 +8,13 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Eye, CheckCircle, XCircle, Mail, User, FileText, Calendar, Download, MapPin, UserCheck, Users } from 'lucide-react';
+import { Eye, CheckCircle, XCircle, Mail, User, FileText, Calendar, Download, MapPin, UserCheck, Users, Pencil } from 'lucide-react';
 import { usePsychologistManagement, PsychologistData } from '@/hooks/usePsychologistManagement';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { DocumentViewer } from './DocumentViewer';
+import { EditPsychologistModal } from './EditPsychologistModal';
 import { SkeletonCardGrid } from '@/components/skeletons/Skeletons';
 import { ContentTransition } from '@/components/skeletons/ContentTransition';
 
@@ -50,6 +51,7 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
   const [selectedPsychologist, setSelectedPsychologist] = useState<PsychologistData | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
+  const [editOpen, setEditOpen] = useState(false);
 
   const {
     loading,
@@ -212,6 +214,13 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
                     </DialogHeader>
                     {selectedPsychologist && (
                       <div className="space-y-6">
+                        <div className="flex justify-end">
+                          <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+                            <Pencil className="h-4 w-4 mr-2" />
+                            Editar informações
+                          </Button>
+                        </div>
+
                         {/* Seção de Status da Aprovação */}
                         <div className="border rounded-lg p-4 bg-muted/20">
                           <div className="flex items-center gap-2 mb-3">
@@ -492,6 +501,18 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
               : `Não há psicólogos com status "${filter}" no momento.`
           }
           variant={filter === 'pending' ? 'primary' : 'muted'}
+        />
+      )}
+
+      {selectedPsychologist && (
+        <EditPsychologistModal
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          psychologist={selectedPsychologist as any}
+          onUpdated={(data) => {
+            if (data) setSelectedPsychologist(data);
+            getPendingPsychologists();
+          }}
         />
       )}
     </div>
