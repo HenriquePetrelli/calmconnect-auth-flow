@@ -8,10 +8,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 interface DocumentViewerProps {
   documentPath?: string;
+  bucket?: string;
+  fallbackUrl?: string;
 }
 
-export const DocumentViewer = ({ documentPath }: DocumentViewerProps) => {
-  const { signedUrl, loading, error, retry } = useSignedDocumentUrl(documentPath);
+export const DocumentViewer = ({ documentPath, bucket, fallbackUrl }: DocumentViewerProps) => {
+  const { signedUrl, loading, error, retry } = useSignedDocumentUrl(documentPath, bucket, fallbackUrl);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
