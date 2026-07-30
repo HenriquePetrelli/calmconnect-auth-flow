@@ -212,7 +212,7 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
                     <Button
                       variant="outline"
                       size="sm"
-                      className="flex-1"
+                      className="w-full"
                       onClick={() => handleViewDetails(psychologist)}
                     >
                       <Eye className="h-4 w-4 mr-2" />
@@ -512,9 +512,8 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
 
                 {isCurrentlyBlocked(psychologist as any) ? (
                   <Button
-                    variant="outline"
                     size="sm"
-                    className="w-full"
+                    className="w-full bg-green-600 hover:bg-green-700 text-white"
                     onClick={() => { setBlockTarget(psychologist); setBlockMode('unblock'); }}
                   >
                     <Unlock className="h-4 w-4 mr-2" />
