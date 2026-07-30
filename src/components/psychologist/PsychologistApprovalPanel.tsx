@@ -503,6 +503,18 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
           variant={filter === 'pending' ? 'primary' : 'muted'}
         />
       )}
+
+      {selectedPsychologist && (
+        <EditPsychologistModal
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          psychologist={selectedPsychologist as any}
+          onUpdated={(data) => {
+            if (data) setSelectedPsychologist(data);
+            getPendingPsychologists();
+          }}
+        />
+      )}
     </div>
   );
 };
