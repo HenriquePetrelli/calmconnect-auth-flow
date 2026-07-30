@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { isCurrentlyBlocked, formatRemainingTime } from "@/utils/psychologistBlock";
+import { isCurrentlyBlocked, notifyBlockedAccess } from "@/utils/psychologistBlock";
 
 
 interface LoginFormProps {
