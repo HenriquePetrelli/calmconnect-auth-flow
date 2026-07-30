@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { SkeletonFullPage, SkeletonStatsGrid } from '@/components/skeletons/Skeletons';
+import { ContentTransition } from '@/components/skeletons/ContentTransition';
+
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
 import { useNavigate } from 'react-router-dom';
