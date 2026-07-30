@@ -212,7 +212,7 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
                     <Button
                       variant="outline"
                       size="sm"
-                      className="flex-1"
+                      className="w-full"
                       onClick={() => handleViewDetails(psychologist)}
                     >
                       <Eye className="h-4 w-4 mr-2" />
