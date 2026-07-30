@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import SplashScreen from '@/components/SplashScreen';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { isCurrentlyBlocked, formatRemainingTime } from '@/utils/psychologistBlock';
+import { isCurrentlyBlocked, notifyBlockedAccess } from '@/utils/psychologistBlock';
 
 
 interface RouteGuardProps {
@@ -133,14 +133,9 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
         .eq('user_id', user.id)
         .maybeSingle();
       if (cancelled || !data || !isCurrentlyBlocked(data as any)) return;
-      const periodo = data.blocked_until
-        ? `até ${new Date(data.blocked_until).toLocaleString('pt-BR')} (${formatRemainingTime(data.blocked_until)} restantes)`
-        : 'permanentemente';
-      toast.error(
-        `Seu acesso está bloqueado ${periodo}. Motivo: ${data.blocked_reason || 'não informado'}`,
-        { duration: 8000 }
-      );
+      await notifyBlockedAccess(data as any);
       await supabase.auth.signOut();
+
       navigate('/', { replace: true });
     })();
     return () => { cancelled = true; };

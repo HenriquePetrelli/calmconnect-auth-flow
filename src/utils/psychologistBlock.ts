@@ -39,3 +39,27 @@ export const formatRemainingTime = (blockedUntil?: string | null): string => {
   if (!days && minutes) parts.push(`${minutes}min`);
   return parts.join(' ') || 'menos de 1 minuto';
 };
+
+const BLOCK_TOAST_ID = 'psychologist-blocked';
+let lastBlockToastAt = 0;
+
+/**
+ * Exibe UM único alerta de acesso bloqueado (deduplicado por id + janela de tempo),
+ * evitando toasts repetidos quando múltiplos guards detectam o bloqueio ao mesmo tempo.
+ */
+export const notifyBlockedAccess = async (p?: BlockInfo | null) => {
+  const now = Date.now();
+  if (now - lastBlockToastAt < 5000) return;
+  lastBlockToastAt = now;
+
+  const periodo = p?.blocked_until
+    ? `até ${new Date(p.blocked_until).toLocaleString('pt-BR')} (${formatRemainingTime(p.blocked_until)} restantes)`
+    : 'permanentemente';
+
+  const { toast } = await import('sonner');
+  toast.error('Acesso bloqueado', {
+    id: BLOCK_TOAST_ID,
+    description: `Seu acesso está bloqueado ${periodo}. Motivo: ${p?.blocked_reason || 'não informado'}`,
+    duration: 8000,
+  });
+};
