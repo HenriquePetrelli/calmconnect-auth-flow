@@ -21,7 +21,7 @@ export const DocumentViewer = ({ documentPath, bucket, fallbackUrl }: DocumentVi
   }, []);
 
   const handleDownload = async () => {
-    if (!signedUrl || !documentPath) return;
+    if (!signedUrl) return;
     
     try {
       const response = await fetch(signedUrl, {
@@ -34,7 +34,7 @@ export const DocumentViewer = ({ documentPath, bucket, fallbackUrl }: DocumentVi
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = documentPath.split('/').pop() || 'documento';
+      a.download = (documentPath || signedUrl).split('/').pop() || 'documento';
       a.style.display = 'none';
       document.body.appendChild(a);
       a.click();
@@ -60,7 +60,7 @@ export const DocumentViewer = ({ documentPath, bucket, fallbackUrl }: DocumentVi
     }
   };
 
-  if (!documentPath) {
+  if (!documentPath && !fallbackUrl) {
     return (
       <Alert>
         <FileText className="h-4 w-4" />
@@ -106,7 +106,7 @@ export const DocumentViewer = ({ documentPath, bucket, fallbackUrl }: DocumentVi
     );
   }
 
-  const filename = documentPath.split('/').pop() || 'documento';
+  const filename = (documentPath || signedUrl.split('?')[0]).split('/').pop() || 'documento';
   const extension = filename.split('.').pop()?.toLowerCase() || '';
   const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension);
   const isPDF = extension === 'pdf';
