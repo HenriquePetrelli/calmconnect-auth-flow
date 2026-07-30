@@ -380,5 +380,5 @@ export const PaymentsPanel = () => {
         />
       )}
     </div>
+    </ContentTransition>
   );
-};
