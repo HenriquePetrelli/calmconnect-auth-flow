@@ -51,6 +51,7 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
   const [selectedPsychologist, setSelectedPsychologist] = useState<PsychologistData | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
+  const [editOpen, setEditOpen] = useState(false);
 
   const {
     loading,
