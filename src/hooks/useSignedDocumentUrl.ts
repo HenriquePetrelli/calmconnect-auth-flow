@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-export const useSignedDocumentUrl = (documentPath?: string) => {
+export const useSignedDocumentUrl = (
+  documentPath?: string,
+  bucket: string = 'psychologist-documents',
+  fallbackUrl?: string
+) => {
   const [signedUrl, setSignedUrl] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -9,7 +13,7 @@ export const useSignedDocumentUrl = (documentPath?: string) => {
   const fetchSignedUrl = async () => {
     if (!documentPath) {
       setLoading(false);
-      setSignedUrl('');
+      setSignedUrl(fallbackUrl || '');
       return;
     }
 
@@ -18,27 +22,33 @@ export const useSignedDocumentUrl = (documentPath?: string) => {
       setError(null);
 
       const { data, error: urlError } = await supabase.storage
-        .from('psychologist-documents')
+        .from(bucket)
         .createSignedUrl(documentPath, 3600); // 1 hora de expiração
 
-      if (urlError) {
-        throw new Error(`Erro ao gerar URL assinada: ${urlError.message}`);
+      if (data?.signedUrl) {
+        setSignedUrl(data.signedUrl);
+        return;
       }
 
-      if (!data?.signedUrl) {
-        throw new Error('URL assinada não foi gerada');
+      // Bucket público ou sem permissão de assinatura: usa URL pública
+      const { data: publicData } = supabase.storage
+        .from(bucket)
+        .getPublicUrl(documentPath);
+
+      const publicUrl = publicData?.publicUrl || fallbackUrl;
+
+      if (!publicUrl) {
+        throw new Error(urlError?.message || 'URL do documento não disponível');
       }
 
-      // Verificação opcional de acessibilidade
-      const testResponse = await fetch(data.signedUrl, { method: 'HEAD' });
-      if (!testResponse.ok) {
-        throw new Error(`Documento não acessível (status ${testResponse.status})`);
-      }
-
-      setSignedUrl(data.signedUrl);
+      setSignedUrl(publicUrl);
     } catch (err) {
       console.error('Error generating signed URL:', err);
-      setError(err instanceof Error ? err : new Error(String(err)));
+      if (fallbackUrl) {
+        setSignedUrl(fallbackUrl);
+      } else {
+        setError(err instanceof Error ? err : new Error(String(err)));
+      }
     } finally {
       setLoading(false);
     }
@@ -46,7 +56,8 @@ export const useSignedDocumentUrl = (documentPath?: string) => {
 
   useEffect(() => {
     fetchSignedUrl();
-  }, [documentPath]);
+  }, [documentPath, bucket, fallbackUrl]);
+
 
   const retry = () => {
     fetchSignedUrl();

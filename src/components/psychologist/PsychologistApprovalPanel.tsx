@@ -21,27 +21,34 @@ import { ContentTransition } from '@/components/skeletons/ContentTransition';
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
 
-const extractDocumentPath = (url?: string): string | undefined => {
+const extractDocumentRef = (
+  url?: string
+): { bucket: string; path: string } | undefined => {
   if (!url) return undefined;
-  
+
   // Remove query parameters if any
   const cleanUrl = url.split('?')[0];
-  
-  // Supabase storage pattern
-  const supabasePattern = /\/storage\/v1\/object\/public\/psychologist-documents\/(.+)$/;
-  const supabaseMatch = cleanUrl.match(supabasePattern);
-  
+
+  // Supabase storage pattern (public or sign), any bucket
+  const supabaseMatch = cleanUrl.match(
+    /\/storage\/v1\/object\/(?:public|sign)\/([^/]+)\/(.+)$/
+  );
+
   if (supabaseMatch) {
-    return supabaseMatch[1];
+    return {
+      bucket: decodeURIComponent(supabaseMatch[1]),
+      path: decodeURIComponent(supabaseMatch[2]),
+    };
   }
-  
+
   // If it's already a simple path (without http)
   if (!cleanUrl.startsWith('http')) {
-    return cleanUrl;
+    return { bucket: 'psychologist-documents', path: cleanUrl };
   }
-  
+
   return undefined;
 };
+
 
 interface PsychologistApprovalPanelProps {
   adminUserId: string;
@@ -401,15 +408,14 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
                                   </Button>
                                 </div>
                               </div>
-                             {selectedPsychologist.document_url ? (
-                                <div className="space-y-4">
-                                  <DocumentViewer 
-                                    documentPath={extractDocumentPath(selectedPsychologist.document_url)} 
-                                  />
-                                </div>
-                              ) : (
-                                <p className="text-sm text-muted-foreground">Nenhum documento anexado</p>
-                                )}
+                              <div className="space-y-4">
+                                <DocumentViewer
+                                  documentPath={extractDocumentRef(selectedPsychologist.document_url)?.path}
+                                  bucket={extractDocumentRef(selectedPsychologist.document_url)?.bucket}
+                                  fallbackUrl={selectedPsychologist.document_url}
+                                />
+                              </div>
+
                                 </div>
                           ) : (
                             <p className="text-sm text-muted-foreground">Nenhum documento anexado</p>
