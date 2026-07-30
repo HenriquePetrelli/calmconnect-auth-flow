@@ -133,14 +133,9 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
         .eq('user_id', user.id)
         .maybeSingle();
       if (cancelled || !data || !isCurrentlyBlocked(data as any)) return;
-      const periodo = data.blocked_until
-        ? `até ${new Date(data.blocked_until).toLocaleString('pt-BR')} (${formatRemainingTime(data.blocked_until)} restantes)`
-        : 'permanentemente';
-      toast.error(
-        `Seu acesso está bloqueado ${periodo}. Motivo: ${data.blocked_reason || 'não informado'}`,
-        { duration: 8000 }
-      );
+      await notifyBlockedAccess(data as any);
       await supabase.auth.signOut();
+
       navigate('/', { replace: true });
     })();
     return () => { cancelled = true; };
