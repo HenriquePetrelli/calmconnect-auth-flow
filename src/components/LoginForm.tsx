@@ -74,6 +74,25 @@ const LoginForm = ({ onForgotPassword, onSignUp }: LoginFormProps) => {
 
       // Para psicólogos, verificar se o cadastro foi aprovado ou rejeitado
       if (profile.user_type === 'psychologist') {
+        // Verificar bloqueio administrativo
+        const { data: psychRow } = await supabase
+          .from('psychologists')
+          .select('is_blocked, blocked_until, blocked_reason')
+          .eq('user_id', data.user.id)
+          .maybeSingle();
+
+        if (psychRow && isCurrentlyBlocked(psychRow as any)) {
+          const periodo = psychRow.blocked_until
+            ? `até ${new Date(psychRow.blocked_until).toLocaleString('pt-BR')} (${formatRemainingTime(psychRow.blocked_until)} restantes)`
+            : 'permanentemente';
+          toast.error(
+            `Seu acesso está bloqueado ${periodo}. Motivo: ${psychRow.blocked_reason || 'não informado'}`,
+            { duration: 8000 }
+          );
+          await supabase.auth.signOut();
+          return;
+        }
+
         // Check user metadata first
         if (data.user.user_metadata?.account_status !== 'approved') {
           // Check registration table for status and rejection details
