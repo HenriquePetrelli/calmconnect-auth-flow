@@ -15,6 +15,8 @@ import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { DocumentViewer } from './DocumentViewer';
 import { SkeletonCardGrid } from '@/components/skeletons/Skeletons';
+import { ContentTransition } from '@/components/skeletons/ContentTransition';
+
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
 
