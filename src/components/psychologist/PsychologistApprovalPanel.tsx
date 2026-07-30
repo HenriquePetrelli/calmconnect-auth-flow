@@ -148,7 +148,7 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
       </ContentTransition>
 
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className={`grid gap-4 md:grid-cols-2 lg:grid-cols-3 ${filteredPsychologists.length ? 'animate-fade-in' : ''}`}>
         {filteredPsychologists.map((psychologist) => (
           <Card key={psychologist.id} className=" transition-shadow">
             <CardHeader className="pb-4">
