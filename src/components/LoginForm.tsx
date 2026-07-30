@@ -84,16 +84,11 @@ const LoginForm = ({ onForgotPassword, onSignUp }: LoginFormProps) => {
           .maybeSingle();
 
         if (psychRow && isCurrentlyBlocked(psychRow as any)) {
-          const periodo = psychRow.blocked_until
-            ? `até ${new Date(psychRow.blocked_until).toLocaleString('pt-BR')} (${formatRemainingTime(psychRow.blocked_until)} restantes)`
-            : 'permanentemente';
-          toast.error(
-            `Seu acesso está bloqueado ${periodo}. Motivo: ${psychRow.blocked_reason || 'não informado'}`,
-            { duration: 8000 }
-          );
+          await notifyBlockedAccess(psychRow as any);
           await supabase.auth.signOut();
           return;
         }
+
 
         // Check user metadata first
         if (data.user.user_metadata?.account_status !== 'approved') {
