@@ -126,21 +126,25 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
         </TabsList>
       </Tabs>
 
-      {loading && pendingPsychologists.length === 0 ? (
-        <SkeletonCardGrid
-          count={6}
-          columns="grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
-        />
-      ) : null}
+      <ContentTransition
+        loading={loading && pendingPsychologists.length === 0}
+        skeleton={
+          <SkeletonCardGrid
+            count={6}
+            columns="grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+          />
+        }
+      >
+        {error && pendingPsychologists.length === 0 && !loading ? (
+          <ErrorState
+            title="Falha ao carregar psicólogos"
+            description="Não conseguimos buscar os cadastros agora. Verifique sua conexão e tente novamente."
+            onRetry={getPendingPsychologists}
+            retrying={loading}
+          />
+        ) : null}
+      </ContentTransition>
 
-      {error && pendingPsychologists.length === 0 && !loading ? (
-        <ErrorState
-          title="Falha ao carregar psicólogos"
-          description="Não conseguimos buscar os cadastros agora. Verifique sua conexão e tente novamente."
-          onRetry={getPendingPsychologists}
-          retrying={loading}
-        />
-      ) : null}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {filteredPsychologists.map((psychologist) => (
