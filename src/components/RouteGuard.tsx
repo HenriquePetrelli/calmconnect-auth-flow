@@ -2,6 +2,10 @@ import { useEffect, ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import SplashScreen from '@/components/SplashScreen';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { isCurrentlyBlocked, formatRemainingTime } from '@/utils/psychologistBlock';
+
 
 interface RouteGuardProps {
   children: ReactNode;
@@ -117,6 +121,31 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
   const { user, userType, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Bloqueio administrativo: encerra sessão de psicólogos bloqueados
+  useEffect(() => {
+    if (!user || userType !== 'psychologist') return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('psychologists')
+        .select('is_blocked, blocked_until, blocked_reason')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (cancelled || !data || !isCurrentlyBlocked(data as any)) return;
+      const periodo = data.blocked_until
+        ? `até ${new Date(data.blocked_until).toLocaleString('pt-BR')} (${formatRemainingTime(data.blocked_until)} restantes)`
+        : 'permanentemente';
+      toast.error(
+        `Seu acesso está bloqueado ${periodo}. Motivo: ${data.blocked_reason || 'não informado'}`,
+        { duration: 8000 }
+      );
+      await supabase.auth.signOut();
+      navigate('/', { replace: true });
+    })();
+    return () => { cancelled = true; };
+  }, [user?.id, userType, navigate]);
+
 
   // Computa permissão de acesso de forma síncrona para evitar
   // renderizar a página protegida (que poderia disparar seus próprios redirects)
