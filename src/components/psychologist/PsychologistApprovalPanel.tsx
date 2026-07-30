@@ -15,6 +15,8 @@ import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { DocumentViewer } from './DocumentViewer';
 import { SkeletonCardGrid } from '@/components/skeletons/Skeletons';
+import { ContentTransition } from '@/components/skeletons/ContentTransition';
+
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
 
@@ -126,23 +128,27 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
         </TabsList>
       </Tabs>
 
-      {loading && pendingPsychologists.length === 0 ? (
-        <SkeletonCardGrid
-          count={6}
-          columns="grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
-        />
-      ) : null}
+      <ContentTransition
+        loading={loading && pendingPsychologists.length === 0}
+        skeleton={
+          <SkeletonCardGrid
+            count={6}
+            columns="grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+          />
+        }
+      >
+        {error && pendingPsychologists.length === 0 && !loading ? (
+          <ErrorState
+            title="Falha ao carregar psicólogos"
+            description="Não conseguimos buscar os cadastros agora. Verifique sua conexão e tente novamente."
+            onRetry={getPendingPsychologists}
+            retrying={loading}
+          />
+        ) : null}
+      </ContentTransition>
 
-      {error && pendingPsychologists.length === 0 && !loading ? (
-        <ErrorState
-          title="Falha ao carregar psicólogos"
-          description="Não conseguimos buscar os cadastros agora. Verifique sua conexão e tente novamente."
-          onRetry={getPendingPsychologists}
-          retrying={loading}
-        />
-      ) : null}
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className={`grid gap-4 md:grid-cols-2 lg:grid-cols-3 ${filteredPsychologists.length ? 'animate-fade-in' : ''}`}>
         {filteredPsychologists.map((psychologist) => (
           <Card key={psychologist.id} className=" transition-shadow">
             <CardHeader className="pb-4">

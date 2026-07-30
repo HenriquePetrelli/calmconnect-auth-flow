@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { SkeletonFullPage, SkeletonStatsGrid } from '@/components/skeletons/Skeletons';
+import { ContentTransition } from '@/components/skeletons/ContentTransition';
+
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
 import { useNavigate } from 'react-router-dom';
@@ -342,52 +344,54 @@ const AdminDashboard = () => {
 
           <TabsContent value="overview" className="space-y-4 sm:space-y-6 mt-4">
             {/* Métricas Gerais */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
-              {metricsLoading ? (
-                <div className="col-span-full">
-                  <SkeletonStatsGrid
-                    count={6}
-                    columns="grid-cols-2 md:grid-cols-3"
-                    compact
-                  />
+            <ContentTransition
+              loading={metricsLoading}
+              skeleton={
+                <SkeletonStatsGrid
+                  count={6}
+                  columns="grid-cols-2 md:grid-cols-3"
+                  compact
+                />
+              }
+            >
+              {metrics ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
+                  {metricCards.map(({ label, value, hint, icon: Icon, accent }) => {
+                    const s = accentStyles[accent];
+                    return (
+                      <Card key={label} className={`${s.border} ${s.bg}`}>
+                        <CardContent className="p-3 sm:p-5">
+                          <div className="flex items-start justify-between gap-2 sm:gap-3">
+                            <div className="min-w-0">
+                              <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wide truncate">
+                                {label}
+                              </p>
+                              <p className={`text-xl sm:text-3xl font-bold mt-1 sm:mt-1.5 ${s.value}`}>
+                                {value}
+                              </p>
+                              <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 hidden sm:block">
+                                {hint}
+                              </p>
+                            </div>
+                            <div className={`rounded-lg p-1.5 sm:p-2.5 shrink-0 ${s.iconBg}`}>
+                              <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${s.iconText}`} />
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
-              ) : metrics ? (
-                metricCards.map(({ label, value, hint, icon: Icon, accent }) => {
-                  const s = accentStyles[accent];
-                  return (
-                    <Card key={label} className={`${s.border} ${s.bg}`}>
-                      <CardContent className="p-3 sm:p-5">
-                        <div className="flex items-start justify-between gap-2 sm:gap-3">
-                          <div className="min-w-0">
-                            <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wide truncate">
-                              {label}
-                            </p>
-                            <p className={`text-xl sm:text-3xl font-bold mt-1 sm:mt-1.5 ${s.value}`}>
-                              {value}
-                            </p>
-                            <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 hidden sm:block">
-                              {hint}
-                            </p>
-                          </div>
-                          <div className={`rounded-lg p-1.5 sm:p-2.5 shrink-0 ${s.iconBg}`}>
-                            <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${s.iconText}`} />
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })
               ) : (
-                <div className="col-span-full">
-                  <ErrorState
-                    title="Falha ao carregar métricas"
-                    description={metricsError || "Não conseguimos buscar os dados agora. Tente novamente em instantes."}
-                    onRetry={fetchMetrics}
-                    retrying={metricsLoading}
-                  />
-                </div>
+                <ErrorState
+                  title="Falha ao carregar métricas"
+                  description={metricsError || "Não conseguimos buscar os dados agora. Tente novamente em instantes."}
+                  onRetry={fetchMetrics}
+                  retrying={metricsLoading}
+                />
               )}
-            </div>
+            </ContentTransition>
+
 
             {/* Resumo e Ações */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
