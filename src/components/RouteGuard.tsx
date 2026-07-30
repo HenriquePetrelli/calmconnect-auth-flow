@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import SplashScreen from '@/components/SplashScreen';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { isCurrentlyBlocked, formatRemainingTime } from '@/utils/psychologistBlock';
+import { isCurrentlyBlocked, notifyBlockedAccess } from '@/utils/psychologistBlock';
 
 
 interface RouteGuardProps {
