@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import SplashScreen from '@/components/SplashScreen';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 import { isCurrentlyBlocked, notifyBlockedAccess } from '@/utils/psychologistBlock';
 
 
@@ -121,9 +120,13 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
   const { user, userType, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const isPublicRoute = allowedUserTypes.includes('public');
 
   // Bloqueio administrativo: encerra sessão de psicólogos bloqueados
   useEffect(() => {
+    // Em rotas públicas, o LoginForm já trata o bloqueio.
+    // Evita dois alertas concorrentes durante o login.
+    if (isPublicRoute) return;
     if (!user || userType !== 'psychologist') return;
     let cancelled = false;
     (async () => {
@@ -139,13 +142,12 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
       navigate('/', { replace: true });
     })();
     return () => { cancelled = true; };
-  }, [user?.id, userType, navigate]);
+  }, [user?.id, userType, navigate, isPublicRoute]);
 
 
   // Computa permissão de acesso de forma síncrona para evitar
   // renderizar a página protegida (que poderia disparar seus próprios redirects)
   const currentPath = location.pathname;
-  const isPublicRoute = allowedUserTypes.includes('public');
 
   let accessState: 'loading' | 'allowed' | 'denied' = 'loading';
   let redirectTarget: string | null = null;
