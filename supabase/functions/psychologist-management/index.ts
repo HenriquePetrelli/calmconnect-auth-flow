@@ -274,7 +274,11 @@ const handler = async (req: Request): Promise<Response> => {
           documents,
           approval_status,
           pix_key,
-          pix_type
+          pix_type,
+          is_blocked,
+          blocked_until,
+          blocked_reason,
+          blocked_at
         `)
         .eq('approval_status', 'pending')
         .order('submitted_at', { ascending: true });
@@ -304,7 +308,11 @@ const handler = async (req: Request): Promise<Response> => {
           documents,
           approval_status,
           pix_key,
-          pix_type
+          pix_type,
+          is_blocked,
+          blocked_until,
+          blocked_reason,
+          blocked_at
         `)
         .order('submitted_at', { ascending: false });
       

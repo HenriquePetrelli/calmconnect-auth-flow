@@ -1061,6 +1061,9 @@ export type Database = {
           area_atendimento: string | null
           average_rating: number | null
           bio: string | null
+          blocked_at: string | null
+          blocked_reason: string | null
+          blocked_until: string | null
           city: string | null
           cpf: string | null
           created_at: string | null
@@ -1070,6 +1073,7 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          is_blocked: boolean
           pix_key: string | null
           pix_type: string | null
           ratings_count: number | null
@@ -1091,6 +1095,9 @@ export type Database = {
           area_atendimento?: string | null
           average_rating?: number | null
           bio?: string | null
+          blocked_at?: string | null
+          blocked_reason?: string | null
+          blocked_until?: string | null
           city?: string | null
           cpf?: string | null
           created_at?: string | null
@@ -1100,6 +1107,7 @@ export type Database = {
           email: string
           full_name: string
           id?: string
+          is_blocked?: boolean
           pix_key?: string | null
           pix_type?: string | null
           ratings_count?: number | null
@@ -1121,6 +1129,9 @@ export type Database = {
           area_atendimento?: string | null
           average_rating?: number | null
           bio?: string | null
+          blocked_at?: string | null
+          blocked_reason?: string | null
+          blocked_until?: string | null
           city?: string | null
           cpf?: string | null
           created_at?: string | null
@@ -1130,6 +1141,7 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          is_blocked?: boolean
           pix_key?: string | null
           pix_type?: string | null
           ratings_count?: number | null

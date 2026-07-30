@@ -101,3 +101,6 @@ verify_jwt = false
 enabled = false
 [functions.admin-update-psychologist]
 verify_jwt = true
+
+[functions.admin-block-psychologist]
+verify_jwt = true

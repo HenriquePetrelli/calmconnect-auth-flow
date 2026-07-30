@@ -8,13 +8,15 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Eye, CheckCircle, XCircle, Mail, User, FileText, Calendar, Download, MapPin, UserCheck, Users, Pencil } from 'lucide-react';
+import { Eye, CheckCircle, XCircle, Mail, User, FileText, Calendar, Download, MapPin, UserCheck, Users, Pencil, Ban, Unlock } from 'lucide-react';
 import { usePsychologistManagement, PsychologistData } from '@/hooks/usePsychologistManagement';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { DocumentViewer } from './DocumentViewer';
 import { EditPsychologistModal } from './EditPsychologistModal';
+import { BlockPsychologistModal } from './BlockPsychologistModal';
+import { isCurrentlyBlocked, formatBlockPeriod } from '@/utils/psychologistBlock';
 import { SkeletonCardGrid } from '@/components/skeletons/Skeletons';
 import { ContentTransition } from '@/components/skeletons/ContentTransition';
 
@@ -59,6 +61,8 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
   const [rejectionReason, setRejectionReason] = useState('');
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
   const [editOpen, setEditOpen] = useState(false);
+  const [blockTarget, setBlockTarget] = useState<any | null>(null);
+  const [blockMode, setBlockMode] = useState<'block' | 'unblock'>('block');
 
   const {
     loading,
@@ -96,7 +100,10 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, psych?: any) => {
+    if (isCurrentlyBlocked(psych)) {
+      return <Badge className="bg-black text-white hover:bg-black">Bloqueado</Badge>;
+    }
     switch (status) {
       case 'pending':
         return <Badge variant="secondary">Pendente</Badge>;
@@ -173,7 +180,7 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
                     <CardDescription>CRP: {psychologist.crp_number}</CardDescription>
                   </div>
                 </div>
-                {getStatusBadge(psychologist.approval_status)}
+                {getStatusBadge(psychologist.approval_status, psychologist)}
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -199,7 +206,7 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
                 </div>
               </div>
 
-              <div className="flex space-x-2">
+              <div className="flex flex-col space-y-2">
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button
@@ -237,7 +244,7 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Status Atual</label>
-                              <div className="mt-1">{getStatusBadge(selectedPsychologist.approval_status)}</div>
+                              <div className="mt-1">{getStatusBadge(selectedPsychologist.approval_status, selectedPsychologist)}</div>
                             </div>
                             <div>
                               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Data de Submissão</label>
@@ -260,6 +267,17 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
                               </div>
                             )}
                           </div>
+                          {isCurrentlyBlocked(selectedPsychologist as any) && (
+                            <div className="mt-4 space-y-2">
+                              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Bloqueio</label>
+                              <div className="text-sm p-3 bg-muted rounded-md border">
+                                <p className="font-medium">{formatBlockPeriod(selectedPsychologist as any)}</p>
+                                <p className="text-muted-foreground mt-1">
+                                  Motivo: {(selectedPsychologist as any).blocked_reason || 'Não informado'}
+                                </p>
+                              </div>
+                            </div>
+                          )}
                           {selectedPsychologist.rejection_reason && (
                             <div className="mt-4">
                               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Motivo da Rejeição</label>
@@ -491,6 +509,28 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
                     )}
                   </DialogContent>
                 </Dialog>
+
+                {isCurrentlyBlocked(psychologist as any) ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => { setBlockTarget(psychologist); setBlockMode('unblock'); }}
+                  >
+                    <Unlock className="h-4 w-4 mr-2" />
+                    Desbloquear
+                  </Button>
+                ) : (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => { setBlockTarget(psychologist); setBlockMode('block'); }}
+                  >
+                    <Ban className="h-4 w-4 mr-2" />
+                    Bloquear
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -507,6 +547,21 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
               : `Não há psicólogos com status "${filter}" no momento.`
           }
           variant={filter === 'pending' ? 'primary' : 'muted'}
+        />
+      )}
+
+      {blockTarget && (
+        <BlockPsychologistModal
+          open={!!blockTarget}
+          onOpenChange={(o) => { if (!o) setBlockTarget(null); }}
+          psychologistId={blockTarget.id}
+          psychologistName={blockTarget.full_name}
+          mode={blockMode}
+          blockInfo={blockTarget}
+          onDone={(updated) => {
+            if (updated && selectedPsychologist?.id === updated.id) setSelectedPsychologist(updated);
+            getPendingPsychologists();
+          }}
         />
       )}
 

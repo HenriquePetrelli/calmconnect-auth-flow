@@ -4,7 +4,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { AlertTriangle, Clock, CheckCircle, XCircle, Ban } from 'lucide-react';
+import { formatRemainingTime } from '@/utils/psychologistBlock';
 
 export const PsychologistAuthGuard = ({ children }: { children: React.ReactNode }) => {
   const { user, userType } = useAuth();
@@ -12,6 +13,8 @@ export const PsychologistAuthGuard = ({ children }: { children: React.ReactNode 
   const [approvalStatus, setApprovalStatus] = useState<{
     isApproved: boolean;
     status: string;
+    blockedUntil?: string | null;
+    blockedReason?: string | null;
   } | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -46,6 +49,9 @@ export const PsychologistAuthGuard = ({ children }: { children: React.ReactNode 
         <Card className="w-full max-w-lg">
           <CardHeader className="text-center">
             <div className="mx-auto mb-4">
+              {approvalStatus?.status === 'blocked' && (
+                <Ban className="h-16 w-16 text-foreground" />
+              )}
               {approvalStatus?.status === 'pending' && (
                 <Clock className="h-16 w-16 text-primary" />
               )}
@@ -57,12 +63,38 @@ export const PsychologistAuthGuard = ({ children }: { children: React.ReactNode 
               )}
             </div>
             <CardTitle className="text-2xl">
+              {approvalStatus?.status === 'blocked' && 'Acesso Bloqueado'}
               {approvalStatus?.status === 'pending' && 'Cadastro em Análise'}
               {approvalStatus?.status === 'rejected' && 'Cadastro Rejeitado'}
               {approvalStatus?.status === 'not_registered' && 'Cadastro Necessário'}
             </CardTitle>
           </CardHeader>
           <CardContent className="text-center space-y-4">
+            {approvalStatus?.status === 'blocked' && (
+              <>
+                <Badge className="bg-black text-white hover:bg-black text-sm">
+                  Status: Bloqueado
+                </Badge>
+                <p className="text-muted-foreground">
+                  Seu acesso à plataforma foi bloqueado pela administração.
+                </p>
+                <div className="rounded-lg border p-3 bg-muted/30 text-left space-y-2">
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Período</p>
+                    <p className="text-sm">
+                      {approvalStatus?.blockedUntil
+                        ? `Bloqueado até ${new Date(approvalStatus.blockedUntil).toLocaleString('pt-BR')} (${formatRemainingTime(approvalStatus.blockedUntil)} restantes)`
+                        : 'Bloqueio permanente'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Motivo</p>
+                    <p className="text-sm">{approvalStatus?.blockedReason || 'Não informado'}</p>
+                  </div>
+                </div>
+              </>
+            )}
+
             {approvalStatus?.status === 'pending' && (
               <>
                 <Badge variant="secondary" className="text-sm">

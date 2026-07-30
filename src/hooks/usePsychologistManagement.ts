@@ -22,6 +22,10 @@ export interface PsychologistData {
   rejection_reason?: string;
   pix_key?: string;
   pix_type?: string;
+  is_blocked?: boolean;
+  blocked_until?: string | null;
+  blocked_reason?: string | null;
+  blocked_at?: string | null;
 }
 
 export interface PsychologistRegistration {
@@ -213,13 +217,25 @@ export const usePsychologistManagement = () => {
       // Verificar tabela psychologists
       const { data: psychologist, error: psychError } = await supabase
         .from('psychologists')
-        .select('approval_status, approved, id')
+        .select('approval_status, approved, id, is_blocked, blocked_until, blocked_reason')
         .eq('user_id', userId)
         .single();
 
       if (psychError) {
         // Se não existe registro, usuário não é psicólogo
         return { isApproved: false, status: 'not_registered' };
+      }
+
+      const blocked = (psychologist as any).is_blocked === true &&
+        (!(psychologist as any).blocked_until || new Date((psychologist as any).blocked_until).getTime() > Date.now());
+
+      if (blocked) {
+        return {
+          isApproved: false,
+          status: 'blocked',
+          blockedUntil: (psychologist as any).blocked_until as string | null,
+          blockedReason: (psychologist as any).blocked_reason as string | null,
+        };
       }
 
       // Verificar tabela psychologist_registrations
