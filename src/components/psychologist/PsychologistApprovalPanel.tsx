@@ -1,17 +1,17 @@
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useEffect, useMemo } from 'react';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Eye, CheckCircle, XCircle, Mail, User, FileText, Calendar, Download, MapPin, UserCheck, Users, Pencil, Ban, Unlock } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Eye, CheckCircle, XCircle, FileText, Download, MapPin, UserCheck, User, Users, Pencil, Ban, Unlock, Search, MoreHorizontal, Trash2 } from 'lucide-react';
 import { usePsychologistManagement, PsychologistData } from '@/hooks/usePsychologistManagement';
-import { formatDistanceToNow } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { DocumentViewer } from './DocumentViewer';
 import { EditPsychologistModal } from './EditPsychologistModal';
@@ -22,6 +22,7 @@ import { ContentTransition } from '@/components/skeletons/ContentTransition';
 
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
+
 
 const extractDocumentRef = (
   url?: string
@@ -63,6 +64,10 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
   const [editOpen, setEditOpen] = useState(false);
   const [blockTarget, setBlockTarget] = useState<any | null>(null);
   const [blockMode, setBlockMode] = useState<'block' | 'unblock'>('block');
+  const [search, setSearch] = useState('');
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<PsychologistData | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const {
     loading,
@@ -79,15 +84,19 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
   }, []);
 
   const handleViewDetails = async (psychologist: PsychologistData) => {
+    setSelectedPsychologist(psychologist);
+    setDetailsOpen(true);
     const details = await getPsychologistDetails(psychologist.id);
     if (details) {
       setSelectedPsychologist(details);
     }
   };
 
+
   const handleApprove = async (psychologistId: string) => {
     const result = await approvePsychologist(psychologistId, adminUserId);
     if (result.success) {
+      setDetailsOpen(false);
       setSelectedPsychologist(null);
     }
   };
@@ -95,10 +104,12 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
   const handleReject = async (psychologistId: string) => {
     const result = await rejectPsychologist(psychologistId, adminUserId, rejectionReason);
     if (result.success) {
+      setDetailsOpen(false);
       setSelectedPsychologist(null);
       setRejectionReason('');
     }
   };
+
 
   const getStatusBadge = (status: string, psych?: any) => {
     if (isCurrentlyBlocked(psych)) {
@@ -116,10 +127,45 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
     }
   };
 
-  const filteredPsychologists = pendingPsychologists.filter(psych => {
-    if (filter === 'all') return true;
-    return psych.approval_status === filter;
-  });
+  const filteredPsychologists = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    return pendingPsychologists.filter((psych) => {
+      const statusOk = filter === 'all' || psych.approval_status === filter;
+      if (!statusOk) return false;
+      if (!term) return true;
+      return (
+        psych.full_name?.toLowerCase().includes(term) ||
+        psych.email?.toLowerCase().includes(term) ||
+        psych.crp_number?.toLowerCase().includes(term)
+      );
+    });
+  }, [pendingPsychologists, filter, search]);
+
+  const handleDelete = async (psychologist: PsychologistData) => {
+    const details: any = psychologist.user_id
+      ? psychologist
+      : await getPsychologistDetails(psychologist.id);
+    const userId = details?.user_id;
+    if (!userId) {
+      toast.error('Não foi possível identificar o usuário deste psicólogo');
+      return;
+    }
+    setDeletingId(psychologist.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('cleanup-user', {
+        body: { userId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success('Psicólogo excluído com sucesso');
+      setSelectedPsychologist(null);
+      getPendingPsychologists();
+    } catch (err: any) {
+      toast.error(err?.message || 'Erro ao excluir psicólogo');
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -144,6 +190,16 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
         </TabsList>
       </Tabs>
 
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Pesquisar por nome, email ou CRP..."
+          className="pl-9"
+        />
+      </div>
+
       <ContentTransition
         loading={loading && pendingPsychologists.length === 0}
         skeleton={
@@ -163,63 +219,83 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
         ) : null}
       </ContentTransition>
 
+      {filteredPsychologists.length > 0 && (
+        <Card className="overflow-hidden animate-fade-in">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/50 hover:bg-muted/50">
+                  <TableHead className="min-w-[180px]">Nome</TableHead>
+                  <TableHead className="min-w-[200px]">Email</TableHead>
+                  <TableHead className="min-w-[120px]">CRP</TableHead>
+                  <TableHead className="min-w-[160px]">Especialização</TableHead>
+                  <TableHead className="min-w-[110px]">Status</TableHead>
+                  <TableHead className="w-[70px] text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredPsychologists.map((psychologist) => (
+                  <TableRow
+                    key={psychologist.id}
+                    className="cursor-pointer"
+                    onClick={() => handleViewDetails(psychologist)}
+                  >
+                    <TableCell className="font-medium">{psychologist.full_name}</TableCell>
+                    <TableCell className="text-muted-foreground">{psychologist.email}</TableCell>
+                    <TableCell className="text-muted-foreground">{psychologist.crp_number}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {psychologist.specialization || '—'}
+                    </TableCell>
+                    <TableCell>{getStatusBadge(psychologist.approval_status, psychologist)}</TableCell>
+                    <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Ações</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48 bg-popover z-50">
+                          <DropdownMenuItem onClick={() => handleViewDetails(psychologist)}>
+                            <Eye className="h-4 w-4 mr-2" />
+                            Detalhes
+                          </DropdownMenuItem>
+                          {isCurrentlyBlocked(psychologist as any) ? (
+                            <DropdownMenuItem
+                              onClick={() => { setBlockTarget(psychologist); setBlockMode('unblock'); }}
+                            >
+                              <Unlock className="h-4 w-4 mr-2" />
+                              Desbloquear
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem
+                              onClick={() => { setBlockTarget(psychologist); setBlockMode('block'); }}
+                            >
+                              <Ban className="h-4 w-4 mr-2" />
+                              Bloquear
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive"
+                            onSelect={(e) => { e.preventDefault(); setDeleteTarget(psychologist); }}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Excluir
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </Card>
+      )}
 
-      <div className={`grid gap-4 md:grid-cols-2 lg:grid-cols-3 ${filteredPsychologists.length ? 'animate-fade-in' : ''}`}>
-        {filteredPsychologists.map((psychologist) => (
-          <Card key={psychologist.id} className=" transition-shadow">
-            <CardHeader className="pb-4">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center space-x-3">
-                  <Avatar>
-                    <AvatarFallback>
-                      {psychologist.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <CardTitle className="text-lg">{psychologist.full_name}</CardTitle>
-                    <CardDescription>CRP: {psychologist.crp_number}</CardDescription>
-                  </div>
-                </div>
-                {getStatusBadge(psychologist.approval_status, psychologist)}
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center space-x-2">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span className="truncate">{psychologist.email}</span>
-                </div>
-                {psychologist.specialization && (
-                  <div className="flex items-center space-x-2">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <span className="truncate">{psychologist.specialization}</span>
-                  </div>
-                )}
-                <div className="flex items-center space-x-2">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span>
-                    {formatDistanceToNow(new Date(psychologist.submitted_at), {
-                      addSuffix: true,
-                      locale: ptBR
-                    })}
-                  </span>
-                </div>
-              </div>
+      <Dialog open={detailsOpen} onOpenChange={(o) => { setDetailsOpen(o); if (!o) setSelectedPsychologist(null); }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
 
-              <div className="flex flex-col space-y-2">
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      onClick={() => handleViewDetails(psychologist)}
-                    >
-                      <Eye className="h-4 w-4 mr-2" />
-                      Detalhes
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle>Detalhes do Psicólogo</DialogTitle>
                       <DialogDescription>
@@ -508,33 +584,8 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
                       </div>
                     )}
                   </DialogContent>
-                </Dialog>
+      </Dialog>
 
-                {isCurrentlyBlocked(psychologist as any) ? (
-                  <Button
-                    size="sm"
-                    className="w-full bg-green-600 hover:bg-green-700 text-white"
-                    onClick={() => { setBlockTarget(psychologist); setBlockMode('unblock'); }}
-                  >
-                    <Unlock className="h-4 w-4 mr-2" />
-                    Desbloquear
-                  </Button>
-                ) : (
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => { setBlockTarget(psychologist); setBlockMode('block'); }}
-                  >
-                    <Ban className="h-4 w-4 mr-2" />
-                    Bloquear
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
 
       {filteredPsychologists.length === 0 && !loading && (
         <EmptyState
@@ -563,6 +614,34 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
           }}
         />
       )}
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => { if (!o) setDeleteTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir psicólogo</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação é permanente e removerá o cadastro, os documentos e o acesso de{' '}
+              {deleteTarget?.full_name}. Deseja continuar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={!!deletingId}
+              onClick={(e) => {
+                e.preventDefault();
+                const target = deleteTarget;
+                if (target) handleDelete(target).then(() => setDeleteTarget(null));
+              }}
+            >
+              {deletingId ? 'Excluindo...' : 'Confirmar exclusão'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+
 
       {selectedPsychologist && (
         <EditPsychologistModal
