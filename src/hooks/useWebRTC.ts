@@ -342,12 +342,14 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
 
   // Automatic reconnection with exponential backoff + ICE restart
   const attemptReconnect = (pc: RTCPeerConnection) => {
-    if (cleanupRef.current || callEndedBy) return;
+    if (cleanupRef.current || callEndedByRef.current) return;
     if (reconnectTimerRef.current) return; // already scheduled
+    if (pc.connectionState === 'closed') return;
 
     if (reconnectAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) {
+      // Still NOT an ended call — the room stays open and the user can retry.
       setIsReconnecting(false);
-      setError('Não foi possível restabelecer a conexão. Verifique sua internet e tente entrar novamente.');
+      setError('Não foi possível restabelecer a conexão automaticamente. A chamada continua aberta — verifique sua internet e toque em "Tentar reconectar".');
       return;
     }
 
@@ -362,8 +364,15 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
 
     reconnectTimerRef.current = setTimeout(async () => {
       reconnectTimerRef.current = null;
-      if (cleanupRef.current || callEndedBy) return;
+      if (cleanupRef.current || callEndedByRef.current) return;
       if (pc.connectionState === 'connected' || pc.connectionState === 'closed') return;
+
+      // No point burning attempts while the device has no network at all.
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        reconnectAttemptsRef.current = Math.max(0, reconnectAttemptsRef.current - 1);
+        setTimeout(() => attemptReconnectRef.current?.(pc), 2000);
+        return;
+      }
 
       try {
         pc.restartIce?.();
@@ -377,13 +386,73 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
 
       // Re-evaluate after giving the attempt time to settle
       setTimeout(() => {
-        if (cleanupRef.current || callEndedBy) return;
+        if (cleanupRef.current || callEndedByRef.current) return;
         if (pc.connectionState !== 'connected' && pc.connectionState !== 'closed') {
           attemptReconnect(pc);
         }
       }, 5000);
     }, delay);
   };
+
+  attemptReconnectRef.current = attemptReconnect;
+
+  /** Manual retry used by the UI after automatic attempts are exhausted. */
+  const forceReconnect = useCallback(() => {
+    const pc = pcRef.current;
+    if (!pc || cleanupRef.current || callEndedByRef.current) return;
+    clearReconnectTimers();
+    reconnectAttemptsRef.current = 0;
+    setReconnectAttempt(0);
+    setError(null);
+    attemptReconnectRef.current?.(pc);
+  }, [clearReconnectTimers]);
+
+  // Detect the device going offline/online. Losing the network is an
+  // involuntary drop: keep the call alive and resume as soon as we are back.
+  useEffect(() => {
+    const handleOffline = () => {
+      console.log('🌐 Device went offline');
+      setIsNetworkOffline(true);
+      if (!callEndedByRef.current && !cleanupRef.current) {
+        setIsReconnecting(true);
+      }
+    };
+
+    const handleOnline = () => {
+      console.log('🌐 Device is back online');
+      setIsNetworkOffline(false);
+      const pc = pcRef.current;
+      if (!pc || cleanupRef.current || callEndedByRef.current) return;
+      if (pc.connectionState === 'connected') return;
+      clearReconnectTimers();
+      reconnectAttemptsRef.current = 0;
+      setReconnectAttempt(0);
+      attemptReconnectRef.current?.(pc);
+    };
+
+    window.addEventListener('offline', handleOffline);
+    window.addEventListener('online', handleOnline);
+    return () => {
+      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('online', handleOnline);
+    };
+  }, [clearReconnectTimers]);
+
+  // Coming back from a background tab / locked screen often leaves ICE stale.
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState !== 'visible') return;
+      const pc = pcRef.current;
+      if (!pc || cleanupRef.current || callEndedByRef.current) return;
+      if (['disconnected', 'failed'].includes(pc.connectionState)) {
+        attemptReconnectRef.current?.(pc);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, []);
+
 
 
   const handleOffer = async (offer: RTCSessionDescriptionInit, pc: RTCPeerConnection) => {
