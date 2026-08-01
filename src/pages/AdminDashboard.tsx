@@ -153,14 +153,14 @@ const AdminDashboard = () => {
         {
           label: 'Psicólogos Ativos',
           value: metrics.active_psychologists,
-          hint: 'Aprovados e ativos',
+          hint: 'Aprovados e não bloqueados',
           icon: UserCheck,
           accent: 'secondary',
         },
         {
-          label: 'Pendentes',
+          label: 'Psicólogos Pendentes',
           value: metrics.pending_psychologists,
-          hint: 'Aguardando aprovação',
+          hint: 'Cadastros aguardando aprovação do admin',
           icon: AlertTriangle,
           accent: 'warning',
         },
