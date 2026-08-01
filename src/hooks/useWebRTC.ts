@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { isRealTermination } from '@/lib/callTermination';
 import { useToast } from '@/hooks/use-toast';
 import { getWebRTCConnectionManager } from '@/utils/webrtc-manager';
 import { flowLock } from '@/utils/flow-lock';
@@ -814,20 +815,13 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
 
               // Check if call was ended by someone — ignore stale terminations
               // that happened before we joined this call.
-              const endedAtMs = (sessionData as any).ended_at
-                ? new Date((sessionData as any).ended_at).getTime()
-                : 0;
-              if (
-                sessionData.status === 'completed' &&
-                sessionData.ended_by &&
-                sessionData.ended_by_type &&
-                endedAtMs >= joinedAt
-              ) {
+              if (isRealTermination(sessionData as any, joinedAt)) {
                 setCallEndedBy({
-                  userId: sessionData.ended_by,
-                  userType: sessionData.ended_by_type
+                  userId: sessionData.ended_by!,
+                  userType: sessionData.ended_by_type!
                 });
               }
+
 
 
               // Handle offer/answer exchange (also supports renegotiation / ICE restart)
