@@ -15,6 +15,7 @@ import UpcomingConsultations from '@/components/psychologist/UpcomingConsultatio
 import ConsultationHistory from '@/components/psychologist/ConsultationHistory';
 import OnlineStatusToggle from '@/components/psychologist/OnlineStatusToggle';
 import { PixModal } from '@/components/psychologist/PixModal';
+import logoImg from '@/assets/soliv-logo.svg';
 
 const PsychologistDashboard = () => {
   const navigate = useNavigate();
@@ -130,7 +131,8 @@ const PsychologistDashboard = () => {
       {/* Header */}
       <header className="sticky top-0 z-30 bg-secondary text-secondary-foreground border-b border-secondary/40 shadow-sm">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3 md:py-4">
-          <div className="flex items-center justify-between gap-2 sm:gap-4">
+          <div className="relative flex items-center justify-between gap-2 sm:gap-4">
+            {/* Lado esquerdo - saudação */}
             <div className="min-w-0 flex-1">
               <p className="text-[10px] sm:text-[11px] font-medium uppercase tracking-wider text-secondary-foreground/70">
                 Área do Psicólogo
@@ -139,6 +141,13 @@ const PsychologistDashboard = () => {
                 Olá, Dr.(a) {profile?.full_name?.split(' ')[0]}
               </h1>
             </div>
+
+            {/* SOLIV centralizado */}
+            <div className="hidden sm:flex absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 items-center gap-2">
+              <img src={logoImg} alt="Soliv" className="w-8 h-8 object-contain select-none" draggable={false} />
+              <span className="text-[32px] font-black text-white lowercase leading-none" style={{ fontFamily: "'El Messiri', sans-serif" }}>soliv</span>
+            </div>
+
             <div className="flex items-center gap-1 sm:gap-2 shrink-0">
               <OnlineStatusToggle />
               <div className="hidden sm:block w-px h-6 bg-white/20" aria-hidden />
