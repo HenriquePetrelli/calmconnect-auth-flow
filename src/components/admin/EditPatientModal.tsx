@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Pencil } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { AdminPatient } from '@/hooks/usePatientManagement';
@@ -26,6 +26,7 @@ export const EditPatientModal = ({ open, onOpenChange, patient, onSaved }: EditP
     password: '',
   });
   const [saving, setSaving] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (patient && open) {
@@ -38,6 +39,7 @@ export const EditPatientModal = ({ open, onOpenChange, patient, onSaved }: EditP
         city: patient.city || '',
         password: '',
       });
+      setShowPassword(false);
     }
   }, [patient, open]);
 
@@ -78,57 +80,78 @@ export const EditPatientModal = ({ open, onOpenChange, patient, onSaved }: EditP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Pencil className="h-4 w-4" />
-            Editar paciente
-          </DialogTitle>
-          <DialogDescription>Atualize os dados cadastrais e o acesso do paciente.</DialogDescription>
+          <DialogTitle>Editar Paciente</DialogTitle>
+          <DialogDescription>Atualize as informações cadastrais do paciente</DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-2 sm:col-span-2">
-            <Label>Nome completo</Label>
-            <Input value={form.full_name} onChange={set('full_name')} />
-          </div>
-          <div className="space-y-2 sm:col-span-2">
-            <Label>E-mail</Label>
-            <Input type="email" value={form.email} onChange={set('email')} />
-          </div>
-          <div className="space-y-2">
-            <Label>CPF</Label>
-            <Input value={form.cpf} onChange={set('cpf')} />
-          </div>
-          <div className="space-y-2">
-            <Label>Telefone</Label>
-            <Input value={form.phone} onChange={set('phone')} />
-          </div>
-          <div className="space-y-2">
-            <Label>Estado</Label>
-            <Input value={form.state} onChange={set('state')} />
-          </div>
-          <div className="space-y-2">
-            <Label>Cidade</Label>
-            <Input value={form.city} onChange={set('city')} />
-          </div>
-          <div className="space-y-2 sm:col-span-2">
-            <Label>Nova senha (opcional)</Label>
-            <Input
-              type="password"
-              value={form.password}
-              onChange={set('password')}
-              placeholder="Deixe em branco para manter a atual"
-            />
-          </div>
+        <div className="space-y-6">
+          <section className="space-y-4">
+            <h4 className="text-sm font-medium">Informações Básicas</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="patient_full_name">Nome completo</Label>
+                <Input id="patient_full_name" value={form.full_name} onChange={set('full_name')} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="patient_cpf">CPF</Label>
+                <Input id="patient_cpf" value={form.cpf} onChange={set('cpf')} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="patient_email">Email</Label>
+                <Input id="patient_email" type="email" value={form.email} onChange={set('email')} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="patient_password">Nova senha</Label>
+                <div className="relative">
+                  <Input
+                    id="patient_password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Deixe em branco para manter"
+                    value={form.password}
+                    onChange={set('password')}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                    aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="patient_phone">Telefone</Label>
+                <Input id="patient_phone" value={form.phone} onChange={set('phone')} />
+              </div>
+            </div>
+          </section>
+
+          <section className="space-y-4">
+            <h4 className="text-sm font-medium">Localização</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="patient_state">Estado</Label>
+                <Input id="patient_state" value={form.state} onChange={set('state')} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="patient_city">Cidade</Label>
+                <Input id="patient_city" value={form.city} onChange={set('city')} />
+              </div>
+            </div>
+          </section>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="gap-2 sm:gap-0">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
             Cancelar
           </Button>
           <Button onClick={submit} disabled={saving}>
-            {saving ? 'Salvando...' : 'Salvar alterações'}
+            {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            Salvar alterações
           </Button>
         </DialogFooter>
       </DialogContent>
