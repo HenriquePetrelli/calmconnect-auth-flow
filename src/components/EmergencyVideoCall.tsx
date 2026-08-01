@@ -706,7 +706,8 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   };
 
 
-  const handleEndCall = async () => {
+  const handleEndCall = async (reason: string = 'encerrada_pelo_usuario') => {
+    endReasonRef.current = reason;
     try {
       console.log('🔄 Starting complete call cleanup...');
       
@@ -719,6 +720,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
             status: 'completed',
             ended_by: user?.id,
             ended_by_type: userType,
+            end_reason: reason,
             ended_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           })
@@ -750,11 +752,16 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
       });
       
       if (onEndCall) {
-        onEndCall();
+        onEndCall({ reason, endedByType: userType });
       } else {
         navigate('/home');
       }
     }
+  };
+
+  const confirmEndCall = () => {
+    setShowEndConfirm(false);
+    handleEndCall(selectedEndReason);
   };
 
   const handleFeedbackClose = () => {
@@ -767,7 +774,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
 
     // Let the parent close the emergency request (and redirect).
     if (onEndCall) {
-      onEndCall();
+      onEndCall({ reason: endReasonRef.current, endedByType: userType });
       return;
     }
 
