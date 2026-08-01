@@ -9,7 +9,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Eye, CheckCircle, XCircle, FileText, Download, MapPin, UserCheck, User, Users, Pencil, Ban, Unlock, Search, MoreHorizontal, Trash2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Eye, CheckCircle, XCircle, FileText, Download, MapPin, UserCheck, User, Users, Pencil, Ban, Unlock, Search, MoreHorizontal, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { usePsychologistManagement, PsychologistData } from '@/hooks/usePsychologistManagement';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -65,6 +66,8 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
   const [blockTarget, setBlockTarget] = useState<any | null>(null);
   const [blockMode, setBlockMode] = useState<'block' | 'unblock'>('block');
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<PsychologistData | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -140,6 +143,18 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
       );
     });
   }, [pendingPsychologists, filter, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredPsychologists.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+
+  useEffect(() => {
+    setPage(1);
+  }, [filter, search, pageSize]);
+
+  const pagedPsychologists = useMemo(
+    () => filteredPsychologists.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+    [filteredPsychologists, currentPage, pageSize]
+  );
 
   const handleDelete = async (psychologist: PsychologistData) => {
     setDeletingId(psychologist.id);
@@ -229,7 +244,7 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredPsychologists.map((psychologist) => (
+                {pagedPsychologists.map((psychologist) => (
                   <TableRow
                     key={psychologist.id}
                     className="cursor-pointer"
@@ -284,6 +299,51 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
                 ))}
               </TableBody>
             </Table>
+          </div>
+
+          <div className="flex flex-col gap-3 border-t p-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs text-muted-foreground text-center sm:text-left">
+              Mostrando {(currentPage - 1) * pageSize + 1}–
+              {Math.min(currentPage * pageSize, filteredPsychologists.length)} de{' '}
+              {filteredPsychologists.length} psicólogos
+            </p>
+
+            <div className="flex items-center justify-center gap-2">
+              <Select value={String(pageSize)} onValueChange={(v) => setPageSize(Number(v))}>
+                <SelectTrigger className="h-8 w-[110px] text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-popover z-50">
+                  {[10, 25, 50].map((n) => (
+                    <SelectItem key={n} value={String(n)}>{n} por página</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setPage(currentPage - 1)}
+                disabled={currentPage <= 1}
+                aria-label="Página anterior"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-xs text-muted-foreground min-w-[70px] text-center">
+                {currentPage} de {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setPage(currentPage + 1)}
+                disabled={currentPage >= totalPages}
+                aria-label="Próxima página"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </Card>
       )}
