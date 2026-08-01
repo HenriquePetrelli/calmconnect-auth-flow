@@ -56,9 +56,10 @@ const extractDocumentRef = (
 
 interface PsychologistApprovalPanelProps {
   adminUserId: string;
+  onDataChange?: () => void;
 }
 
-export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalPanelProps) => {
+export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: PsychologistApprovalPanelProps) => {
   const [selectedPsychologist, setSelectedPsychologist] = useState<PsychologistData | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
@@ -101,6 +102,7 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
     if (result.success) {
       setDetailsOpen(false);
       setSelectedPsychologist(null);
+      onDataChange?.();
     }
   };
 
@@ -110,6 +112,7 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
       setDetailsOpen(false);
       setSelectedPsychologist(null);
       setRejectionReason('');
+      onDataChange?.();
     }
   };
 
@@ -203,6 +206,7 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
       setDetailsOpen(false);
       setSelectedPsychologist(null);
       getPendingPsychologists();
+      onDataChange?.();
     } catch (err: any) {
       toast.error(err?.message || 'Erro ao excluir psicólogo');
     } finally {
@@ -733,6 +737,7 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
           onDone={(updated) => {
             if (updated && selectedPsychologist?.id === updated.id) setSelectedPsychologist(updated);
             getPendingPsychologists();
+            onDataChange?.();
           }}
         />
       )}
@@ -773,6 +778,7 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
           onUpdated={(data) => {
             if (data) setSelectedPsychologist(data);
             getPendingPsychologists();
+            onDataChange?.();
           }}
         />
       )}
