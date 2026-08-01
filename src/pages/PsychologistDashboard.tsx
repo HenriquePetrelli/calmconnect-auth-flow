@@ -15,6 +15,7 @@ import UpcomingConsultations from '@/components/psychologist/UpcomingConsultatio
 import ConsultationHistory from '@/components/psychologist/ConsultationHistory';
 import OnlineStatusToggle from '@/components/psychologist/OnlineStatusToggle';
 import { PixModal } from '@/components/psychologist/PixModal';
+import logoImg from '@/assets/soliv-logo.svg';
 
 const PsychologistDashboard = () => {
   const navigate = useNavigate();
