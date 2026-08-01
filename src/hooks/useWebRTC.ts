@@ -38,16 +38,37 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
   const [isInitializing, setIsInitializing] = useState(false);
   const [webrtcState, setWebrtcState] = useState<WebRTCState>('idle');
   const [callEndedBy, setCallEndedBy] = useState<{userId: string, userType: string} | null>(null);
+  const [isReconnecting, setIsReconnecting] = useState(false);
+  const [reconnectAttempt, setReconnectAttempt] = useState(0);
   
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const initializationRef = useRef<boolean>(false);
   const cleanupRef = useRef<boolean>(false);
+  const reconnectAttemptsRef = useRef<number>(0);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const graceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastAppliedOfferRef = useRef<string | null>(null);
+  const lastAppliedAnswerRef = useRef<string | null>(null);
   const { toast } = useToast();
   const connectionManager = getWebRTCConnectionManager();
   const stateMachine = useRef(stateMachineRegistry.getOrCreate(sessionId));
   const { preferences, isLoading: prefsLoading } = useUserPreferences();
   const mediaManager = useMediaDeviceManager();
+
+  const MAX_RECONNECT_ATTEMPTS = 6;
+
+  const clearReconnectTimers = useCallback(() => {
+    if (reconnectTimerRef.current) {
+      clearTimeout(reconnectTimerRef.current);
+      reconnectTimerRef.current = null;
+    }
+    if (graceTimerRef.current) {
+      clearTimeout(graceTimerRef.current);
+      graceTimerRef.current = null;
+    }
+  }, []);
+
 
   const initializeMedia = useCallback(async () => {
     try {
@@ -143,18 +164,24 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
             const endedByName = callEndedBy.userType === 'psychologist' ? 'O psicólogo' : 'O paciente';
             setError(`${endedByName} finalizou a chamada.`);
           } else {
-            setError('Conexão perdida. Tentando reconectar...');
-            // Attempt ICE restart once before giving up
-            try {
-              pc.restartIce?.();
-            } catch (e) {
-              console.warn('restartIce failed:', e);
-            }
+            attemptReconnect(pc);
           }
         } else if (state === 'disconnected') {
-          // Transient — don't alarm the user, let it self-heal
+          // Transient — give it a short grace period before forcing a reconnect
           console.log('⏳ Connection transient disconnect, awaiting recovery...');
+          if (!graceTimerRef.current && !callEndedBy) {
+            graceTimerRef.current = setTimeout(() => {
+              graceTimerRef.current = null;
+              if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
+                attemptReconnect(pc);
+              }
+            }, 3000);
+          }
         } else if (state === 'connected') {
+          clearReconnectTimers();
+          reconnectAttemptsRef.current = 0;
+          setReconnectAttempt(0);
+          setIsReconnecting(false);
           setError(null);
           setCallEndedBy(null);
           toast({
@@ -163,6 +190,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
           });
         }
       };
+
 
       // Handle ICE candidates
       pc.onicecandidate = (event) => {
@@ -241,12 +269,13 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     }
   };
 
-  const createOffer = async (pc: RTCPeerConnection) => {
+  const createOffer = async (pc: RTCPeerConnection, iceRestart = false) => {
     try {
-      console.log('📝 Creating offer...');
+      console.log('📝 Creating offer...', { iceRestart });
       const offer = await pc.createOffer({
         offerToReceiveAudio: true,
-        offerToReceiveVideo: true
+        offerToReceiveVideo: true,
+        iceRestart
       });
       
       await pc.setLocalDescription(offer);
@@ -266,6 +295,52 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
       setError('Erro ao criar oferta de conexão');
     }
   };
+
+  // Automatic reconnection with exponential backoff + ICE restart
+  const attemptReconnect = (pc: RTCPeerConnection) => {
+    if (cleanupRef.current || callEndedBy) return;
+    if (reconnectTimerRef.current) return; // already scheduled
+
+    if (reconnectAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) {
+      setIsReconnecting(false);
+      setError('Não foi possível restabelecer a conexão. Verifique sua internet e tente entrar novamente.');
+      return;
+    }
+
+    const attempt = reconnectAttemptsRef.current + 1;
+    reconnectAttemptsRef.current = attempt;
+    setReconnectAttempt(attempt);
+    setIsReconnecting(true);
+    setError(null);
+
+    const delay = Math.min(1000 * 2 ** (attempt - 1), 8000);
+    console.log(`🔁 Scheduling reconnect attempt ${attempt} in ${delay}ms`);
+
+    reconnectTimerRef.current = setTimeout(async () => {
+      reconnectTimerRef.current = null;
+      if (cleanupRef.current || callEndedBy) return;
+      if (pc.connectionState === 'connected' || pc.connectionState === 'closed') return;
+
+      try {
+        pc.restartIce?.();
+        // The offerer (psychologist) renegotiates; the answerer waits for the new offer
+        if (userType === 'psychologist') {
+          await createOffer(pc, true);
+        }
+      } catch (e) {
+        console.warn('Reconnect attempt failed:', e);
+      }
+
+      // Re-evaluate after giving the attempt time to settle
+      setTimeout(() => {
+        if (cleanupRef.current || callEndedBy) return;
+        if (pc.connectionState !== 'connected' && pc.connectionState !== 'closed') {
+          attemptReconnect(pc);
+        }
+      }, 5000);
+    }, delay);
+  };
+
 
   const handleOffer = async (offer: RTCSessionDescriptionInit, pc: RTCPeerConnection) => {
     try {
@@ -350,7 +425,12 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     }
     
     cleanupRef.current = true;
+    clearReconnectTimers();
+    setIsReconnecting(false);
+    setReconnectAttempt(0);
+    reconnectAttemptsRef.current = 0;
     loopDetector.trace(sessionId, 'cleanup_start');
+
     
     // Transition to cleaning state
     if (stateMachine.current.canTransitionTo('cleaning')) {
@@ -635,12 +715,21 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
               }
 
 
-              // Handle offer/answer exchange
-              if (sessionData.offer && userType === 'patient' && !pc.remoteDescription) {
-                await handleOffer(sessionData.offer, pc);
-              } else if (sessionData.answer && userType === 'psychologist' && !pc.remoteDescription) {
-                await handleAnswer(sessionData.answer, pc);
+              // Handle offer/answer exchange (also supports renegotiation / ICE restart)
+              if (sessionData.offer && userType === 'patient') {
+                const sdp = (sessionData.offer as any)?.sdp;
+                if (sdp && sdp !== lastAppliedOfferRef.current) {
+                  lastAppliedOfferRef.current = sdp;
+                  await handleOffer(sessionData.offer, pc);
+                }
+              } else if (sessionData.answer && userType === 'psychologist') {
+                const sdp = (sessionData.answer as any)?.sdp;
+                if (sdp && sdp !== lastAppliedAnswerRef.current && pc.signalingState !== 'stable') {
+                  lastAppliedAnswerRef.current = sdp;
+                  await handleAnswer(sessionData.answer, pc);
+                }
               }
+
 
               // Process ICE candidates
               if (sessionData.ice_candidates) {
@@ -725,6 +814,8 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     isInitializing,
     webrtcState,
     callEndedBy,
+    isReconnecting,
+    reconnectAttempt,
     toggleAudio,
     toggleVideo,
     cleanup,
