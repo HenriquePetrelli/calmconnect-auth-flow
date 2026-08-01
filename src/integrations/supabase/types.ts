@@ -697,6 +697,9 @@ export type Database = {
       }
       patients: {
         Row: {
+          blocked_at: string | null
+          blocked_reason: string | null
+          blocked_until: string | null
           city: string
           cpf: string
           created_at: string | null
@@ -706,6 +709,7 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          is_blocked: boolean
           last_mood_date: string | null
           last_mood_value: number | null
           phone: string | null
@@ -718,6 +722,9 @@ export type Database = {
           weekly_goals: string[] | null
         }
         Insert: {
+          blocked_at?: string | null
+          blocked_reason?: string | null
+          blocked_until?: string | null
           city: string
           cpf: string
           created_at?: string | null
@@ -727,6 +734,7 @@ export type Database = {
           email: string
           full_name: string
           id?: string
+          is_blocked?: boolean
           last_mood_date?: string | null
           last_mood_value?: number | null
           phone?: string | null
@@ -739,6 +747,9 @@ export type Database = {
           weekly_goals?: string[] | null
         }
         Update: {
+          blocked_at?: string | null
+          blocked_reason?: string | null
+          blocked_until?: string | null
           city?: string
           cpf?: string
           created_at?: string | null
@@ -748,6 +759,7 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          is_blocked?: boolean
           last_mood_date?: string | null
           last_mood_value?: number | null
           phone?: string | null
