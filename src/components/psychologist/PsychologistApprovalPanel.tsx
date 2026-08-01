@@ -9,7 +9,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Eye, CheckCircle, XCircle, FileText, Download, MapPin, UserCheck, User, Users, Pencil, Ban, Unlock, Search, MoreHorizontal, Trash2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Eye, CheckCircle, XCircle, FileText, Download, MapPin, UserCheck, User, Users, Pencil, Ban, Unlock, Search, MoreHorizontal, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { usePsychologistManagement, PsychologistData } from '@/hooks/usePsychologistManagement';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
