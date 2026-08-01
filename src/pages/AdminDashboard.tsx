@@ -153,14 +153,14 @@ const AdminDashboard = () => {
         {
           label: 'Psicólogos Ativos',
           value: metrics.active_psychologists,
-          hint: 'Aprovados e ativos',
+          hint: 'Aprovados e não bloqueados',
           icon: UserCheck,
           accent: 'secondary',
         },
         {
-          label: 'Pendentes',
+          label: 'Psicólogos Pendentes',
           value: metrics.pending_psychologists,
-          hint: 'Aguardando aprovação',
+          hint: 'Cadastros aguardando aprovação do admin',
           icon: AlertTriangle,
           accent: 'warning',
         },
@@ -369,13 +369,13 @@ const AdminDashboard = () => {
                         <CardContent className="p-3 sm:p-5">
                           <div className="flex items-start justify-between gap-2 sm:gap-3">
                             <div className="min-w-0">
-                              <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wide truncate">
+                              <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wide leading-tight">
                                 {label}
                               </p>
                               <p className={`text-xl sm:text-3xl font-bold mt-1 sm:mt-1.5 ${s.value}`}>
                                 {value}
                               </p>
-                              <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 hidden sm:block">
+                              <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 leading-tight">
                                 {hint}
                               </p>
                             </div>
