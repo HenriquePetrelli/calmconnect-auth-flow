@@ -54,13 +54,23 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
   const graceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastAppliedOfferRef = useRef<string | null>(null);
   const lastAppliedAnswerRef = useRef<string | null>(null);
+  const pcRef = useRef<RTCPeerConnection | null>(null);
+  const callEndedByRef = useRef<{userId: string, userType: string} | null>(null);
+  const attemptReconnectRef = useRef<((pc: RTCPeerConnection) => void) | null>(null);
   const { toast } = useToast();
   const connectionManager = getWebRTCConnectionManager();
   const stateMachine = useRef(stateMachineRegistry.getOrCreate(sessionId));
   const { preferences, isLoading: prefsLoading } = useUserPreferences();
   const mediaManager = useMediaDeviceManager();
 
-  const MAX_RECONNECT_ATTEMPTS = 6;
+  // Reconnection is intentionally generous: an involuntary drop must never be
+  // treated as the end of the call.
+  const MAX_RECONNECT_ATTEMPTS = 12;
+
+  useEffect(() => {
+    callEndedByRef.current = callEndedBy;
+  }, [callEndedBy]);
+
 
   const clearReconnectTimers = useCallback(() => {
     if (reconnectTimerRef.current) {
