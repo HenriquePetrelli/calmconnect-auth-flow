@@ -466,25 +466,19 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
           
           // Check if call was terminated (ignore stale terminations from
           // previous sessions/reconnections)
-          const endedAtMs = newData.ended_at ? new Date(newData.ended_at).getTime() : 0;
-          if (
-            newData.status === 'completed' &&
-            newData.ended_by &&
-            newData.ended_by_type &&
-            endedAtMs >= joinedAtRef.current
-          ) {
-            const endedByType = newData.ended_by_type;
-            const endedByName = endedByType === 'psychologist' ? 'O psicólogo' : 'O paciente';
-            
-            console.log('📞 Call terminated by:', endedByName);
-            setCallTerminatedMessage(`${endedByName} encerrou a chamada de vídeo.`);
-            
+          if (isRealTermination(newData, joinedAtRef.current)) {
+            const message = getTerminationMessage(newData.ended_by_type);
+
+            console.log('📞 Call terminated:', message);
+            setCallTerminatedMessage(message);
+
             // Execute enhanced cleanup after a brief delay
             setTimeout(() => {
               enhancedCleanup();
               setShowFeedbackModal(true);
             }, 1000);
           }
+
 
         }
       )
