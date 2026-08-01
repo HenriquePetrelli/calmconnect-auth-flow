@@ -148,20 +148,21 @@ const EmergencyCall = () => {
       const userId = auth.user?.id;
       if (!userId || cancelled) return;
 
-      const lock = acquireCallLock(userId, sessionIdState);
-      if (!lock.ok) {
+      const lockResult = acquireCallLock(userId, sessionIdState);
+      if (lockResult.ok === false) {
+        const duplicateTab = lockResult.reason === "duplicate-tab";
         toast({
-          title: lock.reason === "duplicate-tab" ? "Chamada já aberta" : "Chamada em andamento",
-          description:
-            lock.reason === "duplicate-tab"
-              ? "Esta chamada já está aberta em outra aba ou janela."
-              : "Você já está em outra chamada. Finalize-a antes de entrar nesta.",
+          title: duplicateTab ? "Chamada já aberta" : "Chamada em andamento",
+          description: duplicateTab
+            ? "Esta chamada já está aberta em outra aba ou janela."
+            : "Você já está em outra chamada. Finalize-a antes de entrar nesta.",
           variant: "destructive",
         });
         navigate(userType === "psychologist" ? "/psychologist-dashboard" : "/home");
         return;
       }
-      release = lock.release;
+      release = lockResult.release;
+
 
       // Server-side guard: the user must not be attending a different room
       const ongoing = await findOngoingCallForUser(userId);
