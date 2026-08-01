@@ -223,7 +223,10 @@ export type Database = {
           accepted_by: string | null
           created_at: string
           duration: number | null
+          end_reason: string | null
           ended_at: string | null
+          ended_by: string | null
+          ended_by_type: string | null
           expires_at: string | null
           id: string
           patient_details: Json
@@ -239,7 +242,10 @@ export type Database = {
           accepted_by?: string | null
           created_at?: string
           duration?: number | null
+          end_reason?: string | null
           ended_at?: string | null
+          ended_by?: string | null
+          ended_by_type?: string | null
           expires_at?: string | null
           id?: string
           patient_details?: Json
@@ -255,7 +261,10 @@ export type Database = {
           accepted_by?: string | null
           created_at?: string
           duration?: number | null
+          end_reason?: string | null
           ended_at?: string | null
+          ended_by?: string | null
+          ended_by_type?: string | null
           expires_at?: string | null
           id?: string
           patient_details?: Json
@@ -1427,6 +1436,7 @@ export type Database = {
           answer: Json | null
           created_at: string
           emergency_request_id: string | null
+          end_reason: string | null
           ended_at: string | null
           ended_by: string | null
           ended_by_type: string | null
@@ -1447,6 +1457,7 @@ export type Database = {
           answer?: Json | null
           created_at?: string
           emergency_request_id?: string | null
+          end_reason?: string | null
           ended_at?: string | null
           ended_by?: string | null
           ended_by_type?: string | null
@@ -1467,6 +1478,7 @@ export type Database = {
           answer?: Json | null
           created_at?: string
           emergency_request_id?: string | null
+          end_reason?: string | null
           ended_at?: string | null
           ended_by?: string | null
           ended_by_type?: string | null
