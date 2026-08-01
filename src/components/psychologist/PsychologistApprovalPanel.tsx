@@ -142,22 +142,16 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
   }, [pendingPsychologists, filter, search]);
 
   const handleDelete = async (psychologist: PsychologistData) => {
-    const details: any = psychologist.user_id
-      ? psychologist
-      : await getPsychologistDetails(psychologist.id);
-    const userId = details?.user_id;
-    if (!userId) {
-      toast.error('Não foi possível identificar o usuário deste psicólogo');
-      return;
-    }
     setDeletingId(psychologist.id);
     try {
-      const { data, error } = await supabase.functions.invoke('cleanup-user', {
-        body: { userId },
+      const { data, error } = await supabase.functions.invoke('admin-delete-psychologist', {
+        body: { psychologist_id: psychologist.id },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      toast.success('Psicólogo excluído com sucesso');
+      if (data?.warning) toast.warning(data.warning);
+      else toast.success('Psicólogo excluído permanentemente');
+      setDetailsOpen(false);
       setSelectedPsychologist(null);
       getPendingPsychologists();
     } catch (err: any) {
@@ -166,6 +160,7 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
       setDeletingId(null);
     }
   };
+
 
   return (
     <div className="space-y-4 sm:space-y-6">
