@@ -164,18 +164,24 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
             const endedByName = callEndedBy.userType === 'psychologist' ? 'O psicólogo' : 'O paciente';
             setError(`${endedByName} finalizou a chamada.`);
           } else {
-            setError('Conexão perdida. Tentando reconectar...');
-            // Attempt ICE restart once before giving up
-            try {
-              pc.restartIce?.();
-            } catch (e) {
-              console.warn('restartIce failed:', e);
-            }
+            attemptReconnect(pc);
           }
         } else if (state === 'disconnected') {
-          // Transient — don't alarm the user, let it self-heal
+          // Transient — give it a short grace period before forcing a reconnect
           console.log('⏳ Connection transient disconnect, awaiting recovery...');
+          if (!graceTimerRef.current && !callEndedBy) {
+            graceTimerRef.current = setTimeout(() => {
+              graceTimerRef.current = null;
+              if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
+                attemptReconnect(pc);
+              }
+            }, 3000);
+          }
         } else if (state === 'connected') {
+          clearReconnectTimers();
+          reconnectAttemptsRef.current = 0;
+          setReconnectAttempt(0);
+          setIsReconnecting(false);
           setError(null);
           setCallEndedBy(null);
           toast({
@@ -184,6 +190,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
           });
         }
       };
+
 
       // Handle ICE candidates
       pc.onicecandidate = (event) => {
