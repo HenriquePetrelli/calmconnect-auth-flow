@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 
 export interface PsychologistData {
   id: string;
+  user_id?: string;
   full_name: string;
   email: string;
   cpf?: string;
