@@ -186,9 +186,21 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
             Analise e gerencie os cadastros de psicólogos na plataforma
           </p>
         </div>
-        <Button onClick={getPendingPsychologists} disabled={loading} size="sm" className="w-full sm:w-auto">
-          {loading ? 'Carregando...' : 'Atualizar'}
-        </Button>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportCsv}
+            disabled={filteredPsychologists.length === 0}
+            className="flex-1 sm:flex-none"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Exportar CSV
+          </Button>
+          <Button onClick={getPendingPsychologists} disabled={loading} size="sm" className="flex-1 sm:flex-none">
+            {loading ? 'Carregando...' : 'Atualizar'}
+          </Button>
+        </div>
       </div>
 
       <Tabs value={filter} onValueChange={(value) => setFilter(value as any)} className="w-full">
