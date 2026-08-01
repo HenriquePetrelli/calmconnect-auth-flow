@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Mic, MicOff, Camera, CameraOff, PhoneOff, Loader2, AlertTriangle, Settings, Shield, Video } from 'lucide-react';
+import { Mic, MicOff, Camera, CameraOff, PhoneOff, Loader2, AlertTriangle, Settings, Shield, Video, WifiOff, RefreshCw } from 'lucide-react';
 import { useWebRTC } from '@/hooks/useWebRTC';
 import { useCallPresence } from '@/hooks/useCallPresence';
 
