@@ -12,11 +12,36 @@ import { supabase } from '@/integrations/supabase/client';
 import { FeedbackModal } from '@/components/sos/FeedbackModal';
 import { VideoCallSettingsModal } from '@/components/sos/VideoCallSettingsModal';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+
+export interface EndCallInfo {
+  reason: string;
+  endedByType: 'psychologist' | 'patient';
+}
+
+const END_REASONS = [
+  { value: 'atendimento_concluido', label: 'Atendimento concluído' },
+  { value: 'paciente_estabilizado', label: 'Paciente estabilizado' },
+  { value: 'encaminhamento', label: 'Encaminhado para acompanhamento' },
+  { value: 'problemas_tecnicos', label: 'Problemas técnicos' },
+  { value: 'outro', label: 'Outro motivo' },
+];
 
 interface EmergencyVideoCallProps {
   sessionId?: string;
   userType?: 'psychologist' | 'patient';
-  onEndCall?: () => void;
+  onEndCall?: (info?: EndCallInfo) => void;
   timeLimit?: number; // in seconds
 }
 
