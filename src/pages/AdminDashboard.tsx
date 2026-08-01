@@ -496,7 +496,7 @@ const AdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="psychologists" className="mt-4">
-            <PsychologistApprovalPanel adminUserId={user?.id} />
+            <PsychologistApprovalPanel adminUserId={user?.id} onDataChange={fetchMetrics} />
           </TabsContent>
 
           <TabsContent value="patients" className="mt-4">
