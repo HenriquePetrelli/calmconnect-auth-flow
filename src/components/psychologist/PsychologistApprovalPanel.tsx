@@ -299,6 +299,51 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
               </TableBody>
             </Table>
           </div>
+
+          <div className="flex flex-col gap-3 border-t p-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs text-muted-foreground text-center sm:text-left">
+              Mostrando {(currentPage - 1) * pageSize + 1}–
+              {Math.min(currentPage * pageSize, filteredPsychologists.length)} de{' '}
+              {filteredPsychologists.length} psicólogos
+            </p>
+
+            <div className="flex items-center justify-center gap-2">
+              <Select value={String(pageSize)} onValueChange={(v) => setPageSize(Number(v))}>
+                <SelectTrigger className="h-8 w-[110px] text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-popover z-50">
+                  {[10, 25, 50].map((n) => (
+                    <SelectItem key={n} value={String(n)}>{n} por página</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setPage(currentPage - 1)}
+                disabled={currentPage <= 1}
+                aria-label="Página anterior"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-xs text-muted-foreground min-w-[70px] text-center">
+                {currentPage} de {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setPage(currentPage + 1)}
+                disabled={currentPage >= totalPages}
+                aria-label="Próxima página"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         </Card>
       )}
 
