@@ -617,8 +617,28 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
                           )}
                         </div>
 
+                        <div className="flex flex-col sm:flex-row gap-2 pt-4 border-t">
+                          {isCurrentlyBlocked(selectedPsychologist as any) ? (
+                            <Button
+                              className="flex-1 bg-success text-success-foreground hover:bg-success/90"
+                              onClick={() => { setBlockTarget(selectedPsychologist); setBlockMode('unblock'); setDetailsOpen(false); }}
+                            >
+                              <Unlock className="h-4 w-4 mr-2" /> Desbloquear
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="destructive"
+                              className="flex-1"
+                              onClick={() => { setBlockTarget(selectedPsychologist); setBlockMode('block'); setDetailsOpen(false); }}
+                            >
+                              <Ban className="h-4 w-4 mr-2" /> Bloquear
+                            </Button>
+                          )}
+                        </div>
+
                         {selectedPsychologist.approval_status === 'pending' && (
                           <div className="flex space-x-2 pt-4 border-t">
+
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
                                 <Button className="flex-1" variant="default">
