@@ -710,12 +710,21 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
               }
 
 
-              // Handle offer/answer exchange
-              if (sessionData.offer && userType === 'patient' && !pc.remoteDescription) {
-                await handleOffer(sessionData.offer, pc);
-              } else if (sessionData.answer && userType === 'psychologist' && !pc.remoteDescription) {
-                await handleAnswer(sessionData.answer, pc);
+              // Handle offer/answer exchange (also supports renegotiation / ICE restart)
+              if (sessionData.offer && userType === 'patient') {
+                const sdp = (sessionData.offer as any)?.sdp;
+                if (sdp && sdp !== lastAppliedOfferRef.current) {
+                  lastAppliedOfferRef.current = sdp;
+                  await handleOffer(sessionData.offer, pc);
+                }
+              } else if (sessionData.answer && userType === 'psychologist') {
+                const sdp = (sessionData.answer as any)?.sdp;
+                if (sdp && sdp !== lastAppliedAnswerRef.current && pc.signalingState !== 'stable') {
+                  lastAppliedAnswerRef.current = sdp;
+                  await handleAnswer(sessionData.answer, pc);
+                }
               }
+
 
               // Process ICE candidates
               if (sessionData.ice_candidates) {
