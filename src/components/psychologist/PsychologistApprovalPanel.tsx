@@ -615,6 +615,34 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
         />
       )}
 
+      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => { if (!o) setDeleteTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir psicólogo</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação é permanente e removerá o cadastro, os documentos e o acesso de{' '}
+              {deleteTarget?.full_name}. Deseja continuar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={!!deletingId}
+              onClick={(e) => {
+                e.preventDefault();
+                const target = deleteTarget;
+                if (target) handleDelete(target).then(() => setDeleteTarget(null));
+              }}
+            >
+              {deletingId ? 'Excluindo...' : 'Confirmar exclusão'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+
+
       {selectedPsychologist && (
         <EditPsychologistModal
           open={editOpen}
