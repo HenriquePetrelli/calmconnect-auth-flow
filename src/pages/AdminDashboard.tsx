@@ -53,6 +53,7 @@ const AdminDashboard = () => {
   const navItems = [
     { value: 'overview', label: 'Visão Geral', icon: LayoutDashboard },
     { value: 'psychologists', label: 'Psicólogos', icon: UserCheck },
+    { value: 'patients', label: 'Pacientes', icon: Users },
     { value: 'payments', label: 'Pagamentos', icon: CreditCard },
     { value: 'profile', label: 'Perfil', icon: UserCog },
   ] as const;
@@ -322,7 +323,7 @@ const AdminDashboard = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-          <TabsList className="hidden md:grid w-full h-auto p-1 bg-muted/60 grid-cols-4 gap-1 rounded-lg">
+          <TabsList className="hidden md:grid w-full h-auto p-1 bg-muted/60 grid-cols-5 gap-1 rounded-lg">
             <TabsTrigger value="overview" className={tabTriggerClass}>
               <LayoutDashboard className="w-4 h-4 shrink-0" />
               <span>Visão Geral</span>
@@ -330,6 +331,10 @@ const AdminDashboard = () => {
             <TabsTrigger value="psychologists" className={tabTriggerClass}>
               <UserCheck className="w-4 h-4 shrink-0" />
               <span>Psicólogos</span>
+            </TabsTrigger>
+            <TabsTrigger value="patients" className={tabTriggerClass}>
+              <Users className="w-4 h-4 shrink-0" />
+              <span>Pacientes</span>
             </TabsTrigger>
             <TabsTrigger value="payments" className={tabTriggerClass}>
               <CreditCard className="w-4 h-4 shrink-0" />
