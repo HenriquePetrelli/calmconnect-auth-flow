@@ -52,6 +52,9 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   const [remoteMuted, setRemoteMuted] = useState(false);
   const [remoteIsCameraOff, setRemoteIsCameraOff] = useState(false);
   const [callTerminatedMessage, setCallTerminatedMessage] = useState<string | null>(null);
+  // Moment this client joined the call — used to ignore stale "call ended" events.
+  const joinedAtRef = useRef<number>(Date.now());
+
 
   const {
     localVideoRef,
