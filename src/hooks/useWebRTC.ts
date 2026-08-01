@@ -164,32 +164,39 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
         pc.addTrack(track, stream);
       });
 
+      pcRef.current = pc;
+
       // Handle connection state changes
       pc.onconnectionstatechange = () => {
         const state = pc.connectionState;
+        const endedBy = callEndedByRef.current;
         console.log(`🔄 Connection state changed: ${state}`);
         setConnectionState(state);
         setIsConnected(state === 'connected');
         onConnectionStateChange?.(state);
 
         if (state === 'failed') {
-          // Only show reconnect message on hard failure when no manual end was signalled
-          if (callEndedBy) {
-            const endedByName = callEndedBy.userType === 'psychologist' ? 'O psicólogo' : 'O paciente';
+          // A hard ICE failure is NOT a call termination. Only a signalled,
+          // deliberate end (persisted in the database) ends the call.
+          if (endedBy) {
+            const endedByName = endedBy.userType === 'psychologist' ? 'O psicólogo' : 'O paciente';
             setError(`${endedByName} finalizou a chamada.`);
           } else {
-            attemptReconnect(pc);
+            attemptReconnectRef.current?.(pc);
           }
         } else if (state === 'disconnected') {
           // Transient — give it a short grace period before forcing a reconnect
           console.log('⏳ Connection transient disconnect, awaiting recovery...');
-          if (!graceTimerRef.current && !callEndedBy) {
-            graceTimerRef.current = setTimeout(() => {
-              graceTimerRef.current = null;
-              if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
-                attemptReconnect(pc);
-              }
-            }, 3000);
+          if (!endedBy) {
+            setIsReconnecting(true);
+            if (!graceTimerRef.current) {
+              graceTimerRef.current = setTimeout(() => {
+                graceTimerRef.current = null;
+                if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
+                  attemptReconnectRef.current?.(pc);
+                }
+              }, 3000);
+            }
           }
         } else if (state === 'connected') {
           clearReconnectTimers();
@@ -204,6 +211,29 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
           });
         }
       };
+
+      // ICE-level watchdog: some browsers keep `connectionState` optimistic
+      // while ICE has already dropped.
+      pc.oniceconnectionstatechange = () => {
+        const iceState = pc.iceConnectionState;
+        console.log(`🧊 ICE connection state: ${iceState}`);
+        if (callEndedByRef.current) return;
+
+        if (iceState === 'failed') {
+          attemptReconnectRef.current?.(pc);
+        } else if (iceState === 'disconnected') {
+          setIsReconnecting(true);
+          if (!graceTimerRef.current) {
+            graceTimerRef.current = setTimeout(() => {
+              graceTimerRef.current = null;
+              if (['disconnected', 'failed'].includes(pc.iceConnectionState)) {
+                attemptReconnectRef.current?.(pc);
+              }
+            }, 3000);
+          }
+        }
+      };
+
 
 
       // Handle ICE candidates
