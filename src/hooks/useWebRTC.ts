@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { isRealTermination } from '@/lib/callTermination';
 import { useToast } from '@/hooks/use-toast';
 import { getWebRTCConnectionManager } from '@/utils/webrtc-manager';
 import { flowLock } from '@/utils/flow-lock';
