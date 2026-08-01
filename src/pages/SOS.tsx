@@ -153,11 +153,12 @@ const SOS = () => {
 
   // Track online professionals
   useEffect(() => {
+    let active = true;
     const fetchOnline = async () => {
       const { count } = await supabase
         .from('psychologist_presence')
         .select('*', { count: 'exact', head: true });
-      setAvailableProfessionals(count ?? 0);
+      if (active) setAvailableProfessionals(count ?? 0);
     };
     fetchOnline();
 
@@ -165,16 +166,19 @@ const SOS = () => {
       .channel('presence_watch')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'psychologist_presence' }, () => {
         fetchOnline();
-      });
+      })
+      .subscribe();
 
-    // Subscribe without returning the Promise to React
-    channel.subscribe();
+    // Fallback polling in case the realtime socket drops
+    const interval = window.setInterval(fetchOnline, 15000);
 
     return () => {
-      // Cleanup without returning a Promise
+      active = false;
+      window.clearInterval(interval);
       supabase.removeChannel(channel);
     };
   }, []);
+
 
   const handleCancelConfirm = async () => {
     setShowCancelModal(false);
