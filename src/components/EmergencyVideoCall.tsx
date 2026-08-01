@@ -12,11 +12,36 @@ import { supabase } from '@/integrations/supabase/client';
 import { FeedbackModal } from '@/components/sos/FeedbackModal';
 import { VideoCallSettingsModal } from '@/components/sos/VideoCallSettingsModal';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+
+export interface EndCallInfo {
+  reason: string;
+  endedByType: 'psychologist' | 'patient';
+}
+
+const END_REASONS = [
+  { value: 'atendimento_concluido', label: 'Atendimento concluído' },
+  { value: 'paciente_estabilizado', label: 'Paciente estabilizado' },
+  { value: 'encaminhamento', label: 'Encaminhado para acompanhamento' },
+  { value: 'problemas_tecnicos', label: 'Problemas técnicos' },
+  { value: 'outro', label: 'Outro motivo' },
+];
 
 interface EmergencyVideoCallProps {
   sessionId?: string;
   userType?: 'psychologist' | 'patient';
-  onEndCall?: () => void;
+  onEndCall?: (info?: EndCallInfo) => void;
   timeLimit?: number; // in seconds
 }
 
@@ -40,6 +65,9 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [sessionValid, setSessionValid] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
+  const [selectedEndReason, setSelectedEndReason] = useState<string>('atendimento_concluido');
+  const endReasonRef = useRef<string>('encerrada_pelo_usuario');
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [userInfo, setUserInfo] = useState<{
     name: string; 
@@ -584,7 +612,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
           });
         }
         if (prev <= 1) {
-          handleEndCall();
+          handleEndCall('tempo_limite_atingido');
           return 0;
         }
         return prev - 1;
@@ -681,7 +709,8 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   };
 
 
-  const handleEndCall = async () => {
+  const handleEndCall = async (reason: string = 'encerrada_pelo_usuario') => {
+    endReasonRef.current = reason;
     try {
       console.log('🔄 Starting complete call cleanup...');
       
@@ -694,6 +723,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
             status: 'completed',
             ended_by: user?.id,
             ended_by_type: userType,
+            end_reason: reason,
             ended_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           })
@@ -725,11 +755,16 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
       });
       
       if (onEndCall) {
-        onEndCall();
+        onEndCall({ reason, endedByType: userType });
       } else {
         navigate('/home');
       }
     }
+  };
+
+  const confirmEndCall = () => {
+    setShowEndConfirm(false);
+    handleEndCall(selectedEndReason);
   };
 
   const handleFeedbackClose = () => {
@@ -742,7 +777,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
 
     // Let the parent close the emergency request (and redirect).
     if (onEndCall) {
-      onEndCall();
+      onEndCall({ reason: endReasonRef.current, endedByType: userType });
       return;
     }
 
@@ -1198,7 +1233,10 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
 
           {/* Botão de encerrar chamada */}
           <button
-            onClick={handleEndCall}
+            onClick={() => {
+              setSelectedEndReason(userType === 'psychologist' ? 'atendimento_concluido' : 'paciente_estabilizado');
+              setShowEndConfirm(true);
+            }}
             className="group relative w-14 h-14 md:w-16 md:h-16 rounded-full bg-destructive hover:bg-destructive/90 flex items-center justify-center transition-all duration-200 shadow-lg shadow-destructive/30"
           >
             <PhoneOff className="text-white" size={20} />
@@ -1225,6 +1263,43 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
         }}
         onDeviceStreamUpdate={updateDeviceStream}
       />
+
+      {/* Confirmação de encerramento */}
+      <AlertDialog open={showEndConfirm} onOpenChange={setShowEndConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Encerrar chamada?</AlertDialogTitle>
+            <AlertDialogDescription>
+              A chamada será finalizada para os dois participantes. Selecione o motivo do encerramento.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <RadioGroup
+            value={selectedEndReason}
+            onValueChange={setSelectedEndReason}
+            className="gap-2 py-2"
+          >
+            {END_REASONS.map((r) => (
+              <div key={r.value} className="flex items-center gap-3 rounded-lg border border-border p-3">
+                <RadioGroupItem value={r.value} id={`end-reason-${r.value}`} />
+                <Label htmlFor={`end-reason-${r.value}`} className="cursor-pointer text-sm font-normal">
+                  {r.label}
+                </Label>
+              </div>
+            ))}
+          </RadioGroup>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel>Continuar na chamada</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmEndCall}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Encerrar chamada
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Feedback Modal */}
       <FeedbackModal

@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { WebRTCVideoCall } from "@/components/sos/WebRTCVideoCall";
-import EmergencyVideoCall from "@/components/EmergencyVideoCall";
+import EmergencyVideoCall, { type EndCallInfo } from "@/components/EmergencyVideoCall";
 import { SkeletonFullPage } from "@/components/skeletons/Skeletons";
 import { acquireCallLock } from "@/lib/callLock";
 import { findOngoingCallForUser, sessionIdOf } from "@/lib/emergencyCallGuard";
@@ -233,7 +233,7 @@ const EmergencyCall = () => {
     markCallAsStarted();
   }, [requestId, sessionIdState, userType, navigate, toast]);
 
-  const endCall = async () => {
+  const endCall = async (info?: EndCallInfo) => {
     const goBack = () =>
       navigate(userType === "psychologist" ? "/psychologist-dashboard" : "/home");
 
@@ -244,6 +244,9 @@ const EmergencyCall = () => {
 
     try {
       const endTime = new Date().toISOString();
+      const { data: auth } = await supabase.auth.getUser();
+      const endReason = info?.reason ?? "encerrada_pelo_usuario";
+      const endedByType = info?.endedByType ?? userType;
 
       // Get current emergency request data
       const { data: emergencyData } = await supabase
@@ -262,7 +265,10 @@ const EmergencyCall = () => {
         .update({
           ended_at: endTime,
           status: "completed",
-          duration
+          duration,
+          ended_by: auth.user?.id ?? null,
+          ended_by_type: endedByType,
+          end_reason: endReason,
         })
         .eq("id", requestId);
 
@@ -270,17 +276,18 @@ const EmergencyCall = () => {
 
       // Update WebRTC session status
       if (sessionIdState) {
-        const { data: auth } = await supabase.auth.getUser();
         await supabase
           .from("webrtc_sessions")
           .update({
             status: "completed",
             ended_at: endTime,
             ended_by: auth.user?.id ?? null,
-            ended_by_type: userType,
+            ended_by_type: endedByType,
+            end_reason: endReason,
           })
           .eq("id", sessionIdState);
       }
+
 
       goBack();
     } catch (error) {
