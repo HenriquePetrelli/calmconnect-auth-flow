@@ -144,8 +144,8 @@ const PsychologistDashboard = () => {
 
             {/* SOLIV centralizado */}
             <div className="hidden sm:flex absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 items-center gap-2">
-              <img src={logoImg} alt="Soliv" className="w-8 h-8 object-contain select-none" draggable={false} />
-              <span className="text-[32px] font-black text-white lowercase leading-none" style={{ fontFamily: "'El Messiri', sans-serif" }}>soliv</span>
+              <img src={logoImg} alt="Soliv" className="w-10 h-10 object-contain select-none" draggable={false} />
+              <span className="text-[48px] font-black text-white lowercase leading-none" style={{ fontFamily: "'El Messiri', sans-serif" }}>soliv</span>
             </div>
 
             <div className="flex items-center gap-1 sm:gap-2 shrink-0">
