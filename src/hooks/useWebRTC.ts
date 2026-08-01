@@ -38,16 +38,37 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
   const [isInitializing, setIsInitializing] = useState(false);
   const [webrtcState, setWebrtcState] = useState<WebRTCState>('idle');
   const [callEndedBy, setCallEndedBy] = useState<{userId: string, userType: string} | null>(null);
+  const [isReconnecting, setIsReconnecting] = useState(false);
+  const [reconnectAttempt, setReconnectAttempt] = useState(0);
   
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const initializationRef = useRef<boolean>(false);
   const cleanupRef = useRef<boolean>(false);
+  const reconnectAttemptsRef = useRef<number>(0);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const graceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastAppliedOfferRef = useRef<string | null>(null);
+  const lastAppliedAnswerRef = useRef<string | null>(null);
   const { toast } = useToast();
   const connectionManager = getWebRTCConnectionManager();
   const stateMachine = useRef(stateMachineRegistry.getOrCreate(sessionId));
   const { preferences, isLoading: prefsLoading } = useUserPreferences();
   const mediaManager = useMediaDeviceManager();
+
+  const MAX_RECONNECT_ATTEMPTS = 6;
+
+  const clearReconnectTimers = useCallback(() => {
+    if (reconnectTimerRef.current) {
+      clearTimeout(reconnectTimerRef.current);
+      reconnectTimerRef.current = null;
+    }
+    if (graceTimerRef.current) {
+      clearTimeout(graceTimerRef.current);
+      graceTimerRef.current = null;
+    }
+  }, []);
+
 
   const initializeMedia = useCallback(async () => {
     try {
