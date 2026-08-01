@@ -612,7 +612,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
           });
         }
         if (prev <= 1) {
-          handleEndCall();
+          handleEndCall('tempo_limite_atingido');
           return 0;
         }
         return prev - 1;
