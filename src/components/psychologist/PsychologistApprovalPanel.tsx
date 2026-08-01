@@ -96,6 +96,7 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
   const handleApprove = async (psychologistId: string) => {
     const result = await approvePsychologist(psychologistId, adminUserId);
     if (result.success) {
+      setDetailsOpen(false);
       setSelectedPsychologist(null);
     }
   };
@@ -103,10 +104,12 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
   const handleReject = async (psychologistId: string) => {
     const result = await rejectPsychologist(psychologistId, adminUserId, rejectionReason);
     if (result.success) {
+      setDetailsOpen(false);
       setSelectedPsychologist(null);
       setRejectionReason('');
     }
   };
+
 
   const getStatusBadge = (status: string, psych?: any) => {
     if (isCurrentlyBlocked(psych)) {
