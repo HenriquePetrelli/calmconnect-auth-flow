@@ -229,7 +229,7 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredPsychologists.map((psychologist) => (
+                {pagedPsychologists.map((psychologist) => (
                   <TableRow
                     key={psychologist.id}
                     className="cursor-pointer"
