@@ -425,7 +425,12 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     }
     
     cleanupRef.current = true;
+    clearReconnectTimers();
+    setIsReconnecting(false);
+    setReconnectAttempt(0);
+    reconnectAttemptsRef.current = 0;
     loopDetector.trace(sessionId, 'cleanup_start');
+
     
     // Transition to cleaning state
     if (stateMachine.current.canTransitionTo('cleaning')) {
