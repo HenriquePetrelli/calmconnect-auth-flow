@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { findPatientOpenRequest } from '@/lib/emergencyCallGuard';
 
 export interface EmergencyRequest {
   id: string;
@@ -40,6 +41,19 @@ export const useEmergencySOS = () => {
       }
 
       console.log('🆘 Creating emergency request for user:', user.id);
+
+      // Guard: never create a second request while one is still open.
+      const existing = await findPatientOpenRequest(user.id);
+      if (existing) {
+        console.log('⛔ Patient already has an open emergency request:', existing.id);
+        toast({
+          title: 'Solicitação já ativa',
+          description: 'Você já possui uma chamada de emergência em andamento.',
+          duration: 4000,
+        });
+        setCurrentRequest(existing as any);
+        return existing.id;
+      }
 
       const { data, error } = await supabase.functions.invoke('emergency-sos', {
         method: 'POST',
