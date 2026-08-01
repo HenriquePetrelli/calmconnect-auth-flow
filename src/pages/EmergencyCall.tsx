@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { WebRTCVideoCall } from "@/components/sos/WebRTCVideoCall";
-import EmergencyVideoCall from "@/components/EmergencyVideoCall";
+import EmergencyVideoCall, { type EndCallInfo } from "@/components/EmergencyVideoCall";
 import { SkeletonFullPage } from "@/components/skeletons/Skeletons";
 import { acquireCallLock } from "@/lib/callLock";
 import { findOngoingCallForUser, sessionIdOf } from "@/lib/emergencyCallGuard";
