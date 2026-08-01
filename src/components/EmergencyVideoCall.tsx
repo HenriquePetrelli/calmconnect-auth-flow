@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -52,6 +52,9 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   const [remoteMuted, setRemoteMuted] = useState(false);
   const [remoteIsCameraOff, setRemoteIsCameraOff] = useState(false);
   const [callTerminatedMessage, setCallTerminatedMessage] = useState<string | null>(null);
+  // Moment this client joined the call — used to ignore stale "call ended" events.
+  const joinedAtRef = useRef<number>(Date.now());
+
 
   const {
     localVideoRef,
@@ -415,8 +418,15 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
             console.log('📹 Remote camera status updated:', newData[`${remoteUserType}_camera_off`]);
           }
           
-          // Check if call was terminated
-          if (newData.status === 'completed' && newData.ended_by && newData.ended_by_type) {
+          // Check if call was terminated (ignore stale terminations from
+          // previous sessions/reconnections)
+          const endedAtMs = newData.ended_at ? new Date(newData.ended_at).getTime() : 0;
+          if (
+            newData.status === 'completed' &&
+            newData.ended_by &&
+            newData.ended_by_type &&
+            endedAtMs >= joinedAtRef.current
+          ) {
             const endedByType = newData.ended_by_type;
             const endedByName = endedByType === 'psychologist' ? 'O psicólogo' : 'O paciente';
             
@@ -429,6 +439,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
               setShowFeedbackModal(true);
             }, 1000);
           }
+
         }
       )
       .subscribe();

@@ -566,6 +566,34 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
         
         loopDetector.trace(sessionId, 'peer_connection_created');
 
+        // Reopen the session if it carries a stale "completed" state from a
+        // previous call/reconnection — otherwise both peers would immediately
+        // think the other one hung up.
+        const joinedAt = Date.now();
+        try {
+          const { data: existingSession } = await supabase
+            .from('webrtc_sessions')
+            .select('status, ended_at')
+            .eq('id', sessionId)
+            .maybeSingle();
+
+          if (existingSession?.status === 'completed') {
+            console.log('♻️ Reopening stale completed session');
+            await supabase
+              .from('webrtc_sessions')
+              .update({
+                status: 'active',
+                ended_at: null,
+                ended_by: null,
+                ended_by_type: null,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', sessionId);
+          }
+        } catch (e) {
+          console.warn('Could not verify session state:', e);
+        }
+
         // Set up realtime subscription for session updates
         const channel = supabase
           .channel(`webrtc_session_${sessionId}`)
@@ -589,13 +617,23 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
                 detail: sessionData 
               }));
 
-              // Check if call was ended by someone
-              if (sessionData.status === 'completed' && sessionData.ended_by && sessionData.ended_by_type) {
+              // Check if call was ended by someone — ignore stale terminations
+              // that happened before we joined this call.
+              const endedAtMs = (sessionData as any).ended_at
+                ? new Date((sessionData as any).ended_at).getTime()
+                : 0;
+              if (
+                sessionData.status === 'completed' &&
+                sessionData.ended_by &&
+                sessionData.ended_by_type &&
+                endedAtMs >= joinedAt
+              ) {
                 setCallEndedBy({
                   userId: sessionData.ended_by,
                   userType: sessionData.ended_by_type
                 });
               }
+
 
               // Handle offer/answer exchange
               if (sessionData.offer && userType === 'patient' && !pc.remoteDescription) {
