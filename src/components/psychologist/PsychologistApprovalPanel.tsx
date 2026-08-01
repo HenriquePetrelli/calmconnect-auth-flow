@@ -141,6 +141,18 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
     });
   }, [pendingPsychologists, filter, search]);
 
+  const totalPages = Math.max(1, Math.ceil(filteredPsychologists.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+
+  useEffect(() => {
+    setPage(1);
+  }, [filter, search, pageSize]);
+
+  const pagedPsychologists = useMemo(
+    () => filteredPsychologists.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+    [filteredPsychologists, currentPage, pageSize]
+  );
+
   const handleDelete = async (psychologist: PsychologistData) => {
     setDeletingId(psychologist.id);
     try {
