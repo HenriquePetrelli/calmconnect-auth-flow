@@ -40,6 +40,10 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
   const [callEndedBy, setCallEndedBy] = useState<{userId: string, userType: string} | null>(null);
   const [isReconnecting, setIsReconnecting] = useState(false);
   const [reconnectAttempt, setReconnectAttempt] = useState(0);
+  const [isNetworkOffline, setIsNetworkOffline] = useState(
+    typeof navigator !== 'undefined' ? !navigator.onLine : false
+  );
+
   
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
