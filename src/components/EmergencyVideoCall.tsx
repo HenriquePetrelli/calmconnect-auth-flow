@@ -415,8 +415,15 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
             console.log('📹 Remote camera status updated:', newData[`${remoteUserType}_camera_off`]);
           }
           
-          // Check if call was terminated
-          if (newData.status === 'completed' && newData.ended_by && newData.ended_by_type) {
+          // Check if call was terminated (ignore stale terminations from
+          // previous sessions/reconnections)
+          const endedAtMs = newData.ended_at ? new Date(newData.ended_at).getTime() : 0;
+          if (
+            newData.status === 'completed' &&
+            newData.ended_by &&
+            newData.ended_by_type &&
+            endedAtMs >= joinedAtRef.current
+          ) {
             const endedByType = newData.ended_by_type;
             const endedByName = endedByType === 'psychologist' ? 'O psicólogo' : 'O paciente';
             
@@ -429,6 +436,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
               setShowFeedbackModal(true);
             }, 1000);
           }
+
         }
       )
       .subscribe();
