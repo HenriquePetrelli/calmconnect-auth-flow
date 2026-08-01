@@ -1058,17 +1058,46 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
           </div>
         )}
         
-        {/* Banner de reconexão automática */}
-        {isReconnecting && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40">
-            <div className="flex items-center gap-2 rounded-full bg-warning/90 text-warning-foreground px-4 py-2 shadow-lg backdrop-blur-sm">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span className="text-xs md:text-sm font-medium">
-                Tentando reconectar{reconnectAttempt > 1 ? ` (tentativa ${reconnectAttempt})` : ''}...
+        {/* Banner de queda de conexão / reconexão automática */}
+        {(isReconnecting || isNetworkOffline || remoteDroppedInvoluntarily) && !callTerminatedMessage && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 w-[92%] max-w-md">
+            <div className="flex flex-col items-center gap-2 rounded-2xl bg-warning/90 text-warning-foreground px-4 py-3 shadow-lg backdrop-blur-sm text-center">
+              <div className="flex items-center gap-2">
+                {isNetworkOffline ? (
+                  <WifiOff className="w-4 h-4" />
+                ) : (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                )}
+                <span className="text-xs md:text-sm font-medium">
+                  {isNetworkOffline
+                    ? 'Sem conexão com a internet'
+                    : isReconnecting
+                      ? `Tentando reconectar${reconnectAttempt > 1 ? ` (tentativa ${reconnectAttempt})` : ''}...`
+                      : 'Participante com conexão instável'}
+                </span>
+              </div>
+              <span className="text-[11px] md:text-xs opacity-90">
+                {isNetworkOffline
+                  ? 'A chamada continua aberta e será retomada assim que a internet voltar.'
+                  : remoteDroppedInvoluntarily && !isReconnecting
+                    ? 'A outra pessoa perdeu a conexão. A chamada não foi encerrada — aguardando o retorno.'
+                    : 'A chamada não foi encerrada. Restabelecendo automaticamente...'}
               </span>
+              {!isNetworkOffline && (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="h-7 text-xs"
+                  onClick={forceReconnect}
+                >
+                  <RefreshCw className="w-3 h-3 mr-1" />
+                  Tentar reconectar
+                </Button>
+              )}
             </div>
           </div>
         )}
+
 
         {/* Placeholder quando não conectado */}
         {!isConnected && (
