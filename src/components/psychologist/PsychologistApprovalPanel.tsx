@@ -144,6 +144,40 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
     });
   }, [pendingPsychologists, filter, search]);
 
+  const handleExportCsv = () => {
+    if (filteredPsychologists.length === 0) {
+      toast.error('Nenhum psicólogo para exportar');
+      return;
+    }
+    const statusLabels: Record<string, string> = {
+      pending: 'Pendente',
+      approved: 'Aprovado',
+      rejected: 'Rejeitado',
+    };
+    const headers = ['Nome', 'Email', 'CPF', 'CRP', 'Especialização', 'Estado', 'Cidade', 'Status', 'Bloqueado'];
+    const escape = (value: unknown) => `"${String(value ?? '').replace(/"/g, '""')}"`;
+    const rows = filteredPsychologists.map((p) => [
+      p.full_name,
+      p.email,
+      p.cpf || '',
+      p.crp_number,
+      p.specialization || '',
+      p.state || '',
+      p.city || '',
+      isCurrentlyBlocked(p as any) ? 'Bloqueado' : (statusLabels[p.approval_status] || p.approval_status),
+      isCurrentlyBlocked(p as any) ? formatBlockPeriod(p as any) : 'Não',
+    ]);
+    const csv = [headers, ...rows].map((row) => row.map(escape).join(';')).join('\n');
+    const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `psicologos-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success(`${filteredPsychologists.length} registro(s) exportado(s)`);
+  };
+
   const totalPages = Math.max(1, Math.ceil(filteredPsychologists.length / pageSize));
   const currentPage = Math.min(page, totalPages);
 
