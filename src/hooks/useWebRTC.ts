@@ -538,10 +538,12 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     }
     
     cleanupRef.current = true;
+    pcRef.current = null;
     clearReconnectTimers();
     setIsReconnecting(false);
     setReconnectAttempt(0);
     reconnectAttemptsRef.current = 0;
+
     loopDetector.trace(sessionId, 'cleanup_start');
 
     
