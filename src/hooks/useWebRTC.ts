@@ -269,12 +269,13 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     }
   };
 
-  const createOffer = async (pc: RTCPeerConnection) => {
+  const createOffer = async (pc: RTCPeerConnection, iceRestart = false) => {
     try {
-      console.log('📝 Creating offer...');
+      console.log('📝 Creating offer...', { iceRestart });
       const offer = await pc.createOffer({
         offerToReceiveAudio: true,
-        offerToReceiveVideo: true
+        offerToReceiveVideo: true,
+        iceRestart
       });
       
       await pc.setLocalDescription(offer);
@@ -294,6 +295,52 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
       setError('Erro ao criar oferta de conexão');
     }
   };
+
+  // Automatic reconnection with exponential backoff + ICE restart
+  const attemptReconnect = (pc: RTCPeerConnection) => {
+    if (cleanupRef.current || callEndedBy) return;
+    if (reconnectTimerRef.current) return; // already scheduled
+
+    if (reconnectAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) {
+      setIsReconnecting(false);
+      setError('Não foi possível restabelecer a conexão. Verifique sua internet e tente entrar novamente.');
+      return;
+    }
+
+    const attempt = reconnectAttemptsRef.current + 1;
+    reconnectAttemptsRef.current = attempt;
+    setReconnectAttempt(attempt);
+    setIsReconnecting(true);
+    setError(null);
+
+    const delay = Math.min(1000 * 2 ** (attempt - 1), 8000);
+    console.log(`🔁 Scheduling reconnect attempt ${attempt} in ${delay}ms`);
+
+    reconnectTimerRef.current = setTimeout(async () => {
+      reconnectTimerRef.current = null;
+      if (cleanupRef.current || callEndedBy) return;
+      if (pc.connectionState === 'connected' || pc.connectionState === 'closed') return;
+
+      try {
+        pc.restartIce?.();
+        // The offerer (psychologist) renegotiates; the answerer waits for the new offer
+        if (userType === 'psychologist') {
+          await createOffer(pc, true);
+        }
+      } catch (e) {
+        console.warn('Reconnect attempt failed:', e);
+      }
+
+      // Re-evaluate after giving the attempt time to settle
+      setTimeout(() => {
+        if (cleanupRef.current || callEndedBy) return;
+        if (pc.connectionState !== 'connected' && pc.connectionState !== 'closed') {
+          attemptReconnect(pc);
+        }
+      }, 5000);
+    }, delay);
+  };
+
 
   const handleOffer = async (offer: RTCSessionDescriptionInit, pc: RTCPeerConnection) => {
     try {
