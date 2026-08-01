@@ -369,7 +369,7 @@ const AdminDashboard = () => {
                         <CardContent className="p-3 sm:p-5">
                           <div className="flex items-start justify-between gap-2 sm:gap-3">
                             <div className="min-w-0">
-                              <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wide truncate">
+                              <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wide leading-tight">
                                 {label}
                               </p>
                               <p className={`text-xl sm:text-3xl font-bold mt-1 sm:mt-1.5 ${s.value}`}>
