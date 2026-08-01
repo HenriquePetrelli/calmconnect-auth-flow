@@ -200,8 +200,8 @@ const AdminDashboard = () => {
       border: 'border-secondary/30',
       bg: 'bg-gradient-to-br from-secondary/10 to-transparent',
       iconBg: 'bg-secondary/20',
-      iconText: 'text-secondary-foreground',
-      value: 'text-secondary-foreground',
+      iconText: 'text-secondary',
+      value: 'text-secondary',
     },
     destructive: {
       border: 'border-destructive/20',
