@@ -29,6 +29,7 @@ import {
   Search,
   Trash2,
   Unlock,
+  UserCheck,
   Users,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -41,13 +42,6 @@ import { SkeletonTable } from '@/components/skeletons/Skeletons';
 import { ContentTransition } from '@/components/skeletons/ContentTransition';
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
-
-const Field = ({ label, value }: { label: string; value?: string | null }) => (
-  <div className="rounded-lg border p-3 bg-muted/30">
-    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</p>
-    <p className="mt-1 text-sm break-words">{value || 'Não informado'}</p>
-  </div>
-);
 
 export const PatientsPanel = () => {
   const { patients, loading, error, fetchPatients } = usePatientManagement();
@@ -213,9 +207,6 @@ export const PatientsPanel = () => {
                                 <DropdownMenuItem onClick={() => setDetailPatient(p)}>
                                   <Eye className="h-4 w-4 mr-2" /> Detalhes
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => setEditPatient(p)}>
-                                  <Pencil className="h-4 w-4 mr-2" /> Alterar informações
-                                </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => setBlockTarget({ patient: p, mode: blocked ? 'unblock' : 'block' })}
                                 >
@@ -273,43 +264,101 @@ export const PatientsPanel = () => {
 
       {/* Detalhes */}
       <Dialog open={!!detailPatient} onOpenChange={(open) => !open && setDetailPatient(null)}>
-        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              {detailPatient?.full_name}
-            </DialogTitle>
-            <DialogDescription>Informações cadastrais do paciente</DialogDescription>
+            <DialogTitle>Detalhes do Paciente</DialogTitle>
+            <DialogDescription>Informações completas do cadastro</DialogDescription>
           </DialogHeader>
           {detailPatient && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">{statusBadge(detailPatient)}</div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Field label="E-mail" value={detailPatient.email} />
-                <Field label="CPF" value={detailPatient.cpf} />
-                <Field label="Telefone" value={detailPatient.phone} />
-                <Field
-                  label="Localização"
-                  value={[detailPatient.city, detailPatient.state].filter(Boolean).join(' - ')}
-                />
-                <Field
-                  label="Cadastro"
-                  value={detailPatient.created_at ? new Date(detailPatient.created_at).toLocaleDateString('pt-BR') : null}
-                />
-              </div>
-              {isCurrentlyBlocked(detailPatient) && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <Field label="Motivo do bloqueio" value={detailPatient.blocked_reason} />
-                  <Field label="Período" value={`${formatBlockPeriod(detailPatient)} (${formatRemainingTime(detailPatient.blocked_until)})`} />
-                </div>
-              )}
-              <div className="flex flex-col sm:flex-row gap-2 pt-2">
-                <Button className="w-full sm:flex-1" onClick={() => { setEditPatient(detailPatient); setDetailPatient(null); }}>
-                  <Pencil className="h-4 w-4 mr-2" /> Alterar informações
+            <div className="space-y-6">
+              <div className="flex justify-end">
+                <Button variant="outline" size="sm" onClick={() => setEditPatient(detailPatient)}>
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Editar informações
                 </Button>
+              </div>
+
+              {/* Seção de Status */}
+              <div className="border rounded-lg p-4 bg-muted/20">
+                <div className="flex items-center gap-2 mb-3">
+                  <UserCheck className="h-4 w-4" />
+                  <span className="text-sm font-medium">Status da Conta</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Status Atual</label>
+                    <div className="mt-1">{statusBadge(detailPatient)}</div>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Data de Cadastro</label>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {detailPatient.created_at ? new Date(detailPatient.created_at).toLocaleString('pt-BR') : 'Não informado'}
+                    </p>
+                  </div>
+                </div>
+                {isCurrentlyBlocked(detailPatient) && (
+                  <div className="mt-4 space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Bloqueio</label>
+                    <div className="text-sm p-3 bg-muted rounded-md border">
+                      <p className="font-medium">
+                        {formatBlockPeriod(detailPatient)} ({formatRemainingTime(detailPatient.blocked_until)})
+                      </p>
+                      <p className="text-muted-foreground mt-1">
+                        Motivo: {detailPatient.blocked_reason || 'Não informado'}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Seção de Informações Básicas */}
+              <div className="border rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Users className="h-4 w-4" />
+                  <span className="text-sm font-medium">Informações Básicas</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Nome Completo</label>
+                    <p className="text-sm text-muted-foreground mt-1">{detailPatient.full_name}</p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">CPF</label>
+                    <p className="text-sm text-muted-foreground mt-1">{detailPatient.cpf || 'Não informado'}</p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">E-mail</label>
+                    <p className="text-sm text-muted-foreground mt-1 break-words">{detailPatient.email}</p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Telefone</label>
+                    <p className="text-sm text-muted-foreground mt-1">{detailPatient.phone || 'Não informado'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Seção de Localização */}
+              <div className="border rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <MapPin className="h-4 w-4" />
+                  <span className="text-sm font-medium">Localização</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Estado</label>
+                    <p className="text-sm text-muted-foreground mt-1">{detailPatient.state || 'Não informado'}</p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Cidade</label>
+                    <p className="text-sm text-muted-foreground mt-1">{detailPatient.city || 'Não informado'}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-2 pt-4 border-t">
                 {isCurrentlyBlocked(detailPatient) ? (
                   <Button
-                    className="w-full sm:flex-1 bg-green-600 hover:bg-green-700 text-white"
+                    className="flex-1 bg-success text-success-foreground hover:bg-success/90"
                     onClick={() => { setBlockTarget({ patient: detailPatient, mode: 'unblock' }); setDetailPatient(null); }}
                   >
                     <Unlock className="h-4 w-4 mr-2" /> Desbloquear
@@ -317,7 +366,7 @@ export const PatientsPanel = () => {
                 ) : (
                   <Button
                     variant="destructive"
-                    className="w-full sm:flex-1"
+                    className="flex-1"
                     onClick={() => { setBlockTarget({ patient: detailPatient, mode: 'block' }); setDetailPatient(null); }}
                   >
                     <Ban className="h-4 w-4 mr-2" /> Bloquear
@@ -328,6 +377,7 @@ export const PatientsPanel = () => {
           )}
         </DialogContent>
       </Dialog>
+
 
       {blockTarget && (
         <BlockPatientModal
