@@ -74,6 +74,21 @@ const LoginForm = ({ onForgotPassword, onSignUp }: LoginFormProps) => {
         return;
       }
 
+      // Pacientes: verificar bloqueio administrativo
+      if (profile.user_type === 'patient') {
+        const { data: patientRow } = await supabase
+          .from('patients')
+          .select('is_blocked, blocked_until, blocked_reason')
+          .eq('user_id', data.user.id)
+          .maybeSingle();
+
+        if (patientRow && isCurrentlyBlocked(patientRow as any)) {
+          await notifyBlockedAccess(patientRow as any);
+          await supabase.auth.signOut();
+          return;
+        }
+      }
+
       // Para psicólogos, verificar se o cadastro foi aprovado ou rejeitado
       if (profile.user_type === 'psychologist') {
         // Verificar bloqueio administrativo
