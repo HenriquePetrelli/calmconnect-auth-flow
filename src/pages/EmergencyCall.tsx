@@ -8,7 +8,7 @@ import EmergencyVideoCall from "@/components/EmergencyVideoCall";
 import { SkeletonFullPage } from "@/components/skeletons/Skeletons";
 
 const EmergencyCall = () => {
-  const { requestId, sessionId } = useParams();
+  const { requestId: requestIdParam, sessionId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -16,8 +16,13 @@ const EmergencyCall = () => {
   const [sessionIdState, setSessionIdState] = useState<string | null>(null);
   const [userType, setUserType] = useState<'psychologist' | 'patient'>('patient');
 
+  // The requestId may come from the route (legacy flow) or from the query
+  // string (direct session route) — both must keep the request lifecycle in sync.
+  const requestId = requestIdParam || searchParams.get('requestId') || undefined;
+
   // Check if this is a direct session ID route
   const isDirectSessionRoute = !!sessionId;
+
 
   useEffect(() => {
     document.title = "Chamada de Emergência | Soliv";
