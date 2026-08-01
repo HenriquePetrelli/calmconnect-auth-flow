@@ -1264,6 +1264,43 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
         onDeviceStreamUpdate={updateDeviceStream}
       />
 
+      {/* Confirmação de encerramento */}
+      <AlertDialog open={showEndConfirm} onOpenChange={setShowEndConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Encerrar chamada?</AlertDialogTitle>
+            <AlertDialogDescription>
+              A chamada será finalizada para os dois participantes. Selecione o motivo do encerramento.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <RadioGroup
+            value={selectedEndReason}
+            onValueChange={setSelectedEndReason}
+            className="gap-2 py-2"
+          >
+            {END_REASONS.map((r) => (
+              <div key={r.value} className="flex items-center gap-3 rounded-lg border border-border p-3">
+                <RadioGroupItem value={r.value} id={`end-reason-${r.value}`} />
+                <Label htmlFor={`end-reason-${r.value}`} className="cursor-pointer text-sm font-normal">
+                  {r.label}
+                </Label>
+              </div>
+            ))}
+          </RadioGroup>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel>Continuar na chamada</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmEndCall}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Encerrar chamada
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Feedback Modal */}
       <FeedbackModal
         isOpen={showFeedbackModal}
