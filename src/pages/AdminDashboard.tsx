@@ -375,7 +375,7 @@ const AdminDashboard = () => {
                               <p className={`text-xl sm:text-3xl font-bold mt-1 sm:mt-1.5 ${s.value}`}>
                                 {value}
                               </p>
-                              <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 hidden sm:block">
+                              <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 leading-tight">
                                 {hint}
                               </p>
                             </div>
