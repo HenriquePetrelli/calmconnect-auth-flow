@@ -8,7 +8,7 @@ import EmergencyVideoCall from "@/components/EmergencyVideoCall";
 import { SkeletonFullPage } from "@/components/skeletons/Skeletons";
 
 const EmergencyCall = () => {
-  const { requestId, sessionId } = useParams();
+  const { requestId: requestIdParam, sessionId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -16,8 +16,13 @@ const EmergencyCall = () => {
   const [sessionIdState, setSessionIdState] = useState<string | null>(null);
   const [userType, setUserType] = useState<'psychologist' | 'patient'>('patient');
 
+  // The requestId may come from the route (legacy flow) or from the query
+  // string (direct session route) — both must keep the request lifecycle in sync.
+  const requestId = requestIdParam || searchParams.get('requestId') || undefined;
+
   // Check if this is a direct session ID route
   const isDirectSessionRoute = !!sessionId;
+
 
   useEffect(() => {
     document.title = "Chamada de Emergência | Soliv";
@@ -130,24 +135,42 @@ const EmergencyCall = () => {
     initializeCall();
   }, [requestId, sessionId, searchParams, navigate, toast, isDirectSessionRoute]);
 
-  // Mark emergency call as started when component mounts
+  // Mark emergency call as started (only once — reconnections must not reset it)
   useEffect(() => {
     const markCallAsStarted = async () => {
       if (!requestId || !sessionIdState) return;
 
       try {
+        const { data: current } = await supabase
+          .from("emergency_requests")
+          .select("started_at, status, ended_at")
+          .eq("id", requestId)
+          .maybeSingle();
+
+        // Call already finished — do not reopen it.
+        if (current?.ended_at || current?.status === "completed") {
+          toast({
+            title: "Chamada encerrada",
+            description: "Esta chamada de emergência já foi finalizada.",
+          });
+          navigate(userType === "psychologist" ? "/psychologist-dashboard" : "/home");
+          return;
+        }
+
+        const isFirstJoin = !current?.started_at;
+
         const { error } = await supabase
           .from("emergency_requests")
           .update({
-            started_at: new Date().toISOString(),
-            status: "in_progress"
+            ...(isFirstJoin ? { started_at: new Date().toISOString() } : {}),
+            status: "in_progress",
           })
           .eq("id", requestId);
 
         if (error) throw error;
 
-        // Mark SOS as used for patients
-        if (userType === 'patient') {
+        // Mark SOS as used for patients (only on the first join)
+        if (userType === "patient" && isFirstJoin) {
           await supabase.functions.invoke("mark-sos-used");
         }
       } catch (error) {
@@ -156,22 +179,28 @@ const EmergencyCall = () => {
     };
 
     markCallAsStarted();
-  }, [requestId, sessionIdState, userType]);
+  }, [requestId, sessionIdState, userType, navigate, toast]);
 
   const endCall = async () => {
-    if (!requestId) return;
+    const goBack = () =>
+      navigate(userType === "psychologist" ? "/psychologist-dashboard" : "/home");
+
+    if (!requestId) {
+      goBack();
+      return;
+    }
 
     try {
       const endTime = new Date().toISOString();
-      
+
       // Get current emergency request data
       const { data: emergencyData } = await supabase
         .from("emergency_requests")
         .select("started_at")
         .eq("id", requestId)
-        .single();
+        .maybeSingle();
 
-      const duration = emergencyData?.started_at 
+      const duration = emergencyData?.started_at
         ? Math.floor((new Date(endTime).getTime() - new Date(emergencyData.started_at).getTime()) / 1000)
         : 0;
 
@@ -189,13 +218,19 @@ const EmergencyCall = () => {
 
       // Update WebRTC session status
       if (sessionIdState) {
+        const { data: auth } = await supabase.auth.getUser();
         await supabase
           .from("webrtc_sessions")
-          .update({ status: "completed" })
+          .update({
+            status: "completed",
+            ended_at: endTime,
+            ended_by: auth.user?.id ?? null,
+            ended_by_type: userType,
+          })
           .eq("id", sessionIdState);
       }
 
-      navigate("/home");
+      goBack();
     } catch (error) {
       console.error("Error ending call:", error);
       toast({
@@ -205,6 +240,7 @@ const EmergencyCall = () => {
       });
     }
   };
+
 
   if (loading) {
     return <SkeletonFullPage />;

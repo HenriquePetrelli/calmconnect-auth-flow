@@ -16,6 +16,8 @@ import ConsultationHistory from '@/components/psychologist/ConsultationHistory';
 import OnlineStatusToggle from '@/components/psychologist/OnlineStatusToggle';
 import { PixModal } from '@/components/psychologist/PixModal';
 import logoImg from '@/assets/soliv-logo.svg';
+import ActiveCallBanner from '@/components/sos/ActiveCallBanner';
+
 
 const PsychologistDashboard = () => {
   const navigate = useNavigate();
@@ -177,6 +179,8 @@ const PsychologistDashboard = () => {
       </header>
 
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-4 md:py-6 space-y-4 sm:space-y-5 md:space-y-6">
+        <ActiveCallBanner />
+
         {/* Stats Cards */}
         <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4">
           <Card className="border-destructive/20 bg-gradient-to-br from-destructive/5 to-transparent">

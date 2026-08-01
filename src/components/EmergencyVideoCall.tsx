@@ -721,11 +721,17 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
 
   const handleFeedbackClose = () => {
     setShowFeedbackModal(false);
-    
+
     toast({
       title: 'Chamada Finalizada',
       description: 'A videochamada foi encerrada com sucesso.',
     });
+
+    // Let the parent close the emergency request (and redirect).
+    if (onEndCall) {
+      onEndCall();
+      return;
+    }
 
     // Redirect based on user type
     if (userType === 'patient') {
@@ -734,6 +740,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
       navigate('/psychologist-dashboard');
     }
   };
+
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
