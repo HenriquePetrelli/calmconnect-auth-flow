@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { findPsychologistOngoingCall } from '@/lib/emergencyCallGuard';
 
 interface EmergencyRequest {
   id: string;
@@ -46,6 +47,21 @@ export const usePsychologistEmergency = () => {
   const acceptEmergencyRequest = async (requestId: string) => {
     try {
       console.log('🔄 Accepting emergency request:', requestId);
+
+      // Guard: a psychologist can only attend one emergency call at a time.
+      const { data: authCheck } = await supabase.auth.getUser();
+      const myId = authCheck.user?.id;
+      if (myId) {
+        const ongoing = await findPsychologistOngoingCall(myId);
+        if (ongoing && ongoing.id !== requestId) {
+          toast({
+            title: 'Chamada em andamento',
+            description: 'Finalize a chamada de emergência atual antes de aceitar outra.',
+            variant: 'destructive',
+          });
+          return null;
+        }
+      }
       
       // Accept the emergency request using PUT method
       const { data, error } = await supabase.functions.invoke('psychologist-emergency', {
