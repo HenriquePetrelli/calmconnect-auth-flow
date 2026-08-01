@@ -40,6 +40,10 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
   const [callEndedBy, setCallEndedBy] = useState<{userId: string, userType: string} | null>(null);
   const [isReconnecting, setIsReconnecting] = useState(false);
   const [reconnectAttempt, setReconnectAttempt] = useState(0);
+  const [isNetworkOffline, setIsNetworkOffline] = useState(
+    typeof navigator !== 'undefined' ? !navigator.onLine : false
+  );
+
   
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -50,13 +54,23 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
   const graceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastAppliedOfferRef = useRef<string | null>(null);
   const lastAppliedAnswerRef = useRef<string | null>(null);
+  const pcRef = useRef<RTCPeerConnection | null>(null);
+  const callEndedByRef = useRef<{userId: string, userType: string} | null>(null);
+  const attemptReconnectRef = useRef<((pc: RTCPeerConnection) => void) | null>(null);
   const { toast } = useToast();
   const connectionManager = getWebRTCConnectionManager();
   const stateMachine = useRef(stateMachineRegistry.getOrCreate(sessionId));
   const { preferences, isLoading: prefsLoading } = useUserPreferences();
   const mediaManager = useMediaDeviceManager();
 
-  const MAX_RECONNECT_ATTEMPTS = 6;
+  // Reconnection is intentionally generous: an involuntary drop must never be
+  // treated as the end of the call.
+  const MAX_RECONNECT_ATTEMPTS = 12;
+
+  useEffect(() => {
+    callEndedByRef.current = callEndedBy;
+  }, [callEndedBy]);
+
 
   const clearReconnectTimers = useCallback(() => {
     if (reconnectTimerRef.current) {
@@ -150,32 +164,39 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
         pc.addTrack(track, stream);
       });
 
+      pcRef.current = pc;
+
       // Handle connection state changes
       pc.onconnectionstatechange = () => {
         const state = pc.connectionState;
+        const endedBy = callEndedByRef.current;
         console.log(`🔄 Connection state changed: ${state}`);
         setConnectionState(state);
         setIsConnected(state === 'connected');
         onConnectionStateChange?.(state);
 
         if (state === 'failed') {
-          // Only show reconnect message on hard failure when no manual end was signalled
-          if (callEndedBy) {
-            const endedByName = callEndedBy.userType === 'psychologist' ? 'O psicólogo' : 'O paciente';
+          // A hard ICE failure is NOT a call termination. Only a signalled,
+          // deliberate end (persisted in the database) ends the call.
+          if (endedBy) {
+            const endedByName = endedBy.userType === 'psychologist' ? 'O psicólogo' : 'O paciente';
             setError(`${endedByName} finalizou a chamada.`);
           } else {
-            attemptReconnect(pc);
+            attemptReconnectRef.current?.(pc);
           }
         } else if (state === 'disconnected') {
           // Transient — give it a short grace period before forcing a reconnect
           console.log('⏳ Connection transient disconnect, awaiting recovery...');
-          if (!graceTimerRef.current && !callEndedBy) {
-            graceTimerRef.current = setTimeout(() => {
-              graceTimerRef.current = null;
-              if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
-                attemptReconnect(pc);
-              }
-            }, 3000);
+          if (!endedBy) {
+            setIsReconnecting(true);
+            if (!graceTimerRef.current) {
+              graceTimerRef.current = setTimeout(() => {
+                graceTimerRef.current = null;
+                if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
+                  attemptReconnectRef.current?.(pc);
+                }
+              }, 3000);
+            }
           }
         } else if (state === 'connected') {
           clearReconnectTimers();
@@ -190,6 +211,29 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
           });
         }
       };
+
+      // ICE-level watchdog: some browsers keep `connectionState` optimistic
+      // while ICE has already dropped.
+      pc.oniceconnectionstatechange = () => {
+        const iceState = pc.iceConnectionState;
+        console.log(`🧊 ICE connection state: ${iceState}`);
+        if (callEndedByRef.current) return;
+
+        if (iceState === 'failed') {
+          attemptReconnectRef.current?.(pc);
+        } else if (iceState === 'disconnected') {
+          setIsReconnecting(true);
+          if (!graceTimerRef.current) {
+            graceTimerRef.current = setTimeout(() => {
+              graceTimerRef.current = null;
+              if (['disconnected', 'failed'].includes(pc.iceConnectionState)) {
+                attemptReconnectRef.current?.(pc);
+              }
+            }, 3000);
+          }
+        }
+      };
+
 
 
       // Handle ICE candidates
@@ -298,12 +342,14 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
 
   // Automatic reconnection with exponential backoff + ICE restart
   const attemptReconnect = (pc: RTCPeerConnection) => {
-    if (cleanupRef.current || callEndedBy) return;
+    if (cleanupRef.current || callEndedByRef.current) return;
     if (reconnectTimerRef.current) return; // already scheduled
+    if (pc.connectionState === 'closed') return;
 
     if (reconnectAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) {
+      // Still NOT an ended call — the room stays open and the user can retry.
       setIsReconnecting(false);
-      setError('Não foi possível restabelecer a conexão. Verifique sua internet e tente entrar novamente.');
+      setError('Não foi possível restabelecer a conexão automaticamente. A chamada continua aberta — verifique sua internet e toque em "Tentar reconectar".');
       return;
     }
 
@@ -318,8 +364,15 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
 
     reconnectTimerRef.current = setTimeout(async () => {
       reconnectTimerRef.current = null;
-      if (cleanupRef.current || callEndedBy) return;
+      if (cleanupRef.current || callEndedByRef.current) return;
       if (pc.connectionState === 'connected' || pc.connectionState === 'closed') return;
+
+      // No point burning attempts while the device has no network at all.
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        reconnectAttemptsRef.current = Math.max(0, reconnectAttemptsRef.current - 1);
+        setTimeout(() => attemptReconnectRef.current?.(pc), 2000);
+        return;
+      }
 
       try {
         pc.restartIce?.();
@@ -333,13 +386,73 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
 
       // Re-evaluate after giving the attempt time to settle
       setTimeout(() => {
-        if (cleanupRef.current || callEndedBy) return;
+        if (cleanupRef.current || callEndedByRef.current) return;
         if (pc.connectionState !== 'connected' && pc.connectionState !== 'closed') {
           attemptReconnect(pc);
         }
       }, 5000);
     }, delay);
   };
+
+  attemptReconnectRef.current = attemptReconnect;
+
+  /** Manual retry used by the UI after automatic attempts are exhausted. */
+  const forceReconnect = useCallback(() => {
+    const pc = pcRef.current;
+    if (!pc || cleanupRef.current || callEndedByRef.current) return;
+    clearReconnectTimers();
+    reconnectAttemptsRef.current = 0;
+    setReconnectAttempt(0);
+    setError(null);
+    attemptReconnectRef.current?.(pc);
+  }, [clearReconnectTimers]);
+
+  // Detect the device going offline/online. Losing the network is an
+  // involuntary drop: keep the call alive and resume as soon as we are back.
+  useEffect(() => {
+    const handleOffline = () => {
+      console.log('🌐 Device went offline');
+      setIsNetworkOffline(true);
+      if (!callEndedByRef.current && !cleanupRef.current) {
+        setIsReconnecting(true);
+      }
+    };
+
+    const handleOnline = () => {
+      console.log('🌐 Device is back online');
+      setIsNetworkOffline(false);
+      const pc = pcRef.current;
+      if (!pc || cleanupRef.current || callEndedByRef.current) return;
+      if (pc.connectionState === 'connected') return;
+      clearReconnectTimers();
+      reconnectAttemptsRef.current = 0;
+      setReconnectAttempt(0);
+      attemptReconnectRef.current?.(pc);
+    };
+
+    window.addEventListener('offline', handleOffline);
+    window.addEventListener('online', handleOnline);
+    return () => {
+      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('online', handleOnline);
+    };
+  }, [clearReconnectTimers]);
+
+  // Coming back from a background tab / locked screen often leaves ICE stale.
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState !== 'visible') return;
+      const pc = pcRef.current;
+      if (!pc || cleanupRef.current || callEndedByRef.current) return;
+      if (['disconnected', 'failed'].includes(pc.connectionState)) {
+        attemptReconnectRef.current?.(pc);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, []);
+
 
 
   const handleOffer = async (offer: RTCSessionDescriptionInit, pc: RTCPeerConnection) => {
@@ -425,10 +538,12 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     }
     
     cleanupRef.current = true;
+    pcRef.current = null;
     clearReconnectTimers();
     setIsReconnecting(false);
     setReconnectAttempt(0);
     reconnectAttemptsRef.current = 0;
+
     loopDetector.trace(sessionId, 'cleanup_start');
 
     
@@ -816,7 +931,10 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     callEndedBy,
     isReconnecting,
     reconnectAttempt,
+    isNetworkOffline,
+    forceReconnect,
     toggleAudio,
+
     toggleVideo,
     cleanup,
     updateDeviceStream
