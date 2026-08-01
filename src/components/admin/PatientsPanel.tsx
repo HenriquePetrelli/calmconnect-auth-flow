@@ -29,6 +29,7 @@ import {
   Search,
   Trash2,
   Unlock,
+  UserCheck,
   Users,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -41,13 +42,6 @@ import { SkeletonTable } from '@/components/skeletons/Skeletons';
 import { ContentTransition } from '@/components/skeletons/ContentTransition';
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
-
-const Field = ({ label, value }: { label: string; value?: string | null }) => (
-  <div className="rounded-lg border p-3 bg-muted/30">
-    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</p>
-    <p className="mt-1 text-sm break-words">{value || 'Não informado'}</p>
-  </div>
-);
 
 export const PatientsPanel = () => {
   const { patients, loading, error, fetchPatients } = usePatientManagement();
@@ -212,9 +206,6 @@ export const PatientsPanel = () => {
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem onClick={() => setDetailPatient(p)}>
                                   <Eye className="h-4 w-4 mr-2" /> Detalhes
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => setEditPatient(p)}>
-                                  <Pencil className="h-4 w-4 mr-2" /> Alterar informações
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => setBlockTarget({ patient: p, mode: blocked ? 'unblock' : 'block' })}
