@@ -65,6 +65,9 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [sessionValid, setSessionValid] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
+  const [selectedEndReason, setSelectedEndReason] = useState<string>('atendimento_concluido');
+  const endReasonRef = useRef<string>('encerrada_pelo_usuario');
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [userInfo, setUserInfo] = useState<{
     name: string; 
