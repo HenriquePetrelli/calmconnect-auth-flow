@@ -201,6 +201,8 @@ const HomeContent = () => {
   return (
     <>
       <div>
+        <ActiveCallBanner />
+
 
         {/* Mobile/Tablet Mood Section */}
         {moodEnabled && (
