@@ -929,7 +929,10 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     callEndedBy,
     isReconnecting,
     reconnectAttempt,
+    isNetworkOffline,
+    forceReconnect,
     toggleAudio,
+
     toggleVideo,
     cleanup,
     updateDeviceStream
