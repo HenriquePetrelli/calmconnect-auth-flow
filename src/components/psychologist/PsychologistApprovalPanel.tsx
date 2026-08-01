@@ -637,7 +637,8 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
                         </div>
 
                         {selectedPsychologist.approval_status === 'pending' && (
-                          <div className="flex space-x-2 pt-4 border-t">
+                          <div className="flex flex-col sm:flex-row gap-2 pt-4 border-t">
+
 
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
