@@ -96,6 +96,8 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     callEndedBy,
     isReconnecting,
     reconnectAttempt,
+    isNetworkOffline,
+    forceReconnect,
     session,
     toggleAudio,
     toggleVideo,
@@ -116,15 +118,27 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
             variant: 'default',
           });
         } else {
+          // Involuntary drop — the call remains open while we reconnect.
           toast({
-            title: 'Conexão Perdida',
-            description: 'A conexão da videochamada foi perdida.',
-            variant: 'destructive',
+            title: 'Conexão instável',
+            description: 'A conexão caiu. A chamada continua ativa e estamos reconectando...',
           });
         }
       }
     }
   });
+
+  // Presence inside the room — distinguishes an involuntary drop of the other
+  // participant from a deliberate call termination.
+  const { remotePresent, remoteLeftAt } = useCallPresence({
+    sessionId,
+    userType,
+    enabled: Boolean(sessionId) && !callTerminatedMessage,
+  });
+
+  const remoteDroppedInvoluntarily =
+    !callTerminatedMessage && !remotePresent && remoteLeftAt !== null;
+
 
 
   // Get current user name for initials
