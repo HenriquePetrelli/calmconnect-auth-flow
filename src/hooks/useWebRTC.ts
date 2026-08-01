@@ -814,6 +814,8 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     isInitializing,
     webrtcState,
     callEndedBy,
+    isReconnecting,
+    reconnectAttempt,
     toggleAudio,
     toggleVideo,
     cleanup,

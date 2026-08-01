@@ -66,6 +66,8 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     isConnected,
     error,
     callEndedBy,
+    isReconnecting,
+    reconnectAttempt,
     session,
     toggleAudio,
     toggleVideo,
@@ -1005,6 +1007,18 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
           </div>
         )}
         
+        {/* Banner de reconexão automática */}
+        {isReconnecting && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40">
+            <div className="flex items-center gap-2 rounded-full bg-warning/90 text-warning-foreground px-4 py-2 shadow-lg backdrop-blur-sm">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span className="text-xs md:text-sm font-medium">
+                Tentando reconectar{reconnectAttempt > 1 ? ` (tentativa ${reconnectAttempt})` : ''}...
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Placeholder quando não conectado */}
         {!isConnected && (
           <div className="absolute inset-0 flex items-center justify-center bg-background">
@@ -1026,10 +1040,14 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
               
               <div className="space-y-3">
                 <h3 className="text-xl md:text-3xl font-semibold">
-                  {userType === 'psychologist' ? 'Aguardando paciente...' : 'Conectando com psicólogo...'}
+                  {isReconnecting
+                    ? 'Tentando reconectar...'
+                    : userType === 'psychologist' ? 'Aguardando paciente...' : 'Conectando com psicólogo...'}
                 </h3>
                 <p className="text-muted-foreground text-sm md:text-lg">
-                  {connectionState === 'connecting' ? 'Estabelecendo conexão segura...' : status.text}
+                  {isReconnecting
+                    ? 'A conexão caiu. Restabelecendo automaticamente, aguarde...'
+                    : connectionState === 'connecting' ? 'Estabelecendo conexão segura...' : status.text}
                 </p>
                 <div className="flex items-center justify-center gap-2 mt-4">
                   <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
