@@ -64,6 +64,10 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
   const [editOpen, setEditOpen] = useState(false);
   const [blockTarget, setBlockTarget] = useState<any | null>(null);
   const [blockMode, setBlockMode] = useState<'block' | 'unblock'>('block');
+  const [search, setSearch] = useState('');
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<PsychologistData | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const {
     loading,
@@ -80,11 +84,14 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
   }, []);
 
   const handleViewDetails = async (psychologist: PsychologistData) => {
+    setSelectedPsychologist(psychologist);
+    setDetailsOpen(true);
     const details = await getPsychologistDetails(psychologist.id);
     if (details) {
       setSelectedPsychologist(details);
     }
   };
+
 
   const handleApprove = async (psychologistId: string) => {
     const result = await approvePsychologist(psychologistId, adminUserId);
