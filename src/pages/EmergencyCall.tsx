@@ -6,6 +6,8 @@ import { useToast } from "@/hooks/use-toast";
 import { WebRTCVideoCall } from "@/components/sos/WebRTCVideoCall";
 import EmergencyVideoCall from "@/components/EmergencyVideoCall";
 import { SkeletonFullPage } from "@/components/skeletons/Skeletons";
+import { acquireCallLock } from "@/lib/callLock";
+import { findOngoingCallForUser, sessionIdOf } from "@/lib/emergencyCallGuard";
 
 const EmergencyCall = () => {
   const { requestId: requestIdParam, sessionId } = useParams();
@@ -134,6 +136,55 @@ const EmergencyCall = () => {
 
     initializeCall();
   }, [requestId, sessionId, searchParams, navigate, toast, isDirectSessionRoute]);
+
+  // Single active call guard: block duplicated tabs and simultaneous rooms
+  useEffect(() => {
+    if (!sessionIdState) return;
+    let release: (() => void) | null = null;
+    let cancelled = false;
+
+    const run = async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      const userId = auth.user?.id;
+      if (!userId || cancelled) return;
+
+      const lock = acquireCallLock(userId, sessionIdState);
+      if (!lock.ok) {
+        toast({
+          title: lock.reason === "duplicate-tab" ? "Chamada já aberta" : "Chamada em andamento",
+          description:
+            lock.reason === "duplicate-tab"
+              ? "Esta chamada já está aberta em outra aba ou janela."
+              : "Você já está em outra chamada. Finalize-a antes de entrar nesta.",
+          variant: "destructive",
+        });
+        navigate(userType === "psychologist" ? "/psychologist-dashboard" : "/home");
+        return;
+      }
+      release = lock.release;
+
+      // Server-side guard: the user must not be attending a different room
+      const ongoing = await findOngoingCallForUser(userId);
+      const ongoingSession = sessionIdOf(ongoing);
+      if (!cancelled && ongoing && ongoingSession && ongoingSession !== sessionIdState) {
+        toast({
+          title: "Chamada em andamento",
+          description: "Você já possui uma chamada de emergência ativa. Retornando para ela.",
+        });
+        navigate(
+          `/emergency-call/${ongoingSession}?userType=${userType}&requestId=${ongoing.id}`,
+          { replace: true }
+        );
+      }
+    };
+
+    run();
+
+    return () => {
+      cancelled = true;
+      release?.();
+    };
+  }, [sessionIdState, userType, navigate, toast]);
 
   // Mark emergency call as started (only once — reconnections must not reset it)
   useEffect(() => {
