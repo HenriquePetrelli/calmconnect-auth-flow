@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import AdminProfile from '@/components/AdminProfile';
 import { PsychologistApprovalPanel } from '@/components/psychologist/PsychologistApprovalPanel';
+import { PatientsPanel } from '@/components/admin/PatientsPanel';
 import { PaymentsPanel } from '@/components/payments/PaymentsPanel';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -496,6 +497,10 @@ const AdminDashboard = () => {
 
           <TabsContent value="psychologists" className="mt-4">
             <PsychologistApprovalPanel adminUserId={user?.id} />
+          </TabsContent>
+
+          <TabsContent value="patients" className="mt-4">
+            <PatientsPanel />
           </TabsContent>
 
           <TabsContent value="payments" className="mt-4">
