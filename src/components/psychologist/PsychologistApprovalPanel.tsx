@@ -509,33 +509,8 @@ export const PsychologistApprovalPanel = ({ adminUserId }: PsychologistApprovalP
                       </div>
                     )}
                   </DialogContent>
-                </Dialog>
+      </Dialog>
 
-                {isCurrentlyBlocked(psychologist as any) ? (
-                  <Button
-                    size="sm"
-                    className="w-full bg-green-600 hover:bg-green-700 text-white"
-                    onClick={() => { setBlockTarget(psychologist); setBlockMode('unblock'); }}
-                  >
-                    <Unlock className="h-4 w-4 mr-2" />
-                    Desbloquear
-                  </Button>
-                ) : (
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => { setBlockTarget(psychologist); setBlockMode('block'); }}
-                  >
-                    <Ban className="h-4 w-4 mr-2" />
-                    Bloquear
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
 
       {filteredPsychologists.length === 0 && !loading && (
         <EmptyState
