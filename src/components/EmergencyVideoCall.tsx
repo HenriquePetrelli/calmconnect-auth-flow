@@ -5,6 +5,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Mic, MicOff, Camera, CameraOff, PhoneOff, Loader2, AlertTriangle, Settings, Shield, Video } from 'lucide-react';
 import { useWebRTC } from '@/hooks/useWebRTC';
+import { useCallPresence } from '@/hooks/useCallPresence';
+
 import { useToast } from '@/hooks/use-toast';
 import VoiceMeter from '@/components/sos/VoiceMeter';
 import { ConnectionQuality } from '@/components/sos/ConnectionQuality';
