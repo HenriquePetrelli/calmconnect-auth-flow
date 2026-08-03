@@ -790,10 +790,18 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     }
   };
 
+  // Allows the shared timer to end the call when it expires.
+  useEffect(() => {
+    endCallRef.current = (reason?: string) => {
+      handleEndCall(reason || 'tempo_limite_atingido');
+    };
+  });
+
   const confirmEndCall = () => {
     setShowEndConfirm(false);
     handleEndCall(selectedEndReason);
   };
+
 
   const handleFeedbackClose = () => {
     setShowFeedbackModal(false);
