@@ -1451,6 +1451,9 @@ export type Database = {
           psychologist_id: string | null
           psychologist_muted: boolean | null
           status: string | null
+          time_left_seconds: number | null
+          timer_paused: boolean
+          timer_updated_at: string | null
           updated_at: string
         }
         Insert: {
@@ -1472,6 +1475,9 @@ export type Database = {
           psychologist_id?: string | null
           psychologist_muted?: boolean | null
           status?: string | null
+          time_left_seconds?: number | null
+          timer_paused?: boolean
+          timer_updated_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -1493,6 +1499,9 @@ export type Database = {
           psychologist_id?: string | null
           psychologist_muted?: boolean | null
           status?: string | null
+          time_left_seconds?: number | null
+          timer_paused?: boolean
+          timer_updated_at?: string | null
           updated_at?: string
         }
         Relationships: [
