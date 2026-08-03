@@ -791,6 +791,54 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
           console.warn('Could not verify session state:', e);
         }
 
+        // Shared handler: applied both from realtime events and from the
+        // polling fallback (realtime sockets can stay dead after a drop).
+        const applySessionUpdate = async (sessionData: WebRTCSession) => {
+          if (!isMounted || !sessionData) return;
+
+          setSession(sessionData);
+
+          window.dispatchEvent(new CustomEvent('webrtc-session-update', {
+            detail: sessionData
+          }));
+
+          if (isRealTermination(sessionData as any, joinedAt)) {
+            setCallEndedBy({
+              userId: sessionData.ended_by!,
+              userType: sessionData.ended_by_type!
+            });
+            return;
+          }
+
+          // Handle offer/answer exchange (also supports renegotiation / ICE restart)
+          if (userType === 'patient') {
+            const sdp = (sessionData.offer as any)?.sdp;
+            if (sdp && sdp !== lastAppliedOfferRef.current) {
+              if (pc.signalingState === 'stable' || pc.signalingState === 'have-remote-offer') {
+                lastAppliedOfferRef.current = sdp;
+                await handleOffer(sessionData.offer!, pc);
+              }
+            }
+          } else {
+            const sdp = (sessionData.answer as any)?.sdp;
+            if (sdp && sdp !== lastAppliedAnswerRef.current) {
+              if (pc.signalingState === 'have-local-offer') {
+                lastAppliedAnswerRef.current = sdp;
+                await handleAnswer(sessionData.answer!, pc);
+              } else if (pc.signalingState === 'stable' && pc.connectionState !== 'connected') {
+                // The peer re-joined with a brand new PeerConnection while ours
+                // is stale: renegotiate so a fresh offer/answer pair is created.
+                lastAppliedAnswerRef.current = sdp;
+                await createOffer(pc, true);
+              }
+            }
+          }
+
+          if (sessionData.ice_candidates) {
+            await processIceCandidates(sessionData.ice_candidates, pc);
+          }
+        };
+
         // Set up realtime subscription for session updates
         const channel = supabase
           .channel(`webrtc_session_${sessionId}`)
@@ -804,53 +852,31 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
             },
             async (payload) => {
               if (!isMounted) return;
-              
               console.log('📡 Session update received:', payload);
-              const sessionData = payload.new as WebRTCSession;
-              setSession(sessionData);
-
-              // Emit session update for parent component to handle mute/camera status
-              window.dispatchEvent(new CustomEvent('webrtc-session-update', { 
-                detail: sessionData 
-              }));
-
-              // Check if call was ended by someone — ignore stale terminations
-              // that happened before we joined this call.
-              if (isRealTermination(sessionData as any, joinedAt)) {
-                setCallEndedBy({
-                  userId: sessionData.ended_by!,
-                  userType: sessionData.ended_by_type!
-                });
-              }
-
-
-
-              // Handle offer/answer exchange (also supports renegotiation / ICE restart)
-              if (sessionData.offer && userType === 'patient') {
-                const sdp = (sessionData.offer as any)?.sdp;
-                if (sdp && sdp !== lastAppliedOfferRef.current) {
-                  lastAppliedOfferRef.current = sdp;
-                  await handleOffer(sessionData.offer, pc);
-                }
-              } else if (sessionData.answer && userType === 'psychologist') {
-                const sdp = (sessionData.answer as any)?.sdp;
-                if (sdp && sdp !== lastAppliedAnswerRef.current && pc.signalingState !== 'stable') {
-                  lastAppliedAnswerRef.current = sdp;
-                  await handleAnswer(sessionData.answer, pc);
-                }
-              }
-
-
-              // Process ICE candidates
-              if (sessionData.ice_candidates) {
-                await processIceCandidates(sessionData.ice_candidates, pc);
-              }
+              await applySessionUpdate(payload.new as WebRTCSession);
             }
           )
           .subscribe();
 
+        // Polling fallback: while the call is not connected, re-read the row so
+        // signaling still converges even if the realtime socket died.
+        const pollTimer = setInterval(async () => {
+          if (!isMounted || cleanupRef.current || callEndedByRef.current) return;
+          if (pc.connectionState === 'connected' || pc.connectionState === 'closed') return;
+
+          const { data, error } = await supabase
+            .from('webrtc_sessions')
+            .select('*')
+            .eq('id', sessionId)
+            .maybeSingle();
+
+          if (error || !data) return;
+          await applySessionUpdate(data as unknown as WebRTCSession);
+        }, 3000);
+
         unsubscribe = () => {
           console.log('🔌 Unsubscribing from realtime channel');
+          clearInterval(pollTimer);
           supabase.removeChannel(channel);
         };
 
@@ -862,6 +888,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
             }
           }, 1000);
         }
+
 
         // Transition to connected state
         stateMachine.current.transitionTo('connected');
