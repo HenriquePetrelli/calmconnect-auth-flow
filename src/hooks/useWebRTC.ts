@@ -361,7 +361,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     setIsReconnecting(true);
     setError(null);
 
-    const delay = Math.min(1000 * 2 ** (attempt - 1), 8000);
+    const delay = getReconnectDelay(attempt);
     console.log(`🔁 Scheduling reconnect attempt ${attempt} in ${delay}ms`);
 
     reconnectTimerRef.current = setTimeout(async () => {

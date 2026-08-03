@@ -5,7 +5,7 @@
  * the session row must not be touched, and we simply retry with backoff.
  */
 
-export const MAX_RECONNECT_ATTEMPTS = 6;
+export const MAX_RECONNECT_ATTEMPTS = 12;
 export const MAX_RECONNECT_DELAY_MS = 8000;
 
 /** Exponential backoff (1s, 2s, 4s, 8s, capped). `attempt` is 1-based. */
