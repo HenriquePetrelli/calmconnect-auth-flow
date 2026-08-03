@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Mic, MicOff, Camera, CameraOff, PhoneOff, Loader2, AlertTriangle, Settings, Shield, Video, WifiOff, RefreshCw } from 'lucide-react';
 import { useWebRTC } from '@/hooks/useWebRTC';
 import { useCallPresence } from '@/hooks/useCallPresence';
+import { getConnectionBannerState, isRemoteDropInvoluntary } from '@/lib/callBanner';
 
 import { useToast } from '@/hooks/use-toast';
 import VoiceMeter from '@/components/sos/VoiceMeter';
