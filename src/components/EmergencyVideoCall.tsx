@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Mic, MicOff, Camera, CameraOff, PhoneOff, Loader2, AlertTriangle, Settings, Shield, Video, WifiOff, RefreshCw } from 'lucide-react';
 import { useWebRTC } from '@/hooks/useWebRTC';
 import { useCallPresence } from '@/hooks/useCallPresence';
+import { getConnectionBannerState, isRemoteDropInvoluntary } from '@/lib/callBanner';
 
 import { useToast } from '@/hooks/use-toast';
 import VoiceMeter from '@/components/sos/VoiceMeter';
@@ -139,8 +140,20 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     enabled: Boolean(sessionId) && !callTerminatedMessage,
   });
 
-  const remoteDroppedInvoluntarily =
-    !callTerminatedMessage && !remotePresent && remoteLeftAt !== null;
+  const remoteDroppedInvoluntarily = isRemoteDropInvoluntary(
+    remotePresent,
+    remoteLeftAt,
+    Boolean(callTerminatedMessage)
+  );
+
+  const banner = getConnectionBannerState({
+    isReconnecting,
+    isNetworkOffline,
+    remoteDroppedInvoluntarily,
+    callTerminated: Boolean(callTerminatedMessage),
+    reconnectAttempt,
+    userType,
+  });
 
 
 
@@ -1054,31 +1067,22 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
         )}
         
         {/* Banner de queda de conexão / reconexão automática */}
-        {(isReconnecting || isNetworkOffline || remoteDroppedInvoluntarily) && !callTerminatedMessage && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 w-[92%] max-w-md">
+        {banner.visible && (
+          <div
+            data-testid="connection-banner"
+            className="absolute top-4 left-1/2 -translate-x-1/2 z-40 w-[92%] max-w-md"
+          >
             <div className="flex flex-col items-center gap-2 rounded-2xl bg-warning/90 text-warning-foreground px-4 py-3 shadow-lg backdrop-blur-sm text-center">
               <div className="flex items-center gap-2">
-                {isNetworkOffline ? (
+                {banner.variant === 'offline' ? (
                   <WifiOff className="w-4 h-4" />
                 ) : (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 )}
-                <span className="text-xs md:text-sm font-medium">
-                  {isNetworkOffline
-                    ? 'Sem conexão com a internet'
-                    : isReconnecting
-                      ? `Tentando reconectar${reconnectAttempt > 1 ? ` (tentativa ${reconnectAttempt})` : ''}...`
-                      : 'Participante com conexão instável'}
-                </span>
+                <span className="text-xs md:text-sm font-medium">{banner.title}</span>
               </div>
-              <span className="text-[11px] md:text-xs opacity-90">
-                {isNetworkOffline
-                  ? 'A chamada continua aberta e será retomada assim que a internet voltar.'
-                  : remoteDroppedInvoluntarily && !isReconnecting
-                    ? 'A outra pessoa perdeu a conexão. A chamada não foi encerrada — aguardando o retorno.'
-                    : 'A chamada não foi encerrada. Restabelecendo automaticamente...'}
-              </span>
-              {!isNetworkOffline && (
+              <span className="text-[11px] md:text-xs opacity-90">{banner.description}</span>
+              {banner.showRetry && (
                 <Button
                   size="sm"
                   variant="secondary"
