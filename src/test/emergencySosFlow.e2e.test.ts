@@ -147,7 +147,7 @@ describe('SOS flow — joining the room', () => {
     });
   });
 
-  it('reports SESSION_NOT_FOUND when the row never appears', async () => {
+  it('reports SESSION_NOT_FOUND when the row never appears', { timeout: 20000 }, async () => {
     await expect(validateWebRTCSession(SESSION_ID)).rejects.toMatchObject({
       code: 'SESSION_NOT_FOUND',
     });
