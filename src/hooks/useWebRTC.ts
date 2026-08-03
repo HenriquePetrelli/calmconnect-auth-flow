@@ -8,6 +8,7 @@ import { stateMachineRegistry, type WebRTCState } from '@/utils/state-machine';
 import { loopDetector } from '@/utils/loop-detector';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { useMediaDeviceManager } from '@/hooks/useMediaDeviceManager';
+import { getReconnectDelay, MAX_RECONNECT_ATTEMPTS as RECONNECT_MAX_ATTEMPTS } from '@/lib/reconnect';
 
 interface WebRTCSession {
   id: string;
@@ -66,7 +67,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
 
   // Reconnection is intentionally generous: an involuntary drop must never be
   // treated as the end of the call.
-  const MAX_RECONNECT_ATTEMPTS = 12;
+  const MAX_RECONNECT_ATTEMPTS = RECONNECT_MAX_ATTEMPTS;
 
   useEffect(() => {
     callEndedByRef.current = callEndedBy;
@@ -360,7 +361,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     setIsReconnecting(true);
     setError(null);
 
-    const delay = Math.min(1000 * 2 ** (attempt - 1), 8000);
+    const delay = getReconnectDelay(attempt);
     console.log(`🔁 Scheduling reconnect attempt ${attempt} in ${delay}ms`);
 
     reconnectTimerRef.current = setTimeout(async () => {
