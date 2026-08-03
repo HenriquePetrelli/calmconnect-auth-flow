@@ -140,8 +140,20 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     enabled: Boolean(sessionId) && !callTerminatedMessage,
   });
 
-  const remoteDroppedInvoluntarily =
-    !callTerminatedMessage && !remotePresent && remoteLeftAt !== null;
+  const remoteDroppedInvoluntarily = isRemoteDropInvoluntary(
+    remotePresent,
+    remoteLeftAt,
+    Boolean(callTerminatedMessage)
+  );
+
+  const banner = getConnectionBannerState({
+    isReconnecting,
+    isNetworkOffline,
+    remoteDroppedInvoluntarily,
+    callTerminated: Boolean(callTerminatedMessage),
+    reconnectAttempt,
+    userType,
+  });
 
 
 
