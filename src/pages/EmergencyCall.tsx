@@ -245,48 +245,16 @@ const EmergencyCall = () => {
     try {
       const endTime = new Date().toISOString();
       const { data: auth } = await supabase.auth.getUser();
-      const endReason = info?.reason ?? "encerrada_pelo_usuario";
-      const endedByType = info?.endedByType ?? userType;
 
-      // Get current emergency request data
-      const { data: emergencyData } = await supabase
-        .from("emergency_requests")
-        .select("started_at")
-        .eq("id", requestId)
-        .maybeSingle();
+      await persistExplicitTermination(supabase, {
+        requestId,
+        sessionId: sessionIdState,
+        userId: auth.user?.id ?? null,
+        endedByType: info?.endedByType ?? userType,
+        reason: info?.reason ?? "encerrada_pelo_usuario",
+        endedAt: endTime,
+      });
 
-      const duration = emergencyData?.started_at
-        ? Math.floor((new Date(endTime).getTime() - new Date(emergencyData.started_at).getTime()) / 1000)
-        : 0;
-
-      // Update emergency request status
-      const { error } = await supabase
-        .from("emergency_requests")
-        .update({
-          ended_at: endTime,
-          status: "completed",
-          duration,
-          ended_by: auth.user?.id ?? null,
-          ended_by_type: endedByType,
-          end_reason: endReason,
-        })
-        .eq("id", requestId);
-
-      if (error) throw error;
-
-      // Update WebRTC session status
-      if (sessionIdState) {
-        await supabase
-          .from("webrtc_sessions")
-          .update({
-            status: "completed",
-            ended_at: endTime,
-            ended_by: auth.user?.id ?? null,
-            ended_by_type: endedByType,
-            end_reason: endReason,
-          })
-          .eq("id", sessionIdState);
-      }
 
 
       goBack();
