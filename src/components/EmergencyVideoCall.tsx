@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Mic, MicOff, Camera, CameraOff, PhoneOff, Loader2, AlertTriangle, Settings, Shield, Video, WifiOff, RefreshCw } from 'lucide-react';
 import { useWebRTC } from '@/hooks/useWebRTC';
 import { useCallPresence } from '@/hooks/useCallPresence';
+import { useSharedCallTimer } from '@/hooks/useSharedCallTimer';
+
 import { getConnectionBannerState, isRemoteDropInvoluntary } from '@/lib/callBanner';
 
 import { useToast } from '@/hooks/use-toast';
@@ -63,7 +65,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   // Use the URL parameter as the session ID (this should be the WebRTC session ID, not the emergency request ID)
   const sessionId = propSessionId || paramSessionId;
   const [userType, setUserType] = useState<'psychologist' | 'patient'>(propUserType || 'patient');
-  const [timeLeft, setTimeLeft] = useState(timeLimit);
+  const endCallRef = useRef<(reason?: string) => void>(() => {});
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOff, setIsCameraOff] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -153,6 +155,22 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     callTerminated: Boolean(callTerminatedMessage),
     reconnectAttempt,
     userType,
+  });
+
+  // Session timer shared by both participants (paused on any drop).
+  const { timeLeft, isPaused: isTimerPaused } = useSharedCallTimer({
+    sessionId,
+    userType,
+    timeLimit,
+    running:
+      isConnected &&
+      remotePresent &&
+      !isReconnecting &&
+      !isNetworkOffline &&
+      !callTerminatedMessage,
+    onExpire: useCallback(() => {
+      endCallRef.current?.('tempo_limite_atingido');
+    }, []),
   });
 
 
@@ -612,39 +630,25 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     }
   };
 
-  // Timer countdown with 5-min and 1-min warnings
+  // Shared session timer: pauses when someone drops, resumes from the same
+  // value on reconnection and ends the call for both when it expires.
   const warned5MinRef = React.useRef(false);
   const warned1MinRef = React.useRef(false);
   useEffect(() => {
-    if (!isConnected) return;
-
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev === 300 && !warned5MinRef.current) {
-          warned5MinRef.current = true;
-          toast({
-            title: 'Aviso',
-            description: 'A chamada será encerrada em 5 minutos.',
-          });
-        }
-        if (prev === 60 && !warned1MinRef.current) {
-          warned1MinRef.current = true;
-          toast({
-            title: 'Atenção',
-            description: 'A chamada será encerrada em 1 minuto.',
-            variant: 'destructive',
-          });
-        }
-        if (prev <= 1) {
-          handleEndCall('tempo_limite_atingido');
-          return 0;
-        }
-        return prev - 1;
+    if (timeLeft === 300 && !warned5MinRef.current) {
+      warned5MinRef.current = true;
+      toast({ title: 'Aviso', description: 'A chamada será encerrada em 5 minutos.' });
+    }
+    if (timeLeft === 60 && !warned1MinRef.current) {
+      warned1MinRef.current = true;
+      toast({
+        title: 'Atenção',
+        description: 'A chamada será encerrada em 1 minuto.',
+        variant: 'destructive',
       });
-    }, 1000);
+    }
+  }, [timeLeft, toast]);
 
-    return () => clearInterval(timer);
-  }, [isConnected]);
 
   const handleMuteToggle = async () => {
     try {
@@ -786,10 +790,18 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     }
   };
 
+  // Allows the shared timer to end the call when it expires.
+  useEffect(() => {
+    endCallRef.current = (reason?: string) => {
+      handleEndCall(reason || 'tempo_limite_atingido');
+    };
+  });
+
   const confirmEndCall = () => {
     setShowEndConfirm(false);
     handleEndCall(selectedEndReason);
   };
+
 
   const handleFeedbackClose = () => {
     setShowFeedbackModal(false);
@@ -998,17 +1010,23 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
           <div className="text-center px-2">
             <div
               className={`text-lg md:text-2xl font-mono font-bold px-2 md:px-4 py-1 md:py-2 rounded-lg transition-colors ${
-                timeLeft <= 60
+                isTimerPaused
+                  ? 'bg-muted text-muted-foreground opacity-70'
+                  : timeLeft <= 60
                   ? 'bg-destructive text-destructive-foreground animate-pulse'
                   : timeLeft <= 300
                   ? 'bg-warning/20 text-warning-foreground'
                   : 'bg-muted'
               }`}
-              title="Tempo restante da sessão SOS"
+              title={isTimerPaused ? 'Tempo pausado — aguardando reconexão' : 'Tempo restante da sessão SOS'}
             >
               {formatTime(timeLeft)}
             </div>
+            {isTimerPaused && (
+              <div className="text-[10px] md:text-xs text-muted-foreground mt-1">Pausado</div>
+            )}
           </div>
+
         </div>
       </div>
 
