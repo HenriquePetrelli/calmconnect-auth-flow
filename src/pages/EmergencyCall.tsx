@@ -8,6 +8,8 @@ import EmergencyVideoCall, { type EndCallInfo } from "@/components/EmergencyVide
 import { SkeletonFullPage } from "@/components/skeletons/Skeletons";
 import { acquireCallLock } from "@/lib/callLock";
 import { findOngoingCallForUser, sessionIdOf } from "@/lib/emergencyCallGuard";
+import { persistExplicitTermination } from "@/lib/callTermination";
+
 
 const EmergencyCall = () => {
   const { requestId: requestIdParam, sessionId } = useParams();
