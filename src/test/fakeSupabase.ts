@@ -139,10 +139,49 @@ class QueryBuilder implements PromiseLike<{ data: any; error: any }> {
   }
 }
 
+/** Minimal Supabase Realtime presence channel fake. */
+export class FakeChannel {
+  private handlers: { event: string; cb: () => void }[] = [];
+  private state: Record<string, any[]> = {};
+
+  constructor(public topic: string, private key: string) {}
+
+  on(_type: 'presence', filter: { event: string }, cb: () => void) {
+    this.handlers.push({ event: filter.event, cb });
+    return this;
+  }
+  subscribe(cb?: (status: string) => void | Promise<void>) {
+    cb?.('SUBSCRIBED');
+    return this;
+  }
+  async track(payload: Record<string, any>) {
+    this.state[this.key] = [payload];
+    this.emit('join');
+    return 'ok';
+  }
+  presenceState() {
+    return this.state;
+  }
+  /** Test helper: the remote participant joins the room. */
+  remoteJoin(userType: string) {
+    this.state[userType] = [{ userType, joinedAt: Date.now() }];
+    this.emit('join');
+  }
+  /** Test helper: the remote participant drops (network loss / tab closed). */
+  remoteLeave(userType: string) {
+    delete this.state[userType];
+    this.emit('leave');
+  }
+  private emit(event: string) {
+    this.handlers.filter((h) => h.event === event || h.event === 'sync').forEach((h) => h.cb());
+  }
+}
+
 export class FakeDB {
   tables: Record<string, Row[]> = {};
   currentUserId: string | null = null;
   writes: { table: string; patch: Row }[] = [];
+  channels: FakeChannel[] = [];
   failNextWith: any = null;
   failSelectWith: any = null;
 
@@ -159,6 +198,15 @@ export class FakeDB {
     const db = this;
     return {
       from: (table: string) => new QueryBuilder(db, table),
+      channel: (topic: string, opts?: { config?: { presence?: { key?: string } } }) => {
+        const ch = new FakeChannel(topic, opts?.config?.presence?.key ?? 'anon');
+        db.channels.push(ch);
+        return ch;
+      },
+      removeChannel: (ch: FakeChannel) => {
+        db.channels = db.channels.filter((c) => c !== ch);
+        return Promise.resolve('ok');
+      },
       auth: {
         getUser: async () => ({
           data: { user: db.currentUserId ? { id: db.currentUserId } : null },
