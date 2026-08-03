@@ -18,6 +18,10 @@ export class SessionValidationError extends Error {
     this.name = 'SessionValidationError';
   }
 }
+/** Delay before the first lookup, to let DB replication settle (disabled in tests). */
+export const INITIAL_VALIDATION_DELAY =
+  import.meta.env?.MODE === 'test' ? 0 : 2500;
+
 
 export const isValidUUID = (uuid: string): boolean => {
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
