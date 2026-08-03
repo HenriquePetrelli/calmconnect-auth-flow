@@ -225,7 +225,9 @@ const EmergencyCall = () => {
 
         // Mark SOS as used for patients (only on the first join)
         if (userType === "patient" && isFirstJoin) {
-          await supabase.functions.invoke("mark-sos-used");
+          await supabase.functions.invoke("mark-sos-used", {
+            body: { request_id: requestId },
+          });
         }
       } catch (error) {
         console.error("Error marking call as started:", error);

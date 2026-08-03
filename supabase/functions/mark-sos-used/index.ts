@@ -50,7 +50,13 @@ serve(async (req) => {
       });
     }
 
-    const body = await req.json();
+    let body: any = {};
+    try {
+      const raw = await req.text();
+      body = raw ? JSON.parse(raw) : {};
+    } catch (_e) {
+      body = {};
+    }
     const requestId: string | undefined = body?.request_id;
     if (!requestId) {
       return new Response(JSON.stringify({ error: "Missing request_id" }), {
