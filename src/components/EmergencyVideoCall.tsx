@@ -612,39 +612,25 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     }
   };
 
-  // Timer countdown with 5-min and 1-min warnings
+  // Shared session timer: pauses when someone drops, resumes from the same
+  // value on reconnection and ends the call for both when it expires.
   const warned5MinRef = React.useRef(false);
   const warned1MinRef = React.useRef(false);
   useEffect(() => {
-    if (!isConnected) return;
-
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev === 300 && !warned5MinRef.current) {
-          warned5MinRef.current = true;
-          toast({
-            title: 'Aviso',
-            description: 'A chamada será encerrada em 5 minutos.',
-          });
-        }
-        if (prev === 60 && !warned1MinRef.current) {
-          warned1MinRef.current = true;
-          toast({
-            title: 'Atenção',
-            description: 'A chamada será encerrada em 1 minuto.',
-            variant: 'destructive',
-          });
-        }
-        if (prev <= 1) {
-          handleEndCall('tempo_limite_atingido');
-          return 0;
-        }
-        return prev - 1;
+    if (timeLeft === 300 && !warned5MinRef.current) {
+      warned5MinRef.current = true;
+      toast({ title: 'Aviso', description: 'A chamada será encerrada em 5 minutos.' });
+    }
+    if (timeLeft === 60 && !warned1MinRef.current) {
+      warned1MinRef.current = true;
+      toast({
+        title: 'Atenção',
+        description: 'A chamada será encerrada em 1 minuto.',
+        variant: 'destructive',
       });
-    }, 1000);
+    }
+  }, [timeLeft, toast]);
 
-    return () => clearInterval(timer);
-  }, [isConnected]);
 
   const handleMuteToggle = async () => {
     try {
