@@ -155,6 +155,22 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     userType,
   });
 
+  // Session timer shared by both participants (paused on any drop).
+  const { timeLeft, isPaused: isTimerPaused } = useSharedCallTimer({
+    sessionId,
+    userType,
+    timeLimit,
+    running:
+      isConnected &&
+      remotePresent &&
+      !isReconnecting &&
+      !isNetworkOffline &&
+      !callTerminatedMessage,
+    onExpire: useCallback(() => {
+      endCallRef.current?.('tempo_limite_atingido');
+    }, []),
+  });
+
 
 
   // Get current user name for initials
