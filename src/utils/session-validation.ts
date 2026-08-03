@@ -18,6 +18,10 @@ export class SessionValidationError extends Error {
     this.name = 'SessionValidationError';
   }
 }
+/** Delay before the first lookup, to let DB replication settle (disabled in tests). */
+export const INITIAL_VALIDATION_DELAY =
+  import.meta.env?.MODE === 'test' ? 0 : 2500;
+
 
 export const isValidUUID = (uuid: string): boolean => {
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -102,32 +106,38 @@ export const validateWebRTCSession = async (sessionId: string): Promise<WebRTCSe
 
       console.log(`✅ Session found: ${sessionId}`, session);
       return session;
-    }, { retries: 4, initialDelay: 2500, useInitialDelay: true });
+    }, { retries: 4, initialDelay: INITIAL_VALIDATION_DELAY, useInitialDelay: INITIAL_VALIDATION_DELAY > 0 });
 
-    // Check if session is expired or close to expiring
+    // Expiry handling.
+    // A session row only "expires" for real when the call is already finished.
+    // While the call is still open (pending/active/connected) an expired
+    // `expires_at` is just a stale timestamp from a reused row — extend it
+    // instead of locking the participants out of an ongoing call.
     if (session.expires_at) {
       const now = new Date();
       const expiresAt = new Date(session.expires_at);
       const timeUntilExpiry = expiresAt.getTime() - now.getTime();
       const oneHourInMs = 60 * 60 * 1000; // 1 hour
-      
-      if (timeUntilExpiry < 0) {
+
+      const callIsFinished = session.status === 'completed' || session.status === 'ended';
+
+      if (timeUntilExpiry < 0 && callIsFinished) {
         console.warn(`⏰ Session expired: ${sessionId}`);
         throw new SessionValidationError('Esta sessão de videochamada já expirou', 'SESSION_EXPIRED');
       }
-      
-      // Auto-extend session if it's within 1 hour of expiring
+
+      // Auto-extend expired or soon-to-expire sessions of ongoing calls
       if (timeUntilExpiry < oneHourInMs) {
-        console.log(`⏰ Session expires soon (${Math.round(timeUntilExpiry / (60 * 1000))}min), extending...`);
+        console.log(`⏰ Session expires soon/expired (${Math.round(timeUntilExpiry / (60 * 1000))}min), extending...`);
+        const newExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
         try {
           const { error: extendError } = await supabase
             .from('webrtc_sessions')
-            .update({ 
-              expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // Extend by 24 hours
-            })
+            .update({ expires_at: newExpiry })
             .eq('id', sessionId);
           
           if (!extendError) {
+            session.expires_at = newExpiry;
             console.log(`✅ Session ${sessionId} extended successfully`);
           } else {
             console.warn(`⚠️ Failed to extend session ${sessionId}:`, extendError);
@@ -137,6 +147,7 @@ export const validateWebRTCSession = async (sessionId: string): Promise<WebRTCSe
         }
       }
     }
+
 
     // Validate user access
     const { data: { user }, error: userError } = await supabase.auth.getUser();
