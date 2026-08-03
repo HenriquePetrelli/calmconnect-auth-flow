@@ -293,8 +293,33 @@ serve(async (req) => {
           let sessionId;
           
           if (existingSession) {
-            console.log('Using existing WebRTC session:', existingSession.id);
+            console.log('Reusing existing WebRTC session:', existingSession.id);
             sessionId = existingSession.id;
+
+            // Refresh the row so a reused/stale session never lands the
+            // participants on an "expired session" screen.
+            const { error: refreshError } = await supabase
+              .from("webrtc_sessions")
+              .update({
+                psychologist_id: user.id,
+                patient_id: updatedRequest.patient_id,
+                status: "pending",
+                offer: null,
+                answer: null,
+                ice_candidates: [],
+                ended_at: null,
+                ended_by: null,
+                ended_by_type: null,
+                end_reason: null,
+                expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", existingSession.id);
+
+            if (refreshError) {
+              console.error('Failed to refresh existing WebRTC session:', refreshError);
+            }
+
           } else {
             // Create new WebRTC session
             const sessionData = {
