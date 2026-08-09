@@ -1344,10 +1344,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
 
           {/* Botão de encerrar chamada */}
           <button
-            onClick={() => {
-              setSelectedEndReason(userType === 'psychologist' ? 'atendimento_concluido' : 'paciente_estabilizado');
-              setShowEndConfirm(true);
-            }}
+            onClick={() => setShowEndConfirm(true)}
             className="group relative w-14 h-14 md:w-16 md:h-16 rounded-full bg-destructive hover:bg-destructive/90 flex items-center justify-center transition-all duration-200 shadow-lg shadow-destructive/30"
           >
             <PhoneOff className="text-white" size={20} />
