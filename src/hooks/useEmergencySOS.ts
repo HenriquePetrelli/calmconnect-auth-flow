@@ -5,7 +5,7 @@ import { findPatientOpenRequest } from '@/lib/emergencyCallGuard';
 
 export interface EmergencyRequest {
   id: string;
-  status: 'pending' | 'accepted' | 'in_progress' | 'completed' | 'cancelled' | 'rejected' | 'waiting';
+  status: 'pending' | 'accepted' | 'in_progress' | 'completed' | 'cancelled';
   accepted_by?: string;
   accepted_at?: string;
   video_room_id?: string;
@@ -280,22 +280,34 @@ export const useEmergencySOS = () => {
     };
   };
 
-  const cancelRequest = useCallback(async (requestId: string) => {
+  const cancelRequest = useCallback(async (
+    requestId: string,
+    reason: 'cancelled_by_patient' | 'abandoned' = 'cancelled_by_patient'
+  ) => {
     try {
       setLoading(true);
-      
+
       // Stop any ongoing polling first
       if (stopPolling) {
         stopPolling();
         setStopPolling(null);
       }
-      
-      // Delete the emergency request
+
+      const { data: { user } } = await supabase.auth.getUser();
+
+      // Keep the request in history: mark it as cancelled instead of deleting it.
       const { error } = await supabase
         .from('emergency_requests')
-        .delete()
-        .eq('id', requestId);
-      
+        .update({
+          status: 'cancelled',
+          ended_at: new Date().toISOString(),
+          ended_by: user?.id ?? null,
+          ended_by_type: 'patient',
+          end_reason: reason,
+        })
+        .eq('id', requestId)
+        .eq('status', 'pending');
+
       if (error) {
         console.error('Error cancelling request:', error);
         throw error;
@@ -310,6 +322,7 @@ export const useEmergencySOS = () => {
       });
       
       console.log('Emergency request cancelled successfully');
+
     } catch (error: any) {
       console.error('Error cancelling request:', error);
       toast({

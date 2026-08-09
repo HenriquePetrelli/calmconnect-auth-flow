@@ -1,7 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 
 export const ONGOING_CALL_STATUSES = ['accepted', 'in_progress'];
-export const OPEN_REQUEST_STATUSES = ['pending', 'waiting', 'accepted', 'in_progress'];
+export const OPEN_REQUEST_STATUSES = ['pending', 'accepted', 'in_progress'];
 
 export interface ActiveEmergencyRow {
   id: string;

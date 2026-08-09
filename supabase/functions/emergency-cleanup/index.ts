@@ -93,17 +93,25 @@ serve(async (req) => {
       );
     }
 
-    // Delete the emergency request
+    // Keep the row for history: mark it as cancelled instead of deleting it
     const { error } = await supabase
       .from('emergency_requests')
-      .delete()
+      .update({
+        status: 'cancelled',
+        ended_at: new Date().toISOString(),
+        ended_by: patient_id,
+        ended_by_type: 'patient',
+        end_reason: 'expired',
+      })
       .eq('id', request_id)
-      .eq('patient_id', patient_id);
+      .eq('patient_id', patient_id)
+      .eq('status', 'pending');
 
     if (error) {
-      console.error('Error deleting emergency request:', error);
+      console.error('Error cancelling emergency request:', error);
       throw error;
     }
+
 
     console.log(`Emergency request ${request_id} cleaned up for patient ${patient_id}`);
 
