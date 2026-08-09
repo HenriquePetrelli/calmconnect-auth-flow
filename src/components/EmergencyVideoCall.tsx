@@ -175,7 +175,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
       !isNetworkOffline &&
       !callTerminatedMessage,
     onExpire: useCallback(() => {
-      endCallRef.current?.('tempo_limite_atingido');
+      endCallRef.current?.(END_REASONS.TIME_LIMIT);
     }, []),
   });
 
