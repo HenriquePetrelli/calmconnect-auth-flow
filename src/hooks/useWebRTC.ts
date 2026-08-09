@@ -58,6 +58,8 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
   const lastAppliedAnswerRef = useRef<string | null>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const callEndedByRef = useRef<{userId: string, userType: string} | null>(null);
+  const signalChannelRef = useRef<CallSignalChannel | null>(null);
+
   const attemptReconnectRef = useRef<((pc: RTCPeerConnection) => void) | null>(null);
   const { toast } = useToast();
   const connectionManager = getWebRTCConnectionManager();
