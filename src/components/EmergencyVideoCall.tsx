@@ -116,7 +116,9 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     toggleAudio,
     toggleVideo,
     cleanup,
-    updateDeviceStream
+    updateDeviceStream,
+    sendCallEndedSignal
+
   } = useWebRTC({
     sessionId: sessionId || '',
     userType,
