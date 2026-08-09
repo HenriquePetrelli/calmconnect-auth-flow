@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Mic, MicOff, Camera, CameraOff, PhoneOff, Loader2, AlertTriangle, Settings, Shield, Video, WifiOff, RefreshCw } from 'lucide-react';
 import { useWebRTC } from '@/hooks/useWebRTC';
 import { useCallPresence } from '@/hooks/useCallPresence';
+import { useParticipantHeartbeat } from '@/hooks/useParticipantHeartbeat';
+
 import { useSharedCallTimer } from '@/hooks/useSharedCallTimer';
 
 import { getConnectionBannerState, isRemoteDropInvoluntary } from '@/lib/callBanner';
@@ -147,6 +149,15 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     userType,
     enabled: Boolean(sessionId) && !callTerminatedMessage,
   });
+
+  // Durable heartbeat: lets the server tell "tab closed for a moment" apart
+  // from a room that both participants really abandoned.
+  useParticipantHeartbeat({
+    sessionId,
+    userType,
+    enabled: Boolean(sessionId) && !callTerminatedMessage,
+  });
+
 
   const remoteDroppedInvoluntarily = isRemoteDropInvoluntary(
     remotePresent,

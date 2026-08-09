@@ -543,6 +543,36 @@ export type Database = {
           },
         ]
       }
+      participant_presence: {
+        Row: {
+          created_at: string
+          id: string
+          last_seen: string
+          session_id: string
+          updated_at: string
+          user_id: string
+          user_type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_seen?: string
+          session_id: string
+          updated_at?: string
+          user_id: string
+          user_type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_seen?: string
+          session_id?: string
+          updated_at?: string
+          user_id?: string
+          user_type?: string
+        }
+        Relationships: []
+      }
       patient_achievements: {
         Row: {
           achieved: boolean
@@ -1662,6 +1692,14 @@ export type Database = {
             }
             Returns: Json
           }
+      finalize_stale_emergency_sessions: {
+        Args: never
+        Returns: {
+          abandoned_count: number
+          expired_count: number
+          timed_out_count: number
+        }[]
+      }
       gerenciar_expiracao_conversas: { Args: never; Returns: undefined }
       get_admin_metrics: {
         Args: never
