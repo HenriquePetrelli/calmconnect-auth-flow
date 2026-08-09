@@ -148,6 +148,15 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     enabled: Boolean(sessionId) && !callTerminatedMessage,
   });
 
+  // Durable heartbeat: lets the server tell "tab closed for a moment" apart
+  // from a room that both participants really abandoned.
+  useParticipantHeartbeat({
+    sessionId,
+    userType,
+    enabled: Boolean(sessionId) && !callTerminatedMessage,
+  });
+
+
   const remoteDroppedInvoluntarily = isRemoteDropInvoluntary(
     remotePresent,
     remoteLeftAt,
