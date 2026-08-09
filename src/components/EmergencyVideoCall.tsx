@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Mic, MicOff, Camera, CameraOff, PhoneOff, Loader2, AlertTriangle, Settings, Shield, Video, WifiOff, RefreshCw } from 'lucide-react';
 import { useWebRTC } from '@/hooks/useWebRTC';
 import { useCallPresence } from '@/hooks/useCallPresence';
+import { useParticipantHeartbeat } from '@/hooks/useParticipantHeartbeat';
+
 import { useSharedCallTimer } from '@/hooks/useSharedCallTimer';
 
 import { getConnectionBannerState, isRemoteDropInvoluntary } from '@/lib/callBanner';
