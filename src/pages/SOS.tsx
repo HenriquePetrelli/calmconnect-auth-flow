@@ -86,7 +86,7 @@ const SOS = () => {
           .from('emergency_requests')
           .select('id, status, room_url, video_room_id, created_at')
           .eq('patient_id', currentUserId)
-          .in('status', ['pending', 'waiting'])
+          .eq('status', 'pending')
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
@@ -185,7 +185,7 @@ const SOS = () => {
     if (requestId) {
       try {
         console.log(`User manually cancelled request: ${requestId}`);
-        await cancelRequest(requestId);
+        await cancelRequest(requestId, 'cancelled_by_patient');
       } catch (error) {
         console.error('Error cancelling request:', error);
       }

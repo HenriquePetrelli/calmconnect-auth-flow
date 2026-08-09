@@ -74,7 +74,7 @@ serve(async (req) => {
         .from('emergency_requests')
         .select('id')
         .eq('patient_id', user.id)
-        .in('status', ['pending', 'waiting'])
+        .eq('status', 'pending')
         .limit(1)
         .maybeSingle();
 
