@@ -222,7 +222,9 @@ export type Database = {
           accepted_at: string | null
           accepted_by: string | null
           created_at: string
+          crisis_resolved: boolean | null
           duration: number | null
+          end_notes: string | null
           end_reason: string | null
           ended_at: string | null
           ended_by: string | null
@@ -241,7 +243,9 @@ export type Database = {
           accepted_at?: string | null
           accepted_by?: string | null
           created_at?: string
+          crisis_resolved?: boolean | null
           duration?: number | null
+          end_notes?: string | null
           end_reason?: string | null
           ended_at?: string | null
           ended_by?: string | null
@@ -260,7 +264,9 @@ export type Database = {
           accepted_at?: string | null
           accepted_by?: string | null
           created_at?: string
+          crisis_resolved?: boolean | null
           duration?: number | null
+          end_notes?: string | null
           end_reason?: string | null
           ended_at?: string | null
           ended_by?: string | null
@@ -1220,6 +1226,7 @@ export type Database = {
       }
       session_feedback: {
         Row: {
+          comment: string | null
           created_at: string | null
           id: string
           problem_resolved: string | null
@@ -1230,6 +1237,7 @@ export type Database = {
           user_type: string
         }
         Insert: {
+          comment?: string | null
           created_at?: string | null
           id?: string
           problem_resolved?: string | null
@@ -1240,6 +1248,7 @@ export type Database = {
           user_type: string
         }
         Update: {
+          comment?: string | null
           created_at?: string | null
           id?: string
           problem_resolved?: string | null
