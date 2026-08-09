@@ -30,19 +30,21 @@ import {
 } from '@/components/ui/alert-dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  END_REASONS,
+  UNRESOLVED_CRISIS_OPTIONS,
+  completionReasonFor,
+  unresolvedCrisisLabel,
+} from '@/lib/emergencyEndReasons';
+import { sosLog } from '@/lib/sosLogger';
 
 export interface EndCallInfo {
   reason: string;
   endedByType: 'psychologist' | 'patient';
+  crisisResolved?: boolean | null;
+  notes?: string | null;
 }
-
-const END_REASONS = [
-  { value: 'atendimento_concluido', label: 'Atendimento concluído' },
-  { value: 'paciente_estabilizado', label: 'Paciente estabilizado' },
-  { value: 'encaminhamento', label: 'Encaminhado para acompanhamento' },
-  { value: 'problemas_tecnicos', label: 'Problemas técnicos' },
-  { value: 'outro', label: 'Outro motivo' },
-];
 
 interface EmergencyVideoCallProps {
   sessionId?: string;
@@ -72,8 +74,12 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   const [sessionValid, setSessionValid] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
-  const [selectedEndReason, setSelectedEndReason] = useState<string>('atendimento_concluido');
-  const endReasonRef = useRef<string>('encerrada_pelo_usuario');
+  // Step 2 (psychologist only): was the patient's crisis resolved?
+  const [showCrisisStep, setShowCrisisStep] = useState(false);
+  const [crisisResolved, setCrisisResolved] = useState<'sim' | 'nao'>('sim');
+  const [unresolvedReason, setUnresolvedReason] = useState<string>(UNRESOLVED_CRISIS_OPTIONS[0].value);
+  const [endNotes, setEndNotes] = useState('');
+  const endInfoRef = useRef<EndCallInfo>({ reason: END_REASONS.OTHER, endedByType: 'patient' });
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [userInfo, setUserInfo] = useState<{
     name: string; 
@@ -737,10 +743,17 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   };
 
 
-  const handleEndCall = async (reason: string = 'encerrada_pelo_usuario') => {
-    endReasonRef.current = reason;
+  const handleEndCall = async (info?: Partial<EndCallInfo>) => {
+    const endInfo: EndCallInfo = {
+      reason: info?.reason ?? completionReasonFor(userType),
+      endedByType: userType,
+      crisisResolved: info?.crisisResolved ?? null,
+      notes: info?.notes ?? null,
+    };
+    endInfoRef.current = endInfo;
+    const reason = endInfo.reason;
     try {
-      console.log('🔄 Starting complete call cleanup...');
+      sosLog('SESSION', 'participant ended call', endInfo);
       
       // 1. Update session status and mark who ended the call FIRST
       if (sessionId) {
@@ -783,7 +796,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
       });
       
       if (onEndCall) {
-        onEndCall({ reason, endedByType: userType });
+        onEndCall(endInfo);
       } else {
         navigate('/home');
       }
@@ -793,13 +806,49 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   // Allows the shared timer to end the call when it expires.
   useEffect(() => {
     endCallRef.current = (reason?: string) => {
-      handleEndCall(reason || 'tempo_limite_atingido');
+      handleEndCall({ reason: reason || END_REASONS.TIME_LIMIT });
     };
   });
 
+  /** Step 1 → patients finish right away, psychologists answer the outcome. */
   const confirmEndCall = () => {
     setShowEndConfirm(false);
-    handleEndCall(selectedEndReason);
+    if (userType === 'psychologist') {
+      setShowCrisisStep(true);
+      return;
+    }
+    handleEndCall({ reason: END_REASONS.COMPLETED_BY_PATIENT });
+  };
+
+  /** Step 2 (psychologist): crisis outcome + optional observations. */
+  const confirmCrisisOutcome = () => {
+    const resolved = crisisResolved === 'sim';
+    const notes = [
+      resolved ? null : `Motivo: ${unresolvedCrisisLabel(unresolvedReason)}`,
+      endNotes.trim() || null,
+    ]
+      .filter(Boolean)
+      .join(' — ');
+
+    setShowCrisisStep(false);
+    handleEndCall({
+      reason: END_REASONS.COMPLETED_BY_PSYCHOLOGIST,
+      crisisResolved: resolved,
+      notes: notes || null,
+    });
+  };
+
+  /**
+   * Closing the outcome modal must never leave the psychologist stuck:
+   * the product rule is to consider the crisis resolved and finish.
+   */
+  const handleCrisisStepOpenChange = (open: boolean) => {
+    if (open) return;
+    setShowCrisisStep(false);
+    handleEndCall({
+      reason: END_REASONS.COMPLETED_BY_PSYCHOLOGIST,
+      crisisResolved: true,
+    });
   };
 
 
@@ -813,7 +862,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
 
     // Let the parent close the emergency request (and redirect).
     if (onEndCall) {
-      onEndCall({ reason: endReasonRef.current, endedByType: userType });
+      onEndCall(endInfoRef.current);
       return;
     }
 
@@ -1326,38 +1375,87 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
         onDeviceStreamUpdate={updateDeviceStream}
       />
 
-      {/* Confirmação de encerramento */}
+      {/* Etapa 1 — confirmação de encerramento */}
       <AlertDialog open={showEndConfirm} onOpenChange={setShowEndConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Encerrar chamada?</AlertDialogTitle>
+            <AlertDialogTitle>Deseja finalizar a chamada?</AlertDialogTitle>
             <AlertDialogDescription>
-              A chamada será finalizada para os dois participantes. Selecione o motivo do encerramento.
+              A chamada será encerrada para os dois participantes.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel>Continuar chamada</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmEndCall}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {userType === 'psychologist' ? 'Encerrar chamada' : 'Finalizar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Etapa 2 — desfecho do atendimento (somente psicólogo) */}
+      <AlertDialog open={showCrisisStep} onOpenChange={handleCrisisStepOpenChange}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>A crise do paciente foi resolvida?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Essa informação fica registrada no histórico do atendimento.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
           <RadioGroup
-            value={selectedEndReason}
-            onValueChange={setSelectedEndReason}
-            className="gap-2 py-2"
+            value={crisisResolved}
+            onValueChange={(v) => setCrisisResolved(v as 'sim' | 'nao')}
+            className="grid grid-cols-2 gap-2 py-1"
           >
-            {END_REASONS.map((r) => (
-              <div key={r.value} className="flex items-center gap-3 rounded-lg border border-border p-3">
-                <RadioGroupItem value={r.value} id={`end-reason-${r.value}`} />
-                <Label htmlFor={`end-reason-${r.value}`} className="cursor-pointer text-sm font-normal">
-                  {r.label}
+            {(['sim', 'nao'] as const).map((v) => (
+              <div key={v} className="flex items-center gap-3 rounded-lg border border-border p-3">
+                <RadioGroupItem value={v} id={`crisis-${v}`} />
+                <Label htmlFor={`crisis-${v}`} className="cursor-pointer text-sm font-normal">
+                  {v === 'sim' ? 'Sim' : 'Não'}
                 </Label>
               </div>
             ))}
           </RadioGroup>
 
+          {crisisResolved === 'nao' && (
+            <div className="space-y-2">
+              <Label className="text-sm">Qual foi o motivo principal?</Label>
+              <RadioGroup
+                value={unresolvedReason}
+                onValueChange={setUnresolvedReason}
+                className="max-h-52 gap-2 overflow-y-auto"
+              >
+                {UNRESOLVED_CRISIS_OPTIONS.map((o) => (
+                  <div key={o.value} className="flex items-center gap-3 rounded-lg border border-border p-3">
+                    <RadioGroupItem value={o.value} id={`unresolved-${o.value}`} />
+                    <Label htmlFor={`unresolved-${o.value}`} className="cursor-pointer text-sm font-normal">
+                      {o.label}
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <Label htmlFor="end-notes" className="text-sm">Observações (opcional)</Label>
+            <Textarea
+              id="end-notes"
+              value={endNotes}
+              onChange={(e) => setEndNotes(e.target.value)}
+              placeholder="Registre observações relevantes do atendimento"
+              rows={3}
+            />
+          </div>
+
           <AlertDialogFooter>
-            <AlertDialogCancel>Continuar na chamada</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmEndCall}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Encerrar chamada
+            <AlertDialogAction onClick={confirmCrisisOutcome} className="w-full sm:w-auto">
+              Finalizar atendimento
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
