@@ -551,7 +551,10 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     }
     
     cleanupRef.current = true;
+    signalChannelRef.current?.close();
+    signalChannelRef.current = null;
     pcRef.current = null;
+
     clearReconnectTimers();
     setIsReconnecting(false);
     setReconnectAttempt(0);
