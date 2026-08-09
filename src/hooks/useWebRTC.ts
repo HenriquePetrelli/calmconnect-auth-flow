@@ -168,6 +168,13 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
 
       pcRef.current = pc;
 
+      // In-call control channel: delivers CALL_ENDED instantly to the peer.
+      signalChannelRef.current = attachCallSignalChannel(pc as any, (signal) => {
+        if (signal.type !== 'CALL_ENDED') return;
+        setCallEndedBy({ userId: '', userType: signal.endedByType });
+      });
+
+
       // Handle connection state changes
       pc.onconnectionstatechange = () => {
         const state = pc.connectionState;
