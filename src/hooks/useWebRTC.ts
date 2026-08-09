@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { isRealTermination } from '@/lib/callTermination';
+import { attachCallSignalChannel, type CallSignalChannel } from '@/lib/callSignals';
+
 import { useToast } from '@/hooks/use-toast';
 import { getWebRTCConnectionManager } from '@/utils/webrtc-manager';
 import { flowLock } from '@/utils/flow-lock';
@@ -58,6 +60,8 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
   const lastAppliedAnswerRef = useRef<string | null>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const callEndedByRef = useRef<{userId: string, userType: string} | null>(null);
+  const signalChannelRef = useRef<CallSignalChannel | null>(null);
+
   const attemptReconnectRef = useRef<((pc: RTCPeerConnection) => void) | null>(null);
   const { toast } = useToast();
   const connectionManager = getWebRTCConnectionManager();
@@ -167,6 +171,13 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
       });
 
       pcRef.current = pc;
+
+      // In-call control channel: delivers CALL_ENDED instantly to the peer.
+      signalChannelRef.current = attachCallSignalChannel(pc as any, (signal) => {
+        if (signal.type !== 'CALL_ENDED') return;
+        setCallEndedBy({ userId: '', userType: signal.endedByType });
+      });
+
 
       // Handle connection state changes
       pc.onconnectionstatechange = () => {
@@ -540,7 +551,10 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     }
     
     cleanupRef.current = true;
+    signalChannelRef.current?.close();
+    signalChannelRef.current = null;
     pcRef.current = null;
+
     clearReconnectTimers();
     setIsReconnecting(false);
     setReconnectAttempt(0);
@@ -959,6 +973,10 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
 
     toggleVideo,
     cleanup,
-    updateDeviceStream
+    updateDeviceStream,
+    /** Signals CALL_ENDED to the peer over the data channel (best effort). */
+    sendCallEndedSignal: (payload: { endedByType: 'patient' | 'psychologist' | 'system'; reason: string }) =>
+      signalChannelRef.current?.sendCallEnded({ ...payload, sessionId }) ?? false,
+
   };
 };
