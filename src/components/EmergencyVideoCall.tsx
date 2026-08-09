@@ -765,6 +765,12 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     const reason = endInfo.reason;
     try {
       sosLog('SESSION', 'participant ended call', endInfo);
+
+      // 0. Tell the peer immediately over the data channel (best effort) so the
+      //    other side closes the room without waiting for realtime propagation.
+      sendCallEndedSignal?.({ endedByType: userType, reason });
+
+
       
       // 1. Update session status and mark who ended the call FIRST
       if (sessionId) {
