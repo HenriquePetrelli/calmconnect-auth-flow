@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { END_REASONS } from '@/lib/emergencyEndReasons';
 import { useToast } from '@/hooks/use-toast';
 import { findPatientOpenRequest } from '@/lib/emergencyCallGuard';
 
@@ -282,7 +283,7 @@ export const useEmergencySOS = () => {
 
   const cancelRequest = useCallback(async (
     requestId: string,
-    reason: 'cancelled_by_patient' | 'abandoned' = 'cancelled_by_patient'
+    reason: 'cancelled_by_patient' | 'abandoned' = END_REASONS.CANCELLED_BY_PATIENT
   ) => {
     try {
       setLoading(true);

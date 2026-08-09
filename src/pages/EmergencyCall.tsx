@@ -9,6 +9,8 @@ import { SkeletonFullPage } from "@/components/skeletons/Skeletons";
 import { acquireCallLock } from "@/lib/callLock";
 import { findOngoingCallForUser, sessionIdOf } from "@/lib/emergencyCallGuard";
 import { persistExplicitTermination } from "@/lib/callTermination";
+import { completionReasonFor } from "@/lib/emergencyEndReasons";
+import { sosLog } from "@/lib/sosLogger";
 
 
 const EmergencyCall = () => {
@@ -22,7 +24,13 @@ const EmergencyCall = () => {
 
   // The requestId may come from the route (legacy flow) or from the query
   // string (direct session route) — both must keep the request lifecycle in sync.
-  const requestId = requestIdParam || searchParams.get('requestId') || undefined;
+  const requestIdFromUrl = requestIdParam || searchParams.get('requestId') || undefined;
+
+  // The emergency request is the source of truth for the session lifecycle.
+  // When the URL only carries the sessionId (direct route / page refresh), we
+  // resolve it from `webrtc_sessions` instead of relying on the URL.
+  const [resolvedRequestId, setResolvedRequestId] = useState<string | undefined>(requestIdFromUrl);
+  const requestId = resolvedRequestId;
 
   // Check if this is a direct session ID route
   const isDirectSessionRoute = !!sessionId;
@@ -31,6 +39,36 @@ const EmergencyCall = () => {
   useEffect(() => {
     document.title = "Chamada de Emergência | Soliv";
   }, []);
+
+  useEffect(() => {
+    if (requestIdFromUrl) {
+      setResolvedRequestId(requestIdFromUrl);
+      return;
+    }
+    if (!sessionIdState) return;
+
+    let cancelled = false;
+    const resolveRequest = async () => {
+      const { data } = await supabase
+        .from("webrtc_sessions")
+        .select("emergency_request_id")
+        .eq("id", sessionIdState)
+        .maybeSingle();
+
+      if (!cancelled && data?.emergency_request_id) {
+        sosLog("SESSION", "emergency request resolved from session", {
+          sessionId: sessionIdState,
+          requestId: data.emergency_request_id,
+        });
+        setResolvedRequestId(data.emergency_request_id);
+      }
+    };
+
+    resolveRequest();
+    return () => {
+      cancelled = true;
+    };
+  }, [requestIdFromUrl, sessionIdState]);
 
   useEffect(() => {
     // If this is a direct session route, use the new component
@@ -255,8 +293,10 @@ const EmergencyCall = () => {
         sessionId: sessionIdState,
         userId: auth.user?.id ?? null,
         endedByType: info?.endedByType ?? userType,
-        reason: info?.reason ?? "encerrada_pelo_usuario",
+        reason: info?.reason ?? completionReasonFor(userType),
         endedAt: endTime,
+        crisisResolved: info?.crisisResolved ?? null,
+        notes: info?.notes ?? null,
       });
 
 

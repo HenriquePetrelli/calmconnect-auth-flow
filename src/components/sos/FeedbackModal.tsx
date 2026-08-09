@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Star } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { usePatientStatistics } from '@/hooks/usePatientStatistics';
+import { sosLog } from '@/lib/sosLogger';
 
 interface FeedbackModalProps {
   isOpen: boolean;
@@ -21,9 +23,45 @@ interface FeedbackModalProps {
 export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerName, onRedirect }: FeedbackModalProps) => {
   const [rating, setRating] = useState<number>(0);
   const [problemResolved, setProblemResolved] = useState<string>('');
+  const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [alreadySent, setAlreadySent] = useState(false);
   const { toast } = useToast();
   const { addActivity } = usePatientStatistics();
+
+  // Idempotency: one feedback per user per session. Reloading the page after
+  // finishing must never create a second row nor block the user here.
+  useEffect(() => {
+    if (!isOpen || !sessionId) return;
+    let cancelled = false;
+
+    const checkExisting = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || cancelled) return;
+
+      const { data } = await supabase
+        .from('session_feedback')
+        .select('id')
+        .eq('session_id', sessionId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!cancelled && data) {
+        sosLog('SESSION', 'feedback already registered — skipping modal', { sessionId });
+        setAlreadySent(true);
+      }
+    };
+
+    checkExisting();
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, sessionId]);
+
+  useEffect(() => {
+    if (alreadySent) handleClose();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [alreadySent]);
 
   const handleStarClick = (star: number) => {
     setRating(star);
@@ -58,13 +96,17 @@ export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerNam
       // Save feedback to database
       const { error: feedbackError } = await supabase
         .from('session_feedback')
-        .insert({
-          session_id: sessionId,
-          user_id: user.id,
-          user_type: userType,
-          rating,
-          problem_resolved: userType === 'patient' ? problemResolved : null,
-        });
+        .upsert(
+          {
+            session_id: sessionId,
+            user_id: user.id,
+            user_type: userType,
+            rating,
+            problem_resolved: userType === 'patient' ? problemResolved : null,
+            comment: comment.trim() || null,
+          },
+          { onConflict: 'session_id,user_id' }
+        );
 
       if (feedbackError) {
         throw feedbackError;
@@ -196,12 +238,32 @@ export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerNam
                      <Label htmlFor="yes">Sim, conseguiu me ajudar</Label>
                    </div>
                    <div className="flex items-center space-x-2">
+                     <RadioGroupItem value="partially" id="partially" />
+                     <Label htmlFor="partially">Parcialmente</Label>
+                   </div>
+                   <div className="flex items-center space-x-2">
                      <RadioGroupItem value="no" id="no" />
                      <Label htmlFor="no">Não conseguiu me ajudar</Label>
                    </div>
                  </RadioGroup>
               </div>
             )}
+
+            {/* Optional free-text comment */}
+            <div className="space-y-2">
+              <Label htmlFor="feedback-comment" className="font-medium">
+                {userType === 'patient' ? 'Conte como foi sua experiência (opcional)' : 'Observações (opcional)'}
+              </Label>
+              <Textarea
+                id="feedback-comment"
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                rows={3}
+                placeholder={userType === 'patient'
+                  ? 'Compartilhe o que achou do atendimento'
+                  : 'Registre observações sobre o atendimento'}
+              />
+            </div>
 
             {/* Action buttons */}
             <div className="flex gap-3">

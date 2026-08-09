@@ -62,7 +62,7 @@ describe('encerramento explícito da chamada emergencial', () => {
       sessionId: SESSION_ID,
       userId: PATIENT,
       endedByType: 'patient',
-      reason: 'encerrada_pelo_usuario',
+      reason: 'completed_by_patient',
     });
 
     expect(duration).toBeGreaterThanOrEqual(595); // ~10 min
@@ -70,7 +70,7 @@ describe('encerramento explícito da chamada emergencial', () => {
       status: 'completed',
       ended_by: PATIENT,
       ended_by_type: 'patient',
-      end_reason: 'encerrada_pelo_usuario',
+      end_reason: 'completed_by_patient',
       duration,
     });
     expect(request().ended_at).toBeTruthy();
@@ -82,14 +82,14 @@ describe('encerramento explícito da chamada emergencial', () => {
       sessionId: SESSION_ID,
       userId: PSYCHOLOGIST,
       endedByType: 'psychologist',
-      reason: 'atendimento_concluido',
+      reason: 'completed_by_psychologist',
     });
 
     expect(session()).toMatchObject({
       status: 'completed',
       ended_by: PSYCHOLOGIST,
       ended_by_type: 'psychologist',
-      end_reason: 'atendimento_concluido',
+      end_reason: 'completed_by_psychologist',
     });
     expect(request().ended_by_type).toBe('psychologist');
   });

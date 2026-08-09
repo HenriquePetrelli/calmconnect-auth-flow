@@ -5,6 +5,9 @@
  * "completed" row left over from a previous call.
  */
 
+import { END_REASONS } from './emergencyEndReasons';
+import { sosLog } from './sosLogger';
+
 export type CallUserType = 'patient' | 'psychologist';
 
 export interface TerminationSessionLike {
@@ -59,9 +62,13 @@ export interface PersistTerminationParams {
   requestId?: string | null;
   sessionId?: string | null;
   userId?: string | null;
-  endedByType: CallUserType;
+  endedByType: CallUserType | 'system';
   reason?: string;
   endedAt?: string;
+  /** Psychologist outcome — whether the patient's crisis was resolved. */
+  crisisResolved?: boolean | null;
+  /** Free-text context for the outcome (motive chosen + observations). */
+  notes?: string | null;
 }
 
 export async function persistExplicitTermination(
@@ -71,18 +78,27 @@ export async function persistExplicitTermination(
     sessionId,
     userId,
     endedByType,
-    reason = 'encerrada_pelo_usuario',
+    reason = END_REASONS.OTHER,
     endedAt = new Date().toISOString(),
+    crisisResolved = null,
+    notes = null,
   }: PersistTerminationParams
-): Promise<{ duration: number }> {
+): Promise<{ duration: number; alreadyEnded: boolean }> {
   let duration = 0;
+  let alreadyEnded = false;
 
   if (requestId) {
     const { data: emergencyData } = await client
       .from('emergency_requests')
-      .select('started_at')
+      .select('started_at, status, ended_at')
       .eq('id', requestId)
       .maybeSingle();
+
+    // Idempotency: a second endCall() must never rewrite the outcome.
+    if (emergencyData?.status === 'completed' || emergencyData?.ended_at) {
+      sosLog('SESSION', 'termination ignored — session already finished', { requestId });
+      return { duration: 0, alreadyEnded: true };
+    }
 
     duration = emergencyData?.started_at
       ? Math.max(
@@ -102,10 +118,13 @@ export async function persistExplicitTermination(
         ended_by: userId ?? null,
         ended_by_type: endedByType,
         end_reason: reason,
+        ...(crisisResolved === null ? {} : { crisis_resolved: crisisResolved }),
+        ...(notes ? { end_notes: notes } : {}),
       })
       .eq('id', requestId);
 
     if (error) throw error;
+    sosLog('SESSION', 'emergency request completed', { requestId, reason, endedByType });
   }
 
   if (sessionId) {
@@ -119,7 +138,8 @@ export async function persistExplicitTermination(
         end_reason: reason,
       })
       .eq('id', sessionId);
+    sosLog('SESSION', 'webrtc session completed', { sessionId });
   }
 
-  return { duration };
+  return { duration, alreadyEnded };
 }
