@@ -36,7 +36,7 @@ const SOS = () => {
       // Only cleanup if we have a requestId, the request was NOT accepted, and we're leaving the page
       if (requestIdRef.current && !acceptedRef.current) {
         console.log(`User left SOS page without acceptance, cleaning up pending request: ${requestIdRef.current}`);
-        cancelRequest(requestIdRef.current).catch(console.error);
+        cancelRequest(requestIdRef.current, 'abandoned').catch(console.error);
       } else if (acceptedRef.current) {
         console.log('Skipping cleanup: emergency was accepted, preserving request and session.');
       }
