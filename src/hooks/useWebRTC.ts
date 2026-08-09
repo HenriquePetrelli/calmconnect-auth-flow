@@ -973,6 +973,10 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
 
     toggleVideo,
     cleanup,
-    updateDeviceStream
+    updateDeviceStream,
+    /** Signals CALL_ENDED to the peer over the data channel (best effort). */
+    sendCallEndedSignal: (payload: { endedByType: 'patient' | 'psychologist' | 'system'; reason: string }) =>
+      signalChannelRef.current?.sendCallEnded({ ...payload, sessionId }) ?? false,
+
   };
 };
