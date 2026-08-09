@@ -68,7 +68,7 @@ const SOS = () => {
       setUserId(currentUserId);
 
       // If we have an expected requestId from navigation, use it
-      // Otherwise, get the most recent pending/waiting request
+      // Otherwise, get the most recent pending request
       let data: any = null;
       
       if (expectedRequestId) {
@@ -81,7 +81,7 @@ const SOS = () => {
           .maybeSingle();
         data = specificRequest;
       } else {
-        // Fallback: Get the most recent pending/waiting request
+        // Fallback: Get the most recent pending request
         const { data: latestRequest } = await supabase
           .from('emergency_requests')
           .select('id, status, room_url, video_room_id, created_at')
