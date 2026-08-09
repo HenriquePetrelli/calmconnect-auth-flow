@@ -102,7 +102,16 @@ serve(async (req) => {
       console.log('📋 Psychologist requesting emergency list');
       
       // Get pending emergency requests (aligned with frontend filter)
-...
+      const { data: emergencyRequests, error } = await supabase
+        .from('emergency_requests')
+        .select('*')
+        .eq('status', 'pending')
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('❌ Error fetching emergency requests:', error);
+        throw error;
+      }
       console.log(`✅ Found ${emergencyRequests?.length || 0} emergency requests with status pending`);
       
       if (emergencyRequests && emergencyRequests.length > 0) {
