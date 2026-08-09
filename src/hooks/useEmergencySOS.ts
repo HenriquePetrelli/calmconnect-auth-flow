@@ -5,7 +5,7 @@ import { findPatientOpenRequest } from '@/lib/emergencyCallGuard';
 
 export interface EmergencyRequest {
   id: string;
-  status: 'pending' | 'accepted' | 'in_progress' | 'completed' | 'cancelled' | 'rejected' | 'waiting';
+  status: 'pending' | 'accepted' | 'in_progress' | 'completed' | 'cancelled';
   accepted_by?: string;
   accepted_at?: string;
   video_room_id?: string;
