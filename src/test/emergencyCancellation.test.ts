@@ -31,8 +31,9 @@ const currentRow = () => fakeDb.rows('emergency_requests').find((r) => r.id === 
 
 describe('Cancelamento de SOS mantém histórico', () => {
   beforeEach(() => {
-    fakeDb.reset();
-    fakeDb.setUser(PATIENT);
+    fakeDb.tables = {};
+    fakeDb.writes = [];
+    fakeDb.currentUserId = PATIENT;
     seedPendingRequest();
   });
 
