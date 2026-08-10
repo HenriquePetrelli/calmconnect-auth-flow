@@ -700,12 +700,21 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     };
     
     updateLocalVideo();
-    
-    // Set up interval for continuous verification
-    const interval = setInterval(updateLocalVideo, 2000);
-    
+
+    // Short-lived verification window (some browsers attach the stream late).
+    // A perpetual 2s interval kept the CPU busy for the whole call.
+    let attempts = 0;
+    const interval = setInterval(() => {
+      attempts += 1;
+      updateLocalVideo();
+      if (attempts >= 5 || localVideoRef.current?.srcObject === localStream) {
+        clearInterval(interval);
+      }
+    }, 1000);
+
     return () => clearInterval(interval);
   }, [localStream, localVideoRef]);
+
  
    const fetchUserInfo = async (sessionId: string, currentUserType: 'patient' | 'psychologist') => {
     try {
