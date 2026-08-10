@@ -380,8 +380,10 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
         };
 
         window.addEventListener('webrtc-session-update', handleSessionUpdate as EventListener);
-        // Cleanup listener when component unmounts
-        return () => window.removeEventListener('webrtc-session-update', handleSessionUpdate as EventListener);
+        // Registered on the effect scope so it is really removed on unmount.
+        detachSessionUpdate = () =>
+          window.removeEventListener('webrtc-session-update', handleSessionUpdate as EventListener);
+
       } catch (error) {
         console.error('❌ Enhanced session validation failed:', error);
         
