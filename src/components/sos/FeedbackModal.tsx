@@ -216,11 +216,11 @@ export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerNam
               </div>
             </div>
 
-            {/* Additional question for patients */}
+            {/* Additional question for patients — binary by product rule */}
             {userType === 'patient' && (
               <div className="space-y-3">
                 <Label className="font-medium">
-                  O psicólogo conseguiu resolver seu problema?
+                  O psicólogo conseguiu te ajudar?
                 </Label>
                  <RadioGroup value={problemResolved} onValueChange={setProblemResolved}>
                    <div className="flex items-center space-x-2">
@@ -228,16 +228,13 @@ export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerNam
                      <Label htmlFor="yes">Sim, conseguiu me ajudar</Label>
                    </div>
                    <div className="flex items-center space-x-2">
-                     <RadioGroupItem value="partially" id="partially" />
-                     <Label htmlFor="partially">Parcialmente</Label>
-                   </div>
-                   <div className="flex items-center space-x-2">
                      <RadioGroupItem value="no" id="no" />
-                     <Label htmlFor="no">Não conseguiu me ajudar</Label>
+                     <Label htmlFor="no">Não</Label>
                    </div>
                  </RadioGroup>
               </div>
             )}
+
 
             {/* Optional free-text comment */}
             <div className="space-y-2">
