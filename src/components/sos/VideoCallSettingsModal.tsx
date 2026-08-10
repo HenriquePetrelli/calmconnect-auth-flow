@@ -7,7 +7,6 @@ import { Settings, Mic, Camera, Volume2, Loader2, AlertTriangle } from 'lucide-r
 import { useToast } from '@/hooks/use-toast';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { useMediaDeviceManager } from '@/hooks/useMediaDeviceManager';
-import { useMediaDeviceSettings } from '@/hooks/useMediaDeviceSettings';
 
 interface VideoCallSettingsModalProps {
   isOpen: boolean;
@@ -30,7 +29,6 @@ export const VideoCallSettingsModal = ({
 }: VideoCallSettingsModalProps) => {
   const { toast } = useToast();
   const { preferences, savePreferences, isLoading: preferencesLoading } = useUserPreferences();
-  const mediaDeviceManager = useMediaDeviceSettings(localVideoRef || { current: null }, onStreamUpdate);
   const mediaManager = useMediaDeviceManager();
   
   const [audioDevices, setAudioDevices] = useState<MediaDeviceInfo[]>([]);

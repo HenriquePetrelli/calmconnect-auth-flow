@@ -144,7 +144,10 @@ export const useEmergencySession = ({
             ...(isFirstJoin ? { started_at: new Date().toISOString() } : {}),
             status: 'in_progress',
           })
-          .eq('id', requestId);
+          .eq('id', requestId)
+          // Guard: never resurrect a cancelled/expired/completed request
+          .in('status', ['accepted', 'in_progress']);
+
 
         if (error) throw error;
 

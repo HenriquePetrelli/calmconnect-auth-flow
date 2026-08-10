@@ -86,6 +86,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOff, setIsCameraOff] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [initTimedOut, setInitTimedOut] = useState(false);
   const [sessionValid, setSessionValid] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
@@ -96,6 +97,18 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   const [endNotes, setEndNotes] = useState('');
   const endInfoRef = useRef<EndCallInfo>({ reason: END_REASONS.OTHER, endedByType: 'patient' });
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+
+  // Safety net: never leave the user stuck on "Conectando..." forever
+  // (blocked permission prompt, frozen device, stalled negotiation...).
+  useEffect(() => {
+    if (!isLoading) {
+      setInitTimedOut(false);
+      return;
+    }
+    const timer = window.setTimeout(() => setInitTimedOut(true), 45000);
+    return () => window.clearTimeout(timer);
+  }, [isLoading]);
+
   const [userInfo, setUserInfo] = useState<{
     name: string; 
     details: string;
@@ -527,18 +540,24 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
       console.log('🧹 Enhanced clear remote video element');
     }
     
-    // 5. Force device release by getting and immediately stopping a temporary stream
-    try {
-      const tempStream = await navigator.mediaDevices.getUserMedia({ 
-        video: true, 
-        audio: true 
+    // 5. Verify every track really ended (no extra getUserMedia — that would
+    // re-open the camera and ask for permission again)
+    const pendingTracks = [
+      ...(localStream?.getTracks() ?? []),
+      ...(remoteStream?.getTracks() ?? []),
+    ].filter((track) => track.readyState !== 'ended');
+
+    if (pendingTracks.length > 0) {
+      pendingTracks.forEach((track) => {
+        try {
+          track.stop();
+        } catch {
+          /* noop */
+        }
       });
-      tempStream.getTracks().forEach(track => track.stop());
-      console.log('📵 Devices forcefully released');
-    } catch (error) {
-      console.log('⚠️ Force release not needed or possible:', error);
+      console.warn(`⚠️ ${pendingTracks.length} track(s) needed a second stop`);
     }
-    
+
     // 6. Force garbage collection and memory cleanup
     if ((window as any).gc) {
       setTimeout(() => (window as any).gc(), 100);
@@ -554,7 +573,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     console.log('📡 Setting up real-time session status synchronization...');
     
     const channel = supabase
-      .channel('webrtc-session-updates')
+      .channel(`webrtc-session-updates-${sessionId}`)
       .on(
         'postgres_changes',
         {
@@ -972,6 +991,28 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
 
   const status = getConnectionStatus();
   const displayError = getDisplayError();
+
+  if (isLoading && initTimedOut) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <div className="max-w-md w-full text-center space-y-4">
+          <h2 className="text-xl font-semibold text-foreground">
+            Não conseguimos iniciar a chamada
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Verifique se o navegador liberou o acesso à câmera e ao microfone e se
+            nenhum outro aplicativo está usando esses dispositivos.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2 justify-center pt-2">
+            <Button onClick={() => window.location.reload()}>Tentar novamente</Button>
+            <Button variant="outline" onClick={() => navigate('/home')}>
+              Voltar para o início
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     // Show the intelligent initializer with delay and progress
