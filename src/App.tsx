@@ -243,11 +243,6 @@ const App = () => {
                       <SubscriptionCancel />
                     </RouteGuard>
                   } />
-                  <Route path="/webrtc-test" element={
-                    <RouteGuard allowedUserTypes={['patient']}>
-                      <WebRTCTest />
-                    </RouteGuard>
-                  } />
                   <Route path="/consultation-call/:appointmentId" element={
                     <RouteGuard allowedUserTypes={['patient']}>
                       <ConsultationCall />
