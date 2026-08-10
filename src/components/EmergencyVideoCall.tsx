@@ -100,6 +100,11 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   const [callTerminatedMessage, setCallTerminatedMessage] = useState<string | null>(null);
   // Moment this client joined the call — used to ignore stale "call ended" events.
   const joinedAtRef = useRef<number>(Date.now());
+  // Diagnostics overlay (incident triage). Opt-in via ?debug=1, stored flag or Ctrl+Shift+D.
+  const [showDiagnostics, setShowDiagnostics] = useState(() =>
+    isDiagnosticsEnabled(typeof window !== 'undefined' ? window.location.search : '', globalThis.localStorage)
+  );
+
 
 
   const {
