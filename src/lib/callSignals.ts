@@ -35,6 +35,12 @@ export interface MediaStateSignal {
   muted: boolean;
   displayName?: string | null;
   avatarUrl?: string | null;
+  /**
+   * Monotonic counter per sender. Concurrent toggles (mute + camera in the same
+   * millisecond, retries, re-announcements after a reconnection) are ordered by
+   * this value, so an older update can never override a newer one.
+   */
+  seq: number;
   at: number;
 }
 
@@ -58,6 +64,7 @@ export function parseCallSignal(raw: unknown): CallSignal | null {
         muted: Boolean(parsed.muted),
         displayName: typeof parsed.displayName === 'string' ? parsed.displayName : null,
         avatarUrl: typeof parsed.avatarUrl === 'string' ? parsed.avatarUrl : null,
+        seq: typeof parsed.seq === 'number' ? parsed.seq : 0,
         at: typeof parsed.at === 'number' ? parsed.at : Date.now(),
       };
     }
@@ -93,7 +100,7 @@ export interface CallSignalChannel {
   /** Sends CALL_ENDED to the peer. Returns false when it could not be delivered. */
   sendCallEnded: (payload: Omit<CallEndedSignal, 'type' | 'at'>) => boolean;
   /** Sends the local camera/mic/avatar state to the peer (best effort). */
-  sendMediaState: (payload: Omit<MediaStateSignal, 'type' | 'at'>) => boolean;
+  sendMediaState: (payload: Omit<MediaStateSignal, 'type' | 'at' | 'seq'>) => boolean;
   /** True when the control channel is open and messages can be delivered now. */
   isOpen: () => boolean;
   close: () => void;
@@ -111,15 +118,25 @@ export function attachCallSignalChannel(
 ): CallSignalChannel {
   let outgoing: DataChannelLike | null = null;
   const handled = new Set<string>();
+  /** Outgoing monotonic counter and the highest sequence seen per remote peer. */
+  let outSeq = 0;
+  const lastSeqByUser = new Map<string, number>();
 
   const dispatch = (event: { data: unknown }) => {
     const signal = parseCallSignal(event.data);
     if (!signal) return;
     // Both channels can carry the same message — deliver it only once.
-    const key =
-      signal.type === 'CALL_ENDED'
-        ? `CALL_ENDED:${signal.at}:${signal.endedByType}`
-        : `MEDIA_STATE:${signal.at}:${signal.userType}`;
+    if (signal.type === 'MEDIA_STATE') {
+      // Ordering guard: ignore duplicates and out-of-order/stale updates.
+      const last = lastSeqByUser.get(signal.userType);
+      if (last !== undefined && signal.seq <= last) return;
+      lastSeqByUser.set(signal.userType, signal.seq);
+      sosLog('SESSION', 'MEDIA_STATE signal received', signal);
+      onSignal(signal);
+      return;
+    }
+
+    const key = `CALL_ENDED:${signal.at}:${signal.endedByType}`;
     if (handled.has(key)) return;
     handled.add(key);
     sosLog('SESSION', `${signal.type} signal received`, signal);
@@ -156,7 +173,8 @@ export function attachCallSignalChannel(
   return {
     isOpen: () => outgoing?.readyState === 'open',
     sendCallEnded: (payload) => send({ type: 'CALL_ENDED', at: Date.now(), ...payload }),
-    sendMediaState: (payload) => send({ type: 'MEDIA_STATE', at: Date.now(), ...payload }),
+    sendMediaState: (payload) =>
+      send({ type: 'MEDIA_STATE', at: Date.now(), seq: ++outSeq, ...payload }),
     close: () => {
       try {
         outgoing?.close?.();
