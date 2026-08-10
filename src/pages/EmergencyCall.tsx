@@ -2,375 +2,98 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { WebRTCVideoCall } from "@/components/sos/WebRTCVideoCall";
 import EmergencyVideoCall, { type EndCallInfo } from "@/components/EmergencyVideoCall";
 import { SkeletonFullPage } from "@/components/skeletons/Skeletons";
-import { acquireCallLock } from "@/lib/callLock";
-import { findOngoingCallForUser, sessionIdOf } from "@/lib/emergencyCallGuard";
-import { persistExplicitTermination } from "@/lib/callTermination";
-import { completionReasonFor } from "@/lib/emergencyEndReasons";
-import { sosLog } from "@/lib/sosLogger";
-import { trackSosEvent, SOS_EVENTS } from "@/lib/sosTrace";
+import { useEmergencySession } from "@/hooks/useEmergencySession";
 
-
+/**
+ * Emergency (SOS) call route.
+ *
+ * This page is a thin UI shell: the whole request/session lifecycle lives in
+ * `useEmergencySession` and the media/WebRTC layer lives in
+ * `EmergencyVideoCall` + `useWebRTC`.
+ */
 const EmergencyCall = () => {
-  const { requestId: requestIdParam, sessionId } = useParams();
+  const { requestId: requestIdParam, sessionId: sessionIdParam } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
-  const [sessionIdState, setSessionIdState] = useState<string | null>(null);
-  const [userType, setUserType] = useState<'psychologist' | 'patient'>('patient');
+  const [sessionId, setSessionId] = useState<string | null>(null);
 
-  // The requestId may come from the route (legacy flow) or from the query
-  // string (direct session route) — both must keep the request lifecycle in sync.
-  const requestIdFromUrl = requestIdParam || searchParams.get('requestId') || undefined;
-
-  // The emergency request is the source of truth for the session lifecycle.
-  // When the URL only carries the sessionId (direct route / page refresh), we
-  // resolve it from `webrtc_sessions` instead of relying on the URL.
-  const [resolvedRequestId, setResolvedRequestId] = useState<string | undefined>(requestIdFromUrl);
-  const requestId = resolvedRequestId;
-
-  // Check if this is a direct session ID route
-  const isDirectSessionRoute = !!sessionId;
-
+  const userType =
+    (searchParams.get("userType") as "psychologist" | "patient") || "patient";
+  const requestIdFromUrl = requestIdParam || searchParams.get("requestId") || null;
 
   useEffect(() => {
     document.title = "Chamada de Emergência | Soliv";
   }, []);
 
+  // The session id is the official room identifier — never trust the URL alone.
   useEffect(() => {
-    if (requestIdFromUrl) {
-      setResolvedRequestId(requestIdFromUrl);
-      return;
-    }
-    if (!sessionIdState) return;
-
-    let cancelled = false;
-    const resolveRequest = async () => {
-      const { data } = await supabase
-        .from("webrtc_sessions")
-        .select("emergency_request_id")
-        .eq("id", sessionIdState)
-        .maybeSingle();
-
-      if (!cancelled && data?.emergency_request_id) {
-        sosLog("SESSION", "emergency request resolved from session", {
-          sessionId: sessionIdState,
-          requestId: data.emergency_request_id,
-        });
-        setResolvedRequestId(data.emergency_request_id);
-      }
-    };
-
-    resolveRequest();
-    return () => {
-      cancelled = true;
-    };
-  }, [requestIdFromUrl, sessionIdState]);
-
-  useEffect(() => {
-    // If this is a direct session route, use the new component
-    if (isDirectSessionRoute && sessionId) {
-      console.log('✅ Direct session route detected with sessionId:', sessionId);
-      setSessionIdState(sessionId);
-      const userTypeParam = searchParams.get('userType') as 'psychologist' | 'patient' || 'patient';
-      setUserType(userTypeParam);
+    const fromUrl = sessionIdParam || searchParams.get("sessionId") || searchParams.get("session_id");
+    if (fromUrl) {
+      setSessionId(fromUrl);
       setLoading(false);
       return;
     }
 
-    // Otherwise use the legacy emergency request flow
-    const initializeCall = async () => {
-      if (!requestId) return;
-
-      try {
-        // Get session ID from URL params or create new session
-        const sessionIdFromParams = searchParams.get('sessionId');
-        const userTypeFromParams = searchParams.get('userType') as 'psychologist' | 'patient' || 'patient';
-        
-        setUserType(userTypeFromParams);
-
-        if (sessionIdFromParams) {
-          console.log('✅ Using sessionId from search params:', sessionIdFromParams);
-          setSessionIdState(sessionIdFromParams);
-        } else {
-          // Create new WebRTC session for patient
-          console.log('Creating new WebRTC session for patient...');
-          
-          const { data: userData } = await supabase.auth.getUser();
-          if (!userData.user) {
-            console.error('No authenticated user found');
-            throw new Error('User not authenticated');
-          }
-
-          const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-          if (sessionError || !sessionData.session) {
-            console.error('Session error:', sessionError);
-            throw new Error('Usuário não autenticado - faça login novamente');
-          }
-
-          console.log('Patient session check:', {
-            hasSession: !!sessionData.session,
-            hasToken: !!sessionData.session?.access_token,
-            userEmail: sessionData.session?.user?.email,
-            userType: userTypeFromParams
-          });
-
-          // Check token expiry and refresh if needed
-          const now = Math.floor(Date.now() / 1000);
-          const expiresAt = sessionData.session.expires_at || 0;
-          if (expiresAt - now < 300) {
-            console.log('Token expires soon, refreshing...');
-            const { data: refreshedSession, error: refreshError } = await supabase.auth.refreshSession();
-            if (refreshError || !refreshedSession.session) {
-              console.error('Token refresh failed:', refreshError);
-              throw new Error('Falha ao renovar autenticação');
-            }
-            sessionData.session = refreshedSession.session;
-          }
-          
-          // Get session data from URL path parameter first, then search params as fallback
-          const sessionIdFromPath = sessionId; // from useParams
-          const sessionIdFromSearch = searchParams.get('session_id');
-          const finalSessionId = sessionIdFromPath || sessionIdFromSearch;
-          
-          console.log('✅ Session ID from path:', sessionIdFromPath);
-          console.log('✅ Session ID from search params:', sessionIdFromSearch);
-          console.log('✅ Final Session ID:', finalSessionId);
-          
-          if (!finalSessionId) {
-            throw new Error('Session ID não encontrado na URL - tente aceitar a emergência novamente');
-          }
-          
-          // Use the session_id directly since it was created by psychologist-emergency
-          const webrtcData = {
-            success: true,
-            session_id: finalSessionId,
-            stun_servers: ["stun:stun.l.google.com:19302", "stun:global.stun.twilio.com:3478"]
-          };
-          
-          console.log('✅ Using session from emergency acceptance:', webrtcData);
-
-          if (!webrtcData?.session_id) {
-            console.error('Invalid response from WebRTC function:', webrtcData);
-            throw new Error('Falha ao obter ID da sessão de vídeo');
-          }
-
-          setSessionIdState(webrtcData.session_id);
-        }
-
-      } catch (error) {
-        console.error("Error initializing call:", error);
-        toast({
-          title: "Erro",
-          description: "Erro ao inicializar chamada",
-          variant: "destructive",
-        });
-        navigate("/home");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    initializeCall();
-  }, [requestId, sessionId, searchParams, navigate, toast, isDirectSessionRoute]);
-
-  // Single active call guard: block duplicated tabs and simultaneous rooms
-  useEffect(() => {
-    if (!sessionIdState) return;
-    let release: (() => void) | null = null;
-    let cancelled = false;
-
-    const run = async () => {
-      const { data: auth } = await supabase.auth.getUser();
-      const userId = auth.user?.id;
-      if (!userId || cancelled) return;
-
-      const lockResult = acquireCallLock(userId, sessionIdState);
-      if (lockResult.ok === false) {
-        const duplicateTab = lockResult.reason === "duplicate-tab";
-        toast({
-          title: duplicateTab ? "Chamada já aberta" : "Chamada em andamento",
-          description: duplicateTab
-            ? "Esta chamada já está aberta em outra aba ou janela."
-            : "Você já está em outra chamada. Finalize-a antes de entrar nesta.",
-          variant: "destructive",
-        });
-        navigate(userType === "psychologist" ? "/psychologist-dashboard" : "/home");
-        return;
-      }
-      release = lockResult.release;
-
-
-      // Server-side guard: the user must not be attending a different room
-      const ongoing = await findOngoingCallForUser(userId);
-      const ongoingSession = sessionIdOf(ongoing);
-      if (!cancelled && ongoing && ongoingSession && ongoingSession !== sessionIdState) {
-        toast({
-          title: "Chamada em andamento",
-          description: "Você já possui uma chamada de emergência ativa. Retornando para ela.",
-        });
-        navigate(
-          `/emergency-call/${ongoingSession}?userType=${userType}&requestId=${ongoing.id}`,
-          { replace: true }
-        );
-      }
-    };
-
-    run();
-
-    return () => {
-      cancelled = true;
-      release?.();
-    };
-  }, [sessionIdState, userType, navigate, toast]);
-
-  // Mark emergency call as started (only once — reconnections must not reset it)
-  useEffect(() => {
-    const markCallAsStarted = async () => {
-      if (!requestId || !sessionIdState) return;
-
-      try {
-        const { data: current } = await supabase
-          .from("emergency_requests")
-          .select("started_at, status, ended_at")
-          .eq("id", requestId)
-          .maybeSingle();
-
-        // Call already finished — do not reopen it.
-        if (current?.ended_at || current?.status === "completed") {
-          toast({
-            title: "Chamada encerrada",
-            description: "Esta chamada de emergência já foi finalizada.",
-          });
-          navigate(userType === "psychologist" ? "/psychologist-dashboard" : "/home");
-          return;
-        }
-
-        const isFirstJoin = !current?.started_at;
-
-        const { error } = await supabase
-          .from("emergency_requests")
-          .update({
-            ...(isFirstJoin ? { started_at: new Date().toISOString() } : {}),
-            status: "in_progress",
-          })
-          .eq("id", requestId);
-
-        if (error) throw error;
-
-        trackSosEvent({
-          eventType: isFirstJoin ? SOS_EVENTS.CALL_STARTED : SOS_EVENTS.ROOM_JOINED,
-          requestId,
-          sessionId: sessionIdState,
-          actorType: userType,
-          message: isFirstJoin ? "Chamada iniciada" : "Participante entrou na sala",
-          metadata: { isFirstJoin },
-        });
-
-        // Mark SOS as used for patients (only on the first join)
-        if (userType === "patient" && isFirstJoin) {
-          await supabase.functions.invoke("mark-sos-used", {
-            body: { request_id: requestId },
-          });
-        }
-      } catch (error) {
-        console.error("Error marking call as started:", error);
-      }
-    };
-
-    markCallAsStarted();
-  }, [requestId, sessionIdState, userType, navigate, toast]);
-
-  const endCall = async (info?: EndCallInfo) => {
-    const goBack = () =>
-      navigate(userType === "psychologist" ? "/psychologist-dashboard" : "/home");
-
-    if (!requestId) {
-      goBack();
+    if (!requestIdFromUrl) {
+      setLoading(false);
       return;
     }
 
-    try {
-      const endTime = new Date().toISOString();
-      const { data: auth } = await supabase.auth.getUser();
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("webrtc_sessions")
+        .select("id")
+        .eq("emergency_request_id", requestIdFromUrl)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-      await persistExplicitTermination(supabase, {
-        requestId,
-        sessionId: sessionIdState,
-        userId: auth.user?.id ?? null,
-        endedByType: info?.endedByType ?? userType,
-        reason: info?.reason ?? completionReasonFor(userType),
-        endedAt: endTime,
-        crisisResolved: info?.crisisResolved ?? null,
-        notes: info?.notes ?? null,
-      });
+      if (!cancelled) {
+        setSessionId(data?.id ?? null);
+        setLoading(false);
+      }
+    })();
 
-      trackSosEvent({
-        eventType: SOS_EVENTS.CALL_ENDED_BY_PARTICIPANT,
-        requestId,
-        sessionId: sessionIdState,
-        actorType: info?.endedByType ?? userType,
-        actorUserId: auth.user?.id ?? null,
-        message: "Encerramento explícito pelo participante",
-        metadata: {
-          reason: info?.reason ?? completionReasonFor(userType),
-          crisisResolved: info?.crisisResolved ?? null,
-          endedAt: endTime,
-        },
-      });
+    return () => {
+      cancelled = true;
+    };
+  }, [sessionIdParam, searchParams, requestIdFromUrl]);
 
-
-
-      goBack();
-    } catch (error) {
-      console.error("Error ending call:", error);
-      toast({
-        title: "Erro",
-        description: "Erro ao finalizar chamada",
-        variant: "destructive",
-      });
-    }
-  };
-
+  const { endSession } = useEmergencySession({
+    sessionId,
+    requestIdFromUrl,
+    userType,
+  });
 
   if (loading) {
     return <SkeletonFullPage />;
   }
 
-  if (!sessionIdState) {
+  if (!sessionId) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-lg">Erro ao carregar sessão de vídeo</p>
-          <Button onClick={() => navigate("/home")} className="mt-4">
-            Voltar ao início
+      <div className="min-h-screen bg-background flex items-center justify-center px-6">
+        <div className="text-center space-y-4">
+          <p className="text-lg font-medium">Não foi possível abrir a sala de atendimento</p>
+          <p className="text-sm text-muted-foreground">
+            A sessão desta emergência não está mais disponível.
+          </p>
+          <Button onClick={() => navigate(userType === "psychologist" ? "/psychologist-dashboard" : "/home")}>
+            Voltar
           </Button>
         </div>
       </div>
     );
   }
 
-  // Use the new component for direct session routes
-  if (isDirectSessionRoute) {
-    return (
-      <EmergencyVideoCall
-        sessionId={sessionIdState}
-        userType={userType}
-        onEndCall={endCall}
-      />
-    );
-  }
-
-  // Legacy component for emergency request routes
   return (
-    <WebRTCVideoCall 
-      sessionId={sessionIdState} 
-      userType={userType} 
-      onEndCall={endCall} 
+    <EmergencyVideoCall
+      sessionId={sessionId}
+      userType={userType}
+      onEndCall={(info?: EndCallInfo) => endSession(info)}
     />
   );
 };
