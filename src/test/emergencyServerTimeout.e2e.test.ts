@@ -210,13 +210,13 @@ describe('SOS — encerramento por timeout 100% server-side', () => {
   it('é idempotente: rodar o finalizador várias vezes não reescreve o desfecho', () => {
     seedCall({ startedMinutesAgo: 25 });
     runServerFinalizer();
-    const snapshot = { ...request(), ...{ session: { ...session() } } };
+    const snapshot = { request: { ...request() }, session: { ...session() } };
 
     const second = runServerFinalizer();
     const third = runServerFinalizer();
 
     expect(second.timedOut + third.timedOut).toBe(0);
-    expect(request().ended_at).toBe(snapshot.ended_at);
+    expect(request().ended_at).toBe(snapshot.request.ended_at);
     expect(request().end_reason).toBe(END_REASONS.TIME_LIMIT);
     expect(session().ended_at).toBe(snapshot.session.ended_at);
   });
