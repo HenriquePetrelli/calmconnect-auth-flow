@@ -160,6 +160,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     updateDeviceStream,
     sendCallEndedSignal,
     remoteMediaState,
+    isRemoteMediaStale,
     sendMediaState
 
   } = useWebRTC({
@@ -1312,6 +1313,19 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
           </div>
         )}
 
+
+        {/* Aviso: estado de câmera/microfone do outro participante pode estar desatualizado */}
+        {isRemoteMediaStale && isConnected && (
+          <div
+            data-testid="remote-media-stale"
+            className={`absolute ${banner.visible ? 'top-24' : 'top-4'} left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 rounded-full bg-muted/90 text-muted-foreground px-3 py-1.5 shadow-md backdrop-blur-sm`}
+          >
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            <span className="text-[11px] md:text-xs font-medium">
+              Status de câmera/microfone desatualizado — sincronizando...
+            </span>
+          </div>
+        )}
 
         {/* Placeholder quando não conectado */}
         {!isConnected && (

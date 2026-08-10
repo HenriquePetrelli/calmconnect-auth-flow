@@ -11,7 +11,7 @@ import { sosLog } from './sosLogger';
 
 export const CALL_SIGNAL_CHANNEL = 'sos-control';
 
-export type CallSignalType = 'CALL_ENDED' | 'MEDIA_STATE';
+export type CallSignalType = 'CALL_ENDED' | 'MEDIA_STATE' | 'MEDIA_STATE_REQUEST';
 
 export interface CallEndedSignal {
   type: 'CALL_ENDED';
@@ -44,7 +44,20 @@ export interface MediaStateSignal {
   at: number;
 }
 
-export type CallSignal = CallEndedSignal | MediaStateSignal;
+/**
+ * Asks the peer to re-announce its current media state.
+ *
+ * Sent right after the control channel recovers (reconnection, ICE restart),
+ * so a temporarily stale remote camera/mic indicator is refreshed immediately
+ * instead of waiting for the next toggle or database round-trip.
+ */
+export interface MediaStateRequestSignal {
+  type: 'MEDIA_STATE_REQUEST';
+  from: 'patient' | 'psychologist';
+  at: number;
+}
+
+export type CallSignal = CallEndedSignal | MediaStateSignal | MediaStateRequestSignal;
 
 const USER_TYPES = ['patient', 'psychologist'];
 
@@ -65,6 +78,15 @@ export function parseCallSignal(raw: unknown): CallSignal | null {
         displayName: typeof parsed.displayName === 'string' ? parsed.displayName : null,
         avatarUrl: typeof parsed.avatarUrl === 'string' ? parsed.avatarUrl : null,
         seq: typeof parsed.seq === 'number' ? parsed.seq : 0,
+        at: typeof parsed.at === 'number' ? parsed.at : Date.now(),
+      };
+    }
+
+    if (parsed.type === 'MEDIA_STATE_REQUEST') {
+      if (!USER_TYPES.includes(parsed.from)) return null;
+      return {
+        type: 'MEDIA_STATE_REQUEST',
+        from: parsed.from,
         at: typeof parsed.at === 'number' ? parsed.at : Date.now(),
       };
     }
@@ -101,6 +123,8 @@ export interface CallSignalChannel {
   sendCallEnded: (payload: Omit<CallEndedSignal, 'type' | 'at'>) => boolean;
   /** Sends the local camera/mic/avatar state to the peer (best effort). */
   sendMediaState: (payload: Omit<MediaStateSignal, 'type' | 'at' | 'seq'>) => boolean;
+  /** Asks the peer to re-announce its media state (used after a recovery). */
+  requestMediaState: (from: 'patient' | 'psychologist') => boolean;
   /** True when the control channel is open and messages can be delivered now. */
   isOpen: () => boolean;
   close: () => void;
@@ -132,6 +156,12 @@ export function attachCallSignalChannel(
       if (last !== undefined && signal.seq <= last) return;
       lastSeqByUser.set(signal.userType, signal.seq);
       sosLog('SESSION', 'MEDIA_STATE signal received', signal);
+      onSignal(signal);
+      return;
+    }
+
+    if (signal.type === 'MEDIA_STATE_REQUEST') {
+      sosLog('SESSION', 'MEDIA_STATE_REQUEST signal received', signal);
       onSignal(signal);
       return;
     }
@@ -175,6 +205,7 @@ export function attachCallSignalChannel(
     sendCallEnded: (payload) => send({ type: 'CALL_ENDED', at: Date.now(), ...payload }),
     sendMediaState: (payload) =>
       send({ type: 'MEDIA_STATE', at: Date.now(), seq: ++outSeq, ...payload }),
+    requestMediaState: (from) => send({ type: 'MEDIA_STATE_REQUEST', from, at: Date.now() }),
     close: () => {
       try {
         outgoing?.close?.();

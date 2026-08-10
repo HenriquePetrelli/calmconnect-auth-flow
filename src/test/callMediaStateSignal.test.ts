@@ -167,3 +167,31 @@ describe('MEDIA_STATE ordenação com eventos concorrentes', () => {
     expect(received).toHaveLength(2);
   });
 });
+
+describe('MEDIA_STATE_REQUEST (recuperação do data channel)', () => {
+  it('faz o peer reanunciar o estado de mídia ao receber o pedido', () => {
+    const pair = makePeerPair();
+    const psychologistSignals: CallSignal[] = [];
+    const patientSignals: CallSignal[] = [];
+
+    const psychologist = attachCallSignalChannel(pair.pcA, (s) => psychologistSignals.push(s));
+    const patient = attachCallSignalChannel(pair.pcB, (s) => patientSignals.push(s));
+    pair.connect();
+
+    // O paciente perdeu o canal e, ao recuperar, pede o estado atual.
+    expect(patient.requestMediaState('patient')).toBe(true);
+    expect(psychologistSignals[0]).toMatchObject({ type: 'MEDIA_STATE_REQUEST', from: 'patient' });
+
+    // O psicólogo responde com seu estado real (microfone mutado).
+    psychologist.sendMediaState({ userType: 'psychologist', muted: true, cameraOff: false });
+    expect(patientSignals.at(-1)).toMatchObject({ type: 'MEDIA_STATE', muted: true });
+  });
+
+  it('valida o remetente do pedido', () => {
+    expect(parseCallSignal(JSON.stringify({ type: 'MEDIA_STATE_REQUEST', from: 'alien' }))).toBeNull();
+    expect(parseCallSignal(JSON.stringify({ type: 'MEDIA_STATE_REQUEST', from: 'patient' }))).toMatchObject({
+      type: 'MEDIA_STATE_REQUEST',
+      from: 'patient',
+    });
+  });
+});
