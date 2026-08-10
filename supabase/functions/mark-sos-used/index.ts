@@ -84,6 +84,19 @@ serve(async (req) => {
 
     const patientId = (emergency as any).patient_id as string;
 
+    // Only the owner of the emergency request may consume their own SOS quota.
+    const { data: authData } = await supabaseService.auth.getUser(
+      authHeader.replace("Bearer ", "")
+    );
+    if (!authData?.user || authData.user.id !== patientId) {
+      logStep("Caller is not the request owner", { requestId });
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 403,
+      });
+    }
+
+
     // Fetch subscriber row for the patient
     const { data: subscriber } = await supabaseService
       .from('subscribers')
