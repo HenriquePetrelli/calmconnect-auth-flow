@@ -41,6 +41,7 @@ import {
   unresolvedCrisisLabel,
 } from '@/lib/emergencyEndReasons';
 import { sosLog } from '@/lib/sosLogger';
+import { endEmergencySession } from '@/lib/endEmergencySession';
 
 export interface EndCallInfo {
   reason: string;
