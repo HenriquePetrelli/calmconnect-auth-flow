@@ -42,6 +42,14 @@ import {
 } from '@/lib/emergencyEndReasons';
 import { sosLog } from '@/lib/sosLogger';
 import { endEmergencySession } from '@/lib/endEmergencySession';
+import CallDiagnosticsPanel from '@/components/sos/CallDiagnosticsPanel';
+import {
+  isDiagnosticsEnabled,
+  isDiagnosticsShortcut,
+  persistDiagnosticsFlag,
+  type DiagnosticsInput,
+} from '@/lib/callDiagnostics';
+import { buildTraceId } from '@/lib/sosTrace';
 
 export interface EndCallInfo {
   reason: string;
