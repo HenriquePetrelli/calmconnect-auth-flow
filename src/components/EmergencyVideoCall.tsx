@@ -119,6 +119,11 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   const [currentUserName, setCurrentUserName] = useState<string>('');
   const [remoteMuted, setRemoteMuted] = useState(false);
   const [remoteIsCameraOff, setRemoteIsCameraOff] = useState(false);
+  // Name announced by the peer over the data channel (used on the avatar).
+  const [remoteDisplayName, setRemoteDisplayName] = useState<string | null>(null);
+  // Timestamp of the last data-channel media update — database events older
+  // than it are ignored so the slow round-trip never overrides the fast path.
+  const lastMediaSignalAtRef = useRef(0);
   const [callTerminatedMessage, setCallTerminatedMessage] = useState<string | null>(null);
   // Moment this client joined the call — used to ignore stale "call ended" events.
   const joinedAtRef = useRef<number>(Date.now());
@@ -150,7 +155,9 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     toggleVideo,
     cleanup,
     updateDeviceStream,
-    sendCallEndedSignal
+    sendCallEndedSignal,
+    remoteMediaState,
+    sendMediaState
 
   } = useWebRTC({
     sessionId: sessionId || '',
@@ -352,6 +359,8 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
         const handleSessionUpdate = (event: CustomEvent) => {
           const sessionData = event.detail;
           const remoteUserType = userType === 'patient' ? 'psychologist' : 'patient';
+          // The data channel is the fast path; skip stale database echoes.
+          if (Date.now() - lastMediaSignalAtRef.current < 5000) return;
           
           // Update remote mute status
           const remoteMutedKey = `${remoteUserType}_muted`;
@@ -587,15 +596,16 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
           const remoteUserType = userType === 'patient' ? 'psychologist' : 'patient';
           
           console.log('📡 Received session update:', newData);
+          const mediaFromSignalIsFresher = Date.now() - lastMediaSignalAtRef.current < 5000;
           
           // Update remote mute status
-          if (newData[`${remoteUserType}_muted`] !== undefined) {
+          if (!mediaFromSignalIsFresher && newData[`${remoteUserType}_muted`] !== undefined) {
             setRemoteMuted(newData[`${remoteUserType}_muted`]);
             console.log('🎤 Remote mute status updated:', newData[`${remoteUserType}_muted`]);
           }
           
           // Update remote camera status
-          if (newData[`${remoteUserType}_camera_off`] !== undefined) {
+          if (!mediaFromSignalIsFresher && newData[`${remoteUserType}_camera_off`] !== undefined) {
             setRemoteIsCameraOff(newData[`${remoteUserType}_camera_off`]);
             console.log('📹 Remote camera status updated:', newData[`${remoteUserType}_camera_off`]);
           }
@@ -625,6 +635,26 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
       supabase.removeChannel(channel);
     };
   }, [sessionId, userType, enhancedCleanup]);
+
+  // Fast path: camera/mic/avatar of the remote peer via WebRTC data channel.
+  useEffect(() => {
+    if (!remoteMediaState) return;
+    lastMediaSignalAtRef.current = Date.now();
+    setRemoteMuted(remoteMediaState.muted);
+    setRemoteIsCameraOff(remoteMediaState.cameraOff);
+    if (remoteMediaState.displayName) setRemoteDisplayName(remoteMediaState.displayName);
+  }, [remoteMediaState]);
+
+  // Announce our own state as soon as the channel is usable and on every change.
+  useEffect(() => {
+    sendMediaState({
+      userType,
+      cameraOff: isCameraOff,
+      muted: isMuted,
+      displayName: currentUserName || null,
+      avatarUrl: null,
+    });
+  }, [sendMediaState, userType, isCameraOff, isMuted, currentUserName, isConnected]);
 
   // Sync initial remote mute/camera status from current session
   useEffect(() => {
@@ -763,6 +793,15 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
       
       // Execute toggle in WebRTC hook
       const muted = toggleAudio();
+
+      // Fast path: tell the peer right away (no database round-trip).
+      sendMediaState({
+        userType,
+        muted,
+        cameraOff: isCameraOff,
+        displayName: currentUserName || null,
+        avatarUrl: null,
+      });
       
       // Communicate status via Supabase
       if (sessionId) {
@@ -797,6 +836,15 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
       
       // Execute toggle
       const cameraOff = toggleVideo();
+
+      // Fast path: tell the peer right away (no database round-trip).
+      sendMediaState({
+        userType,
+        muted: isMuted,
+        cameraOff,
+        displayName: currentUserName || null,
+        avatarUrl: null,
+      });
       
       // Communicate camera status to remote peer via Supabase
       if (sessionId) {
@@ -1204,11 +1252,15 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
               <div className="text-center">
                 <div className="w-32 h-32 md:w-40 md:h-40 mx-auto rounded-full bg-gradient-primary flex items-center justify-center mb-4 shadow-2xl">
                   <span className="text-white font-bold text-3xl md:text-5xl">
-                    {userType === 'patient' ? (userInfo.name?.charAt(0)?.toUpperCase() || 'Dr') : (userInfo.name?.charAt(0)?.toUpperCase() || 'P')}
+                    {(remoteDisplayName || userInfo.name)?.charAt(0)?.toUpperCase() ||
+                      (userType === 'patient' ? 'Dr' : 'P')}
                   </span>
                 </div>
                 <div className="text-muted-foreground text-base md:text-lg px-4">
-                  {userType === 'patient' ? 'Dr. ' + (userInfo.name || 'Psicólogo') : (userInfo.name || 'Paciente')} desligou a câmera
+                  {userType === 'patient'
+                    ? 'Dr. ' + (remoteDisplayName || userInfo.name || 'Psicólogo')
+                    : remoteDisplayName || userInfo.name || 'Paciente'}{' '}
+                  desligou a câmera
                 </div>
               </div>
             </div>
