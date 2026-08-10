@@ -1046,8 +1046,9 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
 
   // Hard guarantee: leaving the call screen (navigation, back button, tab
   // teardown) always releases camera/microphone, even while connected.
-  const cleanupRef = useRef<() => void>();
-  cleanupRef.current = cleanup;
+  const unmountCleanupRef = useRef<(() => void) | undefined>(undefined);
+  unmountCleanupRef.current = cleanup;
+
   useEffect(() => {
     return () => {
       try {
