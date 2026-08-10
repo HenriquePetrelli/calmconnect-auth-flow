@@ -86,6 +86,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOff, setIsCameraOff] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [initTimedOut, setInitTimedOut] = useState(false);
   const [sessionValid, setSessionValid] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
