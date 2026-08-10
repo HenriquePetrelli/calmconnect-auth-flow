@@ -66,6 +66,10 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
   const [remoteMediaState, setRemoteMediaState] = useState<MediaStateSignal | null>(null);
   /** Last media state we announced — re-sent whenever the channel (re)opens. */
   const localMediaStateRef = useRef<Omit<MediaStateSignal, 'type' | 'at' | 'seq'> | null>(null);
+  /** True while the remote media state may be outdated (control channel down). */
+  const [isRemoteMediaStale, setIsRemoteMediaStale] = useState(false);
+  /** Local clock of the last MEDIA_STATE actually received from the peer. */
+  const remoteMediaReceivedAtRef = useRef(0);
 
   const attemptReconnectRef = useRef<((pc: RTCPeerConnection) => void) | null>(null);
   const { toast } = useToast();
@@ -182,12 +186,22 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
         if (signal.type === 'MEDIA_STATE') {
           // Ignore our own echo and out-of-order updates.
           if (signal.userType === userType) return;
+          // A fresh update means the remote view is up to date again.
+          remoteMediaReceivedAtRef.current = Date.now();
+          setIsRemoteMediaStale(false);
           // Last-write-wins by sequence (falls back to timestamp for old peers).
           setRemoteMediaState((prev) => {
             if (!prev) return signal;
             if (signal.seq !== prev.seq) return signal.seq > prev.seq ? signal : prev;
             return signal.at >= prev.at ? signal : prev;
           });
+          return;
+        }
+        if (signal.type === 'MEDIA_STATE_REQUEST') {
+          // The peer recovered its channel and wants our current media state.
+          if (signal.from === userType) return;
+          const payload = localMediaStateRef.current;
+          if (payload) signalChannelRef.current?.sendMediaState(payload);
           return;
         }
         if (signal.type !== 'CALL_ENDED') return;
@@ -584,6 +598,35 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     }, 800);
     return () => clearInterval(timer);
   }, [isConnected]);
+
+  // Staleness watchdog for the remote media indicators.
+  //
+  // While the control channel is down (reconnection, network loss) the remote
+  // camera/mic state we render can no longer be trusted. We flag it so the UI
+  // can warn the user, and the moment the channel recovers we ask the peer to
+  // re-announce — no database round-trip, no waiting for the next toggle.
+  useEffect(() => {
+    let wasOpen = false;
+    const evaluate = () => {
+      const open = signalChannelRef.current?.isOpen() ?? false;
+
+      if (open && !wasOpen) {
+        // Recovered: pull the peer's current state and push ours.
+        signalChannelRef.current?.requestMediaState(userType);
+        const payload = localMediaStateRef.current;
+        if (payload) signalChannelRef.current?.sendMediaState(payload);
+      }
+      wasOpen = open;
+
+      const knowsRemote = remoteMediaReceivedAtRef.current > 0;
+      const degraded = !open || isNetworkOfflineRef.current || isReconnectingRef.current;
+      setIsRemoteMediaStale(knowsRemote && degraded);
+    };
+
+    evaluate();
+    const timer = setInterval(evaluate, 1000);
+    return () => clearInterval(timer);
+  }, [userType]);
 
   const cleanup = useCallback(() => {
     // Prevent multiple cleanup calls
@@ -1015,6 +1058,8 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
 
     toggleVideo,
     remoteMediaState,
+    /** True when the remote camera/mic indicators may be outdated. */
+    isRemoteMediaStale,
     /** Announces the local camera/mic/avatar state to the peer instantly. */
     sendMediaState,
     cleanup,
