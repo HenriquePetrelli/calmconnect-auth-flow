@@ -1044,8 +1044,23 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
 
   }, [sessionId, userType, prefsLoading]);
 
+  // Hard guarantee: leaving the call screen (navigation, back button, tab
+  // teardown) always releases camera/microphone, even while connected.
+  const cleanupRef = useRef<() => void>();
+  cleanupRef.current = cleanup;
+  useEffect(() => {
+    return () => {
+      try {
+        cleanupRef.current?.();
+      } catch (error) {
+        console.warn('[WebRTC] unmount cleanup failed', error);
+      }
+    };
+  }, []);
+
   // (Removed duplicate delayed-initialize effect that caused duplicate realtime
   //  channel subscriptions and orphan media streams.)
+
 
   return {
     localVideoRef,
