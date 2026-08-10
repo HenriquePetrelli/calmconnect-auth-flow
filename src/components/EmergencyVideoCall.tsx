@@ -769,80 +769,24 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
       notes: info?.notes ?? null,
     };
     endInfoRef.current = endInfo;
-    const reason = endInfo.reason;
-    try {
-      sosLog('SESSION', 'participant ended call', endInfo);
 
-      // 0. Tell the peer immediately over the data channel (best effort) so the
-      //    other side closes the room without waiting for realtime propagation.
-      const signalDelivered = sendCallEndedSignal?.({ endedByType: userType, reason }) ?? false;
-      trackSosEvent({
-        eventType: SOS_EVENTS.CALL_ENDED_SIGNAL_SENT,
-        requestId: emergencyRequestIdRef.current,
-        sessionId,
-        actorType: userType,
-        message: 'CALL_ENDED enviado ao peer',
-        metadata: { reason, delivered: signalDelivered, crisisResolved: endInfo.crisisResolved },
-      });
-
-
-      
-      // 1. Update session status and mark who ended the call FIRST
-      if (sessionId) {
-        const { data: { user } } = await supabase.auth.getUser();
-        const { error } = await supabase
-          .from('webrtc_sessions')
-          .update({ 
-            status: 'completed',
-            ended_by: user?.id,
-            ended_by_type: userType,
-            end_reason: reason,
-            ended_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', sessionId);
-        
-        if (error) {
-          console.error('Error updating session status:', error);
-        } else {
-          console.log('📝 Session marked as completed in database');
-          trackSosEvent({
-            eventType: SOS_EVENTS.SESSION_COMPLETED,
-            requestId: emergencyRequestIdRef.current,
-            sessionId,
-            actorType: userType,
-            actorUserId: user?.id ?? null,
-            message: 'Sessão de vídeo marcada como concluída',
-            metadata: { reason },
-          });
-        }
-      }
-      
-      // 2. Enhanced cleanup of all media devices
-      await enhancedCleanup();
-      
-      // 3. Call cleanup from hook
-      cleanup();
-      
-      console.log('✅ Complete call cleanup finished');
-
-      // Show feedback modal
-      setShowFeedbackModal(true);
-    } catch (error) {
-      console.error('❌ Error ending call:', error);
-      toast({
-        title: 'Erro',
-        description: 'Erro ao finalizar chamada',
-        variant: 'destructive',
-      });
-      
-      if (onEndCall) {
-        onEndCall(endInfo);
-      } else {
-        navigate('/home');
-      }
-    }
+    // Single termination flow: signal → persist → trace → hardware/WebRTC cleanup.
+    const { data: auth } = await supabase.auth.getUser();
+    await endEmergencySession({
+      requestId: emergencyRequestIdRef.current,
+      sessionId,
+      userId: auth.user?.id ?? null,
+      endedBy: userType,
+      reason: endInfo.reason,
+      crisisResolved: endInfo.crisisResolved,
+      notes: endInfo.notes,
+      sendCallEndedSignal: sendCallEndedSignal,
+      stopMedia: enhancedCleanup,
+      closeWebRTC: cleanup,
+      onFinished: () => setShowFeedbackModal(true),
+    });
   };
+
 
   // Allows the shared timer to end the call when it expires.
   useEffect(() => {
