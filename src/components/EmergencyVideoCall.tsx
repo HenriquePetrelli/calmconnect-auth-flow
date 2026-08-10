@@ -43,6 +43,7 @@ import {
 import { sosLog } from '@/lib/sosLogger';
 import { endEmergencySession } from '@/lib/endEmergencySession';
 import CallDiagnosticsPanel from '@/components/sos/CallDiagnosticsPanel';
+import PatientContextPanel from '@/components/sos/PatientContextPanel';
 import {
   isDiagnosticsEnabled,
   isDiagnosticsShortcut,
