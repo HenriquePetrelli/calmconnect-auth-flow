@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { AlertTriangle, Phone, Wind } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import PageHeader from "@/components/PageHeader";
