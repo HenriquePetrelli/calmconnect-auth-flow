@@ -560,7 +560,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     console.log('📡 Setting up real-time session status synchronization...');
     
     const channel = supabase
-      .channel('webrtc-session-updates')
+      .channel(`webrtc-session-updates-${sessionId}`)
       .on(
         'postgres_changes',
         {

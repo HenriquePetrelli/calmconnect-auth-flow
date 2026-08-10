@@ -93,6 +93,14 @@ export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerNam
         throw new Error('User not authenticated');
       }
 
+      // Resolve the related emergency request (if any) so the feedback stays
+      // linked even if the webrtc session row is cleaned up later.
+      const { data: emergencyRow } = await supabase
+        .from('emergency_requests')
+        .select('id')
+        .eq('video_room_id', sessionId)
+        .maybeSingle();
+
       // Save feedback to database
       const { error: feedbackError } = await supabase
         .from('session_feedback')
@@ -104,6 +112,7 @@ export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerNam
             rating,
             problem_resolved: userType === 'patient' ? problemResolved : null,
             comment: comment.trim() || null,
+            emergency_request_id: emergencyRow?.id ?? null,
           },
           { onConflict: 'session_id,user_id' }
         );
@@ -112,28 +121,9 @@ export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerNam
         throw feedbackError;
       }
 
-      // Update psychologist average rating if it's a patient rating
-      if (userType === 'patient') {
-        const { data: session } = await supabase
-          .from('webrtc_sessions')
-          .select('psychologist_id')
-          .eq('id', sessionId)
-          .single();
+      // The psychologist average rating is recalculated server-side by a
+      // database trigger on session_feedback (no client-side update needed).
 
-        if (session?.psychologist_id) {
-          const { data: avgRating } = await supabase
-            .rpc('calculate_psychologist_average_rating', {
-              psychologist_user_id: session.psychologist_id
-            });
-
-          if (avgRating !== null) {
-            await supabase
-              .from('psychologists')
-              .update({ average_rating: avgRating })
-              .eq('user_id', session.psychologist_id);
-          }
-        }
-      }
 
       toast({
         title: 'Obrigado!',
