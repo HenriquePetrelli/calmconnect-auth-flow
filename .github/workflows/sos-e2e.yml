@@ -1,0 +1,55 @@
+name: SOS E2E
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * *"
+
+concurrency:
+  group: sos-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit-e2e:
+    name: Suíte SOS (vitest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Rodar testes SOS (integração/E2E simulados)
+        run: npx vitest run --reporter=verbose
+
+  browser-e2e:
+    name: Smoke SOS (${{ matrix.browser }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Instalar navegador ${{ matrix.browser }}
+        run: npx playwright install --with-deps ${{ matrix.browser }}
+      - name: Build da aplicação
+        run: npm run build
+      - name: Rodar smoke SOS
+        run: npx playwright test --project=${{ matrix.browser }}
+      - name: Publicar relatório
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ matrix.browser }}
+          path: playwright-report
+          retention-days: 7
