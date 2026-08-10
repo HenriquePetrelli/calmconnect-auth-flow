@@ -245,28 +245,48 @@ const SOS = () => {
         {/* Status da busca */}
         <Card className="w-full max-w-md">
           <CardContent className="p-8 text-center space-y-6">
-            {/* Loader animado */}
-            <div className="w-20 h-20 mx-auto">
-              <div className="relative w-full h-full">
-                <div className="absolute inset-0 rounded-full border-4 border-primary/20"></div>
-                <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
-                <div className="absolute inset-2 rounded-full border-2 border-primary/40 border-b-transparent animate-spin" style={{ animationDuration: '2s', animationDirection: 'reverse' }}></div>
+            {!expired && (
+              <div className="w-20 h-20 mx-auto">
+                <div className="relative w-full h-full">
+                  <div className="absolute inset-0 rounded-full border-4 border-primary/20"></div>
+                  <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+                  <div className="absolute inset-2 rounded-full border-2 border-primary/40 border-b-transparent animate-spin" style={{ animationDuration: '2s', animationDirection: 'reverse' }}></div>
+                </div>
               </div>
-            </div>
-            
-            <div className="space-y-3">
-              <h2 className="text-2xl font-semibold text-foreground">
-                Buscando profissional...
-              </h2>
-              <p className="text-primary font-medium">
-                Profissionais online: {availableProfessionals}
-              </p>
-              <p className="text-muted-foreground text-sm">
-                Assim que um psicólogo aceitar, abriremos a sala de vídeo automaticamente.
-              </p>
-            </div>
+            )}
+
+            {expired ? (
+              <div className="space-y-3">
+                <h2 className="text-2xl font-semibold text-foreground">
+                  Nenhum profissional pôde atender
+                </h2>
+                <p className="text-muted-foreground text-sm">
+                  Sua solicitação expirou após o tempo máximo de espera. Você pode tentar novamente
+                  ou usar os recursos de apoio abaixo.
+                </p>
+                <Button onClick={() => window.location.reload()} className="w-full">
+                  Tentar novamente
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <h2 className="text-2xl font-semibold text-foreground">
+                  Buscando profissional...
+                </h2>
+                <p className="text-primary font-medium">
+                  Profissionais disponíveis: {availableProfessionals}
+                </p>
+                <p className="text-2xl font-mono font-semibold text-foreground tabular-nums">
+                  {formatCountdown(secondsLeft)}
+                </p>
+                <p className="text-muted-foreground text-sm">
+                  Assim que um psicólogo aceitar, abriremos a sala de vídeo automaticamente.
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
+
 
         {/* Nenhum profissional online: orientar em vez de deixar esperando */}
         {availableProfessionals === 0 && (
