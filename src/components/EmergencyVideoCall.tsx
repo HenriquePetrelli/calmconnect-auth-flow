@@ -992,6 +992,28 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   const status = getConnectionStatus();
   const displayError = getDisplayError();
 
+  if (isLoading && initTimedOut) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <div className="max-w-md w-full text-center space-y-4">
+          <h2 className="text-xl font-semibold text-foreground">
+            Não conseguimos iniciar a chamada
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Verifique se o navegador liberou o acesso à câmera e ao microfone e se
+            nenhum outro aplicativo está usando esses dispositivos.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2 justify-center pt-2">
+            <Button onClick={() => window.location.reload()}>Tentar novamente</Button>
+            <Button variant="outline" onClick={() => navigate('/home')}>
+              Voltar para o início
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (isLoading) {
     // Show the intelligent initializer with delay and progress
     const VideoCallInitializer = React.lazy(() => 
