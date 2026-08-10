@@ -65,7 +65,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
   /** Last media state announced by the peer over the data channel (instant). */
   const [remoteMediaState, setRemoteMediaState] = useState<MediaStateSignal | null>(null);
   /** Last media state we announced — re-sent whenever the channel (re)opens. */
-  const localMediaStateRef = useRef<Omit<MediaStateSignal, 'type' | 'at'> | null>(null);
+  const localMediaStateRef = useRef<Omit<MediaStateSignal, 'type' | 'at' | 'seq'> | null>(null);
 
   const attemptReconnectRef = useRef<((pc: RTCPeerConnection) => void) | null>(null);
   const { toast } = useToast();
@@ -182,7 +182,12 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
         if (signal.type === 'MEDIA_STATE') {
           // Ignore our own echo and out-of-order updates.
           if (signal.userType === userType) return;
-          setRemoteMediaState((prev) => (prev && prev.at > signal.at ? prev : signal));
+          // Last-write-wins by sequence (falls back to timestamp for old peers).
+          setRemoteMediaState((prev) => {
+            if (!prev) return signal;
+            if (signal.seq !== prev.seq) return signal.seq > prev.seq ? signal : prev;
+            return signal.at >= prev.at ? signal : prev;
+          });
           return;
         }
         if (signal.type !== 'CALL_ENDED') return;
@@ -561,7 +566,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     return false;
   }, [localStream]);
 
-  const sendMediaState = useCallback((payload: Omit<MediaStateSignal, 'type' | 'at'>) => {
+  const sendMediaState = useCallback((payload: Omit<MediaStateSignal, 'type' | 'at' | 'seq'>) => {
     localMediaStateRef.current = payload;
     return signalChannelRef.current?.sendMediaState(payload) ?? false;
   }, []);
