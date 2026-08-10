@@ -561,6 +561,11 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     return false;
   }, [localStream]);
 
+  const sendMediaState = useCallback((payload: Omit<MediaStateSignal, 'type' | 'at'>) => {
+    localMediaStateRef.current = payload;
+    return signalChannelRef.current?.sendMediaState(payload) ?? false;
+  }, []);
+
   // Re-announce our media state whenever the peer connection comes up, so the
   // remote side never renders a stale camera/avatar after a (re)connection.
   useEffect(() => {
@@ -1006,10 +1011,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     toggleVideo,
     remoteMediaState,
     /** Announces the local camera/mic/avatar state to the peer instantly. */
-    sendMediaState: (payload: Omit<MediaStateSignal, 'type' | 'at'>) => {
-      localMediaStateRef.current = payload;
-      return signalChannelRef.current?.sendMediaState(payload) ?? false;
-    },
+    sendMediaState,
     cleanup,
     updateDeviceStream,
     /** Signals CALL_ENDED to the peer over the data channel (best effort). */
