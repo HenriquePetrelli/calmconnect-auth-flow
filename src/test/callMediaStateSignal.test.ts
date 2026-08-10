@@ -15,8 +15,14 @@ const makePeerPair = () => {
     },
   });
 
+  // Outgoing channel on each side + the mirror the other side receives.
   const aOut = makeChannel();
+  const aIn = makeChannel();
   const bOut = makeChannel();
+  const bIn = makeChannel();
+  aOut.peer = aIn;
+  bOut.peer = bIn;
+
   const pcA: any = { ondatachannel: null, createDataChannel: () => aOut };
   const pcB: any = { ondatachannel: null, createDataChannel: () => bOut };
 
@@ -24,10 +30,8 @@ const makePeerPair = () => {
     pcA,
     pcB,
     connect() {
-      aOut.peer = bOut;
-      bOut.peer = aOut;
-      pcA.ondatachannel?.({ channel: bOut });
-      pcB.ondatachannel?.({ channel: aOut });
+      pcB.ondatachannel?.({ channel: aIn });
+      pcA.ondatachannel?.({ channel: bIn });
     },
   };
 };
