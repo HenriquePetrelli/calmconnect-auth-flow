@@ -527,18 +527,24 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
       console.log('🧹 Enhanced clear remote video element');
     }
     
-    // 5. Force device release by getting and immediately stopping a temporary stream
-    try {
-      const tempStream = await navigator.mediaDevices.getUserMedia({ 
-        video: true, 
-        audio: true 
+    // 5. Verify every track really ended (no extra getUserMedia — that would
+    // re-open the camera and ask for permission again)
+    const pendingTracks = [
+      ...(localStream?.getTracks() ?? []),
+      ...(remoteStream?.getTracks() ?? []),
+    ].filter((track) => track.readyState !== 'ended');
+
+    if (pendingTracks.length > 0) {
+      pendingTracks.forEach((track) => {
+        try {
+          track.stop();
+        } catch {
+          /* noop */
+        }
       });
-      tempStream.getTracks().forEach(track => track.stop());
-      console.log('📵 Devices forcefully released');
-    } catch (error) {
-      console.log('⚠️ Force release not needed or possible:', error);
+      console.warn(`⚠️ ${pendingTracks.length} track(s) needed a second stop`);
     }
-    
+
     // 6. Force garbage collection and memory cleanup
     if ((window as any).gc) {
       setTimeout(() => (window as any).gc(), 100);
