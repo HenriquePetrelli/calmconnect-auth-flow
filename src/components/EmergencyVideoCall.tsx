@@ -1090,6 +1090,13 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
         />
       )}
 
+      {showPatientContext && userType === 'psychologist' && (
+        <PatientContextPanel
+          requestId={emergencyRequestIdRef.current}
+          onClose={() => setShowPatientContext(false)}
+        />
+      )}
+
       {/* Header fixo com informações - Responsivo */}
       <div className="fixed top-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-b border-border z-50 safe-area-top">
         <div className="flex items-center justify-between p-4 max-w-7xl mx-auto">
