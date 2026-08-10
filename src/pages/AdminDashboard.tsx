@@ -510,9 +510,14 @@ const AdminDashboard = () => {
             <PatientsPanel />
           </TabsContent>
 
+          <TabsContent value="sos" className="mt-4">
+            <SosHistoryPanel withMetrics title="Todas as solicitações SOS" />
+          </TabsContent>
+
           <TabsContent value="payments" className="mt-4">
             <PaymentsPanel />
           </TabsContent>
+
 
           <TabsContent value="profile" className="mt-4">
             <AdminProfile />
