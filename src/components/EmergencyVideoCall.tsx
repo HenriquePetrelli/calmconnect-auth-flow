@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import VoiceMeter from '@/components/sos/VoiceMeter';
 import { ConnectionQuality } from '@/components/sos/ConnectionQuality';
 import { supabase } from '@/integrations/supabase/client';
+import { trackSosEvent, SOS_EVENTS } from '@/lib/sosTrace';
 import { FeedbackModal } from '@/components/sos/FeedbackModal';
 import { VideoCallSettingsModal } from '@/components/sos/VideoCallSettingsModal';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
@@ -62,6 +63,8 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   timeLimit = 1200 // 20 minutes default
 }) => {
   const { sessionId: paramSessionId } = useParams<{ sessionId: string }>();
+  // Emergency request behind this room — resolved lazily, used for SOS tracing.
+  const emergencyRequestIdRef = useRef<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { preferences, isLoading: prefsLoading, loadPreferences } = useUserPreferences();
@@ -592,6 +595,8 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
         return;
       }
 
+      emergencyRequestIdRef.current = webrtcSession.emergency_request_id;
+
       // Get emergency request with patient details
       const { data: emergencyRequest, error: emergencyError } = await supabase
         .from('emergency_requests')
@@ -770,7 +775,15 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
 
       // 0. Tell the peer immediately over the data channel (best effort) so the
       //    other side closes the room without waiting for realtime propagation.
-      sendCallEndedSignal?.({ endedByType: userType, reason });
+      const signalDelivered = sendCallEndedSignal?.({ endedByType: userType, reason }) ?? false;
+      trackSosEvent({
+        eventType: SOS_EVENTS.CALL_ENDED_SIGNAL_SENT,
+        requestId: emergencyRequestIdRef.current,
+        sessionId,
+        actorType: userType,
+        message: 'CALL_ENDED enviado ao peer',
+        metadata: { reason, delivered: signalDelivered, crisisResolved: endInfo.crisisResolved },
+      });
 
 
       
@@ -793,6 +806,15 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
           console.error('Error updating session status:', error);
         } else {
           console.log('📝 Session marked as completed in database');
+          trackSosEvent({
+            eventType: SOS_EVENTS.SESSION_COMPLETED,
+            requestId: emergencyRequestIdRef.current,
+            sessionId,
+            actorType: userType,
+            actorUserId: user?.id ?? null,
+            message: 'Sessão de vídeo marcada como concluída',
+            metadata: { reason },
+          });
         }
       }
       

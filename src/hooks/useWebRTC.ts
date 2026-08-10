@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { isRealTermination } from '@/lib/callTermination';
 import { attachCallSignalChannel, type CallSignalChannel } from '@/lib/callSignals';
+import { trackSosEvent, SOS_EVENTS } from '@/lib/sosTrace';
 
 import { useToast } from '@/hooks/use-toast';
 import { getWebRTCConnectionManager } from '@/utils/webrtc-manager';
@@ -176,6 +177,13 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
       signalChannelRef.current = attachCallSignalChannel(pc as any, (signal) => {
         if (signal.type !== 'CALL_ENDED') return;
         setCallEndedBy({ userId: '', userType: signal.endedByType });
+        trackSosEvent({
+          eventType: SOS_EVENTS.CALL_ENDED_SIGNAL_RECEIVED,
+          sessionId,
+          actorType: userType,
+          message: 'CALL_ENDED recebido do peer',
+          metadata: { endedByType: signal.endedByType, reason: signal.reason, at: signal.at },
+        });
       });
 
 
