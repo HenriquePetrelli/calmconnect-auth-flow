@@ -4,7 +4,7 @@ import { isRealTermination, getTerminationMessage } from '@/lib/callTermination'
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Mic, MicOff, Camera, CameraOff, PhoneOff, Loader2, AlertTriangle, Settings, Shield, Video, WifiOff, RefreshCw, Activity } from 'lucide-react';
+import { Mic, MicOff, Camera, CameraOff, PhoneOff, Loader2, AlertTriangle, Settings, Shield, Video, WifiOff, RefreshCw, Activity, UserRound } from 'lucide-react';
 import { useWebRTC } from '@/hooks/useWebRTC';
 import { useCallPresence } from '@/hooks/useCallPresence';
 import { useParticipantHeartbeat } from '@/hooks/useParticipantHeartbeat';
@@ -43,6 +43,7 @@ import {
 import { sosLog } from '@/lib/sosLogger';
 import { endEmergencySession } from '@/lib/endEmergencySession';
 import CallDiagnosticsPanel from '@/components/sos/CallDiagnosticsPanel';
+import PatientContextPanel from '@/components/sos/PatientContextPanel';
 import {
   isDiagnosticsEnabled,
   isDiagnosticsShortcut,
@@ -112,6 +113,8 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   const [showDiagnostics, setShowDiagnostics] = useState(() =>
     isDiagnosticsEnabled(typeof window !== 'undefined' ? window.location.search : '', globalThis.localStorage)
   );
+  // Patient triage context (psychologist only).
+  const [showPatientContext, setShowPatientContext] = useState(false);
 
 
 
@@ -1087,6 +1090,13 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
         />
       )}
 
+      {showPatientContext && userType === 'psychologist' && (
+        <PatientContextPanel
+          requestId={emergencyRequestIdRef.current}
+          onClose={() => setShowPatientContext(false)}
+        />
+      )}
+
       {/* Header fixo com informações - Responsivo */}
       <div className="fixed top-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-b border-border z-50 safe-area-top">
         <div className="flex items-center justify-between p-4 max-w-7xl mx-auto">
@@ -1410,6 +1420,26 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
               Diagnóstico (Ctrl+Shift+D)
             </div>
           </button>
+
+          {/* Contexto do paciente (apenas psicólogo) */}
+          {userType === 'psychologist' && (
+            <button
+              onClick={() => setShowPatientContext((v) => !v)}
+              aria-pressed={showPatientContext}
+              aria-label="Contexto do paciente"
+              className={`group relative w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center transition-all duration-200 shadow-lg ${
+                showPatientContext ? 'bg-primary hover:bg-primary/90' : 'bg-muted hover:bg-muted/80'
+              }`}
+            >
+              <UserRound
+                className={showPatientContext ? 'text-primary-foreground' : 'text-foreground'}
+                size={18}
+              />
+              <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-popover text-popover-foreground px-3 py-1 rounded-md text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                Contexto do paciente
+              </div>
+            </button>
+          )}
 
 
 
