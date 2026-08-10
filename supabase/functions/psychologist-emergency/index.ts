@@ -264,6 +264,19 @@ serve(async (req) => {
           throw error;
         }
 
+        // Audit trail: persist the acceptance in the SOS lifecycle trace.
+        if (updatedRequest) {
+          await supabase.from('sos_trace_events').insert({
+            trace_id: `req:${requestId}`,
+            emergency_request_id: requestId,
+            event_type: 'request_accepted',
+            actor_user_id: user.id,
+            actor_type: 'psychologist',
+            message: 'Psicólogo aceitou a solicitação de emergência',
+            metadata: { accepted_at: updatedRequest.accepted_at },
+          });
+        }
+
         if (!updatedRequest) {
           return new Response(
             JSON.stringify({
