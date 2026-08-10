@@ -11,7 +11,7 @@ import { sosLog } from './sosLogger';
 
 export const CALL_SIGNAL_CHANNEL = 'sos-control';
 
-export type CallSignalType = 'CALL_ENDED';
+export type CallSignalType = 'CALL_ENDED' | 'MEDIA_STATE';
 
 export interface CallEndedSignal {
   type: 'CALL_ENDED';
@@ -21,14 +21,48 @@ export interface CallEndedSignal {
   at: number;
 }
 
-export type CallSignal = CallEndedSignal;
+/**
+ * Instant camera/mic/avatar state of the sender.
+ *
+ * The `webrtc_sessions` row keeps the durable copy (used on join/refresh), but
+ * waiting for the database round-trip makes the remote avatar lag ~1-2s behind
+ * the actual camera toggle. This message updates the peer immediately.
+ */
+export interface MediaStateSignal {
+  type: 'MEDIA_STATE';
+  userType: 'patient' | 'psychologist';
+  cameraOff: boolean;
+  muted: boolean;
+  displayName?: string | null;
+  avatarUrl?: string | null;
+  at: number;
+}
+
+export type CallSignal = CallEndedSignal | MediaStateSignal;
+
+const USER_TYPES = ['patient', 'psychologist'];
 
 /** Type guard for anything arriving on the control channel. */
 export function parseCallSignal(raw: unknown): CallSignal | null {
   if (typeof raw !== 'string') return null;
   try {
     const parsed = JSON.parse(raw);
-    if (!parsed || parsed.type !== 'CALL_ENDED') return null;
+    if (!parsed) return null;
+
+    if (parsed.type === 'MEDIA_STATE') {
+      if (!USER_TYPES.includes(parsed.userType)) return null;
+      return {
+        type: 'MEDIA_STATE',
+        userType: parsed.userType,
+        cameraOff: Boolean(parsed.cameraOff),
+        muted: Boolean(parsed.muted),
+        displayName: typeof parsed.displayName === 'string' ? parsed.displayName : null,
+        avatarUrl: typeof parsed.avatarUrl === 'string' ? parsed.avatarUrl : null,
+        at: typeof parsed.at === 'number' ? parsed.at : Date.now(),
+      };
+    }
+
+    if (parsed.type !== 'CALL_ENDED') return null;
     if (!['patient', 'psychologist', 'system'].includes(parsed.endedByType)) return null;
     return {
       type: 'CALL_ENDED',
@@ -58,6 +92,10 @@ interface PeerLike {
 export interface CallSignalChannel {
   /** Sends CALL_ENDED to the peer. Returns false when it could not be delivered. */
   sendCallEnded: (payload: Omit<CallEndedSignal, 'type' | 'at'>) => boolean;
+  /** Sends the local camera/mic/avatar state to the peer (best effort). */
+  sendMediaState: (payload: Omit<MediaStateSignal, 'type' | 'at'>) => boolean;
+  /** True when the control channel is open and messages can be delivered now. */
+  isOpen: () => boolean;
   close: () => void;
 }
 
@@ -78,10 +116,13 @@ export function attachCallSignalChannel(
     const signal = parseCallSignal(event.data);
     if (!signal) return;
     // Both channels can carry the same message — deliver it only once.
-    const key = `${signal.type}:${signal.at}:${signal.endedByType}`;
+    const key =
+      signal.type === 'CALL_ENDED'
+        ? `CALL_ENDED:${signal.at}:${signal.endedByType}`
+        : `MEDIA_STATE:${signal.at}:${signal.userType}`;
     if (handled.has(key)) return;
     handled.add(key);
-    sosLog('SESSION', 'CALL_ENDED signal received', signal);
+    sosLog('SESSION', `${signal.type} signal received`, signal);
     onSignal(signal);
   };
 
@@ -101,18 +142,21 @@ export function attachCallSignalChannel(
     if (!outgoing || outgoing.readyState !== 'open') outgoing = event.channel;
   };
 
+  const send = (signal: CallSignal): boolean => {
+    if (!outgoing || outgoing.readyState !== 'open') return false;
+    try {
+      outgoing.send(JSON.stringify(signal));
+      sosLog('SESSION', `${signal.type} signal sent`, signal);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   return {
-    sendCallEnded: (payload) => {
-      if (!outgoing || outgoing.readyState !== 'open') return false;
-      const signal: CallEndedSignal = { type: 'CALL_ENDED', at: Date.now(), ...payload };
-      try {
-        outgoing.send(JSON.stringify(signal));
-        sosLog('SESSION', 'CALL_ENDED signal sent', signal);
-        return true;
-      } catch {
-        return false;
-      }
-    },
+    isOpen: () => outgoing?.readyState === 'open',
+    sendCallEnded: (payload) => send({ type: 'CALL_ENDED', at: Date.now(), ...payload }),
+    sendMediaState: (payload) => send({ type: 'MEDIA_STATE', at: Date.now(), ...payload }),
     close: () => {
       try {
         outgoing?.close?.();
