@@ -118,10 +118,12 @@ const SOS = () => {
       if (data) {
         const id = (data as any).id as string;
         setRequestId(id);
+        setCreatedAt((data as any).created_at ?? new Date().toISOString());
 
         // Only navigate to call if this specific request is accepted
         const sessionId = (data as any).video_room_id || (data as any).room_url;
-        if ((data as any).status === 'accepted' && sessionId) {
+        if (['accepted', 'in_progress'].includes((data as any).status) && sessionId) {
+          acceptedRef.current = true;
           navigate(`/emergency-call/${sessionId}?userType=patient&requestId=${id}`);
           return;
         }
@@ -132,11 +134,15 @@ const SOS = () => {
           .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'emergency_requests', filter: `id=eq.${id}` }, (payload) => {
             const n = payload.new as any;
             const sessionId = n.video_room_id || n.room_url;
-            if (n.status === 'accepted' && sessionId) {
+            if (['accepted', 'in_progress'].includes(n.status) && sessionId) {
               console.log('✅ Realtime acceptance received. Redirecting to call.', { sessionId, id });
               acceptedRef.current = true;
               navigate(`/emergency-call/${sessionId}?userType=patient&requestId=${id}`);
               if (reqChannel) supabase.removeChannel(reqChannel);
+            } else if (['cancelled', 'completed'].includes(n.status)) {
+              // The server finalized the wait (10 min TTL) — say it explicitly.
+              acceptedRef.current = true;
+              setExpired(true);
             }
           })
           .subscribe();
@@ -152,14 +158,12 @@ const SOS = () => {
     };
   }, [navigate]);
 
-  // Track online professionals
+  // Track professionals that are really available (fresh heartbeat + free)
   useEffect(() => {
     let active = true;
     const fetchOnline = async () => {
-      const { count } = await supabase
-        .from('psychologist_presence')
-        .select('*', { count: 'exact', head: true });
-      if (active) setAvailableProfessionals(count ?? 0);
+      const { data, error } = await supabase.rpc('count_available_psychologists');
+      if (active && !error) setAvailableProfessionals(Number(data ?? 0));
     };
     fetchOnline();
 
@@ -179,6 +183,23 @@ const SOS = () => {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  // Countdown mirroring the server-side 10 minute TTL for pending requests.
+  useEffect(() => {
+    if (!createdAt || expired) return;
+    const deadline = new Date(createdAt).getTime() + QUEUE_TTL_MS;
+
+    const tick = () => {
+      const left = Math.max(0, Math.floor((deadline - Date.now()) / 1000));
+      setSecondsLeft(left);
+      if (left === 0) setExpired(true);
+    };
+
+    tick();
+    const interval = window.setInterval(tick, 1000);
+    return () => window.clearInterval(interval);
+  }, [createdAt, expired]);
+
 
 
   const handleCancelConfirm = async () => {
