@@ -415,6 +415,22 @@ serve(async (req) => {
             console.log('Emergency request updated with session_id:', sessionId);
           }
 
+          // Mark the psychologist as busy so the queue stops routing to them.
+          // A DB trigger clears this automatically when the request finishes.
+          await supabase
+            .from('psychologist_presence')
+            .upsert(
+              {
+                psychologist_id: user.id,
+                current_emergency_id: requestId,
+                last_online: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              },
+              { onConflict: 'psychologist_id' }
+            );
+
+
+
           return new Response(
             JSON.stringify({
               success: true,
