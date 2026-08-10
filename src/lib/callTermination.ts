@@ -26,7 +26,12 @@ export function parseEndedAt(endedAt?: string | null): number {
 
 /**
  * A termination is only "real" when the session was explicitly completed by a
- * participant AND that happened after the current viewer joined this call.
+ * participant (or finalized by the server) AND that happened after the current
+ * viewer joined this call.
+ *
+ * Server-side finalizations (`finalize_stale_emergency_sessions`) carry
+ * `ended_by_type = 'system'` with NO `ended_by`, since no user pressed
+ * anything — they must still be treated as a real termination.
  */
 export function isRealTermination(
   session: TerminationSessionLike | null | undefined,
@@ -34,7 +39,8 @@ export function isRealTermination(
 ): boolean {
   if (!session) return false;
   if (session.status !== 'completed') return false;
-  if (!session.ended_by || !session.ended_by_type) return false;
+  if (!session.ended_by_type) return false;
+  if (session.ended_by_type !== 'system' && !session.ended_by) return false;
   return parseEndedAt(session.ended_at) >= joinedAtMs;
 }
 
@@ -49,9 +55,13 @@ export function isStaleCompletedSession(
 }
 
 export function getTerminationMessage(endedByType?: string | null): string {
+  if (endedByType === 'system') {
+    return 'O tempo da chamada de emergência terminou e a sessão foi encerrada.';
+  }
   const endedByName = endedByType === 'psychologist' ? 'O psicólogo' : 'O paciente';
   return `${endedByName} encerrou a chamada de vídeo.`;
 }
+
 
 /**
  * Persists an EXPLICIT termination (participant pressed "encerrar chamada").
