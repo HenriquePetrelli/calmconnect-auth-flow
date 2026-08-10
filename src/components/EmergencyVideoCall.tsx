@@ -63,6 +63,8 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   timeLimit = 1200 // 20 minutes default
 }) => {
   const { sessionId: paramSessionId } = useParams<{ sessionId: string }>();
+  // Emergency request behind this room — resolved lazily, used for SOS tracing.
+  const emergencyRequestIdRef = useRef<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { preferences, isLoading: prefsLoading, loadPreferences } = useUserPreferences();
@@ -593,6 +595,8 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
         return;
       }
 
+      emergencyRequestIdRef.current = webrtcSession.emergency_request_id;
+
       // Get emergency request with patient details
       const { data: emergencyRequest, error: emergencyError } = await supabase
         .from('emergency_requests')
@@ -774,7 +778,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
       const signalDelivered = sendCallEndedSignal?.({ endedByType: userType, reason }) ?? false;
       trackSosEvent({
         eventType: SOS_EVENTS.CALL_ENDED_SIGNAL_SENT,
-        requestId: emergencyRequestId,
+        requestId: emergencyRequestIdRef.current,
         sessionId,
         actorType: userType,
         message: 'CALL_ENDED enviado ao peer',
@@ -804,7 +808,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
           console.log('📝 Session marked as completed in database');
           trackSosEvent({
             eventType: SOS_EVENTS.SESSION_COMPLETED,
-            requestId: emergencyRequestId,
+            requestId: emergencyRequestIdRef.current,
             sessionId,
             actorType: userType,
             actorUserId: user?.id ?? null,
