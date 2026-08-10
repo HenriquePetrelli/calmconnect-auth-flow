@@ -439,7 +439,12 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     };
 
     validateSessionWithDelay();
+
+    return () => {
+      detachSessionUpdate?.();
+    };
   }, [sessionId, navigate, toast]);
+
 
   // Load and apply user preferences on connection (only once, and only if needed)
   const appliedPrefsRef = React.useRef(false);
