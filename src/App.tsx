@@ -53,7 +53,6 @@ const PsychologistDashboard = lazy(() => import("./pages/PsychologistDashboard")
 const PsychologistProfile = lazy(() => import("./pages/PsychologistProfile"));
 const PsychologistPayments = lazy(() => import("./pages/PsychologistPayments"));
 const EmergencyCall = lazy(() => import("./pages/EmergencyCall"));
-const WebRTCTest = lazy(() => import("./pages/WebRTCTest"));
 const Chat = lazy(() => import("./pages/Chat"));
 const ConsultationCall = lazy(() => import("./pages/ConsultationCall"));
 const SupportGroups = lazy(() => import("./pages/SupportGroups"));
