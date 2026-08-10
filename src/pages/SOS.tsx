@@ -9,6 +9,15 @@ import SupportiveMessages from "@/components/sos/SupportiveMessages";
 import { supabase } from "@/integrations/supabase/client";
 import { useEmergencySOS } from "@/hooks/useEmergencySOS";
 
+/** Server-side TTL for pending SOS requests (finalize_stale_emergency_sessions). */
+const QUEUE_TTL_MS = 10 * 60 * 1000;
+
+const formatCountdown = (seconds: number) => {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+};
+
 const SOS = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -17,7 +26,11 @@ const SOS = () => {
   const [requestId, setRequestId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string>('');
+  const [createdAt, setCreatedAt] = useState<string | null>(null);
+  const [secondsLeft, setSecondsLeft] = useState<number>(QUEUE_TTL_MS / 1000);
+  const [expired, setExpired] = useState(false);
   const { cancelRequest, createEmergencyRequest } = useEmergencySOS();
+
   
   // Get requestId from navigation state (passed from SOSButton)
   const expectedRequestId = location.state?.requestId;
@@ -118,10 +131,12 @@ const SOS = () => {
       if (data) {
         const id = (data as any).id as string;
         setRequestId(id);
+        setCreatedAt((data as any).created_at ?? new Date().toISOString());
 
         // Only navigate to call if this specific request is accepted
         const sessionId = (data as any).video_room_id || (data as any).room_url;
-        if ((data as any).status === 'accepted' && sessionId) {
+        if (['accepted', 'in_progress'].includes((data as any).status) && sessionId) {
+          acceptedRef.current = true;
           navigate(`/emergency-call/${sessionId}?userType=patient&requestId=${id}`);
           return;
         }
@@ -132,11 +147,15 @@ const SOS = () => {
           .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'emergency_requests', filter: `id=eq.${id}` }, (payload) => {
             const n = payload.new as any;
             const sessionId = n.video_room_id || n.room_url;
-            if (n.status === 'accepted' && sessionId) {
+            if (['accepted', 'in_progress'].includes(n.status) && sessionId) {
               console.log('✅ Realtime acceptance received. Redirecting to call.', { sessionId, id });
               acceptedRef.current = true;
               navigate(`/emergency-call/${sessionId}?userType=patient&requestId=${id}`);
               if (reqChannel) supabase.removeChannel(reqChannel);
+            } else if (['cancelled', 'completed'].includes(n.status)) {
+              // The server finalized the wait (10 min TTL) — say it explicitly.
+              acceptedRef.current = true;
+              setExpired(true);
             }
           })
           .subscribe();
@@ -152,14 +171,12 @@ const SOS = () => {
     };
   }, [navigate]);
 
-  // Track online professionals
+  // Track professionals that are really available (fresh heartbeat + free)
   useEffect(() => {
     let active = true;
     const fetchOnline = async () => {
-      const { count } = await supabase
-        .from('psychologist_presence')
-        .select('*', { count: 'exact', head: true });
-      if (active) setAvailableProfessionals(count ?? 0);
+      const { data, error } = await supabase.rpc('count_available_psychologists');
+      if (active && !error) setAvailableProfessionals(Number(data ?? 0));
     };
     fetchOnline();
 
@@ -179,6 +196,23 @@ const SOS = () => {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  // Countdown mirroring the server-side 10 minute TTL for pending requests.
+  useEffect(() => {
+    if (!createdAt || expired) return;
+    const deadline = new Date(createdAt).getTime() + QUEUE_TTL_MS;
+
+    const tick = () => {
+      const left = Math.max(0, Math.floor((deadline - Date.now()) / 1000));
+      setSecondsLeft(left);
+      if (left === 0) setExpired(true);
+    };
+
+    tick();
+    const interval = window.setInterval(tick, 1000);
+    return () => window.clearInterval(interval);
+  }, [createdAt, expired]);
+
 
 
   const handleCancelConfirm = async () => {
@@ -211,28 +245,48 @@ const SOS = () => {
         {/* Status da busca */}
         <Card className="w-full max-w-md">
           <CardContent className="p-8 text-center space-y-6">
-            {/* Loader animado */}
-            <div className="w-20 h-20 mx-auto">
-              <div className="relative w-full h-full">
-                <div className="absolute inset-0 rounded-full border-4 border-primary/20"></div>
-                <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
-                <div className="absolute inset-2 rounded-full border-2 border-primary/40 border-b-transparent animate-spin" style={{ animationDuration: '2s', animationDirection: 'reverse' }}></div>
+            {!expired && (
+              <div className="w-20 h-20 mx-auto">
+                <div className="relative w-full h-full">
+                  <div className="absolute inset-0 rounded-full border-4 border-primary/20"></div>
+                  <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+                  <div className="absolute inset-2 rounded-full border-2 border-primary/40 border-b-transparent animate-spin" style={{ animationDuration: '2s', animationDirection: 'reverse' }}></div>
+                </div>
               </div>
-            </div>
-            
-            <div className="space-y-3">
-              <h2 className="text-2xl font-semibold text-foreground">
-                Buscando profissional...
-              </h2>
-              <p className="text-primary font-medium">
-                Profissionais online: {availableProfessionals}
-              </p>
-              <p className="text-muted-foreground text-sm">
-                Assim que um psicólogo aceitar, abriremos a sala de vídeo automaticamente.
-              </p>
-            </div>
+            )}
+
+            {expired ? (
+              <div className="space-y-3">
+                <h2 className="text-2xl font-semibold text-foreground">
+                  Nenhum profissional pôde atender
+                </h2>
+                <p className="text-muted-foreground text-sm">
+                  Sua solicitação expirou após o tempo máximo de espera. Você pode tentar novamente
+                  ou usar os recursos de apoio abaixo.
+                </p>
+                <Button onClick={() => window.location.reload()} className="w-full">
+                  Tentar novamente
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <h2 className="text-2xl font-semibold text-foreground">
+                  Buscando profissional...
+                </h2>
+                <p className="text-primary font-medium">
+                  Profissionais disponíveis: {availableProfessionals}
+                </p>
+                <p className="text-2xl font-mono font-semibold text-foreground tabular-nums">
+                  {formatCountdown(secondsLeft)}
+                </p>
+                <p className="text-muted-foreground text-sm">
+                  Assim que um psicólogo aceitar, abriremos a sala de vídeo automaticamente.
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
+
 
         {/* Nenhum profissional online: orientar em vez de deixar esperando */}
         {availableProfessionals === 0 && (

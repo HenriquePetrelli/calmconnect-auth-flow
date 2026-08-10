@@ -8,12 +8,20 @@ const makeClient = (request: any = { started_at: new Date().toISOString(), statu
     auth: { getUser: async () => ({ data: { user: { id: 'user-1' } } }) },
     from: (table: string) => ({
       select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: request }) }) }),
-      update: (values: any) => ({
-        eq: async () => {
+      update: (values: any) => {
+        const record = () => {
           updates[table].push(values);
-          return { error: null };
-        },
-      }),
+          return { data: [{ id: 'row-1' }], error: null };
+        };
+        // Mirrors the real chain: .eq(...) [.is(...).select(...)]
+        const eqResult: any = {
+          then: (resolve: any, reject: any) => Promise.resolve(record()).then(resolve, reject),
+          is: () => ({ select: async () => record() }),
+        };
+        return { eq: () => eqResult };
+      },
+
+
       insert: async (values: any) => {
         updates[table].push(values);
         return { error: null };

@@ -2,8 +2,15 @@ import { useEffect, useState, useCallback, useSyncExternalStore } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-// Shared module-level store so every consumer of the hook stays in sync
-// instantly, without relying on postgres realtime round-trips.
+/**
+ * Psychologist availability for the SOS queue.
+ *
+ * Presence is a heartbeat: the row exists AND `last_online` must stay fresh.
+ * A closed tab stops the heartbeat and the server prunes the row
+ * (`prune_stale_psychologist_presence`), so nobody stays "online" forever.
+ */
+const HEARTBEAT_MS = 60_000;
+
 type State = { isOnline: boolean; initialized: boolean; userId: string | null };
 let state: State = { isOnline: false, initialized: false, userId: null };
 const listeners = new Set<() => void>();
@@ -18,6 +25,38 @@ const setState = (patch: Partial<State>) => {
 };
 
 let bootstrapped = false;
+let channel: ReturnType<typeof supabase.channel> | null = null;
+let heartbeat: ReturnType<typeof setInterval> | null = null;
+
+const stopHeartbeat = () => {
+  if (heartbeat) {
+    clearInterval(heartbeat);
+    heartbeat = null;
+  }
+};
+
+const startHeartbeat = (userId: string) => {
+  stopHeartbeat();
+  heartbeat = setInterval(async () => {
+    if (!state.isOnline) return;
+    await supabase
+      .from('psychologist_presence')
+      .update({ last_online: new Date().toISOString() })
+      .eq('psychologist_id', userId);
+  }, HEARTBEAT_MS);
+};
+
+/** Releases every shared resource (used on logout / user switch). */
+export const teardownPsychologistPresence = () => {
+  stopHeartbeat();
+  if (channel) {
+    supabase.removeChannel(channel);
+    channel = null;
+  }
+  bootstrapped = false;
+  setState({ isOnline: false, initialized: false, userId: null });
+};
+
 const bootstrap = async () => {
   if (bootstrapped) return;
   bootstrapped = true;
@@ -31,13 +70,17 @@ const bootstrap = async () => {
 
   const { data } = await supabase
     .from('psychologist_presence')
-    .select('psychologist_id')
+    .select('psychologist_id, last_online')
     .eq('psychologist_id', userId)
     .maybeSingle();
 
-  setState({ initialized: true, userId, isOnline: !!data });
+  const fresh =
+    !!data?.last_online && Date.now() - new Date(data.last_online).getTime() < 3 * 60_000;
 
-  supabase
+  setState({ initialized: true, userId, isOnline: fresh });
+  if (fresh) startHeartbeat(userId);
+
+  channel = supabase
     .channel(`psychologist_presence_shared_${userId}`)
     .on(
       'postgres_changes',
@@ -46,7 +89,10 @@ const bootstrap = async () => {
         const newRow: any = payload.new;
         const oldRow: any = payload.old;
         if (payload.eventType === 'DELETE') {
-          if (oldRow?.psychologist_id === userId) setState({ isOnline: false });
+          if (oldRow?.psychologist_id === userId) {
+            stopHeartbeat();
+            setState({ isOnline: false });
+          }
         } else if (newRow?.psychologist_id === userId) {
           setState({ isOnline: true });
         }
@@ -64,44 +110,61 @@ export const usePsychologistPresence = () => {
     bootstrap();
   }, []);
 
-  const setOnlineStatus = useCallback(async (nextStatus: boolean) => {
-    setLoading(true);
-    try {
-      const { data: auth } = await supabase.auth.getUser();
-      const userId = auth.user?.id;
-      if (!userId) throw new Error('Usuário não autenticado');
+  const setOnlineStatus = useCallback(
+    async (nextStatus: boolean) => {
+      setLoading(true);
+      try {
+        const { data: auth } = await supabase.auth.getUser();
+        const userId = auth.user?.id;
+        if (!userId) throw new Error('Usuário não autenticado');
 
-      if (nextStatus) {
-        const { error } = await supabase
-          .from('psychologist_presence')
-          .upsert({
-            psychologist_id: userId,
-            last_online: new Date().toISOString(),
-            emergency_accepted_count: 0,
-            emergency_rejected_count: 0,
-          });
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('psychologist_presence')
-          .delete()
-          .eq('psychologist_id', userId);
-        if (error) throw error;
+        if (nextStatus) {
+          // Never reset the accepted/rejected counters of an existing row.
+          const { data: existing } = await supabase
+            .from('psychologist_presence')
+            .select('psychologist_id')
+            .eq('psychologist_id', userId)
+            .maybeSingle();
+
+          if (existing) {
+            const { error } = await supabase
+              .from('psychologist_presence')
+              .update({ last_online: new Date().toISOString() })
+              .eq('psychologist_id', userId);
+            if (error) throw error;
+          } else {
+            const { error } = await supabase.from('psychologist_presence').insert({
+              psychologist_id: userId,
+              last_online: new Date().toISOString(),
+              emergency_accepted_count: 0,
+              emergency_rejected_count: 0,
+            });
+            if (error) throw error;
+          }
+          startHeartbeat(userId);
+        } else {
+          stopHeartbeat();
+          const { error } = await supabase
+            .from('psychologist_presence')
+            .delete()
+            .eq('psychologist_id', userId);
+          if (error) throw error;
+        }
+
+        setState({ isOnline: nextStatus, userId });
+      } catch (err: any) {
+        console.error('Error updating presence:', err);
+        toast({
+          title: 'Erro',
+          description: `Não foi possível atualizar seu status: ${err.message}`,
+          variant: 'destructive',
+        });
+      } finally {
+        setLoading(false);
       }
-
-      // Update shared store immediately so every consumer re-renders.
-      setState({ isOnline: nextStatus, userId });
-    } catch (err: any) {
-      console.error('Error updating presence:', err);
-      toast({
-        title: 'Erro',
-        description: `Não foi possível atualizar seu status: ${err.message}`,
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [toast]);
+    },
+    [toast]
+  );
 
   const toggle = useCallback(
     () => setOnlineStatus(!snapshot.isOnline),

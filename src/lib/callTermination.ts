@@ -119,7 +119,9 @@ export async function persistExplicitTermination(
         )
       : 0;
 
-    const { error } = await client
+    // Atomic guard: two peers ending at the same time must not overwrite each
+    // other's outcome — only the row that is still open is updated.
+    const { data: updatedRows, error } = await client
       .from('emergency_requests')
       .update({
         ended_at: endedAt,
@@ -131,10 +133,19 @@ export async function persistExplicitTermination(
         ...(crisisResolved === null ? {} : { crisis_resolved: crisisResolved }),
         ...(notes ? { end_notes: notes } : {}),
       })
-      .eq('id', requestId);
+      .eq('id', requestId)
+      .is('ended_at', null)
+      .select('id');
 
     if (error) throw error;
+
+    if (Array.isArray(updatedRows) && updatedRows.length === 0) {
+      sosLog('SESSION', 'termination lost the race — session already finished', { requestId });
+      return { duration: 0, alreadyEnded: true };
+    }
+
     sosLog('SESSION', 'emergency request completed', { requestId, reason, endedByType });
+
   }
 
   if (sessionId) {

@@ -323,7 +323,10 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
 
   // Enhanced session validation with intelligent delay
   useEffect(() => {
+    let detachSessionUpdate: (() => void) | undefined;
+
     const validateSessionWithDelay = async () => {
+
       if (!sessionId) {
         setIsLoading(false);
         return;
@@ -380,8 +383,10 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
         };
 
         window.addEventListener('webrtc-session-update', handleSessionUpdate as EventListener);
-        // Cleanup listener when component unmounts
-        return () => window.removeEventListener('webrtc-session-update', handleSessionUpdate as EventListener);
+        // Registered on the effect scope so it is really removed on unmount.
+        detachSessionUpdate = () =>
+          window.removeEventListener('webrtc-session-update', handleSessionUpdate as EventListener);
+
       } catch (error) {
         console.error('❌ Enhanced session validation failed:', error);
         
@@ -434,7 +439,12 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     };
 
     validateSessionWithDelay();
+
+    return () => {
+      detachSessionUpdate?.();
+    };
   }, [sessionId, navigate, toast]);
+
 
   // Load and apply user preferences on connection (only once, and only if needed)
   const appliedPrefsRef = React.useRef(false);
@@ -690,12 +700,21 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     };
     
     updateLocalVideo();
-    
-    // Set up interval for continuous verification
-    const interval = setInterval(updateLocalVideo, 2000);
-    
+
+    // Short-lived verification window (some browsers attach the stream late).
+    // A perpetual 2s interval kept the CPU busy for the whole call.
+    let attempts = 0;
+    const interval = setInterval(() => {
+      attempts += 1;
+      updateLocalVideo();
+      if (attempts >= 5 || localVideoRef.current?.srcObject === localStream) {
+        clearInterval(interval);
+      }
+    }, 1000);
+
     return () => clearInterval(interval);
   }, [localStream, localVideoRef]);
+
  
    const fetchUserInfo = async (sessionId: string, currentUserType: 'patient' | 'psychologist') => {
     try {
@@ -960,6 +979,16 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
 
   const handleFeedbackClose = () => {
     setShowFeedbackModal(false);
+
+    // Safety net: if any termination path failed before releasing hardware,
+    // the camera/microphone must still be freed here.
+    try {
+      enhancedCleanup();
+    } catch (error) {
+      console.warn('[SOS] cleanup on feedback close failed', error);
+    }
+
+
 
     toast({
       title: 'Chamada Finalizada',
