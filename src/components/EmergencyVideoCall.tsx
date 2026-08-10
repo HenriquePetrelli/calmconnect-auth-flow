@@ -97,6 +97,18 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   const [endNotes, setEndNotes] = useState('');
   const endInfoRef = useRef<EndCallInfo>({ reason: END_REASONS.OTHER, endedByType: 'patient' });
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+
+  // Safety net: never leave the user stuck on "Conectando..." forever
+  // (blocked permission prompt, frozen device, stalled negotiation...).
+  useEffect(() => {
+    if (!isLoading) {
+      setInitTimedOut(false);
+      return;
+    }
+    const timer = window.setTimeout(() => setInitTimedOut(true), 45000);
+    return () => window.clearTimeout(timer);
+  }, [isLoading]);
+
   const [userInfo, setUserInfo] = useState<{
     name: string; 
     details: string;
