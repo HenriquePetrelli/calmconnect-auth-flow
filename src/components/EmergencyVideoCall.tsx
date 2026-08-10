@@ -209,6 +209,52 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     }, []),
   });
 
+  // Ctrl/Cmd + Shift + D toggles diagnostics during an incident.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!isDiagnosticsShortcut(event)) return;
+      event.preventDefault();
+      setShowDiagnostics((prev) => {
+        persistDiagnosticsFlag(!prev, globalThis.localStorage);
+        return !prev;
+      });
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
+  // Snapshot of the whole flow, refreshed on every render while the panel is open.
+  const diagnosticsData: DiagnosticsInput = {
+    sessionId,
+    requestId: emergencyRequestIdRef.current,
+    traceId: buildTraceId(emergencyRequestIdRef.current, sessionId),
+    userType,
+    connectionState,
+    iceConnectionState: peerConnection?.iceConnectionState ?? null,
+    signalingState: peerConnection?.signalingState ?? null,
+    isConnected,
+    isReconnecting,
+    reconnectAttempt,
+    isNetworkOffline,
+    hasLocalStream: Boolean(localStream),
+    hasRemoteStream: Boolean(remoteStream),
+    localTracks: localStream?.getTracks().map((t) => `${t.kind}:${t.readyState}${t.enabled ? '' : ' (off)'}`),
+    remoteTracks: remoteStream?.getTracks().map((t) => `${t.kind}:${t.readyState}`),
+    dataChannelState: null,
+    isMuted,
+    isCameraOff,
+    remoteMuted,
+    remoteCameraOff: remoteIsCameraOff,
+    remotePresent,
+    remoteLeftAt,
+    heartbeatEnabled: Boolean(sessionId) && !callTerminatedMessage,
+    timeLeft,
+    timeLimit,
+    isTimerPaused,
+    callTerminatedMessage,
+    callEndedBy,
+    error,
+  };
 
 
   // Get current user name for initials
