@@ -51,9 +51,12 @@ export const useMediaDeviceManager = () => {
   ): Promise<{ stream: MediaStream; error?: MediaError }> => {
     console.log('🎥 Attempting to get media stream...', { audioDeviceId, videoDeviceId });
 
-    // First, try to get basic permissions
+    // First, try to get basic permissions.
+    // IMPORTANT: the probe stream must be released immediately, otherwise every
+    // media init / settings save leaks a camera+microphone capture.
     try {
-      await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+      const probe = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+      probe.getTracks().forEach((track) => track.stop());
     } catch (error: any) {
       console.error('❌ Permission check failed:', error);
       
@@ -68,6 +71,7 @@ export const useMediaDeviceManager = () => {
         };
       }
     }
+
 
     // Load available devices for validation
     const availableDevices = await loadDevices();

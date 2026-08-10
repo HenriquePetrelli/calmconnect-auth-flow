@@ -1689,6 +1689,7 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: boolean
       }
+      count_available_psychologists: { Args: never; Returns: number }
       create_admin_account: {
         Args: {
           admin_email: string
@@ -1825,6 +1826,11 @@ export type Database = {
       }
       promote_to_admin: {
         Args: { target_user_email: string }
+        Returns: boolean
+      }
+      prune_stale_psychologist_presence: { Args: never; Returns: number }
+      psychologist_can_attend: {
+        Args: { p_user_id?: string }
         Returns: boolean
       }
       reset_patient_weekly_goals_array: { Args: never; Returns: undefined }

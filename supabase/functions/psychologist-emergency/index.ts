@@ -186,7 +186,47 @@ serve(async (req) => {
       }
 
       if (action === 'accept') {
+        // Eligibility is enforced server-side: approved, not blocked and not
+        // already attending another emergency call.
+        const { data: canAttend } = await supabase.rpc('psychologist_can_attend', {
+          p_user_id: user.id,
+        });
+
+        if (!canAttend) {
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: 'Sua conta não está habilitada para atender emergências no momento.',
+              code: 'PSYCHOLOGIST_NOT_ELIGIBLE',
+            }),
+            { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        const { data: ongoingCall } = await supabase
+          .from('emergency_requests')
+          .select('id')
+          .eq('accepted_by', user.id)
+          .in('status', ['accepted', 'in_progress'])
+          .is('ended_at', null)
+          .neq('id', requestId)
+          .limit(1)
+          .maybeSingle();
+
+        if (ongoingCall) {
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: 'Você já está em um atendimento de emergência. Finalize-o antes de aceitar outro.',
+              code: 'PSYCHOLOGIST_BUSY',
+              ongoing_request_id: ongoingCall.id,
+            }),
+            { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
         // First check if the request still exists and is pending
+
         const { data: existingRequest, error: checkError } = await supabase
           .from('emergency_requests')
           .select('id, status, accepted_by')
@@ -374,6 +414,22 @@ serve(async (req) => {
           } else {
             console.log('Emergency request updated with session_id:', sessionId);
           }
+
+          // Mark the psychologist as busy so the queue stops routing to them.
+          // A DB trigger clears this automatically when the request finishes.
+          await supabase
+            .from('psychologist_presence')
+            .upsert(
+              {
+                psychologist_id: user.id,
+                current_emergency_id: requestId,
+                last_online: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              },
+              { onConflict: 'psychologist_id' }
+            );
+
+
 
           return new Response(
             JSON.stringify({

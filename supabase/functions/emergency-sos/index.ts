@@ -69,16 +69,17 @@ serve(async (req) => {
     if (req.method === 'POST') {
       console.log('🆘 POST request - Creating emergency request for patient:', user.id);
       
-      // Check if user already has pending emergency request
+      // A patient that is already inside an open flow must be sent back to it
+      // instead of creating a duplicated request.
       const { data: existingRequest } = await supabase
         .from('emergency_requests')
-        .select('id')
+        .select('id, status, video_room_id')
         .eq('patient_id', user.id)
-        .eq('status', 'pending')
+        .in('status', ['pending', 'accepted', 'in_progress'])
+        .is('ended_at', null)
+        .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
-
-      console.log('🆘 Existing request check:', existingRequest);
 
       if (existingRequest) {
         console.log('🆘 User already has active request:', existingRequest.id);
@@ -86,6 +87,8 @@ serve(async (req) => {
           JSON.stringify({
             success: true,
             emergency_request_id: existingRequest.id,
+            status: existingRequest.status,
+            session_id: existingRequest.video_room_id,
             message: 'Você já tem uma solicitação de emergência ativa. Aguardando resposta dos psicólogos.'
           }),
           {
@@ -93,6 +96,51 @@ serve(async (req) => {
           }
         );
       }
+
+      // Patient must not be blocked.
+      const { data: patientRow } = await supabase
+        .from('patients')
+        .select('is_blocked, blocked_until, blocked_reason')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      const blockActive =
+        patientRow?.is_blocked === true &&
+        (!patientRow?.blocked_until || new Date(patientRow.blocked_until) > new Date());
+
+      if (blockActive) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            code: 'PATIENT_BLOCKED',
+            error: patientRow?.blocked_reason
+              ? `Sua conta está bloqueada: ${patientRow.blocked_reason}`
+              : 'Sua conta está temporariamente bloqueada para atendimentos de emergência.',
+          }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Subscription / monthly SOS quota is enforced server-side.
+      const { data: quota, error: quotaError } = await supabase
+        .rpc('can_use_sos', { p_user_id: user.id })
+        .maybeSingle();
+
+      if (quotaError) {
+        console.error('❌ Error checking SOS quota:', quotaError);
+      } else if (quota && quota.can_use === false) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            code: 'SOS_NOT_ALLOWED',
+            error: quota.reason || 'Seu plano não permite o uso do SOS neste momento.',
+            plan_type: quota.plan_type ?? null,
+          }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+
 
       // Create emergency request
       console.log('🆘 Creating emergency request for patient:', user.id);
