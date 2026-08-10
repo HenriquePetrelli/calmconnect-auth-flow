@@ -233,6 +233,50 @@ const SOS = () => {
           </CardContent>
         </Card>
 
+        {/* Nenhum profissional online: orientar em vez de deixar esperando */}
+        {availableProfessionals === 0 && (
+          <Card className="w-full max-w-md border-destructive/30 bg-destructive/5">
+            <CardContent className="p-6 space-y-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" aria-hidden="true" />
+                <div className="space-y-1">
+                  <h3 className="text-base font-semibold text-foreground">
+                    Nenhum profissional online agora
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Sua solicitação continua na fila e será atendida assim que alguém ficar disponível.
+                    Enquanto isso, você pode usar estes recursos:
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid gap-2">
+                <Button variant="secondary" onClick={() => navigate('/guided-breathing')}>
+                  <Wind className="h-4 w-4" />
+                  Respiração guiada
+                </Button>
+                <Button variant="outline" asChild>
+                  <a href="tel:188">
+                    <Phone className="h-4 w-4" />
+                    Ligar para o CVV (188)
+                  </a>
+                </Button>
+                <Button variant="outline" asChild>
+                  <a href="tel:192">
+                    <Phone className="h-4 w-4" />
+                    Emergência médica (192)
+                  </a>
+                </Button>
+              </div>
+
+              <p className="text-xs text-muted-foreground">
+                Em risco imediato de vida, procure o serviço de emergência mais próximo.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+
         {/* Mensagens de apoio */}
         <SupportiveMessages />
 
