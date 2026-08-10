@@ -1328,6 +1328,22 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
             </div>
           </button>
 
+          {/* Modo de diagnóstico (triagem de incidentes) */}
+          <button
+            onClick={() => setShowDiagnostics((v) => !v)}
+            aria-pressed={showDiagnostics}
+            className={`group relative w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center transition-all duration-200 shadow-lg ${
+              showDiagnostics ? 'bg-primary hover:bg-primary/90' : 'bg-muted hover:bg-muted/80'
+            }`}
+          >
+            <Activity className={showDiagnostics ? 'text-primary-foreground' : 'text-foreground'} size={18} />
+            <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-popover text-popover-foreground px-3 py-1 rounded-md text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+              Diagnóstico (Ctrl+Shift+D)
+            </div>
+          </button>
+
+
+
           {/* Botão de encerrar chamada */}
           <button
             onClick={() => setShowEndConfirm(true)}
