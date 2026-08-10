@@ -70,6 +70,8 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
   const [isRemoteMediaStale, setIsRemoteMediaStale] = useState(false);
   /** Local clock of the last MEDIA_STATE actually received from the peer. */
   const remoteMediaReceivedAtRef = useRef(0);
+  const isNetworkOfflineRef = useRef(false);
+  const isReconnectingRef = useRef(false);
 
   const attemptReconnectRef = useRef<((pc: RTCPeerConnection) => void) | null>(null);
   const { toast } = useToast();
@@ -598,6 +600,14 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     }, 800);
     return () => clearInterval(timer);
   }, [isConnected]);
+
+  // Mirrors used by the staleness watchdog interval (avoids stale closures).
+  useEffect(() => {
+    isNetworkOfflineRef.current = isNetworkOffline;
+  }, [isNetworkOffline]);
+  useEffect(() => {
+    isReconnectingRef.current = isReconnecting;
+  }, [isReconnecting]);
 
   // Staleness watchdog for the remote media indicators.
   //
