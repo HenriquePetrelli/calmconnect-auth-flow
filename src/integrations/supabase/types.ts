@@ -1258,6 +1258,7 @@ export type Database = {
         Row: {
           comment: string | null
           created_at: string | null
+          emergency_request_id: string | null
           id: string
           problem_resolved: string | null
           rating: number
@@ -1269,6 +1270,7 @@ export type Database = {
         Insert: {
           comment?: string | null
           created_at?: string | null
+          emergency_request_id?: string | null
           id?: string
           problem_resolved?: string | null
           rating: number
@@ -1280,6 +1282,7 @@ export type Database = {
         Update: {
           comment?: string | null
           created_at?: string | null
+          emergency_request_id?: string | null
           id?: string
           problem_resolved?: string | null
           rating?: number
