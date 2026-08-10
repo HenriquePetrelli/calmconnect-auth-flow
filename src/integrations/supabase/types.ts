@@ -1290,6 +1290,60 @@ export type Database = {
         }
         Relationships: []
       }
+      sos_trace_events: {
+        Row: {
+          actor_type: string
+          actor_user_id: string | null
+          created_at: string
+          emergency_request_id: string | null
+          event_type: string
+          id: string
+          message: string | null
+          metadata: Json
+          session_id: string | null
+          trace_id: string
+        }
+        Insert: {
+          actor_type?: string
+          actor_user_id?: string | null
+          created_at?: string
+          emergency_request_id?: string | null
+          event_type: string
+          id?: string
+          message?: string | null
+          metadata?: Json
+          session_id?: string | null
+          trace_id: string
+        }
+        Update: {
+          actor_type?: string
+          actor_user_id?: string | null
+          created_at?: string
+          emergency_request_id?: string | null
+          event_type?: string
+          id?: string
+          message?: string | null
+          metadata?: Json
+          session_id?: string | null
+          trace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sos_trace_events_emergency_request_id_fkey"
+            columns: ["emergency_request_id"]
+            isOneToOne: false
+            referencedRelation: "emergency_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sos_trace_events_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "webrtc_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscribers: {
         Row: {
           created_at: string
