@@ -327,7 +327,7 @@ const AdminDashboard = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-          <TabsList className="hidden md:grid w-full h-auto p-1 bg-muted/60 grid-cols-5 gap-1 rounded-lg">
+          <TabsList className="hidden md:grid w-full h-auto p-1 bg-muted/60 grid-cols-6 gap-1 rounded-lg">
             <TabsTrigger value="overview" className={tabTriggerClass}>
               <LayoutDashboard className="w-4 h-4 shrink-0" />
               <span>Visão Geral</span>
@@ -339,6 +339,10 @@ const AdminDashboard = () => {
             <TabsTrigger value="patients" className={tabTriggerClass}>
               <Users className="w-4 h-4 shrink-0" />
               <span>Pacientes</span>
+            </TabsTrigger>
+            <TabsTrigger value="sos" className={tabTriggerClass}>
+              <LifeBuoy className="w-4 h-4 shrink-0" />
+              <span>SOS</span>
             </TabsTrigger>
             <TabsTrigger value="payments" className={tabTriggerClass}>
               <CreditCard className="w-4 h-4 shrink-0" />
