@@ -1421,6 +1421,26 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
             </div>
           </button>
 
+          {/* Contexto do paciente (apenas psicólogo) */}
+          {userType === 'psychologist' && (
+            <button
+              onClick={() => setShowPatientContext((v) => !v)}
+              aria-pressed={showPatientContext}
+              aria-label="Contexto do paciente"
+              className={`group relative w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center transition-all duration-200 shadow-lg ${
+                showPatientContext ? 'bg-primary hover:bg-primary/90' : 'bg-muted hover:bg-muted/80'
+              }`}
+            >
+              <UserRound
+                className={showPatientContext ? 'text-primary-foreground' : 'text-foreground'}
+                size={18}
+              />
+              <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-popover text-popover-foreground px-3 py-1 rounded-md text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                Contexto do paciente
+              </div>
+            </button>
+          )}
+
 
 
           {/* Botão de encerrar chamada */}
