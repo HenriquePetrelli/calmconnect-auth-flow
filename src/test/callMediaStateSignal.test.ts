@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { attachCallSignalChannel, parseCallSignal, type CallSignal } from '@/lib/callSignals';
 
 /** Minimal in-memory pair of connected data channels. */
@@ -90,5 +90,80 @@ describe('MEDIA_STATE via data channel', () => {
     const payload = { userType: 'patient' as const, cameraOff: false, muted: true };
     a.sendMediaState(payload);
     expect(received).toHaveLength(1);
+  });
+});
+
+describe('MEDIA_STATE ordenação com eventos concorrentes', () => {
+  it('numera cada envio com um seq monotônico', () => {
+    const pair = makePeerPair();
+    const received: CallSignal[] = [];
+    const psychologist = attachCallSignalChannel(pair.pcA, () => {});
+    attachCallSignalChannel(pair.pcB, (s) => received.push(s));
+    pair.connect();
+
+    psychologist.sendMediaState({ userType: 'psychologist', muted: true, cameraOff: false });
+    psychologist.sendMediaState({ userType: 'psychologist', muted: false, cameraOff: false });
+    psychologist.sendMediaState({ userType: 'psychologist', muted: true, cameraOff: true });
+
+    expect(received.map((s) => (s as any).seq)).toEqual([1, 2, 3]);
+    expect((received[2] as any).muted).toBe(true);
+  });
+
+  it('entrega toggles no mesmo milissegundo sem descartar nenhum', () => {
+    const pair = makePeerPair();
+    const received: CallSignal[] = [];
+    const psychologist = attachCallSignalChannel(pair.pcA, () => {});
+    attachCallSignalChannel(pair.pcB, (s) => received.push(s));
+    pair.connect();
+
+    const now = Date.now();
+    const spy = vi.spyOn(Date, 'now').mockReturnValue(now);
+    psychologist.sendMediaState({ userType: 'psychologist', muted: true, cameraOff: false });
+    psychologist.sendMediaState({ userType: 'psychologist', muted: true, cameraOff: true });
+    spy.mockRestore();
+
+    expect(received).toHaveLength(2);
+  });
+
+  it('ignora atualizações fora de ordem ou repetidas do mesmo peer', () => {
+    const received: CallSignal[] = [];
+    const pc: any = {
+      ondatachannel: null,
+      createDataChannel: () => ({ readyState: 'open', send: () => {}, onmessage: null }),
+    };
+    attachCallSignalChannel(pc, (s) => received.push(s));
+
+    const inbound: any = { readyState: 'open', send: () => {}, onmessage: null };
+    pc.ondatachannel({ channel: inbound });
+
+    const msg = (seq: number, muted: boolean) =>
+      JSON.stringify({ type: 'MEDIA_STATE', userType: 'psychologist', muted, cameraOff: false, seq, at: seq });
+
+    inbound.onmessage({ data: msg(2, true) });
+    inbound.onmessage({ data: msg(1, false) }); // atrasada
+    inbound.onmessage({ data: msg(2, false) }); // duplicada
+    inbound.onmessage({ data: msg(3, false) });
+
+    expect(received.map((s) => (s as any).seq)).toEqual([2, 3]);
+    expect((received[1] as any).muted).toBe(false);
+  });
+
+  it('mantém sequências independentes por participante', () => {
+    const received: CallSignal[] = [];
+    const pc: any = {
+      ondatachannel: null,
+      createDataChannel: () => ({ readyState: 'open', send: () => {}, onmessage: null }),
+    };
+    attachCallSignalChannel(pc, (s) => received.push(s));
+    const inbound: any = { readyState: 'open', send: () => {}, onmessage: null };
+    pc.ondatachannel({ channel: inbound });
+
+    const msg = (userType: string, seq: number) =>
+      JSON.stringify({ type: 'MEDIA_STATE', userType, muted: true, cameraOff: false, seq, at: seq });
+
+    inbound.onmessage({ data: msg('psychologist', 5) });
+    inbound.onmessage({ data: msg('patient', 1) });
+
+    expect(received).toHaveLength(2);
   });
 });
