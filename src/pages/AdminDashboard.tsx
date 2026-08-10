@@ -55,6 +55,7 @@ const AdminDashboard = () => {
     { value: 'overview', label: 'Visão Geral', icon: LayoutDashboard },
     { value: 'psychologists', label: 'Psicólogos', icon: UserCheck },
     { value: 'patients', label: 'Pacientes', icon: Users },
+    { value: 'sos', label: 'SOS', icon: LifeBuoy },
     { value: 'payments', label: 'Pagamentos', icon: CreditCard },
     { value: 'profile', label: 'Perfil', icon: UserCog },
   ] as const;
