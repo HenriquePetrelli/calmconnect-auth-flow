@@ -561,6 +561,20 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     return false;
   }, [localStream]);
 
+  // Re-announce our media state whenever the peer connection comes up, so the
+  // remote side never renders a stale camera/avatar after a (re)connection.
+  useEffect(() => {
+    if (!isConnected) return;
+    let attempts = 0;
+    const timer = setInterval(() => {
+      attempts += 1;
+      const payload = localMediaStateRef.current;
+      const sent = payload ? signalChannelRef.current?.sendMediaState(payload) : false;
+      if (sent || attempts >= 8) clearInterval(timer);
+    }, 800);
+    return () => clearInterval(timer);
+  }, [isConnected]);
+
   const cleanup = useCallback(() => {
     // Prevent multiple cleanup calls
     if (cleanupRef.current) {
