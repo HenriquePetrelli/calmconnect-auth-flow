@@ -124,6 +124,9 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   // Timestamp of the last data-channel media update — database events older
   // than it are ignored so the slow round-trip never overrides the fast path.
   const lastMediaSignalAtRef = useRef(0);
+  /** Mirrors of the local media state so concurrent toggles never read stale values. */
+  const isMutedRef = useRef(false);
+  const isCameraOffRef = useRef(false);
   const [callTerminatedMessage, setCallTerminatedMessage] = useState<string | null>(null);
   // Moment this client joined the call — used to ignore stale "call ended" events.
   const joinedAtRef = useRef<number>(Date.now());
@@ -788,59 +791,52 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
 
   const handleMuteToggle = async () => {
     try {
-      // First update local state immediately for visual feedback
-      setIsMuted(prev => !prev);
-      
-      // Execute toggle in WebRTC hook
+      // The track is the source of truth — never derive state from a stale render.
       const muted = toggleAudio();
+      isMutedRef.current = muted;
+      setIsMuted(muted);
 
       // Fast path: tell the peer right away (no database round-trip).
+      // The signal carries a monotonic seq, so concurrent toggles stay ordered.
+      lastMediaSignalAtRef.current = Date.now();
       sendMediaState({
         userType,
         muted,
-        cameraOff: isCameraOff,
+        cameraOff: isCameraOffRef.current,
         displayName: currentUserName || null,
         avatarUrl: null,
       });
-      
-      // Communicate status via Supabase
+
+      // Durable copy (used on join/refresh). A failure here must not desync the
+      // UI from the actual track state, so we keep the local value.
       if (sessionId) {
         const { error } = await supabase
           .from('webrtc_sessions')
-          .update({ 
+          .update({
             [`${userType}_muted`]: muted,
             updated_at: new Date().toISOString()
           } as any)
           .eq('id', sessionId);
-        
-        if (error) {
-          console.error('Error updating mute status:', error);
-          // Revert local state on error
-          setIsMuted(prev => !prev);
-        } else {
-          console.log('🎤 Mute status updated in database:', muted);
-        }
+
+        if (error) console.error('Error persisting mute status:', error);
       }
-      
-      console.log('🎤 Audio toggled:', muted ? 'muted' : 'unmuted');
     } catch (error) {
       console.error('Failed to toggle audio:', error);
-      setIsMuted(prev => !prev); // Revert on error
     }
   };
 
   const handleCameraToggle = async () => {
     try {
-      // Immediate visual feedback
-      setIsCameraOff(prev => !prev);
-      
-      // Execute toggle
+      // Execute toggle first: the track result is the source of truth.
       const cameraOff = toggleVideo();
+      isCameraOffRef.current = cameraOff;
+      setIsCameraOff(cameraOff);
 
       // Fast path: tell the peer right away (no database round-trip).
+      lastMediaSignalAtRef.current = Date.now();
       sendMediaState({
         userType,
-        muted: isMuted,
+        muted: isMutedRef.current,
         cameraOff,
         displayName: currentUserName || null,
         avatarUrl: null,
@@ -857,15 +853,9 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
             } as any)
             .eq('id', sessionId);
           
-          if (error) {
-            console.error('Error updating camera status:', error);
-            setIsCameraOff(prev => !prev);
-          } else {
-            console.log('📹 Camera status updated in database:', cameraOff);
-          }
+          if (error) console.error('Error persisting camera status:', error);
         } catch (error) {
-          console.error('Failed to update camera status:', error);
-          setIsCameraOff(prev => !prev);
+          console.error('Failed to persist camera status:', error);
         }
       }
       
