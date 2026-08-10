@@ -1052,7 +1052,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
   useEffect(() => {
     return () => {
       try {
-        cleanupRef.current?.();
+        unmountCleanupRef.current?.();
       } catch (error) {
         console.warn('[WebRTC] unmount cleanup failed', error);
       }
