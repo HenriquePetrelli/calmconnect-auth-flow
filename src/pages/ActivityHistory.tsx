@@ -243,7 +243,10 @@ const ActivityHistory = () => {
             </Card>
           </>
         )}
+
+        <SosHistoryPanel patientId={user?.id ?? null} title="Minhas solicitações SOS" />
       </div>
+
     </div>
   );
 };
