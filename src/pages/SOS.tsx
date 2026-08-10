@@ -252,7 +252,7 @@ const SOS = () => {
               </div>
 
               <div className="grid gap-2">
-                <Button variant="secondary" onClick={() => navigate('/guided-breathing')}>
+                <Button variant="secondary" onClick={() => navigate('/breathing')}>
                   <Wind className="h-4 w-4" />
                   Respiração guiada
                 </Button>
