@@ -11,6 +11,7 @@ import { findOngoingCallForUser, sessionIdOf } from "@/lib/emergencyCallGuard";
 import { persistExplicitTermination } from "@/lib/callTermination";
 import { completionReasonFor } from "@/lib/emergencyEndReasons";
 import { sosLog } from "@/lib/sosLogger";
+import { trackSosEvent, SOS_EVENTS } from "@/lib/sosTrace";
 
 
 const EmergencyCall = () => {
@@ -261,6 +262,15 @@ const EmergencyCall = () => {
 
         if (error) throw error;
 
+        trackSosEvent({
+          eventType: isFirstJoin ? SOS_EVENTS.CALL_STARTED : SOS_EVENTS.ROOM_JOINED,
+          requestId,
+          sessionId: sessionIdState,
+          actorType: userType,
+          message: isFirstJoin ? "Chamada iniciada" : "Participante entrou na sala",
+          metadata: { isFirstJoin },
+        });
+
         // Mark SOS as used for patients (only on the first join)
         if (userType === "patient" && isFirstJoin) {
           await supabase.functions.invoke("mark-sos-used", {
@@ -297,6 +307,20 @@ const EmergencyCall = () => {
         endedAt: endTime,
         crisisResolved: info?.crisisResolved ?? null,
         notes: info?.notes ?? null,
+      });
+
+      trackSosEvent({
+        eventType: SOS_EVENTS.CALL_ENDED_BY_PARTICIPANT,
+        requestId,
+        sessionId: sessionIdState,
+        actorType: info?.endedByType ?? userType,
+        actorUserId: auth.user?.id ?? null,
+        message: "Encerramento explícito pelo participante",
+        metadata: {
+          reason: info?.reason ?? completionReasonFor(userType),
+          crisisResolved: info?.crisisResolved ?? null,
+          endedAt: endTime,
+        },
       });
 
 
