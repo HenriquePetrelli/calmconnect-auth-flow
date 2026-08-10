@@ -112,6 +112,8 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   const [showDiagnostics, setShowDiagnostics] = useState(() =>
     isDiagnosticsEnabled(typeof window !== 'undefined' ? window.location.search : '', globalThis.localStorage)
   );
+  // Patient triage context (psychologist only).
+  const [showPatientContext, setShowPatientContext] = useState(false);
 
 
 
