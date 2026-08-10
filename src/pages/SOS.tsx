@@ -9,6 +9,15 @@ import SupportiveMessages from "@/components/sos/SupportiveMessages";
 import { supabase } from "@/integrations/supabase/client";
 import { useEmergencySOS } from "@/hooks/useEmergencySOS";
 
+/** Server-side TTL for pending SOS requests (finalize_stale_emergency_sessions). */
+const QUEUE_TTL_MS = 10 * 60 * 1000;
+
+const formatCountdown = (seconds: number) => {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+};
+
 const SOS = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -17,7 +26,11 @@ const SOS = () => {
   const [requestId, setRequestId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string>('');
+  const [createdAt, setCreatedAt] = useState<string | null>(null);
+  const [secondsLeft, setSecondsLeft] = useState<number>(QUEUE_TTL_MS / 1000);
+  const [expired, setExpired] = useState(false);
   const { cancelRequest, createEmergencyRequest } = useEmergencySOS();
+
   
   // Get requestId from navigation state (passed from SOSButton)
   const expectedRequestId = location.state?.requestId;
