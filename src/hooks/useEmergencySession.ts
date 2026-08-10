@@ -24,7 +24,7 @@ interface UseEmergencySessionParams {
  *  - the `accepted -> in_progress` transition on the first join
  *  - the single termination entry point
  *
- * The视 components only consume the returned state.
+ * The view components only consume the returned state.
  */
 export const useEmergencySession = ({
   sessionId,
