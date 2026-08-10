@@ -4,7 +4,7 @@ import { isRealTermination, getTerminationMessage } from '@/lib/callTermination'
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Mic, MicOff, Camera, CameraOff, PhoneOff, Loader2, AlertTriangle, Settings, Shield, Video, WifiOff, RefreshCw } from 'lucide-react';
+import { Mic, MicOff, Camera, CameraOff, PhoneOff, Loader2, AlertTriangle, Settings, Shield, Video, WifiOff, RefreshCw, Activity } from 'lucide-react';
 import { useWebRTC } from '@/hooks/useWebRTC';
 import { useCallPresence } from '@/hooks/useCallPresence';
 import { useParticipantHeartbeat } from '@/hooks/useParticipantHeartbeat';
@@ -42,6 +42,14 @@ import {
 } from '@/lib/emergencyEndReasons';
 import { sosLog } from '@/lib/sosLogger';
 import { endEmergencySession } from '@/lib/endEmergencySession';
+import CallDiagnosticsPanel from '@/components/sos/CallDiagnosticsPanel';
+import {
+  isDiagnosticsEnabled,
+  isDiagnosticsShortcut,
+  persistDiagnosticsFlag,
+  type DiagnosticsInput,
+} from '@/lib/callDiagnostics';
+import { buildTraceId } from '@/lib/sosTrace';
 
 export interface EndCallInfo {
   reason: string;
@@ -100,6 +108,11 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   const [callTerminatedMessage, setCallTerminatedMessage] = useState<string | null>(null);
   // Moment this client joined the call — used to ignore stale "call ended" events.
   const joinedAtRef = useRef<number>(Date.now());
+  // Diagnostics overlay (incident triage). Opt-in via ?debug=1, stored flag or Ctrl+Shift+D.
+  const [showDiagnostics, setShowDiagnostics] = useState(() =>
+    isDiagnosticsEnabled(typeof window !== 'undefined' ? window.location.search : '', globalThis.localStorage)
+  );
+
 
 
   const {
@@ -196,6 +209,52 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     }, []),
   });
 
+  // Ctrl/Cmd + Shift + D toggles diagnostics during an incident.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!isDiagnosticsShortcut(event)) return;
+      event.preventDefault();
+      setShowDiagnostics((prev) => {
+        persistDiagnosticsFlag(!prev, globalThis.localStorage);
+        return !prev;
+      });
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
+  // Snapshot of the whole flow, refreshed on every render while the panel is open.
+  const diagnosticsData: DiagnosticsInput = {
+    sessionId,
+    requestId: emergencyRequestIdRef.current,
+    traceId: buildTraceId(emergencyRequestIdRef.current, sessionId),
+    userType,
+    connectionState,
+    iceConnectionState: peerConnection?.iceConnectionState ?? null,
+    signalingState: peerConnection?.signalingState ?? null,
+    isConnected,
+    isReconnecting,
+    reconnectAttempt,
+    isNetworkOffline,
+    hasLocalStream: Boolean(localStream),
+    hasRemoteStream: Boolean(remoteStream),
+    localTracks: localStream?.getTracks().map((t) => `${t.kind}:${t.readyState}${t.enabled ? '' : ' (off)'}`),
+    remoteTracks: remoteStream?.getTracks().map((t) => `${t.kind}:${t.readyState}`),
+    dataChannelState: null,
+    isMuted,
+    isCameraOff,
+    remoteMuted,
+    remoteCameraOff: remoteIsCameraOff,
+    remotePresent,
+    remoteLeftAt,
+    heartbeatEnabled: Boolean(sessionId) && !callTerminatedMessage,
+    timeLeft,
+    timeLimit,
+    isTimerPaused,
+    callTerminatedMessage,
+    callEndedBy,
+    error,
+  };
 
 
   // Get current user name for initials
@@ -1018,6 +1077,16 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
 
   return (
     <div className="fixed inset-0 bg-background flex flex-col overflow-hidden">
+      {showDiagnostics && (
+        <CallDiagnosticsPanel
+          data={diagnosticsData}
+          onClose={() => {
+            persistDiagnosticsFlag(false, globalThis.localStorage);
+            setShowDiagnostics(false);
+          }}
+        />
+      )}
+
       {/* Header fixo com informações - Responsivo */}
       <div className="fixed top-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-b border-border z-50 safe-area-top">
         <div className="flex items-center justify-between p-4 max-w-7xl mx-auto">
@@ -1327,6 +1396,22 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
               Configurações
             </div>
           </button>
+
+          {/* Modo de diagnóstico (triagem de incidentes) */}
+          <button
+            onClick={() => setShowDiagnostics((v) => !v)}
+            aria-pressed={showDiagnostics}
+            className={`group relative w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center transition-all duration-200 shadow-lg ${
+              showDiagnostics ? 'bg-primary hover:bg-primary/90' : 'bg-muted hover:bg-muted/80'
+            }`}
+          >
+            <Activity className={showDiagnostics ? 'text-primary-foreground' : 'text-foreground'} size={18} />
+            <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-popover text-popover-foreground px-3 py-1 rounded-md text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+              Diagnóstico (Ctrl+Shift+D)
+            </div>
+          </button>
+
+
 
           {/* Botão de encerrar chamada */}
           <button
