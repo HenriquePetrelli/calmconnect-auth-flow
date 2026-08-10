@@ -980,6 +980,16 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   const handleFeedbackClose = () => {
     setShowFeedbackModal(false);
 
+    // Safety net: if any termination path failed before releasing hardware,
+    // the camera/microphone must still be freed here.
+    try {
+      enhancedCleanup();
+    } catch (error) {
+      console.warn('[SOS] cleanup on feedback close failed', error);
+    }
+
+
+
     toast({
       title: 'Chamada Finalizada',
       description: 'A videochamada foi encerrada com sucesso.',
