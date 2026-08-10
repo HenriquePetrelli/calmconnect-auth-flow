@@ -8,10 +8,13 @@ import { useQuarterlyActivities } from "@/hooks/useQuarterlyActivities";
 import { formatDateTime } from "@/utils/dateFormatters";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SkeletonSectionCard } from "@/components/skeletons/Skeletons";
+import { SosHistoryPanel } from "@/components/sos/SosHistoryPanel";
+import { useAuth } from "@/contexts/AuthContext";
 import jsPDF from 'jspdf';
 
 const ActivityHistory = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { quarterlyActivities, loading } = useQuarterlyActivities();
   const [selectedMonth, setSelectedMonth] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
