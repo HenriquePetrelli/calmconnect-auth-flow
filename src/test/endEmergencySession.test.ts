@@ -14,10 +14,13 @@ const makeClient = (request: any = { started_at: new Date().toISOString(), statu
           return { data: [{ id: 'row-1' }], error: null };
         };
         // Mirrors the real chain: .eq(...) [.is(...).select(...)]
-        const eqResult: any = Promise.resolve(null).then(record);
-        eqResult.is = () => ({ select: async () => record() });
+        const eqResult: any = {
+          then: (resolve: any, reject: any) => Promise.resolve(record()).then(resolve, reject),
+          is: () => ({ select: async () => record() }),
+        };
         return { eq: () => eqResult };
       },
+
 
       insert: async (values: any) => {
         updates[table].push(values);
