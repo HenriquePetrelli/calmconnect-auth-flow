@@ -323,7 +323,10 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
 
   // Enhanced session validation with intelligent delay
   useEffect(() => {
+    let detachSessionUpdate: (() => void) | undefined;
+
     const validateSessionWithDelay = async () => {
+
       if (!sessionId) {
         setIsLoading(false);
         return;
