@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { isRealTermination } from '@/lib/callTermination';
-import { attachCallSignalChannel, type CallSignalChannel } from '@/lib/callSignals';
+import { attachCallSignalChannel, type CallSignalChannel, type MediaStateSignal } from '@/lib/callSignals';
 import { trackSosEvent, SOS_EVENTS } from '@/lib/sosTrace';
 
 import { useToast } from '@/hooks/use-toast';
@@ -62,6 +62,10 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const callEndedByRef = useRef<{userId: string, userType: string} | null>(null);
   const signalChannelRef = useRef<CallSignalChannel | null>(null);
+  /** Last media state announced by the peer over the data channel (instant). */
+  const [remoteMediaState, setRemoteMediaState] = useState<MediaStateSignal | null>(null);
+  /** Last media state we announced — re-sent whenever the channel (re)opens. */
+  const localMediaStateRef = useRef<Omit<MediaStateSignal, 'type' | 'at'> | null>(null);
 
   const attemptReconnectRef = useRef<((pc: RTCPeerConnection) => void) | null>(null);
   const { toast } = useToast();
@@ -175,6 +179,12 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
 
       // In-call control channel: delivers CALL_ENDED instantly to the peer.
       signalChannelRef.current = attachCallSignalChannel(pc as any, (signal) => {
+        if (signal.type === 'MEDIA_STATE') {
+          // Ignore our own echo and out-of-order updates.
+          if (signal.userType === userType) return;
+          setRemoteMediaState((prev) => (prev && prev.at > signal.at ? prev : signal));
+          return;
+        }
         if (signal.type !== 'CALL_ENDED') return;
         setCallEndedBy({ userId: '', userType: signal.endedByType });
         trackSosEvent({
@@ -550,6 +560,25 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     }
     return false;
   }, [localStream]);
+
+  const sendMediaState = useCallback((payload: Omit<MediaStateSignal, 'type' | 'at'>) => {
+    localMediaStateRef.current = payload;
+    return signalChannelRef.current?.sendMediaState(payload) ?? false;
+  }, []);
+
+  // Re-announce our media state whenever the peer connection comes up, so the
+  // remote side never renders a stale camera/avatar after a (re)connection.
+  useEffect(() => {
+    if (!isConnected) return;
+    let attempts = 0;
+    const timer = setInterval(() => {
+      attempts += 1;
+      const payload = localMediaStateRef.current;
+      const sent = payload ? signalChannelRef.current?.sendMediaState(payload) : false;
+      if (sent || attempts >= 8) clearInterval(timer);
+    }, 800);
+    return () => clearInterval(timer);
+  }, [isConnected]);
 
   const cleanup = useCallback(() => {
     // Prevent multiple cleanup calls
@@ -980,6 +1009,9 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     toggleAudio,
 
     toggleVideo,
+    remoteMediaState,
+    /** Announces the local camera/mic/avatar state to the peer instantly. */
+    sendMediaState,
     cleanup,
     updateDeviceStream,
     /** Signals CALL_ENDED to the peer over the data channel (best effort). */
