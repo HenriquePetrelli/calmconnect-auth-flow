@@ -1077,6 +1077,16 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
 
   return (
     <div className="fixed inset-0 bg-background flex flex-col overflow-hidden">
+      {showDiagnostics && (
+        <CallDiagnosticsPanel
+          data={diagnosticsData}
+          onClose={() => {
+            persistDiagnosticsFlag(false, globalThis.localStorage);
+            setShowDiagnostics(false);
+          }}
+        />
+      )}
+
       {/* Header fixo com informações - Responsivo */}
       <div className="fixed top-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-b border-border z-50 safe-area-top">
         <div className="flex items-center justify-between p-4 max-w-7xl mx-auto">
