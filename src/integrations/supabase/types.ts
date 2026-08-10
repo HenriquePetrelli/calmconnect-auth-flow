@@ -1788,6 +1788,8 @@ export type Database = {
           should_show_rejection_message: boolean
         }[]
       }
+      get_sos_metrics: { Args: { p_days?: number }; Returns: Json }
+      get_sos_patient_context: { Args: { p_request_id: string }; Returns: Json }
       get_user_type: { Args: { user_id_param: string }; Returns: string }
       handle_psychologist_approval: {
         Args: { admin_id: string; psychologist_id: string }
