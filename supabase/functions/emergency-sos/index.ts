@@ -117,7 +117,10 @@ serve(async (req) => {
               ? `Sua conta está bloqueada: ${patientRow.blocked_reason}`
               : 'Sua conta está temporariamente bloqueada para atendimentos de emergência.',
           }),
-          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          // This is an expected business-rule outcome, not a transport failure.
+          // Returning 200 lets the SPA render the blocked state without Supabase
+          // promoting the response to a FunctionsHttpError/runtime error.
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
@@ -136,7 +139,8 @@ serve(async (req) => {
             error: quota.reason || 'Seu plano não permite o uso do SOS neste momento.',
             plan_type: quota.plan_type ?? null,
           }),
-          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          // Subscription/quota denial is an expected application response.
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 

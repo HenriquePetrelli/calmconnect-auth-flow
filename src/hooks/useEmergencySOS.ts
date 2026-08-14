@@ -90,7 +90,19 @@ export const useEmergencySOS = () => {
       console.log('✅ Emergency SOS response:', data);
 
       if (!data?.success) {
-        const errorMsg = data?.error || data?.message || 'Erro desconhecido ao criar solicitação';
+        const errorMsg = data?.error || data?.message || 'Não foi possível iniciar o SOS.';
+        const isBusinessDenial = data?.code === 'SOS_NOT_ALLOWED' || data?.code === 'PATIENT_BLOCKED';
+
+        if (isBusinessDenial) {
+          toast({
+            title: data.code === 'PATIENT_BLOCKED' ? 'Conta bloqueada' : 'SOS indisponível',
+            description: errorMsg,
+            variant: 'destructive',
+            duration: 6000,
+          });
+          return null;
+        }
+
         throw new Error(errorMsg);
       }
 
