@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -172,8 +172,7 @@ export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerNam
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open && !required) onClose(); }}>
       <DialogContent
-        className="sm:max-w-md"
-        hideCloseButton={required}
+        className={`sm:max-w-md ${required ? "[&>button]:hidden" : ""}`}
         onPointerDownOutside={(e) => { if (required) e.preventDefault(); }}
         onEscapeKeyDown={(e) => { if (required) e.preventDefault(); }}
         onInteractOutside={(e) => { if (required) e.preventDefault(); }}
@@ -269,14 +268,16 @@ export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerNam
 
             {/* Action buttons */}
             <div className="flex gap-3">
-               <Button
-                 variant="outline"
-                 className="flex-1"
-                 onClick={handleClose}
-                 disabled={isSubmitting}
-               >
-                 Pular
-               </Button>
+               {!required && (
+                 <Button
+                   variant="outline"
+                   className="flex-1"
+                   onClick={handleClose}
+                   disabled={isSubmitting}
+                 >
+                   Pular
+                 </Button>
+               )}
               <Button
                 className="flex-1"
                 onClick={handleSubmit}
