@@ -22,10 +22,10 @@ export const usePsychologistEmergency = () => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  // Fetch emergency requests
-  const fetchEmergencyRequests = async () => {
+  // Fetch emergency requests. `silent` avoids skeleton flicker on background refreshes.
+  const fetchEmergencyRequests = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const { data, error } = await supabase.functions.invoke('psychologist-emergency', {
         method: 'GET'
       });
@@ -35,15 +35,18 @@ export const usePsychologistEmergency = () => {
       setEmergencyRequests(data || []);
     } catch (error: any) {
       console.error('Error fetching emergency requests:', error);
-      toast({
-        title: 'Erro',
-        description: 'Erro ao carregar solicitações de emergência',
-        variant: 'destructive',
-      });
+      if (!silent) {
+        toast({
+          title: 'Erro',
+          description: 'Erro ao carregar solicitações de emergência',
+          variant: 'destructive',
+        });
+      }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
+
 
   // Accept emergency request
   const acceptEmergencyRequest = async (requestId: string) => {
