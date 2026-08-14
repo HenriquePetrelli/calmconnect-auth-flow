@@ -73,6 +73,9 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
   const graceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastAppliedOfferRef = useRef<string | null>(null);
   const lastAppliedAnswerRef = useRef<string | null>(null);
+  /** Remote candidates already applied to the current ICE generation. */
+  const appliedCandidatesRef = useRef<Set<string>>(new Set());
+
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const callEndedByRef = useRef<{userId: string, userType: string} | null>(null);
   const signalChannelRef = useRef<CallSignalChannel | null>(null);
