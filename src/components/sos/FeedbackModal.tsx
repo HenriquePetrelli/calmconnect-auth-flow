@@ -275,11 +275,85 @@ export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerNam
               </div>
             )}
 
+            {/* Psychologist clinical record: symptoms + notes */}
+            {isPsychologist && (
+              <>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <Label className="font-medium">Sintomas apresentados</Label>
+                    <Badge variant="outline">{symptoms.length} selecionado(s)</Badge>
+                  </div>
+
+                  {symptoms.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {symptoms.map((s) => (
+                        <Badge
+                          key={s}
+                          variant="secondary"
+                          className="max-w-full cursor-pointer truncate font-normal"
+                          onClick={() => toggleSymptom(s)}
+                          title="Remover"
+                        >
+                          {s}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      value={symptomQuery}
+                      onChange={(e) => setSymptomQuery(e.target.value)}
+                      placeholder="Buscar sintoma..."
+                      className="pl-9"
+                    />
+                  </div>
+
+                  <ScrollArea className="h-52 rounded-md border p-3">
+                    <div className="space-y-2.5">
+                      {filteredSymptoms.length === 0 && (
+                        <p className="text-sm text-muted-foreground">Nenhum sintoma encontrado.</p>
+                      )}
+                      {filteredSymptoms.map((symptom) => (
+                        <div key={symptom} className="flex items-start gap-2.5">
+                          <Checkbox
+                            id={`symptom-${symptom}`}
+                            checked={symptoms.includes(symptom)}
+                            onCheckedChange={() => toggleSymptom(symptom)}
+                            className="mt-0.5"
+                          />
+                          <Label
+                            htmlFor={`symptom-${symptom}`}
+                            className="text-sm font-normal leading-snug cursor-pointer"
+                          >
+                            {symptom}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="clinical-notes" className="font-medium">
+                    Anotações do atendimento
+                  </Label>
+                  <Textarea
+                    id="clinical-notes"
+                    value={clinicalNotes}
+                    onChange={(e) => setClinicalNotes(e.target.value)}
+                    rows={4}
+                    placeholder="Registre condutas, encaminhamentos e observações clínicas do atendimento"
+                  />
+                </div>
+              </>
+            )}
 
             {/* Optional free-text comment */}
             <div className="space-y-2">
               <Label htmlFor="feedback-comment" className="font-medium">
-                {userType === 'patient' ? 'Conte como foi sua experiência (opcional)' : 'Observações (opcional)'}
+                {userType === 'patient' ? 'Conte como foi sua experiência (opcional)' : 'Observações gerais (opcional)'}
               </Label>
               <Textarea
                 id="feedback-comment"
@@ -291,6 +365,7 @@ export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerNam
                   : 'Registre observações sobre o atendimento'}
               />
             </div>
+
 
             {/* Action buttons */}
             <div className="flex gap-3">
