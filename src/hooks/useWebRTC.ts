@@ -535,6 +535,8 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
   const handleOffer = async (offer: RTCSessionDescriptionInit, pc: RTCPeerConnection) => {
     try {
       console.log('📝 Handling incoming offer...');
+      // New remote generation: previously applied candidates are obsolete.
+      appliedCandidatesRef.current = new Set();
       await pc.setRemoteDescription(new RTCSessionDescription(offer));
       
       const answer = await pc.createAnswer();
@@ -559,6 +561,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
   const handleAnswer = async (answer: RTCSessionDescriptionInit, pc: RTCPeerConnection) => {
     try {
       console.log('📝 Handling incoming answer...');
+      appliedCandidatesRef.current = new Set();
       await pc.setRemoteDescription(new RTCSessionDescription(answer));
       console.log('✅ Answer processed successfully');
     } catch (error) {
@@ -566,6 +569,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
       setError('Erro ao processar resposta de conexão');
     }
   };
+
 
   const processIceCandidates = async (candidates: RTCIceCandidateInit[], pc: RTCPeerConnection) => {
     if (!candidates || !Array.isArray(candidates)) return;
