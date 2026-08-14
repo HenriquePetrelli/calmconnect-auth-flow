@@ -26,6 +26,20 @@ interface WebRTCSession {
   ended_by_type?: string;
 }
 
+/** Extracts the ICE ufrags declared in an SDP (one per m-line, usually equal). */
+const getUfrags = (sdp?: string): string[] => {
+  if (!sdp) return [];
+  return Array.from(new Set(
+    sdp.split('\n')
+      .filter((l) => l.startsWith('a=ice-ufrag:'))
+      .map((l) => l.replace('a=ice-ufrag:', '').trim())
+  ));
+};
+
+/** Stable identity for a remote candidate, used to avoid re-adding duplicates. */
+const candidateKey = (c: RTCIceCandidateInit) =>
+  `${(c as any).usernameFragment ?? ''}|${c.sdpMid ?? ''}|${c.sdpMLineIndex ?? ''}|${c.candidate ?? ''}`;
+
 interface UseWebRTCProps {
   sessionId: string;
   userType: 'psychologist' | 'patient';
