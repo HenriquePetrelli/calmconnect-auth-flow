@@ -18,9 +18,12 @@ interface FeedbackModalProps {
   sessionId: string;
   partnerName?: string;
   onRedirect?: () => void;
+  /** Mandatory evaluation: no skip, no dismiss — only submitting closes it. */
+  required?: boolean;
 }
 
-export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerName, onRedirect }: FeedbackModalProps) => {
+export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerName, onRedirect, required = false }: FeedbackModalProps) => {
+
   const [rating, setRating] = useState<number>(0);
   const [problemResolved, setProblemResolved] = useState<string>('');
   const [comment, setComment] = useState('');
