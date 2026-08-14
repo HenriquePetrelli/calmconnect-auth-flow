@@ -256,9 +256,9 @@ export const VideoCallSettingsModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-[#202124] border-border text-white max-w-md">
+      <DialogContent className="bg-background text-foreground border-border max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-white">
+          <DialogTitle className="flex items-center gap-2 text-foreground">
             <Settings className="w-5 h-5" />
             Configurações da chamada
           </DialogTitle>
@@ -267,17 +267,17 @@ export const VideoCallSettingsModal = ({
         <div className="space-y-6 py-4">
           {/* Device Status Indicator */}
           {isTestingDevices && (
-            <div className="flex items-center gap-2 p-3 bg-blue-900/30 border border-blue-500/30 rounded-lg">
-              <Loader2 className="w-4 h-4 animate-spin text-secondary" />
-              <span className="text-sm text-blue-200">Testando dispositivos selecionados...</span>
+            <div className="flex items-center gap-2 p-3 bg-primary/10 border border-primary/20 rounded-lg">
+              <Loader2 className="w-4 h-4 animate-spin text-primary" />
+              <span className="text-sm text-foreground">Testando dispositivos selecionados...</span>
             </div>
           )}
 
           {/* Device Error Warnings */}
           {(!audioDevices.length || !videoDevices.length) && (
-            <div className="flex items-center gap-2 p-3 bg-yellow-900/30 border border-yellow-500/30 rounded-lg">
+            <div className="flex items-center gap-2 p-3 bg-warning/10 border border-warning/30 rounded-lg">
               <AlertTriangle className="w-4 h-4 text-warning" />
-              <span className="text-sm text-warning">
+              <span className="text-sm text-warning-foreground">
                 {!audioDevices.length && 'Nenhum microfone detectado. '}
                 {!videoDevices.length && 'Nenhuma câmera detectada. '}
                 Verifique se os dispositivos estão conectados.
@@ -291,15 +291,14 @@ export const VideoCallSettingsModal = ({
               Microfone
             </Label>
             <Select value={tempAudioDevice} onValueChange={handleAudioDeviceChange}>
-              <SelectTrigger className="bg-card border-border text-white">
+              <SelectTrigger className="bg-background border-input text-foreground">
                 <SelectValue placeholder="Selecionar microfone" />
               </SelectTrigger>
-              <SelectContent className="bg-card border-border z-50">
+              <SelectContent className="bg-popover text-popover-foreground border-border z-50">
                 {audioDevices.map((device) => (
                   <SelectItem 
                     key={device.deviceId} 
                     value={device.deviceId}
-                    className="text-white hover:bg-accent"
                   >
                     {device.label || `Microfone ${device.deviceId.slice(0, 8)}...`}
                   </SelectItem>
@@ -315,15 +314,14 @@ export const VideoCallSettingsModal = ({
               Câmera
             </Label>
             <Select value={tempVideoDevice} onValueChange={handleVideoDeviceChange}>
-              <SelectTrigger className="bg-card border-border text-white">
+              <SelectTrigger className="bg-background border-input text-foreground">
                 <SelectValue placeholder="Selecionar câmera" />
               </SelectTrigger>
-              <SelectContent className="bg-card border-border z-50">
+              <SelectContent className="bg-popover text-popover-foreground border-border z-50">
                 {videoDevices.map((device) => (
                   <SelectItem 
                     key={device.deviceId} 
                     value={device.deviceId}
-                    className="text-white hover:bg-accent"
                   >
                     {device.label || `Câmera ${device.deviceId.slice(0, 8)}...`}
                   </SelectItem>
@@ -339,15 +337,14 @@ export const VideoCallSettingsModal = ({
               Alto-falante
             </Label>
             <Select value={tempAudioOutputDevice} onValueChange={handleAudioOutputDeviceChange}>
-              <SelectTrigger className="bg-card border-border text-white">
+              <SelectTrigger className="bg-background border-input text-foreground">
                 <SelectValue placeholder="Selecionar alto-falante" />
               </SelectTrigger>
-              <SelectContent className="bg-card border-border z-50">
+              <SelectContent className="bg-popover text-popover-foreground border-border z-50">
                 {audioOutputDevices.map((device) => (
                   <SelectItem 
                     key={device.deviceId} 
                     value={device.deviceId}
-                    className="text-white hover:bg-accent"
                   >
                     {device.label || `Alto-falante ${device.deviceId.slice(0, 8)}...`}
                   </SelectItem>
@@ -362,14 +359,12 @@ export const VideoCallSettingsModal = ({
           <Button 
             variant="outline" 
             onClick={handleCancel}
-            className="bg-card border-border text-white hover:bg-accent"
           >
             Cancelar
           </Button>
           <Button 
             onClick={testDevicesAndSave}
             disabled={isSaving || preferencesLoading || isTestingDevices}
-            className="bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
           >
             {isSaving || isTestingDevices ? (
               <>
