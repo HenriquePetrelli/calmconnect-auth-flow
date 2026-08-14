@@ -214,15 +214,16 @@ export const usePsychologistEmergency = () => {
         (payload) => {
           console.log('Emergency request change:', payload);
           // Refresh data when there are changes
-          fetchEmergencyRequests();
+          fetchEmergencyRequests(true);
         }
       )
       .subscribe();
 
     // RLS hides cancelled/accepted rows from this psychologist, so the postgres
     // event never arrives. The broadcast bus + a short poll keep the list honest.
-    const unsubscribeQueue = subscribeSosQueue(() => fetchEmergencyRequests());
-    const poll = window.setInterval(() => fetchEmergencyRequests(), 10_000);
+    const unsubscribeQueue = subscribeSosQueue(() => fetchEmergencyRequests(true));
+    const poll = window.setInterval(() => fetchEmergencyRequests(true), 10_000);
+
 
     return () => {
       supabase.removeChannel(channel);
