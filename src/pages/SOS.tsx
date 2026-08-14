@@ -163,6 +163,9 @@ const SOS = () => {
         const id = (data as any).id as string;
         setRequestId(id);
         setCreatedAt((data as any).created_at ?? new Date().toISOString());
+        // Wake up every psychologist dashboard immediately.
+        notifySosQueueChanged({ requestId: id });
+
 
         // Only navigate to call if this specific request is accepted
         const sessionId = (data as any).video_room_id || (data as any).room_url;
