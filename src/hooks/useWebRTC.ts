@@ -577,7 +577,8 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
         appliedCandidatesRef.current.add(candidateKey(candidateData));
 
         const candidate = new RTCIceCandidate(candidateData);
-        if (pc.signalingState === 'closed') return;
+        if ((pc.signalingState as string) === 'closed') return;
+
         await pc.addIceCandidate(candidate);
         console.log('✅ ICE candidate added');
       } catch (error) {
