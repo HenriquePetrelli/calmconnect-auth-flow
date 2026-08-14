@@ -1256,6 +1256,7 @@ export type Database = {
       }
       session_feedback: {
         Row: {
+          clinical_notes: string | null
           comment: string | null
           created_at: string | null
           emergency_request_id: string | null
@@ -1263,11 +1264,13 @@ export type Database = {
           problem_resolved: string | null
           rating: number
           session_id: string
+          symptoms: string[]
           updated_at: string | null
           user_id: string
           user_type: string
         }
         Insert: {
+          clinical_notes?: string | null
           comment?: string | null
           created_at?: string | null
           emergency_request_id?: string | null
@@ -1275,11 +1278,13 @@ export type Database = {
           problem_resolved?: string | null
           rating: number
           session_id: string
+          symptoms?: string[]
           updated_at?: string | null
           user_id: string
           user_type: string
         }
         Update: {
+          clinical_notes?: string | null
           comment?: string | null
           created_at?: string | null
           emergency_request_id?: string | null
@@ -1287,6 +1292,7 @@ export type Database = {
           problem_resolved?: string | null
           rating?: number
           session_id?: string
+          symptoms?: string[]
           updated_at?: string | null
           user_id?: string
           user_type?: string
