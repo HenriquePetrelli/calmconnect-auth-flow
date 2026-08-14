@@ -138,10 +138,13 @@ export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerNam
             rating,
             problem_resolved: userType === 'patient' ? problemResolved : null,
             comment: comment.trim() || null,
+            symptoms: isPsychologist ? symptoms : [],
+            clinical_notes: isPsychologist ? clinicalNotes.trim() || null : null,
             emergency_request_id: emergencyRow?.id ?? null,
           },
           { onConflict: 'session_id,user_id' }
         );
+
 
       if (feedbackError) {
         throw feedbackError;
