@@ -52,12 +52,41 @@ const SOS = () => {
       // Only cleanup if we have a requestId, the request was NOT accepted, and we're leaving the page
       if (requestIdRef.current && !acceptedRef.current) {
         console.log(`User left SOS page without acceptance, cleaning up pending request: ${requestIdRef.current}`);
-        cancelRequest(requestIdRef.current, 'abandoned').catch(console.error);
+        cancelRequest(requestIdRef.current, 'abandoned')
+          .catch(console.error)
+          .finally(() => notifySosQueueChanged({ requestId: requestIdRef.current }));
       } else if (acceptedRef.current) {
         console.log('Skipping cleanup: emergency was accepted, preserving request and session.');
       }
     };
   }, []); // Empty dependency array - only runs on unmount
+
+  // Closing the tab / app must also drop the request from the psychologist queue.
+  useEffect(() => {
+    const handleUnload = () => {
+      const id = requestIdRef.current;
+      if (!id || acceptedRef.current || !userId) return;
+
+      const payload = JSON.stringify({ request_id: id, patient_id: userId });
+      try {
+        navigator.sendBeacon(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/emergency-cleanup`,
+          new Blob([payload], { type: 'application/json' })
+        );
+      } catch (error) {
+        console.error('[SOS] failed to cleanup on unload', error);
+      }
+      notifySosQueueChanged({ requestId: id });
+    };
+
+    window.addEventListener('pagehide', handleUnload);
+    window.addEventListener('beforeunload', handleUnload);
+    return () => {
+      window.removeEventListener('pagehide', handleUnload);
+      window.removeEventListener('beforeunload', handleUnload);
+    };
+  }, [userId]);
+
 
   // Fetch latest emergency request for current user and subscribe for acceptance
   useEffect(() => {
