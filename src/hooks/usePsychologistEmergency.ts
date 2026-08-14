@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { findPsychologistOngoingCall } from '@/lib/emergencyCallGuard';
+import { notifySosQueueChanged, subscribeSosQueue } from '@/lib/sosQueueChannel';
+
 
 interface EmergencyRequest {
   id: string;
@@ -20,10 +22,10 @@ export const usePsychologistEmergency = () => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  // Fetch emergency requests
-  const fetchEmergencyRequests = async () => {
+  // Fetch emergency requests. `silent` avoids skeleton flicker on background refreshes.
+  const fetchEmergencyRequests = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const { data, error } = await supabase.functions.invoke('psychologist-emergency', {
         method: 'GET'
       });
@@ -33,15 +35,18 @@ export const usePsychologistEmergency = () => {
       setEmergencyRequests(data || []);
     } catch (error: any) {
       console.error('Error fetching emergency requests:', error);
-      toast({
-        title: 'Erro',
-        description: 'Erro ao carregar solicitações de emergência',
-        variant: 'destructive',
-      });
+      if (!silent) {
+        toast({
+          title: 'Erro',
+          description: 'Erro ao carregar solicitações de emergência',
+          variant: 'destructive',
+        });
+      }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
+
 
   // Accept emergency request
   const acceptEmergencyRequest = async (requestId: string) => {
@@ -130,6 +135,7 @@ export const usePsychologistEmergency = () => {
         
         // Refresh the list
         fetchEmergencyRequests();
+        notifySosQueueChanged({ requestId });
         
         return {
           emergency_request: data.emergency_request,
@@ -181,6 +187,7 @@ export const usePsychologistEmergency = () => {
 
       // Refresh the list
       fetchEmergencyRequests();
+      notifySosQueueChanged({ requestId });
     } catch (error: any) {
       console.error('Error declining emergency request:', error);
       toast({
@@ -209,15 +216,24 @@ export const usePsychologistEmergency = () => {
         (payload) => {
           console.log('Emergency request change:', payload);
           // Refresh data when there are changes
-          fetchEmergencyRequests();
+          fetchEmergencyRequests(true);
         }
       )
       .subscribe();
 
+    // RLS hides cancelled/accepted rows from this psychologist, so the postgres
+    // event never arrives. The broadcast bus + a short poll keep the list honest.
+    const unsubscribeQueue = subscribeSosQueue(() => fetchEmergencyRequests(true));
+    const poll = window.setInterval(() => fetchEmergencyRequests(true), 10_000);
+
+
     return () => {
       supabase.removeChannel(channel);
+      unsubscribeQueue();
+      window.clearInterval(poll);
     };
   }, []);
+
 
   return {
     emergencyRequests,

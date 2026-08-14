@@ -104,3 +104,6 @@ verify_jwt = true
 
 [functions.admin-block-psychologist]
 verify_jwt = true
+
+[functions.emergency-cleanup]
+verify_jwt = false

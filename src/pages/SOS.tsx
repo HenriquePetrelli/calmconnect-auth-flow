@@ -8,6 +8,8 @@ import CancelConfirmationModal from "@/components/sos/CancelConfirmationModal";
 import SupportiveMessages from "@/components/sos/SupportiveMessages";
 import { supabase } from "@/integrations/supabase/client";
 import { useEmergencySOS } from "@/hooks/useEmergencySOS";
+import { notifySosQueueChanged, subscribeSosQueue } from "@/lib/sosQueueChannel";
+
 
 /** Server-side TTL for pending SOS requests (finalize_stale_emergency_sessions). */
 const QUEUE_TTL_MS = 10 * 60 * 1000;
@@ -50,12 +52,41 @@ const SOS = () => {
       // Only cleanup if we have a requestId, the request was NOT accepted, and we're leaving the page
       if (requestIdRef.current && !acceptedRef.current) {
         console.log(`User left SOS page without acceptance, cleaning up pending request: ${requestIdRef.current}`);
-        cancelRequest(requestIdRef.current, 'abandoned').catch(console.error);
+        cancelRequest(requestIdRef.current, 'abandoned')
+          .catch(console.error)
+          .finally(() => notifySosQueueChanged({ requestId: requestIdRef.current }));
       } else if (acceptedRef.current) {
         console.log('Skipping cleanup: emergency was accepted, preserving request and session.');
       }
     };
   }, []); // Empty dependency array - only runs on unmount
+
+  // Closing the tab / app must also drop the request from the psychologist queue.
+  useEffect(() => {
+    const handleUnload = () => {
+      const id = requestIdRef.current;
+      if (!id || acceptedRef.current || !userId) return;
+
+      const payload = JSON.stringify({ request_id: id, patient_id: userId });
+      try {
+        navigator.sendBeacon(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/emergency-cleanup`,
+          new Blob([payload], { type: 'application/json' })
+        );
+      } catch (error) {
+        console.error('[SOS] failed to cleanup on unload', error);
+      }
+      notifySosQueueChanged({ requestId: id });
+    };
+
+    window.addEventListener('pagehide', handleUnload);
+    window.addEventListener('beforeunload', handleUnload);
+    return () => {
+      window.removeEventListener('pagehide', handleUnload);
+      window.removeEventListener('beforeunload', handleUnload);
+    };
+  }, [userId]);
+
 
   // Fetch latest emergency request for current user and subscribe for acceptance
   useEffect(() => {
@@ -132,6 +163,9 @@ const SOS = () => {
         const id = (data as any).id as string;
         setRequestId(id);
         setCreatedAt((data as any).created_at ?? new Date().toISOString());
+        // Wake up every psychologist dashboard immediately.
+        notifySosQueueChanged({ requestId: id });
+
 
         // Only navigate to call if this specific request is accepted
         const sessionId = (data as any).video_room_id || (data as any).room_url;
@@ -181,21 +215,26 @@ const SOS = () => {
     fetchOnline();
 
     const channel = supabase
-      .channel('presence_watch')
+      .channel(`presence_watch_${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'psychologist_presence' }, () => {
         fetchOnline();
       })
       .subscribe();
 
+    // A psychologist accepting/declining also changes availability.
+    const unsubscribeQueue = subscribeSosQueue(fetchOnline);
+
     // Fallback polling in case the realtime socket drops
-    const interval = window.setInterval(fetchOnline, 15000);
+    const interval = window.setInterval(fetchOnline, 8000);
 
     return () => {
       active = false;
       window.clearInterval(interval);
+      unsubscribeQueue();
       supabase.removeChannel(channel);
     };
   }, []);
+
 
   // Countdown mirroring the server-side 10 minute TTL for pending requests.
   useEffect(() => {
@@ -221,6 +260,8 @@ const SOS = () => {
       try {
         console.log(`User manually cancelled request: ${requestId}`);
         await cancelRequest(requestId, 'cancelled_by_patient');
+        notifySosQueueChanged({ requestId });
+
       } catch (error) {
         console.error('Error cancelling request:', error);
       }

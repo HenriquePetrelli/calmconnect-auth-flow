@@ -39,8 +39,11 @@ Regras:
 ### 3.1 Abertura do chamado
 - Paciente inicia em `/sos`; é criado um registro em `emergency_requests` com status `pending`.
 - A fila só é exibida para psicólogos com presença online (`psychologist_presence`); psicólogo offline vê aviso com botão para ficar online.
-- O contador de profissionais online atualiza em tempo real.
+- O contador de profissionais online atualiza em tempo real (realtime de presença + canal broadcast `sos-queue` + polling de 8s). Bloqueios temporários já vencidos não reduzem a disponibilidade.
+- A lista de emergências do psicólogo também atualiza em tempo real via `sos-queue` e polling de 10s, garantindo que chamados cancelados sumam mesmo quando o RLS impede o evento do banco.
+- Se o paciente sair ou fechar a tela do SOS sem aceite, a solicitação é cancelada automaticamente (`emergency-cleanup` via beacon) e a fila do psicólogo é atualizada.
 - O consumo de SOS respeita o limite do plano do paciente (ver seção 5).
+
 
 ### 3.2 Aceite
 - Aceite é atômico: apenas um psicólogo consegue assumir o chamado; concorrentes recebem falha controlada.
