@@ -198,20 +198,21 @@ export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerNam
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open && !required) onClose(); }}>
       <DialogContent
-        className={`sm:max-w-md ${required ? "[&>button]:hidden" : ""}`}
+        className={`${isPsychologist ? 'sm:max-w-lg' : 'sm:max-w-md'} max-h-[90vh] overflow-y-auto ${required ? "[&>button]:hidden" : ""}`}
         onPointerDownOutside={(e) => { if (required) e.preventDefault(); }}
         onEscapeKeyDown={(e) => { if (required) e.preventDefault(); }}
         onInteractOutside={(e) => { if (required) e.preventDefault(); }}
       >
         <DialogHeader>
           <DialogTitle className="text-center">
-            Como foi sua experiência?
+            {isPsychologist ? 'Registro do atendimento' : 'Como foi sua experiência?'}
           </DialogTitle>
           {required && (
             <DialogDescription className="text-center">
               Avalie o atendimento para continuar usando o aplicativo.
             </DialogDescription>
           )}
+
         </DialogHeader>
 
 
