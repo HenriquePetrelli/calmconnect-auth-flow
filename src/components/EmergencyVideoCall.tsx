@@ -1688,6 +1688,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
       {/* Feedback Modal */}
       <FeedbackModal
         isOpen={showFeedbackModal}
+        required
         onClose={handleFeedbackClose}
         userType={userType}
         sessionId={sessionId || ''}

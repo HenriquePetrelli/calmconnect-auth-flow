@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -18,9 +18,12 @@ interface FeedbackModalProps {
   sessionId: string;
   partnerName?: string;
   onRedirect?: () => void;
+  /** Mandatory evaluation: no skip, no dismiss — only submitting closes it. */
+  required?: boolean;
 }
 
-export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerName, onRedirect }: FeedbackModalProps) => {
+export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerName, onRedirect, required = false }: FeedbackModalProps) => {
+
   const [rating, setRating] = useState<number>(0);
   const [problemResolved, setProblemResolved] = useState<string>('');
   const [comment, setComment] = useState('');
@@ -167,13 +170,24 @@ export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerNam
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open && !required) onClose(); }}>
+      <DialogContent
+        className={`sm:max-w-md ${required ? "[&>button]:hidden" : ""}`}
+        onPointerDownOutside={(e) => { if (required) e.preventDefault(); }}
+        onEscapeKeyDown={(e) => { if (required) e.preventDefault(); }}
+        onInteractOutside={(e) => { if (required) e.preventDefault(); }}
+      >
         <DialogHeader>
           <DialogTitle className="text-center">
             Como foi sua experiência?
           </DialogTitle>
+          {required && (
+            <DialogDescription className="text-center">
+              Avalie o atendimento para continuar usando o aplicativo.
+            </DialogDescription>
+          )}
         </DialogHeader>
+
 
         <Card>
           <CardContent className="p-6 space-y-6">
@@ -254,14 +268,16 @@ export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerNam
 
             {/* Action buttons */}
             <div className="flex gap-3">
-               <Button
-                 variant="outline"
-                 className="flex-1"
-                 onClick={handleClose}
-                 disabled={isSubmitting}
-               >
-                 Pular
-               </Button>
+               {!required && (
+                 <Button
+                   variant="outline"
+                   className="flex-1"
+                   onClick={handleClose}
+                   disabled={isSubmitting}
+                 >
+                   Pular
+                 </Button>
+               )}
               <Button
                 className="flex-1"
                 onClick={handleSubmit}
