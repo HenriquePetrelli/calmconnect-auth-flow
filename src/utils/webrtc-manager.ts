@@ -151,9 +151,13 @@ class WebRTCConnectionManager {
   }
 
   private isConnectionUsable(connection: RTCPeerConnection): boolean {
+    // A closed signaling state can never be revived — reusing it makes a
+    // rejoining participant hang forever in "reconnecting".
+    if (connection.signalingState === 'closed') return false;
     const usableStates: RTCPeerConnectionState[] = ['new', 'connecting', 'connected'];
     return usableStates.includes(connection.connectionState);
   }
+
 
   async cleanupConnection(sessionId: string): Promise<void> {
     const connection = this.activeConnections.get(sessionId);
