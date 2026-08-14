@@ -260,6 +260,8 @@ const SOS = () => {
       try {
         console.log(`User manually cancelled request: ${requestId}`);
         await cancelRequest(requestId, 'cancelled_by_patient');
+        notifySosQueueChanged({ requestId });
+
       } catch (error) {
         console.error('Error cancelling request:', error);
       }
