@@ -135,6 +135,7 @@ export const usePsychologistEmergency = () => {
         
         // Refresh the list
         fetchEmergencyRequests();
+        notifySosQueueChanged({ requestId });
         
         return {
           emergency_request: data.emergency_request,
@@ -186,6 +187,7 @@ export const usePsychologistEmergency = () => {
 
       // Refresh the list
       fetchEmergencyRequests();
+      notifySosQueueChanged({ requestId });
     } catch (error: any) {
       console.error('Error declining emergency request:', error);
       toast({
