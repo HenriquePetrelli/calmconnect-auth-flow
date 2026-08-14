@@ -544,20 +544,33 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
 
   const processIceCandidates = async (candidates: RTCIceCandidateInit[], pc: RTCPeerConnection) => {
     if (!candidates || !Array.isArray(candidates)) return;
-    
+    // A closed/renegotiating connection must never receive candidates.
+    if (pc.signalingState === 'closed') return;
+    if (!pc.remoteDescription || !pc.remoteDescription.type) return;
+
+    // Only candidates belonging to the CURRENT remote ICE credentials are valid.
+    // After a peer rejoins/ICE-restarts, the row still carries candidates from
+    // previous generations — adding them poisons the checklist and the call
+    // never reconnects.
+    const remoteUfrags = getUfrags(pc.remoteDescription.sdp);
+
     for (const candidateData of candidates) {
       try {
-        if (candidateData && typeof candidateData === 'object') {
-          const candidate = new RTCIceCandidate(candidateData);
-          if (pc.remoteDescription && pc.remoteDescription.type) {
-            await pc.addIceCandidate(candidate);
-            console.log('✅ ICE candidate added');
-          }
-        }
+        if (!candidateData || typeof candidateData !== 'object') continue;
+        const ufrag = (candidateData as any).usernameFragment;
+        if (ufrag && remoteUfrags.length > 0 && !remoteUfrags.includes(ufrag)) continue;
+        if (appliedCandidatesRef.current.has(candidateKey(candidateData))) continue;
+        appliedCandidatesRef.current.add(candidateKey(candidateData));
+
+        const candidate = new RTCIceCandidate(candidateData);
+        if (pc.signalingState === 'closed') return;
+        await pc.addIceCandidate(candidate);
+        console.log('✅ ICE candidate added');
       } catch (error) {
         console.warn('⚠️ Error adding ICE candidate:', error);
       }
     }
+
   };
 
   const toggleAudio = useCallback(() => {
