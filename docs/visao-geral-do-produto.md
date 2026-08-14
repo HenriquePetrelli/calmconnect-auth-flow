@@ -103,6 +103,7 @@ Status possíveis do chamado: `pending`, `accepted`, `in_progress`, `completed`,
 
 - Planos pagos (Plus / Premium) via Stripe Checkout; portal do cliente para gestão e cancelamento.
 - O plano define o limite de uso de SOS (contabilizado no banco a cada atendimento consumido).
+- Bloqueios esperados do SOS (sem assinatura, sem cota ou conta bloqueada) são exibidos como aviso de negócio e não interrompem o app com erro de execução.
 - `check-subscription` sincroniza o estado da assinatura com o app.
 - Repasses aos psicólogos: admin acompanha atendimentos realizados e o sistema processa o fechamento semanal (segundas, 9h).
 - Psicólogo acompanha os próprios ganhos em `/psychologist-payments`.
