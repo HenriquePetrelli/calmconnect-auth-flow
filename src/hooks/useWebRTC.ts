@@ -26,6 +26,20 @@ interface WebRTCSession {
   ended_by_type?: string;
 }
 
+/** Extracts the ICE ufrags declared in an SDP (one per m-line, usually equal). */
+const getUfrags = (sdp?: string): string[] => {
+  if (!sdp) return [];
+  return Array.from(new Set(
+    sdp.split('\n')
+      .filter((l) => l.startsWith('a=ice-ufrag:'))
+      .map((l) => l.replace('a=ice-ufrag:', '').trim())
+  ));
+};
+
+/** Stable identity for a remote candidate, used to avoid re-adding duplicates. */
+const candidateKey = (c: RTCIceCandidateInit) =>
+  `${(c as any).usernameFragment ?? ''}|${c.sdpMid ?? ''}|${c.sdpMLineIndex ?? ''}|${c.candidate ?? ''}`;
+
 interface UseWebRTCProps {
   sessionId: string;
   userType: 'psychologist' | 'patient';
@@ -59,6 +73,9 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
   const graceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastAppliedOfferRef = useRef<string | null>(null);
   const lastAppliedAnswerRef = useRef<string | null>(null);
+  /** Remote candidates already applied to the current ICE generation. */
+  const appliedCandidatesRef = useRef<Set<string>>(new Set());
+
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const callEndedByRef = useRef<{userId: string, userType: string} | null>(null);
   const signalChannelRef = useRef<CallSignalChannel | null>(null);
@@ -376,16 +393,24 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
       
       await pc.setLocalDescription(offer);
       
+      // A new offer starts a new ICE generation: drop the previous answer and
+      // forget the candidates we already applied, otherwise the peer could
+      // re-apply a stale answer and the reconnection never converges.
+      lastAppliedAnswerRef.current = null;
+      appliedCandidatesRef.current = new Set();
+
       const { error } = await supabase
         .from('webrtc_sessions')
         .update({ 
           offer: offer as any,
+          answer: null,
           psychologist_id: userType === 'psychologist' ? (await supabase.auth.getUser()).data.user?.id : undefined
         })
         .eq('id', sessionId);
 
       if (error) throw error;
       console.log('✅ Offer created and sent');
+
     } catch (error) {
       console.error('❌ Error creating offer:', error);
       setError('Erro ao criar oferta de conexão');
@@ -510,6 +535,8 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
   const handleOffer = async (offer: RTCSessionDescriptionInit, pc: RTCPeerConnection) => {
     try {
       console.log('📝 Handling incoming offer...');
+      // New remote generation: previously applied candidates are obsolete.
+      appliedCandidatesRef.current = new Set();
       await pc.setRemoteDescription(new RTCSessionDescription(offer));
       
       const answer = await pc.createAnswer();
@@ -534,6 +561,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
   const handleAnswer = async (answer: RTCSessionDescriptionInit, pc: RTCPeerConnection) => {
     try {
       console.log('📝 Handling incoming answer...');
+      appliedCandidatesRef.current = new Set();
       await pc.setRemoteDescription(new RTCSessionDescription(answer));
       console.log('✅ Answer processed successfully');
     } catch (error) {
@@ -542,22 +570,37 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     }
   };
 
+
   const processIceCandidates = async (candidates: RTCIceCandidateInit[], pc: RTCPeerConnection) => {
     if (!candidates || !Array.isArray(candidates)) return;
-    
+    // A closed/renegotiating connection must never receive candidates.
+    if (pc.signalingState === 'closed') return;
+    if (!pc.remoteDescription || !pc.remoteDescription.type) return;
+
+    // Only candidates belonging to the CURRENT remote ICE credentials are valid.
+    // After a peer rejoins/ICE-restarts, the row still carries candidates from
+    // previous generations — adding them poisons the checklist and the call
+    // never reconnects.
+    const remoteUfrags = getUfrags(pc.remoteDescription.sdp);
+
     for (const candidateData of candidates) {
       try {
-        if (candidateData && typeof candidateData === 'object') {
-          const candidate = new RTCIceCandidate(candidateData);
-          if (pc.remoteDescription && pc.remoteDescription.type) {
-            await pc.addIceCandidate(candidate);
-            console.log('✅ ICE candidate added');
-          }
-        }
+        if (!candidateData || typeof candidateData !== 'object') continue;
+        const ufrag = (candidateData as any).usernameFragment;
+        if (ufrag && remoteUfrags.length > 0 && !remoteUfrags.includes(ufrag)) continue;
+        if (appliedCandidatesRef.current.has(candidateKey(candidateData))) continue;
+        appliedCandidatesRef.current.add(candidateKey(candidateData));
+
+        const candidate = new RTCIceCandidate(candidateData);
+        if ((pc.signalingState as string) === 'closed') return;
+
+        await pc.addIceCandidate(candidate);
+        console.log('✅ ICE candidate added');
       } catch (error) {
         console.warn('⚠️ Error adding ICE candidate:', error);
       }
     }
+
   };
 
   const toggleAudio = useCallback(() => {
