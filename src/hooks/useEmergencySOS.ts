@@ -60,20 +60,40 @@ export const useEmergencySOS = () => {
         method: 'POST',
         body: { patient_id: user.id },
       });
-      
+
       console.log('🆘 Emergency SOS raw response:', { data, error });
-      
+
       if (error) {
+        // Business rules (no subscription, quota, blocked account) come back as
+        // non-2xx responses. They are NOT runtime errors: show a friendly toast.
+        let payload: any = null;
+        try {
+          payload = await (error as any)?.context?.json?.();
+        } catch (_e) {
+          payload = null;
+        }
+
+        if (payload?.code) {
+          toast({
+            title: payload.code === 'PATIENT_BLOCKED' ? 'Conta bloqueada' : 'SOS indisponível',
+            description: payload.error || 'Seu plano não permite o uso do SOS neste momento.',
+            variant: 'destructive',
+            duration: 6000,
+          });
+          return null;
+        }
+
         console.error('❌ Edge function error:', error);
         throw new Error(error.message || 'Erro de comunicação com o servidor');
       }
-      
+
       console.log('✅ Emergency SOS response:', data);
-      
+
       if (!data?.success) {
-        const errorMsg = data?.message || 'Erro desconhecido ao criar solicitação';
+        const errorMsg = data?.error || data?.message || 'Erro desconhecido ao criar solicitação';
         throw new Error(errorMsg);
       }
+
       
       if (!data.emergency_request_id) {
         throw new Error('ID da solicitação não retornado pelo servidor');
