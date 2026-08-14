@@ -393,16 +393,24 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
       
       await pc.setLocalDescription(offer);
       
+      // A new offer starts a new ICE generation: drop the previous answer and
+      // forget the candidates we already applied, otherwise the peer could
+      // re-apply a stale answer and the reconnection never converges.
+      lastAppliedAnswerRef.current = null;
+      appliedCandidatesRef.current = new Set();
+
       const { error } = await supabase
         .from('webrtc_sessions')
         .update({ 
           offer: offer as any,
+          answer: null,
           psychologist_id: userType === 'psychologist' ? (await supabase.auth.getUser()).data.user?.id : undefined
         })
         .eq('id', sessionId);
 
       if (error) throw error;
       console.log('✅ Offer created and sent');
+
     } catch (error) {
       console.error('❌ Error creating offer:', error);
       setError('Erro ao criar oferta de conexão');
