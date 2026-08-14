@@ -8,6 +8,8 @@ import CancelConfirmationModal from "@/components/sos/CancelConfirmationModal";
 import SupportiveMessages from "@/components/sos/SupportiveMessages";
 import { supabase } from "@/integrations/supabase/client";
 import { useEmergencySOS } from "@/hooks/useEmergencySOS";
+import { notifySosQueueChanged, subscribeSosQueue } from "@/lib/sosQueueChannel";
+
 
 /** Server-side TTL for pending SOS requests (finalize_stale_emergency_sessions). */
 const QUEUE_TTL_MS = 10 * 60 * 1000;
