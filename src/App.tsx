@@ -310,7 +310,9 @@ const App = () => {
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                   </Suspense>
+                  <PendingFeedbackGate />
                 </BackgroundWrapper>
+
               </BrowserRouter>
           </SubscriptionProvider>
         </AuthProvider>
