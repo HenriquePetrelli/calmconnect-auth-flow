@@ -1,15 +1,21 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Star } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Star, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { usePatientStatistics } from '@/hooks/usePatientStatistics';
 import { sosLog } from '@/lib/sosLogger';
+import { SINTOMAS } from '@/data/sintomas';
+
 
 interface FeedbackModalProps {
   isOpen: boolean;
@@ -27,10 +33,27 @@ export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerNam
   const [rating, setRating] = useState<number>(0);
   const [problemResolved, setProblemResolved] = useState<string>('');
   const [comment, setComment] = useState('');
+  const [symptoms, setSymptoms] = useState<string[]>([]);
+  const [symptomQuery, setSymptomQuery] = useState('');
+  const [clinicalNotes, setClinicalNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [alreadySent, setAlreadySent] = useState(false);
   const { toast } = useToast();
   const { addActivity } = usePatientStatistics();
+
+  const isPsychologist = userType === 'psychologist';
+
+  const filteredSymptoms = useMemo(() => {
+    const q = symptomQuery.trim().toLowerCase();
+    const list = [...SINTOMAS] as string[];
+    return q ? list.filter((s) => s.toLowerCase().includes(q)) : list;
+  }, [symptomQuery]);
+
+  const toggleSymptom = (symptom: string) =>
+    setSymptoms((prev) =>
+      prev.includes(symptom) ? prev.filter((s) => s !== symptom) : [...prev, symptom]
+    );
+
 
   // Idempotency: one feedback per user per session. Reloading the page after
   // finishing must never create a second row nor block the user here.
@@ -115,10 +138,13 @@ export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerNam
             rating,
             problem_resolved: userType === 'patient' ? problemResolved : null,
             comment: comment.trim() || null,
+            symptoms: isPsychologist ? symptoms : [],
+            clinical_notes: isPsychologist ? clinicalNotes.trim() || null : null,
             emergency_request_id: emergencyRow?.id ?? null,
           },
           { onConflict: 'session_id,user_id' }
         );
+
 
       if (feedbackError) {
         throw feedbackError;
@@ -172,20 +198,21 @@ export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerNam
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open && !required) onClose(); }}>
       <DialogContent
-        className={`sm:max-w-md ${required ? "[&>button]:hidden" : ""}`}
+        className={`${isPsychologist ? 'sm:max-w-lg' : 'sm:max-w-md'} max-h-[90vh] overflow-y-auto ${required ? "[&>button]:hidden" : ""}`}
         onPointerDownOutside={(e) => { if (required) e.preventDefault(); }}
         onEscapeKeyDown={(e) => { if (required) e.preventDefault(); }}
         onInteractOutside={(e) => { if (required) e.preventDefault(); }}
       >
         <DialogHeader>
           <DialogTitle className="text-center">
-            Como foi sua experiência?
+            {isPsychologist ? 'Registro do atendimento' : 'Como foi sua experiência?'}
           </DialogTitle>
           {required && (
             <DialogDescription className="text-center">
               Avalie o atendimento para continuar usando o aplicativo.
             </DialogDescription>
           )}
+
         </DialogHeader>
 
 
@@ -249,11 +276,85 @@ export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerNam
               </div>
             )}
 
+            {/* Psychologist clinical record: symptoms + notes */}
+            {isPsychologist && (
+              <>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <Label className="font-medium">Sintomas apresentados</Label>
+                    <Badge variant="outline">{symptoms.length} selecionado(s)</Badge>
+                  </div>
+
+                  {symptoms.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {symptoms.map((s) => (
+                        <Badge
+                          key={s}
+                          variant="secondary"
+                          className="max-w-full cursor-pointer truncate font-normal"
+                          onClick={() => toggleSymptom(s)}
+                          title="Remover"
+                        >
+                          {s}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      value={symptomQuery}
+                      onChange={(e) => setSymptomQuery(e.target.value)}
+                      placeholder="Buscar sintoma..."
+                      className="pl-9"
+                    />
+                  </div>
+
+                  <ScrollArea className="h-52 rounded-md border p-3">
+                    <div className="space-y-2.5">
+                      {filteredSymptoms.length === 0 && (
+                        <p className="text-sm text-muted-foreground">Nenhum sintoma encontrado.</p>
+                      )}
+                      {filteredSymptoms.map((symptom) => (
+                        <div key={symptom} className="flex items-start gap-2.5">
+                          <Checkbox
+                            id={`symptom-${symptom}`}
+                            checked={symptoms.includes(symptom)}
+                            onCheckedChange={() => toggleSymptom(symptom)}
+                            className="mt-0.5"
+                          />
+                          <Label
+                            htmlFor={`symptom-${symptom}`}
+                            className="text-sm font-normal leading-snug cursor-pointer"
+                          >
+                            {symptom}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="clinical-notes" className="font-medium">
+                    Anotações do atendimento
+                  </Label>
+                  <Textarea
+                    id="clinical-notes"
+                    value={clinicalNotes}
+                    onChange={(e) => setClinicalNotes(e.target.value)}
+                    rows={4}
+                    placeholder="Registre condutas, encaminhamentos e observações clínicas do atendimento"
+                  />
+                </div>
+              </>
+            )}
 
             {/* Optional free-text comment */}
             <div className="space-y-2">
               <Label htmlFor="feedback-comment" className="font-medium">
-                {userType === 'patient' ? 'Conte como foi sua experiência (opcional)' : 'Observações (opcional)'}
+                {userType === 'patient' ? 'Conte como foi sua experiência (opcional)' : 'Observações gerais (opcional)'}
               </Label>
               <Textarea
                 id="feedback-comment"
@@ -265,6 +366,7 @@ export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerNam
                   : 'Registre observações sobre o atendimento'}
               />
             </div>
+
 
             {/* Action buttons */}
             <div className="flex gap-3">
