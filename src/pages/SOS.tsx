@@ -215,21 +215,26 @@ const SOS = () => {
     fetchOnline();
 
     const channel = supabase
-      .channel('presence_watch')
+      .channel(`presence_watch_${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'psychologist_presence' }, () => {
         fetchOnline();
       })
       .subscribe();
 
+    // A psychologist accepting/declining also changes availability.
+    const unsubscribeQueue = subscribeSosQueue(fetchOnline);
+
     // Fallback polling in case the realtime socket drops
-    const interval = window.setInterval(fetchOnline, 15000);
+    const interval = window.setInterval(fetchOnline, 8000);
 
     return () => {
       active = false;
       window.clearInterval(interval);
+      unsubscribeQueue();
       supabase.removeChannel(channel);
     };
   }, []);
+
 
   // Countdown mirroring the server-side 10 minute TTL for pending requests.
   useEffect(() => {
