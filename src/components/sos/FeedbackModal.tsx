@@ -33,10 +33,27 @@ export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerNam
   const [rating, setRating] = useState<number>(0);
   const [problemResolved, setProblemResolved] = useState<string>('');
   const [comment, setComment] = useState('');
+  const [symptoms, setSymptoms] = useState<string[]>([]);
+  const [symptomQuery, setSymptomQuery] = useState('');
+  const [clinicalNotes, setClinicalNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [alreadySent, setAlreadySent] = useState(false);
   const { toast } = useToast();
   const { addActivity } = usePatientStatistics();
+
+  const isPsychologist = userType === 'psychologist';
+
+  const filteredSymptoms = useMemo(() => {
+    const q = symptomQuery.trim().toLowerCase();
+    const list = [...SINTOMAS] as string[];
+    return q ? list.filter((s) => s.toLowerCase().includes(q)) : list;
+  }, [symptomQuery]);
+
+  const toggleSymptom = (symptom: string) =>
+    setSymptoms((prev) =>
+      prev.includes(symptom) ? prev.filter((s) => s !== symptom) : [...prev, symptom]
+    );
+
 
   // Idempotency: one feedback per user per session. Reloading the page after
   // finishing must never create a second row nor block the user here.
