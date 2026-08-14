@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { SkeletonSectionCard } from '@/components/skeletons/Skeletons';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Table,
@@ -24,68 +24,127 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
-import { History, Search, Download, Eye, FileText, Calendar, User } from 'lucide-react';
+import { History, Search, Download, Eye, FileText, User, LifeBuoy, CalendarDays } from 'lucide-react';
 import { usePsychologistSchedule } from '@/hooks/usePsychologistSchedule';
+import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-interface AppointmentDetail {
+type ConsultationKind = 'scheduled' | 'emergency';
+
+interface ConsultationRow {
   id: string;
-  patient_id: string;
-  psychologist_id: string;
-  scheduled_at: string;
+  kind: ConsultationKind;
+  /** ISO date used for ordering and display. */
+  occurred_at: string;
   status: string;
-  appointment_type: string;
-  notes?: string;
-  session_summary?: string;
-  created_at: string;
-  updated_at: string;
-  patient: {
-    full_name: string;
-  };
+  patient_name: string;
+  notes?: string | null;
+  session_summary?: string | null;
+  /** SOS only — clinical record registered in the feedback modal. */
+  symptoms?: string[];
+  clinical_notes?: string | null;
+  rating?: number | null;
 }
+
+const ITEMS_PER_PAGE = 10;
 
 const ConsultationHistory = () => {
   const { fetchAppointmentHistory, updateAppointment } = usePsychologistSchedule();
-  const [appointments, setAppointments] = useState<AppointmentDetail[]>([]);
+  const [rows, setRows] = useState<ConsultationRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [selectedAppointment, setSelectedAppointment] = useState<AppointmentDetail | null>(null);
+  const [typeFilter, setTypeFilter] = useState<'all' | ConsultationKind>('all');
+  const [selected, setSelected] = useState<ConsultationRow | null>(null);
   const [sessionSummary, setSessionSummary] = useState('');
   const [savingSummary, setSavingSummary] = useState(false);
 
-  const itemsPerPage = 10;
-
   useEffect(() => {
-    loadAppointments();
-  }, [currentPage]);
+    loadHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const loadAppointments = async () => {
+  /** Loads scheduled appointments and SOS sessions into a single timeline. */
+  const loadHistory = async () => {
     setLoading(true);
     try {
-      const result = await fetchAppointmentHistory(currentPage, itemsPerPage);
-      if (result) {
-        setAppointments(result.appointments);
-        setTotalPages(result.totalPages);
-        setTotalCount(result.totalCount);
-      }
+      const [historyResult, emergencyRows] = await Promise.all([
+        fetchAppointmentHistory(1, 500),
+        loadEmergencyHistory(),
+      ]);
+
+      const scheduled: ConsultationRow[] = (historyResult?.appointments ?? []).map((apt: any) => ({
+        id: apt.id,
+        kind: 'scheduled',
+        occurred_at: apt.scheduled_at,
+        status: apt.status,
+        patient_name: apt.patient?.full_name || 'Paciente',
+        notes: apt.notes,
+        session_summary: apt.session_summary,
+      }));
+
+      const merged = [...scheduled, ...emergencyRows].sort(
+        (a, b) => new Date(b.occurred_at).getTime() - new Date(a.occurred_at).getTime()
+      );
+
+      setRows(merged);
+      setCurrentPage(1);
     } catch (error) {
-      console.error('Error loading appointments:', error);
+      console.error('Error loading consultation history:', error);
     } finally {
       setLoading(false);
     }
   };
 
+  /** SOS calls attended by the logged psychologist, with the clinical record. */
+  const loadEmergencyHistory = async (): Promise<ConsultationRow[]> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
+
+    const { data: requests, error } = await supabase
+      .from('emergency_requests')
+      .select('id, created_at, started_at, ended_at, status, patient_details')
+      .eq('accepted_by', user.id)
+      .order('created_at', { ascending: false })
+      .limit(200);
+
+    if (error || !requests?.length) return [];
+
+    const { data: feedbacks } = await supabase
+      .from('session_feedback')
+      .select('emergency_request_id, symptoms, clinical_notes, rating')
+      .eq('user_id', user.id)
+      .in('emergency_request_id', requests.map((r) => r.id));
+
+    const byRequest = new Map((feedbacks ?? []).map((f) => [f.emergency_request_id, f]));
+
+    return requests.map((r) => {
+      const details = (r.patient_details ?? {}) as Record<string, any>;
+      const feedback = byRequest.get(r.id) as any;
+      return {
+        id: r.id,
+        kind: 'emergency' as const,
+        occurred_at: r.started_at || r.created_at,
+        status: r.status,
+        patient_name: details.full_name || details.name || 'Paciente',
+        symptoms: feedback?.symptoms ?? [],
+        clinical_notes: feedback?.clinical_notes ?? null,
+        rating: feedback?.rating ?? null,
+      };
+    });
+  };
+
   const getStatusBadge = (status: string) => {
-    // Paletas suaves e profissionais (estilo Linear/Notion/Stripe)
     const statusMap: Record<string, { label: string; className: string }> = {
       pending: {
         label: 'Pendente',
         className: 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/30',
+      },
+      accepted: {
+        label: 'Aceita',
+        className: 'bg-sky-100 text-sky-800 border-sky-200 dark:bg-sky-500/15 dark:text-sky-300 dark:border-sky-500/30',
       },
       scheduled: {
         label: 'Agendada',
@@ -139,48 +198,56 @@ const ConsultationHistory = () => {
     );
   };
 
-
-  const getTypeBadge = (type: string) => {
-    const typeMap: Record<string, { label: string; className: string }> = {
-      regular: { label: 'Regular', className: 'bg-secondary/15 text-secondary' },
-      emergency: { label: 'Emergência', className: 'bg-destructive/15 text-destructive' },
-      follow_up: { label: 'Retorno', className: 'bg-success/15 text-success' }
-    };
-
-    const typeInfo = typeMap[type] || { label: type, className: 'bg-muted text-foreground' };
-    return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${typeInfo.className}`}>
-        {typeInfo.label}
-      </span>
+  const getTypeBadge = (kind: ConsultationKind) =>
+    kind === 'emergency' ? (
+      <Badge variant="outline" className="gap-1 rounded-full border-destructive/30 bg-destructive/10 text-destructive">
+        <LifeBuoy className="h-3 w-3" />
+        Emergencial
+      </Badge>
+    ) : (
+      <Badge variant="outline" className="gap-1 rounded-full border-secondary/30 bg-secondary/10 text-secondary">
+        <CalendarDays className="h-3 w-3" />
+        Agendada
+      </Badge>
     );
-  };
 
-  const filteredAppointments = appointments.filter((appointment) => {
-    const matchesSearch = searchTerm === '' || 
-      appointment.patient.full_name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || appointment.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
-  });
+  const filteredRows = useMemo(
+    () =>
+      rows.filter((row) => {
+        const matchesSearch =
+          searchTerm === '' || row.patient_name.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesStatus = statusFilter === 'all' || row.status === statusFilter;
+        const matchesType = typeFilter === 'all' || row.kind === typeFilter;
+        return matchesSearch && matchesStatus && matchesType;
+      }),
+    [rows, searchTerm, statusFilter, typeFilter]
+  );
+
+  const totalCount = filteredRows.length;
+  const totalPages = Math.max(1, Math.ceil(totalCount / ITEMS_PER_PAGE));
+  const pageRows = filteredRows.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, typeFilter]);
 
   const handleSaveSummary = async () => {
-    if (!selectedAppointment) return;
-    
+    if (!selected || selected.kind !== 'scheduled') return;
+
     setSavingSummary(true);
     try {
-      await updateAppointment(selectedAppointment.id, { 
-        sessionSummary: sessionSummary,
-        status: 'completed'
+      await updateAppointment(selected.id, {
+        sessionSummary,
+        status: 'completed',
       });
-      
-      // Update local state
-      setAppointments(prev => prev.map(apt => 
-        apt.id === selectedAppointment.id 
-          ? { ...apt, session_summary: sessionSummary, status: 'completed' }
-          : apt
-      ));
-      
-      setSelectedAppointment(null);
+
+      setRows((prev) =>
+        prev.map((row) =>
+          row.id === selected.id ? { ...row, session_summary: sessionSummary, status: 'completed' } : row
+        )
+      );
+
+      setSelected(null);
       setSessionSummary('');
     } catch (error) {
       console.error('Error saving summary:', error);
@@ -191,15 +258,20 @@ const ConsultationHistory = () => {
 
   const handleExportCSV = () => {
     const csvContent = [
-      ['Data', 'Paciente', 'Tipo', 'Status', 'Notas', 'Resumo da Sessão'].join(','),
-      ...filteredAppointments.map(apt => [
-        format(new Date(apt.scheduled_at), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
-        apt.patient.full_name,
-        apt.appointment_type,
-        apt.status,
-        apt.notes || '',
-        apt.session_summary || ''
-      ].map(field => `"${field}"`).join(','))
+      ['Data', 'Paciente', 'Tipo', 'Status', 'Sintomas', 'Anotações', 'Resumo da Sessão'].join(','),
+      ...filteredRows.map((row) =>
+        [
+          format(new Date(row.occurred_at), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
+          row.patient_name,
+          row.kind === 'emergency' ? 'Emergencial' : 'Agendada',
+          row.status,
+          (row.symptoms ?? []).join(' | '),
+          row.clinical_notes || '',
+          row.session_summary || '',
+        ]
+          .map((field) => `"${String(field).replace(/"/g, '""')}"`)
+          .join(',')
+      ),
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -231,11 +303,11 @@ const ConsultationHistory = () => {
         </CardHeader>
         <CardContent>
           {/* Filters */}
-          <div className="flex gap-4 mb-6">
-            <div className="flex-1">
+          <div className="mb-6 flex flex-wrap gap-4">
+            <div className="min-w-[200px] flex-1">
               <Label htmlFor="search">Buscar paciente</Label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   id="search"
                   placeholder="Nome do paciente..."
@@ -245,15 +317,29 @@ const ConsultationHistory = () => {
                 />
               </div>
             </div>
+            <div className="w-44">
+              <Label htmlFor="type">Tipo</Label>
+              <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as any)}>
+                <SelectTrigger id="type">
+                  <SelectValue placeholder="Filtrar por tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="scheduled">Agendada</SelectItem>
+                  <SelectItem value="emergency">Emergencial</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div className="w-48">
               <Label htmlFor="status">Status</Label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
+                <SelectTrigger id="status">
                   <SelectValue placeholder="Filtrar por status" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="pending">Pendente</SelectItem>
+                  <SelectItem value="accepted">Aceita</SelectItem>
                   <SelectItem value="scheduled">Agendada</SelectItem>
                   <SelectItem value="confirmed">Confirmada</SelectItem>
                   <SelectItem value="in_progress">Em andamento</SelectItem>
@@ -268,7 +354,7 @@ const ConsultationHistory = () => {
             </div>
             <div className="flex items-end">
               <Button onClick={handleExportCSV} variant="outline">
-                <Download className="w-4 h-4 mr-2" />
+                <Download className="mr-2 h-4 w-4" />
                 Exportar CSV
               </Button>
             </div>
@@ -281,115 +367,48 @@ const ConsultationHistory = () => {
                 <TableRow>
                   <TableHead>Data/Hora</TableHead>
                   <TableHead>Paciente</TableHead>
+                  <TableHead>Tipo</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredAppointments.map((appointment) => (
-                  <TableRow key={appointment.id}>
+                {pageRows.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={5} className="py-8 text-center text-sm text-muted-foreground">
+                      Nenhuma consulta encontrada.
+                    </TableCell>
+                  </TableRow>
+                )}
+                {pageRows.map((row) => (
+                  <TableRow key={`${row.kind}-${row.id}`}>
                     <TableCell className="font-medium">
-                      {format(new Date(appointment.scheduled_at), 'dd/MM/yyyy', { locale: ptBR })}
+                      {format(new Date(row.occurred_at), 'dd/MM/yyyy', { locale: ptBR })}
                       <br />
                       <span className="text-sm text-muted-foreground">
-                        {format(new Date(appointment.scheduled_at), 'HH:mm', { locale: ptBR })}
+                        {format(new Date(row.occurred_at), 'HH:mm', { locale: ptBR })}
                       </span>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <User className="w-4 h-4 text-muted-foreground" />
-                        {appointment.patient.full_name}
+                        <User className="h-4 w-4 text-muted-foreground" />
+                        {row.patient_name}
                       </div>
                     </TableCell>
+                    <TableCell>{getTypeBadge(row.kind)}</TableCell>
+                    <TableCell>{getStatusBadge(row.status)}</TableCell>
                     <TableCell>
-                      {getStatusBadge(appointment.status)}
-                    </TableCell>
-                    <TableCell>
-                      <Dialog
-                        open={selectedAppointment?.id === appointment.id}
-                        onOpenChange={(open) => {
-                          if (!open) {
-                            setSelectedAppointment(null);
-                            setSessionSummary('');
-                          }
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelected(row);
+                          setSessionSummary(row.session_summary || '');
                         }}
                       >
-                        <DialogTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedAppointment(appointment);
-                              setSessionSummary(appointment.session_summary || '');
-                            }}
-                          >
-                            <Eye className="w-4 h-4 mr-1" />
-                            Ver
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-2xl">
-                          <DialogHeader>
-                            <DialogTitle>Detalhes da Consulta</DialogTitle>
-                          </DialogHeader>
-                          {selectedAppointment?.id === appointment.id && (
-                            <div className="space-y-4">
-                              <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                  <Label className="font-medium">Paciente</Label>
-                                  <p className="text-sm">{selectedAppointment.patient.full_name}</p>
-                                </div>
-                                <div>
-                                  <Label className="font-medium">Data/Hora</Label>
-                                  <p className="text-sm">
-                                    {format(new Date(selectedAppointment.scheduled_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
-                                  </p>
-                                </div>
-                                <div>
-                                  <Label className="font-medium">Status</Label>
-                                  <div className="text-sm">{getStatusBadge(selectedAppointment.status)}</div>
-                                </div>
-                              </div>
-
-                              {selectedAppointment.notes && (
-                                <div>
-                                  <Label className="font-medium">Notas da Consulta</Label>
-                                  <p className="text-sm bg-muted p-3 rounded-md mt-1">
-                                    {selectedAppointment.notes}
-                                  </p>
-                                </div>
-                              )}
-
-                              <div>
-                                <Label htmlFor="summary" className="font-medium">
-                                  Resumo da Sessão
-                                </Label>
-                                <Textarea
-                                  id="summary"
-                                  value={sessionSummary}
-                                  onChange={(e) => setSessionSummary(e.target.value)}
-                                  placeholder="Adicione um resumo da sessão..."
-                                  rows={6}
-                                  className="mt-1"
-                                />
-                              </div>
-
-                              <div className="flex justify-end gap-2">
-                                <Button
-                                  onClick={handleSaveSummary}
-                                  disabled={savingSummary}
-                                >
-                                  {savingSummary ? (
-                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                  ) : (
-                                    <FileText className="w-4 h-4 mr-2" />
-                                  )}
-                                  Salvar Resumo
-                                </Button>
-                              </div>
-                            </div>
-                          )}
-                        </DialogContent>
-                      </Dialog>
+                        <Eye className="mr-1 h-4 w-4" />
+                        Ver
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -398,9 +417,14 @@ const ConsultationHistory = () => {
           </div>
 
           {/* Pagination */}
-          <div className="flex flex-col items-center gap-3 mt-6">
+          <div className="mt-6 flex flex-col items-center gap-3">
             <p className="text-sm text-muted-foreground">
-              Mostrando {((currentPage - 1) * itemsPerPage) + 1} a {Math.min(currentPage * itemsPerPage, totalCount)} de {totalCount} consultas
+              {totalCount === 0
+                ? 'Nenhum registro'
+                : `Mostrando ${(currentPage - 1) * ITEMS_PER_PAGE + 1} a ${Math.min(
+                    currentPage * ITEMS_PER_PAGE,
+                    totalCount
+                  )} de ${totalCount} consultas`}
             </p>
 
             <Pagination>
@@ -412,17 +436,19 @@ const ConsultationHistory = () => {
                   />
                 </PaginationItem>
 
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <PaginationItem key={page}>
-                    <PaginationLink
-                      onClick={() => setCurrentPage(page)}
-                      isActive={currentPage === page}
-                      className="cursor-pointer"
-                    >
-                      {page}
-                    </PaginationLink>
-                  </PaginationItem>
-                ))}
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter((page) => Math.abs(page - currentPage) <= 2 || page === 1 || page === totalPages)
+                  .map((page) => (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        isActive={page === currentPage}
+                        onClick={() => setCurrentPage(page)}
+                        className="cursor-pointer"
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
 
                 <PaginationItem>
                   <PaginationNext
@@ -435,6 +461,108 @@ const ConsultationHistory = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Details */}
+      <Dialog
+        open={!!selected}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelected(null);
+            setSessionSummary('');
+          }
+        }}
+      >
+        <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Detalhes da Consulta</DialogTitle>
+          </DialogHeader>
+
+          {selected && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="font-medium">Paciente</Label>
+                  <p className="text-sm">{selected.patient_name}</p>
+                </div>
+                <div>
+                  <Label className="font-medium">Data/Hora</Label>
+                  <p className="text-sm">
+                    {format(new Date(selected.occurred_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                  </p>
+                </div>
+                <div>
+                  <Label className="font-medium">Tipo</Label>
+                  <div className="mt-1 text-sm">{getTypeBadge(selected.kind)}</div>
+                </div>
+                <div>
+                  <Label className="font-medium">Status</Label>
+                  <div className="mt-1 text-sm">{getStatusBadge(selected.status)}</div>
+                </div>
+              </div>
+
+              {selected.notes && (
+                <div>
+                  <Label className="font-medium">Notas da Consulta</Label>
+                  <p className="mt-1 rounded-md bg-muted p-3 text-sm">{selected.notes}</p>
+                </div>
+              )}
+
+              {selected.kind === 'emergency' ? (
+                <>
+                  <div>
+                    <Label className="font-medium">Sintomas apresentados</Label>
+                    {selected.symptoms && selected.symptoms.length > 0 ? (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {selected.symptoms.map((symptom) => (
+                          <Badge key={symptom} variant="secondary" className="font-normal">
+                            {symptom}
+                          </Badge>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="mt-1 text-sm text-muted-foreground">Nenhum sintoma registrado.</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label className="font-medium">Anotações do atendimento</Label>
+                    <p className="mt-1 whitespace-pre-wrap rounded-md bg-muted p-3 text-sm">
+                      {selected.clinical_notes || 'Nenhuma anotação registrada.'}
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <Label htmlFor="summary" className="font-medium">
+                      Resumo da Sessão
+                    </Label>
+                    <Textarea
+                      id="summary"
+                      value={sessionSummary}
+                      onChange={(e) => setSessionSummary(e.target.value)}
+                      placeholder="Adicione um resumo da sessão..."
+                      rows={6}
+                      className="mt-1"
+                    />
+                  </div>
+
+                  <div className="flex justify-end gap-2">
+                    <Button onClick={handleSaveSummary} disabled={savingSummary}>
+                      {savingSummary ? (
+                        <div className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-current" />
+                      ) : (
+                        <FileText className="mr-2 h-4 w-4" />
+                      )}
+                      Salvar Resumo
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
