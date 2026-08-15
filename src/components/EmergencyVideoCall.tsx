@@ -1031,34 +1031,55 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     }
   };
 
+  // A finished call is NOT an error: it must go straight to the mandatory
+  // feedback modal instead of showing a "Chamada Finalizada" screen.
+  const callFinished = Boolean(callTerminatedMessage || callEndedBy);
+
   // Helper to determine what error/message to display
   const getDisplayError = () => {
-    // Priority 1: Call termination message from real-time updates
-    if (callTerminatedMessage) {
-      return callTerminatedMessage;
-    }
-    
-    // Priority 2: Call ended by someone (from WebRTC hook)
-    if (callEndedBy) {
-      const endedByName = callEndedBy.userType === 'psychologist' ? 'O psicólogo' : 'O paciente';
-      return `${endedByName} encerrou a chamada de vídeo.`;
-    }
-    
-    // Priority 3: Generic connection error
+    if (callFinished) return null;
+
     if (error?.includes('finalizou a chamada')) {
-      return error;
+      return null;
     }
-    
-    // Priority 4: Any other error
+
     if (error) {
       return `Erro na conexão: ${error}`;
     }
-    
+
     return null;
   };
 
+  // Any termination (local or remote) opens the mandatory feedback modal.
+  useEffect(() => {
+    if (callFinished) setShowFeedbackModal(true);
+  }, [callFinished]);
+
   const status = getConnectionStatus();
   const displayError = getDisplayError();
+
+  // Call over: show only the feedback step. Saving it redirects home.
+  if (callFinished && !showFeedbackModal) {
+    return <div className="min-h-screen bg-background" />;
+  }
+
+  if (callFinished) {
+    return (
+      <div className="min-h-screen bg-background">
+        <FeedbackModal
+          isOpen
+          required
+          onClose={handleFeedbackClose}
+          userType={userType}
+          sessionId={sessionId || ''}
+          partnerName={userInfo.name}
+          onRedirect={handleFeedbackClose}
+        />
+      </div>
+    );
+  }
+
+
 
   if (isLoading && initTimedOut) {
     return (
