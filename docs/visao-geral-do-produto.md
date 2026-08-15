@@ -68,7 +68,11 @@ Regras:
 - Encerramento explícito exige confirmação; registra `ended_by`, `ended_by_type` e `end_reason` (vocabulário canônico).
 - Psicólogo tem fluxo de saída em duas etapas, com `crisis_resolved` e `end_notes`.
 - Fechar o app ou dar refresh não encerra a sessão — apenas ação explícita ou timeout server-side.
-- Feedback do paciente é idempotente (índice único em `session_feedback`); ao enviar, a sessão finaliza para ambos.
+- Feedback do paciente é idempotente (índice único `session_feedback (session_id, user_id)`); ao enviar, a sessão finaliza para ambos.
+- Avaliação do paciente é um fluxo progressivo: (1) resultado do atendimento (`resolution_status`: resolved / partially_resolved / not_resolved), (2) nota obrigatória de 1 a 5 e percepção de acolhimento (`felt_heard`: yes / partially / no), (3) apenas se parcial ou não resolvido, categorias do que aconteceu (`complaint_categories`), (4) apenas em queixas de conduta, relato livre (`complaint_description`).
+- Resultado clínico e qualidade do atendimento são métricas separadas: não resolver a crise não configura queixa contra o psicólogo.
+- Queixas de conduta (desrespeito, pouco acolhimento, atendimento não acolhedor, encerramento precoce) marcam `requires_admin_review = true` para análise administrativa, sem penalizar automaticamente o psicólogo.
+- Relatos e queixas são visíveis apenas ao próprio paciente e a administradores (RLS); o psicólogo não recebe o texto confidencial.
 
 ### 3.5 Timeouts server-side (pg_cron, `finalize_stale_emergency_sessions`, execução a cada minuto)
 
