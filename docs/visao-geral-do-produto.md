@@ -161,3 +161,4 @@ Navegação do paciente: menus lateral e inferior persistem entre Home, Chat, Co
 ## Histórico de atualizações
 
 - 2026-08-10 — Criação do documento consolidando todo o produto (perfis, SOS, consultas, assinaturas, engajamento, administração e testes).
+- 2026-08-15 — Novo fluxo estruturado de avaliação do paciente no SOS (resultado, nota, acolhimento, categorias de queixa e sinalização de revisão administrativa).
