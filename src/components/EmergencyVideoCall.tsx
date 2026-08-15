@@ -1031,31 +1031,25 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     }
   };
 
+  // A finished call is NOT an error: it must go straight to the mandatory
+  // feedback modal instead of showing a "Chamada Finalizada" screen.
+  const callFinished = Boolean(callTerminatedMessage || callEndedBy);
+
   // Helper to determine what error/message to display
   const getDisplayError = () => {
-    // Priority 1: Call termination message from real-time updates
-    if (callTerminatedMessage) {
-      return callTerminatedMessage;
-    }
-    
-    // Priority 2: Call ended by someone (from WebRTC hook)
-    if (callEndedBy) {
-      const endedByName = callEndedBy.userType === 'psychologist' ? 'O psicólogo' : 'O paciente';
-      return `${endedByName} encerrou a chamada de vídeo.`;
-    }
-    
-    // Priority 3: Generic connection error
+    if (callFinished) return null;
+
     if (error?.includes('finalizou a chamada')) {
-      return error;
+      return null;
     }
-    
-    // Priority 4: Any other error
+
     if (error) {
       return `Erro na conexão: ${error}`;
     }
-    
+
     return null;
   };
+
 
   const status = getConnectionStatus();
   const displayError = getDisplayError();
