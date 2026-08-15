@@ -1050,9 +1050,36 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     return null;
   };
 
+  // Any termination (local or remote) opens the mandatory feedback modal.
+  useEffect(() => {
+    if (callFinished) setShowFeedbackModal(true);
+  }, [callFinished]);
 
   const status = getConnectionStatus();
   const displayError = getDisplayError();
+
+  // Call over: show only the feedback step. Saving it redirects home.
+  if (callFinished && !showFeedbackModal) {
+    return <div className="min-h-screen bg-background" />;
+  }
+
+  if (callFinished) {
+    return (
+      <div className="min-h-screen bg-background">
+        <FeedbackModal
+          isOpen
+          required
+          onClose={handleFeedbackClose}
+          userType={userType}
+          sessionId={sessionId || ''}
+          partnerName={userInfo.name}
+          onRedirect={handleFeedbackClose}
+        />
+      </div>
+    );
+  }
+
+
 
   if (isLoading && initTimedOut) {
     return (
