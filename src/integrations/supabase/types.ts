@@ -1258,11 +1258,18 @@ export type Database = {
         Row: {
           clinical_notes: string | null
           comment: string | null
+          complaint_categories: string[]
+          complaint_description: string | null
           created_at: string | null
           emergency_request_id: string | null
+          felt_heard: string | null
+          has_complaint: boolean
           id: string
           problem_resolved: string | null
+          psychologist_id: string | null
           rating: number
+          requires_admin_review: boolean
+          resolution_status: string | null
           session_id: string
           symptoms: string[]
           updated_at: string | null
@@ -1272,11 +1279,18 @@ export type Database = {
         Insert: {
           clinical_notes?: string | null
           comment?: string | null
+          complaint_categories?: string[]
+          complaint_description?: string | null
           created_at?: string | null
           emergency_request_id?: string | null
+          felt_heard?: string | null
+          has_complaint?: boolean
           id?: string
           problem_resolved?: string | null
+          psychologist_id?: string | null
           rating: number
+          requires_admin_review?: boolean
+          resolution_status?: string | null
           session_id: string
           symptoms?: string[]
           updated_at?: string | null
@@ -1286,11 +1300,18 @@ export type Database = {
         Update: {
           clinical_notes?: string | null
           comment?: string | null
+          complaint_categories?: string[]
+          complaint_description?: string | null
           created_at?: string | null
           emergency_request_id?: string | null
+          felt_heard?: string | null
+          has_complaint?: boolean
           id?: string
           problem_resolved?: string | null
+          psychologist_id?: string | null
           rating?: number
+          requires_admin_review?: boolean
+          resolution_status?: string | null
           session_id?: string
           symptoms?: string[]
           updated_at?: string | null
