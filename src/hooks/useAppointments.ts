@@ -58,31 +58,15 @@ export const useAppointments = () => {
 
   const fetchPsychologists = async () => {
     try {
-      // Call the appointments function with psychologists action
-      const { data, error } = await supabase.functions.invoke('appointments', {
+      const { data, error } = await supabase.functions.invoke('appointments?action=psychologists', {
         method: 'GET'
       });
       
       if (error) throw error;
       
-      // If the main call fails, try getting from the direct endpoint with query param
-      try {
-        const response = await fetch(`https://ihrrgmmsfuvlasmzdmwf.supabase.co/functions/v1/appointments?action=psychologists`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlocnJnbW1zZnV2bGFzbXpkbXdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1NDMzMDcsImV4cCI6MjA2OTExOTMwN30.6hRDCL5alu-Bs4kT4jKYJW3G3zmeBJDZB5udruQzOFU',
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        if (response.ok) {
-          const psychologistsData = await response.json();
-          setPsychologists(psychologistsData || []);
-          return;
-        }
-      } catch (fetchError) {
-        console.error('Direct fetch failed:', fetchError);
+      if (data) {
+        setPsychologists(data || []);
+        return;
       }
       
       // Fallback: get directly from psychologists table
