@@ -145,31 +145,22 @@ export const usePsychologistManagement = () => {
   const rejectPsychologist = async (psychologistId: string, adminUserId: string, rejectionReason?: string) => {
     setLoading(true);
     try {
-      const response = await fetch('https://ihrrgmmsfuvlasmzdmwf.supabase.co/functions/v1/psychologist-management?action=reject', {
+      const { data: result, error } = await supabase.functions.invoke('psychologist-management?action=reject', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlocnJnbW1zZnV2bGFzbXpkbXdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1NDMzMDcsImV4cCI6MjA2OTExOTMwN30.6hRDCL5alu-Bs4kT4jKYJW3G3zmeBJDZB5udruQzOFU',
-        },
-        body: JSON.stringify({
+        body: {
           psychologist_id: psychologistId,
           admin_user_id: adminUserId,
           rejection_reason: rejectionReason
-        }),
+        },
       });
 
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error);
-      
-      if (result.success) {
-        toast.success(result.message);
-        // Atualizar lista de pendentes
-        await getPendingPsychologists();
-        return { success: true };
-      } else {
-        throw new Error(result.error || 'Erro na rejeição');
-      }
+      if (error) throw error;
+      if (!result.success) throw new Error(result.error || 'Erro na rejeição');
+
+      toast.success(result.message);
+      // Atualizar lista de pendentes
+      await getPendingPsychologists();
+      return { success: true };
     } catch (error: any) {
       console.error('Erro ao rejeitar psicólogo:', error);
       toast.error(error.message || 'Erro ao rejeitar psicólogo');
