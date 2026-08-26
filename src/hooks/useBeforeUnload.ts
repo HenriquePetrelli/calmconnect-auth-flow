@@ -1,6 +1,9 @@
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://ihrrgmmsfuvlasmzdmwf.supabase.co';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || '';
+
 export const useBeforeUnload = (requestId: string | null, patientId: string) => {
   useEffect(() => {
     if (!requestId) return;
@@ -13,13 +16,13 @@ export const useBeforeUnload = (requestId: string | null, patientId: string) => 
 
         // Try to delete the emergency request before unload
         const response = await fetch(
-          `https://ihrrgmmsfuvlasmzdmwf.supabase.co/functions/v1/emergency-cleanup`,
+          `${SUPABASE_URL}/functions/v1/emergency-cleanup`,
           {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'Authorization': token ? `Bearer ${token}` : '',
-              'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlocnJnbW1zZnV2bGFzbXpkbXdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1NDMzMDcsImV4cCI6MjA2OTExOTMwN30.6hRDCL5alu-Bs4kT4jKYJW3G3zmeBJDZB5udruQzOFU'
+              'apikey': SUPABASE_ANON_KEY
             },
             body: JSON.stringify({
               request_id: requestId,
@@ -45,7 +48,7 @@ export const useBeforeUnload = (requestId: string | null, patientId: string) => 
           });
 
           navigator.sendBeacon(
-            `https://ihrrgmmsfuvlasmzdmwf.supabase.co/functions/v1/emergency-cleanup`,
+            `${SUPABASE_URL}/functions/v1/emergency-cleanup`,
             new Blob([data], { type: 'application/json' })
           );
         } catch (beaconError) {
