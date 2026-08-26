@@ -1,73 +1,74 @@
-# Welcome to your Lovable project
+# Soliv
 
-## Project info
+Aplicativo de apoio emocional e saúde mental que conecta pacientes a psicólogos, oferecendo ferramentas de bem-estar, acompanhamento de humor, diário privado, respiração guiada, grupos de apoio e atendimento emergencial (SOS).
 
-**URL**: https://lovable.dev/projects/82bda655-81e5-448f-832e-ea464e8925dc
+## URL do projeto
 
-## How can I edit this code?
+https://lovable.dev/projects/82bda655-81e5-448f-832e-ea464e8925dc
 
-There are several ways of editing your application.
+## Tecnologias
 
-**Use Lovable**
+- Vite
+- React 18
+- TypeScript
+- Tailwind CSS
+- shadcn/ui
+- Supabase (banco de dados, auth e edge functions)
+- Playwright (testes E2E)
+- Vitest (testes de integração)
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/82bda655-81e5-448f-832e-ea464e8925dc) and start prompting.
+## Estrutura principal
 
-Changes made via Lovable will be committed automatically to this repo.
+```text
+src/
+  components/     Componentes reutilizáveis e telas específicas
+  contexts/       Contextos de autenticação e assinatura
+  hooks/          Hooks customizados (SOS, presença, WebRTC, etc.)
+  lib/            Utilitários e lógica de negócio
+  pages/          Páginas da aplicação
+  services/       Serviços de matching e psicólogos
+supabase/
+  functions/      Edge Functions do Supabase
+```
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+## Como executar localmente
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+# 1. Clone o repositório
+git clone <URL_DO_GITHUB>
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# 2. Acesse a pasta do projeto
+cd soliv
 
-# Step 3: Install the necessary dependencies.
-npm i
+# 3. Instale as dependências
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# 4. Inicie o servidor de desenvolvimento
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## Variáveis de ambiente
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Copie `.env.example` para `.env` e preencha as credenciais do Supabase e outros serviços. Nunca commit arquivos `.env` com valores reais.
 
-**Use GitHub Codespaces**
+## Testes
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```sh
+# Testes de integração / unitários
+npx vitest run
 
-## What technologies are used for this project?
+# Testes E2E
+npx playwright test
+```
 
-This project is built with:
+## Deploy
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+O deploy é feito pela Lovable em https://lovable.dev/projects/82bda655-81e5-448f-832e-ea464e8925dc (Share → Publish).
 
-## How can I deploy this project?
+## Sincronização com GitHub
 
-Simply open [Lovable](https://lovable.dev/projects/82bda655-81e5-448f-832e-ea464e8925dc) and click on Share -> Publish.
+Este projeto utiliza o Git sync da Lovable: alterações feitas na Lovable são commitadas automaticamente no GitHub, e pushes feitos no GitHub refletem na Lovable.
 
-## Can I connect a custom domain to my Lovable project?
+## Documentação viva
 
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+Veja `docs/visao-geral-do-produto.md` para o mapeamento completo de funcionalidades, regras de negócio e arquitetura.
