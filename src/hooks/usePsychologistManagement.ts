@@ -98,22 +98,14 @@ export const usePsychologistManagement = () => {
   const getPsychologistDetails = async (psychologistId: string) => {
     setLoading(true);
     try {
-      const response = await fetch(`https://ihrrgmmsfuvlasmzdmwf.supabase.co/functions/v1/psychologist-management?id=${psychologistId}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlocnJnbW1zZnV2bGFzbXpkbXdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1NDMzMDcsImV4cCI6MjA2OTExOTMwN30.6hRDCL5alu-Bs4kT4jKYJW3G3zmeBJDZB5udruQzOFU',
-        },
+      const { data: result, error } = await supabase.functions.invoke(`psychologist-management?id=${psychologistId}`, {
+        method: 'GET'
       });
 
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error);
-      
-      if (result.success) {
-        return result.data;
-      } else {
-        throw new Error(result.error || 'Erro ao buscar detalhes');
-      }
+      if (error) throw error;
+      if (!result.success) throw new Error(result.error || 'Erro ao buscar detalhes');
+
+      return result.data;
     } catch (error: any) {
       console.error('Erro ao buscar detalhes do psicólogo:', error);
       toast.error(error.message || 'Erro ao carregar detalhes');
