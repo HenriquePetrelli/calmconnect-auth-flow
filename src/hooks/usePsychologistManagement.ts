@@ -52,25 +52,16 @@ export const usePsychologistManagement = () => {
   const registerPsychologist = async (data: PsychologistRegistration) => {
     setLoading(true);
     try {
-      const response = await fetch('https://ihrrgmmsfuvlasmzdmwf.supabase.co/functions/v1/psychologist-management?action=register', {
+      const { data: result, error } = await supabase.functions.invoke('psychologist-management?action=register', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlocnJnbW1zZnV2bGFzbXpkbXdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1NDMzMDcsImV4cCI6MjA2OTExOTMwN30.6hRDCL5alu-Bs4kT4jKYJW3G3zmeBJDZB5udruQzOFU',
-        },
-        body: JSON.stringify(data),
+        body: data,
       });
 
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error);
-      
-      if (result.success) {
-        toast.success(result.message);
-        return { success: true, data: result.data };
-      } else {
-        throw new Error(result.error || 'Erro no cadastro');
-      }
+      if (error) throw error;
+      if (!result.success) throw new Error(result.error || 'Erro no cadastro');
+
+      toast.success(result.message);
+      return { success: true, data: result.data };
     } catch (error: any) {
       console.error('Erro ao cadastrar psicólogo:', error);
       toast.error(error.message || 'Erro ao realizar cadastro');
