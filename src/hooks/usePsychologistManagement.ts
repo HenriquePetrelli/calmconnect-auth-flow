@@ -75,23 +75,15 @@ export const usePsychologistManagement = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('https://ihrrgmmsfuvlasmzdmwf.supabase.co/functions/v1/psychologist-management?action=all', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlocnJnbW1zZnV2bGFzbXpkbXdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1NDMzMDcsImV4cCI6MjA2OTExOTMwN30.6hRDCL5alu-Bs4kT4jKYJW3G3zmeBJDZB5udruQzOFU',
-        },
+      const { data: result, error } = await supabase.functions.invoke('psychologist-management?action=all', {
+        method: 'GET'
       });
 
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error);
-      
-      if (result.success) {
-        setPendingPsychologists(result.data);
-        return result.data;
-      } else {
-        throw new Error(result.error || 'Erro ao buscar psicólogos');
-      }
+      if (error) throw error;
+      if (!result.success) throw new Error(result.error || 'Erro ao buscar psicólogos');
+
+      setPendingPsychologists(result.data);
+      return result.data;
     } catch (err: any) {
       console.error('Erro ao buscar psicólogos:', err);
       setError(err?.message || 'Erro ao carregar psicólogos');
