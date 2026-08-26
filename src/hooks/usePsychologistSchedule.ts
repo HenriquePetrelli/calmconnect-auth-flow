@@ -58,9 +58,8 @@ export const usePsychologistSchedule = () => {
   // Fetch pending appointments (awaiting psychologist confirmation)
   const fetchPendingAppointments = async (): Promise<Appointment[]> => {
     try {
-      const { data, error } = await supabase.functions.invoke('psychologist-schedule', {
-        method: 'GET',
-        query: { action: 'pending' }
+      const { data, error } = await supabase.functions.invoke('psychologist-schedule?action=pending', {
+        method: 'GET'
       });
 
       if (error) throw error;
