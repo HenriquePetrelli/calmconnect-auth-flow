@@ -58,19 +58,13 @@ export const usePsychologistSchedule = () => {
   // Fetch pending appointments (awaiting psychologist confirmation)
   const fetchPendingAppointments = async (): Promise<Appointment[]> => {
     try {
-      const response = await fetch(`https://ihrrgmmsfuvlasmzdmwf.supabase.co/functions/v1/psychologist-schedule?action=pending`, {
+      const { data, error } = await supabase.functions.invoke('psychologist-schedule', {
         method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlocnJnbW1zZnV2bGFzbXpkbXdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1NDMzMDcsImV4cCI6MjA2OTExOTMwN30.6hRDCL5alu-Bs4kT4jKYJW3G3zmeBJDZB5udruQzOFU',
-        }
+        query: { action: 'pending' }
       });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
+
+      if (error) throw error;
+
       return data || [];
     } catch (error: any) {
       console.error('Error fetching pending appointments:', error);
