@@ -37,20 +37,12 @@ export const useAppointments = () => {
     try {
       setLoading(true);
       
-      // Use direct fetch for GET requests to avoid POST with empty body
-      const response = await fetch(`https://ihrrgmmsfuvlasmzdmwf.supabase.co/functions/v1/appointments`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlocnJnbW1zZnV2bGFzbXpkbXdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1NDMzMDcsImV4cCI6MjA2OTExOTMwN30.6hRDCL5alu-Bs4kT4jKYJW3G3zmeBJDZB5udruQzOFU',
-        }
+      const { data, error } = await supabase.functions.invoke('appointments', {
+        method: 'GET'
       });
       
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      if (error) throw error;
       
-      const data = await response.json();
       setAppointments(data || []);
     } catch (error: any) {
       console.error('Error fetching appointments:', error);
@@ -66,31 +58,15 @@ export const useAppointments = () => {
 
   const fetchPsychologists = async () => {
     try {
-      // Call the appointments function with psychologists action
-      const { data, error } = await supabase.functions.invoke('appointments', {
+      const { data, error } = await supabase.functions.invoke('appointments?action=psychologists', {
         method: 'GET'
       });
       
       if (error) throw error;
       
-      // If the main call fails, try getting from the direct endpoint with query param
-      try {
-        const response = await fetch(`https://ihrrgmmsfuvlasmzdmwf.supabase.co/functions/v1/appointments?action=psychologists`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlocnJnbW1zZnV2bGFzbXpkbXdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1NDMzMDcsImV4cCI6MjA2OTExOTMwN30.6hRDCL5alu-Bs4kT4jKYJW3G3zmeBJDZB5udruQzOFU',
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        if (response.ok) {
-          const psychologistsData = await response.json();
-          setPsychologists(psychologistsData || []);
-          return;
-        }
-      } catch (fetchError) {
-        console.error('Direct fetch failed:', fetchError);
+      if (data) {
+        setPsychologists(data || []);
+        return;
       }
       
       // Fallback: get directly from psychologists table
@@ -160,27 +136,16 @@ export const useAppointments = () => {
     try {
       setLoading(true);
       
-      // Call the appointments function with history action and pagination
-      try {
-        const response = await fetch(`https://ihrrgmmsfuvlasmzdmwf.supabase.co/functions/v1/appointments?action=history&page=${page}&limit=${limit}`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlocnJnbW1zZnV2bGFzbXpkbXdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1NDMzMDcsImV4cCI6MjA2OTExOTMwN30.6hRDCL5alu-Bs4kT4jKYJW3G3zmeBJDZB5udruQzOFU',
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        if (response.ok) {
-          const historyData = await response.json();
-          return historyData || [];
-        }
-      } catch (fetchError) {
-        console.error('Direct fetch for history failed:', fetchError);
+      const { data, error } = await supabase.functions.invoke(`appointments?action=history&page=${page}&limit=${limit}`, {
+        method: 'GET'
+      });
+      
+      if (!error && data) {
+        return data || [];
       }
       
       // Fallback: get directly from appointments table
-      const { data, error } = await supabase
+      const { data: appointmentsData, error: appointmentsError } = await supabase
         .from('appointments')
         .select(`
           *,
@@ -193,9 +158,9 @@ export const useAppointments = () => {
         .order('scheduled_at', { ascending: false })
         .range((page - 1) * limit, page * limit - 1);
       
-      if (error) throw error;
+      if (appointmentsError) throw appointmentsError;
       
-      return data || [];
+      return appointmentsData || [];
     } catch (error: any) {
       console.error('Error fetching appointment history:', error);
       toast({

@@ -52,25 +52,16 @@ export const usePsychologistManagement = () => {
   const registerPsychologist = async (data: PsychologistRegistration) => {
     setLoading(true);
     try {
-      const response = await fetch('https://ihrrgmmsfuvlasmzdmwf.supabase.co/functions/v1/psychologist-management?action=register', {
+      const { data: result, error } = await supabase.functions.invoke('psychologist-management?action=register', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlocnJnbW1zZnV2bGFzbXpkbXdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1NDMzMDcsImV4cCI6MjA2OTExOTMwN30.6hRDCL5alu-Bs4kT4jKYJW3G3zmeBJDZB5udruQzOFU',
-        },
-        body: JSON.stringify(data),
+        body: data,
       });
 
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error);
-      
-      if (result.success) {
-        toast.success(result.message);
-        return { success: true, data: result.data };
-      } else {
-        throw new Error(result.error || 'Erro no cadastro');
-      }
+      if (error) throw error;
+      if (!result.success) throw new Error(result.error || 'Erro no cadastro');
+
+      toast.success(result.message);
+      return { success: true, data: result.data };
     } catch (error: any) {
       console.error('Erro ao cadastrar psicólogo:', error);
       toast.error(error.message || 'Erro ao realizar cadastro');
@@ -84,23 +75,15 @@ export const usePsychologistManagement = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('https://ihrrgmmsfuvlasmzdmwf.supabase.co/functions/v1/psychologist-management?action=all', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlocnJnbW1zZnV2bGFzbXpkbXdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1NDMzMDcsImV4cCI6MjA2OTExOTMwN30.6hRDCL5alu-Bs4kT4jKYJW3G3zmeBJDZB5udruQzOFU',
-        },
+      const { data: result, error } = await supabase.functions.invoke('psychologist-management?action=all', {
+        method: 'GET'
       });
 
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error);
-      
-      if (result.success) {
-        setPendingPsychologists(result.data);
-        return result.data;
-      } else {
-        throw new Error(result.error || 'Erro ao buscar psicólogos');
-      }
+      if (error) throw error;
+      if (!result.success) throw new Error(result.error || 'Erro ao buscar psicólogos');
+
+      setPendingPsychologists(result.data);
+      return result.data;
     } catch (err: any) {
       console.error('Erro ao buscar psicólogos:', err);
       setError(err?.message || 'Erro ao carregar psicólogos');
@@ -115,22 +98,14 @@ export const usePsychologistManagement = () => {
   const getPsychologistDetails = async (psychologistId: string) => {
     setLoading(true);
     try {
-      const response = await fetch(`https://ihrrgmmsfuvlasmzdmwf.supabase.co/functions/v1/psychologist-management?id=${psychologistId}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlocnJnbW1zZnV2bGFzbXpkbXdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1NDMzMDcsImV4cCI6MjA2OTExOTMwN30.6hRDCL5alu-Bs4kT4jKYJW3G3zmeBJDZB5udruQzOFU',
-        },
+      const { data: result, error } = await supabase.functions.invoke(`psychologist-management?id=${psychologistId}`, {
+        method: 'GET'
       });
 
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error);
-      
-      if (result.success) {
-        return result.data;
-      } else {
-        throw new Error(result.error || 'Erro ao buscar detalhes');
-      }
+      if (error) throw error;
+      if (!result.success) throw new Error(result.error || 'Erro ao buscar detalhes');
+
+      return result.data;
     } catch (error: any) {
       console.error('Erro ao buscar detalhes do psicólogo:', error);
       toast.error(error.message || 'Erro ao carregar detalhes');
@@ -143,30 +118,21 @@ export const usePsychologistManagement = () => {
   const approvePsychologist = async (psychologistId: string, adminUserId: string) => {
     setLoading(true);
     try {
-      const response = await fetch('https://ihrrgmmsfuvlasmzdmwf.supabase.co/functions/v1/psychologist-management?action=approve', {
+      const { data: result, error } = await supabase.functions.invoke('psychologist-management?action=approve', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlocnJnbW1zZnV2bGFzbXpkbXdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1NDMzMDcsImV4cCI6MjA2OTExOTMwN30.6hRDCL5alu-Bs4kT4jKYJW3G3zmeBJDZB5udruQzOFU',
-        },
-        body: JSON.stringify({
+        body: {
           psychologist_id: psychologistId,
           admin_user_id: adminUserId
-        }),
+        },
       });
 
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error);
-      
-      if (result.success) {
-        toast.success(result.message);
-        // Atualizar lista de pendentes
-        await getPendingPsychologists();
-        return { success: true };
-      } else {
-        throw new Error(result.error || 'Erro na aprovação');
-      }
+      if (error) throw error;
+      if (!result.success) throw new Error(result.error || 'Erro na aprovação');
+
+      toast.success(result.message);
+      // Atualizar lista de pendentes
+      await getPendingPsychologists();
+      return { success: true };
     } catch (error: any) {
       console.error('Erro ao aprovar psicólogo:', error);
       toast.error(error.message || 'Erro ao aprovar psicólogo');
@@ -179,31 +145,22 @@ export const usePsychologistManagement = () => {
   const rejectPsychologist = async (psychologistId: string, adminUserId: string, rejectionReason?: string) => {
     setLoading(true);
     try {
-      const response = await fetch('https://ihrrgmmsfuvlasmzdmwf.supabase.co/functions/v1/psychologist-management?action=reject', {
+      const { data: result, error } = await supabase.functions.invoke('psychologist-management?action=reject', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlocnJnbW1zZnV2bGFzbXpkbXdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1NDMzMDcsImV4cCI6MjA2OTExOTMwN30.6hRDCL5alu-Bs4kT4jKYJW3G3zmeBJDZB5udruQzOFU',
-        },
-        body: JSON.stringify({
+        body: {
           psychologist_id: psychologistId,
           admin_user_id: adminUserId,
           rejection_reason: rejectionReason
-        }),
+        },
       });
 
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error);
-      
-      if (result.success) {
-        toast.success(result.message);
-        // Atualizar lista de pendentes
-        await getPendingPsychologists();
-        return { success: true };
-      } else {
-        throw new Error(result.error || 'Erro na rejeição');
-      }
+      if (error) throw error;
+      if (!result.success) throw new Error(result.error || 'Erro na rejeição');
+
+      toast.success(result.message);
+      // Atualizar lista de pendentes
+      await getPendingPsychologists();
+      return { success: true };
     } catch (error: any) {
       console.error('Erro ao rejeitar psicólogo:', error);
       toast.error(error.message || 'Erro ao rejeitar psicólogo');
