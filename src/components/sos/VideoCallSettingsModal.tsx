@@ -103,9 +103,11 @@ export const VideoCallSettingsModal = ({
       await mediaManager.loadDevices();
       const devices = mediaManager.devices;
       
-      const audioInputs = devices.filter(device => device.kind === 'audioinput');
-      const videoInputs = devices.filter(device => device.kind === 'videoinput');  
-      const audioOutputs = devices.filter(device => device.kind === 'audiooutput');
+      // Radix Select rejects empty string values; devices without an id
+      // (permissions not granted yet) must be filtered out.
+      const audioInputs = devices.filter(device => device.kind === 'audioinput' && !!device.deviceId);
+      const videoInputs = devices.filter(device => device.kind === 'videoinput' && !!device.deviceId);
+      const audioOutputs = devices.filter(device => device.kind === 'audiooutput' && !!device.deviceId);
       
       setAudioDevices(audioInputs as MediaDeviceInfo[]);
       setVideoDevices(videoInputs as MediaDeviceInfo[]);
