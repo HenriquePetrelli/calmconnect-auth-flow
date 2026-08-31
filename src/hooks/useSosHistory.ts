@@ -7,8 +7,12 @@ export interface SosMetrics {
   attended: number;
   unattended: number;
   in_flight: number;
+  completed: number;
+  acceptance_rate: number;
+  crisis_resolved_rate: number;
   avg_accept_seconds: number;
   avg_duration_seconds: number;
+  avg_rating: number;
   end_reasons: Record<string, number>;
 }
 

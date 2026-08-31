@@ -47,6 +47,14 @@ export const formatDuration = (seconds?: number | null): string => {
   return `${s}s`;
 };
 
+/** 0..100 -> "87,5%"; treats missing/zero as "—" since it means no data yet. */
+export const formatPercent = (value?: number | null): string =>
+  value ? `${value.toString().replace('.', ',')}%` : '—';
+
+/** 1..5 -> "4,8 ★"; 0 means no feedback recorded yet. */
+export const formatRating = (value?: number | null): string =>
+  value ? `${value.toString().replace('.', ',')} ★` : '—';
+
 export const formatDateTime = (value?: string | null): string =>
   value ? new Date(value).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '—';
 

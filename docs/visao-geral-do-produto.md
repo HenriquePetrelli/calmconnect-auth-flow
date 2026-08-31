@@ -2,7 +2,7 @@
 
 Documento vivo. Descreve funcionalidades e regras de negócio da plataforma. Deve ser atualizado sempre que uma mudança alterar comportamento, fluxo ou regra.
 
-Última atualização: 2026-08-10
+Última atualização: 2026-08-31
 
 ---
 
@@ -162,3 +162,4 @@ Navegação do paciente: menus lateral e inferior persistem entre Home, Chat, Co
 
 - 2026-08-10 — Criação do documento consolidando todo o produto (perfis, SOS, consultas, assinaturas, engajamento, administração e testes).
 - 2026-08-15 — Novo fluxo estruturado de avaliação do paciente no SOS (resultado, nota, acolhimento, categorias de queixa e sinalização de revisão administrativa).
+- 2026-08-31 — Painel admin de métricas de SOS passa a exibir também taxa de aceite, taxa de resolução de crise, avaliação média e total de solicitações concluídas (já calculados por `get_sos_metrics`, mas não exibidos até então).

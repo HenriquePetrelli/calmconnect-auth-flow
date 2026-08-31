@@ -12,6 +12,8 @@ import {
   endedByLabel,
   formatDateTime,
   formatDuration,
+  formatPercent,
+  formatRating,
   sosStatusLabel,
   sosStatusTone,
   waitSeconds,
@@ -53,6 +55,10 @@ export const SosHistoryPanel: React.FC<SosHistoryPanelProps> = ({
           <Metric label="Em aberto" value={String(metrics.in_flight)} />
           <Metric label="Tempo até aceite" value={formatDuration(metrics.avg_accept_seconds)} />
           <Metric label="Duração média" value={formatDuration(metrics.avg_duration_seconds)} />
+          <Metric label="Concluídas" value={String(metrics.completed)} />
+          <Metric label="Taxa de aceite" value={formatPercent(metrics.acceptance_rate)} />
+          <Metric label="Crise resolvida" value={formatPercent(metrics.crisis_resolved_rate)} />
+          <Metric label="Avaliação média" value={formatRating(metrics.avg_rating)} />
         </div>
       )}
 

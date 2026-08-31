@@ -19,11 +19,11 @@ Atualização do plano do fluxo de chamada emergencial, refletindo tudo que já 
 
 ## Próximos passos propostos
 
-1. **Painel de contexto do paciente na chamada** — durante o atendimento, o psicólogo vê um resumo lateral (humor recente, sintomas, últimas anotações, histórico de SOS) para triagem rápida.
-2. **Histórico de SOS para o paciente e para o admin** — listagem das solicitações passadas com status, duração, quem encerrou e motivo, reaproveitando os campos já gravados.
-3. **Métricas operacionais de SOS** — tempo médio até o aceite, taxa de solicitações não atendidas, duração média e distribuição de motivos de encerramento, para acompanhar a operação.
-4. **Alerta de fila sem psicólogo online** — quando não há profissional disponível, avisar o paciente de forma clara e oferecer alternativas (respiração guiada, canais de emergência) em vez de esperar indefinidamente.
-5. **Execução do checklist manual** — rodada em Chrome/Edge/Safari e Android/iOS, com correção dos desvios encontrados.
+1. ~~**Painel de contexto do paciente na chamada**~~ — entregue: `src/components/sos/PatientContextPanel.tsx` + `get_sos_patient_context`.
+2. ~~**Histórico de SOS para o paciente e para o admin**~~ — entregue: `src/components/sos/SosHistoryPanel.tsx`, usado em `ActivityHistory.tsx` e `AdminDashboard.tsx`.
+3. ~~**Métricas operacionais de SOS**~~ — entregue: função `get_sos_metrics` no banco; painel admin agora exibe também taxa de aceite, taxa de resolução de crise e avaliação média (2026-08-31).
+4. ~~**Alerta de fila sem psicólogo online**~~ — entregue: `src/pages/SOS.tsx` (aviso com alternativas quando `availableProfessionals === 0`).
+5. **Execução do checklist manual** — ainda pendente: rodada em Chrome/Edge/Safari e Android/iOS, com correção dos desvios encontrados.
 
 ## Detalhes técnicos
 
