@@ -1798,11 +1798,11 @@ export type Database = {
         Returns: {
           conversa_id: string
           created_at: string
-          last_message_at: string | null
-          last_message_tipo: string | null
+          last_message_at: string
+          last_message_tipo: string
           mensagens_count: number
-          paciente_nome: string | null
-          psicologo_nome: string | null
+          paciente_nome: string
+          psicologo_nome: string
           status: string
           updated_at: string
         }[]

@@ -40,6 +40,7 @@ const baseHookReturn = {
   enviando: false,
   enviarMensagem: vi.fn(),
   uploadImagem: vi.fn(),
+  refetch: vi.fn(),
 };
 
 const msg = (id: string, autor_id: string, conteudo: string) => ({
