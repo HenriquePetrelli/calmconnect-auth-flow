@@ -436,7 +436,6 @@ export type Database = {
           created_at: string
           id: string
           imagem_url: string | null
-          lida_em: string | null
           tipo: string
           updated_at: string
         }
@@ -447,7 +446,6 @@ export type Database = {
           created_at?: string
           id?: string
           imagem_url?: string | null
-          lida_em?: string | null
           tipo?: string
           updated_at?: string
         }
@@ -458,7 +456,6 @@ export type Database = {
           created_at?: string
           id?: string
           imagem_url?: string | null
-          lida_em?: string | null
           tipo?: string
           updated_at?: string
         }
@@ -1694,10 +1691,6 @@ export type Database = {
         }
         Returns: undefined
       }
-      admin_archive_conversa: {
-        Args: { p_conversa_id: string }
-        Returns: undefined
-      }
       calculate_psychologist_average_rating: {
         Args: { psychologist_user_id: string }
         Returns: number
@@ -1793,20 +1786,6 @@ export type Database = {
         }[]
       }
       gerenciar_expiracao_conversas: { Args: never; Returns: undefined }
-      get_admin_conversas_overview: {
-        Args: never
-        Returns: {
-          conversa_id: string
-          created_at: string
-          last_message_at: string | null
-          last_message_tipo: string | null
-          mensagens_count: number
-          paciente_nome: string | null
-          psicologo_nome: string | null
-          status: string
-          updated_at: string
-        }[]
-      }
       get_admin_metrics: {
         Args: never
         Returns: {
@@ -1817,11 +1796,6 @@ export type Database = {
           sos_requests_last_30_days: number
           total_patients: number
         }[]
-      }
-      get_chat_usage_metrics: { Args: { p_days?: number }; Returns: Json }
-      get_or_create_appointment_webrtc_session: {
-        Args: { p_appointment_id: string }
-        Returns: string
       }
       get_patient_statistics: {
         Args: { patient_user_id: string }
@@ -1873,10 +1847,6 @@ export type Database = {
         Returns: undefined
       }
       is_super_admin: { Args: { user_id_param?: string }; Returns: boolean }
-      marcar_mensagens_como_lidas: {
-        Args: { p_conversa_id: string }
-        Returns: undefined
-      }
       pode_criar_conversa: {
         Args: { p_paciente_id: string; p_psicologo_id: string }
         Returns: boolean
