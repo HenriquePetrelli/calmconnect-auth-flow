@@ -1691,6 +1691,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      admin_archive_conversa: {
+        Args: { p_conversa_id: string }
+        Returns: undefined
+      }
       calculate_psychologist_average_rating: {
         Args: { psychologist_user_id: string }
         Returns: number
@@ -1786,6 +1790,20 @@ export type Database = {
         }[]
       }
       gerenciar_expiracao_conversas: { Args: never; Returns: undefined }
+      get_admin_conversas_overview: {
+        Args: never
+        Returns: {
+          conversa_id: string
+          created_at: string
+          last_message_at: string | null
+          last_message_tipo: string | null
+          mensagens_count: number
+          paciente_nome: string | null
+          psicologo_nome: string | null
+          status: string
+          updated_at: string
+        }[]
+      }
       get_admin_metrics: {
         Args: never
         Returns: {
@@ -1797,6 +1815,7 @@ export type Database = {
           total_patients: number
         }[]
       }
+      get_chat_usage_metrics: { Args: { p_days?: number }; Returns: Json }
       get_patient_statistics: {
         Args: { patient_user_id: string }
         Returns: {

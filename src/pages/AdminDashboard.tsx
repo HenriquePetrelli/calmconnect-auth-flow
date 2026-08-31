@@ -24,12 +24,14 @@ import {
   UserCog,
   Menu,
   LifeBuoy,
+  MessageSquare,
 } from 'lucide-react';
 import AdminProfile from '@/components/AdminProfile';
 import { PsychologistApprovalPanel } from '@/components/psychologist/PsychologistApprovalPanel';
 import { PatientsPanel } from '@/components/admin/PatientsPanel';
 import { PaymentsPanel } from '@/components/payments/PaymentsPanel';
 import { SosHistoryPanel } from '@/components/sos/SosHistoryPanel';
+import { ChatModerationPanel } from '@/components/admin/ChatModerationPanel';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
@@ -58,6 +60,7 @@ const AdminDashboard = () => {
     { value: 'psychologists', label: 'Psicólogos', icon: UserCheck },
     { value: 'patients', label: 'Pacientes', icon: Users },
     { value: 'sos', label: 'SOS', icon: LifeBuoy },
+    { value: 'chat', label: 'Chat', icon: MessageSquare },
     { value: 'payments', label: 'Pagamentos', icon: CreditCard },
     { value: 'profile', label: 'Perfil', icon: UserCog },
   ] as const;
@@ -327,7 +330,7 @@ const AdminDashboard = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-          <TabsList className="hidden md:grid w-full h-auto p-1 bg-muted/60 grid-cols-6 gap-1 rounded-lg">
+          <TabsList className="hidden md:grid w-full h-auto p-1 bg-muted/60 grid-cols-7 gap-1 rounded-lg">
             <TabsTrigger value="overview" className={tabTriggerClass}>
               <LayoutDashboard className="w-4 h-4 shrink-0" />
               <span>Visão Geral</span>
@@ -343,6 +346,10 @@ const AdminDashboard = () => {
             <TabsTrigger value="sos" className={tabTriggerClass}>
               <LifeBuoy className="w-4 h-4 shrink-0" />
               <span>SOS</span>
+            </TabsTrigger>
+            <TabsTrigger value="chat" className={tabTriggerClass}>
+              <MessageSquare className="w-4 h-4 shrink-0" />
+              <span>Chat</span>
             </TabsTrigger>
             <TabsTrigger value="payments" className={tabTriggerClass}>
               <CreditCard className="w-4 h-4 shrink-0" />
@@ -512,6 +519,10 @@ const AdminDashboard = () => {
 
           <TabsContent value="sos" className="mt-4">
             <SosHistoryPanel withMetrics title="Todas as solicitações SOS" />
+          </TabsContent>
+
+          <TabsContent value="chat" className="mt-4">
+            <ChatModerationPanel />
           </TabsContent>
 
           <TabsContent value="payments" className="mt-4">

@@ -136,7 +136,8 @@ Navegação do paciente: menus lateral e inferior persistem entre Home, Chat, Co
 
 ## 7. Administração e manutenção
 
-- Painel admin: aprovação de psicólogos, gestão de pacientes, métricas gerais e métricas de SOS.
+- Painel admin: aprovação de psicólogos, gestão de pacientes, métricas gerais, métricas de SOS e uso/moderação do chat.
+- Moderação de chat: admin vê métricas agregadas e metadados das conversas (participantes, status, contagem de mensagens, última atividade) e pode arquivar uma conversa flagrada por outro canal; o conteúdo das mensagens nunca é exposto ao admin.
 - Edição, bloqueio e exclusão de usuários via Edge Functions com validação server-side.
 - Rotinas automáticas:
 
@@ -163,3 +164,4 @@ Navegação do paciente: menus lateral e inferior persistem entre Home, Chat, Co
 - 2026-08-10 — Criação do documento consolidando todo o produto (perfis, SOS, consultas, assinaturas, engajamento, administração e testes).
 - 2026-08-15 — Novo fluxo estruturado de avaliação do paciente no SOS (resultado, nota, acolhimento, categorias de queixa e sinalização de revisão administrativa).
 - 2026-08-31 — Painel admin de métricas de SOS passa a exibir também taxa de aceite, taxa de resolução de crise, avaliação média e total de solicitações concluídas (já calculados por `get_sos_metrics`, mas não exibidos até então).
+- 2026-08-31 — Novo painel admin de uso e moderação do chat (aba "Chat"): métricas agregadas, listagem de conversas com metadados (sem conteúdo de mensagens) e ação de arquivar conversa flagrada.

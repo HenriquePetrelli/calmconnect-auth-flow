@@ -75,17 +75,26 @@ O sistema de chat permite que pacientes conversem diretamente com psicólogos co
 ### Hooks
 - `useConversas.ts` - Gerenciamento de conversas (listagem, criação, exclusão)
 - `useMensagens.ts` - Gerenciamento de mensagens (envio, recebimento, upload de imagens)
+- `useChatModeration.ts` - Métricas de uso e visão geral das conversas para o admin (metadados apenas)
 
 ### Componentes
 - `ListaConversas.tsx` - Lista todas as conversas do usuário
 - `ChatInterface.tsx` - Interface principal do chat
 - `NovoChat.tsx` - Card promocional do sistema de chat
+- `admin/ChatModerationPanel.tsx` - Painel admin de uso e moderação do chat
 
 ### Páginas
 - `Chat.tsx` - Página principal que alterna entre lista e chat
 
 ### Edge Functions
 - `gerenciar-conversas` - Função automatizada para gerenciar expiração de conversas
+
+## Administração
+
+- ✅ Painel admin (`/admin-dashboard`, aba "Chat") com métricas agregadas de uso (conversas por status, mensagens dos últimos 30 dias, média de mensagens por conversa ativa) e listagem de conversas com participantes, contagem de mensagens e última atividade.
+- ✅ Ação de moderação: admin pode arquivar (encerrar) uma conversa flagrada por outro canal (denúncia, suporte).
+- Por design, o conteúdo das mensagens (`conteudo`, `imagem_url`) nunca é exposto ao admin — apenas metadados. As funções `get_chat_usage_metrics` e `get_admin_conversas_overview` (RPCs `SECURITY DEFINER`, restritas a `is_super_admin`) não selecionam essas colunas.
+- [ ] Backup automático de conversas — não implementado.
 
 ## Funcionalidades Futuras (Não Implementadas)
 
@@ -98,11 +107,6 @@ O sistema de chat permite que pacientes conversem diretamente com psicólogos co
 - [ ] Suporte offline com sincronização
 - [ ] Indicadores de entrega/leitura
 - [ ] Notificações push nativas
-
-### ⚙️ Administração
-- [ ] Painel admin para moderar conversas
-- [ ] Relatórios de uso do chat
-- [ ] Backup automático de conversas
 
 ## Como Testar
 
