@@ -1,3 +1,10 @@
+// NÃO USADA: nenhuma tela do app chama esta função. A gestão real de
+// disponibilidade semanal do psicólogo (e a leitura pelo paciente ao
+// agendar) usa a tabela public.psychologist_availability diretamente
+// (SELECT aberto por RLS) e a RPC set_psychologist_availability para
+// escrita — ver src/hooks/usePsychologistAvailability.ts e
+// src/hooks/useAvailableTimeSlots.ts. Este arquivo ficou órfão e o POST
+// abaixo nunca persistiu nada de verdade; mantido apenas por histórico.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {

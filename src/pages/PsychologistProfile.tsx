@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { LogOut, Mail, Lock, User, FileText, Pencil, Check, MessageCircle, Settings, Wallet, ChevronRight } from 'lucide-react';
+import { LogOut, Mail, Lock, User, FileText, Pencil, Check, MessageCircle, Settings, Wallet, ChevronRight, CalendarClock } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -283,6 +283,20 @@ const PsychologistProfile = () => {
 
       <Card>
         <CardContent className="p-4 space-y-2">
+          <button
+            onClick={() => navigate('/psychologist-availability')}
+            className="w-full flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-left hover:bg-accent hover:border-primary/30 transition-colors group"
+          >
+            <div className="rounded-md bg-secondary/20 p-2 group-hover:bg-secondary/30 transition-colors">
+              <CalendarClock className="w-4 h-4 text-secondary-foreground" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium">Minha agenda</p>
+              <p className="text-xs text-muted-foreground">Defina os dias e horários em que você atende</p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+          </button>
+
           <button
             onClick={() => navigate('/psychologist-payments')}
             className="w-full flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-left hover:bg-accent hover:border-primary/30 transition-colors group"

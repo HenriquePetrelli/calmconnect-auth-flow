@@ -51,6 +51,14 @@ class QueryBuilder implements PromiseLike<{ data: any; error: any }> {
     this.filters.push({ apply: (r) => (r[col] ?? null) === value });
     return this;
   }
+  gte(col: string, value: any) {
+    this.filters.push({ apply: (r) => r[col] >= value });
+    return this;
+  }
+  lte(col: string, value: any) {
+    this.filters.push({ apply: (r) => r[col] <= value });
+    return this;
+  }
   or(expr: string) {
     const clauses = expr.split(',').map((c) => {
       const [col, op, value] = c.split('.');

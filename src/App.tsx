@@ -52,6 +52,7 @@ const SubscriptionCancel = lazy(() => import("./pages/SubscriptionCancel"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const PsychologistDashboard = lazy(() => import("./pages/PsychologistDashboard"));
 const PsychologistProfile = lazy(() => import("./pages/PsychologistProfile"));
+const PsychologistAvailability = lazy(() => import("./pages/PsychologistAvailability"));
 const PsychologistPayments = lazy(() => import("./pages/PsychologistPayments"));
 const EmergencyCall = lazy(() => import("./pages/EmergencyCall"));
 const Chat = lazy(() => import("./pages/Chat"));
@@ -286,6 +287,11 @@ const App = () => {
                   <Route path="/psychologist-profile" element={
                     <RouteGuard allowedUserTypes={['psychologist']}>
                       <PsychologistProfile />
+                    </RouteGuard>
+                  } />
+                  <Route path="/psychologist-availability" element={
+                    <RouteGuard allowedUserTypes={['psychologist']}>
+                      <PsychologistAvailability />
                     </RouteGuard>
                   } />
                   <Route path="/psicologo/suporte" element={

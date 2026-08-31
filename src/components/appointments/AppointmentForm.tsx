@@ -4,7 +4,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Clock, Calendar as CalendarIcon, User, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Clock, Calendar as CalendarIcon, User, AlertTriangle, CalendarX } from 'lucide-react';
 import { format, addDays, setHours, setMinutes, startOfDay } from 'date-fns';
 import { fromZonedTime, toZonedTime } from 'date-fns-tz';
 import { ptBR } from 'date-fns/locale';
@@ -12,6 +12,7 @@ import { useAppointments } from '@/hooks/useAppointments';
 import { useToast } from '@/hooks/use-toast';
 import { useAvailableTimeSlots } from '@/hooks/useAvailableTimeSlots';
 import { formatAppointmentTime } from '@/utils/timezone';
+import { EmptyState } from '@/components/EmptyState';
 import { PsychologistData } from './PsychologistList';
 
 interface AppointmentFormProps {
@@ -34,26 +35,17 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
   const { toast } = useToast();
   
   // Hook para gerenciar horários disponíveis
-  const { 
-    allTimeSlots, 
-    occupiedSlots, 
-    loading: slotsLoading, 
-    isSlotAvailable 
+  const {
+    allTimeSlots,
+    occupiedSlots,
+    loading: slotsLoading,
+    isSlotAvailable,
+    hasAnyAvailability,
+    isDayAvailable,
   } = useAvailableTimeSlots({
     psychologistId: psychologist.user_id,
     selectedDate
   });
-
-  // Verificar se pode agendar (qualquer horário permitido)
-  const canScheduleDate = (date: Date): boolean => {
-    return true; // Permite agendamento imediato
-  };
-
-  // Verificar se horário está no intervalo permitido (7h às 23:50)
-  const isValidTimeSlot = (time: string): boolean => {
-    const [hour, minute] = time.split(':').map(Number);
-    return (hour >= 7 && hour < 24) && (minute % 10 === 0);
-  };
 
   const handleSubmit = async () => {
     if (!selectedDate || !selectedTime) {
@@ -65,11 +57,11 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
       return;
     }
 
-    // Verificar se horário está disponível
-    if (!isSlotAvailable(selectedTime)) {
+    // Verificar se horário está disponível (dentro da agenda do psicólogo e sem conflito)
+    if (!allTimeSlots.includes(selectedTime) || !isSlotAvailable(selectedTime)) {
       toast({
-        title: 'Horário ocupado',
-        description: 'Este horário já está ocupado. Escolha outro horário disponível.',
+        title: 'Horário indisponível',
+        description: 'Este horário não está mais disponível. Escolha outro horário.',
         variant: 'destructive',
       });
       return;
@@ -77,18 +69,6 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
 
     const [hours, minutes] = selectedTime.split(':').map(Number);
     const appointmentDateTime = setMinutes(setHours(selectedDate, hours), minutes);
-
-    // Verificação de horário já removida - permite agendamento imediato
-
-    // Verificar horário permitido
-    if (!isValidTimeSlot(selectedTime)) {
-      toast({
-        title: 'Horário inválido',
-        description: 'Consultas só podem ser agendadas entre 07h e 23:50',
-        variant: 'destructive',
-      });
-      return;
-    }
 
     setIsSubmitting(true);
 
@@ -163,115 +143,126 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-secondary">
-          <p>• Agendamento <strong>imediato</strong> - sem necessidade de antecedência</p>
-          <p>• Horários disponíveis: <strong>07h às 23:50</strong> (intervalos de 10 minutos)</p>
+          <p>• Horários disponíveis seguem a agenda semanal cadastrada pelo psicólogo</p>
           <p>• Duração da consulta: <strong>50 minutos</strong></p>
           <p>• Cancelamentos podem ser feitos até <strong>12h antes</strong> da consulta</p>
           <p>• O psicólogo tem <strong>24h para confirmar</strong> sua solicitação</p>
         </CardContent>
       </Card>
 
-      {/* Date Selection */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CalendarIcon className="w-5 h-5" />
-            Data da Consulta
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={setSelectedDate}
-            disabled={(date) => {
-              const now = new Date();
-              return date < startOfDay(now) || date > addDays(new Date(), 30);
-            }}
-            locale={ptBR}
-            className="rounded-md border"
-          />
-          
-          {/* Aviso de antecedência removido - permite agendamento imediato */}
-        </CardContent>
-      </Card>
+      {!hasAnyAvailability && !slotsLoading ? (
+        <EmptyState
+          icon={CalendarX}
+          title="Psicólogo sem horários configurados"
+          description="Este psicólogo ainda não cadastrou a agenda semanal de atendimento. Tente novamente mais tarde ou escolha outro profissional."
+        />
+      ) : (
+        <>
+          {/* Date Selection */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CalendarIcon className="w-5 h-5" />
+                Data da Consulta
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={setSelectedDate}
+                disabled={(date) => {
+                  const now = new Date();
+                  return date < startOfDay(now) || date > addDays(new Date(), 30) || !isDayAvailable(date);
+                }}
+                locale={ptBR}
+                className="rounded-md border"
+              />
+              <p className="text-xs text-muted-foreground mt-2">
+                Dias sem atendimento do psicólogo aparecem desabilitados no calendário.
+              </p>
+            </CardContent>
+          </Card>
 
-      {/* Time Selection */}
-      {selectedDate && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="w-5 h-5" />
-              Horário (07h às 23:50 - intervalos de 10 min)
-              {slotsLoading && (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary ml-2"></div>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-3 gap-2">
-              {allTimeSlots.map((time) => {
-                const isValidTime = isValidTimeSlot(time);
-                const isAvailable = isSlotAvailable(time);
-                const isOccupied = occupiedSlots.includes(time);
-                
-                return (
-                  <Button
-                    key={time}
-                    variant={selectedTime === time ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setSelectedTime(time)}
-                    disabled={!isValidTime || !isAvailable || slotsLoading}
-                    className={`text-sm relative ${
-                      isOccupied 
-                        ? 'bg-destructive/10 border-destructive/20 text-destructive hover:bg-destructive/10 hover:text-destructive cursor-not-allowed' 
-                        : selectedTime === time
-                          ? ''
-                          : 'hover:bg-secondary/10 hover:text-secondary hover:border-secondary/40'
-                    }`}
-                    title={
-                      isOccupied 
-                        ? 'Horário ocupado' 
-                          : !isValidTime 
-                            ? 'Horário fora do funcionamento'
-                            : 'Disponível'
-                    }
-                  >
-                    {time}
-                    {isOccupied && (
-                      <span className="absolute -top-1 -right-1 w-2 h-2 bg-destructive rounded-full"></span>
+          {/* Time Selection */}
+          {selectedDate && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Clock className="w-5 h-5" />
+                  Horário disponível
+                  {slotsLoading && (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary ml-2"></div>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {!slotsLoading && allTimeSlots.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    O psicólogo não atende neste dia. Escolha outra data no calendário.
+                  </p>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-3 gap-2">
+                      {allTimeSlots.map((time) => {
+                        const isAvailable = isSlotAvailable(time);
+                        const isOccupied = occupiedSlots.includes(time);
+
+                        return (
+                          <Button
+                            key={time}
+                            variant={selectedTime === time ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setSelectedTime(time)}
+                            disabled={!isAvailable || slotsLoading}
+                            className={`text-sm relative ${
+                              isOccupied
+                                ? 'bg-destructive/10 border-destructive/20 text-destructive hover:bg-destructive/10 hover:text-destructive cursor-not-allowed'
+                                : selectedTime === time
+                                  ? ''
+                                  : 'hover:bg-secondary/10 hover:text-secondary hover:border-secondary/40'
+                            }`}
+                            title={isOccupied ? 'Horário ocupado' : 'Disponível'}
+                          >
+                            {time}
+                            {isOccupied && (
+                              <span className="absolute -top-1 -right-1 w-2 h-2 bg-destructive rounded-full"></span>
+                            )}
+                          </Button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Legenda */}
+                    <div className="flex items-center gap-4 mt-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-primary rounded"></div>
+                        <span>Disponível</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-red-200 border border-destructive/30 rounded relative">
+                          <span className="absolute -top-1 -right-1 w-2 h-2 bg-destructive rounded-full"></span>
+                        </div>
+                        <span>Ocupado</span>
+                      </div>
+                    </div>
+
+                    {occupiedSlots.length > 0 && (
+                      <div className="mt-3 p-3 bg-amber-50 border border-warning/20 rounded-lg">
+                        <p className="text-sm text-warning">
+                          <strong>Horários ocupados:</strong> {occupiedSlots.filter((s) => allTimeSlots.includes(s)).sort().join(', ') || '—'}
+                        </p>
+                        <p className="text-xs text-amber-700 mt-1">
+                          * Cada consulta dura 50 minutos, ocupando aproximadamente 5 slots consecutivos
+                        </p>
+                      </div>
                     )}
-                  </Button>
-                );
-              })}
-            </div>
-            
-            {/* Legenda */}
-            <div className="flex items-center gap-4 mt-4 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-primary rounded"></div>
-                <span>Disponível</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-red-200 border border-destructive/30 rounded relative">
-                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-destructive rounded-full"></span>
-                </div>
-                <span>Ocupado</span>
-              </div>
-            </div>
-            
-            {occupiedSlots.length > 0 && (
-              <div className="mt-3 p-3 bg-amber-50 border border-warning/20 rounded-lg">
-                <p className="text-sm text-warning">
-                  <strong>Horários ocupados:</strong> {occupiedSlots.sort().join(', ')}
-                </p>
-                <p className="text-xs text-amber-700 mt-1">
-                  * Cada consulta dura 50 minutos, ocupando aproximadamente 5 slots consecutivos
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          )}
+        </>
       )}
 
       {/* Notes */}
