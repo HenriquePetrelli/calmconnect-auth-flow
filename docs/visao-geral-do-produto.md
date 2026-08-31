@@ -126,7 +126,7 @@ Status possíveis do chamado: `pending`, `accepted`, `in_progress`, `completed`,
 - Respiração guiada com animação em canvas e transições por fase.
 - Biblioteca de sons terapêuticos com player, categorias, playlists e feedback.
 - Grupos de apoio com depoimentos moderados.
-- Chat com o psicólogo, com retenção limitada: bloqueio de escrita após 1 mês e exclusão após 3 meses.
+- Chat com o psicólogo, com retenção limitada: bloqueio de escrita após 1 mês e exclusão após 3 meses; indicador de entrega/leitura (check simples/duplo) nas mensagens próprias.
 - Notificações in-app com contador de não lidas sincronizado.
 - Histórico de atividades paginado, retido por 3 meses.
 
@@ -165,3 +165,4 @@ Navegação do paciente: menus lateral e inferior persistem entre Home, Chat, Co
 - 2026-08-15 — Novo fluxo estruturado de avaliação do paciente no SOS (resultado, nota, acolhimento, categorias de queixa e sinalização de revisão administrativa).
 - 2026-08-31 — Painel admin de métricas de SOS passa a exibir também taxa de aceite, taxa de resolução de crise, avaliação média e total de solicitações concluídas (já calculados por `get_sos_metrics`, mas não exibidos até então).
 - 2026-08-31 — Novo painel admin de uso e moderação do chat (aba "Chat"): métricas agregadas, listagem de conversas com metadados (sem conteúdo de mensagens) e ação de arquivar conversa flagrada.
+- 2026-08-31 — Chat paciente-psicólogo passa a ter indicador de entrega/leitura (check simples/duplo), com marcação automática ao abrir a conversa.

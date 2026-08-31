@@ -9,6 +9,8 @@ import {
   Send,
   Image as ImageIcon,
   CheckCircle,
+  Check,
+  CheckCheck,
   Clock,
   XCircle,
   X,
@@ -219,8 +221,15 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversaId, onVolt
                         <p className="whitespace-pre-wrap break-words">{mensagem.conteudo}</p>
                       )}
                     </div>
-                    <span className="text-[10px] text-muted-foreground mt-1 px-1">
+                    <span className="flex items-center gap-1 text-[10px] text-muted-foreground mt-1 px-1">
                       {format(dataMsg, 'HH:mm')}
+                      {isMinhaMsg && (
+                        mensagem.lida_em ? (
+                          <CheckCheck className="w-3.5 h-3.5 text-primary" aria-label="Lida" />
+                        ) : (
+                          <Check className="w-3.5 h-3.5" aria-label="Enviada" />
+                        )
+                      )}
                     </span>
                   </div>
                 </div>

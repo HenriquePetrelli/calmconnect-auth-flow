@@ -10,6 +10,7 @@ export interface Mensagem {
   conteudo?: string;
   tipo: 'texto' | 'imagem';
   imagem_url?: string;
+  lida_em: string | null;
   created_at: string;
   updated_at: string;
   // Dados do autor
@@ -66,6 +67,18 @@ export const useMensagens = (conversaId?: string) => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  /** Marks every message from the other participant as read by the current user. */
+  const marcarComoLidas = async () => {
+    if (!conversaId || !user) return;
+
+    try {
+      const { error } = await supabase.rpc('marcar_mensagens_como_lidas', { p_conversa_id: conversaId });
+      if (error) throw error;
+    } catch (error) {
+      console.error('Erro ao marcar mensagens como lidas:', error);
     }
   };
 
@@ -137,11 +150,11 @@ export const useMensagens = (conversaId?: string) => {
 
   useEffect(() => {
     if (conversaId) {
-      fetchMensagens();
+      fetchMensagens().then(marcarComoLidas);
     }
   }, [conversaId]);
 
-  // Configurar realtime para mensagens
+  // Configurar realtime para mensagens (INSERT de novas mensagens e UPDATE de recibos de leitura)
   useEffect(() => {
     if (!conversaId) return;
 
@@ -150,13 +163,13 @@ export const useMensagens = (conversaId?: string) => {
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'mensagens',
           filter: `conversa_id=eq.${conversaId}`
         },
         () => {
-          fetchMensagens();
+          fetchMensagens().then(marcarComoLidas);
         }
       )
       .subscribe();

@@ -436,6 +436,7 @@ export type Database = {
           created_at: string
           id: string
           imagem_url: string | null
+          lida_em: string | null
           tipo: string
           updated_at: string
         }
@@ -446,6 +447,7 @@ export type Database = {
           created_at?: string
           id?: string
           imagem_url?: string | null
+          lida_em?: string | null
           tipo?: string
           updated_at?: string
         }
@@ -456,6 +458,7 @@ export type Database = {
           created_at?: string
           id?: string
           imagem_url?: string | null
+          lida_em?: string | null
           tipo?: string
           updated_at?: string
         }
@@ -1866,6 +1869,10 @@ export type Database = {
         Returns: undefined
       }
       is_super_admin: { Args: { user_id_param?: string }; Returns: boolean }
+      marcar_mensagens_como_lidas: {
+        Args: { p_conversa_id: string }
+        Returns: undefined
+      }
       pode_criar_conversa: {
         Args: { p_paciente_id: string; p_psicologo_id: string }
         Returns: boolean

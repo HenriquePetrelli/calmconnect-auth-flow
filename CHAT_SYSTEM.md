@@ -17,6 +17,7 @@ O sistema de chat permite que pacientes conversem diretamente com psicólogos co
 - ✅ Suporte para mensagens de texto
 - ✅ Envio de imagens (upload para Supabase Storage)
 - ✅ Validação de arquivos (apenas imagens, máximo 5MB)
+- ✅ Indicador de entrega/leitura: mensagem própria mostra um check (enviada) ou check duplo (lida), como no WhatsApp; ao abrir a conversa, as mensagens recebidas são marcadas como lidas via RPC `marcar_mensagens_como_lidas`. Não há estado "entregue" separado — o chat é apenas realtime, sem fila offline.
 
 ### 🔐 Regras de Negócio
 - ✅ Pacientes só podem criar conversas com psicólogos que tiveram consultas finalizadas nos últimos 30 dias
@@ -48,6 +49,7 @@ O sistema de chat permite que pacientes conversem diretamente com psicólogos co
 - conteudo: TEXT (nullable)
 - tipo: ENUM ('texto', 'imagem')
 - imagem_url: TEXT (nullable)
+- lida_em: TIMESTAMPTZ (nullable) — quando o destinatário leu a mensagem
 - created_at: TIMESTAMP
 - updated_at: TIMESTAMP
 ```
@@ -63,6 +65,7 @@ O sistema de chat permite que pacientes conversem diretamente com psicólogos co
 #### Políticas de Mensagens
 - Usuários podem ver mensagens apenas das conversas em que participam
 - Usuários podem criar mensagens apenas em conversas ativas onde participam
+- Marcar mensagem como lida não passa por policy de UPDATE aberta: usa a RPC `marcar_mensagens_como_lidas` (`SECURITY DEFINER`), que só atualiza `lida_em` de mensagens do outro participante — nenhum usuário pode alterar conteúdo alheio.
 
 ### ⚡ Tempo Real
 - Suporte completo ao Supabase Realtime
@@ -105,7 +108,6 @@ O sistema de chat permite que pacientes conversem diretamente com psicólogos co
 
 ### 📱 Melhorias Mobile
 - [ ] Suporte offline com sincronização
-- [ ] Indicadores de entrega/leitura
 - [ ] Notificações push nativas
 
 ## Como Testar
