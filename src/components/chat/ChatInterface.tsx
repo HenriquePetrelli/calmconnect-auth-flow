@@ -21,6 +21,7 @@ import { ptBR } from 'date-fns/locale';
 import { useMensagens } from '@/hooks/useMensagens';
 import { useAuth } from '@/contexts/AuthContext';
 import { useConversas } from '@/hooks/useConversas';
+import { ensureNotificationPermission, isTabInBackground, notifyNewMessage } from '@/lib/browserNotifications';
 
 interface ChatInterfaceProps {
   conversaId: string;
@@ -47,8 +48,10 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversaId, onVolt
   const { user } = useAuth();
   const { mensagens, loading, enviando, enviarMensagem, uploadImagem } = useMensagens(conversaId);
   const { conversas } = useConversas();
+  const knownMessageIdsRef = useRef<Set<string> | null>(null);
 
   const conversaAtual = conversas.find((c) => c.id === conversaId);
+  const nomeOutro = conversaAtual?.outro_usuario?.full_name;
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -61,6 +64,28 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversaId, onVolt
   useEffect(() => {
     inputRef.current?.focus();
   }, [conversaId]);
+
+  useEffect(() => {
+    void ensureNotificationPermission();
+  }, []);
+
+  // Notifica no navegador quando chega mensagem nova do outro participante
+  // e a aba não está em foco. Não dispara para o histórico já carregado.
+  useEffect(() => {
+    const known = knownMessageIdsRef.current;
+    if (known) {
+      const novasDeOutro = mensagens.filter((m) => m.autor_id !== user?.id && !known.has(m.id));
+      if (novasDeOutro.length > 0 && isTabInBackground()) {
+        const ultima = novasDeOutro[novasDeOutro.length - 1];
+        notifyNewMessage({
+          title: nomeOutro || 'Nova mensagem',
+          body: ultima.tipo === 'imagem' ? 'Enviou uma imagem' : ultima.conteudo || 'Nova mensagem',
+          onClick: () => scrollToBottom(),
+        });
+      }
+    }
+    knownMessageIdsRef.current = new Set(mensagens.map((m) => m.id));
+  }, [mensagens, user?.id, nomeOutro]);
 
   const handleEnviarMensagem = async () => {
     if (!novaMensagem.trim() && !imagemSelecionada) return;
@@ -132,7 +157,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversaId, onVolt
 
   const statusInfo = getStatusInfo(conversaAtual?.status || 'ativa');
   const podeEnviarMensagens = conversaAtual?.status === 'ativa';
-  const nomeOutro = conversaAtual?.outro_usuario?.full_name;
 
   return (
     <Card className="border-l-4 border-l-primary flex flex-col h-[calc(100vh-8rem)] md:h-[calc(100vh-10rem)]">

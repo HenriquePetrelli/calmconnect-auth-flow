@@ -82,9 +82,12 @@ O sistema de chat permite que pacientes conversem diretamente com psicólogos co
 
 ### Componentes
 - `ListaConversas.tsx` - Lista todas as conversas do usuário
-- `ChatInterface.tsx` - Interface principal do chat
+- `ChatInterface.tsx` - Interface principal do chat; também dispara notificação do navegador para mensagens novas com a aba em segundo plano
 - `NovoChat.tsx` - Card promocional do sistema de chat
 - `admin/ChatModerationPanel.tsx` - Painel admin de uso e moderação do chat
+
+### Utilitários
+- `lib/browserNotifications.ts` - Wrapper sobre a Web Notifications API (permissão, disparo, detecção de aba em segundo plano)
 
 ### Páginas
 - `Chat.tsx` - Página principal que alterna entre lista e chat
@@ -102,9 +105,9 @@ O sistema de chat permite que pacientes conversem diretamente com psicólogos co
 ## Funcionalidades Futuras (Não Implementadas)
 
 ### 🔔 Notificações Push
-- [ ] Integração com Firebase Cloud Messaging (FCM)
-- [ ] Notificações no navegador
-- [ ] Notificações mobile via Capacitor
+- ✅ Notificação do navegador (Web Notifications API) quando chega mensagem nova do outro participante e a aba está em segundo plano ou sem foco. Não depende de nenhuma credencial externa — não é push real (só funciona com o app aberto em alguma aba) e não chega se o navegador estiver fechado.
+- [ ] Integração com Firebase Cloud Messaging (FCM) para push real em background — já existem a tabela `fcm_tokens` e a edge function `firebase-notifications` no projeto, mas nenhuma tela do cliente registra token ou chama essa função; falta um projeto Firebase configurado (`FIREBASE_SERVER_KEY`, dados do app) para ativar.
+- [ ] Notificações mobile via Capacitor (pacote `@capacitor/push-notifications` não está instalado)
 
 ### 📱 Melhorias Mobile
 - [ ] Suporte offline com sincronização
