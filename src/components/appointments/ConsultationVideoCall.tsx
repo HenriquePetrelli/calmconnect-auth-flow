@@ -119,10 +119,12 @@ const ConsultationVideoCall = ({ appointment, onEndCall }: ConsultationVideoCall
 
     // Update session in database
     if (sessionId) {
-      const column = userType === 'psychologist' ? 'psychologist_muted' : 'patient_muted';
+      const payload = userType === 'psychologist'
+        ? { psychologist_muted: muted }
+        : { patient_muted: muted };
       supabase
         .from('webrtc_sessions')
-        .update({ [column]: muted })
+        .update(payload)
         .eq('id', sessionId)
         .then(() => console.log('Mute status updated:', muted));
     }
@@ -134,10 +136,12 @@ const ConsultationVideoCall = ({ appointment, onEndCall }: ConsultationVideoCall
 
     // Update session in database
     if (sessionId) {
-      const column = userType === 'psychologist' ? 'psychologist_camera_off' : 'patient_camera_off';
+      const payload = userType === 'psychologist'
+        ? { psychologist_camera_off: cameraOff }
+        : { patient_camera_off: cameraOff };
       supabase
         .from('webrtc_sessions')
-        .update({ [column]: cameraOff })
+        .update(payload)
         .eq('id', sessionId)
         .then(() => console.log('Camera status updated:', cameraOff));
     }
