@@ -103,6 +103,7 @@ Status possíveis do chamado: `pending`, `accepted`, `in_progress`, `completed`,
 - Consultas do mesmo dia não se duplicam entre "hoje" e "próximas".
 - Entrada na chamada liberada apenas na janela do horário marcado (50 minutos).
 - Ao entrar na chamada (paciente ou psicólogo), a consulta muda para `in_progress` antes de navegar para a sala.
+- Chamada de vídeo da consulta usa uma sessão WebRTC (`webrtc_sessions`) compartilhada por agendamento (`appointments.video_room_id`, criada/reaproveitada via `get_or_create_appointment_webrtc_session`), para que as duas pontas caiam na mesma sala; papel (paciente/psicólogo) é o do usuário logado, não fixo.
 - Histórico com paginação e status traduzidos para português.
 
 ---
@@ -169,3 +170,4 @@ Navegação do paciente: menus lateral e inferior persistem entre Home, Chat, Co
 - 2026-08-31 — Chat paciente-psicólogo passa a ter indicador de entrega/leitura (check simples/duplo), com marcação automática ao abrir a conversa.
 - 2026-08-31 — Chat passa a notificar via navegador (Web Notifications API, sem push externo) quando chega mensagem nova com a aba em segundo plano.
 - 2026-08-31 — Corrigido: psicólogo clicando em "Entrar na chamada" (painel de consultas) agora também transiciona a consulta para `in_progress` antes de navegar para a sala, igual ao fluxo do paciente (antes só o paciente disparava essa transição).
+- 2026-08-31 — Corrigido bug estrutural na chamada de vídeo de consultas agendadas: (1) a rota `/consultation-call/:id` bloqueava psicólogos completamente (RouteGuard só permitia `patient`); (2) mesmo paciente e psicólogo acessando, cada um criava sua própria sessão WebRTC desconectada — não existia elo entre a consulta e uma sessão compartilhada. Agora ambos os papéis acessam a rota e reaproveitam a mesma sessão via `appointments.video_room_id` / `get_or_create_appointment_webrtc_session`, e os campos antes fixos como `'patient'` (mute, câmera, quem encerrou, avaliação) refletem o papel real de quem está na chamada.

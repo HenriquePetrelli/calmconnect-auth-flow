@@ -1819,6 +1819,10 @@ export type Database = {
         }[]
       }
       get_chat_usage_metrics: { Args: { p_days?: number }; Returns: Json }
+      get_or_create_appointment_webrtc_session: {
+        Args: { p_appointment_id: string }
+        Returns: string
+      }
       get_patient_statistics: {
         Args: { patient_user_id: string }
         Returns: {

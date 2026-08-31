@@ -35,6 +35,7 @@ export const ROUTE_PERMISSIONS = {
     '/profile',
     '/account-settings',
     '/appointments',
+    '/consultation-call/', // rotas com parâmetro (id da consulta)
     '/notifications',
     '/statistics',
     '/statistics/activity-history',
@@ -55,6 +56,7 @@ export const ROUTE_PERMISSIONS = {
     '/psychologist-dashboard',
     '/psychologist-profile',
     '/psychologist-payments',
+    '/consultation-call/', // rotas com parâmetro (id da consulta)
     '/chat', // chat disponível para psicólogos
     '/emergency-call', // psicólogo pode atender chamada
     '/emergency-call/', // rotas com parâmetros

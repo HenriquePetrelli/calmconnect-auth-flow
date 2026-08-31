@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAppointmentVideoCall } from '@/hooks/useAppointmentVideoCall';
+import { useAuth } from '@/contexts/AuthContext';
 import ConsultationVideoCall from '@/components/appointments/ConsultationVideoCall';
 import { Appointment } from '@/hooks/useAppointments';
 import { SkeletonFullPage } from '@/components/skeletons/Skeletons';
@@ -9,14 +10,16 @@ import { SkeletonFullPage } from '@/components/skeletons/Skeletons';
 const ConsultationCall = () => {
   const { appointmentId } = useParams<{ appointmentId: string }>();
   const navigate = useNavigate();
+  const { userType } = useAuth();
   const { endConsultation } = useAppointmentVideoCall();
+  const homeRoute = userType === 'psychologist' ? '/psychologist-dashboard' : '/appointments';
   const [appointment, setAppointment] = useState<Appointment | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchAppointment = async () => {
       if (!appointmentId) {
-        navigate('/appointments');
+        navigate(homeRoute);
         return;
       }
 
@@ -41,7 +44,7 @@ const ConsultationCall = () => {
         if (error) throw error;
 
         if (!data) {
-          navigate('/appointments');
+          navigate(homeRoute);
           return;
         }
 
@@ -61,14 +64,14 @@ const ConsultationCall = () => {
         setAppointment(transformedAppointment);
       } catch (error) {
         console.error('Error fetching appointment:', error);
-        navigate('/appointments');
+        navigate(homeRoute);
       } finally {
         setLoading(false);
       }
     };
 
     fetchAppointment();
-  }, [appointmentId, navigate]);
+  }, [appointmentId, navigate, homeRoute]);
 
   const handleEndCall = async () => {
     if (appointmentId) {
@@ -78,7 +81,7 @@ const ConsultationCall = () => {
         console.error('Error ending consultation:', error);
       }
     }
-    navigate('/appointments');
+    navigate(homeRoute);
   };
 
   if (loading) {

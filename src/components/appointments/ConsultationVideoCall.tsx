@@ -3,9 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Mic, MicOff, PhoneOff, Camera, CameraOff, Clock, User, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
 import { formatTimeOnly } from "@/utils/timezone";
 import { useWebRTC } from "@/hooks/useWebRTC";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { VideoCallSettingsModal } from "@/components/sos/VideoCallSettingsModal";
 import { FeedbackModal } from "@/components/sos/FeedbackModal";
@@ -31,9 +31,13 @@ const ConsultationVideoCall = ({ appointment, onEndCall }: ConsultationVideoCall
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const { toast } = useToast();
-  const navigate = useNavigate();
+  const { userType: authUserType } = useAuth();
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
+
+  // RouteGuard only lets 'patient' or 'psychologist' reach this screen.
+  const userType: 'patient' | 'psychologist' =
+    authUserType === 'psychologist' ? 'psychologist' : 'patient';
 
   // Initialize WebRTC for consultation
   const {
@@ -47,7 +51,7 @@ const ConsultationVideoCall = ({ appointment, onEndCall }: ConsultationVideoCall
     cleanup: cleanupWebRTC,
   } = useWebRTC({
     sessionId: sessionId || '',
-    userType: 'patient',
+    userType,
     onConnectionStateChange: (state) => {
       console.log('WebRTC connection state:', state);
     }
@@ -82,21 +86,17 @@ const ConsultationVideoCall = ({ appointment, onEndCall }: ConsultationVideoCall
 
   const initializeConsultationSession = async () => {
     try {
-      // Create WebRTC session for consultation
-      const { data: session, error } = await supabase
-        .from('webrtc_sessions')
-        .insert({
-          patient_id: (await supabase.auth.getUser()).data.user?.id,
-          status: 'pending',
-          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
-        })
-        .select()
-        .single();
+      // Reuses the same WebRTC session for both participants — keyed by the
+      // appointment itself, not created fresh per browser tab — so patient
+      // and psychologist actually land on the same signaling row.
+      const { data: roomId, error } = await supabase.rpc('get_or_create_appointment_webrtc_session', {
+        p_appointment_id: appointment.id,
+      });
 
       if (error) throw error;
-      
-      console.log('Created consultation session:', session.id);
-      setSessionId(session.id);
+
+      console.log('Consultation session ready:', roomId);
+      setSessionId(roomId);
     } catch (error) {
       console.error('Error creating consultation session:', error);
       toast({
@@ -116,12 +116,13 @@ const ConsultationVideoCall = ({ appointment, onEndCall }: ConsultationVideoCall
   const handleToggleMute = () => {
     const muted = toggleAudio();
     setIsMuted(muted);
-    
+
     // Update session in database
     if (sessionId) {
+      const column = userType === 'psychologist' ? 'psychologist_muted' : 'patient_muted';
       supabase
         .from('webrtc_sessions')
-        .update({ patient_muted: muted })
+        .update({ [column]: muted })
         .eq('id', sessionId)
         .then(() => console.log('Mute status updated:', muted));
     }
@@ -130,12 +131,13 @@ const ConsultationVideoCall = ({ appointment, onEndCall }: ConsultationVideoCall
   const handleToggleCamera = () => {
     const cameraOff = toggleVideo();
     setIsCameraOff(cameraOff);
-    
+
     // Update session in database
     if (sessionId) {
+      const column = userType === 'psychologist' ? 'psychologist_camera_off' : 'patient_camera_off';
       supabase
         .from('webrtc_sessions')
-        .update({ patient_camera_off: cameraOff })
+        .update({ [column]: cameraOff })
         .eq('id', sessionId)
         .then(() => console.log('Camera status updated:', cameraOff));
     }
@@ -148,10 +150,10 @@ const ConsultationVideoCall = ({ appointment, onEndCall }: ConsultationVideoCall
         const user = await supabase.auth.getUser();
         await supabase
           .from('webrtc_sessions')
-          .update({ 
+          .update({
             status: 'completed',
             ended_by: user.data.user?.id,
-            ended_by_type: 'patient',
+            ended_by_type: userType,
             ended_at: new Date().toISOString()
           })
           .eq('id', sessionId);
@@ -176,7 +178,6 @@ const ConsultationVideoCall = ({ appointment, onEndCall }: ConsultationVideoCall
       description: "Obrigado por usar nossos serviços.",
     });
     onEndCall();
-    navigate('/appointments');
   };
 
   const psychologistInitials = appointment.psychologist.full_name
@@ -336,7 +337,7 @@ const ConsultationVideoCall = ({ appointment, onEndCall }: ConsultationVideoCall
         isOpen={showFeedbackModal}
         onClose={handleFeedbackClose}
         sessionId={sessionId}
-        userType="patient"
+        userType={userType}
       />
     </div>
   );

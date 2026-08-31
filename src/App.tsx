@@ -244,7 +244,7 @@ const App = () => {
                     </RouteGuard>
                   } />
                   <Route path="/consultation-call/:appointmentId" element={
-                    <RouteGuard allowedUserTypes={['patient']}>
+                    <RouteGuard allowedUserTypes={['patient', 'psychologist']}>
                       <ConsultationCall />
                     </RouteGuard>
                   } />
