@@ -62,8 +62,7 @@ const UpcomingConsultations = () => {
     setStartingAppointments(prev => new Set(prev).add(appointmentId));
     try {
       await updateAppointment(appointmentId, { status: 'in_progress' });
-      // TODO: Integrate with video call system
-      // Starting consultation (removed sensitive logging)
+      navigate(`/consultation-call/${appointmentId}`);
     } catch (error) {
       console.error('Error starting consultation:', error);
     } finally {
@@ -149,15 +148,17 @@ const UpcomingConsultations = () => {
                   const end = start + durationMin * 60 * 1000;
                   const nowMs = Date.now();
                   const canJoin = nowMs >= start && nowMs <= end;
+                  const starting = startingAppointments.has(appointment.id);
                   if (canJoin) {
                     return (
                       <Button
                         size="sm"
                         className="flex-1"
-                        onClick={() => navigate(`/consultation-call/${appointment.id}`)}
+                        disabled={starting}
+                        onClick={() => handleStartConsultation(appointment.id)}
                       >
                         <Video className="w-4 h-4 mr-2" />
-                        Entrar na chamada
+                        {starting ? 'Entrando...' : 'Entrar na chamada'}
                       </Button>
                     );
                   }

@@ -55,12 +55,11 @@ export const useAppointmentVideoCall = () => {
     try {
       setLoading(true);
       
+      // Session summary is added later by the psychologist from ConsultationHistory,
+      // not captured at end-of-call time.
       const { data, error } = await supabase
         .from('appointments')
-        .update({ 
-          status: 'completed',
-          // TODO: Add session summary if needed
-        })
+        .update({ status: 'completed' })
         .eq('id', appointmentId)
         .select()
         .single();

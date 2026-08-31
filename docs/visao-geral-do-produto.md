@@ -102,6 +102,7 @@ Status possíveis do chamado: `pending`, `accepted`, `in_progress`, `completed`,
 - "Consultas de hoje" mostra apenas consultas aceitas e ainda válidas; consultas já passadas saem da lista e vão para o histórico.
 - Consultas do mesmo dia não se duplicam entre "hoje" e "próximas".
 - Entrada na chamada liberada apenas na janela do horário marcado (50 minutos).
+- Ao entrar na chamada (paciente ou psicólogo), a consulta muda para `in_progress` antes de navegar para a sala.
 - Histórico com paginação e status traduzidos para português.
 
 ---
@@ -167,3 +168,4 @@ Navegação do paciente: menus lateral e inferior persistem entre Home, Chat, Co
 - 2026-08-31 — Novo painel admin de uso e moderação do chat (aba "Chat"): métricas agregadas, listagem de conversas com metadados (sem conteúdo de mensagens) e ação de arquivar conversa flagrada.
 - 2026-08-31 — Chat paciente-psicólogo passa a ter indicador de entrega/leitura (check simples/duplo), com marcação automática ao abrir a conversa.
 - 2026-08-31 — Chat passa a notificar via navegador (Web Notifications API, sem push externo) quando chega mensagem nova com a aba em segundo plano.
+- 2026-08-31 — Corrigido: psicólogo clicando em "Entrar na chamada" (painel de consultas) agora também transiciona a consulta para `in_progress` antes de navegar para a sala, igual ao fluxo do paciente (antes só o paciente disparava essa transição).
