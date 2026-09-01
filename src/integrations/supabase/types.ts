@@ -1925,7 +1925,10 @@ export type Database = {
       }
       reset_patient_weekly_goals_array: { Args: never; Returns: undefined }
       reset_weekly_goals: { Args: never; Returns: undefined }
-      set_psychologist_availability: { Args: { p_blocks: Json }; Returns: undefined }
+      set_psychologist_availability: {
+        Args: { p_blocks: Json }
+        Returns: undefined
+      }
       sync_consultation_counts: { Args: never; Returns: undefined }
       sync_psychologist_payments: { Args: never; Returns: undefined }
       update_patient_activity_time: {
