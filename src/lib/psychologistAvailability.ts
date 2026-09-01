@@ -33,3 +33,72 @@ export const validateDayBlocks = (blocks: EditableBlock[]): string | null => {
 
   return null;
 };
+
+/** Segunda-feira (00:00) da semana que contém `date`, como "YYYY-MM-DD". */
+export const getWeekStartISO = (date: Date): string => {
+  const day = date.getDay(); // 0=domingo .. 6=sábado
+  const diffToMonday = day === 0 ? -6 : 1 - day;
+  const monday = new Date(date.getFullYear(), date.getMonth(), date.getDate() + diffToMonday);
+  const y = monday.getFullYear();
+  const m = String(monday.getMonth() + 1).padStart(2, '0');
+  const d = String(monday.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+};
+
+/** As 7 datas (segunda a domingo) da semana que começa em `weekStartISO`. */
+export const weekDatesFrom = (weekStartISO: string): string[] => {
+  const [y, m, d] = weekStartISO.split('-').map(Number);
+  return Array.from({ length: 7 }, (_, i) => {
+    const dt = new Date(y, m - 1, d + i);
+    return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+  });
+};
+
+export type OverrideType = 'bloqueio' | 'abertura';
+
+export interface AvailabilityOverride extends EditableBlock {
+  type: OverrideType;
+}
+
+/** Remove a faixa `blocked` de dentro de `ranges`, truncando ou dividindo os
+ * blocos afetados conforme necessário. Blocos sem sobreposição não mudam. */
+const subtractRange = (ranges: EditableBlock[], blocked: EditableBlock): EditableBlock[] => {
+  const result: EditableBlock[] = [];
+  for (const r of ranges) {
+    const noOverlap = blocked.end_time <= r.start_time || blocked.start_time >= r.end_time;
+    if (noOverlap) {
+      result.push(r);
+      continue;
+    }
+    if (blocked.start_time > r.start_time) {
+      result.push({ start_time: r.start_time, end_time: blocked.start_time });
+    }
+    if (blocked.end_time < r.end_time) {
+      result.push({ start_time: blocked.end_time, end_time: r.end_time });
+    }
+  }
+  return result;
+};
+
+/**
+ * Combina o horário-padrão (recorrente) de um dia com as exceções pontuais
+ * cadastradas para uma data específica.
+ *
+ * 'bloqueio' subtrai do horário-padrão (pode truncar ou dividir um bloco em
+ * dois). 'abertura' adiciona uma faixa extra, fora do padrão. Um bloqueio só
+ * afeta o horário-padrão, nunca uma abertura já existente na mesma data —
+ * para reduzir uma abertura, edite/exclua essa exceção diretamente.
+ */
+export const applyOverridesToDayBlocks = (
+  baseBlocks: EditableBlock[],
+  overrides: AvailabilityOverride[]
+): EditableBlock[] => {
+  let ranges = [...baseBlocks];
+  for (const o of overrides) {
+    if (o.type === 'bloqueio') ranges = subtractRange(ranges, o);
+  }
+  for (const o of overrides) {
+    if (o.type === 'abertura') ranges = [...ranges, { start_time: o.start_time, end_time: o.end_time }];
+  }
+  return ranges.sort((a, b) => a.start_time.localeCompare(b.start_time));
+};

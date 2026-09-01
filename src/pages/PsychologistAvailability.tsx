@@ -87,9 +87,10 @@ const PsychologistAvailability = () => {
           <CardContent className="p-4 flex items-start gap-3">
             <CalendarClock className="w-5 h-5 text-secondary shrink-0 mt-0.5" />
             <p className="text-sm text-muted-foreground">
-              Defina os dias e horários em que você atende consultas agendadas. Pacientes só vão conseguir marcar
-              horários dentro dos blocos que você configurar aqui. Dias sem nenhum horário ficam indisponíveis para
-              agendamento.
+              Este é o seu horário-padrão, que se repete toda semana. Pacientes só vão conseguir marcar horários
+              dentro dos blocos que você configurar aqui. Dias sem nenhum horário ficam indisponíveis para
+              agendamento. Para bloquear um horário pontual ou abrir um horário extra só numa semana específica,
+              use a confirmação semanal no seu painel — não é preciso mexer no padrão para isso.
             </p>
           </CardContent>
         </Card>

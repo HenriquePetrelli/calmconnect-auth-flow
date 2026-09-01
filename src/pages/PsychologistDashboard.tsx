@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Bell, Calendar, User, History, AlertTriangle, Clock, Users, CheckCircle, LogOut } from 'lucide-react';
+import { Bell, Calendar, CalendarCheck, User, History, AlertTriangle, Clock, Users, CheckCircle, LogOut } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { usePsychologistEmergency } from '@/hooks/usePsychologistEmergency';
 import { usePsychologistSchedule } from '@/hooks/usePsychologistSchedule';
@@ -15,8 +15,12 @@ import UpcomingConsultations from '@/components/psychologist/UpcomingConsultatio
 import ConsultationHistory from '@/components/psychologist/ConsultationHistory';
 import OnlineStatusToggle from '@/components/psychologist/OnlineStatusToggle';
 import { PixModal } from '@/components/psychologist/PixModal';
+import { WeeklyScheduleModal } from '@/components/psychologist/WeeklyScheduleModal';
 import logoImg from '@/assets/soliv-logo.svg';
 import ActiveCallBanner from '@/components/sos/ActiveCallBanner';
+import { getWeekStartISO } from '@/lib/psychologistAvailability';
+
+const weeklyConfirmStorageKey = (userId: string) => `soliv:availability-week-confirmed:${userId}`;
 
 
 const PsychologistDashboard = () => {
@@ -24,8 +28,9 @@ const PsychologistDashboard = () => {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showPixModal, setShowPixModal] = useState(false);
+  const [showWeeklyScheduleModal, setShowWeeklyScheduleModal] = useState(false);
   const [psychologistData, setPsychologistData] = useState<any>(null);
-  
+
   const { emergencyRequests } = usePsychologistEmergency();
   const { todayAppointments, upcomingAppointments } = usePsychologistSchedule();
   const { isOnline } = usePsychologistPresence();
@@ -102,6 +107,17 @@ const PsychologistDashboard = () => {
       // If PIX is not configured, show modal
       if (!psychData?.pix_key || !psychData?.pix_type) {
         setShowPixModal(true);
+      } else {
+        // Não sobrepõe com o modal de PIX — só oferece a confirmação semanal
+        // depois que o cadastro básico já está completo.
+        try {
+          const lastConfirmed = localStorage.getItem(weeklyConfirmStorageKey(user.id));
+          if (lastConfirmed !== getWeekStartISO(new Date())) {
+            setShowWeeklyScheduleModal(true);
+          }
+        } catch {
+          // localStorage indisponível (modo privado, etc.) — não bloqueia o app
+        }
       }
     } catch (error) {
       console.error('Error checking profile:', error);
@@ -152,6 +168,16 @@ const PsychologistDashboard = () => {
             <div className="flex items-center gap-1 sm:gap-2 shrink-0">
               <OnlineStatusToggle />
               <div className="hidden sm:block w-px h-6 bg-white/20" aria-hidden />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full text-white hover:bg-white/15 hover:text-white h-9 w-9"
+                onClick={() => setShowWeeklyScheduleModal(true)}
+                title="Agenda da semana"
+                aria-label="Agenda da semana"
+              >
+                <CalendarCheck className="w-[18px] h-[18px]" />
+              </Button>
               <Button
                 variant="ghost"
                 size="icon"
@@ -275,6 +301,22 @@ const PsychologistDashboard = () => {
             checkUserProfile();
           }}
           userId={profile.user_id}
+        />
+      )}
+
+      {/* Confirmação semanal da agenda */}
+      {profile && (
+        <WeeklyScheduleModal
+          open={showWeeklyScheduleModal}
+          onClose={() => setShowWeeklyScheduleModal(false)}
+          onConfirmed={(weekStartISO) => {
+            try {
+              localStorage.setItem(weeklyConfirmStorageKey(profile.user_id), weekStartISO);
+            } catch {
+              // localStorage indisponível — fecha mesmo assim, só não lembra pra próxima
+            }
+            setShowWeeklyScheduleModal(false);
+          }}
         />
       )}
     </div>

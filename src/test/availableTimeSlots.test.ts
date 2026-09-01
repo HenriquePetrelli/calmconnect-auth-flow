@@ -114,4 +114,55 @@ describe('useAvailableTimeSlots — respeita a agenda semanal do psicólogo', ()
     expect(result.current.availableSlots).not.toContain('08:00');
     expect(result.current.availableSlots).toContain('08:50');
   });
+
+  it('um bloqueio pontual do psicólogo some do agendamento do paciente nessa data', async () => {
+    fakeDb.rows('psychologist_availability').push({
+      psychologist_id: PSYCHOLOGIST,
+      day_of_week: 1,
+      start_time: '08:00:00',
+      end_time: '18:00:00',
+      is_available: true,
+    });
+    const mondayISO = `${MONDAY.getFullYear()}-${String(MONDAY.getMonth() + 1).padStart(2, '0')}-${String(MONDAY.getDate()).padStart(2, '0')}`;
+    fakeDb.rows('psychologist_availability_overrides').push({
+      psychologist_id: PSYCHOLOGIST,
+      date: mondayISO,
+      start_time: '12:00:00',
+      end_time: '13:00:00',
+      type: 'bloqueio',
+    });
+
+    const { result } = renderHook(() =>
+      useAvailableTimeSlots({ psychologistId: PSYCHOLOGIST, selectedDate: MONDAY })
+    );
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(result.current.allTimeSlots).not.toContain('12:00');
+    expect(result.current.allTimeSlots).toContain('11:00');
+    expect(result.current.allTimeSlots).toContain('13:00');
+  });
+
+  it('um horário extra aberto pelo psicólogo aparece disponível mesmo num dia sem horário-padrão', async () => {
+    // Nenhum bloco padrão cadastrado para nenhum dia -> hasAnyAvailability seria false,
+    // mas uma abertura pontual no domingo deve tornar o domingo reservável.
+    const sundayISO = `${SUNDAY.getFullYear()}-${String(SUNDAY.getMonth() + 1).padStart(2, '0')}-${String(SUNDAY.getDate()).padStart(2, '0')}`;
+    fakeDb.rows('psychologist_availability_overrides').push({
+      psychologist_id: PSYCHOLOGIST,
+      date: sundayISO,
+      start_time: '09:00:00',
+      end_time: '10:00:00',
+      type: 'abertura',
+    });
+
+    const { result } = renderHook(() =>
+      useAvailableTimeSlots({ psychologistId: PSYCHOLOGIST, selectedDate: SUNDAY })
+    );
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(result.current.hasAnyAvailability).toBe(true);
+    expect(result.current.isDayAvailable(SUNDAY)).toBe(true);
+    expect(result.current.allTimeSlots).toEqual(['09:00', '09:10']);
+  });
 });
