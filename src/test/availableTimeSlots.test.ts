@@ -143,6 +143,31 @@ describe('useAvailableTimeSlots — respeita a agenda semanal do psicólogo', ()
     expect(result.current.allTimeSlots).toContain('13:00');
   });
 
+  it('dias dentro de um período de férias ficam sem nenhum horário, mesmo com horário-padrão configurado', async () => {
+    fakeDb.rows('psychologist_availability').push({
+      psychologist_id: PSYCHOLOGIST,
+      day_of_week: 1,
+      start_time: '08:00:00',
+      end_time: '18:00:00',
+      is_available: true,
+    });
+    const mondayISO = `${MONDAY.getFullYear()}-${String(MONDAY.getMonth() + 1).padStart(2, '0')}-${String(MONDAY.getDate()).padStart(2, '0')}`;
+    fakeDb.rows('psychologist_vacations').push({
+      psychologist_id: PSYCHOLOGIST,
+      start_date: mondayISO,
+      end_date: mondayISO,
+    });
+
+    const { result } = renderHook(() =>
+      useAvailableTimeSlots({ psychologistId: PSYCHOLOGIST, selectedDate: MONDAY })
+    );
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(result.current.isDayAvailable(MONDAY)).toBe(false);
+    expect(result.current.allTimeSlots).toEqual([]);
+  });
+
   it('um horário extra aberto pelo psicólogo aparece disponível mesmo num dia sem horário-padrão', async () => {
     // Nenhum bloco padrão cadastrado para nenhum dia -> hasAnyAvailability seria false,
     // mas uma abertura pontual no domingo deve tornar o domingo reservável.

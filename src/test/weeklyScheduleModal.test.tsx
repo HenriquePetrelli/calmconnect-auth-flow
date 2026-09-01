@@ -25,6 +25,11 @@ const saveBaseMock = vi.fn().mockResolvedValue(true);
 const addOverrideMock = vi.fn().mockResolvedValue(true);
 const removeOverrideMock = vi.fn().mockResolvedValue(true);
 const applyChangesMock = vi.fn().mockResolvedValue(true);
+const cancelVacationMock = vi.fn().mockResolvedValue(true);
+
+// Referência estável — null por padrão (sem férias ativa); testes de férias
+// reatribuem antes do render.
+let currentActiveVacation: { id: string; start_date: string; end_date: string } | null = null;
 
 vi.mock('@/hooks/usePsychologistAvailability', () => ({
   usePsychologistAvailability: () => ({ blocks: currentBaseBlocks, loading: false, save: saveBaseMock }),
@@ -37,6 +42,17 @@ vi.mock('@/hooks/usePsychologistAvailabilityOverrides', () => ({
     addOverride: addOverrideMock,
     removeOverride: removeOverrideMock,
     applyChanges: applyChangesMock,
+  }),
+}));
+
+vi.mock('@/hooks/usePsychologistVacation', () => ({
+  usePsychologistVacation: () => ({
+    activeVacation: currentActiveVacation,
+    upcomingVacation: null,
+    loading: false,
+    saving: false,
+    setVacation: vi.fn().mockResolvedValue(true),
+    cancelVacation: cancelVacationMock,
   }),
 }));
 
@@ -61,9 +77,11 @@ beforeEach(() => {
   addOverrideMock.mockClear();
   removeOverrideMock.mockClear();
   applyChangesMock.mockClear();
+  cancelVacationMock.mockClear();
   currentBaseBlocks = [{ day_of_week: 1, start_time: '08:00', end_time: '16:00' }];
   currentOverrides = [];
   occupiedAppointments = [];
+  currentActiveVacation = null;
 });
 
 const renderAndWait = async () => {
@@ -103,11 +121,14 @@ describe('WeeklyScheduleModal — novo fluxo (padrão + grade de bloqueio)', () 
     await openMondayGrid(mondayCard);
 
     const slot900 = within(mondayCard).getByText('09:00').closest('button')!;
+    expect(slot900.className).toContain('bg-success'); // disponível = verde por padrão
     fireEvent.click(slot900);
     await waitFor(() => expect(within(mondayCard).getByText(/1 bloqueado/)).toBeTruthy());
+    expect(slot900.className).not.toContain('bg-success'); // bloqueado sai do verde
 
     fireEvent.click(slot900);
     await waitFor(() => expect(within(mondayCard).queryByText(/bloqueado/)).toBeNull());
+    expect(slot900.className).toContain('bg-success'); // desbloqueado volta a verde
   });
 
   it('horário já ocupado por consulta aparece desabilitado e não pode ser bloqueado', async () => {
@@ -222,5 +243,17 @@ describe('WeeklyScheduleModal — novo fluxo (padrão + grade de bloqueio)', () 
     await renderAndWait();
     fireEvent.click(screen.getByRole('button', { name: /editar horário padrão/i }));
     expect(navigateMock).toHaveBeenCalledWith('/psychologist-availability');
+  });
+
+  it('em férias ativa, mostra o aviso em vez dos dias e esconde o botão de confirmar', async () => {
+    currentActiveVacation = { id: 'vac-1', start_date: monday, end_date: dates[4] };
+    render(<WeeklyScheduleModal open onClose={() => {}} onConfirmed={() => {}} />);
+
+    await waitFor(() => expect(screen.getByText(/Você está de férias/)).toBeTruthy());
+    expect(screen.queryByText('Segunda-feira', { exact: false })).toBeNull();
+    expect(screen.queryByRole('button', { name: /confirmar horários livres da semana/i })).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: /encerrar férias agora/i }));
+    await waitFor(() => expect(cancelVacationMock).toHaveBeenCalled());
   });
 });

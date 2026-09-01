@@ -16,6 +16,18 @@ vi.mock('@/hooks/usePsychologistAvailability', () => ({
   }),
 }));
 
+vi.mock('@/hooks/usePsychologistVacation', () => ({
+  usePsychologistVacation: () => ({
+    activeVacation: null,
+    upcomingVacation: null,
+    loading: false,
+    saving: false,
+    setVacation: vi.fn().mockResolvedValue(true),
+    cancelVacation: vi.fn().mockResolvedValue(true),
+  }),
+  toISODate: () => '2026-01-01',
+}));
+
 vi.mock('@/components/PageHeader', () => ({ default: () => <div /> }));
 
 describe('PsychologistAvailability page', () => {

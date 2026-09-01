@@ -13,11 +13,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { CalendarCheck, X, Plus, ChevronDown, Lock, Info } from 'lucide-react';
+import { CalendarCheck, X, Plus, ChevronDown, Lock, Info, Palmtree, Plane } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePsychologistAvailability, type AvailabilityBlock } from '@/hooks/usePsychologistAvailability';
 import { usePsychologistAvailabilityOverrides } from '@/hooks/usePsychologistAvailabilityOverrides';
+import { usePsychologistVacation } from '@/hooks/usePsychologistVacation';
 import {
   DAY_LABELS,
   DAYS_DISPLAY_ORDER,
@@ -95,6 +96,12 @@ export const WeeklyScheduleModal: React.FC<WeeklyScheduleModalProps> = ({ open, 
     removeOverride,
     applyChanges,
   } = usePsychologistAvailabilityOverrides(weekStart, weekEnd);
+  const {
+    activeVacation,
+    loading: loadingVacation,
+    saving: savingVacation,
+    cancelVacation,
+  } = usePsychologistVacation();
 
   const [draftDays, setDraftDays] = useState<DraftDays>({});
   const [blockedByDate, setBlockedByDate] = useState<Record<string, Set<string>>>({});
@@ -165,7 +172,7 @@ export const WeeklyScheduleModal: React.FC<WeeklyScheduleModalProps> = ({ open, 
     };
   }, [user, weekStart, weekEnd]);
 
-  const loading = loadingBase || loadingOverrides || loadingOccupied;
+  const loading = loadingBase || loadingOverrides || loadingOccupied || loadingVacation;
 
   const overridesByDate = useMemo(() => {
     const byDate: Record<string, typeof overrides> = {};
@@ -270,13 +277,32 @@ export const WeeklyScheduleModal: React.FC<WeeklyScheduleModalProps> = ({ open, 
             Sua agenda desta semana
           </DialogTitle>
           <DialogDescription>
-            Confirme os dias e horários em que você atende. Para bloquear um horário pontual, abra "Personalizar
-            horários" no dia e clique no horário que quer bloquear.
+            Confirme os dias e horários em que você atende. Para bloquear ou liberar um horário pontual, abra
+            "Personalizar horários" no dia — horários em verde estão disponíveis.
           </DialogDescription>
         </DialogHeader>
 
         {loading ? (
           <div className="py-8 text-center text-sm text-muted-foreground">Carregando...</div>
+        ) : activeVacation ? (
+          <div className="py-6 text-center space-y-3">
+            <Palmtree className="w-8 h-8 text-secondary mx-auto" />
+            <p className="text-sm font-medium text-foreground">
+              Você está de férias até {formatDayDate(activeVacation.end_date)}
+            </p>
+            <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+              Sua agenda fica marcada como indisponível para pacientes nesse período. Seu horário-padrão continua
+              salvo e a confirmação semanal volta automaticamente quando as férias terminarem.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void cancelVacation()}
+              disabled={savingVacation}
+            >
+              {savingVacation ? 'Encerrando...' : 'Encerrar férias agora'}
+            </Button>
+          </div>
         ) : (
           <div className="space-y-3">
             {dates.map((date) => {
@@ -346,7 +372,7 @@ export const WeeklyScheduleModal: React.FC<WeeklyScheduleModalProps> = ({ open, 
                         <CollapsibleContent className="mt-2 space-y-2">
                           <p className="flex items-center gap-1 text-xs text-muted-foreground">
                             <Info className="w-3 h-3 shrink-0" />
-                            Clique para bloquear o horário. Clique de novo para desbloquear.
+                            Horários em verde estão disponíveis. Clique para bloquear ou liberar um horário.
                           </p>
                           <div className="grid grid-cols-4 sm:grid-cols-5 gap-1.5">
                             {gridSlots.map((slot) => {
@@ -358,13 +384,13 @@ export const WeeklyScheduleModal: React.FC<WeeklyScheduleModalProps> = ({ open, 
                                   type="button"
                                   disabled={isOccupied}
                                   onClick={() => toggleSlot(date, slot)}
-                                  title={isOccupied ? 'Já tem consulta marcada' : isBlocked ? 'Clique para desbloquear' : 'Clique para bloquear'}
+                                  title={isOccupied ? 'Já tem consulta marcada' : isBlocked ? 'Clique para liberar' : 'Clique para bloquear'}
                                   className={`text-xs rounded-md py-1.5 border transition-colors ${
                                     isOccupied
                                       ? 'bg-muted text-muted-foreground border-border cursor-not-allowed'
                                       : isBlocked
-                                        ? 'bg-destructive/15 text-destructive border-destructive/30 hover:bg-destructive/25'
-                                        : 'bg-background text-foreground border-input hover:bg-accent'
+                                        ? 'bg-background text-foreground border-input hover:bg-accent'
+                                        : 'bg-success/15 text-success border-success/30 hover:bg-success/25'
                                   }`}
                                 >
                                   {isOccupied && <Lock className="w-2.5 h-2.5 inline mr-1" />}
@@ -400,12 +426,20 @@ export const WeeklyScheduleModal: React.FC<WeeklyScheduleModalProps> = ({ open, 
         )}
 
         <DialogFooter className="flex-col sm:flex-row gap-2 sm:justify-between">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/psychologist-availability')}>
-            Editar horário padrão
-          </Button>
-          <Button onClick={handleConfirm} disabled={saving || loading || hasErrors}>
-            {saving ? 'Salvando...' : 'Confirmar horários livres da semana'}
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button variant="ghost" size="sm" onClick={() => navigate('/psychologist-availability')}>
+              Editar horário padrão
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/psychologist-availability')}>
+              <Plane className="w-3.5 h-3.5 mr-1" />
+              {activeVacation ? 'Gerenciar férias' : 'Tirar férias'}
+            </Button>
+          </div>
+          {!activeVacation && (
+            <Button onClick={handleConfirm} disabled={saving || loading || hasErrors}>
+              {saving ? 'Salvando...' : 'Confirmar horários livres da semana'}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

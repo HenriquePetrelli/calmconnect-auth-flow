@@ -3,11 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { Plus, Trash2, CalendarClock } from 'lucide-react';
+import { Plus, Trash2, CalendarClock, Palmtree } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import { SkeletonFullPage } from '@/components/skeletons/Skeletons';
 import { usePsychologistAvailability, type AvailabilityBlock } from '@/hooks/usePsychologistAvailability';
+import { usePsychologistVacation, toISODate } from '@/hooks/usePsychologistVacation';
 import { DAY_LABELS, DAYS_DISPLAY_ORDER, validateDayBlocks, type EditableBlock } from '@/lib/psychologistAvailability';
+
+const formatBR = (isoDate: string): string => {
+  const [y, m, d] = isoDate.split('-');
+  return `${d}/${m}/${y}`;
+};
 
 type DraftByDay = Record<number, EditableBlock[]>;
 
@@ -25,6 +31,37 @@ const blocksToDraft = (blocks: AvailabilityBlock[]): DraftByDay => {
 const PsychologistAvailability = () => {
   const { blocks, loading, saving, save } = usePsychologistAvailability();
   const [draft, setDraft] = useState<DraftByDay>(emptyDraft());
+
+  const {
+    activeVacation,
+    upcomingVacation,
+    loading: loadingVacation,
+    saving: savingVacation,
+    setVacation,
+    cancelVacation,
+  } = usePsychologistVacation();
+  const [vacationStart, setVacationStart] = useState('');
+  const [vacationEnd, setVacationEnd] = useState('');
+  const [vacationError, setVacationError] = useState<string | null>(null);
+  const currentVacation = activeVacation ?? upcomingVacation;
+  const today = toISODate(new Date());
+
+  const handleScheduleVacation = async () => {
+    setVacationError(null);
+    if (!vacationStart || !vacationEnd) {
+      setVacationError('Preencha as duas datas');
+      return;
+    }
+    if (vacationStart > vacationEnd) {
+      setVacationError('A data de início deve ser antes ou igual à de término');
+      return;
+    }
+    const ok = await setVacation(vacationStart, vacationEnd);
+    if (ok) {
+      setVacationStart('');
+      setVacationEnd('');
+    }
+  };
 
   useEffect(() => {
     document.title = 'Minha Agenda | Soliv';
@@ -92,6 +129,69 @@ const PsychologistAvailability = () => {
               agendamento. Para bloquear um horário pontual ou abrir um horário extra só numa semana específica,
               use a confirmação semanal no seu painel — não é preciso mexer no padrão para isso.
             </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Palmtree className="w-4 h-4 text-secondary" />
+              Férias
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {loadingVacation ? (
+              <p className="text-sm text-muted-foreground">Carregando...</p>
+            ) : currentVacation ? (
+              <div className="space-y-3">
+                <p className="text-sm text-foreground">
+                  {activeVacation ? 'Você está de férias' : 'Férias agendadas'} de{' '}
+                  <strong>{formatBR(currentVacation.start_date)}</strong> até{' '}
+                  <strong>{formatBR(currentVacation.end_date)}</strong>.
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Sua agenda fica indisponível para pacientes nesse período. Seus dias e horários padrão continuam
+                  salvos e a confirmação semanal volta a perguntar sua disponibilidade automaticamente assim que as
+                  férias terminarem.
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void cancelVacation()}
+                  disabled={savingVacation}
+                >
+                  {savingVacation ? 'Cancelando...' : 'Cancelar férias'}
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-xs text-muted-foreground">
+                  Escolha de que dia até que dia você vai ficar indisponível. Seus dias e horários padrão continuam
+                  salvos e voltam a valer normalmente assim que as férias terminarem.
+                </p>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="date"
+                    value={vacationStart}
+                    min={today}
+                    onChange={(e) => setVacationStart(e.target.value)}
+                    className="w-full"
+                  />
+                  <span className="text-muted-foreground text-sm shrink-0">até</span>
+                  <Input
+                    type="date"
+                    value={vacationEnd}
+                    min={vacationStart || today}
+                    onChange={(e) => setVacationEnd(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+                {vacationError && <p className="text-xs text-destructive">{vacationError}</p>}
+                <Button variant="outline" size="sm" onClick={handleScheduleVacation} disabled={savingVacation}>
+                  {savingVacation ? 'Salvando...' : 'Agendar férias'}
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 

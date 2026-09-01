@@ -35,6 +35,7 @@ const slotsWithinBlock = (block: EditableBlock): string[] => {
 export const useAvailableTimeSlots = ({ psychologistId, selectedDate }: UseAvailableTimeSlotsProps) => {
   const [availabilityByDay, setAvailabilityByDay] = useState<Record<number, EditableBlock[]>>({});
   const [overridesByDate, setOverridesByDate] = useState<Record<string, AvailabilityOverride[]>>({});
+  const [vacationRanges, setVacationRanges] = useState<Array<{ start_date: string; end_date: string }>>([]);
   const [hasAnyAvailability, setHasAnyAvailability] = useState(false);
   const [loadingAvailability, setLoadingAvailability] = useState(true);
   const [occupiedSlots, setOccupiedSlots] = useState<string[]>([]);
@@ -49,7 +50,11 @@ export const useAvailableTimeSlots = ({ psychologistId, selectedDate }: UseAvail
       const today = toISODate(new Date());
       const windowEnd = toISODate(addDays(new Date(), BOOKING_WINDOW_DAYS));
 
-      const [{ data: baseRows, error: baseError }, { data: overrideRows, error: overrideError }] = await Promise.all([
+      const [
+        { data: baseRows, error: baseError },
+        { data: overrideRows, error: overrideError },
+        { data: vacationRows, error: vacationError },
+      ] = await Promise.all([
         supabase
           .from('psychologist_availability')
           .select('day_of_week, start_time, end_time')
@@ -61,10 +66,17 @@ export const useAvailableTimeSlots = ({ psychologistId, selectedDate }: UseAvail
           .eq('psychologist_id', psychId)
           .gte('date', today)
           .lte('date', windowEnd),
+        supabase
+          .from('psychologist_vacations')
+          .select('start_date, end_date')
+          .eq('psychologist_id', psychId)
+          .gte('end_date', today)
+          .lte('start_date', windowEnd),
       ]);
 
       if (baseError) throw baseError;
       if (overrideError) throw overrideError;
+      if (vacationError) throw vacationError;
 
       const byDay: Record<number, EditableBlock[]> = {};
       (baseRows ?? []).forEach((row) => {
@@ -83,6 +95,7 @@ export const useAvailableTimeSlots = ({ psychologistId, selectedDate }: UseAvail
         byDate[row.date] = [...(byDate[row.date] ?? []), entry];
       });
       setOverridesByDate(byDate);
+      setVacationRanges(vacationRows ?? []);
 
       const hasBase = (baseRows ?? []).length > 0;
       const hasExtraOpening = (overrideRows ?? []).some((r) => r.type === 'abertura');
@@ -91,6 +104,7 @@ export const useAvailableTimeSlots = ({ psychologistId, selectedDate }: UseAvail
       console.error('Error fetching psychologist availability:', error);
       setAvailabilityByDay({});
       setOverridesByDate({});
+      setVacationRanges([]);
       setHasAnyAvailability(false);
     } finally {
       setLoadingAvailability(false);
@@ -170,8 +184,10 @@ export const useAvailableTimeSlots = ({ psychologistId, selectedDate }: UseAvail
 
   /** Horário-padrão do dia da semana, já combinado com bloqueios/aberturas daquela data específica. */
   const effectiveBlocksForDate = (date: Date): EditableBlock[] => {
+    const iso = toISODate(date);
+    if (vacationRanges.some((v) => v.start_date <= iso && iso <= v.end_date)) return [];
     const dayBlocks = availabilityByDay[date.getDay()] ?? [];
-    const overrides = overridesByDate[toISODate(date)] ?? [];
+    const overrides = overridesByDate[iso] ?? [];
     return applyOverridesToDayBlocks(dayBlocks, overrides);
   };
 

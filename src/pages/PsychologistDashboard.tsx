@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { usePsychologistEmergency } from '@/hooks/usePsychologistEmergency';
 import { usePsychologistSchedule } from '@/hooks/usePsychologistSchedule';
 import { usePsychologistPresence } from '@/hooks/usePsychologistPresence';
+import { usePsychologistVacation } from '@/hooks/usePsychologistVacation';
 import EmergencyNotifications from '@/components/psychologist/EmergencyNotifications';
 import UpcomingConsultations from '@/components/psychologist/UpcomingConsultations';
 import ConsultationHistory from '@/components/psychologist/ConsultationHistory';
@@ -34,10 +35,28 @@ const PsychologistDashboard = () => {
   const { emergencyRequests } = usePsychologistEmergency();
   const { todayAppointments, upcomingAppointments } = usePsychologistSchedule();
   const { isOnline } = usePsychologistPresence();
+  const { activeVacation, loading: loadingVacation } = usePsychologistVacation();
 
   useEffect(() => {
     checkUserProfile();
   }, []);
+
+  // Confirmação semanal: só oferece depois que o cadastro básico (PIX) já
+  // está completo, e nunca durante férias — nesse período a agenda fica
+  // marcada como indisponível e não faz sentido perguntar disponibilidade.
+  useEffect(() => {
+    if (!profile || loadingVacation) return;
+    if (!psychologistData?.pix_key || !psychologistData?.pix_type) return;
+    if (activeVacation) return;
+    try {
+      const lastConfirmed = localStorage.getItem(weeklyConfirmStorageKey(profile.user_id));
+      if (lastConfirmed !== getWeekStartISO(new Date())) {
+        setShowWeeklyScheduleModal(true);
+      }
+    } catch {
+      // localStorage indisponível (modo privado, etc.) — não bloqueia o app
+    }
+  }, [profile, psychologistData, activeVacation, loadingVacation]);
 
   const checkUserProfile = async () => {
     try {
@@ -107,17 +126,6 @@ const PsychologistDashboard = () => {
       // If PIX is not configured, show modal
       if (!psychData?.pix_key || !psychData?.pix_type) {
         setShowPixModal(true);
-      } else {
-        // Não sobrepõe com o modal de PIX — só oferece a confirmação semanal
-        // depois que o cadastro básico já está completo.
-        try {
-          const lastConfirmed = localStorage.getItem(weeklyConfirmStorageKey(user.id));
-          if (lastConfirmed !== getWeekStartISO(new Date())) {
-            setShowWeeklyScheduleModal(true);
-          }
-        } catch {
-          // localStorage indisponível (modo privado, etc.) — não bloqueia o app
-        }
       }
     } catch (error) {
       console.error('Error checking profile:', error);
