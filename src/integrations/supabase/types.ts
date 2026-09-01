@@ -964,6 +964,39 @@ export type Database = {
         }
         Relationships: []
       }
+      psychologist_availability_overrides: {
+        Row: {
+          created_at: string
+          date: string
+          end_time: string
+          id: string
+          psychologist_id: string
+          start_time: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          end_time: string
+          id?: string
+          psychologist_id: string
+          start_time: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          end_time?: string
+          id?: string
+          psychologist_id?: string
+          start_time?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       psychologist_payments: {
         Row: {
           cpf: string | null
