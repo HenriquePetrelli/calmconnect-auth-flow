@@ -100,5 +100,39 @@ export const usePsychologistAvailabilityOverrides = (startDate: string, endDate:
     }
   };
 
-  return { overrides, loading, addOverride, removeOverride, refetch: fetchOverrides };
+  /** Aplica várias adições/remoções de uma vez (ex.: vários cliques na grade
+   * de horários) e só recarrega no final, em vez de um round-trip por clique. */
+  const applyChanges = async (
+    toAdd: Array<{ date: string; start_time: string; end_time: string; type: OverrideType }>,
+    toRemoveIds: string[]
+  ): Promise<boolean> => {
+    if (!user) return false;
+    try {
+      if (toRemoveIds.length > 0) {
+        const { error } = await supabase
+          .from('psychologist_availability_overrides')
+          .delete()
+          .in('id', toRemoveIds);
+        if (error) throw error;
+      }
+      if (toAdd.length > 0) {
+        const { error } = await supabase
+          .from('psychologist_availability_overrides')
+          .insert(toAdd.map((entry) => ({ psychologist_id: user.id, ...entry })));
+        if (error) throw error;
+      }
+      await fetchOverrides();
+      return true;
+    } catch (error: any) {
+      console.error('Erro ao salvar exceções da semana:', error);
+      toast({
+        title: 'Erro ao salvar',
+        description: error.message || 'Não foi possível salvar as alterações da semana. Tente novamente.',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  };
+
+  return { overrides, loading, addOverride, removeOverride, applyChanges, refetch: fetchOverrides };
 };

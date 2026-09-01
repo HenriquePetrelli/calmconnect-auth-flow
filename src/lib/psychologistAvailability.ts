@@ -102,3 +102,30 @@ export const applyOverridesToDayBlocks = (
   }
   return ranges.sort((a, b) => a.start_time.localeCompare(b.start_time));
 };
+
+export const HALF_HOUR_STEP_MIN = 30;
+
+export const timeToMinutes = (time: string): number => {
+  const [h, m] = time.split(':').map(Number);
+  return h * 60 + m;
+};
+
+export const minutesToTime = (minutes: number): string =>
+  `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
+
+/** Início do próximo slot de meia hora a partir de `time`. */
+export const addHalfHour = (time: string): string => minutesToTime(timeToMinutes(time) + HALF_HOUR_STEP_MIN);
+
+/**
+ * Todos os horários de início de meia em meia hora que cabem inteiramente
+ * dentro de [start, end) — a grade usada para bloquear horários pontuais
+ * ("Personalizar horários"). Ex.: 08:00–16:00 -> 08:00, 08:30, ..., 15:30.
+ */
+export const halfHourGridSlots = (start: string, end: string): string[] => {
+  if (!start || !end || start >= end) return [];
+  const slots: string[] = [];
+  for (let m = timeToMinutes(start); m + HALF_HOUR_STEP_MIN <= timeToMinutes(end); m += HALF_HOUR_STEP_MIN) {
+    slots.push(minutesToTime(m));
+  }
+  return slots;
+};

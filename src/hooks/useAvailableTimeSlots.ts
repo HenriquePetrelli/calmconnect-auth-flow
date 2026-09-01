@@ -3,6 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { format, addMinutes, addDays, parseISO, startOfDay, endOfDay } from 'date-fns';
 import {
   applyOverridesToDayBlocks,
+  timeToMinutes,
+  minutesToTime,
   type AvailabilityOverride,
   type EditableBlock,
 } from '@/lib/psychologistAvailability';
@@ -16,14 +18,6 @@ const APPOINTMENT_DURATION_MIN = 50;
 const SLOT_STEP_MIN = 10;
 const BOOKING_WINDOW_DAYS = 30;
 
-const toMinutes = (time: string): number => {
-  const [h, m] = time.split(':').map(Number);
-  return h * 60 + m;
-};
-
-const toTimeString = (minutes: number): string =>
-  `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
-
 const toISODate = (date: Date): string =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 
@@ -31,9 +25,9 @@ const toISODate = (date: Date): string =>
  * for a full APPOINTMENT_DURATION_MIN session inside the block. */
 const slotsWithinBlock = (block: EditableBlock): string[] => {
   const slots: string[] = [];
-  const end = toMinutes(block.end_time);
-  for (let start = toMinutes(block.start_time); start + APPOINTMENT_DURATION_MIN <= end; start += SLOT_STEP_MIN) {
-    slots.push(toTimeString(start));
+  const end = timeToMinutes(block.end_time);
+  for (let start = timeToMinutes(block.start_time); start + APPOINTMENT_DURATION_MIN <= end; start += SLOT_STEP_MIN) {
+    slots.push(minutesToTime(start));
   }
   return slots;
 };
