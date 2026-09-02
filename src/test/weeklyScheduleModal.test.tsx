@@ -32,7 +32,7 @@ const cancelVacationMock = vi.fn().mockResolvedValue(true);
 let currentActiveVacation: { id: string; start_date: string; end_date: string } | null = null;
 
 vi.mock('@/hooks/usePsychologistAvailability', () => ({
-  usePsychologistAvailability: () => ({ blocks: currentBaseBlocks, loading: false, save: saveBaseMock }),
+  usePsychologistAvailability: () => ({ blocks: currentBaseBlocks, loading: false, saving: false, save: saveBaseMock }),
 }));
 
 vi.mock('@/hooks/usePsychologistAvailabilityOverrides', () => ({
@@ -97,12 +97,22 @@ const openMondayGrid = async (mondayCard: HTMLElement) => {
 const getDayCard = (dayLabel: string) => screen.getByText(dayLabel, { exact: false }).closest('div')!.parentElement!;
 
 describe('WeeklyScheduleModal — novo fluxo (padrão + grade de bloqueio)', () => {
-  it('pré-preenche o range do dia a partir do horário-padrão salvo', async () => {
+  it('mostra o horário-padrão salvo só como leitura, sem campo editável', async () => {
     await renderAndWait();
 
     const mondayCard = getDayCard('Segunda-feira');
-    expect(within(mondayCard).getByDisplayValue('08:00')).toBeTruthy();
-    expect(within(mondayCard).getByDisplayValue('16:00')).toBeTruthy();
+    expect(within(mondayCard).getByText('08:00 às 16:00')).toBeTruthy();
+    expect(within(mondayCard).queryByRole('textbox')).toBeNull();
+    expect(within(mondayCard).queryByRole('switch')).toBeNull();
+  });
+
+  it('dia sem horário-padrão mostra aviso, sem grade, mas ainda permite horário extra', async () => {
+    await renderAndWait();
+
+    const tuesdayCard = getDayCard('Terça-feira');
+    expect(within(tuesdayCard).getByText('Sem atendimento padrão')).toBeTruthy();
+    expect(within(tuesdayCard).queryByRole('button', { name: /personalizar horários/i })).toBeNull();
+    expect(within(tuesdayCard).getByRole('button', { name: /adicionar horário extra/i })).toBeTruthy();
   });
 
   it('abre a grade de meia em meia hora dentro do range do dia', async () => {
@@ -159,6 +169,7 @@ describe('WeeklyScheduleModal — novo fluxo (padrão + grade de bloqueio)', () 
         []
       );
     });
+    // Confirmar nunca mexe no horário-padrão — só nas exceções da semana.
     expect(saveBaseMock).not.toHaveBeenCalled();
   });
 
@@ -175,41 +186,6 @@ describe('WeeklyScheduleModal — novo fluxo (padrão + grade de bloqueio)', () 
 
     await waitFor(() => {
       expect(applyChangesMock).toHaveBeenCalledWith([], ['ov-1']);
-    });
-  });
-
-  it('mudar o range do dia e confirmar atualiza o horário-padrão', async () => {
-    await renderAndWait();
-    const mondayCard = getDayCard('Segunda-feira');
-
-    const endInput = within(mondayCard).getByDisplayValue('16:00');
-    fireEvent.change(endInput, { target: { value: '17:00' } });
-
-    fireEvent.click(screen.getByRole('button', { name: /confirmar horários livres da semana/i }));
-
-    await waitFor(() => {
-      expect(saveBaseMock).toHaveBeenCalledWith([{ day_of_week: 1, start_time: '08:00', end_time: '17:00' }]);
-    });
-  });
-
-  it('ligar um dia sem horário-padrão nenhum entra com um range default e é salvo ao confirmar', async () => {
-    await renderAndWait();
-    const tuesdayCard = getDayCard('Terça-feira');
-
-    const toggle = within(tuesdayCard).getByRole('switch');
-    fireEvent.click(toggle);
-
-    await waitFor(() => expect(within(tuesdayCard).getByDisplayValue('08:00')).toBeTruthy());
-
-    fireEvent.click(screen.getByRole('button', { name: /confirmar horários livres da semana/i }));
-
-    await waitFor(() => {
-      expect(saveBaseMock).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          { day_of_week: 1, start_time: '08:00', end_time: '16:00' },
-          { day_of_week: 2, start_time: '08:00', end_time: '18:00' },
-        ])
-      );
     });
   });
 

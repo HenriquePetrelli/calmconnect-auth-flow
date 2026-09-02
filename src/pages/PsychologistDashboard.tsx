@@ -11,12 +11,14 @@ import { usePsychologistEmergency } from '@/hooks/usePsychologistEmergency';
 import { usePsychologistSchedule } from '@/hooks/usePsychologistSchedule';
 import { usePsychologistPresence } from '@/hooks/usePsychologistPresence';
 import { usePsychologistVacation } from '@/hooks/usePsychologistVacation';
+import { usePsychologistAvailability } from '@/hooks/usePsychologistAvailability';
 import EmergencyNotifications from '@/components/psychologist/EmergencyNotifications';
 import UpcomingConsultations from '@/components/psychologist/UpcomingConsultations';
 import ConsultationHistory from '@/components/psychologist/ConsultationHistory';
 import OnlineStatusToggle from '@/components/psychologist/OnlineStatusToggle';
 import { PixModal } from '@/components/psychologist/PixModal';
 import { WeeklyScheduleModal } from '@/components/psychologist/WeeklyScheduleModal';
+import { FirstTimeAvailabilityModal } from '@/components/psychologist/FirstTimeAvailabilityModal';
 import logoImg from '@/assets/soliv-logo.svg';
 import ActiveCallBanner from '@/components/sos/ActiveCallBanner';
 import { getWeekStartISO } from '@/lib/psychologistAvailability';
@@ -30,24 +32,31 @@ const PsychologistDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [showPixModal, setShowPixModal] = useState(false);
   const [showWeeklyScheduleModal, setShowWeeklyScheduleModal] = useState(false);
+  const [showFirstTimeModal, setShowFirstTimeModal] = useState(false);
   const [psychologistData, setPsychologistData] = useState<any>(null);
 
   const { emergencyRequests } = usePsychologistEmergency();
   const { todayAppointments, upcomingAppointments } = usePsychologistSchedule();
   const { isOnline } = usePsychologistPresence();
   const { activeVacation, loading: loadingVacation } = usePsychologistVacation();
+  const { blocks: baseBlocks, loading: loadingBase, refetch: refetchBase } = usePsychologistAvailability();
 
   useEffect(() => {
     checkUserProfile();
   }, []);
 
-  // Confirmação semanal: só oferece depois que o cadastro básico (PIX) já
-  // está completo, e nunca durante férias — nesse período a agenda fica
-  // marcada como indisponível e não faz sentido perguntar disponibilidade.
+  // Só depois que o cadastro básico (PIX) está completo: primeiro pede o
+  // horário-padrão (uma vez, se ainda não configurado) e, com ele já
+  // configurado, oferece a confirmação semanal — nunca durante férias, já
+  // que nesse período a agenda fica marcada como indisponível.
   useEffect(() => {
-    if (!profile || loadingVacation) return;
+    if (!profile || loadingVacation || loadingBase) return;
     if (!psychologistData?.pix_key || !psychologistData?.pix_type) return;
     if (activeVacation) return;
+    if (baseBlocks.length === 0) {
+      setShowFirstTimeModal(true);
+      return;
+    }
     try {
       const lastConfirmed = localStorage.getItem(weeklyConfirmStorageKey(profile.user_id));
       if (lastConfirmed !== getWeekStartISO(new Date())) {
@@ -56,7 +65,7 @@ const PsychologistDashboard = () => {
     } catch {
       // localStorage indisponível (modo privado, etc.) — não bloqueia o app
     }
-  }, [profile, psychologistData, activeVacation, loadingVacation]);
+  }, [profile, psychologistData, activeVacation, loadingVacation, baseBlocks, loadingBase]);
 
   const checkUserProfile = async () => {
     try {
@@ -309,6 +318,25 @@ const PsychologistDashboard = () => {
             checkUserProfile();
           }}
           userId={profile.user_id}
+        />
+      )}
+
+      {/* Configuração inicial do horário-padrão (só uma vez) */}
+      {profile && (
+        <FirstTimeAvailabilityModal
+          open={showFirstTimeModal}
+          onClose={() => setShowFirstTimeModal(false)}
+          onSaved={() => {
+            setShowFirstTimeModal(false);
+            try {
+              // Já conta como a semana confirmada — evita mostrar a modal
+              // semanal logo em seguida da configuração inicial.
+              localStorage.setItem(weeklyConfirmStorageKey(profile.user_id), getWeekStartISO(new Date()));
+            } catch {
+              // localStorage indisponível — segue sem lembrar pra próxima
+            }
+            void refetchBase();
+          }}
         />
       )}
 
