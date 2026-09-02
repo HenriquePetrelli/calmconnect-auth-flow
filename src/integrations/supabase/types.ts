@@ -1146,6 +1146,30 @@ export type Database = {
         }
         Relationships: []
       }
+      psychologist_vacations: {
+        Row: {
+          created_at: string
+          end_date: string
+          id: string
+          psychologist_id: string
+          start_date: string
+        }
+        Insert: {
+          created_at?: string
+          end_date: string
+          id?: string
+          psychologist_id: string
+          start_date: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string
+          id?: string
+          psychologist_id?: string
+          start_date?: string
+        }
+        Relationships: []
+      }
       psychologists: {
         Row: {
           address: string | null
