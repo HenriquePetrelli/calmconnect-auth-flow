@@ -28,6 +28,19 @@ export interface PatientWeeklyGoal {
   weekly_goals: WeeklyGoalTemplate;
 }
 
+/** Domingo (início) e sábado (fim) da semana atual, como "YYYY-MM-DD". */
+export const getCurrentWeekRange = (): { weekStart: string; weekEnd: string } => {
+  const today = new Date();
+  const startOfWeek = new Date(today);
+  startOfWeek.setDate(today.getDate() - today.getDay());
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
+  return {
+    weekStart: startOfWeek.toISOString().split('T')[0],
+    weekEnd: endOfWeek.toISOString().split('T')[0],
+  };
+};
+
 export const useWeeklyGoals = () => {
   const { user } = useAuth();
   const [goals, setGoals] = useState<PatientWeeklyGoal[]>([]);
@@ -81,18 +94,14 @@ export const useWeeklyGoals = () => {
     }
 
     try {
-      const today = new Date();
-      const startOfWeek = new Date(today);
-      startOfWeek.setDate(today.getDate() - today.getDay());
-      const endOfWeek = new Date(startOfWeek);
-      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      const { weekStart, weekEnd } = getCurrentWeekRange();
 
       const { data, error } = await supabase
         .from('patient_weekly_goals')
         .select('*, weekly_goals(*)')
         .eq('user_id', user.id)
-        .gte('week_start_date', startOfWeek.toISOString().split('T')[0])
-        .lte('week_end_date', endOfWeek.toISOString().split('T')[0])
+        .gte('week_start_date', weekStart)
+        .lte('week_end_date', weekEnd)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -166,6 +175,23 @@ export const useWeeklyGoals = () => {
       toast.error('Erro ao criar meta');
     }
   }, [user, fetchGoals]);
+
+  /** Remove uma meta que o paciente deixou de selecionar, parando de rastreá-la nesta semana. */
+  const deleteGoal = useCallback(async (patientWeeklyGoalId: string) => {
+    try {
+      const { error } = await supabase
+        .from('patient_weekly_goals')
+        .delete()
+        .eq('id', patientWeeklyGoalId);
+
+      if (error) throw error;
+
+      await fetchGoals();
+    } catch (error) {
+      console.error('Error deleting goal:', error);
+      toast.error('Erro ao remover meta');
+    }
+  }, [fetchGoals]);
 
   const fetchDefaultGoals = useCallback(async () => {
     try {
@@ -250,9 +276,11 @@ export const useWeeklyGoals = () => {
     loading,
     newlyCompleted,
     dismissCompletionModal,
+    fetchGoals,
     updateGoalProgress,
     checkAndUpdateGoals,
     createGoal,
+    deleteGoal,
     fetchDefaultGoals,
     setShowWeeklyGoalModal,
     setShowGoalModal,

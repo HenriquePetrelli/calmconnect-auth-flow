@@ -8,20 +8,33 @@ interface GoalCardProps {
   goal: PatientWeeklyGoal;
 }
 
+// Chaves alinhadas com weekly_goals.category no banco (breathing, sound,
+// support_group, journal, mood, appointment) — não com rótulos em português.
 const categoryIcons: Record<string, typeof Target> = {
-  'Respiração': TrendingUp,
-  'Diário': BookOpen,
-  'Sono': Music,
-  'Humor': Heart,
-  'Consulta': Calendar,
+  breathing: TrendingUp,
+  journal: BookOpen,
+  sound: Music,
+  mood: Heart,
+  appointment: Calendar,
+  support_group: Target,
 };
 
 const categoryColors: Record<string, string> = {
-  'Respiração': 'bg-secondary/10 text-secondary border-blue-500/20',
-  'Diário': 'bg-secondary/10 text-secondary border-secondary/20',
-  'Sono': 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20',
-  'Humor': 'bg-pink-500/10 text-pink-600 border-pink-500/20',
-  'Consulta': 'bg-success/10 text-success border-success/20',
+  breathing: 'bg-secondary/10 text-secondary border-blue-500/20',
+  journal: 'bg-secondary/10 text-secondary border-secondary/20',
+  sound: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20',
+  mood: 'bg-pink-500/10 text-pink-600 border-pink-500/20',
+  appointment: 'bg-success/10 text-success border-success/20',
+  support_group: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
+};
+
+const categoryLabels: Record<string, string> = {
+  breathing: 'Respiração',
+  journal: 'Diário',
+  sound: 'Sono',
+  mood: 'Humor',
+  appointment: 'Consulta',
+  support_group: 'Grupo de apoio',
 };
 
 export const GoalCard = ({ goal }: GoalCardProps) => {
@@ -49,7 +62,7 @@ export const GoalCard = ({ goal }: GoalCardProps) => {
             <CardTitle className="text-lg font-semibold mb-1">{goal.weekly_goals.title}</CardTitle>
             {goal.weekly_goals.category && (
               <Badge variant="outline" className="mb-2">
-                {goal.weekly_goals.category}
+                {categoryLabels[goal.weekly_goals.category] || goal.weekly_goals.category}
               </Badge>
             )}
             <CardDescription className="text-sm">{goal.weekly_goals.description}</CardDescription>

@@ -43,7 +43,6 @@ const PsychologistSupport = lazy(() => import("./pages/PsychologistSupport"));
 const Appointments = lazy(() => import("./pages/Appointments"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 const Statistics = lazy(() => import("./pages/Statistics"));
-const Progress = lazy(() => import("./pages/Progress"));
 const Achievements = lazy(() => import("./pages/Achievements"));
 const ActivityHistory = lazy(() => import("./pages/ActivityHistory"));
 const SubscriptionPlans = lazy(() => import("./pages/SubscriptionPlans"));
@@ -212,11 +211,6 @@ const App = () => {
                   <Route path="/paciente/suporte" element={
                     <RouteGuard allowedUserTypes={['patient']}>
                       <Support />
-                    </RouteGuard>
-                  } />
-                  <Route path="/progress" element={
-                    <RouteGuard allowedUserTypes={['patient']}>
-                      <Progress />
                     </RouteGuard>
                   } />
                   <Route path="/achievements" element={

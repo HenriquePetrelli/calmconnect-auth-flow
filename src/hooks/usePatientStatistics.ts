@@ -84,18 +84,24 @@ export const usePatientStatistics = () => {
 
       if (quarterlyError) throw quarterlyError;
 
-      // Check and update weekly goals based on activity
-      const categoryMap: Record<string, string> = {
-        'Respiração Guiada': 'Respiração',
-        'Sons Terapêuticos': 'Sono',
-        'Registro de Humor': 'Humor',
-        'Diário Privado': 'Diário',
-        'Consulta Agendada': 'Consulta',
-      };
+      // Check and update weekly goals based on activity. Matched by prefix
+      // (not exact equality) because several callers append details to the
+      // name (e.g. "Sons Terapêuticos: Chuva"), and the values here are the
+      // real `weekly_goals.category` keys seeded in the database — not the
+      // Portuguese display labels a category could easily be mistaken for.
+      const categoryRules: Array<{ prefix: string; category: string }> = [
+        { prefix: 'Respiração Guiada', category: 'breathing' },
+        { prefix: 'Sons Terapêuticos', category: 'sound' },
+        { prefix: 'Registro de Humor', category: 'mood' },
+        { prefix: 'Diário Privado', category: 'journal' },
+        { prefix: 'Grupo de Apoio', category: 'support_group' },
+        { prefix: 'Consulta com Psicólogo', category: 'appointment' },
+        { prefix: 'Consulta Agendada', category: 'appointment' },
+      ];
 
-      const category = categoryMap[activityName];
-      if (category) {
-        await checkAndUpdateGoals(category);
+      const rule = categoryRules.find((r) => activityName.startsWith(r.prefix));
+      if (rule) {
+        await checkAndUpdateGoals(rule.category);
       }
     } catch (error) {
       console.error('Error adding activity:', error);

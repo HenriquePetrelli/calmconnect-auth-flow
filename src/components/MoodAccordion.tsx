@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ChevronDown, Smile, Heart, Meh, Frown, CloudRain, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useMoodLog } from '@/hooks/useMoodLog';
 import { cn } from '@/lib/utils';
 
 export interface MoodOption {
@@ -31,59 +32,18 @@ interface MoodAccordionProps {
 
 export const MoodAccordion: React.FC<MoodAccordionProps> = ({ currentValue, onMoodSelected }) => {
   const { toast } = useToast();
+  const { logMood, saving: isSaving } = useMoodLog();
   const [open, setOpen] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [isHiding, setIsHiding] = useState(false);
 
   const selected = getMoodOptionByValue(currentValue);
 
   const handleSelect = async (mood: MoodOption) => {
-    setIsSaving(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const today = new Date().toISOString().split('T')[0];
-      const { data: patientData } = await supabase
-        .from('patients')
-        .select('daily_mood_count, daily_mood_sum, last_mood_date, last_mood_value')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      const isNewDay = !patientData?.last_mood_date || patientData.last_mood_date !== today;
-      let newCount: number, newSum: number;
-      if (isNewDay) {
-        newCount = (patientData?.daily_mood_count || 0) + 1;
-        newSum = (patientData?.daily_mood_sum || 0) + mood.value;
-      } else {
-        const previousMoodValue = patientData?.last_mood_value || 0;
-        newCount = patientData?.daily_mood_count || 1;
-        newSum = (patientData?.daily_mood_sum || 0) - previousMoodValue + mood.value;
-      }
-
-      const { error } = await supabase
-        .from('patients')
-        .update({
-          daily_mood_count: newCount,
-          daily_mood_sum: newSum,
-          last_mood_date: today,
-          last_mood_value: mood.value,
-        })
-        .eq('user_id', user.id);
-
-      if (error) {
-        toast({ title: 'Erro', description: 'Não foi possível salvar seu humor.', variant: 'destructive' });
-        return;
-      }
-
+    const ok = await logMood(mood.value);
+    if (ok) {
       onMoodSelected(mood.value);
       setShowFeedback(true);
-    } catch (e) {
-      console.error(e);
-      toast({ title: 'Erro', description: 'Não foi possível salvar seu humor.', variant: 'destructive' });
-    } finally {
-      setIsSaving(false);
     }
   };
 

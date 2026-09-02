@@ -12,7 +12,6 @@ import {
   Trophy,
   History,
   Target,
-  CheckCircle2,
   Flame,
   ChevronRight,
   BarChart3,
@@ -23,6 +22,8 @@ import { useAchievements } from "@/hooks/useAchievements";
 import { getRelativeTime, formatDateTime } from "@/utils/dateFormatters";
 import { useWeeklyGoals } from "@/hooks/useWeeklyGoals";
 import { GoalSelectionModal } from "@/components/goals/GoalSelectionModal";
+import { GoalCard } from "@/components/goals/GoalCard";
+import { MoodTrendChart } from "@/components/progress/MoodTrendChart";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { SkeletonList, SkeletonSectionCard } from "@/components/skeletons/Skeletons";
@@ -32,12 +33,9 @@ const Statistics = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { recentActivities, statistics, loading, updateStreak } = usePatientStatistics();
-  const { checkAchievements } = useAchievements();
-  const { selectedGoals, fetchDefaultGoals, loading: goalsLoading, fetchSelectedGoals } = useWeeklyGoals();
+  const { achievements, loading: achievementsLoading, checkAchievements } = useAchievements();
+  const { goals, loading: goalsLoading, fetchGoals } = useWeeklyGoals();
   const [goalModalOpen, setGoalModalOpen] = useState(false);
-  const [goalTemplates, setGoalTemplates] = useState<any[]>([]);
-  const [goalsWithProgress, setGoalsWithProgress] = useState<any[]>([]);
-  const [localSelectedGoals, setLocalSelectedGoals] = useState<string[]>(selectedGoals);
 
   useEffect(() => {
     const init = async () => {
@@ -48,60 +46,27 @@ const Statistics = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    setLocalSelectedGoals(selectedGoals);
-  }, [selectedGoals]);
-
-  useEffect(() => {
-    const loadGoalsData = async () => {
-      const templates = await fetchDefaultGoals();
-      setGoalTemplates(templates);
-      const data = localSelectedGoals
-        .map((goalId) => {
-          const template = templates.find((t) => t.id === goalId);
-          if (!template) return null;
-          return {
-            id: goalId,
-            title: template.title,
-            description: template.description,
-            target: template.target,
-            progress: 0,
-            completed: false,
-          };
-        })
-        .filter(Boolean);
-      setGoalsWithProgress(data);
-    };
-    if (!goalsLoading) loadGoalsData();
-  }, [localSelectedGoals, goalsLoading, fetchDefaultGoals]);
-
+  // Metas selecionadas em outra aba/dispositivo (ou pelo reset semanal
+  // automático às segundas) — recarrega as metas reais desta semana.
   useEffect(() => {
     if (!user?.id) return;
     const channel = supabase
       .channel("patients-weekly-goals-changes")
       .on(
         "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "patients",
-          filter: `user_id=eq.${user.id}`,
-        },
-        (payload) => {
-          const newGoals = (payload.new as any)?.weekly_goals || [];
-          setLocalSelectedGoals(newGoals);
-          fetchSelectedGoals();
-        }
+        { event: "UPDATE", schema: "public", table: "patients", filter: `user_id=eq.${user.id}` },
+        () => fetchGoals()
       )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user?.id, fetchSelectedGoals]);
+  }, [user?.id, fetchGoals]);
 
-  const completedGoals = goalsWithProgress.filter((g) => g.completed).length;
-  const totalGoals = goalsWithProgress.length;
+  const completedGoals = goals.filter((g) => g.completed).length;
+  const totalGoals = goals.length;
   const goalsPercent = totalGoals > 0 ? Math.round((completedGoals / totalGoals) * 100) : 0;
+  const achievedCount = achievements.filter((a) => a.achieved).length;
 
   const statCards = [
     {
@@ -165,6 +130,9 @@ const Statistics = () => {
           </CardContent>
         </Card>
 
+        {/* Evolução do humor */}
+        <MoodTrendChart />
+
         {/* Metas Semanais */}
         {goalsLoading ? (
           <SkeletonSectionCard rows={3} accent="primary" showAvatar={false} />
@@ -186,7 +154,7 @@ const Statistics = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-6">
-              {localSelectedGoals.length === 0 ? (
+              {goals.length === 0 ? (
                 <div className="text-center py-6 space-y-3">
                   <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
                     <Target className="w-6 h-6 text-primary" />
@@ -218,36 +186,10 @@ const Statistics = () => {
                     <Progress value={goalsPercent} className="h-2" />
                   </div>
 
-                  <div className="space-y-4">
-                    {goalsWithProgress.map((goal) => {
-                      const pct = Math.min(
-                        100,
-                        Math.round((goal.progress / goal.target) * 100)
-                      );
-                      return (
-                        <div key={goal.id} className="space-y-2">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <span className="text-sm font-medium text-foreground truncate">
-                                {goal.title}
-                              </span>
-                              {goal.completed && (
-                                <CheckCircle2 size={16} className="text-success shrink-0" />
-                              )}
-                            </div>
-                            <span className="text-xs font-medium text-muted-foreground shrink-0">
-                              {goal.progress}/{goal.target}
-                            </span>
-                          </div>
-                          <Progress value={pct} className="h-1.5" />
-                          {goal.description && (
-                            <p className="text-xs text-muted-foreground">
-                              {goal.description}
-                            </p>
-                          )}
-                        </div>
-                      );
-                    })}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {goals.map((goal) => (
+                      <GoalCard key={goal.id} goal={goal} />
+                    ))}
                   </div>
 
                   <Button
@@ -326,7 +268,9 @@ const Statistics = () => {
                     Minhas conquistas
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    Veja suas insígnias
+                    {achievementsLoading
+                      ? "Veja suas insígnias"
+                      : `${achievedCount} de ${achievements.length} desbloqueadas`}
                   </p>
                 </div>
                 <ChevronRight className="w-4 h-4 text-muted-foreground" />
@@ -421,7 +365,7 @@ const Statistics = () => {
         onOpenChange={setGoalModalOpen}
         onGoalsAdded={async () => {
           setGoalModalOpen(false);
-          await fetchSelectedGoals();
+          await fetchGoals();
         }}
       />
     </div>

@@ -40,7 +40,6 @@ export const ROUTE_PERMISSIONS = {
     '/statistics',
     '/statistics/activity-history',
     '/goals',
-    '/progress',
     '/achievements',
     '/subscription-plans',
     '/subscription-success',

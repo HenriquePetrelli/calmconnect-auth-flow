@@ -612,42 +612,27 @@ export type Database = {
         }
         Relationships: []
       }
-      patient_progress: {
+      patient_mood_logs: {
         Row: {
-          anxiety_level: number | null
           created_at: string
           id: string
-          mood_rating: number | null
-          notes: string | null
+          logged_date: string
+          mood_value: number
           patient_id: string
-          session_date: string
-          session_duration: number | null
-          stress_level: number | null
-          technique_used: string | null
         }
         Insert: {
-          anxiety_level?: number | null
           created_at?: string
           id?: string
-          mood_rating?: number | null
-          notes?: string | null
+          logged_date: string
+          mood_value: number
           patient_id: string
-          session_date?: string
-          session_duration?: number | null
-          stress_level?: number | null
-          technique_used?: string | null
         }
         Update: {
-          anxiety_level?: number | null
           created_at?: string
           id?: string
-          mood_rating?: number | null
-          notes?: string | null
+          logged_date?: string
+          mood_value?: number
           patient_id?: string
-          session_date?: string
-          session_duration?: number | null
-          stress_level?: number | null
-          technique_used?: string | null
         }
         Relationships: []
       }

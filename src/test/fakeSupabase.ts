@@ -12,9 +12,10 @@ interface Filter {
 
 class QueryBuilder implements PromiseLike<{ data: any; error: any }> {
   private filters: Filter[] = [];
-  private mode: 'select' | 'update' | 'insert' | 'delete' = 'select';
+  private mode: 'select' | 'update' | 'insert' | 'delete' | 'upsert' = 'select';
   private patch: Row | null = null;
   private inserted: Row[] = [];
+  private onConflictCols: string[] = [];
   private orderKey: string | null = null;
   private ascending = true;
   private limitN: number | null = null;
@@ -28,6 +29,13 @@ class QueryBuilder implements PromiseLike<{ data: any; error: any }> {
   insert(rows: Row | Row[]) {
     this.mode = 'insert';
     this.inserted = Array.isArray(rows) ? rows : [rows];
+    return this;
+  }
+  /** Simplificado: só olha `onConflict` pra decidir merge-vs-insert; sem upsert real de constraint. */
+  upsert(rows: Row | Row[], opts?: { onConflict?: string }) {
+    this.mode = 'upsert';
+    this.inserted = Array.isArray(rows) ? rows : [rows];
+    this.onConflictCols = opts?.onConflict ? opts.onConflict.split(',').map((c) => c.trim()) : [];
     return this;
   }
   update(patch: Row) {
@@ -109,6 +117,22 @@ class QueryBuilder implements PromiseLike<{ data: any; error: any }> {
         this.db.rows(this.table).push(...this.inserted);
         return { data: this.inserted, error: null };
       }
+      case 'upsert': {
+        const table = this.db.rows(this.table);
+        const results: Row[] = this.inserted.map((newRow) => {
+          const existing =
+            this.onConflictCols.length > 0
+              ? table.find((r) => this.onConflictCols.every((c) => r[c] === newRow[c]))
+              : undefined;
+          if (existing) {
+            Object.assign(existing, newRow);
+            return existing;
+          }
+          table.push(newRow);
+          return newRow;
+        });
+        return { data: results, error: null };
+      }
       case 'update': {
         const rows = this.matching();
         rows.forEach((r) => Object.assign(r, this.patch));
@@ -185,6 +209,28 @@ export class FakeChannel {
   }
 }
 
+export type RpcHandler = (db: FakeDB, params: Record<string, any>) => { data: any; error: any };
+
+/** Simula só o suficiente das RPCs SECURITY DEFINER de verdade pra testar
+ * hooks que dependem delas. Qualquer RPC sem handler aqui (ou em
+ * `FakeDB.rpcHandlers`, registrável por teste) resolve como no-op. */
+const DEFAULT_RPC_HANDLERS: Record<string, RpcHandler> = {
+  add_patient_activity: (db, params) => {
+    const patientId = params.p_patient_id;
+    const rows = db.rows('patient_statistics');
+    let row = rows.find((r) => r.patient_id === patientId);
+    const activity = { name: params.p_activity_name, date: params.p_activity_date };
+    if (!row) {
+      row = { patient_id: patientId, recent_activities: [activity] };
+      rows.push(row);
+    } else {
+      const current = (row.recent_activities ?? []) as Row[];
+      row.recent_activities = [activity, ...current].slice(0, 5);
+    }
+    return { data: null, error: null };
+  },
+};
+
 export class FakeDB {
   tables: Record<string, Row[]> = {};
   currentUserId: string | null = null;
@@ -192,6 +238,8 @@ export class FakeDB {
   channels: FakeChannel[] = [];
   failNextWith: any = null;
   failSelectWith: any = null;
+  /** Handlers extras/sobrepostos por teste, além dos padrões em DEFAULT_RPC_HANDLERS. */
+  rpcHandlers: Record<string, RpcHandler> = {};
 
   rows(table: string): Row[] {
     if (!this.tables[table]) this.tables[table] = [];
@@ -206,6 +254,11 @@ export class FakeDB {
     const db = this;
     return {
       from: (table: string) => new QueryBuilder(db, table),
+      rpc: (fnName: string, params?: Record<string, any>) => {
+        const handler = db.rpcHandlers[fnName] ?? DEFAULT_RPC_HANDLERS[fnName];
+        if (handler) return Promise.resolve(handler(db, params ?? {}));
+        return Promise.resolve({ data: null, error: null });
+      },
       channel: (topic: string, opts?: { config?: { presence?: { key?: string } } }) => {
         const ch = new FakeChannel(topic, opts?.config?.presence?.key ?? 'anon');
         db.channels.push(ch);
