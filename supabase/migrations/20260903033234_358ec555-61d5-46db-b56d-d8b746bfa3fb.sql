@@ -1,0 +1,1 @@
+ALTER TABLE public.group_testimonials ADD COLUMN IF NOT EXISTS sintoma_texto text;
