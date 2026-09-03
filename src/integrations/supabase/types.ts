@@ -384,7 +384,6 @@ export type Database = {
           likes_negativos: number
           likes_positivos: number
           sintoma_id: string | null
-          sintoma_texto: string | null
           texto: string
           user_id: string
         }
@@ -397,7 +396,6 @@ export type Database = {
           likes_negativos?: number
           likes_positivos?: number
           sintoma_id?: string | null
-          sintoma_texto?: string | null
           texto: string
           user_id: string
         }
@@ -410,7 +408,6 @@ export type Database = {
           likes_negativos?: number
           likes_positivos?: number
           sintoma_id?: string | null
-          sintoma_texto?: string | null
           texto?: string
           user_id?: string
         }
@@ -1463,8 +1460,6 @@ export type Database = {
       }
       subscribers: {
         Row: {
-          appointments_last_used: string | null
-          appointments_used_this_month: boolean
           created_at: string
           current_usage: Json | null
           email: string
@@ -1480,8 +1475,6 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
-          appointments_last_used?: string | null
-          appointments_used_this_month?: boolean
           created_at?: string
           current_usage?: Json | null
           email: string
@@ -1497,8 +1490,6 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
-          appointments_last_used?: string | null
-          appointments_used_this_month?: boolean
           created_at?: string
           current_usage?: Json | null
           email?: string
@@ -1788,14 +1779,6 @@ export type Database = {
         Args: { p_conversa_id: string }
         Returns: undefined
       }
-      admin_delete_testimonial: {
-        Args: { p_testimonial_id: string }
-        Returns: undefined
-      }
-      admin_update_testimonial: {
-        Args: { p_testimonial_id: string; p_texto: string }
-        Returns: undefined
-      }
       calculate_psychologist_average_rating: {
         Args: { psychologist_user_id: string }
         Returns: number
@@ -1903,22 +1886,6 @@ export type Database = {
           psicologo_nome: string
           status: string
           updated_at: string
-        }[]
-      }
-      get_admin_group_testimonials: {
-        Args: never
-        Returns: {
-          anonimo: boolean
-          autor_nome: string
-          criado_em: string
-          flagged: boolean
-          group_id: string
-          group_nome: string
-          humor: number
-          likes_negativos: number
-          likes_positivos: number
-          testimonial_id: string
-          texto: string
         }[]
       }
       get_admin_metrics: {
