@@ -10,7 +10,7 @@ interface Filter {
   apply: (row: Row) => boolean;
 }
 
-class QueryBuilder implements PromiseLike<{ data: any; error: any }> {
+class QueryBuilder implements PromiseLike<{ data: any; error: any; count?: number | null }> {
   private filters: Filter[] = [];
   private mode: 'select' | 'update' | 'insert' | 'delete' | 'upsert' = 'select';
   private patch: Row | null = null;
@@ -19,11 +19,15 @@ class QueryBuilder implements PromiseLike<{ data: any; error: any }> {
   private orderKey: string | null = null;
   private ascending = true;
   private limitN: number | null = null;
+  private countRequested = false;
+  private headOnly = false;
 
   constructor(private db: FakeDB, private table: string) {}
 
-  select(_cols?: string) {
+  select(_cols?: string, opts?: { count?: 'exact' | 'planned' | 'estimated'; head?: boolean }) {
     if (this.mode === 'select') this.mode = 'select';
+    this.countRequested = !!opts?.count;
+    this.headOnly = !!opts?.head;
     return this;
   }
   insert(rows: Row | Row[]) {
@@ -100,7 +104,7 @@ class QueryBuilder implements PromiseLike<{ data: any; error: any }> {
     return this.limitN != null ? rows.slice(0, this.limitN) : rows;
   }
 
-  private run(): { data: any; error: any } {
+  private run(): { data: any; error: any; count?: number } {
     if (this.db.failNextWith && this.mode !== 'select') {
       const error = this.db.failNextWith;
       this.db.failNextWith = null;
@@ -145,8 +149,14 @@ class QueryBuilder implements PromiseLike<{ data: any; error: any }> {
         rows.forEach((r) => all.splice(all.indexOf(r), 1));
         return { data: rows, error: null };
       }
-      default:
-        return { data: this.matching(), error: null };
+      default: {
+        const matched = this.matching();
+        return {
+          data: this.headOnly ? null : matched,
+          error: null,
+          ...(this.countRequested ? { count: matched.length } : {}),
+        };
+      }
     }
   }
 

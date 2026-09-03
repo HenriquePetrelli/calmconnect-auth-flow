@@ -15,10 +15,13 @@ import {
   Flame,
   ChevronRight,
   BarChart3,
+  BookOpen,
+  Users,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { usePatientStatistics } from "@/hooks/usePatientStatistics";
 import { useAchievements } from "@/hooks/useAchievements";
+import { usePatientEngagementMetrics } from "@/hooks/usePatientEngagementMetrics";
 import { getRelativeTime, formatDateTime } from "@/utils/dateFormatters";
 import { useWeeklyGoals } from "@/hooks/useWeeklyGoals";
 import { GoalSelectionModal } from "@/components/goals/GoalSelectionModal";
@@ -35,6 +38,12 @@ const Statistics = () => {
   const { recentActivities, statistics, loading, updateStreak } = usePatientStatistics();
   const { achievements, loading: achievementsLoading, checkAchievements } = useAchievements();
   const { goals, loading: goalsLoading, fetchGoals } = useWeeklyGoals();
+  const {
+    journalEntriesCount,
+    supportGroupParticipationCount,
+    appointmentCompletionRate,
+    loading: engagementLoading,
+  } = usePatientEngagementMetrics();
   const [goalModalOpen, setGoalModalOpen] = useState(false);
 
   useEffect(() => {
@@ -73,6 +82,7 @@ const Statistics = () => {
       icon: Activity,
       value: statistics?.total_scheduled_consultations || 0,
       label: "Consultas agendadas",
+      sublabel: appointmentCompletionRate !== null ? `${appointmentCompletionRate}% de comparecimento` : undefined,
       color: "text-primary",
       bg: "bg-primary/15",
     },
@@ -96,6 +106,20 @@ const Statistics = () => {
       label: "Sons terapêuticos",
       color: "text-secondary",
       bg: "bg-secondary/15",
+    },
+    {
+      icon: BookOpen,
+      value: journalEntriesCount,
+      label: "Anotações no diário",
+      color: "text-indigo-600",
+      bg: "bg-indigo-500/15",
+    },
+    {
+      icon: Users,
+      value: supportGroupParticipationCount,
+      label: "Grupos de apoio",
+      color: "text-amber-600",
+      bg: "bg-amber-500/15",
     },
   ];
 
@@ -223,14 +247,14 @@ const Statistics = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
-            {loading ? (
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                {[...Array(4)].map((_, i) => (
+            {loading || engagementLoading ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                {[...Array(6)].map((_, i) => (
                   <div key={i} className="h-24 rounded-lg border bg-muted/40 animate-pulse" />
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                 {statCards.map((s, i) => (
                   <div
                     key={i}
@@ -245,6 +269,11 @@ const Statistics = () => {
                     <div className="text-xs text-muted-foreground mt-1.5">
                       {s.label}
                     </div>
+                    {s.sublabel && (
+                      <div className="text-[11px] font-medium text-primary mt-0.5">
+                        {s.sublabel}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
