@@ -612,6 +612,30 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_mood_logs: {
+        Row: {
+          created_at: string
+          id: string
+          logged_date: string
+          mood_value: number
+          patient_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          logged_date: string
+          mood_value: number
+          patient_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          logged_date?: string
+          mood_value?: number
+          patient_id?: string
+        }
+        Relationships: []
+      }
       patient_progress: {
         Row: {
           anxiety_level: number | null
