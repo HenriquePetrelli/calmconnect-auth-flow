@@ -38,7 +38,7 @@ export const RejectAppointmentModal: React.FC<RejectAppointmentModalProps> = ({
     setShowRescheduleModal(true);
   };
 
-  const handleRescheduleConfirm = async (scheduledAt: string, notes: string) => {
+  const handleRescheduleConfirm = async (scheduledAt: string, notes: string): Promise<boolean> => {
     const success = await onReschedule(scheduledAt, notes);
     if (success) {
       setShowRescheduleModal(false);
@@ -46,6 +46,7 @@ export const RejectAppointmentModal: React.FC<RejectAppointmentModalProps> = ({
     }
     // On failure, stay on the RescheduleModal (error already toasted) so
     // the psychologist can pick a different date/time without starting over.
+    return success;
   };
 
   const handleRescheduleClose = () => {
