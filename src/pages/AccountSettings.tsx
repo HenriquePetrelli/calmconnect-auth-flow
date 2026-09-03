@@ -83,6 +83,15 @@ const AccountSettings = () => {
   };
 
   const handleUpdatePassword = async () => {
+    if (!formData.currentPassword) {
+      toast({
+        title: "Erro",
+        description: "Informe sua senha atual",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (formData.newPassword !== formData.confirmPassword) {
       toast({
         title: "Erro",
@@ -103,6 +112,25 @@ const AccountSettings = () => {
 
     setLoading(true);
     try {
+      // Confirm the caller actually knows the current password before
+      // changing it — updateUser() alone would let anyone with a live
+      // session (e.g. a stolen token, an unlocked shared device) lock the
+      // real owner out without ever proving they know the current one.
+      const { error: reauthError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: formData.currentPassword,
+      });
+
+      if (reauthError) {
+        toast({
+          title: "Erro",
+          description: "Senha atual incorreta",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
       const { error } = await supabase.auth.updateUser({
         password: formData.newPassword,
       });
@@ -178,6 +206,17 @@ const AccountSettings = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
+              <Label htmlFor="currentPassword">Senha Atual</Label>
+              <Input
+                id="currentPassword"
+                type="password"
+                value={formData.currentPassword}
+                onChange={(e) => setFormData((prev) => ({ ...prev, currentPassword: e.target.value }))}
+                placeholder="Digite sua senha atual"
+              />
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="newPassword">Nova Senha</Label>
               <Input
                 id="newPassword"
@@ -201,7 +240,7 @@ const AccountSettings = () => {
 
             <Button
               onClick={handleUpdatePassword}
-              disabled={loading || !formData.newPassword || !formData.confirmPassword}
+              disabled={loading || !formData.currentPassword || !formData.newPassword || !formData.confirmPassword}
               className="w-full"
               variant="outline"
             >

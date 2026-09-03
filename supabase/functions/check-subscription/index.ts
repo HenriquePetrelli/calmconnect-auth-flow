@@ -60,12 +60,14 @@ serve(async (req) => {
         current_usage: { appointments: 0, sos_uses: 0 },
         updated_at: new Date().toISOString(),
       }, { onConflict: 'email' });
-      return new Response(JSON.stringify({ 
+      return new Response(JSON.stringify({
         subscribed: false,
         plan_limits: { appointments: 0, sos_uses: 0 },
         current_usage: { appointments: 0, sos_uses: 0 },
         can_use_sos: false,
-        reason: "Usuário não possui assinatura ativa"
+        reason: "Usuário não possui assinatura ativa",
+        can_schedule_appointment: false,
+        appointment_reason: "Usuário não possui assinatura ativa"
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -120,13 +122,15 @@ serve(async (req) => {
     // Get current usage and SOS flags from database
     const { data: existingSubscriberRow } = await supabaseClient
       .from("subscribers")
-      .select("current_usage, sos_used_this_month, sos_last_used, subscribed, subscription_tier, user_id")
+      .select("current_usage, sos_used_this_month, sos_last_used, appointments_used_this_month, appointments_last_used, subscribed, subscription_tier, user_id")
       .eq("email", user.email)
       .maybeSingle();
 
     const currentUsage = existingSubscriberRow?.current_usage || { appointments: 0, sos_uses: 0 };
     let sosUsedThisMonth = existingSubscriberRow?.sos_used_this_month ?? false;
     let sosLastUsed = existingSubscriberRow?.sos_last_used ?? null as string | null;
+    let appointmentsUsedThisMonth = existingSubscriberRow?.appointments_used_this_month ?? false;
+    let appointmentsLastUsed = existingSubscriberRow?.appointments_last_used ?? null as string | null;
 
     // Compute SOS availability based on plan rules
     let canUseSOS = false;
@@ -167,6 +171,37 @@ serve(async (req) => {
       sosReason = canUseSOS ? "Pode usar SOS (PREMIUM: 1x/mês)" : "Limite mensal de SOS já utilizado (PREMIUM: 1x/mês)";
     }
 
+    // Compute appointment-scheduling availability: only Premium has any
+    // allowance (planLimits.appointments), 1x/month, same reset pattern as SOS.
+    let canScheduleAppointment = false;
+    let appointmentReason = "Sem assinatura ativa";
+    const sameMonthAppointments = appointmentsLastUsed
+      ? (new Date(appointmentsLastUsed)).getUTCFullYear() === now.getUTCFullYear() && (new Date(appointmentsLastUsed)).getUTCMonth() === now.getUTCMonth()
+      : false;
+
+    if (!hasActiveSub || !subscriptionTier) {
+      canScheduleAppointment = false;
+      appointmentReason = "Sem assinatura ativa";
+    } else if (subscriptionTier === "Plus") {
+      canScheduleAppointment = false;
+      appointmentReason = "Agendamento de consultas disponível apenas no plano Premium";
+    } else if (subscriptionTier === "Premium") {
+      // Reset monthly flag when month changed
+      if (appointmentsUsedThisMonth && appointmentsLastUsed && !sameMonthAppointments) {
+        await supabaseClient
+          .from("subscribers")
+          .update({ appointments_used_this_month: false, appointments_last_used: null, updated_at: new Date().toISOString() })
+          .eq("email", user.email);
+        appointmentsUsedThisMonth = false;
+        appointmentsLastUsed = null;
+      }
+
+      canScheduleAppointment = !appointmentsUsedThisMonth;
+      appointmentReason = canScheduleAppointment
+        ? "Pode agendar consulta (PREMIUM: 1x/mês)"
+        : "Limite mensal de consultas agendadas já utilizado (PREMIUM: 1x/mês)";
+    }
+
     // Update subscriber in database
     await supabaseClient.from("subscribers").upsert({
       email: user.email,
@@ -179,6 +214,8 @@ serve(async (req) => {
       current_usage: currentUsage,
       sos_used_this_month: sosUsedThisMonth,
       sos_last_used: sosLastUsed,
+      appointments_used_this_month: appointmentsUsedThisMonth,
+      appointments_last_used: appointmentsLastUsed,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'email' });
 
@@ -191,6 +228,8 @@ serve(async (req) => {
       current_usage: currentUsage,
       can_use_sos: canUseSOS,
       reason: sosReason,
+      can_schedule_appointment: canScheduleAppointment,
+      appointment_reason: appointmentReason,
       plan_type: subscriptionTier
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

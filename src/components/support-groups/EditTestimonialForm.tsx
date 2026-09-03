@@ -16,12 +16,14 @@ interface EditTestimonialFormProps {
     id: string;
     anonimo: boolean;
     sintoma_id: string | null;
+    sintoma_texto: string | null;
     humor: number;
     texto: string;
   };
   onSave: (testimonialId: string, updates: {
     anonimo: boolean;
     sintoma_id: string | null;
+    sintoma_texto: string | null;
     humor: number;
     texto: string;
   }) => Promise<boolean>;
@@ -30,7 +32,7 @@ interface EditTestimonialFormProps {
 
 const EditTestimonialForm = ({ groupName, testimonial, onSave, onCancel }: EditTestimonialFormProps) => {
   const [isAnonymous, setIsAnonymous] = useState(testimonial.anonimo);
-  const [selectedSymptom, setSelectedSymptom] = useState<string>(testimonial.sintoma_id || 'none');
+  const [selectedSymptom, setSelectedSymptom] = useState<string>('none');
   const [mood, setMood] = useState<number>(testimonial.humor);
   const [text, setText] = useState(testimonial.texto);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -39,23 +41,39 @@ const EditTestimonialForm = ({ groupName, testimonial, onSave, onCancel }: EditT
 
   useEffect(() => {
     setIsAnonymous(testimonial.anonimo);
-    setSelectedSymptom(testimonial.sintoma_id || 'none');
     setMood(testimonial.humor);
     setText(testimonial.texto);
   }, [testimonial]);
 
+  // Match the testimonial's stored symptom text back to an index in the
+  // group's current symptom list once it finishes loading.
+  useEffect(() => {
+    if (testimonial.sintoma_texto && symptoms.length > 0) {
+      const index = symptoms.indexOf(testimonial.sintoma_texto);
+      setSelectedSymptom(index >= 0 ? `${symptomId}-${index}` : 'none');
+    } else {
+      setSelectedSymptom('none');
+    }
+  }, [testimonial, symptoms, symptomId]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!text.trim()) {
       return;
     }
 
     setIsSubmitting(true);
 
+    const selectedIndex = selectedSymptom && selectedSymptom !== 'none'
+      ? parseInt(selectedSymptom.split('-').pop() || '-1', 10)
+      : -1;
+    const sintomaTexto = selectedIndex >= 0 ? symptoms[selectedIndex] ?? null : null;
+
     const success = await onSave(testimonial.id, {
       anonimo: isAnonymous,
-      sintoma_id: selectedSymptom === 'none' ? null : symptomId,
+      sintoma_id: sintomaTexto ? symptomId : null,
+      sintoma_texto: sintomaTexto,
       humor: mood,
       texto: text.trim()
     });

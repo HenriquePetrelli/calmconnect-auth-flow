@@ -17,6 +17,7 @@ export interface GroupTestimonial {
   user_id: string;
   anonimo: boolean;
   sintoma_id: string | null;
+  sintoma_texto: string | null;
   humor: number;
   texto: string;
   criado_em: string;
@@ -24,9 +25,6 @@ export interface GroupTestimonial {
   likes_negativos: number;
   profiles?: {
     full_name: string;
-  };
-  transtornos_sintomas?: {
-    sintomas: string[];
   };
   user_like?: {
     tipo: 'positivo' | 'negativo';
@@ -175,10 +173,7 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
       // Build query with optional user filter
       let query = supabase
         .from('group_testimonials')
-        .select(`
-          *,
-          transtornos_sintomas(sintomas)
-        `)
+        .select('*')
         .eq('group_id', groupId);
 
       // Apply user filter if requested
@@ -237,6 +232,7 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
   const addTestimonial = async (testimonial: {
     anonimo: boolean;
     sintoma_id: string | null;
+    sintoma_texto: string | null;
     humor: number;
     texto: string;
   }) => {
@@ -285,6 +281,7 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
   const updateTestimonial = async (testimonialId: string, updates: {
     anonimo: boolean;
     sintoma_id: string | null;
+    sintoma_texto: string | null;
     humor: number;
     texto: string;
   }) => {

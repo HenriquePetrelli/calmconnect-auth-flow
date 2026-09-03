@@ -61,6 +61,17 @@ const ActivityHistory = () => {
     return date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
   };
 
+  // Escape a field for CSV: wrap in quotes (doubling any internal quotes)
+  // whenever it contains a comma, quote or newline — activity names like
+  // "Sons Terapêuticos: Chuva, Trovão" would otherwise split into extra
+  // columns and corrupt the row.
+  const escapeCSVField = (value: string) => {
+    if (/[",\n]/.test(value)) {
+      return `"${value.replace(/"/g, '""')}"`;
+    }
+    return value;
+  };
+
   // Export to CSV
   const exportToCSV = () => {
     if (filteredActivities.length === 0) return;
@@ -71,7 +82,7 @@ const ActivityHistory = () => {
         const date = new Date(activity.date);
         const dateStr = date.toLocaleDateString('pt-BR');
         const timeStr = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-        return [activity.name, dateStr, timeStr].join(',');
+        return [escapeCSVField(activity.name), dateStr, timeStr].join(',');
       })
     ].join('\n');
 

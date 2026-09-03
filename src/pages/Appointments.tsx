@@ -15,12 +15,15 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 const Appointments = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { subscribed, subscriptionTier } = useSubscription();
+  const { subscribed, subscriptionTier, canScheduleAppointment, appointmentReason, checkSubscription } = useSubscription();
   const [showScheduler, setShowScheduler] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const handleScheduleSuccess = () => {
     setShowScheduler(false);
+    // O agendamento consumiu a cota mensal (Premium: 1x/mês) — recarrega
+    // pra refletir isso imediatamente na tela, sem esperar o próximo check.
+    void checkSubscription();
   };
 
   const handleScheduleClick = () => {
@@ -40,6 +43,14 @@ const Appointments = () => {
     }
 
     if (subscriptionTier === 'Premium') {
+      if (!canScheduleAppointment) {
+        toast({
+          title: "Limite mensal atingido",
+          description: appointmentReason || "Você já usou sua consulta agendada deste mês.",
+          variant: "destructive",
+        });
+        return;
+      }
       setShowScheduler(true);
     }
   };

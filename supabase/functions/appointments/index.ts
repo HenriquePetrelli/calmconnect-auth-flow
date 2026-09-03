@@ -182,8 +182,36 @@ serve(async (req) => {
       // Validate appointment_type
       const validTypes = ['regular', 'emergency'];
       const finalAppointmentType = appointment_type && validTypes.includes(appointment_type) ? appointment_type : 'regular';
-      
+
       console.log('Final appointment type:', finalAppointmentType);
+
+      // Enforce the Premium-only, 1x/month scheduling quota server-side —
+      // the client-side gate (subscriptionTier === 'Premium') can be
+      // bypassed by calling this endpoint directly, so it must never be the
+      // only check. Mirrors the same-month reset used for the SOS quota.
+      let subscriberRow: { subscription_tier: string | null; appointments_used_this_month: boolean; appointments_last_used: string | null } | null = null;
+      if (finalAppointmentType === 'regular') {
+        const { data: subRow } = await supabase
+          .from('subscribers')
+          .select('subscription_tier, appointments_used_this_month, appointments_last_used')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        subscriberRow = subRow;
+
+        if (subscriberRow?.subscription_tier !== 'Premium') {
+          throw new Error('O agendamento de consultas está disponível apenas para o plano Premium.');
+        }
+
+        const lastUsed = subscriberRow.appointments_last_used ? new Date(subscriberRow.appointments_last_used) : null;
+        const nowForQuota = new Date();
+        const sameMonth = lastUsed
+          ? lastUsed.getUTCFullYear() === nowForQuota.getUTCFullYear() && lastUsed.getUTCMonth() === nowForQuota.getUTCMonth()
+          : false;
+
+        if (subscriberRow.appointments_used_this_month && sameMonth) {
+          throw new Error('Limite mensal de consultas agendadas já utilizado (PREMIUM: 1x/mês).');
+        }
+      }
 
       // Check for scheduling conflicts - prevent overlapping appointments
       // A 50-minute appointment starting at scheduled_at will end 50 minutes later
@@ -259,6 +287,13 @@ serve(async (req) => {
         .single();
 
       if (error) throw error;
+
+      if (finalAppointmentType === 'regular') {
+        await supabase
+          .from('subscribers')
+          .update({ appointments_used_this_month: true, appointments_last_used: new Date().toISOString() })
+          .eq('user_id', user.id);
+      }
 
       // Transform appointment to ensure psychologist is properly structured
       const transformedAppointment = {

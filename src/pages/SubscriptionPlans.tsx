@@ -318,7 +318,7 @@ const SubscriptionPlans = () => {
             {subscriptionTier === "Premium" && (
               <Card className="p-4">
                 <div className="space-y-2">
-                  <h4 className="font-semibold">Plano Plus - R$ 69,99/mês</h4>
+                  <h4 className="font-semibold">Plano Plus - R$ 69,90/mês</h4>
                   <ul className="text-sm text-muted-foreground space-y-1">
                     <li>• 1 chamada emergencial por mês (25 min)</li>
                     <li>• Acesso à biblioteca de sons</li>

@@ -9,10 +9,10 @@ interface SubscriptionContextType {
   subscriptionEnd: string | null;
   planLimits: { appointments: number; sos_uses: number };
   currentUsage: { appointments: number; sos_uses: number };
+  canScheduleAppointment: boolean;
+  appointmentReason: string | null;
   loading: boolean;
   checkSubscription: () => Promise<void>;
-  canUseFeature: (feature: 'appointments' | 'sos_uses') => boolean;
-  incrementUsage: (feature: 'appointments' | 'sos_uses') => Promise<void>;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
@@ -31,6 +31,8 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
   const [planLimits, setPlanLimits] = useState({ appointments: 0, sos_uses: 0 });
   const [currentUsage, setCurrentUsage] = useState({ appointments: 0, sos_uses: 0 });
+  const [canScheduleAppointment, setCanScheduleAppointment] = useState(false);
+  const [appointmentReason, setAppointmentReason] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -59,40 +61,12 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       setSubscriptionEnd(data.subscription_end);
       setPlanLimits(data.plan_limits || { appointments: 0, sos_uses: 0 });
       setCurrentUsage(data.current_usage || { appointments: 0, sos_uses: 0 });
+      setCanScheduleAppointment(data.can_schedule_appointment ?? false);
+      setAppointmentReason(data.appointment_reason ?? null);
     } catch (error) {
       console.error('Error checking subscription:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const canUseFeature = (feature: 'appointments' | 'sos_uses'): boolean => {
-    return currentUsage[feature] < planLimits[feature];
-  };
-
-  const incrementUsage = async (feature: 'appointments' | 'sos_uses') => {
-    try {
-      const { data: session } = await supabase.auth.getSession();
-      if (!session?.session?.user?.email) return;
-
-      const newUsage = {
-        ...currentUsage,
-        [feature]: currentUsage[feature] + 1
-      };
-
-      const { error } = await supabase
-        .from('subscribers')
-        .update({ current_usage: newUsage })
-        .eq('email', session.session.user.email);
-
-      if (error) {
-        console.error('Error updating usage:', error);
-        return;
-      }
-
-      setCurrentUsage(newUsage);
-    } catch (error) {
-      console.error('Error incrementing usage:', error);
     }
   };
 
@@ -103,6 +77,8 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       setSubscriptionEnd(null);
       setPlanLimits({ appointments: 0, sos_uses: 0 });
       setCurrentUsage({ appointments: 0, sos_uses: 0 });
+      setCanScheduleAppointment(false);
+      setAppointmentReason(null);
       setLoading(false);
       return;
     }
@@ -129,10 +105,10 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         subscriptionEnd,
         planLimits,
         currentUsage,
+        canScheduleAppointment,
+        appointmentReason,
         loading,
         checkSubscription,
-        canUseFeature,
-        incrementUsage,
       }}
     >
       {children}

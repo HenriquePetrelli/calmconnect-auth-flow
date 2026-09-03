@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Lock, Check, User as UserIcon, Wind, NotebookPen, MessageCircle, BarChart3, PartyPopper, Trophy } from 'lucide-react';
+import { Lock, Check, User as UserIcon, Wind, NotebookPen, MessageCircle, BarChart3, PartyPopper, Trophy, Music2, Headphones } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 interface AchievementCardProps {
@@ -18,6 +18,8 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   undraw_chat: MessageCircle,
   undraw_profile_data: BarChart3,
   undraw_celebration: PartyPopper,
+  undraw_music: Music2,
+  undraw_headphones: Headphones,
 };
 
 export const AchievementCard = ({

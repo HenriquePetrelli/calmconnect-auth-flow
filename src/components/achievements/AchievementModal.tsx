@@ -3,7 +3,7 @@ import Confetti from 'react-confetti';
 import { useWindowSize } from '@/hooks/use-window-size';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { User as UserIcon, Wind, NotebookPen, MessageCircle, BarChart3, PartyPopper, Trophy } from 'lucide-react';
+import { User as UserIcon, Wind, NotebookPen, MessageCircle, BarChart3, PartyPopper, Trophy, Music2, Headphones } from 'lucide-react';
 
 interface AchievementModalProps {
   isOpen: boolean;
@@ -20,6 +20,8 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   undraw_chat: MessageCircle,
   undraw_profile_data: BarChart3,
   undraw_celebration: PartyPopper,
+  undraw_music: Music2,
+  undraw_headphones: Headphones,
 };
 
 export const AchievementModal = ({

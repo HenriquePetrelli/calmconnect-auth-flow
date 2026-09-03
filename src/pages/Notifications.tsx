@@ -64,10 +64,18 @@ const Notifications = () => {
       await markAsRead(notification.id);
       toast.success('Notificação marcada como lida');
     }
-    
+
     // If notification is related to an appointment, navigate to appointments
     if (notification.appointment_id) {
       navigate('/appointments');
+      return;
+    }
+
+    const text = `${notification.title} ${notification.message}`.toLowerCase();
+    if (text.includes('mensagem') || text.includes('chat') || text.includes('conversa')) {
+      navigate('/chat');
+    } else if (text.includes('conquista')) {
+      navigate('/achievements');
     }
   };
 

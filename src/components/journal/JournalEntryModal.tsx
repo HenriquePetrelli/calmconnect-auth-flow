@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 interface JournalEntryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (texto: string, humor: number) => void;
+  onSave: (texto: string, humor: number) => Promise<void>;
   editingEntry?: JournalEntry | null;
   loading?: boolean;
 }
@@ -37,15 +37,21 @@ const JournalEntryModal = ({
     }
   }, [editingEntry]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!texto.trim()) return;
-    onSave(texto.trim(), humor);
-    
+    try {
+      await onSave(texto.trim(), humor);
+    } catch {
+      // onSave já mostra o erro (toast) — mantém a modal aberta com o texto
+      // digitado pra não perder a anotação (ex.: limite diário atingido).
+      return;
+    }
+
     // Track activity only for new entries
     if (!editingEntry) {
       addActivity("Diário Privado");
     }
-    
+
     handleClose();
   };
 

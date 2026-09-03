@@ -2,7 +2,7 @@
 
 Documento vivo. Descreve funcionalidades e regras de negócio da plataforma. Deve ser atualizado sempre que uma mudança alterar comportamento, fluxo ou regra.
 
-Última atualização: 2026-08-31
+Última atualização: 2026-09-03
 
 ---
 
@@ -114,8 +114,8 @@ Status possíveis do chamado: `pending`, `accepted`, `in_progress`, `completed`,
 
 ## 5. Modelo de negócio
 
-- Planos pagos (Plus / Premium) via Stripe Checkout; portal do cliente para gestão e cancelamento.
-- O plano define o limite de uso de SOS (contabilizado no banco a cada atendimento consumido).
+- Planos pagos (Plus R$69,90 / Premium) via Stripe Checkout; portal do cliente para gestão e cancelamento. Preço do Plus é o mesmo em todas as telas (perfil, planos, modal de downgrade) e no fallback de classificação por valor do Stripe.
+- O plano define o limite de uso de SOS (contabilizado no banco a cada atendimento consumido) e, para Premium, uma cota mensal de consultas agendadas (`appointments_used_this_month`/`appointments_last_used`, mesma lógica de reset por mês corrido do SOS). A cota é aplicada tanto na UI (aviso antes de abrir o agendamento) quanto no backend (edge function `appointments` recusa o agendamento se o plano não for Premium ou a cota já tiver sido usada no mês — antes só a UI bloqueava, e a função aceitava qualquer chamada autenticada).
 - Bloqueios esperados do SOS (sem assinatura, sem cota ou conta bloqueada) são exibidos como aviso de negócio e não interrompem o app com erro de execução.
 - `check-subscription` sincroniza o estado da assinatura com o app.
 - Repasses aos psicólogos: admin acompanha atendimentos realizados e o sistema processa o fechamento semanal (segundas, 9h).
@@ -128,13 +128,13 @@ Status possíveis do chamado: `pending`, `accepted`, `in_progress`, `completed`,
 - "Meu progresso" (`/statistics`, item "Progresso" da navegação): sequência de dias consecutivos, evolução do humor (gráfico dos últimos 30 dias a partir de `patient_mood_logs`, com média e tendência simples de alta/queda/estável), metas da semana com progresso real por meta (`GoalCard`, categoria/ícone/cor), visão geral de atividades (consultas agendadas com % de comparecimento, emergenciais, respiração, sons, anotações no diário privado, participações em grupos de apoio — `usePatientEngagementMetrics`, derivada das tabelas que essas funcionalidades já usam, sem tabela nova), atalhos para conquistas (com contagem real de desbloqueadas) e histórico completo, e lista de atividades recentes.
 - Registro diário de humor pela tela inicial (`MoodAccordion`) grava tanto o agregado histórico (usado pra saber se já respondeu hoje) quanto uma entrada por dia em `patient_mood_logs` (usada pelo gráfico de evolução), e conta como atividade para a meta semanal da categoria "humor".
 - Metas semanais com reset automático toda segunda-feira (cron semanal).
-- Diário privado.
-- Conquistas e gamificação.
-- Respiração guiada com animação em canvas e transições por fase.
+- Diário privado, limite de 2 anotações por dia calculado no fuso do paciente (America/Sao_Paulo), não em UTC — evita que uma anotação perto da meia-noite conte pro dia errado. Falha ao salvar (ex.: limite atingido) mantém a modal aberta com o texto digitado, em vez de descartá-lo.
+- Conquistas e gamificação: títulos em português; além do par de conquistas por tempo de respiração guiada, há um par equivalente por tempo de sons terapêuticos ouvidos (`total_therapeutic_sound_time`), que antes não contava para nada.
+- Respiração guiada com animação em canvas e transições por fase; cada técnica listada usa o padrão de tempo (inspirar/segurar/expirar/pausar) que suas próprias instruções prometem.
 - Biblioteca de sons terapêuticos com player, categorias, playlists e feedback.
-- Grupos de apoio com depoimentos moderados.
-- Chat com o psicólogo, com retenção limitada: bloqueio de escrita após 1 mês e exclusão após 3 meses; indicador de entrega/leitura (check simples/duplo) nas mensagens próprias; notificação do navegador quando chega mensagem nova com a aba em segundo plano (sem depender de push externo).
-- Notificações in-app com contador de não lidas sincronizado.
+- Grupos de apoio: depoimento pode ser vinculado a um sintoma específico da lista do grupo (texto do sintoma escolhido é salvo, não só a referência ao grupo); moderação é manual pelo admin (ver seção 7) — depoimentos não são mais excluídos automaticamente. Nome do grupo é recuperado do banco se a tela for aberta direto ou recarregada (antes caía para o rótulo genérico "Grupo de Apoio").
+- Chat com o psicólogo, com retenção limitada: bloqueio de escrita após 1 mês e exclusão após 3 meses; indicador de entrega/leitura (check simples/duplo) nas mensagens próprias; notificação do navegador quando chega mensagem nova com a aba em segundo plano (sem depender de push externo); nova mensagem e conquista desbloqueada também geram notificação in-app para o destinatário.
+- Notificações in-app com contador de não lidas sincronizado; inserção restrita ao próprio usuário (RLS), com notificações que precisam avisar a outra parte (nova mensagem, conquista) geradas por trigger no banco.
 - Histórico de atividades paginado, retido por 3 meses.
 
 Navegação do paciente: menus lateral e inferior persistem entre Home, Chat, Consultas, Meu progresso, Notificações e Perfil (sem recarregar); subpáginas usam `PageHeader` padronizado em cor secundária.
@@ -143,8 +143,9 @@ Navegação do paciente: menus lateral e inferior persistem entre Home, Chat, Co
 
 ## 7. Administração e manutenção
 
-- Painel admin: aprovação de psicólogos, gestão de pacientes, métricas gerais, métricas de SOS e uso/moderação do chat.
+- Painel admin: aprovação de psicólogos, gestão de pacientes, métricas gerais, métricas de SOS, uso/moderação do chat e moderação de depoimentos de grupos de apoio.
 - Moderação de chat: admin vê métricas agregadas e metadados das conversas (participantes, status, contagem de mensagens, última atividade) e pode arquivar uma conversa flagrada por outro canal; o conteúdo das mensagens nunca é exposto ao admin.
+- Moderação de depoimentos de grupos de apoio (aba "Grupos"): lista todos os depoimentos com métricas de curtidas/não curtidas, destaca os que chegaram a 10 "não curtidas" como prioridade de revisão manual, e permite ao admin editar o texto ou excluir um depoimento diretamente. Substitui a exclusão automática que existia antes ao atingir 10 "não curtidas" — agora é sempre uma decisão manual do admin.
 - Edição, bloqueio e exclusão de usuários via Edge Functions com validação server-side.
 - Rotinas automáticas:
 
@@ -188,3 +189,20 @@ Navegação do paciente: menus lateral e inferior persistem entre Home, Chat, Co
   - **Limpeza**: removida a página órfã `/progress` (`Progress.tsx`, `ProgressChart.tsx`, `usePatientProgress.ts`, edge function `patient-progress`) — nunca foi linkada de lugar nenhum da navegação (o item "Progresso" sempre apontou para `/statistics`); a tabela `patient_progress` que ela usava nunca recebia uma escrita sequer.
   - Validado com Postgres local (schema/constraint/RLS de `patient_mood_logs`) e 15 novos testes cobrindo o hook de humor, o histórico, o gráfico, a sincronização de metas e o casamento de categoria por prefixo.
 - 2026-09-03 — Adicionadas mais métricas em "Meu progresso", todas derivadas de tabelas que outras funcionalidades já usam (sem tabela nova): novo hook `usePatientEngagementMetrics` traz total de anotações do diário privado (`private_journals`), total de depoimentos compartilhados em grupos de apoio (`group_testimonials`) e % de comparecimento nas consultas (`completed` sobre o total de consultas já finalizadas — concluídas, canceladas, recusadas ou falta; ignora as ainda pendentes/agendadas). A grade "Visão geral" ganhou os cards "Anotações no diário" e "Grupos de apoio" (de 4 para 6 cards), e o card de consultas agendadas ganhou a taxa de comparecimento como subtexto. Validado com 3 novos testes do hook (`usePatientEngagementMetrics.test.ts`) e 3 novos testes de integração na tela (`statisticsEngagementCards.test.tsx`); extensão de `count`/`head` no fake do Supabase usado pelos testes.
+- 2026-09-03 — Levantamento completo das funcionalidades do paciente em busca de gaps e bugs, com correção de uma rodada extensa de achados:
+  - **Moderação de depoimentos de grupos de apoio**: substituída a exclusão automática ao atingir 10 "não curtidas" por uma fila de revisão manual — novo painel admin (aba "Grupos") lista todos os depoimentos, destaca os que bateram o limite como prioridade e permite editar ou excluir. RPCs `get_admin_group_testimonials`/`admin_update_testimonial`/`admin_delete_testimonial` (`SECURITY DEFINER`, checam `is_super_admin`), novo hook `useGroupTestimonialModeration` e componente `GroupTestimonialModerationPanel`.
+  - **Preço do Plus divergente**: `Profile.tsx` e o modal de downgrade em `SubscriptionPlans.tsx` mostravam R$69,99 enquanto o card principal e o Stripe já usavam R$69,90. Unificado em R$69,90 em todo o app; conferido também o classificador de valor no Stripe (fallback por `amount`), que já estava correto.
+  - **Cota de consultas Premium não era aplicada no backend**: a UI já bloqueava agendamento sem cota, mas a edge function `appointments` aceitava a chamada de qualquer paciente autenticado, sem checar plano nem cota — bypass completo da regra de negócio via chamada direta ao endpoint. Adicionadas colunas `appointments_used_this_month`/`appointments_last_used` em `subscribers` (mesmo padrão de reset mensal do SOS), checagem e marcação de uso tanto em `check-subscription` (informa a UI) quanto na própria `appointments` (autoritativa).
+  - **Buraco na política de INSERT de `notifications`**: `WITH CHECK (auth.uid() IS NOT NULL)` permitia a qualquer paciente autenticado inserir notificação para `patient_id` de outra pessoa (spam/spoofing). Restrito a `patient_id = auth.uid()`; nenhum caminho legítimo dependia da permissão ampla.
+  - **Notificações de chat e conquista nunca eram criadas**: a tela de notificações já tinha ícone e navegação prontos para "mensagem"/"conquista", mas nada nunca inserira esse tipo de notificação. Adicionados triggers `SECURITY DEFINER` (`notify_new_message` em `mensagens`, `notify_achievement_unlocked` em `patient_achievements`) que criam a notificação para a outra parte sem nunca referenciar o conteúdo da mensagem.
+  - **Perda de anotação no diário ao atingir o limite diário**: a modal fechava e creditava a atividade mesmo quando `onSave` falhava (ex.: limite de 2/dia atingido) — texto digitado era perdido. `onSave` agora é aguardado e só fecha/credita em caso de sucesso.
+  - **Limite diário do diário calculado em UTC**: uma anotação feita, por exemplo, às 21h de Brasília (00h UTC do dia seguinte) contava para o dia errado. Corrigido para calcular o intervalo do dia no fuso do paciente (`America/Sao_Paulo`) via `date-fns-tz`.
+  - **Sintoma selecionado em depoimento de grupo nunca era salvo**: o campo `sintoma_id` referencia a linha do grupo inteiro em `transtornos_sintomas` (que guarda a lista de sintomas), não um sintoma individual — então qualquer opção escolhida no seletor gravava o mesmo id, e o card sempre mostrava o primeiro sintoma da lista do grupo, não o escolhido. Nova coluna `sintoma_texto` guarda o texto do sintoma selecionado.
+  - **Nome do grupo sumia ao recarregar/abrir link direto de `SupportGroupDetail`**: o nome só vinha de `location.state`, ausente numa navegação direta ou reload — caía para o rótulo genérico "Grupo de Apoio". Adicionado fallback buscando o nome em `support_groups` pelo id quando o state não vem preenchido.
+  - **Padrão de respiração não batia com a instrução exibida**: as técnicas "Respiração Alternada", "Respiração Equilibrada" e "4-7-8 Profundo" mostravam uma instrução (ex. "Inspire por 4, pause por 2, expire por 4") mas praticavam um padrão diferente (5-5-5 ou 4-7-8 padrão), porque o mapeamento reaproveitava padrões genéricos de outras técnicas. Adicionados padrões dedicados para as três, batendo com o que a tela promete.
+  - **Títulos de conquista em inglês**: traduzidos para português (ex. "First Step" → "Primeiro Passo"), com migração de backfill renomeando linhas já existentes sem duplicar ou perder o estado de desbloqueada.
+  - **Tempo de som terapêutico nunca contava para conquista nenhuma**: `patient_statistics.total_therapeutic_sound_time` já era rastreado, mas só o tempo de respiração entrava nas condições de desbloqueio. Adicionado par de conquistas espelhando o de respiração ("Primeiro Som" / "Ouvinte Dedicado").
+  - **Campo "Senha Atual" morto em Alterar Dados da Conta**: o estado existia mas não tinha `<Input>` associado, e a troca de senha chamava `updateUser({password})` direto, sem confirmar que quem está trocando conhece a senha atual — brecha para travar a conta do dono real a partir de uma sessão comprometida/dispositivo compartilhado. Adicionado o campo e uma reautenticação (`signInWithPassword`) antes de trocar.
+  - **Exportação CSV do histórico de atividades sem escape**: nome de atividade com vírgula (ex. "Sons Terapêuticos: Chuva, Trovão") quebrava o alinhamento das colunas no CSV exportado. Adicionado escape padrão de CSV (aspas quando o campo contém vírgula/aspas/quebra de linha).
+  - **Limpeza de código morto**: removidos `SubscriptionManagement.tsx` (órfão), três componentes não referenciados de `breathing/`, funções não usadas de `soundPrefetch.ts`, e `canUseFeature`/`incrementUsage` mortos em `SubscriptionContext`.
+  - Validado com Postgres local para cada migração nova, suíte completa (268 testes) e build de produção.

@@ -1,6 +1,9 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { fromZonedTime } from 'date-fns-tz';
+
+const PATIENT_TIMEZONE = 'America/Sao_Paulo';
 
 export interface JournalEntry {
   id: string;
@@ -50,14 +53,18 @@ export const usePrivateJournal = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuário não autenticado');
 
-      // Check daily limit (2 entries per day)
-      const today = new Date().toISOString().split('T')[0];
+      // Check daily limit (2 entries per day) — using the patient's local
+      // (Brasília) calendar day, not UTC, so entries near local midnight
+      // count against the right day.
+      const localDateStr = new Date().toLocaleDateString('en-CA', { timeZone: PATIENT_TIMEZONE });
+      const startOfLocalDay = fromZonedTime(`${localDateStr}T00:00:00`, PATIENT_TIMEZONE);
+      const startOfNextLocalDay = new Date(startOfLocalDay.getTime() + 24 * 60 * 60 * 1000);
       const { data: todayEntries, error: countError } = await supabase
         .from('private_journals')
         .select('id')
         .eq('user_id', user.id)
-        .gte('criado_em', `${today}T00:00:00.000Z`)
-        .lt('criado_em', `${today}T23:59:59.999Z`);
+        .gte('criado_em', startOfLocalDay.toISOString())
+        .lt('criado_em', startOfNextLocalDay.toISOString());
 
       if (countError) throw countError;
 

@@ -45,9 +45,19 @@ const AddTestimonialForm = ({ groupId, groupName, onSuccess, onCancel }: AddTest
 
     setIsSubmitting(true);
 
+    // The Select offers each individual symptom string from the group's
+    // symptom list, but sintoma_id only references the group-level row —
+    // it can't tell WHICH symptom was picked. Store the picked symptom's
+    // text directly so it's not lost.
+    const selectedIndex = selectedSymptom && selectedSymptom !== 'none'
+      ? parseInt(selectedSymptom.split('-').pop() || '-1', 10)
+      : -1;
+    const sintomaTexto = selectedIndex >= 0 ? symptoms[selectedIndex] ?? null : null;
+
     const success = await addTestimonial({
       anonimo: isAnonymous,
-      sintoma_id: selectedSymptom === 'none' ? null : symptomId,
+      sintoma_id: sintomaTexto ? symptomId : null,
+      sintoma_texto: sintomaTexto,
       humor: mood,
       texto: text.trim()
     });

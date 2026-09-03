@@ -102,7 +102,7 @@ const Profile = () => {
     if (subscriptionTier === "Plus") {
       return {
         name: "Plano Plus",
-        price: "R$ 69,99",
+        price: "R$ 69,90",
         features: [
           "• 1 chamada emergencial por mês",
           "• Duração: 25 minutos",

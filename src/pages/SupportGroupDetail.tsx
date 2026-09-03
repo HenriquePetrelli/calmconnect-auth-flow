@@ -26,6 +26,7 @@ interface TestimonialCardProps {
     user_id: string;
     anonimo: boolean;
     sintoma_id: string | null;
+    sintoma_texto: string | null;
     humor: number;
     texto: string;
     criado_em: string;
@@ -33,9 +34,6 @@ interface TestimonialCardProps {
     likes_negativos: number;
     profiles?: {
       full_name: string;
-    };
-    transtornos_sintomas?: {
-      sintomas: string[];
     };
     user_like?: {
       tipo: 'positivo' | 'negativo';
@@ -233,8 +231,8 @@ const SupportGroupDetail = () => {
   const [upgradeModalFeature, setUpgradeModalFeature] = useState('');
   
   const { subscribed, subscriptionTier } = useSubscription();
-  
-  const groupName = location.state?.groupName || 'Grupo de Apoio';
+
+  const [groupName, setGroupName] = useState<string>(location.state?.groupName || '');
   const { testimonials, loading: testimonialsLoading, likeTestimonial, updateTestimonial, deleteTestimonial, refetch } = useGroupTestimonials(groupId || '', filter === 'mine');
   const { symptoms, loading: symptomsLoading } = useGroupSymptoms(groupName);
 
@@ -246,6 +244,27 @@ const SupportGroupDetail = () => {
     };
     getCurrentUser();
   }, []);
+
+  // location.state is empty on a page reload or direct link — fall back to
+  // fetching the group's name from the database so the header/queries don't
+  // silently fall back to the generic "Grupo de Apoio" placeholder.
+  useEffect(() => {
+    if (groupName || !groupId) return;
+
+    const fetchGroupName = async () => {
+      const { data, error } = await supabase
+        .from('support_groups')
+        .select('nome')
+        .eq('id', groupId)
+        .single();
+
+      if (!error && data) {
+        setGroupName(data.nome);
+      }
+    };
+
+    fetchGroupName();
+  }, [groupId, groupName]);
 
   if (!groupId) {
     navigate('/support-groups');
@@ -299,12 +318,13 @@ const SupportGroupDetail = () => {
   };
 
   const isPremiumUser = subscribed && (subscriptionTier === 'Plus' || subscriptionTier === 'Premium');
+  const displayGroupName = groupName || 'Grupo de Apoio';
 
   return (
     <div className="has-tabs">
       <div className="screen">
         <PageHeader
-          title={groupName}
+          title={displayGroupName}
           backTo="/support-groups"
           rightAction={
             <Button
@@ -333,7 +353,7 @@ const SupportGroupDetail = () => {
                     <DialogTitle className="text-base sm:text-lg leading-snug">
                       Sintomas relacionados
                     </DialogTitle>
-                    <p className="text-sm text-muted-foreground">{groupName}</p>
+                    <p className="text-sm text-muted-foreground">{displayGroupName}</p>
                   </DialogHeader>
                   <div className="space-y-2">
                     {symptomsLoading ? (
@@ -476,9 +496,7 @@ const SupportGroupDetail = () => {
                   <TestimonialCard
                     key={testimonial.id}
                     testimonial={testimonial}
-                    symptomName={
-                      testimonial.transtornos_sintomas?.sintomas?.[0] || undefined
-                    }
+                    symptomName={testimonial.sintoma_texto || undefined}
                     onLike={handleLikeClick}
                     onEdit={handleEditTestimonial}
                     onDelete={handleDeleteTestimonial}

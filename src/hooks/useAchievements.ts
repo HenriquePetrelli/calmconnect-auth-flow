@@ -113,12 +113,14 @@ export const useAchievements = () => {
       // Batch check all achievements
       const toUnlock: string[] = [];
       
-      if (stats.total_guided_breathing_time > 0) toUnlock.push('First Step');
-      if (stats.total_guided_breathing_time >= 5) toUnlock.push('Deep Breather');
-      if (journalCount >= 7) toUnlock.push('Mindful Writer');
-      if (stats.total_scheduled_consultations >= 3) toUnlock.push('Therapy Follower');
-      if (stats.streak_days >= 7) toUnlock.push('Mood Tracker Pro');
-      if (stats.streak_days >= 30) toUnlock.push('Consistent Care');
+      if (stats.total_guided_breathing_time > 0) toUnlock.push('Primeiro Passo');
+      if (stats.total_guided_breathing_time >= 5) toUnlock.push('Respirador Experiente');
+      if (journalCount >= 7) toUnlock.push('Escritor Consciente');
+      if (stats.total_scheduled_consultations >= 3) toUnlock.push('Comprometido com a Terapia');
+      if (stats.streak_days >= 7) toUnlock.push('Mestre do Humor');
+      if (stats.streak_days >= 30) toUnlock.push('Cuidado Constante');
+      if (stats.total_therapeutic_sound_time > 0) toUnlock.push('Primeiro Som');
+      if (stats.total_therapeutic_sound_time >= 5) toUnlock.push('Ouvinte Dedicado');
 
       // Unlock all achievements at once
       for (const title of toUnlock) {

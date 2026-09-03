@@ -1,5 +1,3 @@
-import { soundsData } from "@/data/soundsData";
-
 const prefetched = new Set<string>();
 
 /**
@@ -19,25 +17,4 @@ export function prefetchSounds(files: string[]) {
     (link as HTMLLinkElement & { fetchPriority?: string }).fetchPriority = "low";
     document.head.appendChild(link);
   }
-}
-
-export function prefetchAllSounds() {
-  const files: string[] = [];
-  for (const cat of Object.values(soundsData.categories)) {
-    for (const s of cat.sounds) files.push(s.file);
-  }
-  for (const sub of Object.values(soundsData.subcategories)) {
-    for (const s of sub.sounds) files.push(s.file);
-  }
-  prefetchSounds(files);
-}
-
-export function prefetchCategorySounds(
-  key: string
-): void {
-  const cat =
-    (soundsData.categories as Record<string, { sounds: { file: string }[] }>)[key] ??
-    (soundsData.subcategories as Record<string, { sounds: { file: string }[] }>)[key];
-  if (!cat) return;
-  prefetchSounds(cat.sounds.map((s) => s.file));
 }
