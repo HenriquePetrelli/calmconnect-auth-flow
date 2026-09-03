@@ -12,6 +12,7 @@ import { usePsychologistSchedule } from '@/hooks/usePsychologistSchedule';
 import { usePsychologistPresence } from '@/hooks/usePsychologistPresence';
 import { usePsychologistVacation } from '@/hooks/usePsychologistVacation';
 import { usePsychologistAvailability } from '@/hooks/usePsychologistAvailability';
+import { useNotifications } from '@/hooks/useNotifications';
 import EmergencyNotifications from '@/components/psychologist/EmergencyNotifications';
 import UpcomingConsultations from '@/components/psychologist/UpcomingConsultations';
 import ConsultationHistory from '@/components/psychologist/ConsultationHistory';
@@ -40,6 +41,7 @@ const PsychologistDashboard = () => {
   const { isOnline } = usePsychologistPresence();
   const { activeVacation, loading: loadingVacation } = usePsychologistVacation();
   const { blocks: baseBlocks, loading: loadingBase, refetch: refetchBase } = usePsychologistAvailability();
+  const { unreadCount } = useNotifications();
 
   useEffect(() => {
     checkUserProfile();
@@ -194,6 +196,25 @@ const PsychologistDashboard = () => {
                 aria-label="Agenda da semana"
               >
                 <CalendarCheck className="w-[18px] h-[18px]" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative rounded-full text-white hover:bg-white/15 hover:text-white h-9 w-9"
+                onMouseEnter={() => import('./Notifications')}
+                onClick={() => navigate('/psychologist-notifications')}
+                title="Notificações"
+                aria-label="Notificações"
+              >
+                <Bell className="w-[18px] h-[18px]" />
+                {unreadCount > 0 && (
+                  <Badge
+                    variant="destructive"
+                    className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 flex items-center justify-center text-[10px] leading-none"
+                  >
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </Badge>
+                )}
               </Button>
               <Button
                 variant="ghost"

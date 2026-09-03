@@ -22,6 +22,8 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useAuth } from '@/contexts/AuthContext';
+import PageHeader from '@/components/PageHeader';
 
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -29,6 +31,7 @@ import { toast } from 'sonner';
 
 const Notifications = () => {
   const navigate = useNavigate();
+  const { userType } = useAuth();
   const {
     notifications,
     unreadCount,
@@ -65,9 +68,10 @@ const Notifications = () => {
       toast.success('Notificação marcada como lida');
     }
 
-    // If notification is related to an appointment, navigate to appointments
+    // If notification is related to an appointment, navigate to the
+    // appointments view for whichever side is looking at it.
     if (notification.appointment_id) {
-      navigate('/appointments');
+      navigate(userType === 'psychologist' ? '/psychologist-dashboard' : '/appointments');
       return;
     }
 
@@ -90,9 +94,17 @@ const Notifications = () => {
     toast.success('Todas as notificações foram excluídas');
   };
 
+  // Reused verbatim from the patient side (this page normally sits inside
+  // the patient's MainLayout, which supplies the header/back nav) —
+  // psychologists reach it via a standalone route, so it needs its own.
+  const psychologistHeader = userType === 'psychologist' && (
+    <PageHeader title="Notificações" backTo="/psychologist-dashboard" />
+  );
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-calm">
+        {psychologistHeader}
         {/* Loading Content */}
         <div className="container mx-auto px-4 py-6 max-w-2xl">
           <div className="space-y-4">
@@ -118,7 +130,8 @@ const Notifications = () => {
 
 
   return (
-    <div>
+    <div className={userType === 'psychologist' ? 'min-h-screen bg-background' : undefined}>
+      {psychologistHeader}
       <div>
         {/* Actions bar (no title/back) */}
         {(unreadCount > 0 || notifications.length > 0) && (

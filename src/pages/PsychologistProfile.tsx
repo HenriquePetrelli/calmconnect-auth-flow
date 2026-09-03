@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { LogOut, Mail, Lock, User, FileText, Pencil, Check, MessageCircle, Settings, Wallet, ChevronRight, CalendarClock } from 'lucide-react';
+import { LogOut, Mail, Lock, User, FileText, Pencil, Check, MessageCircle, Settings, Wallet, ChevronRight, CalendarClock, Bell } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -293,6 +293,20 @@ const PsychologistProfile = () => {
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium">Minha agenda</p>
               <p className="text-xs text-muted-foreground">Defina os dias e horários em que você atende</p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+          </button>
+
+          <button
+            onClick={() => navigate('/psychologist-notifications')}
+            className="w-full flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-left hover:bg-accent hover:border-primary/30 transition-colors group"
+          >
+            <div className="rounded-md bg-primary/10 p-2 group-hover:bg-primary/15 transition-colors">
+              <Bell className="w-4 h-4 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium">Notificações</p>
+              <p className="text-xs text-muted-foreground">Veja suas notificações recentes</p>
             </div>
             <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
           </button>

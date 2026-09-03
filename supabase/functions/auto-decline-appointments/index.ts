@@ -23,7 +23,7 @@ serve(async (req) => {
 
     const { data: expiredAppointments, error: selectError } = await supabase
       .from('appointments')
-      .select('id, patient_id, scheduled_at, psychologist_id')
+      .select('id, patient_id, scheduled_at, psychologist_id, appointment_type')
       .eq('status', 'pending')
       .lt('created_at', twentyFourHoursAgo.toISOString());
 
@@ -45,6 +45,26 @@ serve(async (req) => {
       if (updateError) {
         console.error('Error updating expired appointments:', updateError);
         throw updateError;
+      }
+
+      // These requests expired unanswered — nobody ever confirmed them, so
+      // the patient's monthly Premium appointment slot (marked used at
+      // booking time) must come back, same as an explicit decline.
+      const patientIdsToRelease = [
+        ...new Set(
+          expiredAppointments
+            .filter((a) => a.appointment_type === 'regular')
+            .map((a) => a.patient_id)
+        ),
+      ];
+      if (patientIdsToRelease.length > 0) {
+        const { error: quotaError } = await supabase
+          .from('subscribers')
+          .update({ appointments_used_this_month: false })
+          .in('user_id', patientIdsToRelease);
+        if (quotaError) {
+          console.error('Error releasing appointment quota for expired appointments:', quotaError);
+        }
       }
 
       console.log(`Updated ${updatedAppointments?.length || 0} appointments to declined`);

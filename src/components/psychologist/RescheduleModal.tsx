@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -27,26 +27,16 @@ import { format, setHours, setMinutes } from 'date-fns';
 import { fromZonedTime } from 'date-fns-tz';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { useAvailableTimeSlots } from '@/hooks/useAvailableTimeSlots';
 
 interface RescheduleModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (scheduledAt: string, notes: string) => void;
+  onConfirm: (scheduledAt: string, notes: string) => Promise<boolean>;
   loading?: boolean;
   originalDate: string;
 }
-
-const generateTimeSlots = (): string[] => {
-  const slots: string[] = [];
-  for (let hour = 7; hour < 24; hour++) {
-    for (let minute = 0; minute < 60; minute += 10) {
-      slots.push(`${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
-    }
-  }
-  return slots;
-};
-
-const timeSlots = generateTimeSlots();
 
 export const RescheduleModal: React.FC<RescheduleModalProps> = ({
   isOpen,
@@ -58,6 +48,25 @@ export const RescheduleModal: React.FC<RescheduleModalProps> = ({
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [notes, setNotes] = useState('');
+  const [psychologistId, setPsychologistId] = useState<string>('');
+
+  useEffect(() => {
+    if (!isOpen) return;
+    supabase.auth.getUser().then(({ data }) => setPsychologistId(data.user?.id ?? ''));
+  }, [isOpen]);
+
+  // Only offer times that fall inside the psychologist's own configured
+  // schedule (base blocks + date exceptions + vacations) — proposing a
+  // time outside it would be a reschedule nobody, not even the
+  // psychologist themselves, could actually honor.
+  const { availableSlots, isDayAvailable, loading: slotsLoading } = useAvailableTimeSlots({
+    psychologistId,
+    selectedDate,
+  });
+
+  useEffect(() => {
+    setSelectedTime('');
+  }, [selectedDate]);
 
   const originalAppointmentDate = originalDate ? new Date(originalDate) : null;
   const isValidOriginal = originalAppointmentDate && !isNaN(originalAppointmentDate.getTime());
@@ -65,7 +74,7 @@ export const RescheduleModal: React.FC<RescheduleModalProps> = ({
   const maxDate = new Date(minDate);
   maxDate.setDate(maxDate.getDate() + 7);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedDate || !selectedTime) return;
 
@@ -73,10 +82,14 @@ export const RescheduleModal: React.FC<RescheduleModalProps> = ({
     const scheduledAt = setMinutes(setHours(selectedDate, hours), minutes);
     const scheduledAtUTC = fromZonedTime(scheduledAt, 'America/Sao_Paulo');
 
-    onConfirm(scheduledAtUTC.toISOString(), notes);
-    setSelectedDate(undefined);
-    setSelectedTime('');
-    setNotes('');
+    const success = await onConfirm(scheduledAtUTC.toISOString(), notes);
+    if (success) {
+      setSelectedDate(undefined);
+      setSelectedTime('');
+      setNotes('');
+    }
+    // On failure, keep the picked date/time/notes so the psychologist
+    // doesn't have to redo them after seeing the error toast.
   };
 
   const handleClose = () => {
@@ -126,7 +139,7 @@ export const RescheduleModal: React.FC<RescheduleModalProps> = ({
                   mode="single"
                   selected={selectedDate}
                   onSelect={setSelectedDate}
-                  disabled={(date) => date < minDate || date > maxDate}
+                  disabled={(date) => date < minDate || date > maxDate || !isDayAvailable(date)}
                   initialFocus
                   locale={ptBR}
                   className={cn('p-3 pointer-events-auto')}
@@ -140,12 +153,22 @@ export const RescheduleModal: React.FC<RescheduleModalProps> = ({
               <Clock className="h-4 w-4" />
               Horário
             </Label>
-            <Select value={selectedTime} onValueChange={setSelectedTime}>
+            <Select value={selectedTime} onValueChange={setSelectedTime} disabled={!selectedDate || slotsLoading}>
               <SelectTrigger>
-                <SelectValue placeholder="Selecione um horário" />
+                <SelectValue
+                  placeholder={
+                    !selectedDate
+                      ? 'Selecione uma data primeiro'
+                      : slotsLoading
+                        ? 'Carregando horários...'
+                        : availableSlots.length === 0
+                          ? 'Nenhum horário disponível nessa data'
+                          : 'Selecione um horário'
+                  }
+                />
               </SelectTrigger>
               <SelectContent className="max-h-64">
-                {timeSlots.map((time) => (
+                {availableSlots.map((time) => (
                   <SelectItem key={time} value={time}>
                     {time}
                   </SelectItem>

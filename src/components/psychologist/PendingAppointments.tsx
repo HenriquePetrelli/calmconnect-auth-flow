@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Clock, User, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { usePsychologistSchedule } from '@/hooks/usePsychologistSchedule';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -27,31 +28,22 @@ interface Appointment {
 }
 
 const PendingAppointments = () => {
-  const { acceptAppointment, declineAppointment } = usePsychologistSchedule();
+  const { acceptAppointment, declineAppointment, fetchPendingAppointments } = usePsychologistSchedule();
+  const { toast } = useToast();
   const [pendingAppointments, setPendingAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingAppointments, setProcessingAppointments] = useState<Set<string>>(new Set());
   const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null);
 
-  // Fetch pending appointments that are properly connected to the hook
-  const fetchPendingAppointments = async () => {
-    try {
-      const { data, error } = await supabase.functions.invoke('psychologist-schedule?action=pending', {
-        method: 'GET'
-      });
-
-      if (error) throw error;
-
-      setPendingAppointments(data || []);
-    } catch (error: any) {
-      console.error('Error fetching pending appointments:', error);
-    } finally {
-      setLoading(false);
-    }
+  const loadPendingAppointments = async () => {
+    const data = await fetchPendingAppointments();
+    setPendingAppointments(data);
+    setLoading(false);
   };
 
   useEffect(() => {
-    fetchPendingAppointments();
+    loadPendingAppointments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleAccept = async (appointmentId: string) => {
@@ -94,15 +86,16 @@ const PendingAppointments = () => {
     }
   };
 
-  const handleRescheduleProposal = async (scheduledAt: string, notes: string) => {
-    if (!selectedAppointmentId) return;
-    
-    setProcessingAppointments(prev => new Set(prev).add(selectedAppointmentId));
+  const handleRescheduleProposal = async (scheduledAt: string, notes: string): Promise<boolean> => {
+    if (!selectedAppointmentId) return false;
+
+    const appointmentId = selectedAppointmentId;
+    setProcessingAppointments(prev => new Set(prev).add(appointmentId));
     try {
       const { data, error } = await supabase.functions.invoke('psychologist-schedule', {
         method: 'PUT',
         body: {
-          appointmentId: selectedAppointmentId,
+          appointmentId,
           status: 'reschedule_proposed',
           proposedScheduledAt: scheduledAt,
           proposalNotes: notes
@@ -111,14 +104,21 @@ const PendingAppointments = () => {
 
       if (error) throw error;
 
-      setPendingAppointments(prev => prev.filter(a => a.id !== selectedAppointmentId));
+      setPendingAppointments(prev => prev.filter(a => a.id !== appointmentId));
       setSelectedAppointmentId(null);
-    } catch (error) {
+      return true;
+    } catch (error: any) {
       console.error('Error proposing reschedule:', error);
+      toast({
+        title: 'Erro',
+        description: error.message || 'Erro ao propor reagendamento',
+        variant: 'destructive',
+      });
+      return false;
     } finally {
       setProcessingAppointments(prev => {
         const newSet = new Set(prev);
-        newSet.delete(selectedAppointmentId);
+        newSet.delete(appointmentId);
         return newSet;
       });
     }

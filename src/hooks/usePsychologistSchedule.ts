@@ -222,17 +222,6 @@ export const usePsychologistSchedule = () => {
     }
   };
 
-  // Check if appointment can be started (15 minutes before scheduled time)
-  const canStartAppointment = (scheduledAt: string): boolean => {
-    const now = new Date();
-    const scheduledTime = new Date(scheduledAt);
-    const timeDifference = scheduledTime.getTime() - now.getTime();
-    const minutesUntilAppointment = timeDifference / (1000 * 60);
-    
-    // Can start 15 minutes before scheduled time
-    return minutesUntilAppointment <= 15 && minutesUntilAppointment >= -60; // Until 1 hour after
-  };
-
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
@@ -256,7 +245,6 @@ export const usePsychologistSchedule = () => {
     fetchAppointmentHistory,
     updateAppointment,
     acceptAppointment,
-    declineAppointment,
-    canStartAppointment
+    declineAppointment
   };
 };

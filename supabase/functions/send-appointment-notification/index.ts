@@ -176,30 +176,26 @@ serve(async (req) => {
     }
   }
 
-  // Create in-app notification
+  // Create in-app notification. The `patient_id` column is really just
+  // "recipient id" — it's reused for a psychologist recipient the same way
+  // the chat/achievement notification triggers already do, since the RLS
+  // policy on this table only checks that column against auth.uid(),
+  // regardless of the recipient's user type.
   const notificationData: any = {
     appointment_id,
     title,
     message,
-    status: 'unread'
+    status: 'unread',
+    patient_id: recipientId,
   };
 
-  // Add recipient based on who should receive the notification
-  if (psychologist_id) {
-    // For psychologists, we need to add psychologist_id field or use a different table
-    // Since notifications table is for patients, we'll skip in-app notification for psychologists for now
-    // and just send email
-  } else {
-    notificationData.patient_id = patient_id;
-    
-    const { error: notificationError } = await supabase
-      .from('notifications')
-      .insert(notificationData);
+  const { error: notificationError } = await supabase
+    .from('notifications')
+    .insert(notificationData);
 
-    if (notificationError) {
-      console.error('Error creating notification:', notificationError);
-      throw notificationError;
-    }
+  if (notificationError) {
+    console.error('Error creating notification:', notificationError);
+    throw notificationError;
   }
 
   // Send email notification

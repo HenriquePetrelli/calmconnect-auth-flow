@@ -7,6 +7,84 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
 };
 
+type Block = { start_time: string; end_time: string };
+
+const timeToMinutes = (time: string): number => {
+  const [h, m] = time.split(':').map(Number);
+  return h * 60 + m;
+};
+
+/** Subtracts `blocked` from each range in `ranges`, truncating/splitting as needed. */
+const subtractRange = (ranges: Block[], blocked: Block): Block[] => {
+  const result: Block[] = [];
+  for (const r of ranges) {
+    const noOverlap = blocked.end_time <= r.start_time || blocked.start_time >= r.end_time;
+    if (noOverlap) {
+      result.push(r);
+      continue;
+    }
+    if (blocked.start_time > r.start_time) result.push({ start_time: r.start_time, end_time: blocked.start_time });
+    if (blocked.end_time < r.end_time) result.push({ start_time: blocked.end_time, end_time: r.end_time });
+  }
+  return result;
+};
+
+/**
+ * Server-side mirror of the same rule the patient-facing booking flow
+ * already enforces (useAvailableTimeSlots / psychologistAvailability.ts):
+ * a 50-minute slot is only real if it fits inside the psychologist's
+ * base weekly schedule, combined with that exact date's overrides, and
+ * the psychologist isn't on vacation that day. Needed here because the
+ * reschedule-proposal endpoint used to accept any time the psychologist
+ * (or a direct API call) sent, with no check against their own agenda.
+ */
+const isWithinPsychologistAvailability = async (
+  supabase: ReturnType<typeof createClient>,
+  psychologistId: string,
+  scheduledAtISO: string
+): Promise<boolean> => {
+  const scheduledDate = new Date(scheduledAtISO);
+  const brazilTime = new Date(scheduledDate.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+  const dateISO = `${brazilTime.getFullYear()}-${String(brazilTime.getMonth() + 1).padStart(2, '0')}-${String(brazilTime.getDate()).padStart(2, '0')}`;
+  const dayOfWeek = brazilTime.getDay();
+  const startMin = brazilTime.getHours() * 60 + brazilTime.getMinutes();
+  const endMin = startMin + 50;
+
+  const [{ data: vacation }, { data: baseRows }, { data: overrideRows }] = await Promise.all([
+    supabase
+      .from('psychologist_vacations')
+      .select('start_date')
+      .eq('psychologist_id', psychologistId)
+      .lte('start_date', dateISO)
+      .gte('end_date', dateISO)
+      .maybeSingle(),
+    supabase
+      .from('psychologist_availability')
+      .select('start_time, end_time')
+      .eq('psychologist_id', psychologistId)
+      .eq('day_of_week', dayOfWeek)
+      .eq('is_available', true),
+    supabase
+      .from('psychologist_availability_overrides')
+      .select('start_time, end_time, type')
+      .eq('psychologist_id', psychologistId)
+      .eq('date', dateISO),
+  ]);
+
+  if (vacation) return false;
+
+  let ranges: Block[] = (baseRows ?? []).map((r: any) => ({ start_time: r.start_time.slice(0, 5), end_time: r.end_time.slice(0, 5) }));
+  const overrides = (overrideRows ?? []).map((r: any) => ({ start_time: r.start_time.slice(0, 5), end_time: r.end_time.slice(0, 5), type: r.type as string }));
+  for (const o of overrides) {
+    if (o.type === 'bloqueio') ranges = subtractRange(ranges, o);
+  }
+  for (const o of overrides) {
+    if (o.type === 'abertura') ranges = [...ranges, { start_time: o.start_time, end_time: o.end_time }];
+  }
+
+  return ranges.some((r) => timeToMinutes(r.start_time) <= startMin && endMin <= timeToMinutes(r.end_time));
+};
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -292,8 +370,14 @@ serve(async (req) => {
         throw new Error('Invalid status for patient response. Must be "scheduled" or "declined".');
       }
     } else if (userType === 'psychologist') {
-      // Psychologists can perform all actions
-      // No additional validation needed
+      // Psychologists can perform all actions, but a proposed time must
+      // actually fall inside their own configured schedule.
+      if (status === 'reschedule_proposed' && proposedScheduledAt) {
+        const fitsSchedule = await isWithinPsychologistAvailability(supabase, user.id, proposedScheduledAt);
+        if (!fitsSchedule) {
+          throw new Error('O horário proposto está fora da sua agenda configurada.');
+        }
+      }
     } else {
       throw new Error('Access denied. Invalid user type.');
     }
@@ -327,6 +411,17 @@ serve(async (req) => {
     if (proposedScheduledAt) updateData.proposed_scheduled_at = proposedScheduledAt;
     if (proposalNotes) updateData.proposal_notes = proposalNotes;
 
+    // When the patient accepts a reschedule proposal, the appointment's
+    // actual scheduled_at must move to the proposed time — otherwise the
+    // status flips to "scheduled" but every part of the app (call entry
+    // window, "today"/"upcoming" lists, the psychologist's agenda) keeps
+    // operating off the old, already-superseded time.
+    if (userType === 'patient' && action === 'respond_reschedule' && status === 'scheduled' && appointment.proposed_scheduled_at) {
+      updateData.scheduled_at = appointment.proposed_scheduled_at;
+      updateData.proposed_scheduled_at = null;
+      updateData.proposal_notes = null;
+    }
+
     // Build update query with appropriate user filtering
     let updateQuery = supabase
       .from('appointments')
@@ -347,6 +442,22 @@ serve(async (req) => {
     if (error) {
       console.error('Error updating appointment:', error);
       throw error;
+    }
+
+    // The appointment never happened — give the patient's monthly Premium
+    // appointment slot back. It was marked used at booking time (in the
+    // `appointments` function), before anyone confirmed the request; a
+    // decline (by either side, direct or after a reschedule proposal)
+    // must not permanently burn that slot.
+    if (status === 'declined' && appointment.appointment_type === 'regular') {
+      const { error: quotaError } = await supabase
+        .from('subscribers')
+        .update({ appointments_used_this_month: false })
+        .eq('user_id', appointment.patient_id);
+      if (quotaError) {
+        console.error('Error releasing appointment quota:', quotaError);
+        // Don't fail the request over this — the decline itself already succeeded.
+      }
     }
 
     // Send notifications based on who made the change

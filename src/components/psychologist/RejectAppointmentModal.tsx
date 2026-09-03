@@ -14,7 +14,7 @@ interface RejectAppointmentModalProps {
   isOpen: boolean;
   onClose: () => void;
   onReject: () => void;
-  onReschedule: (scheduledAt: string, notes: string) => void;
+  onReschedule: (scheduledAt: string, notes: string) => Promise<boolean>;
   loading?: boolean;
   originalDate: string;
 }
@@ -38,10 +38,14 @@ export const RejectAppointmentModal: React.FC<RejectAppointmentModalProps> = ({
     setShowRescheduleModal(true);
   };
 
-  const handleRescheduleConfirm = (scheduledAt: string, notes: string) => {
-    onReschedule(scheduledAt, notes);
-    setShowRescheduleModal(false);
-    onClose();
+  const handleRescheduleConfirm = async (scheduledAt: string, notes: string) => {
+    const success = await onReschedule(scheduledAt, notes);
+    if (success) {
+      setShowRescheduleModal(false);
+      onClose();
+    }
+    // On failure, stay on the RescheduleModal (error already toasted) so
+    // the psychologist can pick a different date/time without starting over.
   };
 
   const handleRescheduleClose = () => {

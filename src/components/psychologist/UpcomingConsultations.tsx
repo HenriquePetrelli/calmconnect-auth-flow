@@ -26,12 +26,11 @@ const formatTimeUntil = (minutes: number): string => {
 
 const UpcomingConsultations = () => {
   const navigate = useNavigate();
-  const { 
-    todayAppointments: todayRaw, 
-    upcomingAppointments: upcomingRaw, 
-    loading, 
-    canStartAppointment,
-    updateAppointment 
+  const {
+    todayAppointments: todayRaw,
+    upcomingAppointments: upcomingRaw,
+    loading,
+    updateAppointment
   } = usePsychologistSchedule();
 
   const now = new Date();

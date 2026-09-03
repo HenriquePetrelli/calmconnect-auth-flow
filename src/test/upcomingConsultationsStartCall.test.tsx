@@ -40,7 +40,6 @@ describe('UpcomingConsultations — starting a call', () => {
       todayAppointments: [inProgressAppointment],
       upcomingAppointments: [],
       loading: false,
-      canStartAppointment: () => true,
       updateAppointment,
     } as any);
 
@@ -62,7 +61,6 @@ describe('UpcomingConsultations — starting a call', () => {
       todayAppointments: [inProgressAppointment],
       upcomingAppointments: [],
       loading: false,
-      canStartAppointment: () => true,
       updateAppointment,
     } as any);
 

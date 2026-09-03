@@ -298,6 +298,11 @@ const App = () => {
                       <PsychologistPayments />
                     </RouteGuard>
                   } />
+                  <Route path="/psychologist-notifications" element={
+                    <RouteGuard allowedUserTypes={['psychologist']}>
+                      <Notifications />
+                    </RouteGuard>
+                  } />
 
                   {/* Rotas do Admin */}
                   <Route path="/admin-dashboard" element={
