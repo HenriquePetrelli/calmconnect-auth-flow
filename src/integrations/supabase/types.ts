@@ -384,6 +384,7 @@ export type Database = {
           likes_negativos: number
           likes_positivos: number
           sintoma_id: string | null
+          sintoma_texto: string | null
           texto: string
           user_id: string
         }
@@ -396,6 +397,7 @@ export type Database = {
           likes_negativos?: number
           likes_positivos?: number
           sintoma_id?: string | null
+          sintoma_texto?: string | null
           texto: string
           user_id: string
         }
@@ -408,6 +410,7 @@ export type Database = {
           likes_negativos?: number
           likes_positivos?: number
           sintoma_id?: string | null
+          sintoma_texto?: string | null
           texto?: string
           user_id?: string
         }
