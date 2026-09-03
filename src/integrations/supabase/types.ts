@@ -1460,6 +1460,8 @@ export type Database = {
       }
       subscribers: {
         Row: {
+          appointments_last_used: string | null
+          appointments_used_this_month: boolean
           created_at: string
           current_usage: Json | null
           email: string
@@ -1475,6 +1477,8 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          appointments_last_used?: string | null
+          appointments_used_this_month?: boolean
           created_at?: string
           current_usage?: Json | null
           email: string
@@ -1490,6 +1494,8 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          appointments_last_used?: string | null
+          appointments_used_this_month?: boolean
           created_at?: string
           current_usage?: Json | null
           email?: string
