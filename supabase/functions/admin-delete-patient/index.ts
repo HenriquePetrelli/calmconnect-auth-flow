@@ -45,7 +45,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
     const { data: patient, error: fetchError } = await supabase
       .from("patients")
-      .select("id, user_id")
+      .select("id, user_id, full_name")
       .eq("id", patientId)
       .maybeSingle();
 
@@ -78,6 +78,15 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
     const { error: deleteError } = await supabase.from("patients").delete().eq("id", patient.id);
     if (deleteError) return json({ error: deleteError.message }, 400);
+
+    await supabase.from("admin_audit_log").insert({
+      admin_id: user.id,
+      action: "delete_patient",
+      target_type: "patient",
+      target_id: userId,
+      target_name: patient.full_name ?? null,
+      details: {},
+    });
 
     if (userId) {
       await supabase.from("profiles").delete().eq("user_id", userId);

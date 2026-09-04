@@ -7,6 +7,84 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+type Block = { start_time: string; end_time: string };
+
+const timeToMinutes = (time: string): number => {
+  const [h, m] = time.split(':').map(Number);
+  return h * 60 + m;
+};
+
+/** Subtracts `blocked` from each range in `ranges`, truncating/splitting as needed. */
+const subtractRange = (ranges: Block[], blocked: Block): Block[] => {
+  const result: Block[] = [];
+  for (const r of ranges) {
+    const noOverlap = blocked.end_time <= r.start_time || blocked.start_time >= r.end_time;
+    if (noOverlap) {
+      result.push(r);
+      continue;
+    }
+    if (blocked.start_time > r.start_time) result.push({ start_time: r.start_time, end_time: blocked.start_time });
+    if (blocked.end_time < r.end_time) result.push({ start_time: blocked.end_time, end_time: r.end_time });
+  }
+  return result;
+};
+
+/**
+ * Server-side mirror of the same rule the patient-facing booking flow
+ * already enforces (useAvailableTimeSlots / psychologistAvailability.ts):
+ * a 50-minute slot is only real if it fits inside the psychologist's base
+ * weekly schedule, combined with that exact date's overrides, and the
+ * psychologist isn't on vacation that day. Needed here because the old
+ * check only validated a fixed 7h+ window (with a dead upper bound —
+ * `hour >= 24` can never be true) against no one's actual agenda.
+ */
+const isWithinPsychologistAvailability = async (
+  supabase: ReturnType<typeof createClient>,
+  psychologistId: string,
+  scheduledAtISO: string
+): Promise<boolean> => {
+  const scheduledDate = new Date(scheduledAtISO);
+  const brazilTime = new Date(scheduledDate.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+  const dateISO = `${brazilTime.getFullYear()}-${String(brazilTime.getMonth() + 1).padStart(2, '0')}-${String(brazilTime.getDate()).padStart(2, '0')}`;
+  const dayOfWeek = brazilTime.getDay();
+  const startMin = brazilTime.getHours() * 60 + brazilTime.getMinutes();
+  const endMin = startMin + 50;
+
+  const [{ data: vacation }, { data: baseRows }, { data: overrideRows }] = await Promise.all([
+    supabase
+      .from('psychologist_vacations')
+      .select('start_date')
+      .eq('psychologist_id', psychologistId)
+      .lte('start_date', dateISO)
+      .gte('end_date', dateISO)
+      .maybeSingle(),
+    supabase
+      .from('psychologist_availability')
+      .select('start_time, end_time')
+      .eq('psychologist_id', psychologistId)
+      .eq('day_of_week', dayOfWeek)
+      .eq('is_available', true),
+    supabase
+      .from('psychologist_availability_overrides')
+      .select('start_time, end_time, type')
+      .eq('psychologist_id', psychologistId)
+      .eq('date', dateISO),
+  ]);
+
+  if (vacation) return false;
+
+  let ranges: Block[] = (baseRows ?? []).map((r: any) => ({ start_time: r.start_time.slice(0, 5), end_time: r.end_time.slice(0, 5) }));
+  const overrides = (overrideRows ?? []).map((r: any) => ({ start_time: r.start_time.slice(0, 5), end_time: r.end_time.slice(0, 5), type: r.type as string }));
+  for (const o of overrides) {
+    if (o.type === 'bloqueio') ranges = subtractRange(ranges, o);
+  }
+  for (const o of overrides) {
+    if (o.type === 'abertura') ranges = [...ranges, { start_time: o.start_time, end_time: o.end_time }];
+  }
+
+  return ranges.some((r) => timeToMinutes(r.start_time) <= startMin && endMin <= timeToMinutes(r.end_time));
+};
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -175,6 +253,18 @@ serve(async (req) => {
 
       console.log('Received appointment data:', { psychologist_id, scheduled_at, duration, appointment_type, notes });
 
+      // Cap how many booking attempts one patient can make in a short
+      // window — nothing legitimate needs more than a handful per hour,
+      // and the quota/conflict checks below still do real work per call.
+      const { data: withinBookingLimit } = await supabase.rpc('check_rate_limit', {
+        p_key: `appointments:${user.id}`,
+        p_max_requests: 10,
+        p_window_seconds: 3600,
+      });
+      if (withinBookingLimit === false) {
+        throw new Error('Muitas tentativas de agendamento em pouco tempo. Aguarde um pouco antes de tentar novamente.');
+      }
+
       if (!psychologist_id || !scheduled_at) {
         throw new Error('Psychologist ID and scheduled time are required');
       }
@@ -252,18 +342,24 @@ serve(async (req) => {
       // Advance booking rule removed - allow immediate scheduling
       const scheduledDate = new Date(scheduled_at);
 
-      // Validate allowed hours (7 AM to 11:50 PM) and 10-minute intervals in Brazil timezone
-      // Convert UTC to Brazil timezone for validation
+      // 10-minute interval check (Brazil timezone) — kept separate from the
+      // agenda check below since it's a pure formatting rule, not tied to
+      // any one psychologist.
       const brazilTime = new Date(scheduledDate.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
-      const hour = brazilTime.getHours();
       const minutes = brazilTime.getMinutes();
-      
-      if (hour < 7 || hour >= 24) {
-        throw new Error('Consultas só podem ser agendadas entre 07h e 23:50 (horário de Brasília).');
-      }
-      
+
       if (minutes % 10 !== 0) {
         throw new Error('Consultas só podem ser agendadas em intervalos de 10 minutos (ex: 08:00, 08:10, 08:20, etc.).');
+      }
+
+      // Real agenda check — the old rule only validated a fixed 7h+ window
+      // (with a dead upper bound: hour >= 24 can never be true), accepting
+      // any time on any day for any psychologist regardless of what they
+      // actually configured. The client (useAvailableTimeSlots) already
+      // only shows real slots, but this endpoint is callable directly.
+      const fitsSchedule = await isWithinPsychologistAvailability(supabase, psychologist_id, scheduled_at);
+      if (!fitsSchedule) {
+        throw new Error('Esse horário não está disponível na agenda do psicólogo selecionado.');
       }
 
       const { data: appointment, error } = await supabase

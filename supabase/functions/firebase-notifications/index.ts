@@ -8,13 +8,81 @@ const corsHeaders = {
 interface NotificationPayload {
   title: string;
   body: string;
-  data?: Record<string, any>;
-  topic?: string;
+  data?: Record<string, string>;
+  /** Explicit token list — the only targeting mode supported today. */
   tokens?: string[];
 }
 
+interface ServiceAccount {
+  client_email: string;
+  private_key: string;
+  project_id: string;
+}
+
+const base64url = (bytes: Uint8Array): string =>
+  btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+const pemToArrayBuffer = (pem: string): ArrayBuffer => {
+  const b64 = pem
+    .replace(/-----BEGIN PRIVATE KEY-----/, '')
+    .replace(/-----END PRIVATE KEY-----/, '')
+    .replace(/\s/g, '');
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes.buffer;
+};
+
+/**
+ * FCM's legacy `fcm.googleapis.com/fcm/send` HTTP API (server key + a
+ * bare `key=` header) was shut down by Google in June 2024. The only way
+ * to send today is the HTTP v1 API, which is authenticated with a
+ * short-lived OAuth2 access token obtained via a signed JWT — this
+ * exchanges a Firebase service account for that token, entirely with the
+ * Web Crypto API already built into Deno (no extra dependency).
+ */
+const getAccessToken = async (serviceAccount: ServiceAccount): Promise<string> => {
+  const header = { alg: 'RS256', typ: 'JWT' };
+  const now = Math.floor(Date.now() / 1000);
+  const claims = {
+    iss: serviceAccount.client_email,
+    scope: 'https://www.googleapis.com/auth/firebase.messaging',
+    aud: 'https://oauth2.googleapis.com/token',
+    iat: now,
+    exp: now + 3600,
+  };
+
+  const encoder = new TextEncoder();
+  const unsigned = `${base64url(encoder.encode(JSON.stringify(header)))}.${base64url(encoder.encode(JSON.stringify(claims)))}`;
+
+  const key = await crypto.subtle.importKey(
+    'pkcs8',
+    pemToArrayBuffer(serviceAccount.private_key),
+    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const signature = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', key, encoder.encode(unsigned));
+  const jwt = `${unsigned}.${base64url(new Uint8Array(signature))}`;
+
+  const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion: jwt,
+    }),
+  });
+
+  if (!tokenResponse.ok) {
+    throw new Error(`Failed to obtain FCM access token: ${await tokenResponse.text()}`);
+  }
+
+  const { access_token } = await tokenResponse.json();
+  return access_token;
+};
+
 Deno.serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -32,7 +100,11 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Verify authentication
+    // This function is meant to be called server-to-server (from another
+    // edge function that just wrote a notification) as well as by a
+    // logged-in user's own client, so both a service-role caller (no user
+    // JWT) and an authenticated user are accepted — but a bare request
+    // with neither is not.
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(
@@ -40,16 +112,18 @@ Deno.serve(async (req) => {
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
-
-    if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid token' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    const callerToken = authHeader.replace('Bearer ', '');
+    const isServiceRoleCall = callerToken === Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    let callerUserId: string | null = null;
+    if (!isServiceRoleCall) {
+      const { data: { user }, error: authError } = await supabase.auth.getUser(callerToken);
+      if (authError || !user) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid token' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      callerUserId = user.id;
     }
 
     const payload: NotificationPayload = await req.json();
@@ -60,89 +134,80 @@ Deno.serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+    if (!payload.tokens || payload.tokens.length === 0) {
+      return new Response(
+        JSON.stringify({ error: 'tokens must be provided (a non-empty array)' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
-    // Get Firebase server key from secrets
-    const firebaseServerKey = Deno.env.get('FIREBASE_SERVER_KEY');
-    if (!firebaseServerKey) {
+    // Requires three secrets from a Firebase service account JSON
+    // (Project Settings → Service Accounts → Generate new private key):
+    // FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY, FIREBASE_PROJECT_ID.
+    const serviceAccount: ServiceAccount = {
+      client_email: Deno.env.get('FIREBASE_CLIENT_EMAIL') ?? '',
+      private_key: (Deno.env.get('FIREBASE_PRIVATE_KEY') ?? '').replace(/\\n/g, '\n'),
+      project_id: Deno.env.get('FIREBASE_PROJECT_ID') ?? '',
+    };
+    if (!serviceAccount.client_email || !serviceAccount.private_key || !serviceAccount.project_id) {
       return new Response(
         JSON.stringify({ error: 'Firebase configuration not found' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Prepare FCM message
-    let fcmMessage: any = {
-      notification: {
-        title: payload.title,
-        body: payload.body,
-      },
-      data: payload.data || {},
-    };
+    const accessToken = await getAccessToken(serviceAccount);
 
-    // Send to topic or specific tokens
-    if (payload.topic) {
-      fcmMessage.to = `/topics/${payload.topic}`;
-    } else if (payload.tokens && payload.tokens.length > 0) {
-      fcmMessage.registration_ids = payload.tokens;
-    } else {
-      return new Response(
-        JSON.stringify({ error: 'Either topic or tokens must be provided' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Send notification via FCM
-    const fcmResponse = await fetch('https://fcm.googleapis.com/fcm/send', {
-      method: 'POST',
-      headers: {
-        'Authorization': `key=${firebaseServerKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(fcmMessage),
-    });
-
-    const fcmResult = await fcmResponse.json();
-
-    if (!fcmResponse.ok) {
-      console.error('FCM Error:', fcmResult);
-      return new Response(
-        JSON.stringify({ error: 'Failed to send notification', details: fcmResult }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Log notification sent
-    console.log(`Notification sent successfully:`, {
-      title: payload.title,
-      topic: payload.topic,
-      tokens_count: payload.tokens?.length || 0,
-      fcm_response: fcmResult
-    });
-
-    // Store notification in database for tracking
-    const { error: logError } = await supabase
-      .from('notification_logs')
-      .insert({
-        user_id: user.id,
-        title: payload.title,
-        body: payload.body,
-        topic: payload.topic,
-        recipient_count: fcmResult.success || 1,
-        fcm_response: fcmResult,
-      });
-
-    if (logError) {
-      console.error('Error logging notification:', logError);
-    }
-
-    return new Response(
-      JSON.stringify({ 
-        message: 'Notification sent successfully',
-        result: fcmResult 
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    // The v1 API takes one token per request — send them in parallel and
+    // report per-token success so a handful of stale tokens (uninstalled
+    // app, revoked permission) don't look like a total failure.
+    const results = await Promise.all(
+      payload.tokens.map(async (token) => {
+        const response = await fetch(
+          `https://fcm.googleapis.com/v1/projects/${serviceAccount.project_id}/messages:send`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              message: {
+                token,
+                notification: { title: payload.title, body: payload.body },
+                data: payload.data ?? {},
+              },
+            }),
+          }
+        );
+        const body = await response.json();
+        return { token, ok: response.ok, body };
+      })
     );
 
+    const successCount = results.filter((r) => r.ok).length;
+
+    // Tokens FCM reports as unregistered/invalid will never succeed again
+    // — deactivate them so future sends stop wasting a call on them.
+    const deadTokens = results
+      .filter((r) => !r.ok && (r.body?.error?.status === 'NOT_FOUND' || r.body?.error?.status === 'INVALID_ARGUMENT'))
+      .map((r) => r.token);
+    if (deadTokens.length > 0) {
+      await supabase.from('fcm_tokens').update({ is_active: false }).in('token', deadTokens);
+    }
+
+    await supabase.from('notification_logs').insert({
+      user_id: callerUserId,
+      title: payload.title,
+      body: payload.body,
+      recipient_count: successCount,
+      fcm_response: { results },
+    });
+
+    return new Response(
+      JSON.stringify({ message: 'Notifications processed', sent: successCount, total: payload.tokens.length }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   } catch (error) {
     console.error('Error in firebase-notifications function:', error);
     return new Response(

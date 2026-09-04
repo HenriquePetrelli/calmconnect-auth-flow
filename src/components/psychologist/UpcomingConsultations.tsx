@@ -4,13 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clock, User, Calendar, MessageSquare, Video } from 'lucide-react';
+import { Clock, User, Calendar, MessageSquare, Video, History } from 'lucide-react';
 import { usePsychologistSchedule } from '@/hooks/usePsychologistSchedule';
 import { format, isToday, isTomorrow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { formatBrazilTime, formatTimeOnly } from '@/utils/timezone';
 import { Badge as BadgeUI } from '@/components/ui/badge';
 import PendingAppointments from './PendingAppointments';
+import { PatientHistoryModal } from './PatientHistoryModal';
 
 const formatTimeUntil = (minutes: number): string => {
   const total = Math.max(0, Math.floor(minutes));
@@ -56,6 +57,7 @@ const UpcomingConsultations = () => {
   });
   
   const [startingAppointments, setStartingAppointments] = useState<Set<string>>(new Set());
+  const [historyTarget, setHistoryTarget] = useState<{ id: string; name: string } | null>(null);
 
   const handleStartConsultation = async (appointmentId: string) => {
     setStartingAppointments(prev => new Set(prev).add(appointmentId));
@@ -168,6 +170,15 @@ const UpcomingConsultations = () => {
                     </Button>
                   );
                 })()}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setHistoryTarget({ id: appointment.patient_id, name: appointment.patient.full_name })}
+                  title="Ver histórico do paciente"
+                  aria-label="Ver histórico do paciente"
+                >
+                  <History className="w-4 h-4" />
+                </Button>
               </div>
             </div>
           </div>
@@ -244,6 +255,13 @@ const UpcomingConsultations = () => {
           </CardContent>
         </Card>
       )}
+
+      <PatientHistoryModal
+        isOpen={!!historyTarget}
+        onClose={() => setHistoryTarget(null)}
+        patientId={historyTarget?.id ?? null}
+        patientName={historyTarget?.name ?? ''}
+      />
     </div>
   );
 };

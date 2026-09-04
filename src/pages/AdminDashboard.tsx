@@ -26,6 +26,8 @@ import {
   LifeBuoy,
   MessageSquare,
   MessageSquareWarning,
+  History,
+  Bell,
 } from 'lucide-react';
 import AdminProfile from '@/components/AdminProfile';
 import { PsychologistApprovalPanel } from '@/components/psychologist/PsychologistApprovalPanel';
@@ -34,8 +36,11 @@ import { PaymentsPanel } from '@/components/payments/PaymentsPanel';
 import { SosHistoryPanel } from '@/components/sos/SosHistoryPanel';
 import { ChatModerationPanel } from '@/components/admin/ChatModerationPanel';
 import { GroupTestimonialModerationPanel } from '@/components/admin/GroupTestimonialModerationPanel';
+import { AuditLogPanel } from '@/components/admin/AuditLogPanel';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { useNotifications } from '@/hooks/useNotifications';
 
 interface AdminMetrics {
   total_patients: number;
@@ -56,6 +61,7 @@ const AdminDashboard = () => {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { unreadCount } = useNotifications();
 
   const navItems = [
     { value: 'overview', label: 'Visão Geral', icon: LayoutDashboard },
@@ -65,6 +71,7 @@ const AdminDashboard = () => {
     { value: 'chat', label: 'Chat', icon: MessageSquare },
     { value: 'groups', label: 'Grupos', icon: MessageSquareWarning },
     { value: 'payments', label: 'Pagamentos', icon: CreditCard },
+    { value: 'audit', label: 'Auditoria', icon: History },
     { value: 'profile', label: 'Perfil', icon: UserCog },
   ] as const;
 
@@ -243,6 +250,25 @@ const AdminDashboard = () => {
               </h1>
             </div>
             <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative rounded-full text-white hover:bg-white/15 hover:text-white h-9 w-9"
+                onMouseEnter={() => import('./Notifications')}
+                onClick={() => navigate('/admin-notifications')}
+                title="Notificações"
+                aria-label="Notificações"
+              >
+                <Bell className="w-[18px] h-[18px]" />
+                {unreadCount > 0 && (
+                  <Badge
+                    variant="destructive"
+                    className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 flex items-center justify-center text-[10px] leading-none"
+                  >
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </Badge>
+                )}
+              </Button>
               <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
                 <SheetTrigger asChild>
                   <Button
@@ -333,7 +359,7 @@ const AdminDashboard = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-          <TabsList className="hidden md:grid w-full h-auto p-1 bg-muted/60 grid-cols-8 gap-1 rounded-lg">
+          <TabsList className="hidden md:grid w-full h-auto p-1 bg-muted/60 grid-cols-9 gap-1 rounded-lg">
             <TabsTrigger value="overview" className={tabTriggerClass}>
               <LayoutDashboard className="w-4 h-4 shrink-0" />
               <span>Visão Geral</span>
@@ -361,6 +387,10 @@ const AdminDashboard = () => {
             <TabsTrigger value="payments" className={tabTriggerClass}>
               <CreditCard className="w-4 h-4 shrink-0" />
               <span>Pagamentos</span>
+            </TabsTrigger>
+            <TabsTrigger value="audit" className={tabTriggerClass}>
+              <History className="w-4 h-4 shrink-0" />
+              <span>Auditoria</span>
             </TabsTrigger>
             <TabsTrigger value="profile" className={tabTriggerClass}>
               <UserCog className="w-4 h-4 shrink-0" />
@@ -540,6 +570,9 @@ const AdminDashboard = () => {
             <PaymentsPanel />
           </TabsContent>
 
+          <TabsContent value="audit" className="mt-4">
+            <AuditLogPanel />
+          </TabsContent>
 
           <TabsContent value="profile" className="mt-4">
             <AdminProfile />

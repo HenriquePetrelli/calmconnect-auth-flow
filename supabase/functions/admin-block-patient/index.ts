@@ -98,6 +98,15 @@ Deno.serve(async (req: Request): Promise<Response> => {
       .eq("id", patient_id)
       .maybeSingle();
 
+    await supabase.from("admin_audit_log").insert({
+      admin_id: user.id,
+      action: action === "block" ? "block_patient" : "unblock_patient",
+      target_type: "patient",
+      target_id: updated?.user_id ?? null,
+      target_name: updated?.full_name ?? null,
+      details: action === "block" ? { duration, reason } : {},
+    });
+
     return json({
       success: true,
       data: updated,

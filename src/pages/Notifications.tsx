@@ -75,6 +75,13 @@ const Notifications = () => {
       return;
     }
 
+    if (userType === 'admin') {
+      // Admin notifications (new psychologist registration, etc.) all lead
+      // back to the dashboard — the admin picks the relevant tab there.
+      navigate('/admin-dashboard');
+      return;
+    }
+
     const text = `${notification.title} ${notification.message}`.toLowerCase();
     if (text.includes('mensagem') || text.includes('chat') || text.includes('conversa')) {
       navigate('/chat');
@@ -96,15 +103,20 @@ const Notifications = () => {
 
   // Reused verbatim from the patient side (this page normally sits inside
   // the patient's MainLayout, which supplies the header/back nav) —
-  // psychologists reach it via a standalone route, so it needs its own.
-  const psychologistHeader = userType === 'psychologist' && (
-    <PageHeader title="Notificações" backTo="/psychologist-dashboard" />
+  // psychologists and admins reach it via a standalone route, so it needs
+  // its own header there.
+  const isStandalone = userType === 'psychologist' || userType === 'admin';
+  const standaloneHeader = isStandalone && (
+    <PageHeader
+      title="Notificações"
+      backTo={userType === 'psychologist' ? '/psychologist-dashboard' : '/admin-dashboard'}
+    />
   );
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-calm">
-        {psychologistHeader}
+        {standaloneHeader}
         {/* Loading Content */}
         <div className="container mx-auto px-4 py-6 max-w-2xl">
           <div className="space-y-4">
@@ -130,8 +142,8 @@ const Notifications = () => {
 
 
   return (
-    <div className={userType === 'psychologist' ? 'min-h-screen bg-background' : undefined}>
-      {psychologistHeader}
+    <div className={isStandalone ? 'min-h-screen bg-background' : undefined}>
+      {standaloneHeader}
       <div>
         {/* Actions bar (no title/back) */}
         {(unreadCount > 0 || notifications.length > 0) && (

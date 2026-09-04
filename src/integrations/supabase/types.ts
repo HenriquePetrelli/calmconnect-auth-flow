@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          id: string
+          admin_id: string
+          action: string
+          target_type: string
+          target_id: string | null
+          target_name: string | null
+          details: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          admin_id: string
+          action: string
+          target_type: string
+          target_id?: string | null
+          target_name?: string | null
+          details?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          admin_id?: string
+          action?: string
+          target_type?: string
+          target_id?: string | null
+          target_name?: string | null
+          details?: Json
+          created_at?: string
+        }
+        Relationships: []
+      }
       admin_users: {
         Row: {
           created_at: string
@@ -1891,6 +1924,20 @@ export type Database = {
         }[]
       }
       gerenciar_expiracao_conversas: { Args: never; Returns: undefined }
+      get_admin_audit_log: {
+        Args: { p_limit?: number; p_offset?: number }
+        Returns: {
+          id: string
+          admin_id: string
+          admin_name: string | null
+          action: string
+          target_type: string
+          target_id: string | null
+          target_name: string | null
+          details: Json
+          created_at: string
+        }[]
+      }
       get_admin_conversas_overview: {
         Args: never
         Returns: {

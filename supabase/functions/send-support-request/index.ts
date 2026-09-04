@@ -70,6 +70,23 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Each send costs a real email via Resend and creates a ticket for a
+    // human to read — cap how many a session can fire off.
+    const { data: withinLimit } = await supabase.rpc('check_rate_limit', {
+      p_key: `support-request:${user.id}`,
+      p_max_requests: 3,
+      p_window_seconds: 3600,
+    });
+    if (withinLimit === false) {
+      return new Response(
+        JSON.stringify({ error: "Muitas solicitações em pouco tempo. Aguarde antes de enviar outra." }),
+        {
+          status: 429,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
     // Save support ticket to database
     const { data: ticket, error: dbError } = await supabase
       .from('support_tickets')

@@ -310,6 +310,11 @@ const App = () => {
                       <AdminDashboard />
                     </RouteGuard>
                   } />
+                  <Route path="/admin-notifications" element={
+                    <RouteGuard allowedUserTypes={['admin']}>
+                      <Notifications />
+                    </RouteGuard>
+                  } />
 
                     {/* Rota 404 */}
                     <Route path="*" element={<NotFound />} />

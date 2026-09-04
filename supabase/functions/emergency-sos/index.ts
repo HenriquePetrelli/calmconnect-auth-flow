@@ -68,7 +68,19 @@ serve(async (req) => {
 
     if (req.method === 'POST') {
       console.log('🆘 POST request - Creating emergency request for patient:', user.id);
-      
+
+      // Cap rapid-fire create/cancel cycles from flooding the psychologist
+      // queue — a real crisis doesn't need more than a handful of attempts
+      // in a short window.
+      const { data: withinLimit } = await supabase.rpc('check_rate_limit', {
+        p_key: `emergency-sos:${user.id}`,
+        p_max_requests: 5,
+        p_window_seconds: 600,
+      });
+      if (withinLimit === false) {
+        throw new Error('Muitas tentativas em pouco tempo. Aguarde alguns minutos antes de tentar novamente.');
+      }
+
       // A patient that is already inside an open flow must be sent back to it
       // instead of creating a duplicated request.
       const { data: existingRequest } = await supabase
@@ -182,9 +194,39 @@ serve(async (req) => {
         throw psychError;
       }
 
-      // TODO: Send push notifications to online psychologists
-      // This would integrate with Firebase Cloud Messaging
-      // Removed sensitive logging for security
+      // Push online psychologists' devices even if none of them has the
+      // dashboard tab open — that's exactly the gap the in-app realtime
+      // queue and Web Notifications can't cover on their own. Best-effort:
+      // a push failure must never block SOS creation itself.
+      try {
+        const onlineSince = new Date(Date.now() - 3 * 60_000).toISOString();
+        const { data: onlinePsychs } = await supabase
+          .from('psychologist_presence')
+          .select('psychologist_id')
+          .gte('last_online', onlineSince);
+
+        const onlineIds = (onlinePsychs ?? []).map((p) => p.psychologist_id);
+        if (onlineIds.length > 0) {
+          const { data: tokens } = await supabase
+            .from('fcm_tokens')
+            .select('token')
+            .in('user_id', onlineIds)
+            .eq('is_active', true);
+
+          if (tokens && tokens.length > 0) {
+            await supabase.functions.invoke('firebase-notifications', {
+              body: {
+                title: 'Nova solicitação de emergência',
+                body: 'Um paciente precisa de atendimento imediato.',
+                tokens: tokens.map((t) => t.token),
+                data: { type: 'sos', emergency_request_id: emergencyRequest.id },
+              },
+            });
+          }
+        }
+      } catch (pushError) {
+        console.error('Error sending SOS push notification:', pushError);
+      }
 
       return new Response(
         JSON.stringify({

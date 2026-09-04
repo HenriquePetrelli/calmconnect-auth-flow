@@ -173,6 +173,15 @@ serve(async (req: Request): Promise<Response> => {
       .eq("id", psychologist_id)
       .single();
 
+    await supabase.from("admin_audit_log").insert({
+      admin_id: user.id,
+      action: "update_psychologist",
+      target_type: "psychologist",
+      target_id: current.user_id ?? null,
+      target_name: updated?.full_name ?? null,
+      details: { fields_changed: Object.keys(updates), password_changed: typeof password === "string" && password.length > 0 },
+    });
+
     return json({ success: true, data: updated, message: "Informações atualizadas com sucesso" });
   } catch (error: any) {
     console.error("admin-update-psychologist error:", error);

@@ -6,6 +6,7 @@ import { ArrowLeft, Crown, LogOut, Settings, User as UserIcon, MessageCircle, Ed
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { DailyMoodToggle } from "@/components/DailyMoodToggle";
+import { PushNotificationToggle } from "@/components/PushNotificationToggle";
 import { Switch } from "@/components/ui/switch";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -272,6 +273,8 @@ const Profile = () => {
                     </div>
                     <ThemeToggle />
                   </div>
+
+                  <PushNotificationToggle />
 
                   <div className="py-4">
                     <DailyMoodToggle />

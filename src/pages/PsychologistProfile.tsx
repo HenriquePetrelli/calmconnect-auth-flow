@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { LogOut, Mail, Lock, User, FileText, Pencil, Check, MessageCircle, Settings, Wallet, ChevronRight, CalendarClock, Bell } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { PushNotificationToggle } from '@/components/PushNotificationToggle';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SPECIALIZATIONS } from '@/data/specializations';
 import { PasswordChangeModal } from '@/components/psychologist/PasswordChangeModal';
@@ -270,14 +271,15 @@ const PsychologistProfile = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><Settings className="w-4 h-4" /> Configurações</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
+        <CardContent className="space-y-4 divide-y divide-border">
+          <div className="flex items-center justify-between pb-4">
             <div>
               <p className="text-sm font-medium">Modo escuro</p>
               <p className="text-xs text-muted-foreground">Alterne entre tema claro e escuro</p>
             </div>
             <ThemeToggle />
           </div>
+          <PushNotificationToggle />
         </CardContent>
       </Card>
 

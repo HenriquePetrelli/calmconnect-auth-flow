@@ -106,6 +106,15 @@ Deno.serve(async (req: Request): Promise<Response> => {
       .eq("id", patient.id)
       .maybeSingle();
 
+    await supabase.from("admin_audit_log").insert({
+      admin_id: user.id,
+      action: "update_patient",
+      target_type: "patient",
+      target_id: patient.user_id ?? null,
+      target_name: name,
+      details: { password_changed: !!password, email_changed: mail !== patient.email },
+    });
+
     return json({ success: true, data: updated, message: "Paciente atualizado com sucesso" });
   } catch (error: any) {
     console.error("admin-update-patient error:", error);
