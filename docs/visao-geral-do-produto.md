@@ -2,7 +2,7 @@
 
 Documento vivo. Descreve funcionalidades e regras de negócio da plataforma. Deve ser atualizado sempre que uma mudança alterar comportamento, fluxo ou regra.
 
-Última atualização: 2026-09-03
+Última atualização: 2026-09-04
 
 ---
 
@@ -148,6 +148,7 @@ Navegação do paciente: menus lateral e inferior persistem entre Home, Chat, Co
 - Moderação de chat: admin vê métricas agregadas e metadados das conversas (participantes, status, contagem de mensagens, última atividade) e pode arquivar uma conversa flagrada por outro canal; o conteúdo das mensagens nunca é exposto ao admin.
 - Moderação de depoimentos de grupos de apoio (aba "Grupos"): lista todos os depoimentos com métricas de curtidas/não curtidas, destaca os que chegaram a 10 "não curtidas" como prioridade de revisão manual, e permite ao admin editar o texto ou excluir um depoimento diretamente. Substitui a exclusão automática que existia antes ao atingir 10 "não curtidas" — agora é sempre uma decisão manual do admin.
 - Edição, bloqueio e exclusão de usuários via Edge Functions com validação server-side.
+- Criação de conta de administrador não existe como fluxo do app (nem tela, nem endpoint) — é sempre manual, direto no painel do Supabase. Ver `docs/creating-an-admin-account.md`.
 - Rotinas automáticas:
 
 | Rotina | Frequência |
@@ -214,3 +215,10 @@ Navegação do paciente: menus lateral e inferior persistem entre Home, Chat, Co
   - **Proposta de reagendamento do psicólogo ignorava a agenda real configurada**: `RescheduleModal` oferecia horários fixos de 7h às 23h50 de 10 em 10 minutos, podendo propor (sem validação nenhuma no backend) um horário em que o próprio psicólogo não atende ou está de férias. Passou a reaproveitar `useAvailableTimeSlots` (mesmo hook do agendamento do paciente) para só oferecer horários que cabem na agenda real; `psychologist-schedule/index.ts` valida de novo no backend antes de salvar. Modal só fecha em caso de sucesso, preservando a seleção se a proposta for rejeitada.
   - **Limpeza de código morto**: removida `canStartAppointment` de `usePsychologistSchedule` — não era chamada em lugar nenhum, e tinha uma regra (libera 15 min antes) diferente da que o componente realmente usa (só dentro da janela exata). `PendingAppointments.tsx` parou de duplicar `fetchPendingAppointments` e passou a usar a função já exposta pelo hook.
   - Validado com typecheck, suíte completa (268 testes) e build de produção; lógica de disponibilidade do backend espelha fielmente a já testada em `psychologistAvailability.ts`/`useAvailableTimeSlots`.
+- 2026-09-04 — Mesmo levantamento de gaps e bugs, agora do lado do admin, com correção de todos os achados:
+  - **`create-admin-account` não verificava absolutamente nada**: sem header de autorização, sem checar usuário, sem checar admin — qualquer requisição HTTP criava uma conta de administrador completa. Não havia tela ligada a nenhuma rota do app chamando essa função (`AdminCreateForm.tsx` e o script `adminSetup.ts` nunca foram roteados), mas isso não protegia nada: a edge function ficava publicada e chamável direto pela URL. Removida por completo — a função, `AdminCreateForm.tsx`, `adminSetup.ts` e `scripts/setupAdmin.ts`. Criação de admin passa a ser sempre manual, direto no painel do Supabase; ver `docs/creating-an-admin-account.md`.
+  - **Troca de senha do admin não verificava a senha atual**: `AdminProfile.tsx` só checava se o campo "Senha Atual" não estava vazio, nunca se o valor batia com a senha de verdade — mesma brecha já corrigida no paciente e que o psicólogo nunca teve. Adicionada reautenticação (`signInWithPassword`) antes de trocar, igual aos outros dois perfis.
+  - **`payment-sync` sem autenticação nenhuma**: diferente de `confirm-payment` (que corretamente exige admin), o endpoint que recalcula os valores pendentes de pagamento de todos os psicólogos era público. Adicionada a mesma checagem de `is_super_admin`; `verify_jwt` também ligado no `config.toml`.
+  - **`is_admin()` travada em `SELECT false` desde uma migração antiga** ("Simplified for now", nunca corrigida) — a única função que a usava (`admin-psychologist-management`, edge function sem nenhuma tela usando ela hoje) ficava permanentemente bloqueada até para admins de verdade. Trocado para `is_super_admin()` (a mesma que todo o resto do código já usa) e removida a função quebrada.
+  - **Excluir um psicólogo não limpava `psychologist_availability_overrides` nem `psychologist_vacations`**: as duas tabelas foram criadas sem chave estrangeira nenhuma, então linhas de bloqueios pontuais e férias de um psicólogo excluído ficavam órfãs pra sempre. Adicionada `FOREIGN KEY ... ON DELETE CASCADE` nas duas (mesmo padrão de toda tabela ligada a `auth.users` nesse projeto) e exclusão explícita em `admin-delete-psychologist`, para consistência com o resto da função.
+  - Validado com Postgres local para a nova migração de FK, typecheck, suíte completa (268 testes) e build de produção.

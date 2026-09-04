@@ -156,9 +156,13 @@ const checkAdminPermission = async (req: Request): Promise<{ authorized: boolean
       return { authorized: false };
     }
 
-    // Check if user is admin using the secure function
+    // Check if user is admin using the secure function. is_admin() was left
+    // as a permanent `SELECT false` stub by an old migration and never
+    // fixed — every other admin-only function in this codebase already
+    // uses is_super_admin(), so this one is switched to match instead of
+    // trying to resurrect the broken one.
     const { data: isAdmin, error: adminError } = await supabase
-      .rpc('is_admin', { user_id_param: user.id });
+      .rpc('is_super_admin', { user_id_param: user.id });
 
     if (adminError || !isAdmin) {
       return { authorized: false };

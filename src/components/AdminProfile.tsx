@@ -11,7 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 const AdminProfile = () => {
   const { toast } = useToast();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   
   const [isUpdating, setIsUpdating] = useState(false);
   const [formData, setFormData] = useState({
@@ -58,6 +58,19 @@ const AdminProfile = () => {
         });
         return;
       }
+
+      // Confirm the caller actually knows the current password before
+      // changing it — the field above only checked it was non-empty, so
+      // any live admin session (a stolen token, an unlocked shared
+      // computer) could change the password and lock the real admin out
+      // without ever proving they know the current one. This is the
+      // highest-privilege account in the app, so it gets checked first.
+      if (!user?.email) throw new Error('Não foi possível confirmar o email da conta');
+      const { error: reauthError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: formData.currentPassword,
+      });
+      if (reauthError) throw new Error('Senha atual incorreta');
 
       // Update password in Supabase Auth
       const { error } = await supabase.auth.updateUser({

@@ -69,6 +69,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
       // 2. Dependências ligadas ao user_id
       await supabase.from("psychologist_presence").delete().eq("psychologist_id", userId);
       await supabase.from("psychologist_availability").delete().eq("psychologist_id", userId);
+      await supabase.from("psychologist_availability_overrides").delete().eq("psychologist_id", userId);
+      await supabase.from("psychologist_vacations").delete().eq("psychologist_id", userId);
       await supabase.from("webrtc_sessions").delete().eq("psychologist_id", userId);
       await supabase.from("mensagens").delete().eq("autor_id", userId);
       await supabase.from("conversas").delete().eq("psicologo_id", userId);
