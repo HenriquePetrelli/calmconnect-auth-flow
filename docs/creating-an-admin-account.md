@@ -24,7 +24,7 @@ values ('<UUID_DO_USUARIO>', '<UUID_DO_USUARIO>', true);
 
 (`granted_by` guarda quem concedeu o acesso — como normalmente é o primeiro/único admin se concedendo, self-referencia é aceitável; se você já tem outro admin ativo, pode usar o UUID dele ali em vez do próprio.)
 
-Pronto — a pessoa já consegue entrar em `/admin-login` com o email e senha cadastrados.
+Pronto — a pessoa já consegue entrar pela tela de login normal do app (não existe uma tela de login separada para admin) com o email e senha cadastrados; o app reconhece pelo `user_type = 'admin'` do perfil e leva direto para `/admin-dashboard`.
 
 ## Removendo o acesso de um admin
 
