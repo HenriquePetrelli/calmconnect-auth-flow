@@ -1,5 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Calendar, BarChart3, MessageCircle, LifeBuoy } from "lucide-react";
+import { Home, Calendar, BarChart3, MessageCircle } from "lucide-react";
+import LifeRingIcon from "@/components/icons/LifeRingIcon";
 
 interface BottomNavigationProps {
   onSOSClick?: () => void;
@@ -23,7 +24,7 @@ const BottomNavigation = ({ onSOSClick }: BottomNavigationProps) => {
       isActive: location.pathname === "/appointments",
     },
     {
-      icon: LifeBuoy,
+      icon: LifeRingIcon,
       label: "SOS",
       path: "/sos",
       isActive: location.pathname === "/sos",
@@ -50,18 +51,20 @@ const BottomNavigation = ({ onSOSClick }: BottomNavigationProps) => {
 
         if (item.isSpecial) {
           return (
-            <button
-              key={item.path}
-              onClick={onSOSClick || (() => navigate(item.path))}
-              className="tab-item sos flex flex-col items-center justify-center h-full p-2 transition-all duration-200 relative rounded-2xl text-primary hover:text-primary/80"
-              aria-label="Ajuda Emergencial"
-            >
-              {item.isActive && (
-                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-primary rounded-full transition-all duration-200"></div>
-              )}
-              <Icon className="w-8 h-8 transition-all duration-200" strokeWidth={2.25} />
-              <span className="text-xs mt-1 font-medium transition-all duration-200">{item.label}</span>
-            </button>
+            <div key={item.path} className="tab-item sos flex flex-col items-center justify-end h-full pb-1.5">
+              <button
+                onClick={onSOSClick || (() => navigate(item.path))}
+                className={`relative -mt-7 flex h-16 w-16 items-center justify-center rounded-full bg-background shadow-[0_8px_20px_-4px_rgba(0,0,0,0.35)] transition-transform duration-200 hover:scale-105 active:scale-95 ${
+                  item.isActive ? "ring-4 ring-primary/60" : "ring-4 ring-primary/25"
+                }`}
+                aria-label="Ajuda Emergencial"
+              >
+                <Icon className="h-10 w-10" />
+              </button>
+              <span className="mt-1 text-xs font-semibold text-primary transition-all duration-200">
+                {item.label}
+              </span>
+            </div>
           );
         }
 
