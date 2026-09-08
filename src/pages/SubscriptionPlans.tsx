@@ -148,6 +148,37 @@ const SubscriptionPlans = () => {
     setShowDowngradeModal(true);
   };
 
+  const handleManagePayment = async () => {
+    try {
+      setLoading("portal");
+
+      const { data, error } = await supabase.functions.invoke('customer-portal');
+
+      if (error) {
+        console.error('Error opening customer portal:', error);
+        toast({
+          title: "Erro",
+          description: "Erro ao abrir o portal de pagamento",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      }
+    } catch (error) {
+      console.error('Error opening customer portal:', error);
+      toast({
+        title: "Erro",
+        description: "Erro inesperado ao abrir o portal de pagamento",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <PageHeader title="Planos de Assinatura" backTo="/home" />
@@ -177,7 +208,15 @@ const SubscriptionPlans = () => {
                 </Badge>
                 
                 <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
-                  <Button 
+                  <Button
+                    onClick={handleManagePayment}
+                    disabled={loading === "portal"}
+                    variant="outline"
+                    className="flex-1 bg-background hover:bg-muted"
+                  >
+                    {loading === "portal" ? "Abrindo..." : "Gerenciar Pagamento"}
+                  </Button>
+                  <Button
                     onClick={handleDowngrade}
                     variant="outline"
                     className="flex-1 bg-background hover:bg-muted"

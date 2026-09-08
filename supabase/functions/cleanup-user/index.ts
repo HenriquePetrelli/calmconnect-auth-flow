@@ -27,7 +27,27 @@ Deno.serve(async (req) => {
       }
     )
 
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('No authorization header');
+    }
+
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    );
+
+    if (authError || !user) {
+      throw new Error('Invalid authentication');
+    }
+
     const { userId }: CleanupUserRequest = await req.json();
+
+    // This function performs a full, irreversible account deletion. It is
+    // only meant to roll back a signup that just failed for the caller's own
+    // still-incomplete account, so only self-cleanup is allowed.
+    if (userId !== user.id) {
+      throw new Error('You can only clean up your own account');
+    }
 
     console.log('Starting cleanup for user:', userId);
 
