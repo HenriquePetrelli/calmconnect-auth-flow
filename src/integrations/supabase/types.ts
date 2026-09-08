@@ -1335,6 +1335,24 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          count: number
+          key: string
+          window_start: string
+        }
+        Insert: {
+          count?: number
+          key: string
+          window_start: string
+        }
+        Update: {
+          count?: number
+          key?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       security_audit_log: {
         Row: {
           action: string
@@ -1848,6 +1866,14 @@ export type Database = {
           plan_type: string
           reason: string
         }[]
+      }
+      check_rate_limit: {
+        Args: {
+          p_key: string
+          p_max_requests: number
+          p_window_seconds: number
+        }
+        Returns: boolean
       }
       cleanup_quarterly_activities: { Args: never; Returns: undefined }
       cleanup_rejected_psychologist: {
