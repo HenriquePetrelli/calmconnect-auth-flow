@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Calendar, BarChart3, MessageCircle, Sun } from "lucide-react";
+import { Home, Calendar, BarChart3, MessageCircle, LifeBuoy } from "lucide-react";
 
 interface BottomNavigationProps {
   onSOSClick?: () => void;
@@ -23,7 +23,7 @@ const BottomNavigation = ({ onSOSClick }: BottomNavigationProps) => {
       isActive: location.pathname === "/appointments",
     },
     {
-      icon: () => <Sun className="w-7 h-7 text-primary-foreground" />,
+      icon: () => <LifeBuoy className="w-7 h-7 text-primary-foreground" />,
       label: "",
       path: "/sos",
       isActive: location.pathname === "/sos",
