@@ -3,6 +3,7 @@ import Confetti from 'react-confetti';
 import { useWindowSize } from '@/hooks/use-window-size';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Mascot } from '@/components/mascot';
 import { User as UserIcon, Wind, NotebookPen, MessageCircle, BarChart3, PartyPopper, Trophy, Music2, Headphones } from 'lucide-react';
 
 interface AchievementModalProps {
@@ -56,7 +57,7 @@ export const AchievementModal = ({
                 transition={{ type: 'spring', damping: 15, stiffness: 300 }}
                 className="flex flex-col items-center text-center space-y-6 py-6"
               >
-                {/* Icon */}
+                {/* Mascote comemorando, com o ícone da conquista específica como selo */}
                 <motion.div
                   initial={{ scale: 0, rotate: -180 }}
                   animate={{ scale: 1, rotate: 0 }}
@@ -66,10 +67,16 @@ export const AchievementModal = ({
                     damping: 10,
                     stiffness: 200,
                   }}
+                  className="relative"
                 >
+                  <Mascot pose="celebrate" className="w-32 h-32" />
                   {(() => {
                     const IconComp = iconMap[icon] || Trophy;
-                    return <IconComp className="w-24 h-24 text-primary" />;
+                    return (
+                      <span className="absolute -bottom-1 -right-1 flex h-10 w-10 items-center justify-center rounded-full bg-primary shadow-md ring-4 ring-background">
+                        <IconComp className="h-5 w-5 text-primary-foreground" />
+                      </span>
+                    );
                   })()}
                 </motion.div>
 

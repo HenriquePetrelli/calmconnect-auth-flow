@@ -3,6 +3,7 @@ import { AlertTriangle, Phone, Wind } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import PageHeader from "@/components/PageHeader";
+import { Mascot } from "@/components/mascot";
 import { useNavigate, useLocation } from "react-router-dom";
 import CancelConfirmationModal from "@/components/sos/CancelConfirmationModal";
 import SupportiveMessages from "@/components/sos/SupportiveMessages";
@@ -283,6 +284,8 @@ const SOS = () => {
 
       {/* Content */}
       <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-8">
+        {!expired && <Mascot pose="hug" className="w-24 h-24" />}
+
         {/* Status da busca */}
         <Card className="w-full max-w-md">
           <CardContent className="p-8 text-center space-y-6">
