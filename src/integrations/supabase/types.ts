@@ -16,34 +16,34 @@ export type Database = {
     Tables: {
       admin_audit_log: {
         Row: {
-          id: string
-          admin_id: string
           action: string
-          target_type: string
+          admin_id: string
+          created_at: string
+          details: Json
+          id: string
           target_id: string | null
           target_name: string | null
-          details: Json
-          created_at: string
+          target_type: string
         }
         Insert: {
-          id?: string
-          admin_id: string
           action: string
-          target_type: string
+          admin_id: string
+          created_at?: string
+          details?: Json
+          id?: string
           target_id?: string | null
           target_name?: string | null
-          details?: Json
-          created_at?: string
+          target_type: string
         }
         Update: {
-          id?: string
-          admin_id?: string
           action?: string
-          target_type?: string
+          admin_id?: string
+          created_at?: string
+          details?: Json
+          id?: string
           target_id?: string | null
           target_name?: string | null
-          details?: Json
-          created_at?: string
+          target_type?: string
         }
         Relationships: []
       }
@@ -517,7 +517,7 @@ export type Database = {
           recipient_count: number | null
           title: string
           topic: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           body: string
@@ -527,7 +527,7 @@ export type Database = {
           recipient_count?: number | null
           title: string
           topic?: string | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           body?: string
@@ -537,7 +537,7 @@ export type Database = {
           recipient_count?: number | null
           title?: string
           topic?: string | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -1335,6 +1335,24 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          count: number
+          key: string
+          window_start: string
+        }
+        Insert: {
+          count?: number
+          key: string
+          window_start: string
+        }
+        Update: {
+          count?: number
+          key?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       security_audit_log: {
         Row: {
           action: string
@@ -1849,6 +1867,14 @@ export type Database = {
           reason: string
         }[]
       }
+      check_rate_limit: {
+        Args: {
+          p_key: string
+          p_max_requests: number
+          p_window_seconds: number
+        }
+        Returns: boolean
+      }
       cleanup_quarterly_activities: { Args: never; Returns: undefined }
       cleanup_rejected_psychologist: {
         Args: { p_user_id: string }
@@ -1927,15 +1953,15 @@ export type Database = {
       get_admin_audit_log: {
         Args: { p_limit?: number; p_offset?: number }
         Returns: {
-          id: string
-          admin_id: string
-          admin_name: string | null
           action: string
-          target_type: string
-          target_id: string | null
-          target_name: string | null
-          details: Json
+          admin_id: string
+          admin_name: string
           created_at: string
+          details: Json
+          id: string
+          target_id: string
+          target_name: string
+          target_type: string
         }[]
       }
       get_admin_conversas_overview: {
