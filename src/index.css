@@ -649,37 +649,31 @@
   .has-tabs .screen .screen-content {
     flex: 1 1 auto;
     overflow: auto;
-    padding-bottom: calc(var(--tab-height) + env(safe-area-inset-bottom));
+    padding-bottom: calc(var(--tab-height) + 28px + env(safe-area-inset-bottom));
   }
 
-  /* barra de tabs fixa */
+  /* barra de tabs flutuante, estilo moderno (pill arredondado, com respiro das bordas) */
   .tabs {
     position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    left: 12px;
+    right: 12px;
     height: var(--tab-height);
-    padding-bottom: env(safe-area-inset-bottom);
     display: flex;
     align-items: center;
     justify-content: space-around;
     gap: 12px;
     z-index: 1000;
-    background: hsl(var(--secondary));
-    border-top: 1px solid hsl(var(--secondary) / 0.4);
-    backdrop-filter: blur(6px);
+    background: hsl(var(--secondary) / 0.94);
+    border-radius: 28px;
+    border: 1px solid hsl(var(--secondary-foreground) / 0.08);
+    box-shadow: 0 12px 32px -8px hsl(var(--foreground) / 0.22), 0 2px 8px hsl(var(--foreground) / 0.08);
+    backdrop-filter: blur(12px);
   }
 
-  /* destaque do SOS dentro da barra fixa */
+  /* item do SOS: sem fundo preenchido, só o ícone em destaque */
   .tabs .tab-item.sos {
-    transform: translateY(-10px);
-    width: 56px;
-    height: 56px;
-    border-radius: 9999px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1001;
+    background: transparent;
   }
 
   /* z-index das modals deve ser maior que das tabs */

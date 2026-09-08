@@ -76,7 +76,7 @@ export const DesktopSidebar: React.FC = () => {
           className="w-full justify-start gap-3 h-12 text-left transition-all duration-200 bg-primary text-white hover:bg-primary/90 hover:text-white"
           onClick={() => navigate('/sos')}
         >
-          <LifeBuoy className="w-5 h-5" />
+          <LifeBuoy className="w-7 h-7" strokeWidth={2.25} />
           <span className="font-medium">Ajuda Emergencial</span>
         </Button>
       </div>

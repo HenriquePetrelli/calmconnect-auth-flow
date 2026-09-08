@@ -23,8 +23,8 @@ const BottomNavigation = ({ onSOSClick }: BottomNavigationProps) => {
       isActive: location.pathname === "/appointments",
     },
     {
-      icon: () => <LifeBuoy className="w-7 h-7 text-primary-foreground" />,
-      label: "",
+      icon: LifeBuoy,
+      label: "SOS",
       path: "/sos",
       isActive: location.pathname === "/sos",
       isSpecial: true,
@@ -50,15 +50,18 @@ const BottomNavigation = ({ onSOSClick }: BottomNavigationProps) => {
 
         if (item.isSpecial) {
           return (
-            <div key={item.path} className="flex items-center justify-center">
-              <button
-                onClick={onSOSClick || (() => navigate(item.path))}
-                className="tab-item sos bg-primary hover:opacity-90 text-primary-foreground shadow-lg transition-all duration-200 hover:shadow-xl"
-                aria-label="Ajuda Emergencial"
-              >
-                <Icon />
-              </button>
-            </div>
+            <button
+              key={item.path}
+              onClick={onSOSClick || (() => navigate(item.path))}
+              className="tab-item sos flex flex-col items-center justify-center h-full p-2 transition-all duration-200 relative rounded-2xl text-primary hover:text-primary/80"
+              aria-label="Ajuda Emergencial"
+            >
+              {item.isActive && (
+                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-primary rounded-full transition-all duration-200"></div>
+              )}
+              <Icon className="w-8 h-8 transition-all duration-200" strokeWidth={2.25} />
+              <span className="text-xs mt-1 font-medium transition-all duration-200">{item.label}</span>
+            </button>
           );
         }
 
@@ -66,7 +69,7 @@ const BottomNavigation = ({ onSOSClick }: BottomNavigationProps) => {
           <button
             key={item.path}
             onClick={() => navigate(item.path)}
-            className={`tab-item flex flex-col items-center justify-center h-full p-2 transition-all duration-200 relative rounded-lg ${
+            className={`tab-item flex flex-col items-center justify-center h-full p-2 transition-all duration-200 relative rounded-2xl ${
               item.isActive
                 ? "text-secondary-foreground bg-secondary-foreground/20"
                 : "text-secondary-foreground/70 hover:text-secondary-foreground"
