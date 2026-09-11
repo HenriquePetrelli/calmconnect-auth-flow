@@ -649,25 +649,27 @@
   .has-tabs .screen .screen-content {
     flex: 1 1 auto;
     overflow: auto;
-    padding-bottom: calc(var(--tab-height) + 28px + env(safe-area-inset-bottom));
+    padding-bottom: calc(var(--tab-height) + 24px + env(safe-area-inset-bottom));
   }
 
-  /* barra de tabs flutuante, estilo moderno (pill arredondado, com respiro das bordas) */
+  /* barra de tabs, sempre fixa no rodapé (edge-to-edge) */
   .tabs {
     position: fixed;
-    bottom: calc(12px + env(safe-area-inset-bottom));
-    left: 12px;
-    right: 12px;
-    height: var(--tab-height);
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: calc(var(--tab-height) + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom);
     display: flex;
     align-items: center;
     justify-content: space-around;
     gap: 12px;
     z-index: 1000;
-    background: hsl(var(--secondary) / 0.94);
-    border-radius: 28px;
-    border: 1px solid hsl(var(--secondary-foreground) / 0.08);
-    box-shadow: 0 12px 32px -8px hsl(var(--foreground) / 0.22), 0 2px 8px hsl(var(--foreground) / 0.08);
+    background: hsl(var(--secondary) / 0.96);
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+    border-top: 1px solid hsl(var(--secondary-foreground) / 0.08);
+    box-shadow: 0 -8px 24px -8px hsl(var(--foreground) / 0.18);
     backdrop-filter: blur(12px);
   }
 
