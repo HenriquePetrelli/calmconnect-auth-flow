@@ -70,16 +70,21 @@ export const DesktopSidebar: React.FC = () => {
       </nav>
 
       {/* SOS / Ajuda Emergencial */}
-      <div className="px-4 pb-2">
+      <div className="px-4 pb-4">
         <Button
           variant="ghost"
-          className="w-full justify-start gap-3 h-16 text-left transition-all duration-200 bg-primary text-white hover:bg-primary/90 hover:text-white"
+          className="group relative w-full justify-start gap-4 h-[74px] px-4 text-left overflow-hidden rounded-2xl bg-gradient-to-r from-sos-primary to-sos-secondary text-white shadow-lg shadow-sos-primary/25 transition-all duration-200 hover:brightness-110 hover:shadow-xl hover:shadow-sos-primary/30 hover:text-white"
           onClick={() => navigate('/sos')}
         >
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
-            <LifeRingIcon className="h-9 w-9" />
+          <span className="absolute right-0 top-0 h-full w-1/2 bg-gradient-to-l from-white/10 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
+          <span className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white shadow-md">
+            <span className="absolute inset-0 rounded-full bg-sos-primary/20 animate-ping" />
+            <LifeRingIcon className="h-11 w-11" />
           </span>
-          <span className="text-base font-semibold">Ajuda Emergencial</span>
+          <div className="relative flex flex-col">
+            <span className="text-base font-bold">Ajuda Emergencial</span>
+            <span className="text-xs text-white/80">Toque para suporte imediato</span>
+          </div>
         </Button>
       </div>
 
