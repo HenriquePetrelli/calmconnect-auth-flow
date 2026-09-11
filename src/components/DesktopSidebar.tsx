@@ -77,7 +77,7 @@ export const DesktopSidebar: React.FC = () => {
           onClick={() => navigate('/sos')}
         >
           <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
-            <LifeRingIcon className="h-12 w-12" />
+            <LifeRingIcon className="h-8 w-8" />
           </span>
           <span className="text-base font-semibold leading-tight">Ajuda Emergencial</span>
         </Button>
