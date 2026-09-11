@@ -649,26 +649,26 @@
   .has-tabs .screen .screen-content {
     flex: 1 1 auto;
     overflow: auto;
-    padding-bottom: calc(var(--tab-height) + 24px + env(safe-area-inset-bottom));
+    padding-bottom: calc(var(--tab-height) + 32px + env(safe-area-inset-bottom));
   }
 
-  /* barra de tabs, sempre fixa no rodapé (edge-to-edge) */
+  /* barra de tabs fixa no rodapé, com uma margem embaixo pra o círculo do
+     SOS (que ultrapassa a borda inferior da barra) nunca ser cortado pela
+     borda da tela */
   .tabs {
     position: fixed;
-    bottom: 0;
+    bottom: calc(16px + env(safe-area-inset-bottom));
     left: 0;
     right: 0;
-    height: calc(var(--tab-height) + env(safe-area-inset-bottom));
-    padding-bottom: env(safe-area-inset-bottom);
+    height: var(--tab-height);
     display: flex;
     align-items: center;
     justify-content: space-around;
     gap: 12px;
     z-index: 1000;
     background: hsl(var(--secondary) / 0.96);
-    border-top-left-radius: 24px;
-    border-top-right-radius: 24px;
-    border-top: 1px solid hsl(var(--secondary-foreground) / 0.08);
+    border-radius: 24px;
+    border: 1px solid hsl(var(--secondary-foreground) / 0.08);
     box-shadow: 0 -8px 24px -8px hsl(var(--foreground) / 0.18);
     backdrop-filter: blur(12px);
   }

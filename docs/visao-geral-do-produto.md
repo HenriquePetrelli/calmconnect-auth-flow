@@ -279,3 +279,8 @@ Navegação do paciente: menus lateral e inferior persistem entre Home, Chat, Co
   - **Círculo agora centralizado verticalmente no meio da barra**, não mais alinhado ao topo dela — passa a ultrapassar a barra simetricamente por cima e por baixo (`top` recalculado de -43px para -7px, já que o círculo de 86px agora fica centrado nos 72px de altura da barra em vez de alinhado à borda superior).
   - **Ícone do menu lateral desktop bem maior** (badge de 48px→64px, ícone de 36px→48px) — como o texto "Ajuda Emergencial" não cabia mais ao lado do ícone maior nos 256px da barra lateral (o `Button` do design system usa `whitespace-nowrap` por padrão, cortando o texto), o botão passou a permitir quebra de linha (`whitespace-normal`), então o texto quebra em duas linhas em vez de cortar.
   - Validado renderizando os dois componentes reais via Playwright, typecheck, build de produção e suíte completa.
+- 2026-09-11 — Mais um ajuste fino no botão de SOS da navegação inferior, a pedido:
+  - Fundo trocado de branco para roxo (`bg-secondary`, a mesma cor da barra), com o anel ao redor sem opacidade (`ring-primary` sólido em vez de `ring-primary/25`/`ring-primary/60`).
+  - Diminuído de 86px para 75px, recentralizado no meio da barra (o cálculo de centralização depende do tamanho do círculo).
+  - A barra ganhou uma margem de 16px do rodapé da tela — sem essa margem, a parte do círculo que ultrapassa a borda inferior da barra ficava cortada pela borda da tela, já que antes a barra ficava grudada em `bottom: 0`.
+  - Validado renderizando o componente real via Playwright (incluindo medição por código de que o botão não fica cortado pela borda da tela), typecheck, build de produção e suíte completa.
