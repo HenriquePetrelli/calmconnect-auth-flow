@@ -80,8 +80,8 @@ const BottomNavigation = ({ onSOSClick }: BottomNavigationProps) => {
 
       <button
         onClick={onSOSClick || (() => navigate(sosItem.path))}
-        style={{ position: "fixed", left: "50%", bottom: "calc(16px + env(safe-area-inset-bottom) + 8px)", transform: "translateX(-50%)", width: 75, height: 75 }}
-        className="tab-item sos flex items-center justify-center rounded-full text-primary-foreground shadow-[0_12px_28px_-8px_hsl(var(--primary)/0.5)] ring-4 ring-background transition-transform duration-200 hover:scale-105 active:scale-95 z-[1001]"
+        style={{ position: "fixed", left: "50%", bottom: "calc(16px + env(safe-area-inset-bottom) + 34.5px)", transform: "translateX(-50%)", width: 75, height: 75 }}
+        className="tab-item sos flex items-center justify-center rounded-full text-primary-foreground shadow-[0_14px_32px_-8px_hsl(var(--primary)/0.55)] ring-4 ring-background transition-transform duration-200 hover:scale-105 active:scale-95 z-[1001]"
         aria-label="Ajuda Emergencial"
       >
         <SosIcon className="h-10 w-10" />
