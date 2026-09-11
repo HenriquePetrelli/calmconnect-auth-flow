@@ -44,25 +44,19 @@ const BottomNavigation = ({ onSOSClick }: BottomNavigationProps) => {
     },
   ];
 
+  const sosItem = navItems.find((item) => item.isSpecial)!;
+  const SosIcon = sosItem.icon;
+
   return (
-    <nav className="tabs grid grid-cols-5 items-center !gap-0 !justify-normal px-2">
+    <nav className="tabs relative grid grid-cols-5 items-center !gap-0 !justify-normal px-2">
       {navItems.map((item) => {
         const Icon = item.icon;
 
+        // Reserva o espaço da coluna do meio; o botão em si é renderizado
+        // fora do grid (abaixo) e centralizado na barra inteira, não nesta
+        // célula — assim a centralização não depende da matemática do grid.
         if (item.isSpecial) {
-          return (
-            <div key={item.path} className="tab-item sos relative h-full flex items-center justify-center">
-              <button
-                onClick={onSOSClick || (() => navigate(item.path))}
-                className={`absolute left-1/2 top-0 flex h-[86px] w-[86px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-background shadow-[0_8px_20px_-4px_rgba(0,0,0,0.35)] transition-transform duration-200 hover:scale-105 active:scale-95 ${
-                  item.isActive ? "ring-4 ring-primary/60" : "ring-4 ring-primary/25"
-                }`}
-                aria-label="Ajuda Emergencial"
-              >
-                <Icon className="h-11 w-11" />
-              </button>
-            </div>
-          );
+          return <div key={item.path} aria-hidden="true" />;
         }
 
         return (
@@ -83,6 +77,16 @@ const BottomNavigation = ({ onSOSClick }: BottomNavigationProps) => {
           </button>
         );
       })}
+
+      <button
+        onClick={onSOSClick || (() => navigate(sosItem.path))}
+        className={`tab-item sos absolute left-0 right-0 top-0 mx-auto -translate-y-1/2 flex h-[86px] w-[86px] items-center justify-center rounded-full bg-background shadow-[0_8px_20px_-4px_rgba(0,0,0,0.35)] transition-transform duration-200 hover:scale-105 active:scale-95 ${
+          sosItem.isActive ? "ring-4 ring-primary/60" : "ring-4 ring-primary/25"
+        }`}
+        aria-label="Ajuda Emergencial"
+      >
+        <SosIcon className="h-11 w-11" />
+      </button>
     </nav>
   );
 };
