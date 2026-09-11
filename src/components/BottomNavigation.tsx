@@ -80,7 +80,7 @@ const BottomNavigation = ({ onSOSClick }: BottomNavigationProps) => {
 
       <button
         onClick={onSOSClick || (() => navigate(sosItem.path))}
-        style={{ position: "absolute", left: 0, right: 0, top: -43, margin: "0 auto", width: 86, height: 86 }}
+        style={{ position: "absolute", left: 0, right: 0, top: -7, margin: "0 auto", width: 86, height: 86 }}
         className={`tab-item sos flex items-center justify-center rounded-full bg-background shadow-[0_8px_20px_-4px_rgba(0,0,0,0.35)] transition-transform duration-200 hover:scale-105 active:scale-95 ${
           sosItem.isActive ? "ring-4 ring-primary/60" : "ring-4 ring-primary/25"
         }`}

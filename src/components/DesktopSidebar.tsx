@@ -73,13 +73,13 @@ export const DesktopSidebar: React.FC = () => {
       <div className="px-4 pb-4">
         <Button
           variant="ghost"
-          className="w-full justify-start gap-4 h-[72px] px-4 text-left rounded-2xl bg-primary text-white transition-colors duration-200 hover:bg-primary/90 hover:text-white"
+          className="w-full h-20 justify-start gap-3 px-4 text-left rounded-2xl bg-primary text-white transition-colors duration-200 hover:bg-primary/90 hover:text-white whitespace-normal"
           onClick={() => navigate('/sos')}
         >
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
-            <LifeRingIcon className="h-9 w-9" />
+          <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+            <LifeRingIcon className="h-12 w-12" />
           </span>
-          <span className="text-base font-semibold">Ajuda Emergencial</span>
+          <span className="text-base font-semibold leading-tight">Ajuda Emergencial</span>
         </Button>
       </div>
 
