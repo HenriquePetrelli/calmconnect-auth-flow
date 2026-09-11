@@ -73,7 +73,7 @@ export const DesktopSidebar: React.FC = () => {
       <div className="px-4 pb-4">
         <Button
           variant="ghost"
-          className="group relative w-full justify-start gap-4 h-[74px] px-4 text-left overflow-hidden rounded-2xl bg-gradient-to-r from-sos-primary to-sos-secondary text-white shadow-lg shadow-sos-primary/25 transition-all duration-200 hover:brightness-110 hover:shadow-xl hover:shadow-sos-primary/30 hover:text-white"
+          className="group relative w-full justify-start gap-4 h-[74px] px-4 text-left overflow-hidden rounded-2xl bg-gradient-to-r from-sos-primary to-sos-secondary text-white shadow-lg shadow-destructive/20 transition-all duration-200 hover:brightness-110 hover:shadow-xl hover:shadow-destructive/30 hover:text-white"
           onClick={() => navigate('/sos')}
         >
           <span className="absolute right-0 top-0 h-full w-1/2 bg-gradient-to-l from-white/10 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
