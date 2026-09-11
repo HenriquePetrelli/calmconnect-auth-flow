@@ -673,11 +673,12 @@
     backdrop-filter: blur(12px);
   }
 
-  /* item do SOS: fundo roxo primário fixo e destacado */
+  /* item do SOS: fundo roxo primário, flutuante e sempre visível acima da barra */
   .tabs .tab-item.sos {
     background: hsl(var(--primary));
     position: absolute;
     z-index: 1001;
+    will-change: transform;
   }
 
   /* z-index das modals deve ser maior que das tabs */
