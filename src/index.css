@@ -673,9 +673,11 @@
     backdrop-filter: blur(12px);
   }
 
-  /* item do SOS: sem fundo preenchido, só o ícone em destaque */
+  /* item do SOS: fundo roxo primário fixo e destacado */
   .tabs .tab-item.sos {
-    background: transparent;
+    background: hsl(var(--primary));
+    position: absolute;
+    z-index: 1001;
   }
 
   /* z-index das modals deve ser maior que das tabs */
