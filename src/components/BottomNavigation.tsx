@@ -51,19 +51,16 @@ const BottomNavigation = ({ onSOSClick }: BottomNavigationProps) => {
 
         if (item.isSpecial) {
           return (
-            <div key={item.path} className="tab-item sos flex flex-col items-center justify-end h-full pb-1.5">
+            <div key={item.path} className="tab-item sos relative h-full">
               <button
                 onClick={onSOSClick || (() => navigate(item.path))}
-                className={`relative -mt-7 flex h-16 w-16 items-center justify-center rounded-full bg-background shadow-[0_8px_20px_-4px_rgba(0,0,0,0.35)] transition-transform duration-200 hover:scale-105 active:scale-95 ${
+                className={`absolute left-1/2 top-0 flex h-[86px] w-[86px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-background shadow-[0_8px_20px_-4px_rgba(0,0,0,0.35)] transition-transform duration-200 hover:scale-105 active:scale-95 ${
                   item.isActive ? "ring-4 ring-primary/60" : "ring-4 ring-primary/25"
                 }`}
                 aria-label="Ajuda Emergencial"
               >
-                <Icon className="h-10 w-10" />
+                <Icon className="h-11 w-11" />
               </button>
-              <span className="mt-1 text-xs font-semibold text-primary transition-all duration-200">
-                {item.label}
-              </span>
             </div>
           );
         }

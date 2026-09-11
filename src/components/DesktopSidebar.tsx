@@ -4,11 +4,11 @@ import {
   Home,
   MessageCircle,
   Calendar,
-  LifeBuoy,
   BarChart3,
   ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import LifeRingIcon from '@/components/icons/LifeRingIcon';
 import logoImg from '@/assets/soliv-logo.svg';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -76,7 +76,9 @@ export const DesktopSidebar: React.FC = () => {
           className="w-full justify-start gap-3 h-16 text-left transition-all duration-200 bg-primary text-white hover:bg-primary/90 hover:text-white"
           onClick={() => navigate('/sos')}
         >
-          <LifeBuoy className="w-10 h-10 shrink-0" strokeWidth={2} />
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+            <LifeRingIcon className="h-9 w-9" />
+          </span>
           <span className="text-base font-semibold">Ajuda Emergencial</span>
         </Button>
       </div>

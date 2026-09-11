@@ -261,3 +261,8 @@ Navegação do paciente: menus lateral e inferior persistem entre Home, Chat, Co
   - **Botão de SOS da navegação inferior ganhou destaque de verdade**: virou um botão circular elevado (flutuando acima da barra, como um FAB), com fundo branco, sombra e anel colorido — em vez de só um ícone colorido dentro da barra.
   - **Ícone do menu lateral desktop bem maior**: de `w-7 h-7` num botão de 48px de altura para `w-10 h-10` num botão de 64px — antes ainda ficava pequeno mesmo depois do primeiro ajuste.
   - Validado renderizando os componentes reais via Playwright (incluindo uma captura ampliada do ícone novo pra conferir o desenho em detalhe), typecheck, build de produção e suíte completa.
+- 2026-09-11 — Terceira rodada de ajuste no botão de SOS, a pedido:
+  - Removido o rótulo "SOS" abaixo do botão flutuante da navegação inferior — agora é só o círculo com a bóia.
+  - O círculo passou a ser maior que a própria barra (86px, contra os 72px de altura da barra) e centralizado no limite superior dela, então metade fica visivelmente pra fora por cima e a outra metade se apoia dentro da barra — antes era menor que a barra e só encostava por cima.
+  - O menu lateral desktop passou a usar o mesmo ícone desenhado à mão da navegação inferior (antes só tinha ganhado tamanho, mas continuava sendo o `LifeBuoy` do lucide) — colocado dentro de um círculo branco pra manter o contraste das faixas laranja/branca contra o fundo laranja do botão, no mesmo tratamento visual usado no botão flutuante mobile.
+  - Validado renderizando os dois componentes reais via Playwright, incluindo capturas ampliadas dos dois botões, além de typecheck, build de produção e suíte completa.
