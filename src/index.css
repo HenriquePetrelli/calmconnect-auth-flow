@@ -15,7 +15,7 @@
 
 @layer base {
   :root {
-    --tab-height: 72px;
+    --tab-height: 56px;
 
     /* Base — Light */
     --background: 220 20% 98%;        /* #F9FAFB */
@@ -652,33 +652,65 @@
     padding-bottom: calc(var(--tab-height) + 32px + env(safe-area-inset-bottom));
   }
 
-  /* barra de tabs fixa no rodapé, com uma margem embaixo pra o círculo do
-     SOS (que ultrapassa a borda inferior da barra) nunca ser cortado pela
-     borda da tela */
+  /* barra de tabs fixa no rodapé, sem bordas arredondadas e colada no bottom */
   .tabs {
     position: fixed;
-    bottom: calc(16px + env(safe-area-inset-bottom));
+    bottom: 0;
     left: 0;
     right: 0;
     height: var(--tab-height);
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     align-items: center;
-    justify-content: space-around;
-    gap: 12px;
+    justify-items: center;
     z-index: 1000;
-    background: hsl(var(--secondary) / 0.96);
-    border-radius: 24px;
-    border: 1px solid hsl(var(--secondary-foreground) / 0.08);
+    background: hsl(var(--secondary) / 0.98);
+    border-radius: 0;
+    border-top: 1px solid hsl(var(--secondary-foreground) / 0.08);
     box-shadow: 0 -8px 24px -8px hsl(var(--foreground) / 0.18);
     backdrop-filter: blur(12px);
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
-  /* item do SOS: fundo roxo primário, flutuante e sempre visível acima da barra */
+  /* item do SOS: fundo primário, flutuante e sempre visível acima da barra */
   .tabs .tab-item.sos {
-    background: hsl(var(--primary));
-    position: absolute;
+    background: transparent;
+    position: relative;
     z-index: 1001;
     will-change: transform;
+  }
+
+  .sos-button {
+    position: absolute;
+    top: -22px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-hover)));
+    color: hsl(var(--primary-foreground));
+    box-shadow:
+      0 0 0 4px hsl(var(--background)),
+      0 -6px 20px -4px hsl(var(--primary) / 0.45),
+      0 8px 24px -6px hsl(var(--foreground) / 0.25);
+    border: 2px solid hsl(var(--primary-foreground) / 0.2);
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+  }
+
+  .sos-button:hover {
+    transform: translateX(-50%) scale(1.06);
+    box-shadow:
+      0 0 0 4px hsl(var(--background)),
+      0 -8px 28px -4px hsl(var(--primary) / 0.55),
+      0 10px 28px -6px hsl(var(--foreground) / 0.3);
+  }
+
+  .sos-button:active {
+    transform: translateX(-50%) scale(0.95);
   }
 
   /* z-index das modals deve ser maior que das tabs */
