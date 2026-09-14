@@ -57,7 +57,14 @@ const BottomNavigation = ({ onSOSClick }: BottomNavigationProps) => {
         return (
           <button
             key={item.path}
-            onClick={() => (isSpecial ? onSOSClick?.() || navigate(item.path) : navigate(item.path))}
+            onClick={() => {
+              if (isSpecial) {
+                if (onSOSClick) onSOSClick();
+                else navigate(item.path);
+              } else {
+                navigate(item.path);
+              }
+            }}
             className={`tab-item flex flex-col items-center justify-center h-full px-2 py-1 transition-all duration-200 relative rounded-2xl ${
               isSpecial
                 ? ""
