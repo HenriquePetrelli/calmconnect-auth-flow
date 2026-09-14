@@ -48,42 +48,43 @@ const BottomNavigation = ({ onSOSClick }: BottomNavigationProps) => {
   const SosIcon = sosItem.icon;
 
   return (
-    <nav className="tabs relative grid grid-cols-5 items-center !gap-0 !justify-normal px-2">
+    <nav className="tabs">
       {navItems.map((item) => {
         const Icon = item.icon;
-
         const isSpecial = item.isSpecial;
+
+        if (isSpecial) {
+          return (
+            <div key={item.path} className="tab-item sos relative flex items-center justify-center h-full">
+              <button
+                onClick={() => {
+                  if (onSOSClick) onSOSClick();
+                  else navigate(item.path);
+                }}
+                aria-label="Botão SOS - Emergência"
+                className="sos-button"
+              >
+                <Icon className="h-9 w-9" />
+              </button>
+            </div>
+          );
+        }
 
         return (
           <button
             key={item.path}
-            onClick={() => {
-              if (isSpecial) {
-                if (onSOSClick) onSOSClick();
-                else navigate(item.path);
-              } else {
-                navigate(item.path);
-              }
-            }}
+            onClick={() => navigate(item.path)}
             className={`tab-item flex flex-col items-center justify-center h-full px-2 py-1 transition-all duration-200 relative rounded-2xl ${
-              isSpecial
-                ? ""
-                : item.isActive
-                  ? "text-secondary-foreground bg-secondary-foreground/20 shadow-sm"
-                  : "text-secondary-foreground/70 hover:text-secondary-foreground hover:bg-secondary-foreground/10"
+              item.isActive
+                ? "text-secondary-foreground bg-secondary-foreground/20 shadow-sm"
+                : "text-secondary-foreground/70 hover:text-secondary-foreground hover:bg-secondary-foreground/10"
             }`}
           >
-            {!isSpecial && item.isActive && (
+            {item.isActive && (
               <div className="absolute top-1 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-secondary-foreground rounded-full transition-all duration-200"></div>
             )}
-            {isSpecial ? (
-              <span className="flex items-center justify-center w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-[0_10px_24px_-6px_hsl(var(--primary)/0.55)] ring-4 ring-background transition-transform duration-200 hover:scale-105 active:scale-95">
-                <Icon className="h-8 w-8" />
-              </span>
-            ) : (
-              <Icon className="w-5 h-5 transition-all duration-200" />
-            )}
-            {!isSpecial && <span className="text-xs mt-1 transition-all duration-200">{item.label}</span>}
+            <Icon className="w-5 h-5 transition-all duration-200" />
+            <span className="text-xs mt-1 transition-all duration-200">{item.label}</span>
           </button>
         );
       })}
