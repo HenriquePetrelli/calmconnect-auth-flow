@@ -69,6 +69,40 @@ serve(async (req) => {
 
       console.log(`Updated ${updatedAppointments?.length || 0} appointments to declined`);
 
+      // A manual decline already notifies the patient (in-app + email) via
+      // send-appointment-notification. An appointment that just times out
+      // unanswered deserves the exact same courtesy — otherwise the patient
+      // only finds out by checking the app themselves.
+      try {
+        const psychologistIds = [...new Set(expiredAppointments.map((a) => a.psychologist_id))];
+        const { data: psychologists } = await supabase
+          .from('profiles')
+          .select('user_id, full_name')
+          .in('user_id', psychologistIds);
+
+        const nameByPsychologistId = new Map(
+          (psychologists ?? []).map((p) => [p.user_id, p.full_name])
+        );
+
+        for (const appointment of expiredAppointments) {
+          try {
+            await supabase.functions.invoke('send-appointment-notification', {
+              body: {
+                patient_id: appointment.patient_id,
+                appointment_id: appointment.id,
+                status: 'declined',
+                psychologist_name: nameByPsychologistId.get(appointment.psychologist_id) || 'o psicólogo',
+                appointment_date: new Date(appointment.scheduled_at).toLocaleString('pt-BR'),
+              },
+            });
+          } catch (notificationError) {
+            console.error(`Error notifying patient for appointment ${appointment.id}:`, notificationError);
+          }
+        }
+      } catch (notificationBatchError) {
+        console.error('Error notifying patients of auto-declined appointments:', notificationBatchError);
+      }
+
       return new Response(
         JSON.stringify({
           success: true,

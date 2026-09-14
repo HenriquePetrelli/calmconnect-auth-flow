@@ -1,24 +1,20 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const getAllowedOrigins = () => {
-  return [
-    'https://82bda655-81e5-448f-832e-ea464e8925dc.sandbox.lovable.dev',
-    'https://id-preview--82bda655-81e5-448f-832e-ea464e8925dc.lovable.app',
-    'http://localhost:3000',
-    'http://localhost:5173'
-  ];
-};
-
-const getCorsHeaders = (origin: string | null) => {
-  const allowedOrigins = getAllowedOrigins();
-  const isAllowed = origin && allowedOrigins.includes(origin);
-  
+// This endpoint is authenticated via a Bearer token (checked below), not
+// cookies, so there's no reason to restrict/reflect Origin the way a
+// credentialed (cookie-based) request would require — every other edge
+// function in this project just uses '*'. The previous hardcoded allowlist
+// only matched a handful of old Lovable preview URLs; any other domain
+// (including the real production one) got a mismatched
+// Access-Control-Allow-Origin back and had the response silently blocked
+// by the browser, so this call could fail with no visible error and the
+// patient's monthly SOS quota would never actually get marked as used.
+const getCorsHeaders = (_origin: string | null) => {
   return {
-    'Access-Control-Allow-Origin': isAllowed ? origin : allowedOrigins[0],
+    'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Credentials': 'true'
   };
 };
 
