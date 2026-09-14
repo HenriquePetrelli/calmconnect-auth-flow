@@ -52,40 +52,34 @@ const BottomNavigation = ({ onSOSClick }: BottomNavigationProps) => {
       {navItems.map((item) => {
         const Icon = item.icon;
 
-        // Reserva o espaço da coluna do meio; o botão em si é renderizado
-        // fora do grid (abaixo) e centralizado na barra inteira, não nesta
-        // célula — assim a centralização não depende da matemática do grid.
-        if (item.isSpecial) {
-          return <div key={item.path} aria-hidden="true" />;
-        }
+        const isSpecial = item.isSpecial;
 
         return (
           <button
             key={item.path}
-            onClick={() => navigate(item.path)}
+            onClick={() => (isSpecial ? onSOSClick?.() || navigate(item.path) : navigate(item.path))}
             className={`tab-item flex flex-col items-center justify-center h-full px-2 py-1 transition-all duration-200 relative rounded-2xl ${
-              item.isActive
-                ? "text-secondary-foreground bg-secondary-foreground/20 shadow-sm"
-                : "text-secondary-foreground/70 hover:text-secondary-foreground hover:bg-secondary-foreground/10"
+              isSpecial
+                ? ""
+                : item.isActive
+                  ? "text-secondary-foreground bg-secondary-foreground/20 shadow-sm"
+                  : "text-secondary-foreground/70 hover:text-secondary-foreground hover:bg-secondary-foreground/10"
             }`}
           >
-            {item.isActive && (
+            {!isSpecial && item.isActive && (
               <div className="absolute top-1 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-secondary-foreground rounded-full transition-all duration-200"></div>
             )}
-            <Icon className="w-5 h-5 transition-all duration-200" />
-            <span className="text-xs mt-1 transition-all duration-200">{item.label}</span>
+            {isSpecial ? (
+              <span className="flex items-center justify-center w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-[0_10px_24px_-6px_hsl(var(--primary)/0.55)] ring-4 ring-background transition-transform duration-200 hover:scale-105 active:scale-95">
+                <Icon className="h-8 w-8" />
+              </span>
+            ) : (
+              <Icon className="w-5 h-5 transition-all duration-200" />
+            )}
+            {!isSpecial && <span className="text-xs mt-1 transition-all duration-200">{item.label}</span>}
           </button>
         );
       })}
-
-      <button
-        onClick={onSOSClick || (() => navigate(sosItem.path))}
-        style={{ position: "absolute", left: 0, right: 0, top: -30, margin: "0 auto", width: 75, height: 75 }}
-        className="tab-item sos flex items-center justify-center rounded-full text-primary-foreground shadow-[0_14px_32px_-8px_hsl(var(--primary)/0.55)] ring-4 ring-background transition-transform duration-200 hover:scale-105 active:scale-95 z-[1001]"
-        aria-label="Ajuda Emergencial"
-      >
-        <SosIcon className="h-10 w-10" />
-      </button>
     </nav>
   );
 };
