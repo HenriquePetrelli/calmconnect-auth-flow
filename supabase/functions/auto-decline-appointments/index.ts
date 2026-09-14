@@ -92,7 +92,7 @@ serve(async (req) => {
                 appointment_id: appointment.id,
                 status: 'declined',
                 psychologist_name: nameByPsychologistId.get(appointment.psychologist_id) || 'o psicólogo',
-                appointment_date: new Date(appointment.scheduled_at).toLocaleString('pt-BR'),
+                appointment_date: new Date(appointment.scheduled_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
               },
             });
           } catch (notificationError) {

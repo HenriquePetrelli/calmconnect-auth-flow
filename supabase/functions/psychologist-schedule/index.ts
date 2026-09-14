@@ -472,8 +472,8 @@ serve(async (req) => {
             appointment_id: appointmentId,
             status: status,
             psychologist_name: appointment.psychologists.full_name,
-            appointment_date: new Date(appointment.scheduled_at).toLocaleString('pt-BR'),
-            proposed_date: proposedScheduledAt ? new Date(proposedScheduledAt).toLocaleString('pt-BR') : null,
+            appointment_date: new Date(appointment.scheduled_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+            proposed_date: proposedScheduledAt ? new Date(proposedScheduledAt).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }) : null,
             proposal_notes: proposalNotes
           };
         } else if (userType === 'patient' && action === 'respond_reschedule') {
@@ -483,8 +483,8 @@ serve(async (req) => {
             appointment_id: appointmentId,
             status: status,
             patient_response: status === 'scheduled' ? 'accepted' : 'declined',
-            appointment_date: new Date(appointment.scheduled_at).toLocaleString('pt-BR'),
-            proposed_date: appointment.proposed_scheduled_at ? new Date(appointment.proposed_scheduled_at).toLocaleString('pt-BR') : null
+            appointment_date: new Date(appointment.scheduled_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+            proposed_date: appointment.proposed_scheduled_at ? new Date(appointment.proposed_scheduled_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }) : null
           };
         }
 
