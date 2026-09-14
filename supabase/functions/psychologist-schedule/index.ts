@@ -276,10 +276,20 @@ serve(async (req) => {
         );
       }
 
-      // Default: get today's appointments
-      const today = new Date();
-      const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-      const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+      // Default: get today's appointments. "Today" must mean Brazil's
+      // calendar day, not the UTC day this edge function's runtime happens
+      // to be in — building the boundary from a raw `new Date()` here used
+      // Deno's UTC getters, so for ~21h/day (every hour except 21h-24h BRT)
+      // this returned the wrong window: mostly tomorrow's appointments,
+      // missing almost all of today's.
+      const now = new Date();
+      const brazilNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+      const y = brazilNow.getFullYear();
+      const m = brazilNow.getMonth();
+      const d = brazilNow.getDate();
+      // America/Sao_Paulo has been fixed at UTC-3 since Brazil ended DST in 2019.
+      const startOfDay = new Date(Date.UTC(y, m, d, 3, 0, 0));
+      const endOfDay = new Date(Date.UTC(y, m, d + 1, 3, 0, 0));
 
       const { data: appointments, error } = await supabase
         .from('appointments')
