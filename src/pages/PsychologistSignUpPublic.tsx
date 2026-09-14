@@ -17,6 +17,7 @@ import { LocationFields } from "@/components/psychologist/LocationFields";
 import { PsychologistService } from "@/services/psychologist.service";
 import { TRANSTORNOS } from "@/data/transtornos";
 import MultiSelectModal from "@/components/ui/multi-select-modal";
+import { validateCPF } from "@/utils/cpf";
 
 const specializations = [
   // Áreas tradicionais
@@ -59,7 +60,7 @@ const formSchema = z.object({
   password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
   confirmPassword: z.string(),
   fullName: z.string().min(2, "Nome completo é obrigatório"),
-  cpf: z.string().min(11, "CPF é obrigatório"),
+  cpf: z.string().min(1, "CPF é obrigatório"),
   crp: z.string().min(5, "CRP é obrigatório"),
   
   specialty: z.string().min(1, "Especialidade é obrigatória"),
@@ -72,6 +73,9 @@ const formSchema = z.object({
 }).refine((data) => data.password === data.confirmPassword, {
   message: "As senhas não coincidem",
   path: ["confirmPassword"],
+}).refine((data) => validateCPF(data.cpf), {
+  message: "CPF inválido. Verifique os números digitados.",
+  path: ["cpf"],
 })
 
 type FormData = z.infer<typeof formSchema>;

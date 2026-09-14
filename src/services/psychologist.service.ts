@@ -302,7 +302,10 @@ export class PsychologistService {
       if (message.includes('violates row-level security')) {
         return 'Erro de permissão. Tente novamente em alguns segundos.';
       }
-      
+      if (message.includes('valid_cpf_format')) {
+        return 'CPF inválido. Verifique os números digitados.';
+      }
+
       // Return the original error message if it's user-friendly
       if (error.message && error.message.length < 100) {
         return error.message;

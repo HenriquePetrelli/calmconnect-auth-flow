@@ -44,9 +44,6 @@ const BottomNavigation = ({ onSOSClick }: BottomNavigationProps) => {
     },
   ];
 
-  const sosItem = navItems.find((item) => item.isSpecial)!;
-  const SosIcon = sosItem.icon;
-
   return (
     <nav className="tabs">
       {navItems.map((item) => {
