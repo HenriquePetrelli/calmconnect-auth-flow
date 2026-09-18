@@ -1,0 +1,31 @@
+-- psychologist-documents stores psychologists' identity/CRP verification
+-- documents. A 2025-08-09 migration ("Tornar o bucket público para
+-- resolver problemas de RLS") set the bucket itself to public = true as a
+-- workaround, instead of fixing the actual RLS gap (the admin upload path
+-- writes to a `psychologists.id`-keyed folder, which the then-existing
+-- owner-only INSERT policy — keyed by auth.uid() — didn't cover; a
+-- separate "Super admins can manage all psychologist documents" FOR ALL
+-- policy already granted admins full access regardless of folder, so the
+-- public flag was never actually necessary).
+--
+-- A public bucket serves objects directly via
+-- /storage/v1/object/public/<bucket>/<path>, bypassing RLS entirely for
+-- reads. Since document_url is stored and rendered as a public-style URL
+-- in the admin approval UI (getPublicUrl), this has meant anyone who
+-- obtains that URL can read a psychologist's ID/CRP document with no
+-- authentication at all, indefinitely — a live PII exposure.
+--
+-- The RLS policies that should be gating this were never actually
+-- removed: "Super admins can view psychologist documents", "Super admins
+-- can manage all psychologist documents" (FOR ALL, is_super_admin()) and
+-- "Enable psychologist document access" (owner-by-folder OR
+-- is_super_admin()) are all still in place from earlier migrations —
+-- they've simply been moot ever since the bucket went public. Flipping
+-- the bucket back to private is enough to make them matter again; no new
+-- policy is needed. src/hooks/useSignedDocumentUrl.ts already tries
+-- createSignedUrl before falling back to getPublicUrl, so the admin
+-- approval UI (the only current reader of this bucket) starts getting a
+-- real, time-limited signed URL instead of a permanently public one.
+UPDATE storage.buckets
+SET public = false
+WHERE id = 'psychologist-documents';
