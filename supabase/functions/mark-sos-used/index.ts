@@ -23,17 +23,24 @@ const logStep = (step: string, details?: any) => {
   console.log(`[MARK-SOS-USED] ${step}${detailsStr}`);
 };
 
-// Same fix as check-subscription: compare the month as lived in
-// America/Sao_Paulo, not Deno's UTC clock, so a use late on the last day
-// of the month isn't attributed to the next month.
-const brazilYearMonth = (date: Date) => {
+// sos_last_used is a plain `date` column (no time-of-day) — it must hold
+// the Brazil calendar date, not Deno's UTC one, otherwise a use late on
+// the last day of the month gets stored as the 1st of the next month.
+// Conversely, a stored date-only value must be compared by its own Y/M
+// digits, never re-parsed as a UTC instant and converted again — that
+// would (wrongly) roll every "1st of the month" value back to the last
+// day of the previous month.
+const brazilDateString = (date: Date): string => {
   const brazil = new Date(date.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
-  return { year: brazil.getFullYear(), month: brazil.getMonth() };
+  const y = brazil.getFullYear();
+  const m = String(brazil.getMonth() + 1).padStart(2, '0');
+  const d = String(brazil.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 };
-const isSameBrazilMonth = (a: Date, b: Date) => {
-  const ym1 = brazilYearMonth(a);
-  const ym2 = brazilYearMonth(b);
-  return ym1.year === ym2.year && ym1.month === ym2.month;
+const isSameBrazilMonthAsDateOnly = (storedDateOnly: string, instant: Date): boolean => {
+  const [storedYear, storedMonth] = storedDateOnly.split('-').map(Number);
+  const brazilInstant = new Date(instant.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+  return storedYear === brazilInstant.getFullYear() && storedMonth === brazilInstant.getMonth() + 1;
 };
 
 serve(async (req) => {
@@ -131,8 +138,9 @@ serve(async (req) => {
     }
 
     const today = new Date();
-    const last = subscriber.sos_last_used ? new Date(subscriber.sos_last_used) : null;
-    const sameMonth = last ? isSameBrazilMonth(last, today) : false;
+    const sameMonth = subscriber.sos_last_used
+      ? isSameBrazilMonthAsDateOnly(subscriber.sos_last_used, today)
+      : false;
 
     // If already used this month, nothing to do (idempotent)
     if (subscriber.sos_used_this_month && sameMonth) {
@@ -146,7 +154,7 @@ serve(async (req) => {
     // If month changed, reset first (optional)
     let updatePayload: any = {
       sos_used_this_month: true,
-      sos_last_used: today.toISOString().slice(0, 10), // store as date
+      sos_last_used: brazilDateString(today), // store as Brazil calendar date
       updated_at: new Date().toISOString(),
     };
 

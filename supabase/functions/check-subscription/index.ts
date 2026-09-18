@@ -28,6 +28,18 @@ const isSameBrazilMonth = (a: Date, b: Date) => {
   return ym1.year === ym2.year && ym1.month === ym2.month;
 };
 
+// sos_last_used is a plain `date` column (no time-of-day), unlike
+// appointments_last_used (timestamptz). A date-only value like
+// "2026-02-01" must be compared by its own Y/M digits — re-parsing it as
+// `new Date("2026-02-01")` treats it as UTC midnight, and converting THAT
+// to Brazil time rolls it back to Jan 31 21:00, wrongly classifying every
+// "1st of the month" value as the previous month.
+const isSameBrazilMonthAsDateOnly = (storedDateOnly: string, instant: Date): boolean => {
+  const [storedYear, storedMonth] = storedDateOnly.split('-').map(Number);
+  const brazilInstant = new Date(instant.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+  return storedYear === brazilInstant.getFullYear() && storedMonth === brazilInstant.getMonth() + 1;
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -153,7 +165,7 @@ serve(async (req) => {
     let sosReason = "Sem assinatura ativa";
     const now = new Date();
     const sameMonth = sosLastUsed
-      ? isSameBrazilMonth(new Date(sosLastUsed), now)
+      ? isSameBrazilMonthAsDateOnly(sosLastUsed, now)
       : false;
 
     if (!hasActiveSub || !subscriptionTier) {
