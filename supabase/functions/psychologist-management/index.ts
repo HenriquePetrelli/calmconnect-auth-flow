@@ -31,7 +31,6 @@ interface PsychologistRegistration {
 
 interface ApprovalRequest {
   psychologist_id: string;
-  admin_user_id: string;
 }
 
 interface RejectionRequest extends ApprovalRequest {
@@ -342,25 +341,28 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Aprovar psicólogo
     if (req.method === 'POST' && action === 'approve') {
-      const { psychologist_id, admin_user_id }: ApprovalRequest = await req.json();
-      
-      validateInput({ psychologist_id, admin_user_id }, ['psychologist_id', 'admin_user_id']);
-      
+      const { psychologist_id }: ApprovalRequest = await req.json();
+
+      validateInput({ psychologist_id }, ['psychologist_id']);
+
       // Buscar dados do psicólogo antes da aprovação
       const { data: psychologist, error: fetchError } = await supabase
         .from('psychologists')
         .select('*')
         .eq('id', psychologist_id)
         .single();
-      
+
       if (fetchError || !psychologist) {
         throw new Error('Psicólogo não encontrado');
       }
-      
-      // Usar função RPC para aprovação
+
+      // Usar função RPC para aprovação. admin_id vem do usuário já
+      // verificado (user.id), nunca do corpo da requisição — do contrário
+      // qualquer admin poderia atribuir a aprovação a outro admin no
+      // registro permanente de auditoria (reviewed_by).
       const { error: approvalError } = await supabase.rpc('handle_psychologist_approval', {
         psychologist_id: psychologist_id,
-        admin_id: admin_user_id
+        admin_id: user.id
       });
       
       if (approvalError) throw approvalError;
@@ -385,25 +387,27 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Rejeitar psicólogo
     if (req.method === 'POST' && action === 'reject') {
-      const { psychologist_id, admin_user_id, rejection_reason }: RejectionRequest = await req.json();
-      
-      validateInput({ psychologist_id, admin_user_id }, ['psychologist_id', 'admin_user_id']);
-      
+      const { psychologist_id, rejection_reason }: RejectionRequest = await req.json();
+
+      validateInput({ psychologist_id }, ['psychologist_id']);
+
       // Buscar dados do psicólogo antes da rejeição
       const { data: psychologist, error: fetchError } = await supabase
         .from('psychologists')
         .select('*')
         .eq('id', psychologist_id)
         .single();
-      
+
       if (fetchError || !psychologist) {
         throw new Error('Psicólogo não encontrado');
       }
-      
-      // Usar função RPC para rejeição
+
+      // Usar função RPC para rejeição. admin_id vem do usuário já
+      // verificado (user.id), nunca do corpo da requisição — mesmo motivo
+      // da correção em "approve" acima.
       const { error: rejectionError } = await supabase.rpc('handle_psychologist_rejection', {
         psychologist_id: psychologist_id,
-        admin_id: admin_user_id,
+        admin_id: user.id,
         rejection_reason: rejection_reason || null
       });
       
