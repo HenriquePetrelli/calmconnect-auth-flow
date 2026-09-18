@@ -10,6 +10,17 @@ const corsHeaders = {
 
 const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
 
+// Interpolated into raw HTML email content below (title/subject too, via
+// in-app notification text) — none of it is user-safe by default:
+// psychologist_name comes from the psychologist's own profile full_name,
+// proposal_notes from their own free-text reschedule message. Neither is
+// sanitized upstream, so without escaping here a psychologist could embed
+// an <a>/<img> phishing link that renders live in a patient's real inbox.
+const escapeHtml = (value: unknown): string =>
+  String(value ?? '').replace(/[&<>"']/g, (c) => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!
+  ));
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -21,7 +32,24 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-  const { 
+    // This endpoint creates a notification/sends an email for an arbitrary
+    // recipient id taken straight from the request body — it must only
+    // ever be reachable server-to-server (from psychologist-schedule and
+    // auto-decline-appointments, both of which already call it with the
+    // service-role key), never by a signed-up user's own token. Without
+    // this check, any authenticated user could make the platform send a
+    // real email — with attacker-chosen appointment/proposal text — to any
+    // other user's real address.
+    const authHeader = req.headers.get('Authorization');
+    const callerToken = authHeader?.replace('Bearer ', '') ?? '';
+    if (callerToken !== Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+  const {
     patient_id, 
     psychologist_id, 
     appointment_id, 
@@ -84,6 +112,15 @@ serve(async (req) => {
 
   recipientEmail = user.user.email;
 
+  // HTML-escaped variants for the raw email templates below — psychologist_name
+  // and proposal_notes ultimately come from a psychologist's own profile
+  // name / free-text reschedule message, neither sanitized upstream.
+  const safeRecipientName = escapeHtml(recipientProfile?.full_name);
+  const safePsychName = escapeHtml(psychologist_name);
+  const safeApptDate = escapeHtml(appointment_date);
+  const safeProposedDate = escapeHtml(proposed_date);
+  const safeProposalNotes = escapeHtml(proposal_notes);
+
   let title, message, emailSubject, emailContent;
 
   if (psychologist_id) {
@@ -95,29 +132,29 @@ serve(async (req) => {
         emailSubject = 'Reagendamento aceito - Soliv';
         emailContent = `
           <h2>Reagendamento Aceito</h2>
-          <p>Olá ${recipientProfile?.full_name || 'Doutor(a)'},</p>
+          <p>Olá ${safeRecipientName || 'Doutor(a)'},</p>
           <p>O paciente aceitou sua proposta de reagendamento.</p>
           <ul>
-            <li><strong>Nova data confirmada:</strong> ${proposed_date}</li>
+            <li><strong>Nova data confirmada:</strong> ${safeProposedDate}</li>
           </ul>
           <p>A consulta está confirmada para o novo horário.</p>
           <p>Atenciosamente,<br>Equipe Soliv</p>
         `;
         break;
-      
+
       case 'declined':
         title = 'Reagendamento Recusado';
         message = `O paciente recusou sua proposta de reagendamento.`;
         emailSubject = 'Reagendamento recusado - Soliv';
         emailContent = `
           <h2>Reagendamento Recusado</h2>
-          <p>Olá ${recipientProfile?.full_name || 'Doutor(a)'},</p>
-          <p>Infelizmente o paciente recusou sua proposta de reagendamento para ${proposed_date}.</p>
+          <p>Olá ${safeRecipientName || 'Doutor(a)'},</p>
+          <p>Infelizmente o paciente recusou sua proposta de reagendamento para ${safeProposedDate}.</p>
           <p>A consulta foi cancelada definitivamente.</p>
           <p>Atenciosamente,<br>Equipe Soliv</p>
         `;
         break;
-      
+
       default:
         throw new Error('Invalid status for psychologist notification');
     }
@@ -130,41 +167,41 @@ serve(async (req) => {
         emailSubject = 'Consulta confirmada - Soliv';
         emailContent = `
           <h2>Consulta Confirmada</h2>
-           <p>Olá ${recipientProfile?.full_name || 'Paciente'},</p>
+           <p>Olá ${safeRecipientName || 'Paciente'},</p>
           <p>Sua consulta foi confirmada!</p>
           <ul>
-            <li><strong>Psicólogo:</strong> ${psychologist_name}</li>
-            <li><strong>Data:</strong> ${appointment_date}</li>
+            <li><strong>Psicólogo:</strong> ${safePsychName}</li>
+            <li><strong>Data:</strong> ${safeApptDate}</li>
           </ul>
           <p>Prepare-se para sua sessão e lembre-se de estar em um ambiente tranquilo.</p>
           <p>Atenciosamente,<br>Equipe Soliv</p>
         `;
         break;
-      
+
       case 'declined':
         title = 'Consulta Recusada';
         message = `Sua consulta com ${psychologist_name} foi recusada. Você pode agendar com outro profissional.`;
         emailSubject = 'Consulta recusada - Soliv';
         emailContent = `
           <h2>Consulta Recusada</h2>
-           <p>Olá ${recipientProfile?.full_name || 'Paciente'},</p>
-          <p>Infelizmente sua consulta agendada para ${appointment_date} com ${psychologist_name} foi recusada.</p>
+           <p>Olá ${safeRecipientName || 'Paciente'},</p>
+          <p>Infelizmente sua consulta agendada para ${safeApptDate} com ${safePsychName} foi recusada.</p>
           <p>Não se preocupe! Você pode agendar uma nova consulta com outro psicólogo disponível em nossa plataforma.</p>
           <p>Atenciosamente,<br>Equipe Soliv</p>
         `;
         break;
-      
+
       case 'reschedule_proposed':
         title = 'Nova Proposta de Horário';
         message = `${psychologist_name} sugeriu um novo horário: ${proposed_date}. ${proposal_notes || ''}`;
         emailSubject = 'Nova proposta de horário - Soliv';
         emailContent = `
           <h2>Nova Proposta de Horário</h2>
-          <p>Olá ${recipientProfile?.full_name || 'Paciente'},</p>
-          <p>O psicólogo ${psychologist_name} não pôde confirmar sua consulta para ${appointment_date}, mas sugeriu um novo horário:</p>
+          <p>Olá ${safeRecipientName || 'Paciente'},</p>
+          <p>O psicólogo ${safePsychName} não pôde confirmar sua consulta para ${safeApptDate}, mas sugeriu um novo horário:</p>
           <ul>
-            <li><strong>Novo horário proposto:</strong> ${proposed_date}</li>
-            ${proposal_notes ? `<li><strong>Observações:</strong> ${proposal_notes}</li>` : ''}
+            <li><strong>Novo horário proposto:</strong> ${safeProposedDate}</li>
+            ${proposal_notes ? `<li><strong>Observações:</strong> ${safeProposalNotes}</li>` : ''}
           </ul>
           <p>Acesse o aplicativo para aceitar ou recusar esta proposta.</p>
           <p>Atenciosamente,<br>Equipe Soliv</p>
