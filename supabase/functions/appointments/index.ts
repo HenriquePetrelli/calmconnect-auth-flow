@@ -282,6 +282,24 @@ serve(async (req) => {
         throw new Error('Psychologist ID and scheduled time are required');
       }
 
+      // The GET action=psychologists listing only ever shows approved
+      // psychologists, but this endpoint is callable directly with any
+      // psychologist_id — without this check a patient could book with a
+      // pending/rejected/blocked account (availability rows can outlive
+      // approval, e.g. set up before rejection).
+      const { data: targetPsychologist } = await supabase
+        .from('psychologists')
+        .select('approved, approval_status, is_blocked, blocked_until')
+        .eq('user_id', psychologist_id)
+        .maybeSingle();
+
+      const psychBlocked = targetPsychologist?.is_blocked === true &&
+        (!targetPsychologist?.blocked_until || new Date(targetPsychologist.blocked_until) > new Date());
+
+      if (!targetPsychologist || !targetPsychologist.approved || targetPsychologist.approval_status !== 'approved' || psychBlocked) {
+        throw new Error('Psicólogo indisponível para agendamento.');
+      }
+
       // Validate appointment_type
       const validTypes = ['regular', 'emergency'];
       const finalAppointmentType = appointment_type && validTypes.includes(appointment_type) ? appointment_type : 'regular';
@@ -432,10 +450,13 @@ serve(async (req) => {
   } catch (error: any) {
     console.error('Error in appointments function:', error.message);
     const msg = error?.message || 'Erro interno';
-    // Validation/business errors → 400/409 (not 500)
+    // Validation/business errors → 400/409/429 (not 500) — these are
+    // expected outcomes (agenda full, plan restriction, quota used, rate
+    // limited), not server malfunctions.
     const isConflict = /ocupado/i.test(msg);
-    const isValidation = /obrigat|inválid|intervalo|entre 07h|10 minutos|required/i.test(msg);
-    const status = isConflict ? 409 : isValidation ? 400 : 500;
+    const isRateLimited = /muitas (tentativas|solicitações)/i.test(msg);
+    const isValidation = /obrigat|inválid|intervalo|entre 07h|10 minutos|required|dispon|limite mensal/i.test(msg);
+    const status = isConflict ? 409 : isRateLimited ? 429 : isValidation ? 400 : 500;
     return new Response(
       JSON.stringify({ error: msg }),
       {
