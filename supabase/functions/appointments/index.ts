@@ -7,6 +7,19 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Monthly quota reset must follow the calendar month as lived in
+// America/Sao_Paulo, not Deno's UTC clock — otherwise a use late on the
+// last day of the month gets attributed to the next month.
+const brazilYearMonth = (date: Date) => {
+  const brazil = new Date(date.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+  return { year: brazil.getFullYear(), month: brazil.getMonth() };
+};
+const isSameBrazilMonth = (a: Date, b: Date) => {
+  const ym1 = brazilYearMonth(a);
+  const ym2 = brazilYearMonth(b);
+  return ym1.year === ym2.year && ym1.month === ym2.month;
+};
+
 type Block = { start_time: string; end_time: string };
 
 const timeToMinutes = (time: string): number => {
@@ -294,9 +307,7 @@ serve(async (req) => {
 
         const lastUsed = subscriberRow.appointments_last_used ? new Date(subscriberRow.appointments_last_used) : null;
         const nowForQuota = new Date();
-        const sameMonth = lastUsed
-          ? lastUsed.getUTCFullYear() === nowForQuota.getUTCFullYear() && lastUsed.getUTCMonth() === nowForQuota.getUTCMonth()
-          : false;
+        const sameMonth = lastUsed ? isSameBrazilMonth(lastUsed, nowForQuota) : false;
 
         if (subscriberRow.appointments_used_this_month && sameMonth) {
           throw new Error('Limite mensal de consultas agendadas já utilizado (PREMIUM: 1x/mês).');

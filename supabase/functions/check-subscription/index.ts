@@ -12,6 +12,22 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CHECK-SUBSCRIPTION] ${step}${detailsStr}`);
 };
 
+// Monthly quotas (SOS, appointments) reset by calendar month — but this
+// function runs on Deno's UTC clock, not Brazil's. Comparing getUTCFullYear/
+// getUTCMonth means the "month" flips ~3h early (21h-24h BRT), so a use late
+// on the last day of the month could get attributed to the next month and
+// wrongly block a legitimate use early in that next month. Compare the
+// month as lived in America/Sao_Paulo instead.
+const brazilYearMonth = (date: Date) => {
+  const brazil = new Date(date.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+  return { year: brazil.getFullYear(), month: brazil.getMonth() };
+};
+const isSameBrazilMonth = (a: Date, b: Date) => {
+  const ym1 = brazilYearMonth(a);
+  const ym2 = brazilYearMonth(b);
+  return ym1.year === ym2.year && ym1.month === ym2.month;
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -137,7 +153,7 @@ serve(async (req) => {
     let sosReason = "Sem assinatura ativa";
     const now = new Date();
     const sameMonth = sosLastUsed
-      ? (new Date(sosLastUsed)).getUTCFullYear() === now.getUTCFullYear() && (new Date(sosLastUsed)).getUTCMonth() === now.getUTCMonth()
+      ? isSameBrazilMonth(new Date(sosLastUsed), now)
       : false;
 
     if (!hasActiveSub || !subscriptionTier) {
@@ -176,7 +192,7 @@ serve(async (req) => {
     let canScheduleAppointment = false;
     let appointmentReason = "Sem assinatura ativa";
     const sameMonthAppointments = appointmentsLastUsed
-      ? (new Date(appointmentsLastUsed)).getUTCFullYear() === now.getUTCFullYear() && (new Date(appointmentsLastUsed)).getUTCMonth() === now.getUTCMonth()
+      ? isSameBrazilMonth(new Date(appointmentsLastUsed), now)
       : false;
 
     if (!hasActiveSub || !subscriptionTier) {

@@ -23,6 +23,19 @@ const logStep = (step: string, details?: any) => {
   console.log(`[MARK-SOS-USED] ${step}${detailsStr}`);
 };
 
+// Same fix as check-subscription: compare the month as lived in
+// America/Sao_Paulo, not Deno's UTC clock, so a use late on the last day
+// of the month isn't attributed to the next month.
+const brazilYearMonth = (date: Date) => {
+  const brazil = new Date(date.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+  return { year: brazil.getFullYear(), month: brazil.getMonth() };
+};
+const isSameBrazilMonth = (a: Date, b: Date) => {
+  const ym1 = brazilYearMonth(a);
+  const ym2 = brazilYearMonth(b);
+  return ym1.year === ym2.year && ym1.month === ym2.month;
+};
+
 serve(async (req) => {
   const origin = req.headers.get('origin');
   const corsHeaders = getCorsHeaders(origin);
@@ -119,7 +132,7 @@ serve(async (req) => {
 
     const today = new Date();
     const last = subscriber.sos_last_used ? new Date(subscriber.sos_last_used) : null;
-    const sameMonth = last ? (last.getUTCFullYear() === today.getUTCFullYear() && last.getUTCMonth() === today.getUTCMonth()) : false;
+    const sameMonth = last ? isSameBrazilMonth(last, today) : false;
 
     // If already used this month, nothing to do (idempotent)
     if (subscriber.sos_used_this_month && sameMonth) {
