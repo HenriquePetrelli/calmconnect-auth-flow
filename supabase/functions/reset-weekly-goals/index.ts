@@ -12,9 +12,40 @@ serve(async (req) => {
   }
 
   try {
+    // This endpoint is only meant to be hit by the Monday pg_cron job, but
+    // it has to run with verify_jwt=false (pg_cron's net.http_post sends
+    // only the public anon key, not a real user session), which means
+    // Supabase's gateway lets ANY unauthenticated caller reach it. Unlike
+    // the other public cron endpoints in this project, this one had no
+    // guard of its own: every single call unconditionally wiped every
+    // patient's current weekly goal progress, any day, any number of
+    // times. Two layers of defense, neither requiring the cron job itself
+    // to change: (1) an optional shared secret — if CRON_SECRET is set as
+    // an edge function secret, a request missing/mismatching the
+    // x-cron-secret header is rejected; skipped entirely while the secret
+    // isn't configured, so this doesn't break the existing cron job; (2) a
+    // hard requirement that it only runs on Monday in Brazil's calendar,
+    // which holds regardless of whether the secret is configured yet.
+    const cronSecret = Deno.env.get('CRON_SECRET');
+    if (cronSecret && req.headers.get('x-cron-secret') !== cronSecret) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 401,
+      });
+    }
+
+    const brazilNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+    if (brazilNow.getDay() !== 1) { // 0 = Sunday, 1 = Monday
+      console.log('[RESET-WEEKLY-GOALS] Skipped: not Monday in America/Sao_Paulo', { brazilNow: brazilNow.toISOString() });
+      return new Response(
+        JSON.stringify({ success: false, skipped: true, reason: 'Only runs on Monday (America/Sao_Paulo)' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      );
+    }
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     console.log('[RESET-WEEKLY-GOALS] Starting weekly goals reset - Monday 01:00 AM BRT');
