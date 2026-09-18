@@ -188,12 +188,21 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
       // For each testimonial, fetch user profile and user like status
       const testimonialsWithProfiles = await Promise.all(
         (data || []).map(async (testimonial) => {
-          // Fetch profile
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('full_name')
-            .eq('user_id', testimonial.user_id)
-            .single();
+          // Anonymous testimonials must not carry the author's real name
+          // to the client at all — the UI already hides it when rendering,
+          // but that's cosmetic only: the name would still be sitting in
+          // the network response/React state for anyone to read via
+          // devtools, defeating the whole point of posting anonymously
+          // about a sensitive mental-health topic.
+          let profile: { full_name: string } | null = null;
+          if (!testimonial.anonimo) {
+            const { data: profileData } = await supabase
+              .from('profiles')
+              .select('full_name')
+              .eq('user_id', testimonial.user_id)
+              .single();
+            profile = profileData;
+          }
 
           // Fetch user's like on this testimonial
           let userLike = null;
