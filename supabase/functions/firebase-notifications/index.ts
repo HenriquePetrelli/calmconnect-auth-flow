@@ -141,6 +141,31 @@ Deno.serve(async (req) => {
       );
     }
 
+    // A non-service-role caller (a logged-in user's own client) may only
+    // push to devices registered to themselves — fcm_tokens' own RLS
+    // already enforces this for reads through the normal Supabase client,
+    // but this function uses the service-role client internally and must
+    // re-check ownership itself, otherwise any authenticated user could
+    // target an arbitrary FCM token (someone else's device) with a
+    // title/body of their choosing.
+    if (!isServiceRoleCall) {
+      const { data: ownedTokens } = await supabase
+        .from('fcm_tokens')
+        .select('token')
+        .eq('user_id', callerUserId)
+        .in('token', payload.tokens);
+
+      const ownedSet = new Set((ownedTokens ?? []).map((t) => t.token));
+      payload.tokens = payload.tokens.filter((t) => ownedSet.has(t));
+
+      if (payload.tokens.length === 0) {
+        return new Response(
+          JSON.stringify({ error: 'None of the provided tokens belong to the authenticated user' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
     // Requires three secrets from a Firebase service account JSON
     // (Project Settings → Service Accounts → Generate new private key):
     // FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY, FIREBASE_PROJECT_ID.
