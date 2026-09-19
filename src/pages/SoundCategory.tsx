@@ -3,6 +3,7 @@ import { Play, Clock, Music } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { soundsData } from "@/data/soundsData";
 import PageHeader from "@/components/PageHeader";
+import PatientBottomNav from "@/components/PatientBottomNav";
 
 const SoundCategory = () => {
   const navigate = useNavigate();
@@ -33,7 +34,8 @@ const SoundCategory = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-12">
+    <div className="min-h-screen bg-background pb-24 lg:pb-12">
+      <PatientBottomNav />
       <PageHeader title={category.title} backTo="/sounds" />
 
       {(category as any).description && (

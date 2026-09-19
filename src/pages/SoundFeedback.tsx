@@ -5,6 +5,7 @@ import { CheckCircle, RotateCcw, Home } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { usePatientStatistics } from "@/hooks/usePatientStatistics";
 import { useAchievements } from "@/hooks/useAchievements";
+import PatientBottomNav from "@/components/PatientBottomNav";
 
 const SoundFeedback = () => {
   const navigate = useNavigate();
@@ -30,7 +31,8 @@ const SoundFeedback = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/5 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/5 flex items-center justify-center p-6 pb-24 lg:pb-6">
+      <PatientBottomNav />
       <Card className="w-full max-w-md mx-auto">
         <CardContent className="p-8 text-center space-y-6">
           {/* Success Icon */}

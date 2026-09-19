@@ -85,7 +85,7 @@ Estas regras valem para **todas** as fases.
 | 3 | Regra do laranja (inversão completa, decidida na Fase 1) + papel definitivo do `--secondary` (adiado da Fase 2) | 4h–6h | não precisou de 🛑 — ✅ concluída |
 | 4 | Modo escuro (revisão + 2 ajustes, reduzida na Fase 0) | 2h | não — ✅ concluída (parcial, ver §5 de `docs/visual/04-modo-escuro.md`) |
 | 5 | Acessibilidade | 3h | não — ✅ concluída (parcial, ver §2 de `docs/visual/05-acessibilidade.md`) |
-| 6 | SOS e modo crise | 4h | 🛑 antes de mexer em comportamento |
+| 6 | SOS e modo crise | 4h | 🛑 antes de mexer em comportamento — ✅ concluída (6b aprovada por Henrique antes do commit) |
 | 7 | Wordmark, splash e assets (reduzida na Fase 1 — sem ícone novo) | 2h | 🛑 revisão do wordmark em SVG |
 | 8 | Tom de voz e microcopy | 3h | 🛑 lista de textos |
 | 9 | Guia de marca | 1h30 | não |
@@ -193,26 +193,15 @@ Relatório completo com o antes/depois dos contrastes em `docs/visual/05-acessib
 
 ---
 
-### Fase 6 — SOS e modo crise · 4h · 🛑
+### Fase 6 — SOS e modo crise · 4h · ✅ concluída
 
-**6a. Botão (sem mudança de comportamento)**
-- **Confirmado na Fase 0: já é consistente por construção** — um único componente (`BottomNavigation.tsx`, usado via `MainLayout.tsx`/`PatientBottomNav.tsx`) renderiza o botão em todas as telas do paciente. Esta etapa vira verificação visual (screenshot das telas onde aparece), não correção.
-- Mesmo tamanho, mesmo ícone (boia), mesma cor `sos`.
-- Não aparece em telas onde não faz sentido (ex.: dentro de uma consulta já em andamento). Listar essas telas e confirmar.
+Relatório completo, com o diff de `EmergencyVideoCall.tsx`, em `docs/visual/06-sos-modo-crise.md`. Resumo:
 
-**6b. Proteção contra toque acidental**
-**Decisão da Fase 1: toque abre confirmação em tela cheia antes de acionar de verdade.** Implementar só isso — nenhuma outra opção (segurar 1s, nenhuma proteção). 🛑 Isso é mudança de comportamento: mostrar o diff antes de commitar.
+**6a.** Confirmado por construção (sem correção de posição/tamanho): um único componente renderiza o botão, nunca aparece durante uma chamada. Achado levado ao Henrique antes de agir (mudava o que é alcançável, não só estilo): 10 telas do paciente não tinham o botão — decisão de adicionar nas telas de conteúdo (sons/conquistas/histórico/suporte) e manter de fora as transacionais (assinatura, configurações). Aplicado em 5 telas; `SoundPlayer.tsx` ficou pendente (layout em tela cheia, risco real de cobrir controles sem poder ver renderizado).
 
-**6c. Modo crise visual**
-Nas telas do fluxo de emergência (acionar → aguardando psicólogo → chamada → encerramento):
-- fundo `calm`, sem gradientes chamativos;
-- um único próximo passo por tela, texto grande;
-- sem navegação inferior, sem notificações de conquistas, sem nada que distraia;
-- CVV 188 visível e tocável (`tel:188`) na tela de espera;
-- mensagem de espera acolhedora e honesta (o texto final vem da Fase 8).
-- **Nota: a remoção do mascote (Fase 1, decisão de removê-lo do app inteiro) já cobre a tela de espera do SOS (`SOS.tsx`, hoje com `<Mascot pose="hug">`) — conferir que ela já não usa mais o componente antes de chegar nesta fase, se a Fase 10 for executada antes.**
+**6b.** 🛑 Implementado e **aprovado por Henrique antes do commit**, como o plano exigia. `ConfirmationModal.tsx` virou uma confirmação em tela cheia de verdade (era um `AlertDialog` pequeno centralizado). Validado com screenshot real antes de pedir aprovação.
 
-Em `EmergencyVideoCall.tsx`: **só classes e texto**. Diff separado no relatório (regra 2 da seção 3).
+**6c.** `SOS.tsx`: fundo virou `bg-calm` (primeiro uso real do token), mascote removido (antecipando só esta tela da Fase 10), CVV/SAMU agora sempre visíveis na espera (antes só apareciam sem profissional online). `EmergencyVideoCall.tsx`: só `bg-background` → `bg-calm` nas 14 ocorrências, nada mais — diff completo no relatório.
 
 ---
 

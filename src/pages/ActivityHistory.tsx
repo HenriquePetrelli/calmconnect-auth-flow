@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { SkeletonSectionCard } from "@/components/skeletons/Skeletons";
 import { SosHistoryPanel } from "@/components/sos/SosHistoryPanel";
 import { useAuth } from "@/contexts/AuthContext";
+import PatientBottomNav from "@/components/PatientBottomNav";
 import jsPDF from 'jspdf';
 
 const ActivityHistory = () => {
@@ -130,7 +131,8 @@ const ActivityHistory = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-24 lg:pb-0">
+      <PatientBottomNav />
       <PageHeader title="Histórico de Atividades" backTo="/statistics" />
 
       {/* Content */}

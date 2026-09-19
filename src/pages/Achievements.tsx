@@ -5,6 +5,7 @@ import { AchievementCard } from '@/components/achievements/AchievementCard';
 import { AchievementModal } from '@/components/achievements/AchievementModal';
 import { SkeletonCardGrid } from '@/components/skeletons/Skeletons';
 import PageHeader from '@/components/PageHeader';
+import PatientBottomNav from '@/components/PatientBottomNav';
 
 const Achievements = () => {
   const navigate = useNavigate();
@@ -14,7 +15,8 @@ const Achievements = () => {
   const totalCount = achievements.length;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-24 lg:pb-0">
+      <PatientBottomNav />
       <PageHeader title="Minhas Conquistas" backTo="/statistics" />
 
       {/* Content */}

@@ -3,7 +3,6 @@ import { AlertTriangle, Phone, Wind } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import PageHeader from "@/components/PageHeader";
-import { Mascot } from "@/components/mascot";
 import { useNavigate, useLocation } from "react-router-dom";
 import CancelConfirmationModal from "@/components/sos/CancelConfirmationModal";
 import SupportiveMessages from "@/components/sos/SupportiveMessages";
@@ -279,13 +278,11 @@ const SOS = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-calm flex flex-col">
       <PageHeader title="Solicitar ajuda" onBack={() => setShowCancelModal(true)} />
 
       {/* Content */}
       <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-8">
-        {!expired && <Mascot pose="hug" className="w-24 h-24" />}
-
         {/* Status da busca */}
         <Card className="w-full max-w-md">
           <CardContent className="p-8 text-center space-y-6">
@@ -331,6 +328,17 @@ const SOS = () => {
           </CardContent>
         </Card>
 
+        {/* CVV/SAMU sempre visíveis e tocáveis durante a espera, não só quando ninguém está online */}
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-sm">
+          <a href="tel:188" className="inline-flex items-center gap-1.5 text-primary hover:underline">
+            <Phone className="h-3.5 w-3.5" />
+            CVV: 188
+          </a>
+          <a href="tel:192" className="inline-flex items-center gap-1.5 text-primary hover:underline">
+            <Phone className="h-3.5 w-3.5" />
+            SAMU: 192
+          </a>
+        </div>
 
         {/* Nenhum profissional online: orientar em vez de deixar esperando */}
         {availableProfessionals === 0 && (

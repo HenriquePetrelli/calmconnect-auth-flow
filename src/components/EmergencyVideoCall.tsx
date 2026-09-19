@@ -1057,12 +1057,12 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
 
   // Call over: show only the feedback step. Saving it redirects home.
   if (callFinished && !showFeedbackModal) {
-    return <div className="min-h-screen bg-background" />;
+    return <div className="min-h-screen bg-calm" />;
   }
 
   if (callFinished) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-calm">
         <FeedbackModal
           isOpen
           required
@@ -1080,7 +1080,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
 
   if (isLoading && initTimedOut) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+      <div className="min-h-screen bg-calm flex items-center justify-center p-6">
         <div className="max-w-md w-full text-center space-y-4">
           <h2 className="text-xl font-semibold text-foreground">
             Não conseguimos iniciar a chamada
@@ -1108,7 +1108,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     
     return (
       <React.Suspense fallback={
-        <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="min-h-screen bg-calm flex items-center justify-center">
           <Loader2 className="w-12 h-12 animate-spin text-primary" />
         </div>
       }>
@@ -1141,7 +1141,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     
     return (
       <React.Suspense fallback={
-        <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="min-h-screen bg-calm flex items-center justify-center">
           <Loader2 className="w-12 h-12 animate-spin text-primary" />
         </div>
       }>
@@ -1162,7 +1162,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
 
   if (!sessionId) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-calm flex items-center justify-center">
         <Card className="w-full max-w-md mx-4">
           <CardContent className="p-8 text-center space-y-4">
             <AlertTriangle className="w-12 h-12 mx-auto text-destructive" />
@@ -1183,7 +1183,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
 
   if (displayError) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-calm flex items-center justify-center">
         <Card className="w-full max-w-md mx-4">
           <CardContent className="p-8 text-center space-y-4">
             <AlertTriangle className="w-12 h-12 mx-auto text-destructive" />
@@ -1206,7 +1206,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   }
 
   return (
-    <div className="fixed inset-0 bg-background flex flex-col overflow-hidden">
+    <div className="fixed inset-0 bg-calm flex flex-col overflow-hidden">
       {showDiagnostics && (
         <CallDiagnosticsPanel
           data={diagnosticsData}
@@ -1272,7 +1272,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
       </div>
 
       {/* Área principal do vídeo - Tela inteira */}
-      <div className="absolute inset-0 top-[72px] md:top-[88px] bottom-[100px] md:bottom-[120px] bg-background overflow-hidden">
+      <div className="absolute inset-0 top-[72px] md:top-[88px] bottom-[100px] md:bottom-[120px] bg-calm overflow-hidden">
         {/* Vídeo remoto - Tela inteira */}
         <div className="absolute inset-0">
           <video 
@@ -1313,7 +1313,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
 
           {/* Additional remote mute text indicator */}
           {isConnected && remoteMuted && (
-            <div className="absolute top-16 left-4 bg-background/70 backdrop-blur-sm rounded-lg px-3 py-1 shadow-lg z-20">
+            <div className="absolute top-16 left-4 bg-calm/70 backdrop-blur-sm rounded-lg px-3 py-1 shadow-lg z-20">
               <div className="flex items-center gap-1 text-destructive">
                 <MicOff size={14} />
                 <span className="text-xs font-medium">Microfone desligado</span>
@@ -1376,7 +1376,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
 
         {/* Placeholder quando não conectado */}
         {!isConnected && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background">
+          <div className="absolute inset-0 flex items-center justify-center bg-calm">
             <div className="text-center space-y-6 md:space-y-8 max-w-md mx-4">
               <div className="relative">
                 <div className="w-32 h-32 md:w-40 md:h-40 mx-auto rounded-full bg-gradient-primary flex items-center justify-center shadow-2xl">
@@ -1462,7 +1462,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
               </div>
               {/* Name label with local audio meter */}
               <div className="absolute bottom-1 left-1 right-1 md:bottom-2 md:left-2 md:right-2">
-                <div className="bg-background/60 backdrop-blur-sm rounded px-1 py-0.5 md:px-2 md:py-1">
+                <div className="bg-calm/60 backdrop-blur-sm rounded px-1 py-0.5 md:px-2 md:py-1">
                   <div className="flex items-center justify-between">
                     <span className="text-foreground text-xs font-medium">Você</span>
                     <VoiceMeter stream={localStream} size="small" />
@@ -1476,7 +1476,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
         {/* Indicador de participante remoto com medidor - Sobreposto */}
         {isConnected && (
           <div className="absolute top-4 left-4 z-30">
-            <div className="flex items-center gap-2 bg-background/70 backdrop-blur-md rounded-xl px-3 py-2 shadow-lg border border-border">
+            <div className="flex items-center gap-2 bg-calm/70 backdrop-blur-md rounded-xl px-3 py-2 shadow-lg border border-border">
               <span className="text-foreground font-medium text-sm max-w-32 truncate">
                 {userType === 'patient' ? (userInfo.name || 'Psicólogo') : (userInfo.name || 'Paciente')}
               </span>
@@ -1487,7 +1487,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
       </div>
 
       {/* Barra de controles fixa na parte inferior - Sobreposta */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border p-4 safe-area-bottom z-40">
+      <div className="fixed bottom-0 left-0 right-0 bg-calm/95 backdrop-blur-sm border-t border-border p-4 safe-area-bottom z-40">
         {/* Indicadores de segurança - Desktop apenas */}
         <div className="hidden md:flex justify-center items-center gap-6 mb-4 text-muted-foreground text-sm">
           <div className="flex items-center gap-2">

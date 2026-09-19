@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import PageHeader from "@/components/PageHeader";
+import PatientBottomNav from "@/components/PatientBottomNav";
 
 const Support = () => {
   const navigate = useNavigate();
@@ -77,6 +78,7 @@ const Support = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <PatientBottomNav />
       <PageHeader title="Suporte" backTo="/profile" />
 
       {/* Content */}
