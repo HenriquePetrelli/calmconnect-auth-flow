@@ -133,10 +133,7 @@ export const usePsychologistSchedule = () => {
 
       if (error) throw error;
 
-      toast({
-        title: 'Sucesso',
-        description: data.message,
-      });
+      toast({ title: data.message || 'Consulta atualizada' });
 
       // Refresh appointments
       fetchTodayAppointments();
@@ -167,10 +164,7 @@ export const usePsychologistSchedule = () => {
 
       if (error) throw error;
 
-      toast({
-        title: 'Sucesso',
-        description: 'Consulta confirmada com sucesso',
-      });
+      toast({ title: 'Consulta confirmada' });
 
       // Refresh appointments
       fetchTodayAppointments();
@@ -201,10 +195,7 @@ export const usePsychologistSchedule = () => {
 
       if (error) throw error;
 
-      toast({
-        title: 'Sucesso',
-        description: 'Consulta recusada',
-      });
+      toast({ title: 'Consulta recusada' });
 
       // Refresh appointments
       fetchTodayAppointments();

@@ -181,7 +181,7 @@ export const DocumentUpload = ({
       
       {error && (
         <FormMessage>
-          Por favor, envie um documento comprobatório
+          Envie um documento comprobatório
         </FormMessage>
       )}
     </div>

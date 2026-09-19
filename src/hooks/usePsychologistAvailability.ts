@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 
 export interface AvailabilityBlock {
   day_of_week: number;
@@ -67,7 +68,7 @@ export const usePsychologistAvailability = () => {
       console.error('Erro ao salvar disponibilidade:', error);
       toast({
         title: 'Erro ao salvar',
-        description: error.message || 'Não foi possível salvar sua agenda. Tente novamente.',
+        description: getFriendlyErrorMessage(error, 'Não foi possível salvar sua agenda. Tente novamente.'),
         variant: 'destructive',
       });
       return false;

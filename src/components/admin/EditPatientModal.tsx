@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 import type { AdminPatient } from '@/hooks/usePatientManagement';
 
 interface EditPatientModalProps {
@@ -72,7 +73,7 @@ export const EditPatientModal = ({ open, onOpenChange, patient, onSaved }: EditP
       onOpenChange(false);
       onSaved(data?.data);
     } catch (err: any) {
-      toast.error(err?.message || 'Erro ao atualizar paciente');
+      toast.error(getFriendlyErrorMessage(err, 'Erro ao atualizar paciente'));
     } finally {
       setSaving(false);
     }

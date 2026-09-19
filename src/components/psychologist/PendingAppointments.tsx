@@ -8,6 +8,7 @@ import { Clock, User, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { usePsychologistSchedule } from '@/hooks/usePsychologistSchedule';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -111,7 +112,7 @@ const PendingAppointments = () => {
       console.error('Error proposing reschedule:', error);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao propor reagendamento',
+        description: getFriendlyErrorMessage(error, 'Não foi possível propor o reagendamento.'),
         variant: 'destructive',
       });
       return false;

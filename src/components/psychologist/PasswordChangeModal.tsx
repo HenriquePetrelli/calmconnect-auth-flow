@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
+import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 import { supabase } from '@/integrations/supabase/client';
 
 interface PasswordChangeModalProps {
@@ -63,10 +64,10 @@ export const PasswordChangeModal = ({ open, onOpenChange, currentEmail }: Passwo
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
 
-      toast({ title: 'Senha atualizada', description: 'Sua senha foi alterada com sucesso.' });
+      toast({ title: 'Senha atualizada' });
       onOpenChange(false);
     } catch (e: any) {
-      toast({ title: 'Erro ao alterar senha', description: e.message || 'Tente novamente.', variant: 'destructive' });
+      toast({ title: 'Erro ao alterar senha', description: getFriendlyErrorMessage(e, 'Não foi possível alterar a senha.'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }

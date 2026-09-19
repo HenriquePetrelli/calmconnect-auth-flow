@@ -119,7 +119,7 @@ export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerNam
     if (rating === 0) {
       toast({
         title: 'Avaliação obrigatória',
-        description: 'Por favor, selecione uma avaliação de 1 a 5 estrelas.',
+        description: 'Selecione uma avaliação de 1 a 5 estrelas.',
         variant: 'destructive',
       });
       if (!isPsychologist) setStep(2);
@@ -168,10 +168,7 @@ export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerNam
       // The psychologist average rating is recalculated server-side by a
       // database trigger on session_feedback (no client-side update needed).
 
-      toast({
-        title: 'Obrigado pelo seu feedback.',
-        description: 'Sua avaliação foi enviada com sucesso.',
-      });
+      toast({ title: 'Obrigado pelo seu feedback!' });
 
       if (userType === 'patient') {
         addActivity(emergencyRow ? 'SOS de Emergência' : 'Consulta com Psicólogo');

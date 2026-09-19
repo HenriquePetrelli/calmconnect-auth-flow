@@ -9,6 +9,7 @@ import PageHeader from "@/components/PageHeader";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { getFriendlyErrorMessage } from "@/utils/errorMessage";
 const AccountSettings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -65,16 +66,13 @@ const AccountSettings = () => {
         if (emailError) throw emailError;
       }
 
-      toast({
-        title: "Sucesso",
-        description: "Dados atualizados com sucesso!",
-      });
+      toast({ title: "Dados atualizados" });
 
       fetchUserData();
     } catch (error: any) {
       toast({
         title: "Erro",
-        description: error.message || "Erro ao atualizar dados",
+        description: getFriendlyErrorMessage(error, "Erro ao atualizar dados"),
         variant: "destructive",
       });
     } finally {
@@ -137,10 +135,7 @@ const AccountSettings = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Sucesso",
-        description: "Senha atualizada com sucesso!",
-      });
+      toast({ title: "Senha atualizada" });
 
       setFormData((prev) => ({
         ...prev,
@@ -151,7 +146,7 @@ const AccountSettings = () => {
     } catch (error: any) {
       toast({
         title: "Erro",
-        description: error.message || "Erro ao atualizar senha",
+        description: getFriendlyErrorMessage(error, "Erro ao atualizar senha"),
         variant: "destructive",
       });
     } finally {

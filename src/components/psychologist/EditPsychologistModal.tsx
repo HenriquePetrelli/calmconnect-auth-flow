@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { SPECIALIZATIONS } from '@/data/specializations';
 import { toast } from 'sonner';
+import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 import { Eye, EyeOff, FileText, Loader2, Upload } from 'lucide-react';
 
 interface EditablePsychologist {
@@ -100,7 +101,7 @@ export const EditPsychologistModal = ({
       set('document_url', data.publicUrl);
       toast.success('Documento enviado');
     } catch (err: any) {
-      toast.error(err.message || 'Erro ao enviar documento');
+      toast.error(getFriendlyErrorMessage(err, 'Erro ao enviar documento'));
     } finally {
       setUploading(false);
     }
@@ -140,7 +141,7 @@ export const EditPsychologistModal = ({
       onUpdated((data as any)?.data);
       onOpenChange(false);
     } catch (err: any) {
-      toast.error(err.message || 'Erro ao salvar alterações');
+      toast.error(getFriendlyErrorMessage(err, 'Erro ao salvar alterações'));
     } finally {
       setSaving(false);
     }

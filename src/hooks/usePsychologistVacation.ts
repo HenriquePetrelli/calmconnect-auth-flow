@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 
 export interface VacationPeriod {
   id: string;
@@ -84,7 +85,7 @@ export const usePsychologistVacation = () => {
       console.error('Erro ao salvar férias:', error);
       toast({
         title: 'Erro ao salvar',
-        description: error.message || 'Não foi possível salvar suas férias. Tente novamente.',
+        description: getFriendlyErrorMessage(error, 'Não foi possível salvar suas férias. Tente novamente.'),
         variant: 'destructive',
       });
       return false;
@@ -111,7 +112,7 @@ export const usePsychologistVacation = () => {
       console.error('Erro ao cancelar férias:', error);
       toast({
         title: 'Erro',
-        description: error.message || 'Não foi possível cancelar as férias. Tente novamente.',
+        description: getFriendlyErrorMessage(error, 'Não foi possível cancelar as férias. Tente novamente.'),
         variant: 'destructive',
       });
       return false;

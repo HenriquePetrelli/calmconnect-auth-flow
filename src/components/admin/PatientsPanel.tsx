@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 import { usePatientManagement, type AdminPatient } from '@/hooks/usePatientManagement';
 import { BlockPatientModal } from './BlockPatientModal';
 import { EditPatientModal } from './EditPatientModal';
@@ -110,7 +111,7 @@ export const PatientsPanel = () => {
       setDeleteTarget(null);
       fetchPatients();
     } catch (err: any) {
-      toast.error(err?.message || 'Erro ao excluir paciente');
+      toast.error(getFriendlyErrorMessage(err, 'Erro ao excluir paciente'));
     } finally {
       setDeleting(false);
     }

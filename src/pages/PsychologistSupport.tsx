@@ -26,7 +26,7 @@ const PsychologistSupport = () => {
     if (!formData.email || !formData.description) {
       toast({
         title: "Erro",
-        description: "Por favor, preencha pelo menos o email e a descrição do problema.",
+        description: "Preencha ao menos o email e a descrição do problema.",
         variant: "destructive"
       });
       return;
@@ -48,7 +48,7 @@ const PsychologistSupport = () => {
 
       toast({
         title: "Solicitação enviada",
-        description: "Sua solicitação de suporte foi enviada com sucesso. Em breve entraremos em contato."
+        description: "Em breve entraremos em contato."
       });
 
       // Reset form

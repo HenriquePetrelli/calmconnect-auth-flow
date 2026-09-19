@@ -90,10 +90,7 @@ export const usePrivateJournal = () => {
       if (error) throw error;
 
       setEntries(prev => [data, ...prev]);
-      toast({
-        title: 'Sucesso',
-        description: 'Anotação criada com sucesso!',
-      });
+      toast({ title: 'Anotação criada' });
 
       return data;
     } catch (error) {
@@ -122,10 +119,7 @@ export const usePrivateJournal = () => {
         entry.id === id ? data : entry
       ));
 
-      toast({
-        title: 'Sucesso',
-        description: 'Anotação atualizada com sucesso!',
-      });
+      toast({ title: 'Anotação atualizada' });
 
       return data;
     } catch (error) {
@@ -149,10 +143,7 @@ export const usePrivateJournal = () => {
       if (error) throw error;
 
       setEntries(prev => prev.filter(entry => entry.id !== id));
-      toast({
-        title: 'Sucesso',
-        description: 'Anotação excluída com sucesso!',
-      });
+      toast({ title: 'Anotação excluída' });
     } catch (error) {
       console.error('Erro ao excluir entrada:', error);
       toast({

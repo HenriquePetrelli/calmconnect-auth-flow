@@ -21,8 +21,7 @@ const SubscriptionSuccess = () => {
       }, 2000);
       
       toast({
-        title: "Assinatura Ativada!",
-        description: "Sua assinatura foi processada com sucesso.",
+        title: "Assinatura ativada!",
       });
     }
   }, [searchParams, checkSubscription, toast]);

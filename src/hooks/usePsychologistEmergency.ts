@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 import { findPsychologistOngoingCall } from '@/lib/emergencyCallGuard';
 import { notifySosQueueChanged, subscribeSosQueue } from '@/lib/sosQueueChannel';
 
@@ -153,7 +154,7 @@ export const usePsychologistEmergency = () => {
       console.error('❌ Error accepting emergency request:', error);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao aceitar solicitação',
+        description: getFriendlyErrorMessage(error, 'Erro ao aceitar solicitação'),
         variant: 'destructive',
       });
       throw error;

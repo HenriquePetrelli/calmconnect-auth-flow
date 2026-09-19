@@ -134,7 +134,7 @@ export const PixModal: React.FC<PixModalProps> = ({ isOpen, onClose, userId }) =
     if (!pixType || !pixKey) {
       toast({
         title: "Campos obrigatórios",
-        description: "Por favor, preencha o tipo e a chave PIX.",
+        description: "Preencha o tipo e a chave PIX.",
         variant: "destructive"
       });
       return;
@@ -143,7 +143,7 @@ export const PixModal: React.FC<PixModalProps> = ({ isOpen, onClose, userId }) =
     if (!validatePixKey(pixType, pixKey)) {
       toast({
         title: "Chave PIX inválida",
-        description: "Por favor, insira uma chave PIX válida para o tipo selecionado.",
+        description: "Chave PIX inválida para o tipo selecionado.",
         variant: "destructive"
       });
       return;
@@ -162,17 +162,14 @@ export const PixModal: React.FC<PixModalProps> = ({ isOpen, onClose, userId }) =
 
       if (error) throw error;
 
-      toast({
-        title: "PIX cadastrado",
-        description: "Sua chave PIX foi cadastrada com sucesso!"
-      });
+      toast({ title: "Chave PIX cadastrada" });
 
       onClose();
     } catch (error: any) {
       console.error('Erro ao salvar PIX:', error);
       toast({
         title: "Erro ao salvar",
-        description: "Ocorreu um erro ao salvar sua chave PIX. Tente novamente.",
+        description: "Não foi possível salvar a chave PIX.",
         variant: "destructive"
       });
     } finally {

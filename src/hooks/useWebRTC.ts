@@ -274,10 +274,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
           setIsReconnecting(false);
           setError(null);
           setCallEndedBy(null);
-          toast({
-            title: 'Conectado!',
-            description: 'Videochamada estabelecida com sucesso.',
-          });
+          toast({ title: 'Conectado!' });
         }
       };
 

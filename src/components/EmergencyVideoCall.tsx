@@ -990,10 +990,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
 
 
 
-    toast({
-      title: 'Chamada Finalizada',
-      description: 'A videochamada foi encerrada com sucesso.',
-    });
+    toast({ title: 'Chamada finalizada' });
 
     // Let the parent close the emergency request (and redirect).
     if (onEndCall) {

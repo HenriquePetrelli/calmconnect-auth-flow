@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useSyncExternalStore } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 
 /**
  * Psychologist availability for the SOS queue.
@@ -156,7 +157,7 @@ export const usePsychologistPresence = () => {
         console.error('Error updating presence:', err);
         toast({
           title: 'Erro',
-          description: `Não foi possível atualizar seu status: ${err.message}`,
+          description: getFriendlyErrorMessage(err, 'Não foi possível atualizar seu status.'),
           variant: 'destructive',
         });
       } finally {

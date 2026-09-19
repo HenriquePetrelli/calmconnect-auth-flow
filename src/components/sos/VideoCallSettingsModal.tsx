@@ -233,10 +233,7 @@ export const VideoCallSettingsModal = ({
       });
 
       if (success) {
-        toast({
-          title: 'Configurações aplicadas',
-          description: 'Dispositivos testados e configurações salvas com sucesso.',
-        });
+        toast({ title: 'Configurações aplicadas' });
         onClose();
         return true;
       } else {

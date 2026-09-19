@@ -14,6 +14,7 @@ import { Eye, CheckCircle, XCircle, FileText, Download, MapPin, UserCheck, User,
 import { usePsychologistManagement, PsychologistData } from '@/hooks/usePsychologistManagement';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 import { DocumentViewer } from './DocumentViewer';
 import { EditPsychologistModal } from './EditPsychologistModal';
 import { BlockPsychologistModal } from './BlockPsychologistModal';
@@ -208,7 +209,7 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
       getPendingPsychologists();
       onDataChange?.();
     } catch (err: any) {
-      toast.error(err?.message || 'Erro ao excluir psicólogo');
+      toast.error(getFriendlyErrorMessage(err, 'Erro ao excluir psicólogo'));
     } finally {
       setDeletingId(null);
     }

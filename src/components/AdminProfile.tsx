@@ -8,6 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { LogOut, Mail, Key, Save, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 
 const AdminProfile = () => {
   const { toast } = useToast();
@@ -22,10 +23,7 @@ const AdminProfile = () => {
 
   const handleLogout = async () => {
     try {
-      toast({
-        title: "Logout realizado",
-        description: "Você foi desconectado com sucesso.",
-      });
+      toast({ title: "Logout realizado" });
       await signOut();
     } catch (error) {
       console.error('Error logging out:', error);
@@ -79,10 +77,7 @@ const AdminProfile = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Senha atualizada",
-        description: "Sua senha foi alterada com sucesso.",
-      });
+      toast({ title: "Senha atualizada" });
 
       // Clear password fields
       setFormData({
@@ -94,7 +89,7 @@ const AdminProfile = () => {
     } catch (error) {
       toast({
         title: "Erro ao atualizar",
-        description: error instanceof Error ? error.message : "Falha ao atualizar perfil",
+        description: getFriendlyErrorMessage(error, "Não foi possível atualizar o perfil."),
         variant: "destructive",
       });
     } finally {

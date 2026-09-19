@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 
 export interface Appointment {
   id: string;
@@ -113,8 +114,8 @@ export const useAppointments = () => {
       if (error) throw error;
       
       toast({
-        title: 'Sucesso',
-        description: data.message || 'Consulta solicitada com sucesso! Aguardando confirmação do psicólogo.',
+        title: 'Consulta solicitada',
+        description: data.message || 'Aguardando confirmação do psicólogo.',
       });
       
       await fetchAppointments();
@@ -123,7 +124,7 @@ export const useAppointments = () => {
       console.error('Error creating appointment:', error);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao agendar consulta',
+        description: getFriendlyErrorMessage(error, 'Não foi possível agendar a consulta.'),
         variant: 'destructive',
       });
       throw error;
@@ -191,8 +192,8 @@ export const useAppointments = () => {
       if (error) throw error;
       
       toast({
-        title: 'Sucesso',
-        description: data.message || (accept ? 'Reagendamento aceito com sucesso!' : 'Reagendamento recusado com sucesso!'),
+        title: accept ? 'Reagendamento aceito' : 'Reagendamento recusado',
+        description: data.message,
       });
       
       await fetchAppointments();
@@ -201,7 +202,7 @@ export const useAppointments = () => {
       console.error('Error responding to reschedule:', error);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao responder reagendamento',
+        description: getFriendlyErrorMessage(error, 'Não foi possível responder ao reagendamento.'),
         variant: 'destructive',
       });
       throw error;

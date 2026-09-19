@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 import { Appointment } from '@/hooks/useAppointments';
 
 export const useAppointmentVideoCall = () => {
@@ -32,17 +33,14 @@ export const useAppointmentVideoCall = () => {
 
       if (error) throw error;
 
-      toast({
-        title: 'Consulta iniciada',
-        description: 'Conectando à videochamada...',
-      });
+      toast({ title: 'Consulta iniciada' });
 
       return data;
     } catch (error: any) {
       console.error('Error starting consultation:', error);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao iniciar consulta',
+        description: getFriendlyErrorMessage(error, 'Não foi possível iniciar a consulta.'),
         variant: 'destructive',
       });
       throw error;
@@ -66,17 +64,14 @@ export const useAppointmentVideoCall = () => {
 
       if (error) throw error;
 
-      toast({
-        title: 'Consulta finalizada',
-        description: 'Consulta encerrada com sucesso.',
-      });
+      toast({ title: 'Consulta finalizada' });
 
       return data;
     } catch (error: any) {
       console.error('Error ending consultation:', error);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao finalizar consulta',
+        description: getFriendlyErrorMessage(error, 'Não foi possível finalizar a consulta.'),
         variant: 'destructive',
       });
       throw error;

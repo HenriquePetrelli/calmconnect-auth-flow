@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 
 export interface PsychologistData {
   id: string;
@@ -64,7 +65,7 @@ export const usePsychologistManagement = () => {
       return { success: true, data: result.data };
     } catch (error: any) {
       console.error('Erro ao cadastrar psicólogo:', error);
-      toast.error(error.message || 'Erro ao realizar cadastro');
+      toast.error(getFriendlyErrorMessage(error, 'Erro ao realizar cadastro'));
       return { success: false, error: error.message };
     } finally {
       setLoading(false);
@@ -87,7 +88,7 @@ export const usePsychologistManagement = () => {
     } catch (err: any) {
       console.error('Erro ao buscar psicólogos:', err);
       setError(err?.message || 'Erro ao carregar psicólogos');
-      toast.error(err.message || 'Erro ao carregar psicólogos');
+      toast.error(getFriendlyErrorMessage(err, 'Erro ao carregar psicólogos'));
       return [];
     } finally {
       setLoading(false);
@@ -108,7 +109,7 @@ export const usePsychologistManagement = () => {
       return result.data;
     } catch (error: any) {
       console.error('Erro ao buscar detalhes do psicólogo:', error);
-      toast.error(error.message || 'Erro ao carregar detalhes');
+      toast.error(getFriendlyErrorMessage(error, 'Erro ao carregar detalhes'));
       return null;
     } finally {
       setLoading(false);
@@ -135,7 +136,7 @@ export const usePsychologistManagement = () => {
       return { success: true };
     } catch (error: any) {
       console.error('Erro ao aprovar psicólogo:', error);
-      toast.error(error.message || 'Erro ao aprovar psicólogo');
+      toast.error(getFriendlyErrorMessage(error, 'Erro ao aprovar psicólogo'));
       return { success: false, error: error.message };
     } finally {
       setLoading(false);
@@ -163,7 +164,7 @@ export const usePsychologistManagement = () => {
       return { success: true };
     } catch (error: any) {
       console.error('Erro ao rejeitar psicólogo:', error);
-      toast.error(error.message || 'Erro ao rejeitar psicólogo');
+      toast.error(getFriendlyErrorMessage(error, 'Erro ao rejeitar psicólogo'));
       return { success: false, error: error.message };
     } finally {
       setLoading(false);

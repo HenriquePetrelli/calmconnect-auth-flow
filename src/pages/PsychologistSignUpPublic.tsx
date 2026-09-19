@@ -108,7 +108,7 @@ const PsychologistSignUpPublic = () => {
 
   const onSubmit = async (data: FormData) => {
     if (!documentFile) {
-      toast.error("Por favor, envie um documento comprovante.");
+      toast.error("Envie um documento comprovante.");
       return;
     }
 
@@ -135,13 +135,13 @@ const PsychologistSignUpPublic = () => {
 
       if (result.success) {
         setIsSuccess(true);
-        toast.success("Cadastro realizado com sucesso! Verifique seu email para confirmar a conta.");
+        toast.success("Cadastro enviado! Verifique seu email para confirmar a conta.");
       } else {
         toast.error(result.error || "Erro ao criar conta. Tente novamente.");
       }
     } catch (error) {
       console.error('Erro no submit:', error);
-      toast.error("Erro inesperado. Por favor, tente novamente.");
+      toast.error("Erro inesperado. Tente novamente.");
     } finally {
       setIsSubmitting(false);
     }

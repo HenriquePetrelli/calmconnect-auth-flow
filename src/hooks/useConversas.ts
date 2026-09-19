@@ -164,10 +164,7 @@ export const useConversas = () => {
 
       if (error) throw error;
 
-      toast({
-        title: 'Sucesso',
-        description: 'Nova conversa criada com sucesso!',
-      });
+      toast({ title: 'Conversa criada' });
 
       await fetchConversas();
       return data;
@@ -191,10 +188,7 @@ export const useConversas = () => {
 
       if (error) throw error;
 
-      toast({
-        title: 'Sucesso',
-        description: 'Conversa excluída com sucesso!',
-      });
+      toast({ title: 'Conversa excluída' });
 
       await fetchConversas();
     } catch (error) {

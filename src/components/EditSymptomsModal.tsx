@@ -111,10 +111,7 @@ export const EditSymptomsModal: React.FC<EditSymptomsModalProps> = ({
 
       if (error) throw error;
 
-      toast({
-        title: 'Sucesso',
-        description: 'Seus sintomas foram atualizados com sucesso.'
-      });
+      toast({ title: 'Sintomas atualizados' });
       onOpenChange(false);
     } catch (error) {
       console.error('Error saving symptoms:', error);

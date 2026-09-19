@@ -85,9 +85,7 @@ export const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = (
 
       toast({
         title: accept ? 'Reagendamento aceito' : 'Reagendamento recusado',
-        description: accept 
-          ? 'Sua consulta foi reagendada com sucesso!'
-          : 'O reagendamento foi recusado. Você pode agendar uma nova consulta.',
+        description: accept ? undefined : 'Você pode agendar uma nova consulta.',
       });
 
       onUpdate?.();

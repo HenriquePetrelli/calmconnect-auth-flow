@@ -135,7 +135,7 @@ export const PsychologistList: React.FC<PsychologistListProps> = ({
                 Nenhum psicólogo disponível no momento
             </h3>
             <p className="text-muted-foreground">
-                Por favor, verifique novamente mais tarde.
+                Verifique novamente mais tarde.
             </p>
           </CardContent>
         </Card>

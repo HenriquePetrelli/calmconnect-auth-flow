@@ -35,10 +35,7 @@ export const SessionRetryHandler: React.FC<SessionRetryHandlerProps> = ({
       const session = await validateWebRTCSession(sessionId);
       console.log('✅ Session validation successful on retry:', session);
       
-      toast({
-        title: 'Conectado!',
-        description: 'Sessão de videochamada encontrada com sucesso.',
-      });
+      toast({ title: 'Conectado!' });
       
       onSessionReady(session);
     } catch (error) {

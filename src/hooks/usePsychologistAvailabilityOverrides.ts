@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 import type { OverrideType } from '@/lib/psychologistAvailability';
 
 export interface AvailabilityOverrideRow {
@@ -76,7 +77,7 @@ export const usePsychologistAvailabilityOverrides = (startDate: string, endDate:
       console.error('Erro ao adicionar exceção:', error);
       toast({
         title: 'Erro ao salvar',
-        description: error.message || 'Não foi possível salvar essa exceção. Tente novamente.',
+        description: getFriendlyErrorMessage(error, 'Não foi possível salvar essa exceção. Tente novamente.'),
         variant: 'destructive',
       });
       return false;
@@ -93,7 +94,7 @@ export const usePsychologistAvailabilityOverrides = (startDate: string, endDate:
       console.error('Erro ao remover exceção:', error);
       toast({
         title: 'Erro ao remover',
-        description: error.message || 'Não foi possível remover essa exceção. Tente novamente.',
+        description: getFriendlyErrorMessage(error, 'Não foi possível remover essa exceção. Tente novamente.'),
         variant: 'destructive',
       });
       return false;
@@ -127,7 +128,7 @@ export const usePsychologistAvailabilityOverrides = (startDate: string, endDate:
       console.error('Erro ao salvar exceções da semana:', error);
       toast({
         title: 'Erro ao salvar',
-        description: error.message || 'Não foi possível salvar as alterações da semana. Tente novamente.',
+        description: getFriendlyErrorMessage(error, 'Não foi possível salvar as alterações da semana. Tente novamente.'),
         variant: 'destructive',
       });
       return false;

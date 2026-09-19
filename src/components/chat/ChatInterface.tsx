@@ -119,7 +119,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversaId, onVolt
     const file = e.target.files?.[0];
     if (file) {
       if (!file.type.startsWith('image/')) {
-        alert('Por favor, selecione apenas arquivos de imagem.');
+        alert('Selecione apenas arquivos de imagem.');
         return;
       }
       if (file.size > 5 * 1024 * 1024) {

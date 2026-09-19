@@ -122,7 +122,6 @@ const SubscriptionPlans = () => {
       if (data?.success) {
         toast({
           title: "Assinatura cancelada",
-          description: "Sua assinatura foi cancelada com sucesso.",
         });
         
         // Refresh subscription status

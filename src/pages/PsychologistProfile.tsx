@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 import { supabase } from '@/integrations/supabase/client';
 import { LogOut, Mail, Lock, User, FileText, Pencil, Check, MessageCircle, Settings, Wallet, ChevronRight, CalendarClock, Bell } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
@@ -103,9 +104,9 @@ const PsychologistProfile = () => {
       await supabase.from('profiles').update({ full_name: tempName.trim() }).eq('user_id', userId!);
       setFullName(tempName.trim());
       setEditName(false);
-      toast({ title: 'Salvo', description: 'Nome atualizado com sucesso.' });
+      toast({ title: 'Nome atualizado' });
     } catch (e: any) {
-      toast({ title: 'Erro ao salvar', description: e.message || 'Tente novamente', variant: 'destructive' });
+      toast({ title: 'Erro ao salvar', description: getFriendlyErrorMessage(e, 'Não foi possível salvar.'), variant: 'destructive' });
     }
   };
 
@@ -115,9 +116,9 @@ const PsychologistProfile = () => {
       await supabase.from('profiles').update({ specialty: tempSpec }).eq('user_id', userId!);
       setSpecialization(tempSpec);
       setEditSpec(false);
-      toast({ title: 'Salvo', description: 'Especialização atualizada.' });
+      toast({ title: 'Especialização atualizada' });
     } catch (e: any) {
-      toast({ title: 'Erro', description: e.message || 'Tente novamente', variant: 'destructive' });
+      toast({ title: 'Erro', description: getFriendlyErrorMessage(e, 'Não foi possível salvar.'), variant: 'destructive' });
     }
   };
 
@@ -126,9 +127,9 @@ const PsychologistProfile = () => {
       await updatePsych({ bio: tempBio.trim() });
       setBio(tempBio.trim());
       setEditBio(false);
-      toast({ title: 'Salvo', description: 'Biografia atualizada.' });
+      toast({ title: 'Biografia atualizada' });
     } catch (e: any) {
-      toast({ title: 'Erro', description: e.message || 'Tente novamente', variant: 'destructive' });
+      toast({ title: 'Erro', description: getFriendlyErrorMessage(e, 'Não foi possível salvar.'), variant: 'destructive' });
     }
   };
 
@@ -154,7 +155,7 @@ const PsychologistProfile = () => {
         }
       }, 8000);
     } catch (e: any) {
-      toast({ title: 'Erro ao atualizar email', description: e.message || 'Verifique o endereço informado.', variant: 'destructive' });
+      toast({ title: 'Erro ao atualizar email', description: getFriendlyErrorMessage(e, 'Não foi possível atualizar o email. Verifique o endereço informado.'), variant: 'destructive' });
     }
   };
 

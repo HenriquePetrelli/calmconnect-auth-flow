@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 import PageHeader from '@/components/PageHeader';
 import {
   CreditCard,
@@ -91,7 +92,7 @@ const PsychologistPayments = () => {
     } catch (e: any) {
       toast({
         title: 'Erro ao carregar pagamentos',
-        description: e.message || 'Tente novamente',
+        description: getFriendlyErrorMessage(e, 'Não foi possível concluir a operação.'),
         variant: 'destructive',
       });
     } finally {

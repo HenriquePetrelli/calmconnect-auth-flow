@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 
 export interface PaymentRecord {
   id: string;
@@ -61,10 +62,7 @@ export const usePayments = () => {
       
       if (error) throw error;
       
-      toast({
-        title: 'Sucesso',
-        description: `Pagamento confirmado! Valor: R$ ${data.amount_paid}`,
-      });
+      toast({ title: `Pagamento confirmado — R$ ${data.amount_paid}` });
       
       await fetchPayments();
       return data;
@@ -72,7 +70,7 @@ export const usePayments = () => {
       console.error('Error confirming payment:', error);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao confirmar pagamento',
+        description: getFriendlyErrorMessage(error, 'Não foi possível confirmar o pagamento.'),
         variant: 'destructive',
       });
       throw error;
@@ -88,10 +86,7 @@ export const usePayments = () => {
       
       if (error) throw error;
       
-      toast({
-        title: 'Sucesso',
-        description: 'Sincronização de pagamentos concluída',
-      });
+      toast({ title: 'Sincronização concluída' });
       
       await fetchPayments();
       return data;
@@ -99,7 +94,7 @@ export const usePayments = () => {
       console.error('Error syncing payments:', error);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao sincronizar pagamentos',
+        description: getFriendlyErrorMessage(error, 'Não foi possível sincronizar os pagamentos.'),
         variant: 'destructive',
       });
       throw error;

@@ -306,11 +306,9 @@ const { error: profileError } = await supabase
       }
 
       if (isPatient) {
-        toast.success(`Cadastro realizado com sucesso! Bem-vindo ${formData.name}!`);
-        toast.info("Verifique seu email para confirmar a conta antes de fazer login.");
+        toast.success(`Bem-vindo, ${formData.name}! Verifique seu email para confirmar a conta.`);
       } else {
-        toast.success(`Cadastro realizado com sucesso! Dr.(a) ${formData.name}!`);
-        toast.info("Seu cadastro foi enviado para análise. Você receberá um email quando for aprovado.");
+        toast.success(`Cadastro enviado para análise, Dr.(a) ${formData.name}. Você receberá um email quando for aprovado.`);
       }
       
       // Redirecionar para login após cadastro
@@ -343,7 +341,7 @@ const { error: profileError } = await supabase
             <Alert variant="destructive" className="mb-6">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Por favor, preencha todos os campos obrigatórios corretamente.
+                Preencha todos os campos obrigatórios corretamente.
               </AlertDescription>
             </Alert>
           )}
@@ -466,7 +464,7 @@ const { error: profileError } = await supabase
                   />
                   {errors.sintomas && (
                     <p className="text-sm text-destructive">
-                      Por favor, selecione pelo menos um sintoma
+                      Selecione pelo menos um sintoma
                     </p>
                   )}
                 </div>

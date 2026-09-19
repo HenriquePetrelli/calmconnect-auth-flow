@@ -269,10 +269,7 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
 
       if (error) throw error;
 
-      toast({
-        title: "Depoimento adicionado",
-        description: "Seu depoimento foi compartilhado com sucesso!",
-      });
+      toast({ title: "Depoimento adicionado" });
 
       fetchTestimonials(); // Refresh list
       return true;
@@ -302,10 +299,7 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
 
       if (error) throw error;
 
-      toast({
-        title: "Depoimento atualizado",
-        description: "Suas alterações foram salvas com sucesso!",
-      });
+      toast({ title: "Depoimento atualizado" });
 
       await fetchTestimonials(filterByUser); // Refresh list
       return true;
@@ -329,10 +323,7 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
 
       if (error) throw error;
 
-      toast({
-        title: "Depoimento excluído",
-        description: "Seu depoimento foi removido com sucesso!",
-      });
+      toast({ title: "Depoimento excluído" });
 
       await fetchTestimonials(filterByUser); // Refresh list
       return true;

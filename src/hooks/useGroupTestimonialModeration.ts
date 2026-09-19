@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 
 export interface AdminGroupTestimonial {
   testimonial_id: string;
@@ -64,7 +65,7 @@ export const useGroupTestimonialModeration = () => {
       console.error('Erro ao editar depoimento:', error);
       toast({
         title: 'Erro ao salvar',
-        description: error.message || 'Não foi possível editar o depoimento.',
+        description: getFriendlyErrorMessage(error, 'Não foi possível editar o depoimento.'),
         variant: 'destructive',
       });
       return false;
@@ -86,7 +87,7 @@ export const useGroupTestimonialModeration = () => {
       console.error('Erro ao excluir depoimento:', error);
       toast({
         title: 'Erro',
-        description: error.message || 'Não foi possível excluir o depoimento.',
+        description: getFriendlyErrorMessage(error, 'Não foi possível excluir o depoimento.'),
         variant: 'destructive',
       });
       return false;

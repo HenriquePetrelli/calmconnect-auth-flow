@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 
 interface VideoCallInitializerProps {
   onReady: () => void;
@@ -85,7 +86,7 @@ const VideoCallInitializer: React.FC<VideoCallInitializerProps> = ({
         
       } catch (error) {
         console.error('Initialization failed:', error);
-        onError(error instanceof Error ? error.message : 'Erro na inicialização');
+        onError(getFriendlyErrorMessage(error, 'Não foi possível iniciar a videochamada.'));
       }
     };
 

@@ -113,7 +113,7 @@ export const useEmergencySOS = () => {
       
       toast({
         title: 'SOS Ativado',
-        description: data.message || 'Solicitação de emergência enviada com sucesso',
+        description: data.message,
         duration: 3000,
       });
       

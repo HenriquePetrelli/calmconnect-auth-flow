@@ -146,7 +146,7 @@ export class PsychologistService {
     } catch (error) {
       return {
         success: false,
-        error: 'Falha no upload do documento. Por favor, tente novamente.',
+        error: 'Falha no upload do documento. Tente novamente.',
       };
     }
   }
@@ -279,7 +279,7 @@ export class PsychologistService {
   }
 
   private static getUserFriendlyError(error: unknown): string {
-    const defaultMessage = 'Ocorreu um erro durante o cadastro. Por favor, tente novamente.';
+    const defaultMessage = 'Ocorreu um erro durante o cadastro. Tente novamente.';
     
     if (error instanceof Error) {
       const message = error.message.toLowerCase();
@@ -322,7 +322,7 @@ export class PsychologistService {
     if (!validTypes.includes(file.type)) {
       return {
         valid: false,
-        error: 'Por favor, envie um arquivo PDF, JPG ou PNG.'
+        error: 'Envie um arquivo PDF, JPG ou PNG.'
       };
     }
     

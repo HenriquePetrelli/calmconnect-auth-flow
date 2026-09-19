@@ -51,7 +51,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
     if (!selectedDate || !selectedTime) {
       toast({
         title: 'Campos obrigatórios',
-        description: 'Por favor, selecione data e horário',
+        description: 'Selecione data e horário',
         variant: 'destructive',
       });
       return;

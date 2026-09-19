@@ -71,10 +71,7 @@ const Profile = () => {
     try {
       await supabase.auth.signOut();
       navigate('/');
-      toast({
-        title: "Logout realizado",
-        description: "Você foi desconectado com sucesso."
-      });
+      toast({ title: "Logout realizado" });
     } catch (error) {
       toast({
         title: "Erro",

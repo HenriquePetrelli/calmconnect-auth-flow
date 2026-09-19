@@ -29,7 +29,7 @@ const LoginForm = ({ onForgotPassword, onSignUp }: LoginFormProps) => {
     try {
       // Validação básica
       if (!email || !password) {
-        toast.error("Por favor, preencha todos os campos");
+        toast.error("Preencha todos os campos");
         return;
       }
 
@@ -48,7 +48,7 @@ const LoginForm = ({ onForgotPassword, onSignUp }: LoginFormProps) => {
         if (error.message.includes("Invalid login credentials")) {
           toast.error("Email ou senha incorretos");
         } else if (error.message.includes("Email not confirmed")) {
-          toast.error("Por favor, confirme seu email antes de fazer login");
+          toast.error("Confirme seu email antes de fazer login");
         } else {
           toast.error("Erro ao fazer login. Tente novamente.");
         }
@@ -150,7 +150,7 @@ const LoginForm = ({ onForgotPassword, onSignUp }: LoginFormProps) => {
         }
       }
 
-      toast.success(`Login realizado com sucesso! Bem-vindo${profile.user_type === 'psychologist' ? ' Dr.(a)' : ''} ${profile.full_name}!`);
+      toast.success(`Bem-vindo${profile.user_type === 'psychologist' ? ' Dr.(a)' : ''}, ${profile.full_name}!`);
       
       // Redirecionar para a página apropriada baseado no userType
       if (profile.user_type === 'psychologist') {
