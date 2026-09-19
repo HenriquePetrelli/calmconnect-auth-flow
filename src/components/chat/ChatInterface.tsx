@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { format, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { toast } from 'sonner';
 import { useMensagens } from '@/hooks/useMensagens';
 import { useAuth } from '@/contexts/AuthContext';
 import { useConversas } from '@/hooks/useConversas';
@@ -119,11 +120,11 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversaId, onVolt
     const file = e.target.files?.[0];
     if (file) {
       if (!file.type.startsWith('image/')) {
-        alert('Selecione apenas arquivos de imagem.');
+        toast.error('Selecione apenas arquivos de imagem.');
         return;
       }
       if (file.size > 5 * 1024 * 1024) {
-        alert('O arquivo deve ter no máximo 5MB.');
+        toast.error('O arquivo deve ter no máximo 5MB.');
         return;
       }
       setImagemSelecionada(file);

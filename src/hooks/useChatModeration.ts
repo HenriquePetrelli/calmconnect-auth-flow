@@ -70,7 +70,7 @@ export const useChatModeration = () => {
       const { error } = await supabase.rpc('admin_archive_conversa', { p_conversa_id: conversaId });
       if (error) throw error;
 
-      toast({ title: 'Conversa arquivada', description: 'A conversa foi encerrada.' });
+      toast({ title: 'Conversa arquivada' });
       await load();
       return true;
     } catch (error) {
