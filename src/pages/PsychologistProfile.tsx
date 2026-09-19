@@ -275,8 +275,8 @@ const PsychologistProfile = () => {
         <CardContent className="space-y-4 divide-y divide-border">
           <div className="flex items-center justify-between pb-4">
             <div>
-              <p className="text-sm font-medium">Modo escuro</p>
-              <p className="text-xs text-muted-foreground">Alterne entre tema claro e escuro</p>
+              <p className="text-sm font-medium">Tema do aplicativo</p>
+              <p className="text-xs text-muted-foreground">Claro, escuro ou seguir o sistema</p>
             </div>
             <ThemeToggle />
           </div>

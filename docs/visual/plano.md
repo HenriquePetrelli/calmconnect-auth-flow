@@ -83,7 +83,7 @@ Estas regras valem para **todas** as fases.
 | 1 | Decisões do Henrique | — | 🛑 sim — ✅ concluída |
 | 2 | Tokens de design | 3h | não — ✅ concluída |
 | 3 | Regra do laranja (inversão completa, decidida na Fase 1) + papel definitivo do `--secondary` (adiado da Fase 2) | 4h–6h | não precisou de 🛑 — ✅ concluída |
-| 4 | Modo escuro (revisão + 2 ajustes, reduzida na Fase 0) | 2h | não |
+| 4 | Modo escuro (revisão + 2 ajustes, reduzida na Fase 0) | 2h | não — ✅ concluída (parcial, ver §5 de `docs/visual/04-modo-escuro.md`) |
 | 5 | Acessibilidade | 3h | não |
 | 6 | SOS e modo crise | 4h | 🛑 antes de mexer em comportamento |
 | 7 | Wordmark, splash e assets (reduzida na Fase 1 — sem ícone novo) | 2h | 🛑 revisão do wordmark em SVG |
@@ -168,18 +168,14 @@ Relatório completo em `docs/visual/03-regra-do-laranja.md`. Resumo:
 
 ---
 
-### Fase 4 — Modo escuro · 4h
+### Fase 4 — Modo escuro · 4h · ✅ concluída (parcial)
 
-- **Confirmado na Fase 0: o modo escuro já existe e funciona** (next-themes, tokens `.dark` completos e paralelos ao `:root`, `ThemeToggle.tsx`). Esta fase é **revisão + 2 ajustes pontuais**, não construção do zero:
-  1. Trocar `enableSystem={false}` para `true` em `App.tsx` (`ThemeProvider`) e adicionar a opção "sistema" no `ThemeToggle.tsx` (hoje é um switch binário claro/escuro).
-  2. Revisão visual das telas prioritárias abaixo — a cobertura por tokens já é ampla (só 10 de 232 componentes usam `dark:` manualmente, o resto herda dos tokens), mas isso nunca foi verificado renderizado, só lido no código.
-- `darkMode: ["class"]` já está ativo em `tailwind.config.ts`.
-- Padrão: **seguir o sistema**. Toggle manual no perfil (claro / escuro / sistema), preferência salva localmente.
-- Fundo escuro **não é preto puro** (usar algo como `#121018` puxado para o roxo) para reduzir o contraste agressivo de madrugada.
-- Ordem de prioridade das telas: fluxo de SOS → home do paciente → diário → plano de segurança → consultas → resto.
-- Imagens e ilustrações precisam de versão para fundo escuro ou fundo próprio.
+Relatório completo em `docs/visual/04-modo-escuro.md`. Resumo:
 
-**Atenção:** a tela de SOS e a chamada de emergência provavelmente serão abertas no escuro, com a pessoa acordada no meio da noite. Estas telas precisam estar perfeitas no modo escuro antes de qualquer outra.
+- `enableSystem` ligado e `defaultTheme="system"` em `App.tsx`. `ThemeToggle.tsx` virou um seletor de 3 estados (Claro/Escuro/Sistema, shadcn `Select`), usado sem mudança de import nos dois lugares que já existiam (`Profile.tsx`, `PsychologistProfile.tsx`).
+- Fundo escuro (`#2a2438`) confirmado como já não sendo preto puro e já puxado pro roxo — sem mudança necessária.
+- Verificação visual real via Playwright/Chromium (não só leitura de código) nas telas alcançáveis sem login: Login e `/signup-type`, em claro e escuro — confirmou o `<html class="dark">` sendo aplicado corretamente pelo `enableSystem`, e validou visualmente os fixes de wordmark/"Login" da Fase 3 (ambos legíveis e roxos no escuro).
+- **Pendência explícita:** telas que exigem login (SOS, home, diário, plano de segurança, consultas) não foram verificadas visualmente nesta sessão — sem credenciais de teste disponíveis. Risco avaliado como baixo por leitura de código (cobertura de tokens já ampla, achado da Fase 0), mas fica registrado como item em aberto, análogo ao checklist manual que a própria Fase 11 já previa fazer num aparelho.
 
 ---
 

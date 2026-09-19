@@ -265,7 +265,7 @@ const Profile = () => {
                     <div className="space-y-0.5 pr-4">
                       <div className="text-sm font-medium">Tema do aplicativo</div>
                       <div className="text-xs text-muted-foreground">
-                        Alternar entre modo claro e escuro
+                        Claro, escuro ou seguir o sistema
                       </div>
                     </div>
                     <ThemeToggle />
