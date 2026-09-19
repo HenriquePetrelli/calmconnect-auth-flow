@@ -299,11 +299,10 @@ const SOS = () => {
             {expired ? (
               <div className="space-y-3">
                 <h2 className="text-2xl font-semibold text-foreground">
-                  Nenhum profissional pôde atender
+                  Ainda não encontramos um profissional livre
                 </h2>
                 <p className="text-muted-foreground text-sm">
-                  Sua solicitação expirou após o tempo máximo de espera. Você pode tentar novamente
-                  ou usar os recursos de apoio abaixo.
+                  Você não está sozinho. Tente de novo ou use uma das opções abaixo enquanto isso.
                 </p>
                 <Button onClick={() => window.location.reload()} className="w-full">
                   Tentar novamente

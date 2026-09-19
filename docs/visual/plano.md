@@ -87,7 +87,7 @@ Estas regras valem para **todas** as fases.
 | 5 | Acessibilidade | 3h | não — ✅ concluída (parcial, ver §2 de `docs/visual/05-acessibilidade.md`) |
 | 6 | SOS e modo crise | 4h | 🛑 antes de mexer em comportamento — ✅ concluída (6b aprovada por Henrique antes do commit) |
 | 7 | Wordmark, splash e assets (reduzida na Fase 1 — sem ícone novo) | 2h | 🛑 revisão do wordmark em SVG — ✅ concluída, aprovada por Henrique |
-| 8 | Tom de voz e microcopy | 3h | 🛑 lista de textos — tabela pronta, **aguardando aprovação de Henrique antes de aplicar** |
+| 8 | Tom de voz e microcopy | 3h | 🛑 lista de textos — ✅ aprovada e aplicada por Henrique |
 | 9 | Guia de marca | 1h30 | não |
 | 10 | Remover o mascote (reformulada na Fase 1) | 1h | não |
 | 11 | Verificação final | 2h | não |
@@ -232,9 +232,9 @@ Relatório completo em `docs/visual/07-wordmark-assets.md`. Resumo:
 
 **Confirmado na Fase 0: 9 arquivos de teste comparam texto exato** (`chatModerationPanel.render.test.tsx`, `chatReadReceipts.render.test.tsx`, `consultationCallRouteAccess.test.tsx`, `firstTimeAvailabilityModal.test.tsx`, `goalSelectionModal.test.tsx`, `moodTrendChart.test.tsx`, `psychologistAvailabilityPage.test.tsx`, `statisticsEngagementCards.test.tsx`, `weeklyScheduleModal.test.tsx` — ver `docs/visual/00-inventario.md` §11). Ao mudar texto que algum deles verifica, ajustar o teste junto e mencionar no relatório.
 
-**Feito nesta fase (2026-09-19), 🛑 aguardando aprovação:** guia de tom de voz em `docs/visual/08-tom-de-voz.md`; tabela de microcopy proposto em `docs/visual/08-microcopy-proposto.md` (9 itens, nenhuma mudança aplicada ainda, nenhum teste afetado). **Reconfirmado: nenhum texto de culpa/pressão em metas, conquistas ou sequências** — as oportunidades encontradas são pontuais, concentradas em erros técnicos que vazavam linguagem de desenvolvedor (ex.: "ID da sessão") e na mensagem de "ninguém atendeu" do SOS.
+**Feito nesta fase (2026-09-19):** guia de tom de voz em `docs/visual/08-tom-de-voz.md`; tabela de microcopy em `docs/visual/08-microcopy-proposto.md`, apresentada e **aprovada por Henrique** — 8 dos 9 itens aplicados (o 9º já estava bom). **Reconfirmado: nenhum texto de culpa/pressão em metas, conquistas ou sequências** — as oportunidades encontradas eram pontuais, concentradas em erros técnicos que vazavam linguagem de desenvolvedor (ex.: "ID da sessão") e na mensagem de "ninguém atendeu" do SOS.
 
-**Achado importante, fora do escopo original da fase:** a linha da seção 2 sobre `SafetyPlanModal`/`SafetyPlanPrompt` (regra 6 da seção 3 também citava) **era falsa** — nenhum dos dois componentes existe no código, não há CVV/SAMU em lugar nenhum além de `SOS.tsx` (já corrigido na Fase 6), e não há vestígio no histórico do git de que algum dia existiram. Corrigido na seção 2 e na regra 6.
+**Achado importante, fora do escopo original da fase:** a linha da seção 2 sobre `SafetyPlanModal`/`SafetyPlanPrompt` (regra 6 da seção 3 também citava) **era falsa** — nenhum dos dois componentes existia no código, sem vestígio no histórico do git. Corrigido na seção 2 e na regra 6. **Henrique optou por criar a feature agora** em vez de adiar: `src/components/HomeCrisisAccess.tsx`, um card discreto e sempre visível na home com CVV 188/SAMU 192 tocáveis, fora de uma crise já em andamento. Detalhes em `docs/visual/08-microcopy-proposto.md`.
 
 ---
 

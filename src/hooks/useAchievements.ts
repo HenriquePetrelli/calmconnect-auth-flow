@@ -45,8 +45,8 @@ export const useAchievements = () => {
     } catch (error) {
       console.error('Error fetching achievements:', error);
       toast({
-        title: 'Erro ao carregar conquistas',
-        description: 'Tente novamente mais tarde',
+        title: 'Não foi possível carregar suas conquistas',
+        description: 'Tente de novo em instantes',
         variant: 'destructive',
       });
     } finally {

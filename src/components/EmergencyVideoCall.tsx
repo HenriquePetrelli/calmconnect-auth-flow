@@ -1086,8 +1086,8 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
             Não conseguimos iniciar a chamada
           </h2>
           <p className="text-sm text-muted-foreground">
-            Verifique se o navegador liberou o acesso à câmera e ao microfone e se
-            nenhum outro aplicativo está usando esses dispositivos.
+            Verifique se o navegador tem permissão para usar sua câmera e microfone,
+            e feche outros apps que possam estar usando esses dispositivos.
           </p>
           <div className="flex flex-col sm:flex-row gap-2 justify-center pt-2">
             <Button onClick={() => window.location.reload()}>Tentar novamente</Button>
@@ -1120,7 +1120,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
           onError={(error) => {
             console.error('❌ VideoCallInitializer failed:', error);
             toast({
-              title: 'Erro na Inicialização',
+              title: 'Não foi possível conectar',
               description: error,
               variant: 'destructive',
             });
@@ -1167,10 +1167,10 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
           <CardContent className="p-8 text-center space-y-4">
             <AlertTriangle className="w-12 h-12 mx-auto text-destructive" />
             <h3 className="text-xl font-semibold text-destructive">
-              Sessão Não Encontrada
+              Não encontramos essa chamada
             </h3>
             <p className="text-muted-foreground">
-              ID da sessão não foi fornecido ou é inválido.
+              O link que você usou pode estar incompleto. Volte para o início e tente novamente.
             </p>
             <Button onClick={() => navigate('/home')}>
               Voltar ao Início

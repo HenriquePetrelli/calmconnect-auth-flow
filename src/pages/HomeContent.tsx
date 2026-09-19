@@ -21,6 +21,7 @@ import React from "react";
 import PageSkeleton from "@/components/PageSkeleton";
 import { useTheme } from "next-themes";
 import ActiveCallBanner from "@/components/sos/ActiveCallBanner";
+import HomeCrisisAccess from "@/components/HomeCrisisAccess";
 
 
 
@@ -204,7 +205,7 @@ const HomeContent = () => {
     <>
       <div>
         <ActiveCallBanner />
-
+        <HomeCrisisAccess />
 
         {/* Mobile/Tablet Mood Section */}
         {moodEnabled && (

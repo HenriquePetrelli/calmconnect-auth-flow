@@ -24,7 +24,7 @@ const CancelConfirmationModal = ({ open, onOpenChange, onConfirm }: CancelConfir
             Tem certeza que deseja cancelar a busca?
           </AlertDialogTitle>
           <AlertDialogDescription>
-            Você será redirecionado para a tela inicial.
+            Você volta para a tela inicial.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

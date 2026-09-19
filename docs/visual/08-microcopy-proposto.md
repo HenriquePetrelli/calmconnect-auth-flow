@@ -1,6 +1,6 @@
-# Fase 8 — Microcopy proposto (🛑 aguardando aprovação)
+# Fase 8 — Microcopy proposto (✅ aprovado e aplicado)
 
-Nenhuma destas mudanças foi aplicada ainda — o plano pede para apresentar a tabela e aplicar só depois da aprovação do Henrique. Achados a partir de uma varredura das telas principais, com atenção especial às áreas que o plano pede (metas, conquistas/sequências, erros, espera do SOS, "ninguém atendeu", encerramento de chamada).
+Henrique aprovou os 9 itens (2026-09-19) — todos aplicados, exceto o item 3 (já estava bom, sem mudança). O item das metas semanais (seção "Fora do escopo de edição de arquivo") não foi aplicado — exigiria uma migration nova, fora do que foi aprovado nesta rodada. Achados a partir de uma varredura das telas principais, com atenção especial às áreas que o plano pede (metas, conquistas/sequências, erros, espera do SOS, "ninguém atendeu", encerramento de chamada).
 
 **Confirmado de novo nesta fase:** não há texto de culpa/pressão em metas semanais, conquistas ou sequências — a Fase 0 já não tinha achado nada, e a varredura desta fase (incluindo o conteúdo das conquistas/metas, que vem do banco) confirma. `GoalCompletionModal.tsx` e `AchievementModal.tsx` já são bem escritos (ver `08-tom-de-voz.md`). As oportunidades abaixo são pontuais, concentradas em telas de erro técnico e na tela de espera do SOS.
 
@@ -31,6 +31,10 @@ Os títulos/descrições das metas semanais padrão vêm do banco (`default_week
 | mood | "Registrar meu humor todos os dias desta semana" | "Registre seu humor todos os dias desta semana" |
 | appointment | "Concluir minha consulta agendada" | "Compareça à sua consulta agendada" |
 
-## Testes a ajustar se a tabela principal for aprovada
+## Testes ajustados
 
-Nenhum dos 9 arquivos de teste que comparam texto exato (`docs/visual/00-inventario.md` §11) referencia os textos acima — conferido antes de propor. Nenhum ajuste de teste necessário para os itens 1-9.
+Nenhum dos 9 arquivos de teste que comparam texto exato (`docs/visual/00-inventario.md` §11) referencia os textos acima — conferido antes de propor. Nenhum ajuste de teste necessário para os itens 1-9, confirmado após aplicar (`npx vitest run`, mesma baseline de sempre).
+
+## Acesso ao CVV/SAMU na home (feature nova, aprovada junto)
+
+Ligada ao achado da seção 2 do plano corrigido nesta fase: `SafetyPlanModal`/`SafetyPlanPrompt` nunca existiram. Henrique optou por criar agora um acesso rápido, em vez de deixar para depois. Implementado `src/components/HomeCrisisAccess.tsx` — um card discreto, sempre visível, logo abaixo do banner de chamada ativa em `HomeContent.tsx`: "Precisa conversar agora?" com links `tel:188` (CVV) e `tel:192` (SAMU). Não é um modal, não interrompe nada — só fica disponível na home o tempo todo, sem depender de já estar numa crise em andamento (isso o botão de SOS já cobre). Validado com screenshot real (claro/escuro) antes de aplicar.
