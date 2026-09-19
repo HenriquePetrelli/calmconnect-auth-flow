@@ -88,7 +88,7 @@ Estas regras valem para **todas** as fases.
 | 6 | SOS e modo crise | 4h | 🛑 antes de mexer em comportamento — ✅ concluída (6b aprovada por Henrique antes do commit) |
 | 7 | Wordmark, splash e assets (reduzida na Fase 1 — sem ícone novo) | 2h | 🛑 revisão do wordmark em SVG — ✅ concluída, aprovada por Henrique |
 | 8 | Tom de voz e microcopy | 3h | 🛑 lista de textos — ✅ aprovada e aplicada por Henrique |
-| 9 | Guia de marca | 1h30 | não |
+| 9 | Guia de marca | 1h30 | não — ✅ concluída |
 | 10 | Remover o mascote (reformulada na Fase 1) | 1h | não |
 | 11 | Verificação final | 2h | não |
 
@@ -238,18 +238,9 @@ Relatório completo em `docs/visual/07-wordmark-assets.md`. Resumo:
 
 ---
 
-### Fase 9 — Guia de marca · 1h30
+### Fase 9 — Guia de marca · 1h30 · ✅ concluída
 
-`docs/visual/guia-de-marca.md`, curto e prático:
-
-- paleta com tokens, hex e onde usar;
-- **a regra do laranja**, em destaque;
-- tipografia (wordmark e interface);
-- ícone e wordmark: versões, tamanho mínimo, área de respiro, o que não fazer;
-- resumo do tom de voz com 5 exemplos certos e errados;
-- regras do mascote (se houver).
-
-Esse documento serve para qualquer pessoa (ou Claude) que for mexer na interface depois.
+`docs/visual/guia-de-marca.md` escrito, cobrindo paleta (tokens + hex + onde usar), a regra do laranja em destaque, tipografia, ícone/wordmark (versões, tamanho mínimo, área de respiro, o que não fazer), resumo do tom de voz com 5 exemplos, e a nota de que não há mais mascote (a decisão de removê-lo já foi tomada na Fase 1; a Fase 10 só executa a limpeza de código). Reúne e referencia os relatórios de todas as fases anteriores.
 
 ---
 
