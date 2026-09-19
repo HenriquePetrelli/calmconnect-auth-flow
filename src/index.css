@@ -35,20 +35,15 @@
     --primary-active: 263 69% 42%;    /* #5B21B6 */
     --primary-glow: 258 90% 66%;      /* #8B5CF6 */
 
-    /* Secondary — hoje com o MESMO valor do --primary (roxo), de propósito.
-       Henrique decidiu (Fase 2) que o papel definitivo é virar um tom neutro/cinza,
-       mas ~140 usos de -secondary espalhados por ~35 arquivos misturam dois sentidos
-       diferentes: "quero o roxo de marca" (ex.: wordmark em MainLayout.tsx/SignupType.tsx)
-       e "quero um tom discreto/neutro" (ex.: botão variant="secondary", badges).
-       Trocar o valor aqui sem separar os dois casos quebraria o wordmark e outros usos
-       de marca. Fica para a Fase 3 (que já audita usos de cor arquivo a arquivo) separar
-       os dois casos e só então aplicar o tom neutro alvo — valores já calculados e com
-       contraste validado em docs/visual/02-tokens.md. */
-    --secondary: 262 83% 58%;
-    --secondary-foreground: 0 0% 100%;
-    --secondary-hover: 263 70% 50%;   /* #6D28D9 */
-    --secondary-active: 263 69% 42%;  /* #5B21B6 */
-    --secondary-glow: 258 90% 66%;    /* #8B5CF6 */
+    /* Secondary — tom neutro/cinza-arroxeado (Fase 3). Usos que queriam o roxo
+       de marca (wordmark, headers "cheios" com texto branco fixo) foram
+       migrados para --primary antes desta troca de valor — ver
+       docs/visual/03-regra-do-laranja.md. */
+    --secondary: 258 10% 92%;
+    --secondary-foreground: 258 20% 25%;   /* contraste 9,82:1 sobre --secondary */
+    --secondary-hover: 258 10% 87%;        /* contraste 8,64:1 */
+    --secondary-active: 258 10% 82%;
+    --secondary-glow: 258 10% 95%;
 
     --muted: 220 14% 96%;             /* #F3F4F6 */
     --muted-foreground: 220 9% 46%;   /* #6B7280 */
@@ -73,11 +68,11 @@
 
     /* Brand gradients */
     --gradient-primary: linear-gradient(135deg, hsl(262 83% 58%), hsl(258 90% 66%));
-    --gradient-secondary: linear-gradient(135deg, hsl(262 83% 58%), hsl(258 90% 66%));
+    --gradient-secondary: linear-gradient(135deg, hsl(258 10% 92%), hsl(258 10% 82%));
     --gradient-brand: linear-gradient(135deg, hsl(262 83% 58%), hsl(258 90% 66%));
     --gradient-card: linear-gradient(180deg, hsl(0 0% 100%), hsl(220 14% 98%));
     --gradient-calm: linear-gradient(180deg, hsl(220 20% 98%), hsl(220 14% 96%));
-    --gradient-professional: linear-gradient(135deg, hsl(25 95% 53%), hsl(21 90% 48%));
+    --gradient-professional: linear-gradient(135deg, hsl(262 83% 58%), hsl(263 70% 50%));
     --gradient-breathing: linear-gradient(135deg, hsl(199 89% 48%), hsl(160 84% 39%));
     --gradient-sounds: linear-gradient(135deg, hsl(262 83% 58%), hsl(258 90% 66%));
     --gradient-evolution: linear-gradient(135deg, hsl(142 71% 45%), hsl(142 76% 73%));
@@ -108,14 +103,7 @@
     --sos-glow: 0 84% 60% / 0.3;
 
     --premium-primary: 262 83% 58%;
-    --professional-primary: 25 95% 53%;
-
-    --emma-header: 25 95% 53%;
-    --emma-background: 220 20% 98%;
-    --emma-card: 0 0% 100%;
-    --emma-primary: 25 95% 53%;
-    --emma-text: 222 47% 11%;
-    --emma-secondary: 220 9% 46%;
+    --professional-primary: 262 83% 58%;
 
     /* Shadows */
     --shadow-xs: 0 1px 2px 0 hsl(222 47% 11% / 0.05);
@@ -165,12 +153,12 @@
     --primary-active: 262 83% 60%;
     --primary-glow: 252 95% 82%;
 
-    /* Secondary — mesmo valor do --primary por enquanto; ver nota no light mode (:root) */
-    --secondary: 258 92% 74%;
-    --secondary-foreground: 260 44% 10%;
-    --secondary-hover: 258 90% 68%;
-    --secondary-active: 262 83% 60%;
-    --secondary-glow: 252 95% 82%;
+    /* Secondary — tom neutro/cinza-arroxeado (Fase 3), ver nota no light mode (:root) */
+    --secondary: 256 14% 32%;
+    --secondary-foreground: 255 20% 92%;   /* contraste 7,27:1 sobre --secondary */
+    --secondary-hover: 256 14% 38%;
+    --secondary-active: 256 14% 44%;
+    --secondary-glow: 256 14% 50%;
 
     --muted: 256 20% 30%;             /* lighter muted surface */
     --muted-foreground: 255 25% 88%;  /* higher contrast secondary text */
@@ -196,13 +184,13 @@
     --progress-track: 255 18% 42%;     /* neutral muted gray for dark sliders */
 
     --gradient-primary: linear-gradient(135deg, hsl(258 92% 74%), hsl(252 95% 82%));
-    --gradient-secondary: linear-gradient(135deg, hsl(258 92% 74%), hsl(252 95% 82%));
+    --gradient-secondary: linear-gradient(135deg, hsl(256 14% 32%), hsl(256 14% 44%));
     --gradient-brand: linear-gradient(135deg, hsl(258 92% 74%), hsl(252 95% 82%));
     --gradient-card: linear-gradient(180deg, hsl(256 22% 24%), hsl(258 22% 20%));
     --gradient-calm: linear-gradient(180deg, hsl(258 22% 18%), hsl(256 22% 22%));
 
 
-    --gradient-professional: linear-gradient(135deg, hsl(27 96% 61%), hsl(25 95% 53%));
+    --gradient-professional: linear-gradient(135deg, hsl(258 92% 74%), hsl(258 90% 68%));
     --gradient-breathing: linear-gradient(135deg, hsl(199 89% 60%), hsl(160 84% 49%));
     --gradient-sounds: linear-gradient(135deg, hsl(258 90% 70%), hsl(252 95% 78%));
     --gradient-evolution: linear-gradient(135deg, hsl(142 71% 50%), hsl(142 76% 65%));
@@ -232,14 +220,7 @@
     --sos-glow: 0 84% 65% / 0.4;
 
     --premium-primary: 258 90% 70%;
-    --professional-primary: 27 96% 61%;
-
-    --emma-header: 27 96% 61%;
-    --emma-background: 260 44% 7%;
-    --emma-card: 256 44% 14%;
-    --emma-primary: 27 96% 61%;
-    --emma-text: 220 20% 98%;
-    --emma-secondary: 255 47% 76%;
+    --professional-primary: 258 92% 74%;
 
     --shadow-xs: 0 1px 2px 0 hsl(0 0% 0% / 0.4);
     --shadow-sm: 0 1px 3px 0 hsl(0 0% 0% / 0.5), 0 1px 2px -1px hsl(0 0% 0% / 0.4);
@@ -458,34 +439,6 @@
     padding-right: env(safe-area-inset-right);
   }
 
-  /* Emma App Utilities */
-  .emma-card {
-    @apply bg-white rounded-2xl shadow-sm border-0;
-  }
-  
-  .text-emma-primary {
-    color: hsl(var(--emma-primary));
-  }
-  
-  .text-emma-text {
-    color: hsl(var(--emma-text));
-  }
-  
-  .text-emma-secondary {
-    color: hsl(var(--emma-secondary));
-  }
-  
-  .bg-emma-header {
-    background: hsl(var(--emma-header));
-  }
-  
-  .bg-emma-background {
-    background: hsl(var(--emma-background));
-  }
-  
-  .bg-emma-card {
-    background: hsl(var(--emma-card));
-  }
 }
 
 @keyframes fadeIn {

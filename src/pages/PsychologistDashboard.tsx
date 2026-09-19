@@ -161,17 +161,17 @@ const PsychologistDashboard = () => {
 
   const tabTriggerClass =
     'flex items-center justify-center gap-1.5 sm:gap-2 py-2 sm:py-2.5 px-2 text-xs sm:text-sm font-medium rounded-md ' +
-    'data-[state=active]:bg-secondary data-[state=active]:text-white data-[state=active]:shadow-sm transition-colors';
+    'data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-sm transition-colors';
 
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-secondary text-secondary-foreground border-b border-secondary/40 shadow-sm">
+      <header className="sticky top-0 z-30 bg-primary text-primary-foreground border-b border-primary/40 shadow-sm">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3 md:py-4">
           <div className="relative flex items-center justify-between gap-2 sm:gap-4">
             {/* Lado esquerdo - saudação */}
             <div className="min-w-0 flex-1">
-              <p className="text-[10px] sm:text-[11px] font-medium uppercase tracking-wider text-secondary-foreground/70">
+              <p className="text-[10px] sm:text-[11px] font-medium uppercase tracking-wider text-primary-foreground/70">
                 Área do Psicólogo
               </p>
               <h1 className="text-base sm:text-lg md:text-xl font-semibold text-white truncate">

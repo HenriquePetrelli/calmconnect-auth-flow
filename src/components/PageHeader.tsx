@@ -29,7 +29,7 @@ const PageHeader = ({
   };
 
   return (
-    <div className={`bg-secondary text-secondary-foreground ${className}`}>
+    <div className={`bg-primary text-primary-foreground ${className}`}>
       <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-2">
         <div className="w-10 flex items-center justify-start">
           {showBack && (

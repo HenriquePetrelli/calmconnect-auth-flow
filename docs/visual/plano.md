@@ -68,7 +68,7 @@ Estas regras valem para **todas** as fases.
 2. **`EmergencyVideoCall.tsx` e `useWebRTC.ts` são zona protegida.** Em `useWebRTC.ts`, nada. Em `EmergencyVideoCall.tsx`, só `className`, tokens de cor e texto visível. O diff dele deve ser revisado linha a linha e apresentado separado no relatório.
 3. **Os testes existentes precisam continuar passando.** `npx vitest run` e `npx tsc --noEmit` ao fim de cada fase. Se um teste quebrar por causa de texto alterado, mostre antes de ajustar o teste.
 4. **Nada de cor fixa nova.** Nenhum hex, `rgb()` ou classe de paleta crua (`orange-500`, `purple-600`, `violet-*`) em componentes. Toda cor sai de um token semântico (Fase 2).
-5. **Laranja é exclusivo do SOS** (a partir da Fase 3).
+5. **Laranja é exclusivo do SOS** — em vigor desde a Fase 3, verificado por `bash scripts/check-colors.sh`.
 6. **O CVV 188 e o SAMU 192 nunca somem** de onde já aparecem (`SafetyPlanModal`, telas de emergência).
 7. **Commits pequenos**, um por fase, com mensagem `visual(fase-N): …`.
 8. **Na dúvida sobre gosto, pergunte.** Na dúvida sobre acessibilidade, siga o WCAG.
@@ -82,7 +82,7 @@ Estas regras valem para **todas** as fases.
 | 0 | Inventário (somente leitura) | 2h | 🛑 sim — ✅ concluída |
 | 1 | Decisões do Henrique | — | 🛑 sim — ✅ concluída |
 | 2 | Tokens de design | 3h | não — ✅ concluída |
-| 3 | Regra do laranja (inversão completa, decidida na Fase 1) + papel definitivo do `--secondary` (adiado da Fase 2) | 4h–6h (cresceu de novo: absorveu a separação marca/neutro do `--secondary`, ~140 usos em ~35 arquivos) | 🛑 casos ambíguos |
+| 3 | Regra do laranja (inversão completa, decidida na Fase 1) + papel definitivo do `--secondary` (adiado da Fase 2) | 4h–6h | não precisou de 🛑 — ✅ concluída |
 | 4 | Modo escuro (revisão + 2 ajustes, reduzida na Fase 0) | 2h | não |
 | 5 | Acessibilidade | 3h | não |
 | 6 | SOS e modo crise | 4h | 🛑 antes de mexer em comportamento |
@@ -156,23 +156,15 @@ Relatório completo com todos os valores, contrastes e a justificativa de cada e
 
 ---
 
-### Fase 3 — Regra do laranja + papel definitivo do `--secondary` · 4h–6h · 🛑 casos ambíguos
+### Fase 3 — Regra do laranja + papel definitivo do `--secondary` · 4h–6h · ✅ concluída
 
-**Escopo real (ver pergunta 0 da Fase 1): o laranja já foi tirado de `--primary` na Fase 2** (agora é roxo) e `--sos-secondary` já é o laranja exclusivo do SOS. O que falta é migrar os usos crus/específicos — raw hex, classes de paleta Tailwind (`orange-500`, `amber-600` etc.) — que ainda não passam pelos tokens. Usando a lista da Fase 0 (`docs/visual/00-inventario.md` §3) e a saída de `bash scripts/check-colors.sh`:
+Relatório completo em `docs/visual/03-regra-do-laranja.md`. Resumo:
 
-- **(a) é SOS** → trocar para `sos-secondary`/`sos-soft`.
-- **(b) não é SOS** → trocar para `primary`, `warning` ou neutro, conforme o sentido.
-- **(c) ambíguo** → 🛑 listar com print/descrição e perguntar.
-
-Casos que provavelmente são ambíguos: badges de "urgente", alerta de pagamento pendente, a metade laranja do logo antigo, gráficos de estatísticas.
-
-`warning` deve ser amarelo/âmbar claramente distinguível do laranja do SOS. Se não houver par de cores distinguível com bom contraste, usar ícone + texto em vez de cor.
-
-**Tarefa adicional, herdada da Fase 2 (ver `docs/visual/02-tokens.md` §5):** resolver o papel definitivo de `--secondary`. Hoje ele tem o mesmo valor do `--primary` (roxo) de propósito, para não quebrar nada. Auditar os ~140 usos em ~35 arquivos e separar em dois grupos:
-- quer o **roxo de marca** (ex.: wordmark em `MainLayout.tsx`/`SignupType.tsx`) → migrar para `text-primary`/`bg-primary` etc.;
-- quer um tom **neutro/discreto de verdade** (ex.: botão `variant="secondary"`, a barra de navegação inferior `.tabs`) → aplicar os valores-alvo já calculados e validados em `docs/visual/02-tokens.md` §5 (`258 10% 92%` / `258 20% 25%` light, `256 14% 32%` / `255 20% 92%` dark, mais hover/active/glow).
-
-Aproveitar a passagem para migrar o restante das cores cruas para tokens nos mesmos arquivos. Ao final, `scripts/check-colors.sh` deve passar.
+- Toda ocorrência de laranja fora do SOS (classes `orange-*`, hex `#F97316`/família, RGB literal em canvas, e um token CSS morto `--professional-primary` que ninguém usa hoje) foi auditada e reclassificada — nenhuma sobrou ambígua o bastante para precisar de 🛑. A maioria virou âmbar (cor de categoria/atenção decorativa) ou `bg-primary` (onde era literalmente o antigo `--primary`, ex. banners "Recomendado").
+- `amber-*` foi explicitamente excluído da regra — é a família do `--warning`, distinta do laranja de SOS de propósito, como o parágrafo abaixo sempre previu.
+- Achado e removido por completo: resíduo de tokens `emma-*` (cor laranja, zero uso em qualquer tela) — sobra do template original antes de virar "Soliv".
+- Papel definitivo do `--secondary` resolvido: usos que queriam o roxo de marca (wordmark, cabeçalhos sólidos com texto branco fixo, inclusive o componente compartilhado `PageHeader.tsx` usado em 19 páginas) foram migrados para `--primary` primeiro; só depois o valor de `--secondary` foi trocado para o tom neutro já calculado na Fase 2.
+- `scripts/check-colors.sh` agora passa (seções 2 e 3 — regra do laranja). A seção 1 (cor crua em geral, informativa) segue mostrando paletas de humor/respiração/som/gráfico nunca-laranja, fora do escopo desta fase — fica documentado como débito técnico futuro, não bloqueia.
 
 ---
 

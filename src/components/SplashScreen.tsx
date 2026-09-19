@@ -11,7 +11,7 @@ const SplashScreen = () => {
           draggable={false}
         />
         <span
-          className="text-[64px] font-black text-secondary lowercase leading-none"
+          className="text-[64px] font-black text-primary lowercase leading-none"
           style={{ fontFamily: "'El Messiri', sans-serif" }}
         >
           soliv

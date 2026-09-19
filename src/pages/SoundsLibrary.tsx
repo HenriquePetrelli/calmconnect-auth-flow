@@ -39,7 +39,7 @@ const SoundsLibrary = () => {
       icon: Sparkles,
       title: "Para Meditar",
       description: "Paisagens sonoras para mindfulness",
-      iconBg: "bg-[#F97316]",
+      iconBg: "bg-[#D97706]",
       sounds: 5,
     },
     {
@@ -71,7 +71,7 @@ const SoundsLibrary = () => {
       id: "therapeutic",
       icon: Headphones,
       title: "Tons Terapêuticos",
-      iconBg: "bg-[#F97316]",
+      iconBg: "bg-[#D97706]",
       count: soundsData.subcategories.therapeutic.sounds.length,
     },
     {
@@ -279,7 +279,7 @@ const SoundsLibrary = () => {
                   <p className="text-sm text-muted-foreground">Baseado no seu histórico de uso</p>
                 </div>
 
-                <div className="relative overflow-hidden rounded-2xl bg-[#F97316] text-white p-6 sm:p-8 shadow-lg">
+                <div className="relative overflow-hidden rounded-2xl bg-primary text-primary-foreground p-6 sm:p-8 shadow-lg">
                   <div className="absolute -right-6 -bottom-6 w-40 h-40 rounded-full bg-white/10 pointer-events-none" />
                   <div className="absolute right-10 top-6 w-20 h-20 rounded-2xl bg-white/15 flex items-center justify-center pointer-events-none">
                     <Music className="w-10 h-10 text-white/80" />
@@ -298,7 +298,7 @@ const SoundsLibrary = () => {
                     </p>
                     <Button
                       onClick={() => navigate(`/sounds/player/${featuredSound.id}`)}
-                      className="bg-white text-[#F97316] hover:bg-white/90 rounded-full font-semibold h-11 px-5 shadow-md"
+                      className="bg-white text-primary hover:bg-white/90 rounded-full font-semibold h-11 px-5 shadow-md"
                     >
                       <Play className="w-4 h-4 mr-2 fill-current" />
                       Reproduzir agora

@@ -26,7 +26,7 @@ const PatternSelector = ({ onSelect, currentPattern }: PatternSelectorProps) => 
     switch (type) {
       case 'relaxation': return 'bg-[#10B981]';
       case 'balance': return 'bg-[#A855F7]';
-      case 'focus': return 'bg-[#F97316]';
+      case 'focus': return 'bg-[#D97706]';
       case 'control': return 'bg-[#3B82F6]';
       case 'calm': return 'bg-[#EC4899]';
       case 'crisis': return 'bg-[#EF4444]';

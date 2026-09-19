@@ -121,14 +121,6 @@ export default {
 					glow: 'hsl(var(--sos-glow))'                 // Brilho suave para atenção
 				},
 				calm: 'hsl(var(--calm))',                        // Fundo do modo crise (Fase 6c)
-				'emma': {
-					header: 'hsl(var(--emma-header))',
-					background: 'hsl(var(--emma-background))', 
-					card: 'hsl(var(--emma-card))',
-					primary: 'hsl(var(--emma-primary))',
-					text: 'hsl(var(--emma-text))',
-					secondary: 'hsl(var(--emma-secondary))'
-				}
 			},
 			boxShadow: {
 				xs: 'var(--shadow-xs)',

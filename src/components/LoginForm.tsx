@@ -180,7 +180,7 @@ const LoginForm = ({ onForgotPassword, onSignUp }: LoginFormProps) => {
       <CardContent className="p-8">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-semibold text-secondary mb-2">
+            <h2 className="text-2xl font-semibold text-primary mb-2">
               Login
             </h2>
             <p className="text-muted-foreground text-sm">

@@ -239,11 +239,11 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-secondary text-secondary-foreground border-b border-secondary/40 shadow-sm">
+      <header className="sticky top-0 z-30 bg-primary text-primary-foreground border-b border-primary/40 shadow-sm">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3 md:py-4">
           <div className="flex items-center justify-between gap-2 sm:gap-4">
             <div className="min-w-0 flex-1">
-              <p className="text-[10px] sm:text-[11px] font-medium uppercase tracking-wider text-secondary-foreground/70 flex items-center gap-1.5">
+              <p className="text-[10px] sm:text-[11px] font-medium uppercase tracking-wider text-primary-foreground/70 flex items-center gap-1.5">
                 <Shield className="w-3 h-3" /> Painel Administrativo
               </p>
               <h1 className="text-base sm:text-lg md:text-xl font-semibold text-white truncate">
@@ -281,7 +281,7 @@ const AdminDashboard = () => {
                     <Menu className="w-[18px] h-[18px]" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="w-[82vw] max-w-xs p-0 bg-secondary text-secondary-foreground border-r-0">
+                <SheetContent side="left" className="w-[82vw] max-w-xs p-0 bg-primary text-primary-foreground border-r-0">
                   <SheetHeader className="p-4 border-b border-white/10 text-left">
                     <SheetTitle className="text-white flex items-center gap-2 text-sm">
                       <Shield className="w-4 h-4" /> Painel Administrativo

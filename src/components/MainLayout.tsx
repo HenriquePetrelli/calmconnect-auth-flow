@@ -92,7 +92,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               {/* SOLIV CENTRALIZADO - Tablet/Mobile */}
               <div className="flex items-center space-x-2 absolute left-1/2 transform -translate-x-1/2">
                 <img src={logoImg} alt="Soliv" className="w-10 h-10 object-contain select-none" draggable={false} />
-                <span className="text-[48px] font-black text-secondary lowercase leading-none" style={{ fontFamily: "'El Messiri', sans-serif" }}>soliv</span>
+                <span className="text-[48px] font-black text-primary lowercase leading-none" style={{ fontFamily: "'El Messiri', sans-serif" }}>soliv</span>
               </div>
               
               {/* NOTIFICAÇÕES À DIREITA */}
@@ -126,7 +126,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               
               {/* SOLIV CENTRALIZADO - Desktop */}
               <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                <span className="text-[48px] font-black text-secondary lowercase leading-none" style={{ fontFamily: "'El Messiri', sans-serif" }}>soliv</span>
+                <span className="text-[48px] font-black text-primary lowercase leading-none" style={{ fontFamily: "'El Messiri', sans-serif" }}>soliv</span>
               </div>
               
               <div className="flex items-center gap-4">

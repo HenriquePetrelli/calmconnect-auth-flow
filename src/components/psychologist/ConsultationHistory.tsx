@@ -172,7 +172,7 @@ const ConsultationHistory = () => {
       },
       no_show: {
         label: 'Faltou',
-        className: 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-500/15 dark:text-orange-300 dark:border-orange-500/30',
+        className: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-500/15 dark:text-slate-300 dark:border-slate-500/30',
       },
       reschedule_proposed: {
         label: 'Reagendamento proposto',

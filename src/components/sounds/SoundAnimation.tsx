@@ -17,10 +17,10 @@ interface SoundAnimationProps {
   audioRef?: React.MutableRefObject<HTMLAudioElement | null>;
 }
 
-// Paleta identidade
+// Paleta identidade — laranja é exclusivo do SOS (Fase 3), aqui usamos âmbar
 const COLORS = {
-  orange: { r: 249, g: 115, b: 22 },
-  orangeSoft: { r: 253, g: 186, b: 116 },
+  orange: { r: 217, g: 119, b: 6 },
+  orangeSoft: { r: 252, g: 211, b: 77 },
   purple: { r: 124, g: 58, b: 237 },
   purpleSoft: { r: 167, g: 139, b: 250 },
   white: { r: 255, g: 250, b: 240 },
@@ -153,7 +153,7 @@ const SoundAnimation = ({ type, isPlaying, levelsRef, circular = false, audioRef
           className="absolute inset-0"
           style={{
             background:
-              "radial-gradient(circle at 30% 25%, rgba(124,58,237,0.55), transparent 60%), radial-gradient(circle at 70% 80%, rgba(249,115,22,0.30), transparent 55%), linear-gradient(135deg, #1a0d3a 0%, #0f0820 100%)",
+              "radial-gradient(circle at 30% 25%, rgba(124,58,237,0.55), transparent 60%), radial-gradient(circle at 70% 80%, rgba(217,119,6,0.30), transparent 55%), linear-gradient(135deg, #1a0d3a 0%, #0f0820 100%)",
           }}
         />
         <canvas ref={canvasRef} className="relative w-full h-full block" aria-hidden />
@@ -175,7 +175,7 @@ const SoundAnimation = ({ type, isPlaying, levelsRef, circular = false, audioRef
         className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(circle at 30% 20%, rgba(124,58,237,0.55), transparent 60%), radial-gradient(circle at 70% 80%, rgba(249,115,22,0.35), transparent 55%), linear-gradient(135deg, #1a0d3a 0%, #0f0820 100%)",
+            "radial-gradient(circle at 30% 20%, rgba(124,58,237,0.55), transparent 60%), radial-gradient(circle at 70% 80%, rgba(217,119,6,0.35), transparent 55%), linear-gradient(135deg, #1a0d3a 0%, #0f0820 100%)",
         }}
       />
       <canvas ref={canvasRef} className="relative w-full h-full block" aria-hidden />
@@ -208,7 +208,7 @@ function drawWaves(
   const glowR = Math.min(w, h) * (0.35 + 0.15 * intensity + bass * 0.2);
   const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowR);
   glow.addColorStop(0, `rgba(124, 58, 237, ${0.35 * intensity})`);
-  glow.addColorStop(0.6, `rgba(249, 115, 22, ${0.12 * intensity})`);
+  glow.addColorStop(0.6, `rgba(217, 119, 6, ${0.12 * intensity})`);
   glow.addColorStop(1, "rgba(124, 58, 237, 0)");
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, w, h);
@@ -351,9 +351,9 @@ function drawFire(
 
   // Base glow (bloom)
   const base = ctx.createRadialGradient(cx, cy + 20, 0, cx, cy + 20, w * 0.4);
-  base.addColorStop(0, `rgba(249, 115, 22, ${0.35 * intensity + 0.05})`);
-  base.addColorStop(0.5, `rgba(249, 115, 22, ${0.10 * intensity})`);
-  base.addColorStop(1, "rgba(249, 115, 22, 0)");
+  base.addColorStop(0, `rgba(217, 119, 6, ${0.35 * intensity + 0.05})`);
+  base.addColorStop(0.5, `rgba(217, 119, 6, ${0.10 * intensity})`);
+  base.addColorStop(1, "rgba(217, 119, 6, 0)");
   ctx.fillStyle = base;
   ctx.fillRect(0, 0, w, h);
 
@@ -440,8 +440,8 @@ function drawBreathing(
 
   // Núcleo laranja → roxo
   const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
-  core.addColorStop(0, `rgba(253, 186, 116, ${0.6 * intensity + 0.1})`);
-  core.addColorStop(0.5, `rgba(249, 115, 22, ${0.45 * intensity + 0.08})`);
+  core.addColorStop(0, `rgba(252, 211, 77, ${0.6 * intensity + 0.1})`);
+  core.addColorStop(0.5, `rgba(217, 119, 6, ${0.45 * intensity + 0.08})`);
   core.addColorStop(1, "rgba(124, 58, 237, 0)");
   ctx.fillStyle = core;
   ctx.beginPath();

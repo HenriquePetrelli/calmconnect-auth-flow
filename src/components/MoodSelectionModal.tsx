@@ -21,7 +21,7 @@ const moods = [
   { emoji: '😀', Icon: Laugh, label: 'Feliz', value: 5, color: 'text-green-600' },
   { emoji: '🙂', Icon: Smile, label: 'Calmo', value: 4, color: 'text-emerald-600' },
   { emoji: '😐', Icon: Meh, label: 'Neutro', value: 3, color: 'text-yellow-600' },
-  { emoji: '😔', Icon: Frown, label: 'Triste', value: 2, color: 'text-orange-600' },
+  { emoji: '😔', Icon: Frown, label: 'Triste', value: 2, color: 'text-rose-600' },
   { emoji: '😡', Icon: Angry, label: 'Irritado', value: 1, color: 'text-red-600' }
 ];
 

@@ -14,7 +14,7 @@ const BackgroundWrapper: React.FC<BackgroundWrapperProps> = ({ children, classNa
     <div
       className={`relative min-h-screen bg-background text-foreground ${className}`}
     >
-      {/* Subtle brand glow (orange + purple) */}
+      {/* Subtle brand glow (roxo, dois tons — Fase 1: laranja não é mais cor de marca) */}
       <div
         aria-hidden
         className="pointer-events-none fixed inset-0 -z-10 opacity-[0.35] dark:opacity-25"
