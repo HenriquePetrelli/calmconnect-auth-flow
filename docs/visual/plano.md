@@ -90,9 +90,11 @@ Estas regras valem para **todas** as fases.
 | 8 | Tom de voz e microcopy | 3h | 🛑 lista de textos — ✅ aprovada e aplicada por Henrique |
 | 9 | Guia de marca | 1h30 | não — ✅ concluída |
 | 10 | Remover o mascote (reformulada na Fase 1) | 1h | não — ✅ concluída |
-| 11 | Verificação final | 2h | não |
+| 11 | Verificação final | 2h | não — ✅ concluída (parcial, ver §3 de `docs/visual/11-verificacao.md`) |
 
 **Total revisado:** ~25h (era ~24h; Fase 3 cresceu mais uma vez por causa do `--secondary`, ver Fase 2 e `docs/visual/02-tokens.md` §5).
+
+**✅ Plano concluído em 2026-09-19 (Fases 0-11).** Pendências que sobraram, nenhuma bloqueante, listadas em `docs/visual/11-verificacao.md` §5 — a mais relevante é o checklist manual no aparelho Android, que sempre foi previsto como a única etapa não automatizável do plano inteiro.
 
 ---
 
@@ -250,26 +252,9 @@ Relatório completo em `docs/visual/10-remover-mascote.md`. `SOS.tsx` já tinha 
 
 ---
 
-### Fase 11 — Verificação final · 2h
+### Fase 11 — Verificação final · 2h · ✅ concluída (parcial)
 
-```bash
-npx tsc --noEmit
-npx vitest run
-npm run build          # [S1] ajustar se o bundler não for Vite
-bash scripts/check-colors.sh
-```
-
-Depois:
-- Playwright: screenshots das 10 telas principais em claro e escuro, em largura de celular (390px) → `docs/visual/screenshots/`.
-- Checklist manual no aparelho Android:
-  - [ ] SOS visível e na mesma posição em todas as telas do paciente
-  - [ ] Nenhum laranja fora do SOS
-  - [ ] Modo escuro sem textos invisíveis
-  - [ ] Fonte do sistema no máximo não quebra o fluxo de SOS
-  - [ ] Ícone correto na tela inicial, na lista de apps e na splash
-  - [ ] CVV 188 tocável na tela de espera
-
-Relatório final em `docs/visual/11-verificacao.md`.
+Relatório completo em `docs/visual/11-verificacao.md`. `tsc`/`vitest`/`build`/`check-colors.sh` todos limpos, mesma baseline de testes observada em todas as 11 fases. Screenshots Playwright das 5 telas públicas alcançáveis sem login (claro/escuro) em `docs/visual/screenshots/`. **Checklist manual no aparelho Android não executável nesta sessão** (sem aparelho físico/emulador) — fica como a única etapa do plano inteiro que sempre foi prevista como manual, não automatizável.
 
 ---
 
