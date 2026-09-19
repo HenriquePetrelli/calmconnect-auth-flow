@@ -27,14 +27,23 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    /* Primary — Orange #F97316 */
-    --primary: 25 95% 53%;
+    /* Primary — Purple #7C3AED (marca, Fase 1 pergunta 0: inversão completa —
+       laranja deixou de ser cor de botão comum e ficou exclusivo do SOS) */
+    --primary: 262 83% 58%;
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 21 90% 48%;      /* #EA580C */
-    --primary-active: 17 88% 40%;     /* #C2410C */
-    --primary-glow: 27 96% 61%;       /* #FB923C */
+    --primary-hover: 263 70% 50%;     /* #6D28D9 */
+    --primary-active: 263 69% 42%;    /* #5B21B6 */
+    --primary-glow: 258 90% 66%;      /* #8B5CF6 */
 
-    /* Secondary — Purple #7C3AED */
+    /* Secondary — hoje com o MESMO valor do --primary (roxo), de propósito.
+       Henrique decidiu (Fase 2) que o papel definitivo é virar um tom neutro/cinza,
+       mas ~140 usos de -secondary espalhados por ~35 arquivos misturam dois sentidos
+       diferentes: "quero o roxo de marca" (ex.: wordmark em MainLayout.tsx/SignupType.tsx)
+       e "quero um tom discreto/neutro" (ex.: botão variant="secondary", badges).
+       Trocar o valor aqui sem separar os dois casos quebraria o wordmark e outros usos
+       de marca. Fica para a Fase 3 (que já audita usos de cor arquivo a arquivo) separar
+       os dois casos e só então aplicar o tom neutro alvo — valores já calculados e com
+       contraste validado em docs/visual/02-tokens.md. */
     --secondary: 262 83% 58%;
     --secondary-foreground: 0 0% 100%;
     --secondary-hover: 263 70% 50%;   /* #6D28D9 */
@@ -44,10 +53,9 @@
     --muted: 220 14% 96%;             /* #F3F4F6 */
     --muted-foreground: 220 9% 46%;   /* #6B7280 */
 
-    /* Accent — subtle ORANGE tint hover surface (primary brand).
-       Purple is reserved for explicit secondary elements only. */
-    --accent: 25 100% 96%;            /* very light orange tint ≈ rgba(249,115,22,0.08) */
-    --accent-foreground: 21 90% 40%;  /* primary-ish foreground on hover */
+    /* Accent — subtle PURPLE tint hover surface (primary brand, Fase 1 pergunta 0). */
+    --accent: 262 100% 97%;           /* very light purple tint */
+    --accent-foreground: 263 70% 40%; /* primary-ish foreground on hover */
 
     --destructive: 0 84% 60%;         /* #EF4444 */
     --destructive-foreground: 0 0% 100%;
@@ -60,20 +68,20 @@
 
     --border: 220 13% 91%;            /* #E5E7EB */
     --input: 220 13% 91%;
-    --ring: 25 95% 53%;
+    --ring: 262 83% 58%;
     --progress-track: 220 9% 78%;      /* neutral gray for media sliders */
 
     /* Brand gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(25 95% 53%), hsl(27 96% 61%));
+    --gradient-primary: linear-gradient(135deg, hsl(262 83% 58%), hsl(258 90% 66%));
     --gradient-secondary: linear-gradient(135deg, hsl(262 83% 58%), hsl(258 90% 66%));
-    --gradient-brand: linear-gradient(135deg, hsl(25 95% 53%), hsl(262 83% 58%));
+    --gradient-brand: linear-gradient(135deg, hsl(262 83% 58%), hsl(258 90% 66%));
     --gradient-card: linear-gradient(180deg, hsl(0 0% 100%), hsl(220 14% 98%));
     --gradient-calm: linear-gradient(180deg, hsl(220 20% 98%), hsl(220 14% 96%));
     --gradient-professional: linear-gradient(135deg, hsl(25 95% 53%), hsl(21 90% 48%));
     --gradient-breathing: linear-gradient(135deg, hsl(199 89% 48%), hsl(160 84% 39%));
     --gradient-sounds: linear-gradient(135deg, hsl(262 83% 58%), hsl(258 90% 66%));
     --gradient-evolution: linear-gradient(135deg, hsl(142 71% 45%), hsl(142 76% 73%));
-    --gradient-sos: linear-gradient(135deg, hsl(0 84% 60%), hsl(25 95% 53%));
+    --gradient-sos: linear-gradient(135deg, hsl(0 84% 60%), hsl(20 85% 38%));
 
     /* Feature accents */
     --breathing-primary: 199 89% 48%;
@@ -91,7 +99,12 @@
     --evolution-secondary: 142 76% 73%;
 
     --sos-primary: 0 84% 60%;
-    --sos-secondary: 25 95% 53%;
+    --sos-secondary: 20 85% 38%;      /* laranja EXCLUSIVO do SOS, Fase 1 pergunta 2 — corrige contraste (era 2,78:1, agora 5,54:1) */
+    --sos-secondary-hover: 20 85% 32%;
+    --sos-secondary-active: 20 85% 24%; /* traço fino do LifeRingIcon */
+    --sos-secondary-foreground: 0 0% 100%;
+    --sos-soft: 20 100% 95%;          /* fundo laranja suave, também exclusivo do SOS */
+    --calm: 258 30% 96%;              /* fundo do modo crise, Fase 6c */
     --sos-glow: 0 84% 60% / 0.3;
 
     --premium-primary: 262 83% 58%;
@@ -145,12 +158,14 @@
     --popover: 256 22% 24%;
     --popover-foreground: 0 0% 100%;
 
-    --primary: 27 96% 64%;
+    /* Primary — roxo (mesmo mapeamento do light mode, ver Fase 1 pergunta 0) */
+    --primary: 258 92% 74%;
     --primary-foreground: 260 44% 10%;
-    --primary-hover: 27 96% 58%;
-    --primary-active: 25 95% 52%;
-    --primary-glow: 32 97% 74%;
+    --primary-hover: 258 90% 68%;
+    --primary-active: 262 83% 60%;
+    --primary-glow: 252 95% 82%;
 
+    /* Secondary — mesmo valor do --primary por enquanto; ver nota no light mode (:root) */
     --secondary: 258 92% 74%;
     --secondary-foreground: 260 44% 10%;
     --secondary-hover: 258 90% 68%;
@@ -160,9 +175,9 @@
     --muted: 256 20% 30%;             /* lighter muted surface */
     --muted-foreground: 255 25% 88%;  /* higher contrast secondary text */
 
-    /* Accent — subtle ORANGE tint hover surface */
-    --accent: 22 45% 30%;
-    --accent-foreground: 27 96% 82%;
+    /* Accent — subtle PURPLE tint hover surface */
+    --accent: 260 35% 28%;
+    --accent-foreground: 258 80% 85%;
 
     --destructive: 0 84% 65%;
     --destructive-foreground: 0 0% 100%;
@@ -175,14 +190,14 @@
 
     --border: 256 20% 36%;            /* visible border on cards */
     --input: 256 20% 34%;
-    --ring: 27 96% 64%;
+    --ring: 258 92% 74%;
 
 
     --progress-track: 255 18% 42%;     /* neutral muted gray for dark sliders */
 
-    --gradient-primary: linear-gradient(135deg, hsl(25 95% 53%), hsl(27 96% 61%));
-    --gradient-secondary: linear-gradient(135deg, hsl(262 83% 58%), hsl(258 90% 66%));
-    --gradient-brand: linear-gradient(135deg, hsl(25 95% 53%), hsl(262 83% 58%));
+    --gradient-primary: linear-gradient(135deg, hsl(258 92% 74%), hsl(252 95% 82%));
+    --gradient-secondary: linear-gradient(135deg, hsl(258 92% 74%), hsl(252 95% 82%));
+    --gradient-brand: linear-gradient(135deg, hsl(258 92% 74%), hsl(252 95% 82%));
     --gradient-card: linear-gradient(180deg, hsl(256 22% 24%), hsl(258 22% 20%));
     --gradient-calm: linear-gradient(180deg, hsl(258 22% 18%), hsl(256 22% 22%));
 
@@ -191,7 +206,7 @@
     --gradient-breathing: linear-gradient(135deg, hsl(199 89% 60%), hsl(160 84% 49%));
     --gradient-sounds: linear-gradient(135deg, hsl(258 90% 70%), hsl(252 95% 78%));
     --gradient-evolution: linear-gradient(135deg, hsl(142 71% 50%), hsl(142 76% 65%));
-    --gradient-sos: linear-gradient(135deg, hsl(0 84% 65%), hsl(25 95% 60%));
+    --gradient-sos: linear-gradient(135deg, hsl(0 84% 65%), hsl(20 85% 40%));
 
     --breathing-primary: 199 89% 60%;
     --breathing-secondary: 160 84% 49%;
@@ -208,7 +223,12 @@
     --evolution-secondary: 142 76% 65%;
 
     --sos-primary: 0 84% 65%;
-    --sos-secondary: 25 95% 60%;
+    --sos-secondary: 20 85% 40%;
+    --sos-secondary-hover: 20 85% 34%;
+    --sos-secondary-active: 20 85% 24%;
+    --sos-secondary-foreground: 0 0% 100%;
+    --sos-soft: 20 45% 20%;
+    --calm: 258 20% 16%;
     --sos-glow: 0 84% 65% / 0.4;
 
     --premium-primary: 258 90% 70%;
@@ -691,13 +711,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-hover)));
-    color: hsl(var(--primary-foreground));
+    background: linear-gradient(135deg, hsl(var(--sos-secondary)), hsl(var(--sos-secondary-hover)));
+    color: hsl(var(--sos-secondary-foreground));
     box-shadow:
       0 0 0 4px hsl(var(--background)),
-      0 -6px 20px -4px hsl(var(--primary) / 0.45),
+      0 -6px 20px -4px hsl(var(--sos-secondary) / 0.45),
       0 8px 24px -6px hsl(var(--foreground) / 0.25);
-    border: 2px solid hsl(var(--primary-foreground) / 0.2);
+    border: 2px solid hsl(var(--sos-secondary-foreground) / 0.2);
     transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
   }
 
@@ -705,7 +725,7 @@
     transform: translateX(-50%) scale(1.06);
     box-shadow:
       0 0 0 4px hsl(var(--background)),
-      0 -8px 28px -4px hsl(var(--primary) / 0.55),
+      0 -8px 28px -4px hsl(var(--sos-secondary) / 0.55),
       0 10px 28px -6px hsl(var(--foreground) / 0.3);
   }
 

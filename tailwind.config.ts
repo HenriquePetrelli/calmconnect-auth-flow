@@ -113,9 +113,14 @@ export default {
 				},
 				'sos': {
 					primary: 'hsl(var(--sos-primary))',          // Vermelho alerta (suavizado)
-					secondary: 'hsl(var(--sos-secondary))',      // Laranja cuidado
+					secondary: 'hsl(var(--sos-secondary))',      // Laranja exclusivo do SOS
+					'secondary-hover': 'hsl(var(--sos-secondary-hover))',
+					'secondary-active': 'hsl(var(--sos-secondary-active))',
+					'secondary-foreground': 'hsl(var(--sos-secondary-foreground))',
+					soft: 'hsl(var(--sos-soft))',                // Fundo laranja suave, exclusivo do SOS
 					glow: 'hsl(var(--sos-glow))'                 // Brilho suave para atenção
 				},
+				calm: 'hsl(var(--calm))',                        // Fundo do modo crise (Fase 6c)
 				'emma': {
 					header: 'hsl(var(--emma-header))',
 					background: 'hsl(var(--emma-background))', 

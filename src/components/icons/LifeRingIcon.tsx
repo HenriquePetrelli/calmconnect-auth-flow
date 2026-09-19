@@ -13,7 +13,7 @@ const LifeRingIcon = ({ className }: LifeRingIconProps) => (
     <circle
       cx="24" cy="24" r="16"
       fill="none"
-      stroke="#EA580C"
+      stroke="hsl(var(--sos-secondary))"
       strokeWidth="11"
       strokeDasharray="25.13 25.13"
       transform="rotate(-45 24 24)"
@@ -21,19 +21,19 @@ const LifeRingIcon = ({ className }: LifeRingIconProps) => (
     <circle
       cx="24" cy="24" r="16"
       fill="none"
-      stroke="#FFFFFF"
+      stroke="hsl(var(--sos-secondary-foreground))"
       strokeWidth="11"
       strokeDasharray="25.13 25.13"
       strokeDashoffset="-25.13"
       transform="rotate(-45 24 24)"
     />
     {/* clean edges */}
-    <circle cx="24" cy="24" r="21.5" fill="none" stroke="#7C2D12" strokeWidth="1.6" />
-    <circle cx="24" cy="24" r="10.5" fill="none" stroke="#7C2D12" strokeWidth="1.6" />
+    <circle cx="24" cy="24" r="21.5" fill="none" stroke="hsl(var(--sos-secondary-active))" strokeWidth="1.6" />
+    <circle cx="24" cy="24" r="10.5" fill="none" stroke="hsl(var(--sos-secondary-active))" strokeWidth="1.6" />
     {/* center hole */}
     <circle cx="24" cy="24" r="9.7" fill="white" />
     {/* rope grips at the 4 band seams */}
-    <g fill="#7C2D12">
+    <g fill="hsl(var(--sos-secondary-active))">
       <rect x="22.5" y="1.5" width="3" height="5" rx="1.2" />
       <rect x="22.5" y="41.5" width="3" height="5" rx="1.2" />
       <rect x="1.5" y="22.5" width="5" height="3" rx="1.2" />

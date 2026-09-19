@@ -81,8 +81,8 @@ Estas regras valem para **todas** as fases.
 |---|---|---|---|
 | 0 | Inventário (somente leitura) | 2h | 🛑 sim — ✅ concluída |
 | 1 | Decisões do Henrique | — | 🛑 sim — ✅ concluída |
-| 2 | Tokens de design | 3h | não |
-| 3 | Regra do laranja (inversão completa, decidida na Fase 1) | 3h–5h (cresceu: é o app inteiro, não um caso isolado) | 🛑 casos ambíguos |
+| 2 | Tokens de design | 3h | não — ✅ concluída |
+| 3 | Regra do laranja (inversão completa, decidida na Fase 1) + papel definitivo do `--secondary` (adiado da Fase 2) | 4h–6h (cresceu de novo: absorveu a separação marca/neutro do `--secondary`, ~140 usos em ~35 arquivos) | 🛑 casos ambíguos |
 | 4 | Modo escuro (revisão + 2 ajustes, reduzida na Fase 0) | 2h | não |
 | 5 | Acessibilidade | 3h | não |
 | 6 | SOS e modo crise | 4h | 🛑 antes de mexer em comportamento |
@@ -92,7 +92,7 @@ Estas regras valem para **todas** as fases.
 | 10 | Remover o mascote (reformulada na Fase 1) | 1h | não |
 | 11 | Verificação final | 2h | não |
 
-**Total revisado:** ~24h (era ~28h sem mascote; Fase 3 cresceu por causa da inversão completa, Fases 4/7/10 encolheram pelas decisões da Fase 0/1).
+**Total revisado:** ~25h (era ~24h; Fase 3 cresceu mais uma vez por causa do `--secondary`, ver Fase 2 e `docs/visual/02-tokens.md` §5).
 
 ---
 
@@ -142,46 +142,35 @@ O Claude prepara as perguntas; o Henrique responde. Registrar as respostas em `d
 
 ---
 
-### Fase 2 — Tokens de design · 3h
+### Fase 2 — Tokens de design · 3h · ✅ concluída
 
-Criar uma camada semântica. **Confirmado na Fase 0:** o projeto usa Tailwind + shadcn com variáveis HSL em `src/index.css` (`:root`/`.dark`) — estender essas variáveis em vez de criar um sistema paralelo. Já existem `--sos-primary`/`--sos-secondary`/`--sos-glow` (vermelho+laranja); os tokens novos abaixo devem reaproveitar/renomear esses em vez de duplicar. **Esta fase também depende da resposta à pergunta 0 da Fase 1** (escopo da regra do laranja) — o valor de `--brand`/`--primary` só pode ser definido depois dessa decisão.
+Relatório completo com todos os valores, contrastes e a justificativa de cada escolha em `docs/visual/02-tokens.md`. Resumo do que foi feito e do que mudou em relação ao plano original:
 
-Tokens mínimos (claro e escuro):
-
-```
---brand / --brand-foreground          roxo principal
---brand-soft                          roxo claro para fundos
---sos / --sos-foreground              laranja, EXCLUSIVO do SOS
---sos-soft                            fundo laranja suave, também exclusivo
---calm                                fundo do modo crise
---success / --warning / --danger      estados (warning NÃO pode ser laranja)
---surface / --surface-raised          fundos
---text / --text-muted                 textos
-```
-
-Mapear no `tailwind.config.ts` (`bg-sos`, `text-brand`, etc.).
-
-Criar `scripts/check-colors.sh` que falha se:
-- aparecer hex/rgb/hsl literal em `src/**/*.tsx`;
-- aparecer `bg-sos`, `text-sos`, `border-sos` ou classes de paleta laranja fora de uma lista de arquivos permitidos (`scripts/sos-allowlist.txt`).
-
-Deixar o script pronto para entrar no CI quando o CI existir (roadmap, sessão 25).
-
-Nesta fase, **só crie os tokens**. A migração dos componentes é nas próximas.
+- **`--primary` virou roxo** (`262 83% 58%` light / `258 92% 74%` dark), junto com `--ring`, `--accent`/`--accent-foreground` e os gradientes que dependiam dele — conforme a decisão de inversão completa da Fase 1.
+- **`--sos-secondary` virou o laranja exclusivo do SOS** (`20 85% 38%` light / `20 85% 40%` dark), corrigindo a falha de contraste encontrada na Fase 0. Tokens de apoio novos: `--sos-secondary-hover`, `--sos-secondary-active`, `--sos-secondary-foreground`, `--sos-soft`.
+- **Novo token `--calm`**, fundo do modo crise (Fase 6c), que não tinha equivalente antes.
+- **Correção de acoplamento não prevista no plano original:** `.sos-button` (o botão real de SOS, em `BottomNavigation.tsx`) e `LifeRingIcon.tsx` (o ícone da boia) referenciavam `--primary`/hex fixo diretamente — sem corrigir isso, o botão de emergência real ficaria roxo assim que `--primary` mudasse. Ambos foram repontados para os novos tokens `--sos-*`.
+- **`--brand`/`--sos`/`--surface`/`--text`/`--danger` do texto original do plano não foram criados como tokens novos e separados.** Achado ao implementar: o projeto já tem nomes estabelecidos e usados em centenas de lugares para exatamente esses conceitos — `--primary` (agora o roxo de marca), `--sos-secondary` (laranja exclusivo do SOS), `--background`/`--card` (surface), `--foreground`/`--muted-foreground` (text), `--destructive` (danger). Duplicar esses nomes criaria dois sistemas paralelos para a mesma cor em vez de um só, o oposto do objetivo desta fase. Só foram adicionados tokens para conceitos que **não tinham** equivalente (`--calm`, `--sos-soft` e os `--sos-secondary-*` de apoio).
+- **Decisão nova, coletada durante a fase (não estava no lote da Fase 1):** o que fazer com `--secondary`, que tinha o mesmo valor do novo `--primary`. Henrique escolheu virar neutro/cinza — mas a aplicação do valor foi **adiada para a Fase 3**: o token aparece em ~140 lugares (bem mais que os ~90 estimados), misturando usos que querem o roxo de marca (o wordmark, entre outros) com usos que realmente querem um tom neutro. Separar os dois é o mesmo tipo de auditoria arquivo-a-arquivo que a Fase 3 já ia fazer para o laranja — os valores-alvo (com contraste validado) já estão calculados em `docs/visual/02-tokens.md` §5, prontos para aplicar.
+- Mapeado em `tailwind.config.ts`. Criado `scripts/check-colors.sh` + `scripts/sos-allowlist.txt`, prontos para entrar em CI quando o CI existir (roadmap, sessão 25). **Falha hoje, como esperado** — é o critério de aceite da Fase 3, não desta.
 
 ---
 
-### Fase 3 — Regra do laranja · 3h · 🛑 casos ambíguos
+### Fase 3 — Regra do laranja + papel definitivo do `--secondary` · 4h–6h · 🛑 casos ambíguos
 
-**Escopo real (ver pergunta 0 da Fase 1): o laranja hoje é `--primary`, a cor padrão de todo o app, não um uso isolado.** Esta fase só começa depois da decisão do Henrique sobre qual dos três caminhos (a/b/c) seguir. Usando a lista da Fase 0 (`docs/visual/00-inventario.md` §3):
+**Escopo real (ver pergunta 0 da Fase 1): o laranja já foi tirado de `--primary` na Fase 2** (agora é roxo) e `--sos-secondary` já é o laranja exclusivo do SOS. O que falta é migrar os usos crus/específicos — raw hex, classes de paleta Tailwind (`orange-500`, `amber-600` etc.) — que ainda não passam pelos tokens. Usando a lista da Fase 0 (`docs/visual/00-inventario.md` §3) e a saída de `bash scripts/check-colors.sh`:
 
-- **(a) é SOS** → trocar para `sos`.
-- **(b) não é SOS** → trocar para `brand`, `warning` ou neutro, conforme o sentido.
+- **(a) é SOS** → trocar para `sos-secondary`/`sos-soft`.
+- **(b) não é SOS** → trocar para `primary`, `warning` ou neutro, conforme o sentido.
 - **(c) ambíguo** → 🛑 listar com print/descrição e perguntar.
 
 Casos que provavelmente são ambíguos: badges de "urgente", alerta de pagamento pendente, a metade laranja do logo antigo, gráficos de estatísticas.
 
 `warning` deve ser amarelo/âmbar claramente distinguível do laranja do SOS. Se não houver par de cores distinguível com bom contraste, usar ícone + texto em vez de cor.
+
+**Tarefa adicional, herdada da Fase 2 (ver `docs/visual/02-tokens.md` §5):** resolver o papel definitivo de `--secondary`. Hoje ele tem o mesmo valor do `--primary` (roxo) de propósito, para não quebrar nada. Auditar os ~140 usos em ~35 arquivos e separar em dois grupos:
+- quer o **roxo de marca** (ex.: wordmark em `MainLayout.tsx`/`SignupType.tsx`) → migrar para `text-primary`/`bg-primary` etc.;
+- quer um tom **neutro/discreto de verdade** (ex.: botão `variant="secondary"`, a barra de navegação inferior `.tabs`) → aplicar os valores-alvo já calculados e validados em `docs/visual/02-tokens.md` §5 (`258 10% 92%` / `258 20% 25%` light, `256 14% 32%` / `255 20% 92%` dark, mais hover/active/glow).
 
 Aproveitar a passagem para migrar o restante das cores cruas para tokens nos mesmos arquivos. Ao final, `scripts/check-colors.sh` deve passar.
 
