@@ -282,6 +282,7 @@ const ConsultationVideoCall = ({ appointment, onEndCall }: ConsultationVideoCall
             size="icon"
             className="w-14 h-14 rounded-full"
             onClick={handleToggleMute}
+            aria-label={isMuted ? "Ativar microfone" : "Silenciar microfone"}
           >
             {isMuted ? <MicOff size={22} /> : <Mic size={22} />}
           </Button>
@@ -291,6 +292,7 @@ const ConsultationVideoCall = ({ appointment, onEndCall }: ConsultationVideoCall
             size="icon"
             className="w-16 h-16 rounded-full bg-destructive hover:bg-destructive/90 shadow-lg"
             onClick={handleEndCall}
+            aria-label="Encerrar chamada"
           >
             <PhoneOff size={26} />
           </Button>
@@ -300,6 +302,7 @@ const ConsultationVideoCall = ({ appointment, onEndCall }: ConsultationVideoCall
             size="icon"
             className="w-14 h-14 rounded-full"
             onClick={handleToggleCamera}
+            aria-label={isCameraOff ? "Ativar câmera" : "Desativar câmera"}
           >
             {isCameraOff ? <CameraOff size={22} /> : <Camera size={22} />}
           </Button>
@@ -309,6 +312,7 @@ const ConsultationVideoCall = ({ appointment, onEndCall }: ConsultationVideoCall
             size="icon"
             className="w-14 h-14 rounded-full"
             onClick={() => setShowSettingsModal(true)}
+            aria-label="Configurações de vídeo e áudio"
           >
             <Settings size={22} />
           </Button>

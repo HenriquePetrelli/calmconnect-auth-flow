@@ -31,14 +31,14 @@ const PageHeader = ({
   return (
     <div className={`bg-primary text-primary-foreground ${className}`}>
       <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-2">
-        <div className="w-10 flex items-center justify-start">
+        <div className="w-12 flex items-center justify-start">
           {showBack && (
             <Button
               variant="ghost"
               size="icon"
               onClick={handleBack}
               aria-label="Voltar"
-              className="rounded-full bg-white/15 text-white hover:bg-white/25 hover:text-white h-10 w-10"
+              className="rounded-full bg-white/15 text-white hover:bg-white/25 hover:text-white h-12 w-12"
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
@@ -47,7 +47,7 @@ const PageHeader = ({
         <h1 className="flex-1 text-center text-base sm:text-lg font-semibold text-white truncate px-2">
           {title}
         </h1>
-        <div className="w-10 flex items-center justify-end">
+        <div className="w-12 flex items-center justify-end">
           {rightAction}
         </div>
       </div>

@@ -46,6 +46,7 @@ const JournalEntryCard = ({ entry, onEdit, onDelete }: JournalEntryCardProps) =>
               size="icon"
               onClick={() => onEdit(entry)}
               className="h-8 w-8"
+              aria-label="Editar registro do diário"
             >
               <Edit className="h-4 w-4" />
             </Button>
@@ -54,6 +55,7 @@ const JournalEntryCard = ({ entry, onEdit, onDelete }: JournalEntryCardProps) =>
               size="icon"
               onClick={() => onDelete(entry.id)}
               className="h-8 w-8 text-destructive hover:text-destructive"
+              aria-label="Excluir registro do diário"
             >
               <Trash2 className="h-4 w-4" />
             </Button>

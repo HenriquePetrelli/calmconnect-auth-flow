@@ -58,7 +58,7 @@ const BottomNavigation = ({ onSOSClick }: BottomNavigationProps) => {
                   if (onSOSClick) onSOSClick();
                   else navigate(item.path);
                 }}
-                aria-label="Botão SOS - Emergência"
+                aria-label="Pedir ajuda emergencial agora"
                 className="sos-button"
               >
                 <Icon className="h-9 w-9" />

@@ -84,7 +84,7 @@ Estas regras valem para **todas** as fases.
 | 2 | Tokens de design | 3h | não — ✅ concluída |
 | 3 | Regra do laranja (inversão completa, decidida na Fase 1) + papel definitivo do `--secondary` (adiado da Fase 2) | 4h–6h | não precisou de 🛑 — ✅ concluída |
 | 4 | Modo escuro (revisão + 2 ajustes, reduzida na Fase 0) | 2h | não — ✅ concluída (parcial, ver §5 de `docs/visual/04-modo-escuro.md`) |
-| 5 | Acessibilidade | 3h | não |
+| 5 | Acessibilidade | 3h | não — ✅ concluída (parcial, ver §2 de `docs/visual/05-acessibilidade.md`) |
 | 6 | SOS e modo crise | 4h | 🛑 antes de mexer em comportamento |
 | 7 | Wordmark, splash e assets (reduzida na Fase 1 — sem ícone novo) | 2h | 🛑 revisão do wordmark em SVG |
 | 8 | Tom de voz e microcopy | 3h | 🛑 lista de textos |
@@ -179,17 +179,17 @@ Relatório completo em `docs/visual/04-modo-escuro.md`. Resumo:
 
 ---
 
-### Fase 5 — Acessibilidade · 3h
+### Fase 5 — Acessibilidade · 3h · ✅ concluída (parcial)
 
-- Contraste AA em todos os pares mapeados na Fase 0. Corrigir nos tokens, não componente a componente.
-- Área de toque mínima de 48×48px em todo elemento interativo. O botão de SOS, bem maior.
-- Tamanhos de fonte em `rem`. Testar com a fonte do sistema no máximo no Android: nada pode cortar ou sobrepor no fluxo de SOS.
-- `aria-label` descritivo no botão de SOS ("Pedir ajuda emergencial agora") e em todo botão só com ícone.
-- Foco visível (`focus-visible:ring`) em todos os interativos.
-- Respeitar `prefers-reduced-motion`: animações de pulsar no SOS e transições param.
-- Nunca usar só cor para transmitir estado (online/offline, qualidade de conexão): sempre ícone ou texto junto.
+Relatório completo com o antes/depois dos contrastes em `docs/visual/05-acessibilidade.md`. Resumo:
 
-Gerar `docs/visual/05-acessibilidade.md` com o antes/depois dos contrastes.
+- Contraste AA corrigido nos tokens: `--destructive`, `--success`, `--sos-primary` (o vermelho do botão de emergência) reprovavam de forma severa (o de sucesso quase nem passava para texto grande) — todos agora ≥4,8:1. Achado bônus: `--evolution-primary` (variante não usada em nenhuma tela) tinha o mesmo problema, corrigido junto.
+- Área de toque: `size="icon"` (padrão do botão compartilhado) e o botão de voltar do `PageHeader.tsx` (19 páginas) foram de 40px para 48px. **Pendência:** fileiras de 3-4 ícones nos cabeçalhos de `PsychologistDashboard.tsx`/`AdminDashboard.tsx` continuam em 36px — aumentar às cegas, sem conseguir ver a tela renderizada (sem credenciais de teste), tem risco real de quebrar layout num cabeçalho já apertado.
+- Fontes já estavam em `rem` — conferido, sem mudança.
+- `aria-label`: botão de SOS alinhado ao texto do plano; auditados todos os botões só-com-ícone do app, 6 sem rótulo corrigidos (inclui os 4 controles principais de uma chamada de vídeo real, em `ConsultationVideoCall.tsx`).
+- Foco visível: já existia, abrangente, desde antes desta fase — conferido, sem mudança.
+- `prefers-reduced-motion`: não existia, adicionado um bloco global que cobre toda animação/transição do app de uma vez (inclusive o pulsar do botão de SOS).
+- Cor sozinha para estado: `ConnectionQuality.tsx` (usado dentro do `EmergencyVideoCall.tsx`) já fazia certo (ícone diferente por estado). `OnlineStatusToggle.tsx` corrigido — o indicador compacto online/offline agora distingue por forma (preenchido vs. vazado), não só cor.
 
 ---
 

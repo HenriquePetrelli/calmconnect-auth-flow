@@ -52,10 +52,10 @@
     --accent: 262 100% 97%;           /* very light purple tint */
     --accent-foreground: 263 70% 40%; /* primary-ish foreground on hover */
 
-    --destructive: 0 84% 60%;         /* #EF4444 */
+    --destructive: 0 84% 48%;         /* Fase 5: escurecido, branco em cima passa AA (era 3,78:1, agora 4,87:1) */
     --destructive-foreground: 0 0% 100%;
 
-    --success: 142 71% 45%;
+    --success: 142 71% 30%;           /* Fase 5: escurecido, branco em cima passa AA (era 2,30:1, agora 4,84:1) */
     --success-foreground: 0 0% 100%;
 
     --warning: 38 92% 50%;
@@ -90,10 +90,10 @@
     --sounds-secondary: 258 90% 66%;
     --sounds-accent: 251 91% 95%;
 
-    --evolution-primary: 142 71% 45%;
+    --evolution-primary: 142 71% 30%;   /* Fase 5: escurecido, mesmo motivo do --success (branco em cima) */
     --evolution-secondary: 142 76% 73%;
 
-    --sos-primary: 0 84% 60%;
+    --sos-primary: 0 84% 48%;         /* Fase 5: escurecido, branco em cima passa AA (era 3,78:1, agora 4,87:1) */
     --sos-secondary: 20 85% 38%;      /* laranja EXCLUSIVO do SOS, Fase 1 pergunta 2 — corrige contraste (era 2,78:1, agora 5,54:1) */
     --sos-secondary-hover: 20 85% 32%;
     --sos-secondary-active: 20 85% 24%; /* traço fino do LifeRingIcon */
@@ -167,10 +167,10 @@
     --accent: 260 35% 28%;
     --accent-foreground: 258 80% 85%;
 
-    --destructive: 0 84% 65%;
+    --destructive: 0 84% 48%;         /* Fase 5: escurecido, branco em cima passa AA (era 3,30:1, agora 4,87:1) */
     --destructive-foreground: 0 0% 100%;
 
-    --success: 142 65% 52%;
+    --success: 142 65% 30%;           /* Fase 5: escurecido, branco em cima passa AA (era 1,94:1, agora 5,10:1) */
     --success-foreground: 0 0% 100%;
 
     --warning: 38 92% 58%;
@@ -207,10 +207,10 @@
     --sounds-secondary: 252 95% 78%;
     --sounds-accent: 251 91% 85%;
 
-    --evolution-primary: 142 71% 50%;
+    --evolution-primary: 142 71% 30%;   /* Fase 5: escurecido, mesmo motivo do --success (branco em cima) */
     --evolution-secondary: 142 76% 65%;
 
-    --sos-primary: 0 84% 65%;
+    --sos-primary: 0 84% 48%;         /* Fase 5: escurecido, branco em cima passa AA (era 3,30:1, agora 4,87:1) */
     --sos-secondary: 20 85% 40%;
     --sos-secondary-hover: 20 85% 34%;
     --sos-secondary-active: 20 85% 24%;
@@ -888,4 +888,21 @@
 body {
   min-height: 100vh;
   background: hsl(var(--background));
+}
+
+/* Fase 5 (acessibilidade): respeitar prefers-reduced-motion.
+   Encurta toda animação/transição para quase-instantâneo em vez de remover
+   por completo — mantém eventos de animationend/transitionend disparando
+   (nenhum componente depende disso hoje, mas é mais seguro que display:none
+   ou animation:none) e cobre tudo de uma vez: o pulsar do botão de SOS
+   (animate-pulse-gentle), a respiração guiada, e toda transição comum. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

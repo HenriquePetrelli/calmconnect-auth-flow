@@ -23,7 +23,9 @@ export const OnlineStatusToggle = ({ compact = true, className }: OnlineStatusTo
         <span
           className={cn(
             'inline-block w-2 h-2 rounded-full shrink-0',
-            isOnline ? 'bg-emerald-400 shadow-[0_0_0_3px_rgba(52,211,153,0.25)]' : 'bg-white/40',
+            isOnline
+              ? 'bg-emerald-400 shadow-[0_0_0_3px_rgba(52,211,153,0.25)]'
+              : 'bg-transparent border border-white/50',
           )}
           aria-hidden
         />

@@ -263,6 +263,7 @@ export const ListaConversas: React.FC<ListaConversasProps> = ({ onSelectConversa
                           size="icon"
                           className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                           onClick={(e) => e.stopPropagation()}
+                          aria-label="Excluir conversa"
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
