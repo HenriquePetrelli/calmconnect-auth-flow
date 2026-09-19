@@ -39,7 +39,7 @@ Estes podem ter mudado desde então, mas têm origem no código real.
 | `EmergencyVideoCall.tsx` e `useWebRTC.ts` são os arquivos mais críticos e testados | auditoria técnica |
 | Existem testes com Vitest e Playwright; não existe CI | auditoria técnica |
 | Rota `/consultation-call/:appointmentId` | sessões de consulta |
-| `SafetyPlanModal` mostra CVV 188 e SAMU 192; `SafetyPlanPrompt` fica na home | estado da implementação |
+| ~~`SafetyPlanModal` mostra CVV 188 e SAMU 192; `SafetyPlanPrompt` fica na home~~ **— achado falso na Fase 8: nenhum dos dois componentes existe no código (busca ampla por "SafetyPlan", "plano de segurança", "CVV", "SAMU" — só `SOS.tsx` tem CVV/SAMU, já corrigido na Fase 6 para aparecer sempre na espera). Não há vestígio no histórico do git de que algum dia existiu.** | estado da implementação — **corrigido, ver Fase 8** |
 | `PatientContextPanel` e `PsychologistDashboard` (com aba Agenda) existem | estado da implementação, agenda |
 | Existem metas semanais, conquistas (`/achievements`) e RPCs de streak | auditoria técnica |
 | Nome em roxo com fonte arredondada; logo de cérebro laranja/roxo; SOS laranja com boia | prints enviados pelo Henrique |
@@ -69,7 +69,7 @@ Estas regras valem para **todas** as fases.
 3. **Os testes existentes precisam continuar passando.** `npx vitest run` e `npx tsc --noEmit` ao fim de cada fase. Se um teste quebrar por causa de texto alterado, mostre antes de ajustar o teste.
 4. **Nada de cor fixa nova.** Nenhum hex, `rgb()` ou classe de paleta crua (`orange-500`, `purple-600`, `violet-*`) em componentes. Toda cor sai de um token semântico (Fase 2).
 5. **Laranja é exclusivo do SOS** — em vigor desde a Fase 3, verificado por `bash scripts/check-colors.sh`.
-6. **O CVV 188 e o SAMU 192 nunca somem** de onde já aparecem (`SafetyPlanModal`, telas de emergência).
+6. **O CVV 188 e o SAMU 192 nunca somem** de onde já aparecem (`SOS.tsx`, telas de emergência — `SafetyPlanModal` não existe, achado falso corrigido na Fase 8).
 7. **Commits pequenos**, um por fase, com mensagem `visual(fase-N): …`.
 8. **Na dúvida sobre gosto, pergunte.** Na dúvida sobre acessibilidade, siga o WCAG.
 
@@ -87,7 +87,7 @@ Estas regras valem para **todas** as fases.
 | 5 | Acessibilidade | 3h | não — ✅ concluída (parcial, ver §2 de `docs/visual/05-acessibilidade.md`) |
 | 6 | SOS e modo crise | 4h | 🛑 antes de mexer em comportamento — ✅ concluída (6b aprovada por Henrique antes do commit) |
 | 7 | Wordmark, splash e assets (reduzida na Fase 1 — sem ícone novo) | 2h | 🛑 revisão do wordmark em SVG — ✅ concluída, aprovada por Henrique |
-| 8 | Tom de voz e microcopy | 3h | 🛑 lista de textos |
+| 8 | Tom de voz e microcopy | 3h | 🛑 lista de textos — tabela pronta, **aguardando aprovação de Henrique antes de aplicar** |
 | 9 | Guia de marca | 1h30 | não |
 | 10 | Remover o mascote (reformulada na Fase 1) | 1h | não |
 | 11 | Verificação final | 2h | não |
@@ -231,6 +231,10 @@ Relatório completo em `docs/visual/07-wordmark-assets.md`. Resumo:
 4. Atenção especial a: metas semanais, conquistas e sequências (streaks), mensagens de erro, tela de espera do SOS, mensagem quando ninguém atende, encerramento de chamada.
 
 **Confirmado na Fase 0: 9 arquivos de teste comparam texto exato** (`chatModerationPanel.render.test.tsx`, `chatReadReceipts.render.test.tsx`, `consultationCallRouteAccess.test.tsx`, `firstTimeAvailabilityModal.test.tsx`, `goalSelectionModal.test.tsx`, `moodTrendChart.test.tsx`, `psychologistAvailabilityPage.test.tsx`, `statisticsEngagementCards.test.tsx`, `weeklyScheduleModal.test.tsx` — ver `docs/visual/00-inventario.md` §11). Ao mudar texto que algum deles verifica, ajustar o teste junto e mencionar no relatório.
+
+**Feito nesta fase (2026-09-19), 🛑 aguardando aprovação:** guia de tom de voz em `docs/visual/08-tom-de-voz.md`; tabela de microcopy proposto em `docs/visual/08-microcopy-proposto.md` (9 itens, nenhuma mudança aplicada ainda, nenhum teste afetado). **Reconfirmado: nenhum texto de culpa/pressão em metas, conquistas ou sequências** — as oportunidades encontradas são pontuais, concentradas em erros técnicos que vazavam linguagem de desenvolvedor (ex.: "ID da sessão") e na mensagem de "ninguém atendeu" do SOS.
+
+**Achado importante, fora do escopo original da fase:** a linha da seção 2 sobre `SafetyPlanModal`/`SafetyPlanPrompt` (regra 6 da seção 3 também citava) **era falsa** — nenhum dos dois componentes existe no código, não há CVV/SAMU em lugar nenhum além de `SOS.tsx` (já corrigido na Fase 6), e não há vestígio no histórico do git de que algum dia existiram. Corrigido na seção 2 e na regra 6.
 
 ---
 
