@@ -1,8 +1,7 @@
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { RotateCcw, Home, Clock } from "lucide-react";
-import { Mascot } from "@/components/mascot";
+import { RotateCcw, Home, Clock, CheckCircle } from "lucide-react";
 import { usePatientStatistics } from "@/hooks/usePatientStatistics";
 import { useAchievements } from "@/hooks/useAchievements";
 
@@ -42,7 +41,9 @@ const CompletionScreen = ({
       <Card className="w-full max-w-md mx-auto">
         <CardContent className="p-8 text-center space-y-6">
           <div className="flex justify-center">
-            <Mascot pose="celebrate" className="w-24 h-24" />
+            <div className="w-20 h-20 bg-success/15 rounded-full flex items-center justify-center">
+              <CheckCircle className="w-10 h-10 text-success" />
+            </div>
           </div>
 
           <div>

@@ -1,5 +1,4 @@
 import React from 'react';
-import { Mascot } from '@/components/mascot';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -19,6 +18,7 @@ import {
   Video,
   UserCheck,
   Sparkles,
+  BellOff,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -181,7 +181,9 @@ const Notifications = () => {
         <main className="container mx-auto px-4 py-6 max-w-2xl">
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center text-center py-16">
-              <Mascot pose="sleep" className="w-28 h-28 mb-6" />
+              <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center mb-6">
+                <BellOff className="w-12 h-12 text-muted-foreground" />
+              </div>
               <h3 className="text-lg font-semibold text-foreground mb-3">
                 Nenhuma notificação
               </h3>

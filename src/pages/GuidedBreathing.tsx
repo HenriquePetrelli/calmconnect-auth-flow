@@ -22,7 +22,6 @@ import PracticeScreen from "@/components/breathing/PracticeScreen";
 import CompletionScreen from "@/components/breathing/CompletionScreen";
 import PatientBottomNav from "@/components/PatientBottomNav";
 import PageHeader from "@/components/PageHeader";
-import { Mascot } from "@/components/mascot";
 import { cn } from "@/lib/utils";
 
 export interface Technique {
@@ -233,7 +232,9 @@ const GuidedBreathing = () => {
       <div className="px-4 sm:px-6 pt-6 max-w-5xl mx-auto">
         <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm">
           <div className="flex items-start gap-3 mb-4">
-            <Mascot pose="hug" className="w-14 h-14 shrink-0" />
+            <div className="w-14 h-14 shrink-0 rounded-2xl bg-primary/10 flex items-center justify-center">
+              <Waves className="w-7 h-7 text-primary" />
+            </div>
             <div>
               <h2 className="text-lg sm:text-xl font-bold text-foreground leading-tight">
                 Respire com calma e equilibre sua mente

@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Mascot } from '@/components/mascot';
+import { Trophy } from 'lucide-react';
 import { useAchievements } from '@/hooks/useAchievements';
 import { AchievementCard } from '@/components/achievements/AchievementCard';
 import { AchievementModal } from '@/components/achievements/AchievementModal';
@@ -25,7 +25,9 @@ const Achievements = () => {
           <SkeletonCardGrid count={6} />
         ) : achievements.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 space-y-4">
-            <Mascot pose="thinking" className="w-28 h-28" />
+            <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center">
+              <Trophy className="w-12 h-12 text-muted-foreground" />
+            </div>
             <h2 className="text-xl font-semibold text-foreground">
               Nenhuma conquista ainda
             </h2>

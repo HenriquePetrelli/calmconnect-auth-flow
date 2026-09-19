@@ -89,7 +89,7 @@ Estas regras valem para **todas** as fases.
 | 7 | Wordmark, splash e assets (reduzida na Fase 1 — sem ícone novo) | 2h | 🛑 revisão do wordmark em SVG — ✅ concluída, aprovada por Henrique |
 | 8 | Tom de voz e microcopy | 3h | 🛑 lista de textos — ✅ aprovada e aplicada por Henrique |
 | 9 | Guia de marca | 1h30 | não — ✅ concluída |
-| 10 | Remover o mascote (reformulada na Fase 1) | 1h | não |
+| 10 | Remover o mascote (reformulada na Fase 1) | 1h | não — ✅ concluída |
 | 11 | Verificação final | 2h | não |
 
 **Total revisado:** ~25h (era ~24h; Fase 3 cresceu mais uma vez por causa do `--secondary`, ver Fase 2 e `docs/visual/02-tokens.md` §5).
@@ -244,16 +244,9 @@ Relatório completo em `docs/visual/07-wordmark-assets.md`. Resumo:
 
 ---
 
-### Fase 10 — Remover o mascote · 1h · não é mais 🛑
+### Fase 10 — Remover o mascote · 1h · ✅ concluída
 
-**Reformulada pela Fase 1: a decisão foi remover o mascote do app inteiro**, não introduzir um novo nem manter o existente. Escopo pequeno, sem necessidade de aprovação visual (não há nada novo para aprovar) — só limpeza.
-
-O mascote (preguiça) hoje é `src/components/mascot/` (`Mascot.tsx`, `palette.ts`, `species/sloth/` com `SlothBase`, `SlothCelebrate`, `SlothHug`, `SlothSleep`, `SlothThinking`, `SlothWave`), em uso em 7 telas: `CompletionScreen.tsx` (respiração), `AchievementModal.tsx`, `SOS.tsx` (linha 287 — `<Mascot pose="hug">` na tela de espera da emergência, o achado que motivou a pergunta na Fase 1), `Achievements.tsx`, `Notifications.tsx`, `GuidedBreathing.tsx`, `Index.tsx`.
-
-1. Remover o uso de `<Mascot .../>` nas 7 telas listadas — decidir tela a tela se o espaço fica vazio, se recebe outro elemento visual simples (ex.: um ícone), ou se o layout é ajustado para não depender da presença do mascote.
-2. Remover `src/components/mascot/` do repositório (componente e todas as poses) depois de confirmar que nenhuma referência restou (`grep -rn "mascot" src --include=*.tsx --include=*.ts -i`).
-3. Conferir os testes das 7 telas afetadas (cruzar com a lista de testes que dependem de texto da Fase 0, `docs/visual/00-inventario.md` §11) — nenhum deve depender da presença do mascote, mas confirmar antes de remover.
-4. Resultado direto: a tela de espera do SOS (`SOS.tsx`) deixa de correr o risco descrito na Fase 6c ("sem mascote, sem nada que distraia") só por consequência desta fase — não precisa de nenhuma política de rotas proibidas, porque não existe mais mascote para aparecer em lugar nenhum.
+Relatório completo em `docs/visual/10-remover-mascote.md`. `SOS.tsx` já tinha sido resolvido na Fase 6c; as outras 6 telas (`CompletionScreen.tsx`, `AchievementModal.tsx`, `Achievements.tsx`, `Notifications.tsx`, `GuidedBreathing.tsx`, `Index.tsx`) foram tratadas tela a tela nesta fase — a maioria virou um ícone simples num círculo colorido, seguindo padrões já existentes no app; em `Index.tsx` (tela de login), o espaço passou a mostrar a wordmark "soliv" de verdade (antes só existia oculta para leitor de tela). `src/components/mascot/` removido por completo (10 arquivos), confirmado sem nenhuma referência restante. Nenhum dos 9 testes de texto exato foi afetado.
 
 ---
 
