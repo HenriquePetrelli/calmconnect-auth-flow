@@ -86,7 +86,7 @@ Estas regras valem para **todas** as fases.
 | 4 | Modo escuro (revisão + 2 ajustes, reduzida na Fase 0) | 2h | não — ✅ concluída (parcial, ver §5 de `docs/visual/04-modo-escuro.md`) |
 | 5 | Acessibilidade | 3h | não — ✅ concluída (parcial, ver §2 de `docs/visual/05-acessibilidade.md`) |
 | 6 | SOS e modo crise | 4h | 🛑 antes de mexer em comportamento — ✅ concluída (6b aprovada por Henrique antes do commit) |
-| 7 | Wordmark, splash e assets (reduzida na Fase 1 — sem ícone novo) | 2h | 🛑 revisão do wordmark em SVG |
+| 7 | Wordmark, splash e assets (reduzida na Fase 1 — sem ícone novo) | 2h | 🛑 revisão do wordmark em SVG — ✅ concluída, aprovada por Henrique |
 | 8 | Tom de voz e microcopy | 3h | 🛑 lista de textos |
 | 9 | Guia de marca | 1h30 | não |
 | 10 | Remover o mascote (reformulada na Fase 1) | 1h | não |
@@ -205,21 +205,16 @@ Relatório completo, com o diff de `EmergencyVideoCall.tsx`, em `docs/visual/06-
 
 ---
 
-### Fase 7 — Wordmark, splash e assets · 2h (reduzida pela Fase 1) · 🛑
+### Fase 7 — Wordmark, splash e assets · 2h (reduzida pela Fase 1) · ✅ concluída
 
-**Reformulada pela Fase 1: o logo (cérebro) fica como está — não há novo ícone para desenhar.** Os itens 1-2 do plano original (esboçar e aprovar um conceito novo) não se aplicam mais. A fase vira: reaproveitar o logo atual nos formatos que faltam, e resolver o wordmark (que é o achado real da Fase 0, independente da decisão do ícone).
+Relatório completo em `docs/visual/07-wordmark-assets.md`. Resumo:
 
-1. Gerar e substituir, a partir do `soliv-logo.svg` atual (nota: é um PNG embrulhado em SVG — para os tamanhos grandes usar o PNG de maior resolução disponível, se houver, em vez de reescalar o SVG atual):
-   - favicon (`.ico` + SVG) e `apple-touch-icon`;
-   - `public/manifest.json` (192, 512, maskable) — **confirmado na Fase 0: não existe hoje, é criação nova, não edição**;
-   - Android: ícone adaptativo (foreground + background separados) em todos os `mipmap-*` — **confirmado: `android/` não existe**; deixar os arquivos prontos em `docs/visual/assets/android/`;
-   - iOS: `AppIcon.appiconset` — **confirmado: `ios/` não existe**; mesmo tratamento;
-   - splash do Capacitor (claro e escuro);
-   - `og:image` no `index.html` (não localizado na Fase 0 — confirmar se já existe algum ao entrar nesta fase).
-2. Wordmark — **confirmado na Fase 0: hoje é texto ao vivo com `fontFamily: 'El Messiri'` em 5 arquivos (`MainLayout.tsx` 2x, `SplashScreen.tsx`, `SignupType.tsx`, `PsychologistDashboard.tsx`), não SVG.** Isso continua sendo um problema real mesmo com o logo mantido: se a fonte falhar ao carregar, o nome não aparece corretamente. Converter "soliv" em **SVG** (texto em curvas), não dependente de fonte carregada em runtime. Criar versão para fundo escuro. Atualizar os 5 arquivos para usar o novo SVG do wordmark.
-3. Se algum arquivo do logo antigo ficar sem uso depois desse reaproveitamento, remover do repositório.
-
-**Nota técnica que fica registrada, sem ação obrigatória nesta fase:** o `soliv-logo.svg` atual não é vetor de verdade (embrulha um PNG em base64) — vai perder qualidade em tamanhos grandes (512px, splash). Se isso incomodar visualmente quando os assets forem gerados, vale considerar vetorizar o logo existente (redesenhar as mesmas formas em SVG de verdade) como um passo à parte, com aprovação do Henrique antes — não é a mesma coisa que trocar o símbolo, que já foi descartado.
+- **Wordmark "soliv" convertido de texto ao vivo (dependia de `fontFamily: 'El Messiri'` carregar via Google Fonts) para SVG de verdade**, gerado com `opentype.js` a partir da fonte real (Bold/700 — o único peso que de fato existe; `font-black`/900 nunca foi carregado). Novo componente `src/components/Wordmark.tsx` (`fill="currentColor"`, funciona em claro/escuro sem arquivo separado). Os 5 arquivos da Fase 0 atualizados. El Messiri removida do `<link>` de fontes (não é mais usada em lugar nenhum). Validado com screenshot real, aprovado por Henrique antes do commit (ponto de parada do plano).
+- **Favicon** (`.ico` + `.svg`, este último de 843 KB → 48 KB), **`apple-touch-icon.png`**, **`manifest.json`** (criado do zero, confirmado que não existia), **`og-image.png`** (criado do zero — só existia um fallback quadrado usando o favicon).
+- **Android/iOS**: assets gerados e deixados em `docs/visual/assets/android/` e `docs/visual/assets/ios/`, como staging (os diretórios nativos ainda não existem).
+- **Splash Capacitor** (claro/escuro) gerados em `docs/visual/assets/splash/`.
+- **Achado fora do escopo original, mesma família do achado da Fase 3:** `theme-color` e `mask-icon color` em `index.html` ainda eram o laranja antigo (`#F97316`) — atributos HTML crus, fora do alcance do `check-colors.sh`. Corrigidos para o roxo de marca.
+- Nota técnica sobre o PNG-fonte não ser vetor de verdade permanece registrada, sem ação — ver relatório.
 
 ---
 

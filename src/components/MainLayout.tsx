@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Bell, User } from "lucide-react";
 import logoImg from '@/assets/soliv-logo.svg';
+import Wordmark from '@/components/Wordmark';
 import { Button } from "@/components/ui/button";
 import { NotificationButton } from "@/components/notifications/NotificationButton";
 import BottomNavigation from "@/components/BottomNavigation";
@@ -92,7 +93,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               {/* SOLIV CENTRALIZADO - Tablet/Mobile */}
               <div className="flex items-center space-x-2 absolute left-1/2 transform -translate-x-1/2">
                 <img src={logoImg} alt="Soliv" className="w-10 h-10 object-contain select-none" draggable={false} />
-                <span className="text-[48px] font-black text-primary lowercase leading-none" style={{ fontFamily: "'El Messiri', sans-serif" }}>soliv</span>
+                <Wordmark className="h-[34px] text-primary" />
               </div>
               
               {/* NOTIFICAÇÕES À DIREITA */}
@@ -121,12 +122,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               {/* SPACER ESQUERDO */}
               <div className="flex items-center gap-3 opacity-0 pointer-events-none select-none">
                 <img src={logoImg} alt="" className="w-12 h-12 object-contain" draggable={false} />
-                <span className="text-[48px] font-black lowercase">soliv</span>
+                <Wordmark className="h-[34px]" />
               </div>
-              
+
               {/* SOLIV CENTRALIZADO - Desktop */}
               <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                <span className="text-[48px] font-black text-primary lowercase leading-none" style={{ fontFamily: "'El Messiri', sans-serif" }}>soliv</span>
+                <Wordmark className="h-[34px] text-primary" />
               </div>
               
               <div className="flex items-center gap-4">

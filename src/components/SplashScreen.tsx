@@ -1,4 +1,5 @@
 import logoImg from '@/assets/soliv-logo.svg';
+import Wordmark from '@/components/Wordmark';
 
 const SplashScreen = () => {
   return (
@@ -10,12 +11,7 @@ const SplashScreen = () => {
           className="h-24 w-auto select-none animate-scale-in"
           draggable={false}
         />
-        <span
-          className="text-[64px] font-black text-primary lowercase leading-none"
-          style={{ fontFamily: "'El Messiri', sans-serif" }}
-        >
-          soliv
-        </span>
+        <Wordmark className="h-[45px] text-primary" />
         <div className="mt-6 h-1 w-24 overflow-hidden rounded-full bg-muted">
           <div className="h-full w-1/2 animate-[shimmer_1.2s_ease-in-out_infinite] rounded-full bg-primary" />
         </div>

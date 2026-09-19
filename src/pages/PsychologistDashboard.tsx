@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Bell, Calendar, CalendarCheck, User, History, AlertTriangle, Clock, Users, CheckCircle, LogOut } from 'lucide-react';
+import Wordmark from '@/components/Wordmark';
 import { supabase } from '@/integrations/supabase/client';
 import { usePsychologistEmergency } from '@/hooks/usePsychologistEmergency';
 import { usePsychologistSchedule } from '@/hooks/usePsychologistSchedule';
@@ -181,7 +182,7 @@ const PsychologistDashboard = () => {
 
             {/* SOLIV centralizado */}
             <div className="hidden sm:flex absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 items-center gap-2">
-              <span className="text-[48px] font-black text-white lowercase leading-none" style={{ fontFamily: "'El Messiri', sans-serif" }}>soliv</span>
+              <Wordmark className="h-[34px] text-white" />
             </div>
 
             <div className="flex items-center gap-1 sm:gap-2 shrink-0">

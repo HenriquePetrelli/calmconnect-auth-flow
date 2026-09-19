@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Logo from "@/components/Logo";
+import Wordmark from "@/components/Wordmark";
 
 const SignupType = () => {
   const navigate = useNavigate();
@@ -11,7 +12,9 @@ const SignupType = () => {
         <div>
           <Logo />
   
-          <h1 className="mt-3 text-5xl md:text-6xl font-black text-primary lowercase leading-none animate-fade-in" style={{ fontFamily: "'El Messiri', sans-serif" }}>soliv</h1>
+          <h1 className="mt-3 animate-fade-in" aria-label="soliv">
+            <Wordmark className="h-[34px] md:h-[42px] text-primary mx-auto" />
+          </h1>
         </div>
         
         <div className="space-y-4">
