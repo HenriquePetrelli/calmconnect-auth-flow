@@ -1,0 +1,389 @@
+# Plano de identidade visual do Soliv
+
+> **Para o Claude que vai executar este plano:** leia o documento inteiro antes de tocar em qualquer arquivo. Execute **uma fase por sessão**, na ordem. Cada fase termina com um relatório curto e um commit. Quando uma fase tiver **🛑 PARADA**, não avance: apresente o que encontrou e espere a decisão do Henrique.
+>
+> **Este plano foi escrito sem acesso direto ao código.** Ele se baseia em resumos de auditorias anteriores e em prints da identidade visual. Tudo que não foi confirmado está marcado como **[S1]**, **[S2]** etc. e listado na seção 2. **Nenhuma instrução marcada com [S] deve ser executada antes de a Fase 0 confirmar a suposição.** Se a Fase 0 derrubar uma suposição, a primeira tarefa é corrigir este documento.
+
+---
+
+## 1. Contexto
+
+O Soliv é um app de bem-estar mental (React + Supabase + Capacitor; bundler Vite, confirmado na Fase 0). O diferencial é o **botão de ajuda emergencial (SOS)**: o paciente em crise é conectado por vídeo a um psicólogo.
+
+A identidade visual atual tem três peças:
+
+- **Nome:** "soliv" em minúsculas, fonte arredondada personalizada, roxo. **Fica.**
+- **Logo:** cérebro dividido, metade laranja com traços de vento, metade roxa com eletrocardiograma. **Vai ser substituído.** É o símbolo mais genérico do setor, o ECG remete a hospital, o traço não funciona em 48px e o laranja dilui o SOS.
+- **Botão SOS:** círculo laranja com boia salva-vidas. **Fica, e ganha exclusividade.**
+
+### Objetivo
+
+1. Separar **cor de marca** (roxo) de **cor funcional de emergência** (laranja).
+2. Deixar o app confortável de madrugada (modo escuro) e acessível.
+3. Fazer o fluxo de SOS ficar mais simples e calmo durante a crise.
+4. Trocar o ícone por um símbolo discreto: quem usa o app não precisa anunciar isso para quem vê a tela do celular.
+5. Definir um tom de voz acolhedor e remover qualquer texto que gere culpa.
+6. (Opcional, por último) Introduzir um mascote com regras claras de onde pode aparecer.
+
+---
+
+## 2. O que é fato e o que é suposição
+
+### Fatos (vindos de auditorias do código, commit `9319a82`, ago/2026)
+
+Estes podem ter mudado desde então, mas têm origem no código real.
+
+| Fato | Origem |
+|---|---|
+| Stack React + Supabase + Capacitor; projeto nasceu na Lovable | auditoria técnica, roadmap |
+| `EmergencyVideoCall.tsx` e `useWebRTC.ts` são os arquivos mais críticos e testados | auditoria técnica |
+| Existem testes com Vitest e Playwright; não existe CI | auditoria técnica |
+| Rota `/consultation-call/:appointmentId` | sessões de consulta |
+| `SafetyPlanModal` mostra CVV 188 e SAMU 192; `SafetyPlanPrompt` fica na home | estado da implementação |
+| `PatientContextPanel` e `PsychologistDashboard` (com aba Agenda) existem | estado da implementação, agenda |
+| Existem metas semanais, conquistas (`/achievements`) e RPCs de streak | auditoria técnica |
+| Nome em roxo com fonte arredondada; logo de cérebro laranja/roxo; SOS laranja com boia | prints enviados pelo Henrique |
+| Bundler é Vite (`^5.4.1`); estilo é Tailwind (`^3.4.11`) com shadcn/ui (HSL em `src/index.css`, `:root`/`.dark`) | Fase 0 — `package.json`, `tailwind.config.ts`, `components.json` |
+| Modo escuro **existe e funciona** (next-themes, `ThemeToggle.tsx`, tokens `.dark` completos), mas não segue o tema do sistema (`enableSystem={false}`, `defaultTheme="light"`) e o toggle é só claro/escuro | Fase 0 — `docs/visual/00-inventario.md` §7 |
+| **`--primary` (a cor padrão de todo o app: botões, foco, sombra, scrollbar) é o laranja; `--secondary` é o roxo** — o laranja não é um uso isolado fora do SOS, é a cor de marca principal hoje | Fase 0 — `docs/visual/00-inventario.md` §3 |
+| Wordmark "soliv" é renderizado como **texto ao vivo** com `fontFamily: 'El Messiri'` (Google Fonts) em 5 arquivos, não como SVG em curvas; `Logo.tsx` usa um SVG só de ícone, que por sua vez embrulha um PNG (não é vetor) | Fase 0 — `docs/visual/00-inventario.md` §5 |
+| Fonte da interface (Poppins) é diferente da fonte do wordmark (El Messiri) | Fase 0 |
+| Não existem `android/`, `ios/` **nem `public/manifest.json`** | Fase 0 — `docs/visual/00-inventario.md` §5 |
+| Rotas do fluxo de emergência: `/sos`, `/emergency-call`, `/emergency-call/request/:requestId`, `/emergency-call/:sessionId`, `/emergency/call/:requestId` (legacy, só psicólogo). Consulta agendada é rota separada, `/consultation-call/:appointmentId` | Fase 0 — `docs/visual/00-inventario.md` §10 |
+| Nenhum texto de culpa/pressão encontrado (metas, streaks, conquistas) | Fase 0 — `docs/visual/00-inventario.md` §9 |
+| 9 arquivos de teste comparam texto exato da interface (`getByText`/`toHaveTextContent`) | Fase 0 — `docs/visual/00-inventario.md` §11 |
+| O botão de SOS é renderizado por um único componente compartilhado (`BottomNavigation.tsx`) em todas as telas do paciente — posição e tamanho são consistentes por construção | Fase 0 |
+| Texto branco sobre o laranja `primary` (botão padrão do app inteiro) reprova WCAG AA mesmo para texto grande (2,78:1, mínimo é 3:1) — mesmo problema em `--sos-secondary` | Fase 0 — `docs/visual/00-inventario.md` §8 |
+| Já existe um mascote implementado (preguiça, `src/components/mascot/`, poses base/celebrate/hug/sleep/thinking/wave) e em uso em 7 telas, **incluindo `/sos` (pose "hug" na tela de espera do SOS)** — não existe ainda uma política de rotas proibidas | Fase 0 |
+
+### Suposições que restam (nenhuma sobrevive sem confirmação — todas as 12 originais foram resolvidas na Fase 0; ver `docs/visual/00-inventario.md` §12 para a tabela completa com evidências)
+
+---
+
+## 3. Regras invioláveis
+
+Estas regras valem para **todas** as fases.
+
+1. **Nenhuma mudança de lógica.** Este é um trabalho visual. Não altere hooks, queries, RPCs, edge functions, migrations, rotas ou permissões. Se uma melhoria visual exigir mudar comportamento, pare e pergunte.
+2. **`EmergencyVideoCall.tsx` e `useWebRTC.ts` são zona protegida.** Em `useWebRTC.ts`, nada. Em `EmergencyVideoCall.tsx`, só `className`, tokens de cor e texto visível. O diff dele deve ser revisado linha a linha e apresentado separado no relatório.
+3. **Os testes existentes precisam continuar passando.** `npx vitest run` e `npx tsc --noEmit` ao fim de cada fase. Se um teste quebrar por causa de texto alterado, mostre antes de ajustar o teste.
+4. **Nada de cor fixa nova.** Nenhum hex, `rgb()` ou classe de paleta crua (`orange-500`, `purple-600`, `violet-*`) em componentes. Toda cor sai de um token semântico (Fase 2).
+5. **Laranja é exclusivo do SOS** (a partir da Fase 3).
+6. **O CVV 188 e o SAMU 192 nunca somem** de onde já aparecem (`SafetyPlanModal`, telas de emergência).
+7. **Commits pequenos**, um por fase, com mensagem `visual(fase-N): …`.
+8. **Na dúvida sobre gosto, pergunte.** Na dúvida sobre acessibilidade, siga o WCAG.
+
+---
+
+## 4. Fases
+
+| Fase | O quê | Estimativa | Parada? |
+|---|---|---|---|
+| 0 | Inventário (somente leitura) | 2h | 🛑 sim |
+| 1 | Decisões do Henrique | — | 🛑 sim |
+| 2 | Tokens de design | 3h | não |
+| 3 | Regra do laranja | 3h | 🛑 casos ambíguos |
+| 4 | Modo escuro | 4h | não |
+| 5 | Acessibilidade | 3h | não |
+| 6 | SOS e modo crise | 4h | 🛑 antes de mexer em comportamento |
+| 7 | Ícone, splash e assets | 3h | 🛑 aprovação do ícone |
+| 8 | Tom de voz e microcopy | 3h | 🛑 lista de textos |
+| 9 | Guia de marca | 1h30 | não |
+| 10 | Mascote (opcional) | 6h+ | 🛑 sim |
+| 11 | Verificação final | 2h | não |
+
+**Total sem mascote:** ~28h, cerca de 4 semanas a 8h/semana.
+
+---
+
+### Fase 0 — Inventário · 2h · 🛑
+
+**Somente leitura. Não edite nenhum arquivo além do relatório.**
+
+Gere `docs/visual/00-inventario.md` com:
+
+1. **Stack de estilo.** Tailwind? Qual versão? `tailwind.config.*`, `src/index.css`, variáveis CSS em `:root`, shadcn/ui (`components.json`, `src/components/ui/`), `next-themes` ou similar, `darkMode` configurado?
+2. **Todas as cores em uso.** Rodar e resumir (contagem por arquivo, top 20 arquivos):
+   ```bash
+   grep -rnE "#[0-9a-fA-F]{3,8}\b|rgba?\(|hsl\(" src --include=*.tsx --include=*.ts --include=*.css
+   grep -rnoE "\b(bg|text|border|ring|from|to|via|fill|stroke)-(orange|amber|red|purple|violet|indigo|fuchsia)-[0-9]{2,3}" src | sort | uniq -c | sort -rn
+   ```
+3. **Onde o laranja aparece.** Lista de cada ocorrência, classificada em: (a) é SOS/emergência, (b) não é SOS, (c) ambíguo.
+4. **Fontes.** Onde a fonte do wordmark é carregada, qual fonte o resto da UI usa, se há `@font-face` ou Google Fonts.
+5. **Logo e ícones.** Localizar todas as versões: `public/`, `src/assets/`, favicon, `manifest.json`, `android/app/src/main/res/mipmap-*`, `ios/App/App/Assets.xcassets`, splash do Capacitor, `index.html` (`og:image`, `apple-touch-icon`).
+6. **Componentes do SOS.** Todo arquivo que renderiza o botão de emergência ou faz parte do fluxo (acionar → esperar → chamada → encerramento). Anotar a posição do botão em cada tela onde aparece.
+7. **Modo escuro.** Existe? Funciona? Quantos componentes têm variante `dark:`?
+8. **Contraste.** Medir os 10 pares texto/fundo mais usados (roxo sobre branco, branco sobre roxo, cinza de texto secundário, texto sobre laranja). Reportar razão e se passa AA (4,5:1 texto normal, 3:1 texto grande/ícones).
+9. **Textos com culpa ou pressão.** `grep` em strings com "perdeu", "quebrou", "sequência", "não esqueça", "você não", "falhou", "streak". Listar.
+10. **Mapa de telas.** As ~40 rotas agrupadas por área (paciente, psicólogo, admin, emergência, consulta, grupos). Identificar os caminhos reais do fluxo de emergência **[S8]**.
+11. **Testes que dependem de texto.** Listar testes que fazem `getByText`, `toHaveTextContent` ou comparam strings da interface **[S10]**.
+12. **Validar as suposições.** Preencher uma tabela com S1 a S12: **confirmada**, **falsa** ou **parcial**, com a evidência (arquivo e linha, ou comando executado).
+13. **Corrigir este plano.** Para cada suposição falsa ou parcial, editar a seção afetada deste documento, mover a linha para "Fatos" na seção 2 e registrar a mudança num bloco "Correções da Fase 0" no fim do arquivo. Suposições confirmadas também passam para "Fatos".
+
+🛑 **PARADA.** Apresente: (1) a tabela de suposições, (2) o que mudou no plano por causa dela, (3) um resumo de uma tela com os números principais e os 5 problemas mais graves. Espere o Henrique.
+
+---
+
+### Fase 1 — Decisões do Henrique · 🛑
+
+O Claude prepara as perguntas; o Henrique responde. Registrar as respostas em `docs/visual/01-decisoes.md`.
+
+0. **[NOVA — adicionada pela Fase 0, prioritária] Escopo real da "regra do laranja".** A Fase 0 descobriu que `--primary` (a cor padrão de botão, foco, sombra e scrollbar do app inteiro) já é o laranja, e `--secondary` já é o roxo — não é um caso isolado, é o design system inteiro. Tornar o laranja exclusivo do SOS (regra 5 da seção 3) significa **trocar a cor primária de todo o app** de laranja para roxo (ou uma terceira cor), não só migrar alguns componentes. Três caminhos possíveis, cada um com escopo e risco diferentes:
+   - **(a) Inversão completa:** `--primary` vira roxo, `--secondary` vira laranja-só-SOS (renomeado para não ser mais escolhível como cor de botão comum). Maior fidelidade ao objetivo 1 do plano, maior escopo (toda a Fase 3 cresce).
+   - **(b) Nova cor de marca:** introduzir uma terceira cor (ex.: um roxo mais vivo, ou um tom neutro) como `--primary`, deixando o roxo atual como `--secondary` e o laranja isolado só em `--sos-*`. Evita reaproveitar o roxo atual em tudo, mas é mais trabalho de design.
+   - **(c) Manter laranja como cor de marca, abrir mão da exclusividade do SOS:** o SOS usa uma variação clara (tom, saturação ou forma) que o distingue do laranja "comum" do resto do app, sem proibir laranja fora do botão de emergência. Menor escopo, mas não cumpre a regra 5 como está escrita hoje — exigiria reescrever essa regra.
+   O Claude apresenta as 3 opções com exemplos visuais (tela de botão comum vs. botão SOS) antes do Henrique decidir; a resposta aqui determina o tamanho real da Fase 3.
+1. **Roxo da marca.** Manter o tom atual do wordmark (`hsl(262 83% 58%)`, hoje `--secondary`) ou ajustar? O Claude propõe 2–3 variações com contraste medido.
+2. **Laranja do SOS.** Manter o tom atual da boia (`hsl(25 95% 53%)`, hoje também `--primary` do resto do app — ver pergunta 0)? Precisa ter contraste ≥ 3:1 contra o fundo claro e o escuro — **hoje falha** (texto branco sobre esse laranja mede 2,78:1; ver `docs/visual/00-inventario.md` §8), então o tom precisa mudar de qualquer forma, independente da resposta à pergunta 0.
+3. **Direção do ícone.** O Claude esboça 3 conceitos em SVG simples (ex.: forma abstrata derivada do "o" do wordmark, gota/onda, duas formas se apoiando). Critério: legível a 48px, não diz "saúde mental" nem "crise" para quem olha de fora.
+4. **Proteção contra toque acidental no SOS.** Opções: (a) nenhuma, (b) segurar 1 segundo, (c) toque + confirmação em tela cheia. Decisão de produto, afeta velocidade na crise.
+5. **Mascote.** Já existe um mascote implementado (preguiça, 6 poses, `src/components/mascot/`), em uso em 7 telas — **incluindo a tela de espera do SOS (`/sos`, pose "hug")**, o que a Fase 6c/10 diz que não deveria acontecer. A pergunta não é mais "sim/não construir do zero", é: manter a preguiça (e só corrigir onde ela aparece, adicionando a política de rotas proibidas — vira essencialmente a Fase 10 já pronta, só falta a política) ou substituir por outra espécie/direção? Se mantiver, a Fase 10 encolhe bastante.
+6. **Fonte da interface** **[confirmado: interface usa Poppins, wordmark usa El Messiri — são diferentes]**. Manter a atual ou trocar (sugestões com bom suporte a acentos: Inter, Nunito Sans, Figtree).
+
+---
+
+### Fase 2 — Tokens de design · 3h
+
+Criar uma camada semântica. **Confirmado na Fase 0:** o projeto usa Tailwind + shadcn com variáveis HSL em `src/index.css` (`:root`/`.dark`) — estender essas variáveis em vez de criar um sistema paralelo. Já existem `--sos-primary`/`--sos-secondary`/`--sos-glow` (vermelho+laranja); os tokens novos abaixo devem reaproveitar/renomear esses em vez de duplicar. **Esta fase também depende da resposta à pergunta 0 da Fase 1** (escopo da regra do laranja) — o valor de `--brand`/`--primary` só pode ser definido depois dessa decisão.
+
+Tokens mínimos (claro e escuro):
+
+```
+--brand / --brand-foreground          roxo principal
+--brand-soft                          roxo claro para fundos
+--sos / --sos-foreground              laranja, EXCLUSIVO do SOS
+--sos-soft                            fundo laranja suave, também exclusivo
+--calm                                fundo do modo crise
+--success / --warning / --danger      estados (warning NÃO pode ser laranja)
+--surface / --surface-raised          fundos
+--text / --text-muted                 textos
+```
+
+Mapear no `tailwind.config.ts` (`bg-sos`, `text-brand`, etc.).
+
+Criar `scripts/check-colors.sh` que falha se:
+- aparecer hex/rgb/hsl literal em `src/**/*.tsx`;
+- aparecer `bg-sos`, `text-sos`, `border-sos` ou classes de paleta laranja fora de uma lista de arquivos permitidos (`scripts/sos-allowlist.txt`).
+
+Deixar o script pronto para entrar no CI quando o CI existir (roadmap, sessão 25).
+
+Nesta fase, **só crie os tokens**. A migração dos componentes é nas próximas.
+
+---
+
+### Fase 3 — Regra do laranja · 3h · 🛑 casos ambíguos
+
+**Escopo real (ver pergunta 0 da Fase 1): o laranja hoje é `--primary`, a cor padrão de todo o app, não um uso isolado.** Esta fase só começa depois da decisão do Henrique sobre qual dos três caminhos (a/b/c) seguir. Usando a lista da Fase 0 (`docs/visual/00-inventario.md` §3):
+
+- **(a) é SOS** → trocar para `sos`.
+- **(b) não é SOS** → trocar para `brand`, `warning` ou neutro, conforme o sentido.
+- **(c) ambíguo** → 🛑 listar com print/descrição e perguntar.
+
+Casos que provavelmente são ambíguos: badges de "urgente", alerta de pagamento pendente, a metade laranja do logo antigo, gráficos de estatísticas.
+
+`warning` deve ser amarelo/âmbar claramente distinguível do laranja do SOS. Se não houver par de cores distinguível com bom contraste, usar ícone + texto em vez de cor.
+
+Aproveitar a passagem para migrar o restante das cores cruas para tokens nos mesmos arquivos. Ao final, `scripts/check-colors.sh` deve passar.
+
+---
+
+### Fase 4 — Modo escuro · 4h
+
+- **Confirmado na Fase 0: o modo escuro já existe e funciona** (next-themes, tokens `.dark` completos e paralelos ao `:root`, `ThemeToggle.tsx`). Esta fase é **revisão + 2 ajustes pontuais**, não construção do zero:
+  1. Trocar `enableSystem={false}` para `true` em `App.tsx` (`ThemeProvider`) e adicionar a opção "sistema" no `ThemeToggle.tsx` (hoje é um switch binário claro/escuro).
+  2. Revisão visual das telas prioritárias abaixo — a cobertura por tokens já é ampla (só 10 de 232 componentes usam `dark:` manualmente, o resto herda dos tokens), mas isso nunca foi verificado renderizado, só lido no código.
+- `darkMode: ["class"]` já está ativo em `tailwind.config.ts`.
+- Padrão: **seguir o sistema**. Toggle manual no perfil (claro / escuro / sistema), preferência salva localmente.
+- Fundo escuro **não é preto puro** (usar algo como `#121018` puxado para o roxo) para reduzir o contraste agressivo de madrugada.
+- Ordem de prioridade das telas: fluxo de SOS → home do paciente → diário → plano de segurança → consultas → resto.
+- Imagens e ilustrações precisam de versão para fundo escuro ou fundo próprio.
+
+**Atenção:** a tela de SOS e a chamada de emergência provavelmente serão abertas no escuro, com a pessoa acordada no meio da noite. Estas telas precisam estar perfeitas no modo escuro antes de qualquer outra.
+
+---
+
+### Fase 5 — Acessibilidade · 3h
+
+- Contraste AA em todos os pares mapeados na Fase 0. Corrigir nos tokens, não componente a componente.
+- Área de toque mínima de 48×48px em todo elemento interativo. O botão de SOS, bem maior.
+- Tamanhos de fonte em `rem`. Testar com a fonte do sistema no máximo no Android: nada pode cortar ou sobrepor no fluxo de SOS.
+- `aria-label` descritivo no botão de SOS ("Pedir ajuda emergencial agora") e em todo botão só com ícone.
+- Foco visível (`focus-visible:ring`) em todos os interativos.
+- Respeitar `prefers-reduced-motion`: animações de pulsar no SOS e transições param.
+- Nunca usar só cor para transmitir estado (online/offline, qualidade de conexão): sempre ícone ou texto junto.
+
+Gerar `docs/visual/05-acessibilidade.md` com o antes/depois dos contrastes.
+
+---
+
+### Fase 6 — SOS e modo crise · 4h · 🛑
+
+**6a. Botão (sem mudança de comportamento)**
+- **Confirmado na Fase 0: já é consistente por construção** — um único componente (`BottomNavigation.tsx`, usado via `MainLayout.tsx`/`PatientBottomNav.tsx`) renderiza o botão em todas as telas do paciente. Esta etapa vira verificação visual (screenshot das telas onde aparece), não correção.
+- Mesmo tamanho, mesmo ícone (boia), mesma cor `sos`.
+- Não aparece em telas onde não faz sentido (ex.: dentro de uma consulta já em andamento). Listar essas telas e confirmar.
+
+**6b. Proteção contra toque acidental**
+Implementar **somente** a opção escolhida na Fase 1. 🛑 Isso é mudança de comportamento: mostrar o diff antes de commitar.
+
+**6c. Modo crise visual**
+Nas telas do fluxo de emergência (acionar → aguardando psicólogo → chamada → encerramento):
+- fundo `calm`, sem gradientes chamativos;
+- um único próximo passo por tela, texto grande;
+- sem navegação inferior, sem notificações de conquistas, sem mascote, sem nada que distraia;
+- CVV 188 visível e tocável (`tel:188`) na tela de espera;
+- mensagem de espera acolhedora e honesta (o texto final vem da Fase 8).
+
+Em `EmergencyVideoCall.tsx`: **só classes e texto**. Diff separado no relatório (regra 2 da seção 3).
+
+---
+
+### Fase 7 — Ícone, splash e assets · 3h · 🛑
+
+1. Refinar o conceito escolhido na Fase 1 em SVG limpo (formas simples, sem traço fino).
+2. 🛑 Apresentar o ícone em: 48px, 96px, 192px, 512px, sobre papel de parede claro e escuro, e ao lado de ícones de apps comuns. Esperar aprovação.
+3. Após aprovado, gerar e substituir:
+   - favicon (`.ico` + SVG) e `apple-touch-icon`;
+   - `public/manifest.json` (192, 512, maskable) — **confirmado na Fase 0: não existe hoje, é criação nova, não edição**;
+   - Android: ícone adaptativo (foreground + background separados) em todos os `mipmap-*` — **confirmado: `android/` não existe**; deixar os arquivos prontos em `docs/visual/assets/android/`;
+   - iOS: `AppIcon.appiconset` — **confirmado: `ios/` não existe**; mesmo tratamento;
+   - splash do Capacitor (claro e escuro);
+   - `og:image` no `index.html` (não localizado nesta fase — confirmar se já existe algum ao entrar na Fase 7).
+4. Wordmark — **confirmado na Fase 0: hoje é texto ao vivo com `fontFamily: 'El Messiri'` em 5 arquivos (`MainLayout.tsx` 2x, `SplashScreen.tsx`, `SignupType.tsx`, `PsychologistDashboard.tsx`), não SVG.** `Logo.tsx` usa um SVG, mas só do ícone, e esse SVG embrulha um PNG em base64 (não é vetor de verdade — vai precisar ser refeito do zero também, não só ajustado). Garantir que o "soliv" final seja um **SVG** (texto convertido em curvas), não dependente de fonte carregada em runtime. Criar versão para fundo escuro. Atualizar os 5 arquivos que hoje renderizam o texto ao vivo para usar o novo SVG.
+5. Remover do repositório os arquivos do logo antigo que não forem mais referenciados.
+
+**Honestidade:** o Claude consegue produzir um ícone vetorial simples e correto tecnicamente. Para um símbolo com qualidade de marca, vale considerar um designer refinar o conceito escolhido. Nesse caso, a Fase 7 vira: "receber os arquivos do designer e fazer o item 3".
+
+---
+
+### Fase 8 — Tom de voz e microcopy · 3h · 🛑
+
+1. Escrever `docs/visual/08-tom-de-voz.md` (uma página):
+   - frases curtas, na segunda pessoa, calorosas;
+   - sem jargão clínico para o paciente;
+   - sem positividade forçada ("vai ficar tudo bem!");
+   - nunca culpa, nunca cobrança;
+   - na crise: frases ainda mais curtas, verbos no presente, uma instrução por vez.
+2. **Confirmado na Fase 0: não foi encontrado texto de culpa/pressão** (metas, streaks, conquistas) — essa frente específica não tem incêndio para apagar. Ainda assim, fazer uma varredura de tom geral nas telas principais e montar uma tabela **texto atual → texto proposto → arquivo** onde houver oportunidade de deixar mais acolhedor (não só onde há "erro").
+3. 🛑 Apresentar a tabela. Aplicar só após aprovação.
+4. Atenção especial a: metas semanais, conquistas e sequências (streaks), mensagens de erro, tela de espera do SOS, mensagem quando ninguém atende, encerramento de chamada.
+
+**Confirmado na Fase 0: 9 arquivos de teste comparam texto exato** (`chatModerationPanel.render.test.tsx`, `chatReadReceipts.render.test.tsx`, `consultationCallRouteAccess.test.tsx`, `firstTimeAvailabilityModal.test.tsx`, `goalSelectionModal.test.tsx`, `moodTrendChart.test.tsx`, `psychologistAvailabilityPage.test.tsx`, `statisticsEngagementCards.test.tsx`, `weeklyScheduleModal.test.tsx` — ver `docs/visual/00-inventario.md` §11). Ao mudar texto que algum deles verifica, ajustar o teste junto e mencionar no relatório.
+
+---
+
+### Fase 9 — Guia de marca · 1h30
+
+`docs/visual/guia-de-marca.md`, curto e prático:
+
+- paleta com tokens, hex e onde usar;
+- **a regra do laranja**, em destaque;
+- tipografia (wordmark e interface);
+- ícone e wordmark: versões, tamanho mínimo, área de respiro, o que não fazer;
+- resumo do tom de voz com 5 exemplos certos e errados;
+- regras do mascote (se houver).
+
+Esse documento serve para qualquer pessoa (ou Claude) que for mexer na interface depois.
+
+---
+
+### Fase 10 — Mascote · 6h+ (bem menos se só corrigir o existente) · 🛑
+
+**Reformulada pela Fase 0: o mascote já existe.** Não é mais "opcional/do zero" — é `src/components/mascot/` (`Mascot.tsx`, `palette.ts`, `species/sloth/` com `SlothBase`, `SlothCelebrate`, `SlothHug`, `SlothSleep`, `SlothThinking`, `SlothWave` — 6 poses, uma a mais do que as 4-5 planejadas). Já está em uso em 7 telas: `CompletionScreen.tsx` (respiração), `AchievementModal.tsx`, `SOS.tsx`, `Achievements.tsx`, `Notifications.tsx`, `GuidedBreathing.tsx`, `Index.tsx`.
+
+**Achado que precisa de decisão na Fase 1 (pergunta 5):** `src/pages/SOS.tsx` linha 287 renderiza `<Mascot pose="hug" className="w-24 h-24" />` **na tela de espera da emergência** (`!expired &&`) — exatamente o tipo de aparição que a Fase 6c e a regra 5 abaixo dizem que não deveria acontecer. Não existe hoje nenhum arquivo `mascotPolicy.ts` ou equivalente restringindo rotas.
+
+Duas execuções possíveis, dependendo da resposta da Fase 1:
+- **Se mantiver a preguiça:** a fase vira principalmente o item 4 (política de rotas proibidas) + remover/trocar o uso em `SOS.tsx`, revisar as poses já feitas contra a regra 5 (nenhuma deve parecer triste/brava/decepcionada — conferir `SlothThinking`/`SlothSleep` com esse olhar) e só complementar poses que estejam faltando. Escopo pequeno.
+- **Se trocar de espécie:** os passos 1-3 originais valem como estavam, descartando os arquivos de `species/sloth/` que não forem mais referenciados (seguindo a mesma lógica de limpeza da Fase 7 item 5).
+
+1. Definir 4 a 5 poses (ou confirmar as 6 já existentes): acenando (onboarding), comemorando (conquista), tranquilo (tela vazia), lendo/escrevendo (diário), descansando (fim de semana/metas zeradas).
+2. 🛑 Apresentar as poses (novas ou já existentes) antes de integrar/manter.
+3. Criar (ou confirmar) `<Mascot pose="..." />` com as poses em SVG.
+4. Criar uma lista explícita de **onde é proibido**:
+   ```ts
+   // src/lib/mascotPolicy.ts
+   export const MASCOT_FORBIDDEN_ROUTES = [
+     '/consultation-call',
+     '/sos',                                  // já viola hoje — ver achado acima
+     '/emergency-call',
+     '/emergency-call/request',
+     '/emergency-call',                       // cobre /:sessionId por prefixo
+     '/emergency/call',                       // rota legacy
+     // + plano de segurança, painel do psicólogo, admin (revisar caminho a caminho antes de fechar a lista)
+   ];
+   ```
+   O componente não renderiza nessas rotas, mesmo que alguém o coloque lá por engano. Escrever um teste para isso (e um teste de regressão específico garantindo que `SOS.tsx` não volta a renderizar o mascote).
+5. O mascote **nunca** fica triste, bravo ou decepcionado com o usuário.
+
+---
+
+### Fase 11 — Verificação final · 2h
+
+```bash
+npx tsc --noEmit
+npx vitest run
+npm run build          # [S1] ajustar se o bundler não for Vite
+bash scripts/check-colors.sh
+```
+
+Depois:
+- Playwright: screenshots das 10 telas principais em claro e escuro, em largura de celular (390px) → `docs/visual/screenshots/`.
+- Checklist manual no aparelho Android:
+  - [ ] SOS visível e na mesma posição em todas as telas do paciente
+  - [ ] Nenhum laranja fora do SOS
+  - [ ] Modo escuro sem textos invisíveis
+  - [ ] Fonte do sistema no máximo não quebra o fluxo de SOS
+  - [ ] Ícone correto na tela inicial, na lista de apps e na splash
+  - [ ] CVV 188 tocável na tela de espera
+
+Relatório final em `docs/visual/11-verificacao.md`.
+
+---
+
+## 5. Formato do relatório de cada fase
+
+Ao fim de cada fase, responder com:
+
+1. **O que foi feito** (3 a 6 linhas)
+2. **Arquivos alterados** (lista)
+3. **Diff de `EmergencyVideoCall.tsx`**, se tocado, separado
+4. **Resultado de tsc / vitest / build / check-colors**
+5. **O que ficou pendente ou em dúvida**
+6. **Próxima fase**
+
+---
+
+## 6. Como começar
+
+Colocar este arquivo em `docs/visual/plano.md` no repositório e abrir o Claude Code com:
+
+> Leia `docs/visual/plano.md` inteiro. Execute somente a Fase 0, incluindo a validação das suposições S1 a S12 e a correção deste documento, e pare no ponto de parada.
+
+---
+
+## Correções da Fase 0
+
+Feito em 2026-09-19. Relatório completo com evidências em `docs/visual/00-inventario.md`. Resumo do que mudou:
+
+1. **Seção 2 (Fatos/Suposições):** as 12 suposições (S1-S12) foram todas resolvidas — 5 confirmadas como estavam (S1, S2, S3, S8, S12), 5 derrubadas (S4, S6, S9, S10, S11), 2 parcialmente (S5 — verdadeira mas muito maior do que suposto — e S7 — verdadeira e ainda pior, nem `manifest.json` existe). Todas movidas para a tabela de "Fatos".
+
+2. **Achado mais importante, que muda o tamanho real do trabalho:** o laranja não é um detalhe isolado do SOS — é `--primary`, a cor padrão de botão/foco/sombra de **todo o app**. A regra 5 da seção 3 ("laranja é exclusivo do SOS") era escrita como se fosse migrar alguns componentes; na prática, ou o app troca sua cor de marca principal, ou a regra precisa ser reescrita. **Adicionada a pergunta 0 (nova, prioritária) na Fase 1**, com três caminhos possíveis. A Fase 2 e a Fase 3 ficam bloqueadas até essa resposta.
+
+3. **Modo escuro já existe e funciona** (não estava ausente como a suposição original dizia) — só falta ligar `enableSystem` e trocar o toggle binário por um seletor de 3 estados. A Fase 4 encolheu para isso + revisão visual, como o próprio plano previa para esse cenário.
+
+4. **Mascote já existe** (preguiça, 6 poses, em uso em 7 telas) — incluindo, hoje, dentro da tela de espera do SOS (`/sos`), o que viola o espírito da Fase 6c antes mesmo de a Fase 10 começar. A Fase 1 pergunta 5 e a Fase 10 inteira foram reformuladas: a pergunta não é mais "construir um mascote do zero", é "manter a preguiça (com política de rotas) ou trocar de espécie".
+
+5. **Wordmark não é SVG** — é texto ao vivo com a fonte "El Messiri" carregada via Google Fonts, em 5 arquivos diferentes. O `Logo.tsx` até usa um `<svg>`, mas só para o ícone, e esse SVG embrulha uma imagem PNG em base64 (não é vetor de verdade). A Fase 7 item 4 foi atualizada para deixar isso explícito: é criação nova em ambas as frentes (ícone e wordmark), não um ajuste do que já existe.
+
+6. **`manifest.json` não existe** (além de `android/`/`ios/`, que já eram suspeitos): a Fase 7 item 3 foi marcada como criação, não edição.
+
+7. **Contraste:** medido diretamente dos valores HSL do código (não estimado). O achado mais sério: texto branco sobre o laranja `--primary` (o botão padrão de todo o app) reprova WCAG AA mesmo para texto grande (2,78:1, precisa de 3:1). Isso é hoje, em produção. Como a pergunta 0 da Fase 1 já vai mexer nessa cor de qualquer forma, a correção de contraste fica natural dentro dessa decisão — mas vale considerar adiantar só esse ponto específico antes da Fase 5 se o cronograma permitir, já que é uma falha de acessibilidade ativa.
+
+8. **Nenhum texto de culpa/pressão encontrado** — a Fase 8 (item 2) foi ajustada para não presumir um problema que não existe; a revisão de tom continua valendo, só não há um "incêndio" de streak/culpa para apagar.
+
+9. **9 testes comparam texto exato da interface** — listados explicitamente na Fase 6/Fase 8 em vez de ficarem como suposição.
+
+10. **Rotas do fluxo de emergência**, confirmadas: `/sos`, `/emergency-call`, `/emergency-call/request/:requestId`, `/emergency-call/:sessionId`, `/emergency/call/:requestId` (legacy). Consulta agendada é rota separada (`/consultation-call/:appointmentId`) — usada em vários pontos do plano (Fase 6a, Fase 10) que antes diziam apenas "[S8]".
+
+11. **Botão de SOS já é consistente por construção** (um único componente compartilhado) — a Fase 6a vira verificação visual, não correção de posição/tamanho.
