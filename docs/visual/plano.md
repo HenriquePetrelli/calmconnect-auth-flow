@@ -13,17 +13,17 @@ O Soliv é um app de bem-estar mental (React + Supabase + Capacitor; bundler Vit
 A identidade visual atual tem três peças:
 
 - **Nome:** "soliv" em minúsculas, fonte arredondada personalizada, roxo. **Fica.**
-- **Logo:** cérebro dividido, metade laranja com traços de vento, metade roxa com eletrocardiograma. **Vai ser substituído.** É o símbolo mais genérico do setor, o ECG remete a hospital, o traço não funciona em 48px e o laranja dilui o SOS.
-- **Botão SOS:** círculo laranja com boia salva-vidas. **Fica, e ganha exclusividade.**
+- **Logo:** cérebro dividido, metade laranja com traços de vento, metade roxa com eletrocardiograma. **[Decisão da Fase 1: fica como está — Henrique optou por manter o logo atual, não substituir.]** A preocupação original do plano com o laranja diluir o SOS perde peso com a inversão de cores decidida (pergunta 0): o laranja do logo deixa de ser a cor primária do app de qualquer forma. Continua pendente o problema técnico do arquivo (ver `docs/visual/00-inventario.md` §5: o SVG atual embrulha um PNG, não é vetor de verdade) — fora do escopo visual/de marca, mas vale registrar para uma limpeza técnica futura se o arquivo continuar sendo usado.
+- **Botão SOS:** círculo laranja com boia salva-vidas. **Fica, e ganha exclusividade** (tom ajustado na Fase 1 — ver `docs/visual/01-decisoes.md`).
 
 ### Objetivo
 
 1. Separar **cor de marca** (roxo) de **cor funcional de emergência** (laranja).
 2. Deixar o app confortável de madrugada (modo escuro) e acessível.
 3. Fazer o fluxo de SOS ficar mais simples e calmo durante a crise.
-4. Trocar o ícone por um símbolo discreto: quem usa o app não precisa anunciar isso para quem vê a tela do celular.
+4. ~~Trocar o ícone por um símbolo discreto~~ **[Fase 1: não se aplica mais — logo mantido como está.]**
 5. Definir um tom de voz acolhedor e remover qualquer texto que gere culpa.
-6. (Opcional, por último) Introduzir um mascote com regras claras de onde pode aparecer.
+6. ~~(Opcional, por último) Introduzir um mascote com regras claras de onde pode aparecer.~~ **[Fase 1: decisão foi remover o mascote existente do app inteiro, não introduzir um novo — ver `docs/visual/01-decisoes.md`.]**
 
 ---
 
@@ -79,20 +79,20 @@ Estas regras valem para **todas** as fases.
 
 | Fase | O quê | Estimativa | Parada? |
 |---|---|---|---|
-| 0 | Inventário (somente leitura) | 2h | 🛑 sim |
-| 1 | Decisões do Henrique | — | 🛑 sim |
+| 0 | Inventário (somente leitura) | 2h | 🛑 sim — ✅ concluída |
+| 1 | Decisões do Henrique | — | 🛑 sim — ✅ concluída |
 | 2 | Tokens de design | 3h | não |
-| 3 | Regra do laranja | 3h | 🛑 casos ambíguos |
-| 4 | Modo escuro | 4h | não |
+| 3 | Regra do laranja (inversão completa, decidida na Fase 1) | 3h–5h (cresceu: é o app inteiro, não um caso isolado) | 🛑 casos ambíguos |
+| 4 | Modo escuro (revisão + 2 ajustes, reduzida na Fase 0) | 2h | não |
 | 5 | Acessibilidade | 3h | não |
 | 6 | SOS e modo crise | 4h | 🛑 antes de mexer em comportamento |
-| 7 | Ícone, splash e assets | 3h | 🛑 aprovação do ícone |
+| 7 | Wordmark, splash e assets (reduzida na Fase 1 — sem ícone novo) | 2h | 🛑 revisão do wordmark em SVG |
 | 8 | Tom de voz e microcopy | 3h | 🛑 lista de textos |
 | 9 | Guia de marca | 1h30 | não |
-| 10 | Mascote (opcional) | 6h+ | 🛑 sim |
+| 10 | Remover o mascote (reformulada na Fase 1) | 1h | não |
 | 11 | Verificação final | 2h | não |
 
-**Total sem mascote:** ~28h, cerca de 4 semanas a 8h/semana.
+**Total revisado:** ~24h (era ~28h sem mascote; Fase 3 cresceu por causa da inversão completa, Fases 4/7/10 encolheram pelas decisões da Fase 0/1).
 
 ---
 
@@ -224,35 +224,36 @@ Gerar `docs/visual/05-acessibilidade.md` com o antes/depois dos contrastes.
 - Não aparece em telas onde não faz sentido (ex.: dentro de uma consulta já em andamento). Listar essas telas e confirmar.
 
 **6b. Proteção contra toque acidental**
-Implementar **somente** a opção escolhida na Fase 1. 🛑 Isso é mudança de comportamento: mostrar o diff antes de commitar.
+**Decisão da Fase 1: toque abre confirmação em tela cheia antes de acionar de verdade.** Implementar só isso — nenhuma outra opção (segurar 1s, nenhuma proteção). 🛑 Isso é mudança de comportamento: mostrar o diff antes de commitar.
 
 **6c. Modo crise visual**
 Nas telas do fluxo de emergência (acionar → aguardando psicólogo → chamada → encerramento):
 - fundo `calm`, sem gradientes chamativos;
 - um único próximo passo por tela, texto grande;
-- sem navegação inferior, sem notificações de conquistas, sem mascote, sem nada que distraia;
+- sem navegação inferior, sem notificações de conquistas, sem nada que distraia;
 - CVV 188 visível e tocável (`tel:188`) na tela de espera;
 - mensagem de espera acolhedora e honesta (o texto final vem da Fase 8).
+- **Nota: a remoção do mascote (Fase 1, decisão de removê-lo do app inteiro) já cobre a tela de espera do SOS (`SOS.tsx`, hoje com `<Mascot pose="hug">`) — conferir que ela já não usa mais o componente antes de chegar nesta fase, se a Fase 10 for executada antes.**
 
 Em `EmergencyVideoCall.tsx`: **só classes e texto**. Diff separado no relatório (regra 2 da seção 3).
 
 ---
 
-### Fase 7 — Ícone, splash e assets · 3h · 🛑
+### Fase 7 — Wordmark, splash e assets · 2h (reduzida pela Fase 1) · 🛑
 
-1. Refinar o conceito escolhido na Fase 1 em SVG limpo (formas simples, sem traço fino).
-2. 🛑 Apresentar o ícone em: 48px, 96px, 192px, 512px, sobre papel de parede claro e escuro, e ao lado de ícones de apps comuns. Esperar aprovação.
-3. Após aprovado, gerar e substituir:
+**Reformulada pela Fase 1: o logo (cérebro) fica como está — não há novo ícone para desenhar.** Os itens 1-2 do plano original (esboçar e aprovar um conceito novo) não se aplicam mais. A fase vira: reaproveitar o logo atual nos formatos que faltam, e resolver o wordmark (que é o achado real da Fase 0, independente da decisão do ícone).
+
+1. Gerar e substituir, a partir do `soliv-logo.svg` atual (nota: é um PNG embrulhado em SVG — para os tamanhos grandes usar o PNG de maior resolução disponível, se houver, em vez de reescalar o SVG atual):
    - favicon (`.ico` + SVG) e `apple-touch-icon`;
    - `public/manifest.json` (192, 512, maskable) — **confirmado na Fase 0: não existe hoje, é criação nova, não edição**;
    - Android: ícone adaptativo (foreground + background separados) em todos os `mipmap-*` — **confirmado: `android/` não existe**; deixar os arquivos prontos em `docs/visual/assets/android/`;
    - iOS: `AppIcon.appiconset` — **confirmado: `ios/` não existe**; mesmo tratamento;
    - splash do Capacitor (claro e escuro);
-   - `og:image` no `index.html` (não localizado nesta fase — confirmar se já existe algum ao entrar na Fase 7).
-4. Wordmark — **confirmado na Fase 0: hoje é texto ao vivo com `fontFamily: 'El Messiri'` em 5 arquivos (`MainLayout.tsx` 2x, `SplashScreen.tsx`, `SignupType.tsx`, `PsychologistDashboard.tsx`), não SVG.** `Logo.tsx` usa um SVG, mas só do ícone, e esse SVG embrulha um PNG em base64 (não é vetor de verdade — vai precisar ser refeito do zero também, não só ajustado). Garantir que o "soliv" final seja um **SVG** (texto convertido em curvas), não dependente de fonte carregada em runtime. Criar versão para fundo escuro. Atualizar os 5 arquivos que hoje renderizam o texto ao vivo para usar o novo SVG.
-5. Remover do repositório os arquivos do logo antigo que não forem mais referenciados.
+   - `og:image` no `index.html` (não localizado na Fase 0 — confirmar se já existe algum ao entrar nesta fase).
+2. Wordmark — **confirmado na Fase 0: hoje é texto ao vivo com `fontFamily: 'El Messiri'` em 5 arquivos (`MainLayout.tsx` 2x, `SplashScreen.tsx`, `SignupType.tsx`, `PsychologistDashboard.tsx`), não SVG.** Isso continua sendo um problema real mesmo com o logo mantido: se a fonte falhar ao carregar, o nome não aparece corretamente. Converter "soliv" em **SVG** (texto em curvas), não dependente de fonte carregada em runtime. Criar versão para fundo escuro. Atualizar os 5 arquivos para usar o novo SVG do wordmark.
+3. Se algum arquivo do logo antigo ficar sem uso depois desse reaproveitamento, remover do repositório.
 
-**Honestidade:** o Claude consegue produzir um ícone vetorial simples e correto tecnicamente. Para um símbolo com qualidade de marca, vale considerar um designer refinar o conceito escolhido. Nesse caso, a Fase 7 vira: "receber os arquivos do designer e fazer o item 3".
+**Nota técnica que fica registrada, sem ação obrigatória nesta fase:** o `soliv-logo.svg` atual não é vetor de verdade (embrulha um PNG em base64) — vai perder qualidade em tamanhos grandes (512px, splash). Se isso incomodar visualmente quando os assets forem gerados, vale considerar vetorizar o logo existente (redesenhar as mesmas formas em SVG de verdade) como um passo à parte, com aprovação do Henrique antes — não é a mesma coisa que trocar o símbolo, que já foi descartado.
 
 ---
 
@@ -287,34 +288,16 @@ Esse documento serve para qualquer pessoa (ou Claude) que for mexer na interface
 
 ---
 
-### Fase 10 — Mascote · 6h+ (bem menos se só corrigir o existente) · 🛑
+### Fase 10 — Remover o mascote · 1h · não é mais 🛑
 
-**Reformulada pela Fase 0: o mascote já existe.** Não é mais "opcional/do zero" — é `src/components/mascot/` (`Mascot.tsx`, `palette.ts`, `species/sloth/` com `SlothBase`, `SlothCelebrate`, `SlothHug`, `SlothSleep`, `SlothThinking`, `SlothWave` — 6 poses, uma a mais do que as 4-5 planejadas). Já está em uso em 7 telas: `CompletionScreen.tsx` (respiração), `AchievementModal.tsx`, `SOS.tsx`, `Achievements.tsx`, `Notifications.tsx`, `GuidedBreathing.tsx`, `Index.tsx`.
+**Reformulada pela Fase 1: a decisão foi remover o mascote do app inteiro**, não introduzir um novo nem manter o existente. Escopo pequeno, sem necessidade de aprovação visual (não há nada novo para aprovar) — só limpeza.
 
-**Achado que precisa de decisão na Fase 1 (pergunta 5):** `src/pages/SOS.tsx` linha 287 renderiza `<Mascot pose="hug" className="w-24 h-24" />` **na tela de espera da emergência** (`!expired &&`) — exatamente o tipo de aparição que a Fase 6c e a regra 5 abaixo dizem que não deveria acontecer. Não existe hoje nenhum arquivo `mascotPolicy.ts` ou equivalente restringindo rotas.
+O mascote (preguiça) hoje é `src/components/mascot/` (`Mascot.tsx`, `palette.ts`, `species/sloth/` com `SlothBase`, `SlothCelebrate`, `SlothHug`, `SlothSleep`, `SlothThinking`, `SlothWave`), em uso em 7 telas: `CompletionScreen.tsx` (respiração), `AchievementModal.tsx`, `SOS.tsx` (linha 287 — `<Mascot pose="hug">` na tela de espera da emergência, o achado que motivou a pergunta na Fase 1), `Achievements.tsx`, `Notifications.tsx`, `GuidedBreathing.tsx`, `Index.tsx`.
 
-Duas execuções possíveis, dependendo da resposta da Fase 1:
-- **Se mantiver a preguiça:** a fase vira principalmente o item 4 (política de rotas proibidas) + remover/trocar o uso em `SOS.tsx`, revisar as poses já feitas contra a regra 5 (nenhuma deve parecer triste/brava/decepcionada — conferir `SlothThinking`/`SlothSleep` com esse olhar) e só complementar poses que estejam faltando. Escopo pequeno.
-- **Se trocar de espécie:** os passos 1-3 originais valem como estavam, descartando os arquivos de `species/sloth/` que não forem mais referenciados (seguindo a mesma lógica de limpeza da Fase 7 item 5).
-
-1. Definir 4 a 5 poses (ou confirmar as 6 já existentes): acenando (onboarding), comemorando (conquista), tranquilo (tela vazia), lendo/escrevendo (diário), descansando (fim de semana/metas zeradas).
-2. 🛑 Apresentar as poses (novas ou já existentes) antes de integrar/manter.
-3. Criar (ou confirmar) `<Mascot pose="..." />` com as poses em SVG.
-4. Criar uma lista explícita de **onde é proibido**:
-   ```ts
-   // src/lib/mascotPolicy.ts
-   export const MASCOT_FORBIDDEN_ROUTES = [
-     '/consultation-call',
-     '/sos',                                  // já viola hoje — ver achado acima
-     '/emergency-call',
-     '/emergency-call/request',
-     '/emergency-call',                       // cobre /:sessionId por prefixo
-     '/emergency/call',                       // rota legacy
-     // + plano de segurança, painel do psicólogo, admin (revisar caminho a caminho antes de fechar a lista)
-   ];
-   ```
-   O componente não renderiza nessas rotas, mesmo que alguém o coloque lá por engano. Escrever um teste para isso (e um teste de regressão específico garantindo que `SOS.tsx` não volta a renderizar o mascote).
-5. O mascote **nunca** fica triste, bravo ou decepcionado com o usuário.
+1. Remover o uso de `<Mascot .../>` nas 7 telas listadas — decidir tela a tela se o espaço fica vazio, se recebe outro elemento visual simples (ex.: um ícone), ou se o layout é ajustado para não depender da presença do mascote.
+2. Remover `src/components/mascot/` do repositório (componente e todas as poses) depois de confirmar que nenhuma referência restou (`grep -rn "mascot" src --include=*.tsx --include=*.ts -i`).
+3. Conferir os testes das 7 telas afetadas (cruzar com a lista de testes que dependem de texto da Fase 0, `docs/visual/00-inventario.md` §11) — nenhum deve depender da presença do mascote, mas confirmar antes de remover.
+4. Resultado direto: a tela de espera do SOS (`SOS.tsx`) deixa de correr o risco descrito na Fase 6c ("sem mascote, sem nada que distraia") só por consequência desta fase — não precisa de nenhuma política de rotas proibidas, porque não existe mais mascote para aparecer em lugar nenhum.
 
 ---
 
