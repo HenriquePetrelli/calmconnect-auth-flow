@@ -41,7 +41,7 @@ export const usePayments = () => {
       setPayments(data || []);
     } catch (err: any) {
       console.error('Error fetching payments:', err);
-      setError(err?.message || 'Erro ao carregar pagamentos');
+      setError(getFriendlyErrorMessage(err, 'Erro ao carregar pagamentos.'));
       toast({
         title: 'Erro',
         description: 'Erro ao carregar pagamentos',

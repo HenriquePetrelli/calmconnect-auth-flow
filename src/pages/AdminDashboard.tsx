@@ -41,6 +41,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useNotifications } from '@/hooks/useNotifications';
+import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 
 interface AdminMetrics {
   total_patients: number;
@@ -132,7 +133,7 @@ const AdminDashboard = () => {
       if (data && data.length > 0) setMetrics(data[0]);
     } catch (error: any) {
       console.error('Error fetching metrics:', error.message);
-      setMetricsError(error?.message || 'Falha ao carregar métricas');
+      setMetricsError(getFriendlyErrorMessage(error, 'Falha ao carregar métricas.'));
       toast({
         title: "Erro",
         description: "Falha ao carregar métricas do sistema",

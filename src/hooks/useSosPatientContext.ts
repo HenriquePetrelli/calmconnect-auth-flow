@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 
 export interface SosPatientSummary {
   full_name: string | null;
@@ -55,7 +56,7 @@ export const useSosPatientContext = (requestId: string | null, enabled: boolean)
       if (rpcError) throw rpcError;
       setContext((data as unknown as SosPatientContext) ?? null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Não foi possível carregar o contexto do paciente');
+      setError(getFriendlyErrorMessage(err, 'Não foi possível carregar o contexto do paciente.'));
     } finally {
       setLoading(false);
     }

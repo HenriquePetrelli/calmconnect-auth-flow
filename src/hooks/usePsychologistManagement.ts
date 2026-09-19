@@ -87,8 +87,8 @@ export const usePsychologistManagement = () => {
       return result.data;
     } catch (err: any) {
       console.error('Erro ao buscar psicólogos:', err);
-      setError(err?.message || 'Erro ao carregar psicólogos');
-      toast.error(getFriendlyErrorMessage(err, 'Erro ao carregar psicólogos'));
+      setError(getFriendlyErrorMessage(err, 'Erro ao carregar psicólogos.'));
+      toast.error(getFriendlyErrorMessage(err, 'Erro ao carregar psicólogos.'));
       return [];
     } finally {
       setLoading(false);

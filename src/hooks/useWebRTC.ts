@@ -9,6 +9,7 @@ import { getWebRTCConnectionManager } from '@/utils/webrtc-manager';
 import { flowLock } from '@/utils/flow-lock';
 import { stateMachineRegistry, type WebRTCState } from '@/utils/state-machine';
 import { loopDetector } from '@/utils/loop-detector';
+import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { useMediaDeviceManager } from '@/hooks/useMediaDeviceManager';
 import { getReconnectDelay, MAX_RECONNECT_ATTEMPTS as RECONNECT_MAX_ATTEMPTS } from '@/lib/reconnect';
@@ -1053,7 +1054,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
           stateMachine.current.transitionTo('error');
           setWebrtcState('error');
           
-          setError(error instanceof Error ? error.message : 'Erro ao inicializar videochamada');
+          setError(getFriendlyErrorMessage(error, 'Erro ao inicializar videochamada.'));
           setIsInitializing(false);
           initializationRef.current = false;
           

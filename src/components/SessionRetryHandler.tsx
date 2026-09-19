@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle, RefreshCw, Clock, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { validateWebRTCSession, SessionValidationError } from '@/utils/session-validation';
+import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 
 interface SessionRetryHandlerProps {
   sessionId: string;
@@ -40,7 +41,7 @@ export const SessionRetryHandler: React.FC<SessionRetryHandlerProps> = ({
       onSessionReady(session);
     } catch (error) {
       console.error(`❌ Retry attempt ${currentAttempt} failed:`, error);
-      setLastError(error instanceof Error ? error.message : 'Erro desconhecido');
+      setLastError(getFriendlyErrorMessage(error, 'Não foi possível validar a sessão.'));
       
       if (currentAttempt >= maxRetries) {
         console.error('❌ All retry attempts exhausted');

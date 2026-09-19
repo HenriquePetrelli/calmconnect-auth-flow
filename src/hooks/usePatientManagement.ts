@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 
 export interface AdminPatient {
   id: string;
@@ -34,7 +35,7 @@ export const usePatientManagement = () => {
       setPatients((data || []) as AdminPatient[]);
     } catch (err: any) {
       console.error('Erro ao carregar pacientes:', err);
-      setError(err?.message || 'Erro ao carregar pacientes');
+      setError(getFriendlyErrorMessage(err, 'Erro ao carregar pacientes.'));
     } finally {
       setLoading(false);
     }
