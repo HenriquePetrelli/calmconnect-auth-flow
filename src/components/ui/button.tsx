@@ -10,17 +10,17 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "bg-primary text-primary-foreground shadow-primary hover:bg-primary-hover active:bg-primary-active hover:shadow-lg active:scale-[0.98]",
-        secondary: "bg-secondary text-secondary-foreground shadow-success hover:bg-secondary-hover active:bg-secondary-active hover:shadow-lg active:scale-[0.98]",
-        destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 active:scale-[0.98]",
+        secondary: "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary-hover active:bg-secondary-active hover:shadow-md active:scale-[0.98]",
+        destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/85 active:bg-destructive/75 active:scale-[0.98]",
         outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground shadow-sm hover:shadow-md active:scale-[0.98]",
         ghost: "hover:bg-accent hover:text-accent-foreground active:scale-[0.98]",
         link: "text-primary underline-offset-4 hover:underline",
         
         /* Design System - Feature Variants */
-        breathing: "bg-breathing-primary text-white shadow-md hover:bg-breathing-primary/90 hover:shadow-lg active:scale-[0.98] hover:shadow-breathing-primary/30",
-        sounds: "bg-sounds-primary text-white shadow-md hover:bg-sounds-primary/90 hover:shadow-lg active:scale-[0.98]",
-        evolution: "bg-evolution-primary text-white shadow-md hover:bg-evolution-primary/90 hover:shadow-lg active:scale-[0.98]",
-        sos: "bg-sos-primary text-white shadow-md hover:bg-sos-primary/90 hover:shadow-lg active:scale-[0.98] animate-pulse-gentle",
+        breathing: "bg-breathing-primary text-primary-foreground shadow-md hover:bg-breathing-primary/85 hover:shadow-lg active:bg-breathing-primary/75 active:scale-[0.98] hover:shadow-breathing-primary/30",
+        sounds: "bg-sounds-primary text-primary-foreground shadow-md hover:bg-sounds-primary/85 hover:shadow-lg active:bg-sounds-primary/75 active:scale-[0.98]",
+        evolution: "bg-evolution-primary text-primary-foreground shadow-md hover:bg-evolution-primary/85 hover:shadow-lg active:bg-evolution-primary/75 active:scale-[0.98]",
+        sos: "bg-sos-primary text-sos-secondary-foreground shadow-md hover:bg-sos-primary/85 hover:shadow-lg active:bg-sos-primary/75 active:scale-[0.98] animate-pulse-gentle",
         
         /* Soft variants for better accessibility */
         "primary-soft": "bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 hover:border-primary/30 active:scale-[0.98]",

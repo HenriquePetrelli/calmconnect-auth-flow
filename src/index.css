@@ -94,10 +94,10 @@
     --evolution-secondary: 142 76% 73%;
 
     --sos-primary: 0 84% 48%;         /* Fase 5: escurecido, branco em cima passa AA (era 3,78:1, agora 4,87:1) */
-    --sos-secondary: 20 85% 38%;      /* laranja EXCLUSIVO do SOS, Fase 1 pergunta 2 — corrige contraste (era 2,78:1, agora 5,54:1) */
-    --sos-secondary-hover: 20 85% 32%;
-    --sos-secondary-active: 20 85% 24%; /* traço fino do LifeRingIcon */
-    --sos-secondary-foreground: 0 0% 100%;
+    --sos-secondary: 25 95% 53%;      /* laranja luminoso exclusivo do SOS */
+    --sos-secondary-hover: 21 90% 48%;
+    --sos-secondary-active: 17 88% 40%; /* traço fino do LifeRingIcon */
+    --sos-secondary-foreground: 222 47% 11%;
     --sos-soft: 20 100% 95%;          /* fundo laranja suave, também exclusivo do SOS */
     --calm: 258 30% 96%;              /* fundo do modo crise, Fase 6c */
     --sos-glow: 0 84% 60% / 0.3;
@@ -125,14 +125,14 @@
     --radius: 0.875rem;
 
     /* Sidebar — Light */
-    --sidebar-background: 0 0% 100%;
+    --sidebar-background: 260 100% 99%;
     --sidebar-foreground: 222 47% 11%;
     --sidebar-primary: 25 95% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 25 100% 96%;
-    --sidebar-accent-foreground: 21 90% 40%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 25 95% 53%;
+    --sidebar-accent: 262 100% 97%;
+    --sidebar-accent-foreground: 263 70% 40%;
+    --sidebar-border: 258 24% 90%;
+    --sidebar-ring: 262 83% 58%;
   }
 
   .dark {
@@ -211,10 +211,10 @@
     --evolution-secondary: 142 76% 65%;
 
     --sos-primary: 0 84% 48%;         /* Fase 5: escurecido, branco em cima passa AA (era 3,30:1, agora 4,87:1) */
-    --sos-secondary: 20 85% 40%;
-    --sos-secondary-hover: 20 85% 34%;
-    --sos-secondary-active: 20 85% 24%;
-    --sos-secondary-foreground: 0 0% 100%;
+    --sos-secondary: 27 96% 61%;
+    --sos-secondary-hover: 25 95% 54%;
+    --sos-secondary-active: 21 90% 46%;
+    --sos-secondary-foreground: 260 44% 10%;
     --sos-soft: 20 45% 20%;
     --calm: 258 20% 16%;
     --sos-glow: 0 84% 65% / 0.4;
@@ -238,14 +238,14 @@
     --shadow-sounds: 0 10px 25px -5px hsl(var(--sounds-primary) / 0.3);
     --shadow-evolution: 0 10px 25px -5px hsl(var(--evolution-primary) / 0.3);
 
-    --sidebar-background: 256 44% 14%;
+    --sidebar-background: 258 28% 18%;
     --sidebar-foreground: 220 20% 98%;
-    --sidebar-primary: 27 96% 61%;
-    --sidebar-primary-foreground: 260 44% 7%;
-    --sidebar-accent: 22 60% 18%;
-    --sidebar-accent-foreground: 27 96% 75%;
-    --sidebar-border: 256 41% 21%;
-    --sidebar-ring: 27 96% 61%;
+    --sidebar-primary: 258 92% 74%;
+    --sidebar-primary-foreground: 260 44% 10%;
+    --sidebar-accent: 260 35% 28%;
+    --sidebar-accent-foreground: 258 80% 85%;
+    --sidebar-border: 256 20% 36%;
+    --sidebar-ring: 258 92% 74%;
   }
 }
 
@@ -637,17 +637,47 @@
     align-items: center;
     justify-items: center;
     z-index: 1000;
-    background: hsl(var(--secondary) / 0.98);
+    background: hsl(var(--sidebar-background) / 0.98);
     border-radius: 0;
-    border-top: 1px solid hsl(var(--secondary-foreground) / 0.08);
-    box-shadow: 0 -8px 24px -8px hsl(var(--foreground) / 0.18);
+    border-top: 1px solid hsl(var(--sidebar-border));
+    box-shadow: 0 -8px 24px -12px hsl(var(--foreground) / 0.16);
     backdrop-filter: blur(12px);
     padding-bottom: env(safe-area-inset-bottom);
   }
 
-  /* item do SOS: fundo primário, flutuante e sempre visível acima da barra */
-  .tabs .tab-item.sos {
+  .tabs .tab-item {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 4px 8px;
+    border-radius: 0;
     background: transparent;
+    box-shadow: none;
+    transition: color 0.2s ease;
+  }
+
+  .tabs .tab-item:hover,
+  .tabs .tab-item:focus,
+  .tabs .tab-item:focus-visible,
+  .tabs .tab-item:active {
+    background: transparent;
+  }
+
+  .tabs .tab-item:focus-visible {
+    color: hsl(var(--primary));
+    box-shadow: inset 0 3px 0 hsl(var(--primary));
+  }
+
+  .tabs .tab-item.is-active {
+    color: hsl(var(--primary));
+  }
+
+  /* O SOS permanece destacado, mas ocupa a mesma coluna dos demais itens. */
+  .tabs .tab-item.sos {
     position: relative;
     z-index: 1001;
     will-change: transform;
@@ -658,8 +688,8 @@
     top: -22px;
     left: 50%;
     transform: translateX(-50%);
-    width: 64px;
-    height: 64px;
+    width: 56px;
+    height: 56px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -684,6 +714,13 @@
 
   .sos-button:active {
     transform: translateX(-50%) scale(0.95);
+  }
+
+  .sos-button:focus-visible {
+    box-shadow:
+      0 0 0 4px hsl(var(--background)),
+      0 0 0 7px hsl(var(--primary)),
+      0 8px 24px -6px hsl(var(--foreground) / 0.25);
   }
 
   /* z-index das modals deve ser maior que das tabs */

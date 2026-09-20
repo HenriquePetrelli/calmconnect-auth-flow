@@ -52,7 +52,7 @@ const BottomNavigation = ({ onSOSClick }: BottomNavigationProps) => {
 
         if (isSpecial) {
           return (
-            <div key={item.path} className="tab-item sos relative flex items-center justify-center h-full">
+            <div key={item.path} className="tab-item sos">
               <button
                 onClick={() => {
                   if (onSOSClick) onSOSClick();
@@ -61,7 +61,7 @@ const BottomNavigation = ({ onSOSClick }: BottomNavigationProps) => {
                 aria-label="Pedir ajuda emergencial agora"
                 className="sos-button"
               >
-                <Icon className="h-9 w-9" />
+                <Icon className="h-8 w-8" />
               </button>
             </div>
           );
@@ -71,17 +71,15 @@ const BottomNavigation = ({ onSOSClick }: BottomNavigationProps) => {
           <button
             key={item.path}
             onClick={() => navigate(item.path)}
-            className={`tab-item flex flex-col items-center justify-center h-full px-2 py-1 transition-all duration-200 relative rounded-2xl ${
+            aria-current={item.isActive ? "page" : undefined}
+            className={`tab-item group ${
               item.isActive
-                ? "text-secondary-foreground bg-secondary-foreground/20 shadow-sm"
-                : "text-secondary-foreground/70 hover:text-secondary-foreground hover:bg-secondary-foreground/10"
+                ? "is-active text-primary"
+                : "text-muted-foreground hover:text-foreground focus-visible:text-primary"
             }`}
           >
-            {item.isActive && (
-              <div className="absolute top-1 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-secondary-foreground rounded-full transition-all duration-200"></div>
-            )}
-            <Icon className="w-5 h-5 transition-all duration-200" />
-            <span className="text-xs mt-1 transition-all duration-200">{item.label}</span>
+            <Icon className="h-5 w-5 transition-colors duration-200" />
+            <span className="text-xs transition-colors duration-200">{item.label}</span>
           </button>
         );
       })}
