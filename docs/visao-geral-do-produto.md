@@ -2,7 +2,7 @@
 
 Documento vivo. Descreve funcionalidades e regras de negócio da plataforma. Deve ser atualizado sempre que uma mudança alterar comportamento, fluxo ou regra.
 
-Última atualização: 2026-09-04
+Última atualização: 2026-09-20
 
 ---
 
@@ -31,6 +31,7 @@ Regras:
 - Admin pode bloquear usuários por período determinado, editar dados cadastrais e excluir contas (paciente e psicólogo) via Edge Functions dedicadas.
 - Papéis vivem em tabela própria com função `security definer`; nunca no perfil do usuário.
 - Ao deslogar, o tema volta sempre para light mode.
+- A navegação do paciente usa superfícies neutras próprias nos temas claro e escuro. Na barra inferior, os cinco destinos têm áreas iguais, sem preenchimento no hover/foco: ativo e foco usam o roxo da marca no ícone; hover usa a cor principal de texto. O SOS mantém laranja exclusivo, em tom luminoso e com texto/ícone escuro para contraste.
 
 ---
 

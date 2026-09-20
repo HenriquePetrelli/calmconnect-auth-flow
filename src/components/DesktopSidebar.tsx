@@ -30,12 +30,11 @@ export const DesktopSidebar: React.FC = () => {
   const initial = firstName.charAt(0).toUpperCase();
 
   return (
-    <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:bg-secondary lg:text-secondary-foreground lg:border-r lg:border-secondary/40">
+    <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:bg-sidebar lg:text-sidebar-foreground lg:border-r lg:border-sidebar-border">
       {/* Logo Section */}
       <div className="flex items-center justify-center p-6 border-b border-secondary-foreground/15">
         <div
-          className="bg-white dark:bg-[#2a2438] rounded-full p-3 flex items-center justify-center shadow-md"
-          style={{ border: '2px solid hsl(var(--secondary-glow))' }}
+          className="rounded-full border-2 border-primary/15 bg-card p-3 flex items-center justify-center shadow-md"
         >
           <img
             src={logoImg}
@@ -57,8 +56,8 @@ export const DesktopSidebar: React.FC = () => {
               variant="ghost"
               className={`
                 w-full justify-start gap-3 h-12 text-left transition-all duration-200
-                text-secondary-foreground hover:bg-secondary-foreground/15 hover:text-secondary-foreground
-                ${isActive ? 'bg-secondary-foreground/20' : ''}
+                text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground
+                ${isActive ? 'bg-sidebar-accent text-sidebar-primary' : ''}
               `}
               onClick={() => navigate(item.path)}
             >
@@ -73,10 +72,10 @@ export const DesktopSidebar: React.FC = () => {
       <div className="px-4 pb-4">
         <Button
           variant="ghost"
-          className="w-full h-16 justify-start gap-3 px-3 text-left rounded-2xl bg-primary text-white transition-colors duration-200 hover:bg-primary/90 hover:text-white whitespace-normal"
+          className="w-full h-16 justify-start gap-3 px-3 text-left rounded-xl bg-sos-secondary text-sos-secondary-foreground transition-colors duration-200 hover:bg-sos-secondary-hover hover:text-sos-secondary-foreground whitespace-normal [&_svg]:!size-8"
           onClick={() => navigate('/sos')}
         >
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-card shadow-sm">
             <LifeRingIcon className="h-8 w-8" />
           </span>
           <span className="text-base font-semibold leading-tight">Ajuda Emergencial</span>
@@ -84,19 +83,19 @@ export const DesktopSidebar: React.FC = () => {
       </div>
 
       {/* Profile Card */}
-      <div className="p-4 border-t border-secondary-foreground/15">
+      <div className="p-4 border-t border-sidebar-border">
         <button
           onClick={() => navigate('/profile')}
-          className="w-full flex items-center gap-3 p-3 rounded-2xl bg-secondary-foreground/10 hover:bg-secondary-foreground/20 transition-colors text-left"
+          className="w-full flex items-center gap-3 p-3 rounded-xl bg-sidebar-accent/60 hover:bg-sidebar-accent transition-colors text-left"
         >
           <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-            <span className="text-white font-semibold">{initial}</span>
+            <span className="text-primary-foreground font-semibold">{initial}</span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-semibold text-secondary-foreground truncate">{firstName}</p>
-            <p className="text-xs text-secondary-foreground/70">Ver perfil</p>
+            <p className="font-semibold text-sidebar-foreground truncate">{firstName}</p>
+            <p className="text-xs text-muted-foreground">Ver perfil</p>
           </div>
-          <ChevronRight className="w-4 h-4 text-secondary-foreground/70 flex-shrink-0" />
+          <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
         </button>
       </div>
     </aside>
