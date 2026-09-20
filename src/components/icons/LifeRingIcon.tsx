@@ -21,7 +21,7 @@ const LifeRingIcon = ({ className }: LifeRingIconProps) => (
     <circle
       cx="24" cy="24" r="16"
       fill="none"
-      stroke="hsl(var(--sos-secondary-foreground))"
+      stroke="white"
       strokeWidth="11"
       strokeDasharray="25.13 25.13"
       strokeDashoffset="-25.13"
