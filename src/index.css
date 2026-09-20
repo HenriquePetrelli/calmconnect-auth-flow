@@ -684,43 +684,49 @@
   }
 
   .sos-button {
-    position: absolute;
-    top: -22px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
+    width: 100%;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, hsl(var(--sos-secondary)), hsl(var(--sos-secondary-hover)));
+    padding: 4px 8px;
+    border-radius: 0;
+    background: transparent;
     color: hsl(var(--sos-secondary-foreground));
+    box-shadow: none;
+    transition: color 0.2s ease;
+  }
+
+  .sos-button svg {
+    width: 46px;
+    height: 46px;
+    padding: 7px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, hsl(var(--sos-secondary)), hsl(var(--sos-secondary-hover)));
     box-shadow:
-      0 0 0 4px hsl(var(--background)),
-      0 -6px 20px -4px hsl(var(--sos-secondary) / 0.45),
-      0 8px 24px -6px hsl(var(--foreground) / 0.25);
-    border: 2px solid hsl(var(--sos-secondary-foreground) / 0.2);
-    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+      0 -4px 14px -5px hsl(var(--sos-secondary) / 0.55),
+      0 6px 14px -6px hsl(var(--foreground) / 0.28);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
 
   .sos-button:hover {
-    transform: translateX(-50%) scale(1.06);
-    box-shadow:
-      0 0 0 4px hsl(var(--background)),
-      0 -8px 28px -4px hsl(var(--sos-secondary) / 0.55),
-      0 10px 28px -6px hsl(var(--foreground) / 0.3);
+    background: transparent;
   }
 
-  .sos-button:active {
-    transform: translateX(-50%) scale(0.95);
+  .sos-button:hover svg {
+    transform: translateY(-1px);
+    box-shadow:
+      0 -5px 16px -5px hsl(var(--sos-secondary) / 0.6),
+      0 8px 16px -6px hsl(var(--foreground) / 0.32);
   }
 
   .sos-button:focus-visible {
-    box-shadow:
-      0 0 0 4px hsl(var(--background)),
-      0 0 0 7px hsl(var(--primary)),
-      0 8px 24px -6px hsl(var(--foreground) / 0.25);
+    color: hsl(var(--primary));
+    box-shadow: inset 0 3px 0 hsl(var(--primary));
+  }
+
+  .sos-button:active svg {
+    transform: translateY(1px) scale(0.96);
   }
 
   /* z-index das modals deve ser maior que das tabs */

@@ -1,2 +1,3 @@
 src/components/ui/button.tsx
 src/components/sos/ConfirmationModal.tsx
+src/components/DesktopSidebar.tsx
