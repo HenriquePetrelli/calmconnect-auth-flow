@@ -84,3 +84,10 @@ Criado, executável, com `scripts/sos-allowlist.txt` (hoje só `src/components/u
 - `src/components/icons/LifeRingIcon.tsx` — hex fixo → tokens
 - `scripts/check-colors.sh` (novo)
 - `scripts/sos-allowlist.txt` (novo)
+
+## 9. Revisão de navegação e estados — 2026-09-20
+
+- O laranja exclusivo do SOS foi clareado para `25 95% 53%` no tema claro e `27 96% 61%` no escuro. Como branco não mantém contraste suficiente nesses tons, `--sos-secondary-foreground` passou a usar texto escuro, com contraste de 6,43:1 e 8,25:1, respectivamente.
+- Os estados de hover e active do laranja agora seguem uma progressão gradual de luminosidade, sem misturar o roxo principal ao botão emergencial.
+- `--sidebar-*` passou a definir uma superfície quase branca com leve matiz violeta no tema claro e uma superfície violeta profunda no escuro. A navegação inferior usa a mesma família, substituindo o antigo cinza-arroxeado de `--secondary`.
+- Botões compartilhados usam tokens próprios em hover/active; navegação inferior é a exceção intencional sem fundo de interação, comunicando ativo/foco pelo ícone roxo e hover pela cor principal de texto.

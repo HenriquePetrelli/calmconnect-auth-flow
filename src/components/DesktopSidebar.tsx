@@ -72,7 +72,7 @@ export const DesktopSidebar: React.FC = () => {
       <div className="px-4 pb-4">
         <Button
           variant="ghost"
-          className="w-full h-16 justify-start gap-3 px-3 text-left rounded-xl bg-sos-secondary text-sos-secondary-foreground transition-colors duration-200 hover:bg-sos-secondary-hover hover:text-sos-secondary-foreground whitespace-normal"
+          className="w-full h-16 justify-start gap-3 px-3 text-left rounded-xl bg-sos-secondary text-sos-secondary-foreground transition-colors duration-200 hover:bg-sos-secondary-hover hover:text-sos-secondary-foreground whitespace-normal [&_svg]:!size-8"
           onClick={() => navigate('/sos')}
         >
           <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-card shadow-sm">
