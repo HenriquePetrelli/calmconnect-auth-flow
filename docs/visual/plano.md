@@ -96,6 +96,17 @@ Estas regras valem para **todas** as fases.
 
 **✅ Plano concluído em 2026-09-19 (Fases 0-11).** Pendências que sobraram, nenhuma bloqueante, listadas em `docs/visual/11-verificacao.md` §5 — a mais relevante é o checklist manual no aparelho Android, que sempre foi previsto como a única etapa não automatizável do plano inteiro.
 
+### Revisão pós-plano via Lovable — 2026-09-20
+
+Henrique fez uma revisão de navegação e cores diretamente pelo Lovable (fora desta sessão), 9 commits direto em `main` (detalhes em `docs/visual/02-tokens.md` §9 e em `.lovable/plan/revisão-de-cores-e-navegação-2026-09-20.md`): laranja do SOS clareado com `--sos-secondary-foreground` passando de branco fixo para texto escuro; nova família `--sidebar-*` para a navegação (substitui o `--secondary` cinza-arroxeado); botão "Ajuda Emergencial" do `DesktopSidebar.tsx` corrigido para usar o token de SOS (era `bg-primary` roxo — inconsistência que as Fases 2/3 desta sessão deixaram passar); reestruturação do `.tabs`/bottom nav e progressão de hover/active dos botões compartilhados.
+
+Sincronizado nesta sessão (`git merge origin/main`, fast-forward, sem conflitos) e validado (`tsc`, `vitest`, `build` — sem regressão, mesmas 3 falhas pré-existentes de sempre). A mudança de `--sos-secondary-foreground` para texto escuro quebrou dois usos que não tinham relação com o botão que motivou a mudança — mesmo padrão de acoplamento já corrigido duas vezes neste plano (Fase 2 `.sos-button`/`--primary`, Fase 3 `--professional-primary`/`--evolution-primary`):
+
+- `LifeRingIcon.tsx`: a faixa branca alternada da boia virou azul-marinho escuro, descaracterizando o ícone. Corrigido para `"white"` literal (mesmo padrão do furo central do próprio ícone).
+- `button.tsx` `variant="sos"` (código morto, zero usos confirmados via grep): ficou com vermelho + texto escuro, 3,68:1/3,84:1, reprovando AA. Corrigido para `text-white`, igual ao padrão já usado em `ConfirmationModal.tsx` (4,87:1, Fase 5).
+
+Commit `22fe659`. Resto da revisão do Lovable avaliado e aceito como está — inclui uma correção real de inconsistência que esta sessão não tinha pego.
+
 ---
 
 ### Fase 0 — Inventário · 2h · 🛑
