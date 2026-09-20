@@ -5,4 +5,4 @@
 - [x] Equalizar os itens do BottomNavigation, sem fundos de hover/foco, com ícone roxo no ativo/foco e escuro no hover.
 - [x] Substituir o cinza do BottomNavigation e DesktopSidebar por superfícies neutras alinhadas ao tema.
 - [x] Atualizar a documentação visual e a visão geral do produto.
-- [ ] Validar cores, testes relevantes e aparência disponível sem sessão autenticada.
+- [x] Validar cores, testes relevantes e aparência disponível sem sessão autenticada.
