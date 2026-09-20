@@ -249,6 +249,33 @@
   }
 }
 
+@layer components {
+  /* Estados cromáticos coerentes mesmo em botões de tela que sobrescrevem a variante compartilhada. */
+  button.bg-primary:hover {
+    background-color: hsl(var(--primary-hover));
+  }
+
+  button.bg-primary:active {
+    background-color: hsl(var(--primary-active));
+  }
+
+  button.bg-secondary:hover {
+    background-color: hsl(var(--secondary-hover));
+  }
+
+  button.bg-secondary:active {
+    background-color: hsl(var(--secondary-active));
+  }
+
+  button.bg-destructive:hover {
+    background-color: hsl(var(--destructive) / 0.85);
+  }
+
+  button.bg-destructive:active {
+    background-color: hsl(var(--destructive) / 0.75);
+  }
+}
+
 @layer utilities {
   /* Modern Animation Utilities */
   .animate-fade-in {

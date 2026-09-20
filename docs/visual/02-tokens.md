@@ -91,3 +91,4 @@ Criado, executável, com `scripts/sos-allowlist.txt` (hoje só `src/components/u
 - Os estados de hover e active do laranja agora seguem uma progressão gradual de luminosidade, sem misturar o roxo principal ao botão emergencial.
 - `--sidebar-*` passou a definir uma superfície quase branca com leve matiz violeta no tema claro e uma superfície violeta profunda no escuro. A navegação inferior usa a mesma família, substituindo o antigo cinza-arroxeado de `--secondary`.
 - Botões compartilhados usam tokens próprios em hover/active; navegação inferior é a exceção intencional sem fundo de interação, comunicando ativo/foco pelo ícone roxo e hover pela cor principal de texto.
+- Botões de tela que aplicam diretamente `bg-primary`, `bg-secondary` ou `bg-destructive` também recebem a mesma progressão global de hover/active, evitando estados diferentes entre páginas antigas e componentes compartilhados.
