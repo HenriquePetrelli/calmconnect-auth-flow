@@ -29,6 +29,7 @@ const ConsultationCall = () => {
           .select(`
             id,
             scheduled_at,
+            duration,
             status,
             appointment_type,
             notes,
@@ -52,6 +53,7 @@ const ConsultationCall = () => {
         const transformedAppointment: Appointment = {
           id: data.id,
           scheduled_at: data.scheduled_at,
+          duration: data.duration ?? undefined,
           status: data.status,
           appointment_type: data.appointment_type,
           notes: data.notes,

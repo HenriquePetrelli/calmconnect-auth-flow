@@ -3,22 +3,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 import { Appointment } from '@/hooks/useAppointments';
+import { canJoinConsultation } from '@/lib/consultationWindow';
 
 export const useAppointmentVideoCall = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const canJoinCall = useCallback((appointment: Appointment): boolean => {
-    if (!['scheduled', 'confirmed'].includes(appointment.status)) {
-      return false;
-    }
-
-    const appointmentTime = new Date(appointment.scheduled_at);
-    const now = new Date();
-    
-    // Allow joining from the exact scheduled time
-    return now >= appointmentTime;
-  }, []);
+  // Opens 10 min before the start and stays open until 15 min after the
+  // end, including while in_progress so a dropped participant can rejoin.
+  const canJoinCall = useCallback((appointment: Appointment): boolean => canJoinConsultation(appointment), []);
 
   const startConsultation = useCallback(async (appointmentId: string) => {
     try {
@@ -32,8 +25,6 @@ export const useAppointmentVideoCall = () => {
         .single();
 
       if (error) throw error;
-
-      toast({ title: 'Consulta iniciada' });
 
       return data;
     } catch (error: any) {

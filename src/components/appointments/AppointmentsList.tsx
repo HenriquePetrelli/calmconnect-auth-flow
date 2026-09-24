@@ -201,7 +201,7 @@ export const AppointmentsList: React.FC<AppointmentsListProps> = ({
                 {/* Actions */}
                 <div className="flex flex-col sm:flex-row gap-2">
                   {/* Video call button for confirmed appointments */}
-                  {['scheduled', 'confirmed'].includes(appointment.status) && (
+                  {['scheduled', 'confirmed', 'in_progress'].includes(appointment.status) && (
                     <Button
                       variant={canJoinCall(appointment) ? "default" : "outline"}
                       size="sm"
@@ -219,7 +219,13 @@ export const AppointmentsList: React.FC<AppointmentsListProps> = ({
                       className="gap-1.5 w-full sm:w-auto justify-center"
                     >
                       <Video size={14} />
-                      <span>{canJoinCall(appointment) ? 'Entrar na videochamada' : 'Aguardar horário'}</span>
+                      <span>
+                        {!canJoinCall(appointment)
+                          ? 'Aguardar horário'
+                          : appointment.status === 'in_progress'
+                            ? 'Voltar para a videochamada'
+                            : 'Entrar na videochamada'}
+                      </span>
                     </Button>
                   )}
 
