@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { format, addMinutes, addDays, parseISO, startOfDay, endOfDay } from 'date-fns';
+import { addDays, startOfDay, endOfDay } from 'date-fns';
 import {
   applyOverridesToDayBlocks,
   timeToMinutes,
@@ -8,6 +8,16 @@ import {
   type AvailabilityOverride,
   type EditableBlock,
 } from '@/lib/psychologistAvailability';
+import {
+  BLOCKING_STATUSES,
+  DEFAULT_BOOKING_RULES,
+  isSlotFree,
+  lastBookableDay,
+  normalizeRules,
+  respectsMinNotice,
+  type BookingRules,
+  type ExistingAppointment,
+} from '@/lib/bookingRules';
 
 interface UseAvailableTimeSlotsProps {
   psychologistId: string;
@@ -16,7 +26,8 @@ interface UseAvailableTimeSlotsProps {
 
 const APPOINTMENT_DURATION_MIN = 50;
 const SLOT_STEP_MIN = 10;
-const BOOKING_WINDOW_DAYS = 30;
+/** Upper bound for what's fetched; each psychologist's own max_advance_days narrows it. */
+const BOOKING_WINDOW_DAYS = 90;
 
 const toISODate = (date: Date): string =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -38,7 +49,8 @@ export const useAvailableTimeSlots = ({ psychologistId, selectedDate }: UseAvail
   const [vacationRanges, setVacationRanges] = useState<Array<{ start_date: string; end_date: string }>>([]);
   const [hasAnyAvailability, setHasAnyAvailability] = useState(false);
   const [loadingAvailability, setLoadingAvailability] = useState(true);
-  const [occupiedSlots, setOccupiedSlots] = useState<string[]>([]);
+  const [dayAppointments, setDayAppointments] = useState<ExistingAppointment[]>([]);
+  const [rules, setRules] = useState<BookingRules>(DEFAULT_BOOKING_RULES);
   const [loading, setLoading] = useState(false);
 
   // Busca a agenda semanal (padrão) + exceções pontuais dos próximos 30 dias,
@@ -54,6 +66,7 @@ export const useAvailableTimeSlots = ({ psychologistId, selectedDate }: UseAvail
         { data: baseRows, error: baseError },
         { data: overrideRows, error: overrideError },
         { data: vacationRows, error: vacationError },
+        { data: rulesRow },
       ] = await Promise.all([
         supabase
           .from('psychologist_availability')
@@ -72,7 +85,13 @@ export const useAvailableTimeSlots = ({ psychologistId, selectedDate }: UseAvail
           .eq('psychologist_id', psychId)
           .gte('end_date', today)
           .lte('start_date', windowEnd),
+        supabase
+          .from('psychologist_booking_rules')
+          .select('buffer_minutes, min_notice_hours, max_advance_days')
+          .eq('psychologist_id', psychId)
+          .maybeSingle(),
       ]);
+      setRules(normalizeRules(rulesRow));
 
       if (baseError) throw baseError;
       if (overrideError) throw overrideError;
@@ -117,74 +136,58 @@ export const useAvailableTimeSlots = ({ psychologistId, selectedDate }: UseAvail
     }
   }, [psychologistId, fetchAvailability]);
 
-  // Buscar horários ocupados do psicólogo para uma data específica
-  const fetchOccupiedSlots = async (date: Date, psychId: string) => {
+  // Consultas que já ocupam a agenda do psicólogo nesse dia (com uma folga
+  // de 2h para os lados, para o intervalo obrigatório entre consultas).
+  const fetchDayAppointments = async (date: Date, psychId: string) => {
     if (!date || !psychId) return;
 
     try {
       setLoading(true);
+      const from = new Date(startOfDay(date).getTime() - 2 * 60 * 60_000);
+      const to = new Date(endOfDay(date).getTime() + 2 * 60 * 60_000);
 
-      // Converter data para o início e fim do dia (considerando o fuso horário do usuário)
-      const startOfDayBrazil = startOfDay(date);
-      const endOfDayBrazil = endOfDay(date);
-
-      // Buscar consultas agendadas e pendentes do psicólogo para essa data
       const { data: appointments, error } = await supabase
         .from('appointments')
         .select('scheduled_at, duration')
         .eq('psychologist_id', psychId)
-        .in('status', ['scheduled', 'pending'])
-        .gte('scheduled_at', startOfDayBrazil.toISOString())
-        .lte('scheduled_at', endOfDayBrazil.toISOString());
+        .in('status', BLOCKING_STATUSES)
+        .gte('scheduled_at', from.toISOString())
+        .lte('scheduled_at', to.toISOString());
 
       if (error) {
         console.error('Error fetching occupied slots:', error);
         return;
       }
-
-      if (!appointments || appointments.length === 0) {
-        setOccupiedSlots([]);
-        return;
-      }
-
-      // Processar horários ocupados
-      const occupied: string[] = [];
-
-      appointments.forEach(appointment => {
-        const appointmentTime = parseISO(appointment.scheduled_at);
-        const duration = appointment.duration || 50; // Duração padrão de 50 minutos
-
-        // Para uma consulta de 50 minutos, ocupar slots de 10 em 10 minutos
-        const startTimeSlot = format(appointmentTime, 'HH:mm');
-        occupied.push(startTimeSlot);
-
-        // Calcular quantos slots de 10 minutos a consulta ocupa
-        const slotsToOccupy = Math.ceil(duration / 10);
-
-        for (let i = 1; i < slotsToOccupy; i++) {
-          const nextSlotTime = addMinutes(appointmentTime, i * 10);
-          const nextTimeSlot = format(nextSlotTime, 'HH:mm');
-          occupied.push(nextTimeSlot);
-        }
-      });
-
-      setOccupiedSlots([...new Set(occupied)]); // Remove duplicatas
+      setDayAppointments(appointments ?? []);
     } catch (error) {
       console.error('Error fetching occupied slots:', error);
-      setOccupiedSlots([]);
+      setDayAppointments([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Verificar se um slot específico está disponível
+  const slotStartMs = (date: Date, time: string): number => {
+    const [h, m] = time.split(':').map(Number);
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate(), h, m).getTime();
+  };
+
+  // Um horário está disponível se não encosta em nenhuma consulta existente
+  // (respeitando o intervalo definido pelo psicólogo) e se respeita a
+  // antecedência mínima.
   const isSlotAvailable = (timeSlot: string): boolean => {
-    return !occupiedSlots.includes(timeSlot);
+    if (!selectedDate) return false;
+    const start = slotStartMs(selectedDate, timeSlot);
+    return (
+      respectsMinNotice(start, rules) &&
+      isSlotFree(start, APPOINTMENT_DURATION_MIN, dayAppointments, rules.buffer_minutes)
+    );
   };
 
   /** Horário-padrão do dia da semana, já combinado com bloqueios/aberturas daquela data específica. */
   const effectiveBlocksForDate = (date: Date): EditableBlock[] => {
     const iso = toISODate(date);
+    if (iso < toISODate(new Date()) || date.getTime() > lastBookableDay(rules).getTime()) return [];
     if (vacationRanges.some((v) => v.start_date <= iso && iso <= v.end_date)) return [];
     const dayBlocks = availabilityByDay[date.getDay()] ?? [];
     const overrides = overridesByDate[iso] ?? [];
@@ -203,13 +206,14 @@ export const useAvailableTimeSlots = ({ psychologistId, selectedDate }: UseAvail
   // Buscar quando a data ou psicólogo mudarem
   useEffect(() => {
     if (selectedDate && psychologistId) {
-      fetchOccupiedSlots(selectedDate, psychologistId);
+      fetchDayAppointments(selectedDate, psychologistId);
     } else {
-      setOccupiedSlots([]);
+      setDayAppointments([]);
     }
   }, [selectedDate, psychologistId]);
 
   const allTimeSlots = getAllSlotsForSelectedDate();
+  const occupiedSlots = allTimeSlots.filter((t) => !isSlotAvailable(t));
 
   return {
     allTimeSlots,
@@ -221,7 +225,7 @@ export const useAvailableTimeSlots = ({ psychologistId, selectedDate }: UseAvail
     isDayAvailable,
     refetch: () => {
       if (selectedDate && psychologistId) {
-        fetchOccupiedSlots(selectedDate, psychologistId);
+        fetchDayAppointments(selectedDate, psychologistId);
       }
     }
   };

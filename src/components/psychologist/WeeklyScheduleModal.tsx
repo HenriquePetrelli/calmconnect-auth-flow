@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { BLOCKING_STATUSES } from '@/lib/bookingRules';
 import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
@@ -44,7 +45,8 @@ interface DayPattern {
   end: string;
 }
 
-const OCCUPIED_STATUSES = ['scheduled', 'pending'];
+// Confirmed/in-progress consultations hold the slot too.
+const OCCUPIED_STATUSES = BLOCKING_STATUSES;
 
 const formatDayDate = (isoDate: string): string => {
   const [, m, d] = isoDate.split('-');

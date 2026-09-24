@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      psychologist_booking_rules: {
+        Row: {
+          psychologist_id: string
+          buffer_minutes: number
+          min_notice_hours: number
+          max_advance_days: number
+          updated_at: string
+        }
+        Insert: {
+          psychologist_id: string
+          buffer_minutes?: number
+          min_notice_hours?: number
+          max_advance_days?: number
+          updated_at?: string
+        }
+        Update: {
+          psychologist_id?: string
+          buffer_minutes?: number
+          min_notice_hours?: number
+          max_advance_days?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       safety_plans: {
         Row: {
           id: string

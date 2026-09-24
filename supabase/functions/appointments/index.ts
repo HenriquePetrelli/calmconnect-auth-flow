@@ -332,43 +332,63 @@ serve(async (req) => {
         }
       }
 
-      // Check for scheduling conflicts - prevent overlapping appointments
-      // A 50-minute appointment starting at scheduled_at will end 50 minutes later
+      // Psychologist's own booking rules (defaults when never configured).
+      // Mirrors src/lib/bookingRules.ts, which only decides what the patient
+      // is shown — this endpoint is callable directly, so it must re-check.
+      const { data: rulesRow } = await supabase
+        .from('psychologist_booking_rules')
+        .select('buffer_minutes, min_notice_hours, max_advance_days')
+        .eq('psychologist_id', psychologist_id)
+        .maybeSingle();
+      const bufferMin = rulesRow?.buffer_minutes ?? 0;
+      const minNoticeHours = rulesRow?.min_notice_hours ?? 2;
+      const maxAdvanceDays = rulesRow?.max_advance_days ?? 30;
+
       const appointmentStart = new Date(scheduled_at);
-      const appointmentEnd = new Date(appointmentStart.getTime() + 50 * 60 * 1000); // 50 minutes later
-      
-      // Check if there are any existing appointments that would overlap
+      const appointmentEnd = new Date(appointmentStart.getTime() + 50 * 60 * 1000);
+      const nowMs = Date.now();
+
+      if (appointmentStart.getTime() < nowMs + minNoticeHours * 60 * 60 * 1000) {
+        throw new Error(
+          minNoticeHours > 0
+            ? `Este psicólogo pede pelo menos ${minNoticeHours}h de antecedência. Escolha um horário mais à frente.`
+            : 'Não é possível agendar em um horário que já passou.'
+        );
+      }
+      if (appointmentStart.getTime() > nowMs + (maxAdvanceDays + 1) * 24 * 60 * 60 * 1000) {
+        throw new Error(`A agenda deste psicólogo só abre até ${maxAdvanceDays} dias à frente.`);
+      }
+
+      // Conflicts: every status that holds the slot (confirmed/in_progress
+      // included — before, only pending/scheduled were checked, so a
+      // confirmed consultation could be double-booked), keeping the
+      // psychologist's buffer free on both sides.
+      const windowMs = (3 * 60 + bufferMin) * 60 * 1000;
       const { data: conflictingAppointments, error: conflictError } = await supabase
         .from('appointments')
         .select('id, scheduled_at, duration')
         .eq('psychologist_id', psychologist_id)
-        .in('status', ['pending', 'scheduled'])
-        .gte('scheduled_at', new Date(appointmentStart.getTime() - 50 * 60 * 1000).toISOString()) // Check 50 minutes before
-        .lte('scheduled_at', appointmentEnd.toISOString()); // Check until our appointment ends
+        .in('status', ['pending', 'scheduled', 'confirmed', 'in_progress'])
+        .gte('scheduled_at', new Date(appointmentStart.getTime() - windowMs).toISOString())
+        .lte('scheduled_at', new Date(appointmentEnd.getTime() + windowMs).toISOString());
 
       if (conflictError) {
         console.error('Error checking conflicts:', conflictError);
         throw new Error('Erro ao verificar conflitos de horário');
       }
 
-      // Check if any existing appointment would overlap with the new one
-      if (conflictingAppointments && conflictingAppointments.length > 0) {
-        for (const existingAppointment of conflictingAppointments) {
-          const existingStart = new Date(existingAppointment.scheduled_at);
-          const existingEnd = new Date(existingStart.getTime() + (existingAppointment.duration || 50) * 60 * 1000);
-          
-          // Check if there's any overlap
-          if (
-            (appointmentStart >= existingStart && appointmentStart < existingEnd) ||
-            (appointmentEnd > existingStart && appointmentEnd <= existingEnd) ||
-            (appointmentStart <= existingStart && appointmentEnd >= existingEnd)
-          ) {
-            throw new Error('Este horário já está ocupado. Escolha outro horário disponível.');
-          }
+      const bufferMs = bufferMin * 60 * 1000;
+      for (const existing of conflictingAppointments ?? []) {
+        const existingStart = new Date(existing.scheduled_at).getTime();
+        const existingEnd = existingStart + (existing.duration || 50) * 60 * 1000;
+        const free =
+          appointmentEnd.getTime() + bufferMs <= existingStart ||
+          appointmentStart.getTime() >= existingEnd + bufferMs;
+        if (!free) {
+          throw new Error('Este horário já está ocupado. Escolha outro horário disponível.');
         }
       }
 
-      // Advance booking rule removed - allow immediate scheduling
       const scheduledDate = new Date(scheduled_at);
 
       // 10-minute interval check (Brazil timezone) — kept separate from the

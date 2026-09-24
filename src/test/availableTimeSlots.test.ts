@@ -198,4 +198,61 @@ describe('useAvailableTimeSlots — respeita a agenda semanal do psicólogo', ()
     expect(result.current.isDayAvailable(SUNDAY)).toBe(true);
     expect(result.current.allTimeSlots).toEqual(['09:00', '09:10']);
   });
+
+  it('consulta CONFIRMADA também ocupa o horário (antes permitia agendamento duplo)', async () => {
+    fakeDb.rows('psychologist_availability').push({
+      psychologist_id: PSYCHOLOGIST, day_of_week: 1, start_time: '08:00:00', end_time: '10:00:00', is_available: true,
+    });
+    fakeDb.rows('appointments').push({
+      psychologist_id: PSYCHOLOGIST,
+      status: 'confirmed',
+      duration: 50,
+      scheduled_at: new Date(MONDAY.getFullYear(), MONDAY.getMonth(), MONDAY.getDate(), 8, 0).toISOString(),
+    });
+
+    const { result } = renderHook(() => useAvailableTimeSlots({ psychologistId: PSYCHOLOGIST, selectedDate: MONDAY }));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(result.current.isSlotAvailable('08:00')).toBe(false);
+    // 08:40 ainda cai dentro da consulta confirmada (08:00–08:50).
+    expect(result.current.isSlotAvailable('08:40')).toBe(false);
+  });
+
+  it('respeita o intervalo entre consultas definido pelo psicólogo', async () => {
+    fakeDb.rows('psychologist_availability').push({
+      psychologist_id: PSYCHOLOGIST, day_of_week: 1, start_time: '08:00:00', end_time: '12:00:00', is_available: true,
+    });
+    fakeDb.rows('psychologist_booking_rules').push({
+      psychologist_id: PSYCHOLOGIST, buffer_minutes: 20, min_notice_hours: 0, max_advance_days: 30,
+    });
+    fakeDb.rows('appointments').push({
+      psychologist_id: PSYCHOLOGIST,
+      status: 'scheduled',
+      duration: 50,
+      scheduled_at: new Date(MONDAY.getFullYear(), MONDAY.getMonth(), MONDAY.getDate(), 8, 0).toISOString(),
+    });
+
+    const { result } = renderHook(() => useAvailableTimeSlots({ psychologistId: PSYCHOLOGIST, selectedDate: MONDAY }));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    // Termina 08:50 + 20min de intervalo → próximo início possível 09:10.
+    expect(result.current.isSlotAvailable('08:50')).toBe(false);
+    expect(result.current.isSlotAvailable('09:00')).toBe(false);
+    expect(result.current.isSlotAvailable('09:10')).toBe(true);
+  });
+
+  it('não abre dias além do limite de antecedência do psicólogo', async () => {
+    fakeDb.rows('psychologist_availability').push({
+      psychologist_id: PSYCHOLOGIST, day_of_week: 1, start_time: '08:00:00', end_time: '12:00:00', is_available: true,
+    });
+    fakeDb.rows('psychologist_booking_rules').push({
+      psychologist_id: PSYCHOLOGIST, buffer_minutes: 0, min_notice_hours: 0, max_advance_days: 1,
+    });
+
+    const { result } = renderHook(() => useAvailableTimeSlots({ psychologistId: PSYCHOLOGIST, selectedDate: MONDAY }));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    // MONDAY fica pelo menos 7 dias à frente.
+    expect(result.current.isDayAvailable(MONDAY)).toBe(false);
+  });
 });
