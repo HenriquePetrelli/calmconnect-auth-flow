@@ -269,6 +269,7 @@ export type Database = {
           room_url: string | null
           started_at: string | null
           status: string
+          time_limit_seconds: number
           updated_at: string
           video_room_id: string | null
         }
@@ -290,6 +291,7 @@ export type Database = {
           room_url?: string | null
           started_at?: string | null
           status?: string
+          time_limit_seconds?: number
           updated_at?: string
           video_room_id?: string | null
         }
@@ -311,6 +313,7 @@ export type Database = {
           room_url?: string | null
           started_at?: string | null
           status?: string
+          time_limit_seconds?: number
           updated_at?: string
           video_room_id?: string | null
         }

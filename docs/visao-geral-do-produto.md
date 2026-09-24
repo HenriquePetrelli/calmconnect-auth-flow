@@ -80,7 +80,7 @@ Regras:
 | Situação | Limite |
 |---|---|
 | Chamado sem aceite | 10 minutos → `expired` |
-| Duração máxima da chamada | 20 minutos |
+| Duração máxima da chamada | conforme o plano do paciente, gravada em `emergency_requests.time_limit_seconds` na abertura: Plus 25 min, Premium 50 min, sem plano ativo 20 min |
 | Inatividade de heartbeat | 10 minutos → `abandoned` |
 
 Encerramentos por sistema são idempotentes e propagados aos dois lados.
@@ -340,3 +340,4 @@ Navegação do paciente: menus lateral e inferior persistem entre Home, Chat, Co
   - Removida a entrada morta `[functions.patient-progress]` do `config.toml` (a função já não existia). A tabela `patient_progress` foi mantida: `get_sos_patient_context` ainda a lê.
   - `.env` continua versionado de propósito: só contém URL e chave pública (anon) do Supabase, já embutidas em `client.ts`, e a Lovable depende do arquivo no repositório.
 - 2026-09-24 — Suíte verde de novo: `availableTimeSlots.test.ts` usava a data fixa 07/09/2026, que saiu da janela de agendamento do hook (hoje .. +30 dias) quando virou passado — os 3 testes "falhando de sempre" eram isso, não bug. Agora usa a próxima segunda-feira a partir de uma semana à frente. Corrigido também o único erro de typecheck (`Uint8Array<ArrayBuffer>` em `useAudioAnalyser.ts`, genérico que o TypeScript 5.6 do projeto não tem), e o CI passa a rodar `tsc --noEmit` antes dos testes.
+- 2026-09-24 — Corrigido: toda chamada SOS durava 20 minutos, embora os planos vendam 25 min (Plus) e 50 min (Premium). `EmergencyCall` nunca passava `timeLimit` para `EmergencyVideoCall` (que caía no padrão de 20 min) e `finalize_stale_emergency_sessions` também cortava em 20 min fixos. Nova coluna `emergency_requests.time_limit_seconds`, preenchida por trigger `BEFORE INSERT` a partir do tier do paciente (o cliente não escolhe a própria duração); a tela da chamada lê esse valor antes de montar a sala e o finalizador usa o limite de cada chamado. Validado em Postgres local.
