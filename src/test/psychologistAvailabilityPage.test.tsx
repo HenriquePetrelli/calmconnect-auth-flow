@@ -30,6 +30,11 @@ vi.mock('@/hooks/usePsychologistVacation', () => ({
 
 vi.mock('@/components/PageHeader', () => ({ default: () => <div /> }));
 
+const rules = { buffer_minutes: 0, min_notice_hours: 2, max_advance_days: 30 };
+vi.mock('@/hooks/usePsychologistBookingRules', () => ({
+  usePsychologistBookingRules: () => ({ rules, loading: false, saving: false, save: vi.fn() }),
+}));
+
 describe('PsychologistAvailability page', () => {
   it('carrega os blocos já salvos e permite adicionar outro horário no mesmo dia', async () => {
     render(<PsychologistAvailability />);
@@ -71,5 +76,22 @@ describe('PsychologistAvailability page', () => {
         expect.objectContaining({ day_of_week: 1, start_time: '08:00', end_time: '12:00' }),
       ]);
     });
+  });
+
+  it('copia os horários de um dia para outros', () => {
+    saveMock.mockClear();
+    render(<PsychologistAvailability />);
+
+    fireEvent.click(screen.getByText('Copiar para outros dias'));
+    fireEvent.click(screen.getByLabelText('Quarta-feira'));
+    fireEvent.click(screen.getByText('Copiar'));
+    fireEvent.click(screen.getByText('Salvar agenda'));
+
+    // handleSave calls save() synchronously; no waitFor — polling while the
+    // Radix popover's focus scope is mounted never settles in jsdom.
+    expect(saveMock).toHaveBeenCalled();
+    const saved = saveMock.mock.calls[0][0] as { day_of_week: number; start_time: string; end_time: string }[];
+    expect(saved).toContainEqual({ day_of_week: 3, start_time: '08:00', end_time: '12:00' });
+    expect(saved).toContainEqual({ day_of_week: 1, start_time: '08:00', end_time: '12:00' });
   });
 });
