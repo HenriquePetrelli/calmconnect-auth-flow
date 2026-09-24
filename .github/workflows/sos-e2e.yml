@@ -23,6 +23,8 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci --no-audit --no-fund
+      - name: Typecheck
+        run: npx tsc --noEmit -p tsconfig.app.json
       - name: Rodar testes SOS (integração/E2E simulados)
         run: npx vitest run --reporter=verbose
 

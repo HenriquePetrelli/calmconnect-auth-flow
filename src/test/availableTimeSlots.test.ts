@@ -8,10 +8,18 @@ import { useAvailableTimeSlots } from '@/hooks/useAvailableTimeSlots';
 
 const PSYCHOLOGIST = '22222222-2222-2222-2222-222222222222';
 
-// A Monday, so day_of_week === 1 regardless of the host machine's timezone
-// (constructed from local Y/M/D so .getDay() matches the intent of the test).
-const MONDAY = new Date(2026, 8, 7); // 2026-09-07 is a Monday
-const SUNDAY = new Date(2026, 8, 6); // day before, a Sunday
+// The next Monday at least a week from today, so day_of_week === 1 and the
+// date always falls inside the hook's booking window (today .. +30 days) —
+// a fixed calendar date silently broke these tests once it became the past.
+// Constructed from local Y/M/D so .getDay() matches the intent of the test.
+const nextMonday = (): Date => {
+  const now = new Date();
+  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7);
+  d.setDate(d.getDate() + ((8 - d.getDay()) % 7));
+  return d;
+};
+const MONDAY = nextMonday();
+const SUNDAY = new Date(MONDAY.getFullYear(), MONDAY.getMonth(), MONDAY.getDate() - 1); // day before, a Sunday
 
 beforeEach(() => {
   fakeDb.tables = {};
