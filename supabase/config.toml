@@ -101,3 +101,6 @@ verify_jwt = true
 
 [functions.emergency-cleanup]
 verify_jwt = false
+
+[functions.delete-own-account]
+verify_jwt = true

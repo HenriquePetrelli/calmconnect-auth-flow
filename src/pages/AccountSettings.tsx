@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { getFriendlyErrorMessage } from "@/utils/errorMessage";
+import DeleteAccountCard from "@/components/DeleteAccountCard";
 const AccountSettings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -244,6 +245,8 @@ const AccountSettings = () => {
             </Button>
           </CardContent>
         </Card>
+
+        {user?.profile?.user_type === "patient" && user?.email && <DeleteAccountCard email={user.email} />}
       </div>
     </div>
   );
