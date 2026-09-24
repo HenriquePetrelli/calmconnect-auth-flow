@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 import PageHeader from '@/components/PageHeader';
+import PayoutHistory from '@/components/payments/PayoutHistory';
 import {
   CreditCard,
   Wallet,
@@ -244,6 +245,8 @@ const PsychologistPayments = () => {
             </div>
           </CardContent>
         </Card>
+
+        {payment?.psychologist_id && <PayoutHistory psychologistId={payment.psychologist_id} />}
 
         {/* PIX info */}
         <Card>

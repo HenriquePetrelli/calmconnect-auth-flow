@@ -53,14 +53,41 @@ export const usePayments = () => {
   };
 
 
-  const confirmPayment = async (psychologist_id: string) => {
+  const confirmPayment = async (
+    psychologist_id: string,
+    confirmation: { expectedAmount: number; pixE2eId: string; receipt?: File | null }
+  ) => {
     try {
       setLoading(true);
+
+      // The receipt (optional) goes to the private payment-receipts bucket,
+      // under the psychologist's folder so they can read it too.
+      let receipt_path: string | null = null;
+      if (confirmation.receipt) {
+        const ext = confirmation.receipt.name.split('.').pop()?.toLowerCase() || 'pdf';
+        const path = `${psychologist_id}/${Date.now()}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from('payment-receipts')
+          .upload(path, confirmation.receipt, { contentType: confirmation.receipt.type || undefined });
+        if (uploadError) throw uploadError;
+        receipt_path = path;
+      }
+
       const { data, error } = await supabase.functions.invoke('confirm-payment', {
-        body: { psychologist_id },
+        body: {
+          psychologist_id,
+          expected_amount: confirmation.expectedAmount,
+          pix_e2e_id: confirmation.pixE2eId,
+          receipt_path,
+        },
       });
       
-      if (error) throw error;
+      if (error) {
+        // Surface the function's own message (value changed, E2E reused...)
+        // instead of the generic "non-2xx status" error.
+        const body = await (error as { context?: Response }).context?.json?.().catch(() => null);
+        throw new Error(body?.error ?? error.message);
+      }
       
       toast({ title: `Pagamento confirmado — R$ ${data.amount_paid}` });
       

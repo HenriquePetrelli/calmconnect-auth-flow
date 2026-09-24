@@ -25,7 +25,8 @@ import {
   AlertTriangle,
   Loader2
 } from 'lucide-react';
-import { usePayments } from '@/hooks/usePayments';
+import { usePayments, type PaymentRecord } from '@/hooks/usePayments';
+import { ConfirmPayoutDialog } from './ConfirmPayoutDialog';
 import { PaymentDetailsModal } from './PaymentDetailsModal';
 
 export const PaymentsPanel = () => {
@@ -33,12 +34,25 @@ export const PaymentsPanel = () => {
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
   const [processingPayment, setProcessingPayment] = useState<string | null>(null);
 
-  const handleConfirmPayment = async (psychologist_id: string) => {
+  // Opens the reconciliation dialog; the payout is only confirmed there,
+  // with the PIX E2E id (and optionally the receipt).
+  const [confirmTarget, setConfirmTarget] = useState<PaymentRecord | null>(null);
+  const handleConfirmPayment = (psychologist_id: string) => {
+    setConfirmTarget(payments.find((p) => p.psychologist_id === psychologist_id) ?? null);
+  };
+  const submitConfirmation = async (data: { pixE2eId: string; receipt: File | null }) => {
+    if (!confirmTarget) return false;
     try {
-      setProcessingPayment(psychologist_id);
-      await confirmPayment(psychologist_id);
-    } catch (error) {
+      setProcessingPayment(confirmTarget.psychologist_id);
+      await confirmPayment(confirmTarget.psychologist_id, {
+        expectedAmount: confirmTarget.total_pending_amount,
+        ...data,
+      });
+      setConfirmTarget(null);
+      return true;
+    } catch {
       // Error handled in hook
+      return false;
     } finally {
       setProcessingPayment(null);
     }
@@ -381,6 +395,15 @@ export const PaymentsPanel = () => {
           onClose={() => setSelectedPayment(null)}
         />
       )}
+
+      <ConfirmPayoutDialog
+        payment={confirmTarget}
+        submitting={Boolean(confirmTarget && processingPayment === confirmTarget.psychologist_id)}
+        onCancel={() => setConfirmTarget(null)}
+        onConfirm={submitConfirmation}
+        formatCurrency={formatCurrency}
+        pixTypeLabel={getPixTypeLabel}
+      />
     </div>
     </ContentTransition>
   );
