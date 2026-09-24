@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Trash2 } from 'lucide-react';
+import { Download, Trash2 } from 'lucide-react';
+import { collectMyData, downloadJson } from '@/lib/exportMyData';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -32,6 +33,22 @@ export const DeleteAccountCard = ({ email }: { email: string }) => {
   const [confirmation, setConfirmation] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [exporting, setExporting] = useState(false);
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const payload = await collectMyData(user.id, user.email ?? null);
+      downloadJson(`soliv-meus-dados-${new Date().toISOString().slice(0, 10)}.json`, payload);
+    } catch (e) {
+      console.error('Erro ao exportar dados:', e);
+      toast({ title: 'Não foi possível gerar o arquivo', description: 'Tente de novo em instantes.', variant: 'destructive' });
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const reset = () => {
     setPassword('');
@@ -80,9 +97,19 @@ export const DeleteAccountCard = ({ email }: { email: string }) => {
   return (
     <Card className="border-destructive/30">
       <CardHeader>
-        <CardTitle className="text-destructive">Excluir conta</CardTitle>
+        <CardTitle>Seus dados</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
+        <p className="text-sm text-muted-foreground">
+          Baixe uma cópia de tudo o que você registrou no Soliv, num arquivo que outros serviços conseguem ler.
+        </p>
+        <Button variant="outline" className="w-full" onClick={handleExport} disabled={exporting}>
+          <Download size={16} className="mr-2" />
+          {exporting ? 'Gerando arquivo...' : 'Baixar meus dados'}
+        </Button>
+
+        <div className="border-t pt-4" />
+        <h3 className="font-semibold text-destructive">Excluir conta</h3>
         <p className="text-sm text-muted-foreground">
           Apaga definitivamente sua conta e seus dados: diário, humor, plano de segurança, depoimentos, conversas,
           histórico de consultas e de SOS. Se você tiver uma assinatura ativa, ela é cancelada. Não dá para desfazer.

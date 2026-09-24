@@ -52,10 +52,10 @@ Transferência internacional (art. 33): todos os operadores acima processam dado
 
 | Direito | Como é atendido hoje |
 |---|---|
-| Confirmação e acesso | parcialmente pelo próprio app (perfil, diário, histórico); **não há exportação completa** |
+| Confirmação e acesso | pelo próprio app e pela exportação completa ("Baixar meus dados") |
 | Correção | telas de perfil e conta |
 | Eliminação | **paciente: "Excluir conta" em Alterar dados da conta** (edge function `delete-own-account`); psicólogo: via suporte |
-| Portabilidade | **não implementado** — exportar os dados do paciente em JSON/PDF é o próximo passo |
+| Portabilidade | paciente: "Baixar meus dados" (JSON com todas as tabelas dele) em Alterar dados da conta |
 | Revogação do consentimento | equivale hoje à exclusão da conta |
 
 ## Segurança (art. 46)

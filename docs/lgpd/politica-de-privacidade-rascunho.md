@@ -43,7 +43,7 @@ Só com empresas que prestam o serviço para nós: Supabase (banco de dados), St
 
 ## Seus direitos
 
-Você pode acessar e corrigir seus dados pelo app e **excluir sua conta a qualquer momento** em Perfil → Alterar dados da conta → Excluir conta. Isso apaga seus dados e cancela a assinatura. Para os outros direitos (portabilidade, informações sobre compartilhamento, revogar consentimento), escreva para [e-mail].
+Você pode acessar e corrigir seus dados pelo app e **excluir sua conta a qualquer momento** em Perfil → Alterar dados da conta → Excluir conta. Isso apaga seus dados e cancela a assinatura. Você também pode baixar uma cópia de todos os seus dados no mesmo lugar ("Baixar meus dados"). Para os outros direitos (informações sobre compartilhamento, revogar consentimento), escreva para [e-mail].
 
 Você também pode reclamar à Autoridade Nacional de Proteção de Dados (ANPD).
 
