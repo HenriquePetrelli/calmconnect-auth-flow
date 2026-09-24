@@ -14,6 +14,75 @@ export type Database = {
   }
   public: {
     Tables: {
+      safety_plans: {
+        Row: {
+          id: string
+          patient_id: string
+          warning_signs: string[]
+          coping_strategies: string[]
+          distractions: string[]
+          safe_environment: string[]
+          reasons_to_live: string[]
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          patient_id: string
+          warning_signs?: string[]
+          coping_strategies?: string[]
+          distractions?: string[]
+          safe_environment?: string[]
+          reasons_to_live?: string[]
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          patient_id?: string
+          warning_signs?: string[]
+          coping_strategies?: string[]
+          distractions?: string[]
+          safe_environment?: string[]
+          reasons_to_live?: string[]
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      emergency_contacts: {
+        Row: {
+          id: string
+          patient_id: string
+          name: string
+          relationship: string | null
+          phone: string
+          is_primary: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          patient_id: string
+          name: string
+          relationship?: string | null
+          phone: string
+          is_primary?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          patient_id?: string
+          name?: string
+          relationship?: string | null
+          phone?: string
+          is_primary?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       admin_audit_log: {
         Row: {
           action: string
@@ -1822,6 +1891,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_sos_safety_plan: {
+        Args: { p_request_id: string }
+        Returns: Json
+      }
       get_group_testimonials: {
         Args: { p_group_id: string; p_only_mine?: boolean }
         Returns: {
