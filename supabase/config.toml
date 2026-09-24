@@ -104,3 +104,6 @@ verify_jwt = false
 
 [functions.delete-own-account]
 verify_jwt = true
+
+[functions.stripe-webhook]
+verify_jwt = false
