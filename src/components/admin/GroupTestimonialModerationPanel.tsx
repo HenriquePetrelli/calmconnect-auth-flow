@@ -22,7 +22,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { AlertTriangle, MessageSquareWarning, Pencil, ThumbsDown, ThumbsUp, Trash2 } from 'lucide-react';
+import { AlertTriangle, Flag, FlagOff, MessageSquareWarning, Pencil, ThumbsDown, ThumbsUp, Trash2 } from 'lucide-react';
 import { EmptyState } from '@/components/EmptyState';
 import { SkeletonTable } from '@/components/skeletons/Skeletons';
 import { ContentTransition } from '@/components/skeletons/ContentTransition';
@@ -38,18 +38,27 @@ const Metric: React.FC<{ label: string; value: string }> = ({ label, value }) =>
   </div>
 );
 
+const REPORT_REASON_LABELS: Record<string, string> = {
+  ofensivo: 'Ofensivo',
+  risco: 'Risco',
+  dados_pessoais: 'Dados pessoais',
+  spam: 'Spam',
+  outro: 'Outro',
+};
+
 const formatDate = (value: string) => new Date(value).toLocaleDateString('pt-BR', { dateStyle: 'short' });
 
-/** Admin moderation of support-group testimonials. Testimonials with 10+
- * "não gostei" sort first and are flagged — nothing gets deleted
- * automatically anymore, an admin reviews and decides. */
+/** Admin moderation of support-group testimonials. Testimonials reported by
+ * users sort first, then those with 10+ "não gostei" — nothing gets deleted
+ * automatically, an admin reviews and decides. */
 export const GroupTestimonialModerationPanel = () => {
-  const { testimonials, loading, savingId, updateTestimonial, deleteTestimonial } = useGroupTestimonialModeration();
+  const { testimonials, loading, savingId, updateTestimonial, deleteTestimonial, dismissReports } = useGroupTestimonialModeration();
   const [editTarget, setEditTarget] = useState<AdminGroupTestimonial | null>(null);
   const [editText, setEditText] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<AdminGroupTestimonial | null>(null);
 
   const flaggedCount = testimonials.filter((t) => t.flagged).length;
+  const reportedCount = testimonials.filter((t) => t.pending_reports > 0).length;
 
   const openEdit = (t: AdminGroupTestimonial) => {
     setEditTarget(t);
@@ -73,14 +82,15 @@ export const GroupTestimonialModerationPanel = () => {
       <div>
         <h2 className="text-lg sm:text-xl font-semibold text-foreground">Grupos de Apoio — Depoimentos</h2>
         <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-          Depoimentos com 10 ou mais "não gostei" ficam sinalizados aqui para revisão — não são mais excluídos
-          automaticamente. Edite ou exclua manualmente quando necessário.
+          Depoimentos denunciados por usuários ou com 10 ou mais "não gostei" ficam sinalizados aqui para revisão —
+          nada é excluído automaticamente. Edite, exclua ou arquive as denúncias quando necessário.
         </p>
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
         <Metric label="Depoimentos totais" value={String(testimonials.length)} />
         <Metric label="Sinalizados p/ revisão" value={String(flaggedCount)} />
+        <Metric label="Com denúncias" value={String(reportedCount)} />
       </div>
 
       <ContentTransition loading={loading} skeleton={<SkeletonTable rows={5} cols={5} />}>
@@ -133,12 +143,32 @@ export const GroupTestimonialModerationPanel = () => {
                             </Badge>
                           )}
                         </div>
+                        {t.pending_reports > 0 && (
+                          <div className="mt-1 flex items-center gap-1 text-xs text-destructive">
+                            <Flag className="h-3.5 w-3.5" />
+                            {t.pending_reports} {t.pending_reports === 1 ? 'denúncia' : 'denúncias'}:{' '}
+                            {t.report_reasons.map((r) => REPORT_REASON_LABELS[r] ?? r).join(', ')}
+                          </div>
+                        )}
                       </TableCell>
                       <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
                         {formatDate(t.criado_em)}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
+                          {t.pending_reports > 0 && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                              onClick={() => dismissReports(t.testimonial_id)}
+                              disabled={savingId === t.testimonial_id}
+                              aria-label="Arquivar denúncias (manter depoimento)"
+                              title="Arquivar denúncias (manter depoimento)"
+                            >
+                              <FlagOff className="h-4 w-4" />
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="icon"

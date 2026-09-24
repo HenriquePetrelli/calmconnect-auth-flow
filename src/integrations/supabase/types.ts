@@ -1822,6 +1822,33 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_group_testimonials: {
+        Args: { p_group_id: string; p_only_mine?: boolean }
+        Returns: {
+          id: string
+          group_id: string
+          anonimo: boolean
+          sintoma_id: string | null
+          sintoma_texto: string | null
+          humor: number
+          texto: string
+          criado_em: string
+          likes_positivos: number
+          likes_negativos: number
+          autor_nome: string | null
+          is_mine: boolean
+          user_like: string | null
+          reported_by_me: boolean
+        }[]
+      }
+      report_group_testimonial: {
+        Args: { p_testimonial_id: string; p_reason: string; p_details?: string | null }
+        Returns: undefined
+      }
+      admin_dismiss_testimonial_reports: {
+        Args: { p_testimonial_id: string }
+        Returns: undefined
+      }
       add_patient_activity: {
         Args: {
           p_activity_date?: string
@@ -1987,6 +2014,8 @@ export type Database = {
           anonimo: boolean
           autor_nome: string
           criado_em: string
+          pending_reports: number
+          report_reasons: string[]
           flagged: boolean
           group_id: string
           group_nome: string
