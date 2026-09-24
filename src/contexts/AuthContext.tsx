@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { deactivateStoredPushToken } from '@/lib/pushToken';
 import { toast } from 'sonner';
 
 type UserType = 'admin' | 'psychologist' | 'patient' | 'unknown';
@@ -192,6 +193,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
+      // While the session still exists: stop this device from receiving the
+      // outgoing user's pushes (shared phones, handing the device over).
+      await deactivateStoredPushToken();
       cleanupAuthState();
       // Always reset to light mode on logout; dark mode is per-logged-in-user
       try {

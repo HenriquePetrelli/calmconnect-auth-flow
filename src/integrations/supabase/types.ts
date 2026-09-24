@@ -1891,6 +1891,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      register_push_token: {
+        Args: { p_token: string; p_device_info?: Json }
+        Returns: undefined
+      }
       get_sos_safety_plan: {
         Args: { p_request_id: string }
         Returns: Json
