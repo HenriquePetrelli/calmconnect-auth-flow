@@ -2211,6 +2211,10 @@ export type Database = {
         Args: { p_user_id?: string }
         Returns: boolean
       }
+      register_push_token: {
+        Args: { p_device_info?: Json; p_token: string }
+        Returns: undefined
+      }
       report_group_testimonial: {
         Args: { p_details?: string; p_reason: string; p_testimonial_id: string }
         Returns: undefined
