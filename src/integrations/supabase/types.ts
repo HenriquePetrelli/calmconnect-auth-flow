@@ -410,6 +410,50 @@ export type Database = {
           },
         ]
       }
+      group_testimonial_reports: {
+        Row: {
+          created_at: string
+          details: string | null
+          id: string
+          reason: string
+          reporter_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          testimonial_id: string
+        }
+        Insert: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason: string
+          reporter_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          testimonial_id: string
+        }
+        Update: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason?: string
+          reporter_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          testimonial_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_testimonial_reports_testimonial_id_fkey"
+            columns: ["testimonial_id"]
+            isOneToOne: false
+            referencedRelation: "group_testimonials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       group_testimonials: {
         Row: {
           anonimo: boolean
@@ -1846,6 +1890,10 @@ export type Database = {
         Args: { p_testimonial_id: string }
         Returns: undefined
       }
+      admin_dismiss_testimonial_reports: {
+        Args: { p_testimonial_id: string }
+        Returns: undefined
+      }
       admin_update_testimonial: {
         Args: { p_testimonial_id: string; p_texto: string }
         Returns: undefined
@@ -1985,6 +2033,8 @@ export type Database = {
           humor: number
           likes_negativos: number
           likes_positivos: number
+          pending_reports: number
+          report_reasons: string[]
           testimonial_id: string
           texto: string
         }[]
@@ -2001,6 +2051,25 @@ export type Database = {
         }[]
       }
       get_chat_usage_metrics: { Args: { p_days?: number }; Returns: Json }
+      get_group_testimonials: {
+        Args: { p_group_id: string; p_only_mine?: boolean }
+        Returns: {
+          anonimo: boolean
+          autor_nome: string
+          criado_em: string
+          group_id: string
+          humor: number
+          id: string
+          is_mine: boolean
+          likes_negativos: number
+          likes_positivos: number
+          reported_by_me: boolean
+          sintoma_id: string
+          sintoma_texto: string
+          texto: string
+          user_like: string
+        }[]
+      }
       get_or_create_appointment_webrtc_session: {
         Args: { p_appointment_id: string }
         Returns: string
@@ -2071,6 +2140,10 @@ export type Database = {
       psychologist_can_attend: {
         Args: { p_user_id?: string }
         Returns: boolean
+      }
+      report_group_testimonial: {
+        Args: { p_details?: string; p_reason: string; p_testimonial_id: string }
+        Returns: undefined
       }
       reset_patient_weekly_goals_array: { Args: never; Returns: undefined }
       reset_weekly_goals: { Args: never; Returns: undefined }
