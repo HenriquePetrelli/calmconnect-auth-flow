@@ -302,11 +302,23 @@ const SOS = () => {
                   Ainda não encontramos um profissional livre
                 </h2>
                 <p className="text-muted-foreground text-sm">
-                  Você não está sozinho. Tente de novo ou use uma das opções abaixo enquanto isso.
+                  Você não está sozinho. O CVV atende agora, de graça, 24 horas — é a forma mais rápida de
+                  conversar com alguém neste momento.
                 </p>
-                <Button onClick={() => window.location.reload()} className="w-full">
-                  Tentar novamente
+                {/* Ponte para o CVV como ação principal: quando ninguém aceita, a
+                    pessoa não pode ficar só com um "tente de novo". */}
+                <Button asChild className="w-full min-h-12">
+                  <a href="tel:188">
+                    <Phone className="h-4 w-4" />
+                    Ligar para o CVV (188)
+                  </a>
                 </Button>
+                <Button variant="outline" onClick={() => window.location.reload()} className="w-full min-h-12">
+                  Tentar de novo com um psicólogo
+                </Button>
+                <p className="text-xs text-muted-foreground">
+                  Este pedido não conta na sua cota do mês — ela só é usada quando um atendimento começa.
+                </p>
               </div>
             ) : (
               <div className="space-y-3">

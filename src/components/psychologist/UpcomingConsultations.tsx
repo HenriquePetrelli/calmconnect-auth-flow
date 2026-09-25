@@ -12,6 +12,7 @@ import { formatBrazilTime, formatTimeOnly } from '@/utils/timezone';
 import { Badge as BadgeUI } from '@/components/ui/badge';
 import PendingAppointments from './PendingAppointments';
 import { PatientHistoryModal } from './PatientHistoryModal';
+import { canJoinConsultation, isConsultationUpcoming, JOIN_EARLY_MINUTES } from '@/lib/consultationWindow';
 
 const formatTimeUntil = (minutes: number): string => {
   const total = Math.max(0, Math.floor(minutes));
@@ -36,12 +37,7 @@ const UpcomingConsultations = () => {
 
   const now = new Date();
   const acceptedStatuses = ['scheduled', 'confirmed', 'in_progress'];
-  const isAppointmentActive = (a: any) => {
-    const start = new Date(a.scheduled_at);
-    const durationMin = a.duration || 50;
-    const end = new Date(start.getTime() + durationMin * 60 * 1000);
-    return end.getTime() > now.getTime();
-  };
+  const isAppointmentActive = (a: any) => isConsultationUpcoming(a, now.getTime());
   const todayAppointments = todayRaw
     .filter((a: any) => acceptedStatuses.includes(a.status))
     .filter(isAppointmentActive);
@@ -80,7 +76,7 @@ const UpcomingConsultations = () => {
     const now = new Date();
     const minutesUntilAppointment = (appointmentDate.getTime() - now.getTime()) / (1000 * 60);
 
-    if (minutesUntilAppointment <= 15 && minutesUntilAppointment > 0) {
+    if (minutesUntilAppointment <= JOIN_EARLY_MINUTES && minutesUntilAppointment > 0) {
       return { badge: 'Disponível agora', style: 'bg-success/15 text-success border-success/20' };
     }
     if (minutesUntilAppointment <= 0 && minutesUntilAppointment > -60) {
@@ -144,11 +140,7 @@ const UpcomingConsultations = () => {
 
               <div className="flex gap-2">
                 {(() => {
-                  const start = new Date(appointment.scheduled_at).getTime();
-                  const durationMin = appointment.duration || 50;
-                  const end = start + durationMin * 60 * 1000;
-                  const nowMs = Date.now();
-                  const canJoin = nowMs >= start && nowMs <= end;
+                  const canJoin = canJoinConsultation(appointment);
                   const starting = startingAppointments.has(appointment.id);
                   if (canJoin) {
                     return (
@@ -159,7 +151,11 @@ const UpcomingConsultations = () => {
                         onClick={() => handleStartConsultation(appointment.id)}
                       >
                         <Video className="w-4 h-4 mr-2" />
-                        {starting ? 'Entrando...' : 'Entrar na chamada'}
+                        {starting
+                          ? 'Entrando...'
+                          : appointment.status === 'in_progress'
+                            ? 'Voltar para a chamada'
+                            : 'Entrar na chamada'}
                       </Button>
                     );
                   }

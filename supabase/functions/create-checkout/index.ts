@@ -2,6 +2,17 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
+// Plans are resolved on the server from Stripe price IDs configured as
+// secrets (STRIPE_PRICE_PLUS / STRIPE_PRICE_PREMIUM), defaulting to the
+// current live prices. An unknown price grants NO tier — there used to be a
+// fallback that promoted any price above R$ 69,99 to Premium, which, with
+// create-checkout accepting any priceId from the client, let anyone
+// subscribe to some other price in the account and be treated as Premium.
+const PLAN_PRICES = {
+  Plus: Deno.env.get("STRIPE_PRICE_PLUS") ?? "price_1S3qAKPhFwqSktZsXexQefrx",
+  Premium: Deno.env.get("STRIPE_PRICE_PREMIUM") ?? "price_1S3q9YPhFwqSktZsejrePGuS",
+} as const;
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -40,8 +51,13 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    const { priceId, plan } = await req.json();
-    if (!priceId || !plan) throw new Error("Price ID and plan are required");
+    // The client only says which plan; the price comes from the server.
+    const { plan: requestedPlan } = await req.json();
+    const plan = String(requestedPlan ?? "").toLowerCase() === "premium" ? "Premium"
+      : String(requestedPlan ?? "").toLowerCase() === "plus" ? "Plus"
+      : null;
+    if (!plan) throw new Error("Plano inválido");
+    const priceId = PLAN_PRICES[plan];
     logStep("Request data", { priceId, plan });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });

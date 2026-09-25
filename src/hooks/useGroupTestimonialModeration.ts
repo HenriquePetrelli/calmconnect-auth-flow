@@ -15,6 +15,9 @@ export interface AdminGroupTestimonial {
   likes_negativos: number;
   flagged: boolean;
   criado_em: string;
+  /** Pending reports from other users (see report_group_testimonial). */
+  pending_reports: number;
+  report_reasons: string[];
 }
 
 /** Admin moderation of support-group testimonials: replaces the old
@@ -96,5 +99,27 @@ export const useGroupTestimonialModeration = () => {
     }
   };
 
-  return { testimonials, loading, savingId, updateTestimonial, deleteTestimonial, reload: load };
+  const dismissReports = async (testimonialId: string): Promise<boolean> => {
+    setSavingId(testimonialId);
+    try {
+      const { error } = await supabase.rpc('admin_dismiss_testimonial_reports', { p_testimonial_id: testimonialId });
+      if (error) throw error;
+
+      toast({ title: 'Denúncias arquivadas' });
+      await load();
+      return true;
+    } catch (error: any) {
+      console.error('Erro ao arquivar denúncias:', error);
+      toast({
+        title: 'Erro',
+        description: getFriendlyErrorMessage(error, 'Não foi possível arquivar as denúncias.'),
+        variant: 'destructive',
+      });
+      return false;
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  return { testimonials, loading, savingId, updateTestimonial, deleteTestimonial, dismissReports, reload: load };
 };

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useSosPatientContext } from '@/hooks/useSosPatientContext';
+import SafetyPlanSection from '@/components/sos/SafetyPlanSection';
 import { describeEndReason, formatDateTime, formatDuration, sosStatusLabel } from '@/lib/sosHistory';
 
 interface PatientContextPanelProps {
@@ -64,6 +65,8 @@ export const PatientContextPanel: React.FC<PatientContextPanelProps> = ({ reques
               </p>
             </section>
           )}
+
+          {context && <SafetyPlanSection requestId={requestId} />}
 
           {patient?.symptoms && patient.symptoms.length > 0 && (
             <section className="space-y-2">

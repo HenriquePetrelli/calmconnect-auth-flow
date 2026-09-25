@@ -19,6 +19,8 @@ const SAMPLE = [
     likes_negativos: 1,
     flagged: false,
     criado_em: new Date().toISOString(),
+    pending_reports: 0,
+    report_reasons: [],
   },
   {
     testimonial_id: 't2',
@@ -32,6 +34,8 @@ const SAMPLE = [
     likes_negativos: 10,
     flagged: true,
     criado_em: new Date().toISOString(),
+    pending_reports: 2,
+    report_reasons: ['ofensivo', 'risco'],
   },
 ];
 
@@ -102,5 +106,22 @@ describe('useGroupTestimonialModeration', () => {
 
     expect(ok!).toBe(false);
     expect(result.current.savingId).toBeNull();
+  });
+
+  it('arquivar denúncias chama a RPC do admin sem excluir o depoimento', async () => {
+    const dismissSpy = vi.fn(() => ({ data: null, error: null }));
+    const deleteSpy = vi.fn(() => ({ data: null, error: null }));
+    fakeDb.rpcHandlers.admin_dismiss_testimonial_reports = dismissSpy;
+    fakeDb.rpcHandlers.admin_delete_testimonial = deleteSpy;
+
+    const { result } = renderHook(() => useGroupTestimonialModeration());
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => {
+      await result.current.dismissReports('t2');
+    });
+
+    expect(dismissSpy).toHaveBeenCalledWith(expect.anything(), { p_testimonial_id: 't2' });
+    expect(deleteSpy).not.toHaveBeenCalled();
   });
 });

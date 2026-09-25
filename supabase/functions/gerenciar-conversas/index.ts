@@ -13,6 +13,17 @@ serve(async (req) => {
   }
 
   try {
+    // Optional shared secret (same pattern as reset-weekly-goals): once
+    // CRON_SECRET is configured as an edge function secret, only callers
+    // sending a matching x-cron-secret header (the pg_cron job) get through.
+    const cronSecret = Deno.env.get('CRON_SECRET');
+    if (cronSecret && req.headers.get('x-cron-secret') !== cronSecret) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 401,
+      });
+    }
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''

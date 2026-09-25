@@ -4,9 +4,12 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Info, Plus, User, ThumbsUp, ThumbsDown, Edit, Trash2, Filter, Crown } from 'lucide-react';
+import { Info, Plus, User, ThumbsUp, ThumbsDown, Edit, Trash2, Filter, Crown, Flag } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useGroupTestimonials, useGroupSymptoms } from '@/hooks/useSupportGroups';
+import { useGroupTestimonials, useGroupSymptoms, type GroupTestimonial, type TestimonialReportReason } from '@/hooks/useSupportGroups';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -21,34 +24,17 @@ import { getJournalMood } from '@/components/journal/journalMoods';
 import { cn } from '@/lib/utils';
 
 interface TestimonialCardProps {
-  testimonial: {
-    id: string;
-    user_id: string;
-    anonimo: boolean;
-    sintoma_id: string | null;
-    sintoma_texto: string | null;
-    humor: number;
-    texto: string;
-    criado_em: string;
-    likes_positivos: number;
-    likes_negativos: number;
-    profiles?: {
-      full_name: string;
-    };
-    user_like?: {
-      tipo: 'positivo' | 'negativo';
-    };
-  };
+  testimonial: GroupTestimonial;
   symptomName?: string;
   onLike: (testimonialId: string, tipo: 'positivo' | 'negativo' | 'none') => void;
   isPremiumUser?: boolean;
   onEdit: (testimonial: any) => void;
   onDelete: (testimonialId: string) => void;
-  currentUserId?: string;
+  onReport: (testimonial: GroupTestimonial) => void;
   groupName: string;
 }
 
-const TestimonialCard = ({ testimonial, symptomName, onLike, onEdit, onDelete, currentUserId, groupName, isPremiumUser = false }: TestimonialCardProps) => {
+const TestimonialCard = ({ testimonial, symptomName, onLike, onEdit, onDelete, onReport, groupName, isPremiumUser = false }: TestimonialCardProps) => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR', {
       day: '2-digit',
@@ -59,9 +45,9 @@ const TestimonialCard = ({ testimonial, symptomName, onLike, onEdit, onDelete, c
 
   const userName = testimonial.anonimo 
     ? 'Anônimo' 
-    : testimonial.profiles?.full_name || 'Usuário';
+    : testimonial.autor_nome || 'Usuário';
 
-  const isOwnTestimonial = currentUserId === testimonial.user_id;
+  const isOwnTestimonial = testimonial.is_mine;
   const userLikeType = testimonial.user_like?.tipo;
 
   return (
@@ -103,6 +89,21 @@ const TestimonialCard = ({ testimonial, symptomName, onLike, onEdit, onDelete, c
               })()}
             </div>
           </div>
+
+          {/* Denúncia discreta — só em depoimentos de outras pessoas */}
+          {!isOwnTestimonial && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onReport(testimonial)}
+              disabled={testimonial.reported_by_me}
+              className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+              aria-label={testimonial.reported_by_me ? 'Depoimento já denunciado' : 'Denunciar depoimento'}
+              title={testimonial.reported_by_me ? 'Você já denunciou este depoimento' : 'Denunciar depoimento'}
+            >
+              <Flag className="w-4 h-4" />
+            </Button>
+          )}
 
           {/* Edit/Delete buttons for own testimonials */}
           {isOwnTestimonial && (
@@ -217,6 +218,14 @@ const TestimonialCard = ({ testimonial, symptomName, onLike, onEdit, onDelete, c
   );
 };
 
+const REPORT_REASONS: { value: TestimonialReportReason; label: string }[] = [
+  { value: 'ofensivo', label: 'Ofensivo, discriminatório ou assédio' },
+  { value: 'risco', label: 'Incentiva autolesão ou coloca alguém em risco' },
+  { value: 'dados_pessoais', label: 'Expõe dados pessoais de alguém' },
+  { value: 'spam', label: 'Propaganda ou spam' },
+  { value: 'outro', label: 'Outro motivo' },
+];
+
 const SupportGroupDetail = () => {
   const { groupId } = useParams<{ groupId: string }>();
   const location = useLocation();
@@ -225,7 +234,10 @@ const SupportGroupDetail = () => {
   const [showAddTestimonial, setShowAddTestimonial] = useState(false);
   const [showEditTestimonial, setShowEditTestimonial] = useState(false);
   const [editingTestimonial, setEditingTestimonial] = useState<any>(null);
-  const [currentUserId, setCurrentUserId] = useState<string | undefined>();
+  const [reportTarget, setReportTarget] = useState<GroupTestimonial | null>(null);
+  const [reportReason, setReportReason] = useState<TestimonialReportReason>('ofensivo');
+  const [reportDetails, setReportDetails] = useState('');
+  const [reportSending, setReportSending] = useState(false);
   const [filter, setFilter] = useState<'all' | 'mine'>('all');
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeModalFeature, setUpgradeModalFeature] = useState('');
@@ -233,17 +245,8 @@ const SupportGroupDetail = () => {
   const { subscribed, subscriptionTier } = useSubscription();
 
   const [groupName, setGroupName] = useState<string>(location.state?.groupName || '');
-  const { testimonials, loading: testimonialsLoading, likeTestimonial, updateTestimonial, deleteTestimonial, refetch } = useGroupTestimonials(groupId || '', filter === 'mine');
+  const { testimonials, loading: testimonialsLoading, likeTestimonial, updateTestimonial, deleteTestimonial, reportTestimonial, refetch } = useGroupTestimonials(groupId || '', filter === 'mine');
   const { symptoms, loading: symptomsLoading } = useGroupSymptoms(groupName);
-
-  // Get current user ID
-  useEffect(() => {
-    const getCurrentUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setCurrentUserId(user?.id);
-    };
-    getCurrentUser();
-  }, []);
 
   // location.state is empty on a page reload or direct link — fall back to
   // fetching the group's name from the database so the header/queries don't
@@ -500,13 +503,79 @@ const SupportGroupDetail = () => {
                     onLike={handleLikeClick}
                     onEdit={handleEditTestimonial}
                     onDelete={handleDeleteTestimonial}
-                    currentUserId={currentUserId}
+                    onReport={setReportTarget}
                     groupName={groupName}
                     isPremiumUser={isPremiumUser}
                   />
                 ))
               )}
             </div>
+
+            {/* Denúncia de depoimento */}
+            <Dialog
+              open={!!reportTarget}
+              onOpenChange={(open) => {
+                if (!open) {
+                  setReportTarget(null);
+                  setReportDetails('');
+                  setReportReason('ofensivo');
+                }
+              }}
+            >
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Denunciar depoimento</DialogTitle>
+                  <DialogDescription>
+                    A denúncia é anônima para o autor. Nossa equipe revisa e decide o que fazer — nada é removido automaticamente.
+                  </DialogDescription>
+                </DialogHeader>
+                <RadioGroup
+                  value={reportReason}
+                  onValueChange={(v) => setReportReason(v as TestimonialReportReason)}
+                  className="space-y-1"
+                >
+                  {REPORT_REASONS.map((r) => (
+                    <div key={r.value} className="flex items-center gap-3 min-h-12">
+                      <RadioGroupItem value={r.value} id={`report-${r.value}`} />
+                      <Label htmlFor={`report-${r.value}`} className="font-normal leading-snug">{r.label}</Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+                <Textarea
+                  value={reportDetails}
+                  onChange={(e) => setReportDetails(e.target.value.slice(0, 500))}
+                  placeholder="Quer contar mais? (opcional)"
+                  aria-label="Detalhes da denúncia (opcional)"
+                  rows={3}
+                />
+                {reportReason === 'risco' && (
+                  <p className="text-sm text-muted-foreground">
+                    Se alguém corre perigo agora, ligue para o CVV (188) ou o SAMU (192).
+                  </p>
+                )}
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setReportTarget(null)} disabled={reportSending}>
+                    Cancelar
+                  </Button>
+                  <Button
+                    disabled={reportSending}
+                    onClick={async () => {
+                      if (!reportTarget) return;
+                      setReportSending(true);
+                      const ok = await reportTestimonial(reportTarget.id, reportReason, reportDetails);
+                      setReportSending(false);
+                      if (ok) {
+                        setReportTarget(null);
+                        setReportDetails('');
+                        setReportReason('ofensivo');
+                      }
+                    }}
+                  >
+                    {reportSending ? 'Enviando...' : 'Enviar denúncia'}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
 
             {/* Subscription Upgrade Modal */}
             <SubscriptionUpgradeModal

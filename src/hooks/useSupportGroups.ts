@@ -14,7 +14,6 @@ export interface SupportGroup {
 export interface GroupTestimonial {
   id: string;
   group_id: string;
-  user_id: string;
   anonimo: boolean;
   sintoma_id: string | null;
   sintoma_texto: string | null;
@@ -23,13 +22,17 @@ export interface GroupTestimonial {
   criado_em: string;
   likes_positivos: number;
   likes_negativos: number;
-  profiles?: {
-    full_name: string;
-  };
+  /** Author's name — always null for anonymous testimonials. The author's
+   * user_id is never sent to other users (see get_group_testimonials). */
+  autor_nome: string | null;
+  is_mine: boolean;
+  reported_by_me: boolean;
   user_like?: {
     tipo: 'positivo' | 'negativo';
-  };
+  } | null;
 }
+
+export type TestimonialReportReason = 'ofensivo' | 'risco' | 'spam' | 'dados_pessoais' | 'outro';
 
 export interface GroupSymptom {
   id: string;
@@ -168,64 +171,23 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
     
     try {
       setLoading(true);
-      const { data: user } = await supabase.auth.getUser();
-      
-      // Build query with optional user filter
-      let query = supabase
-        .from('group_testimonials')
-        .select('*')
-        .eq('group_id', groupId);
-
-      // Apply user filter if requested
-      if (userFilter && user.user) {
-        query = query.eq('user_id', user.user.id);
-      }
-
-      const { data, error } = await query.order('criado_em', { ascending: false });
+      // Served by an RPC instead of a direct select: RLS can't hide a
+      // column, so reading the table directly shipped every anonymous
+      // author's user_id to every reader. The RPC never returns user_id and
+      // only returns the name for non-anonymous testimonials.
+      const { data, error } = await supabase.rpc('get_group_testimonials', {
+        p_group_id: groupId,
+        p_only_mine: userFilter,
+      });
 
       if (error) throw error;
 
-      // For each testimonial, fetch user profile and user like status
-      const testimonialsWithProfiles = await Promise.all(
-        (data || []).map(async (testimonial) => {
-          // Anonymous testimonials must not carry the author's real name
-          // to the client at all — the UI already hides it when rendering,
-          // but that's cosmetic only: the name would still be sitting in
-          // the network response/React state for anyone to read via
-          // devtools, defeating the whole point of posting anonymously
-          // about a sensitive mental-health topic.
-          let profile: { full_name: string } | null = null;
-          if (!testimonial.anonimo) {
-            const { data: profileData } = await supabase
-              .from('profiles')
-              .select('full_name')
-              .eq('user_id', testimonial.user_id)
-              .single();
-            profile = profileData;
-          }
+      const rows: GroupTestimonial[] = (data ?? []).map((row) => ({
+        ...row,
+        user_like: row.user_like ? { tipo: row.user_like as 'positivo' | 'negativo' } : null,
+      }));
 
-          // Fetch user's like on this testimonial
-          let userLike = null;
-          if (user.user) {
-            const { data: likeData } = await supabase
-              .from('group_testimonial_likes')
-              .select('tipo')
-              .eq('testimonial_id', testimonial.id)
-              .eq('user_id', user.user.id)
-              .maybeSingle(); // Use maybeSingle to avoid errors when no like exists
-            
-            userLike = likeData;
-          }
-
-          return {
-            ...testimonial,
-            profiles: profile,
-            user_like: userLike
-          };
-        })
-      );
-
-      setTestimonials(testimonialsWithProfiles);
+      setTestimonials(rows);
     } catch (error) {
       console.error('Error fetching testimonials:', error);
       toast({
@@ -337,6 +299,32 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
       return false;
     }
   };
+  const reportTestimonial = async (testimonialId: string, reason: TestimonialReportReason, details?: string) => {
+    try {
+      const { error } = await supabase.rpc('report_group_testimonial', {
+        p_testimonial_id: testimonialId,
+        p_reason: reason,
+        p_details: details ?? null,
+      });
+      if (error) throw error;
+
+      setTestimonials(prev => prev.map(t => (t.id === testimonialId ? { ...t, reported_by_me: true } : t)));
+      toast({
+        title: 'Denúncia enviada',
+        description: 'Nossa equipe vai revisar este depoimento.',
+      });
+      return true;
+    } catch (error) {
+      console.error('Error reporting testimonial:', error);
+      toast({
+        title: 'Não foi possível enviar a denúncia',
+        description: 'Tente novamente em instantes.',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  };
+
 
   useEffect(() => {
     fetchTestimonials();
@@ -480,6 +468,7 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
     addTestimonial,
     updateTestimonial,
     deleteTestimonial,
+    reportTestimonial,
     likeTestimonial,
     refetch: (userFilter: boolean = filterByUser) => fetchTestimonials(userFilter)
   };

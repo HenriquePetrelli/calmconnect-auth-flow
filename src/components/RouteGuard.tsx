@@ -25,6 +25,7 @@ export const ROUTE_PERMISSIONS = {
     '/support-groups',
     '/support-group/:groupId',
     '/journal',
+    '/safety-plan',
     '/sounds',
     '/sounds/category',
     '/sounds/subcategory', 

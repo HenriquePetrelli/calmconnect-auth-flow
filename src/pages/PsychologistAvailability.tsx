@@ -3,7 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { Plus, Trash2, CalendarClock, Palmtree } from 'lucide-react';
+import { Plus, Trash2, CalendarClock, Palmtree, Copy } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import BookingRulesCard from '@/components/psychologist/BookingRulesCard';
 import PageHeader from '@/components/PageHeader';
 import { SkeletonFullPage } from '@/components/skeletons/Skeletons';
 import { usePsychologistAvailability, type AvailabilityBlock } from '@/hooks/usePsychologistAvailability';
@@ -102,6 +105,22 @@ const PsychologistAvailability = () => {
       ...prev,
       [day]: (prev[day] ?? []).map((b, i) => (i === index ? { ...b, [field]: value } : b)),
     }));
+  };
+
+  // "Copiar para outros dias": replicates one day's intervals onto the
+  // chosen days, replacing whatever they had.
+  const [copyTargets, setCopyTargets] = useState<number[]>([]);
+  const [copyFrom, setCopyFrom] = useState<number | null>(null);
+  const applyCopy = () => {
+    if (copyFrom === null) return;
+    const source = (draft[copyFrom] ?? []).map((b) => ({ ...b }));
+    setDraft((prev) => {
+      const next = { ...prev };
+      for (const day of copyTargets) next[day] = source.map((b) => ({ ...b }));
+      return next;
+    });
+    setCopyFrom(null);
+    setCopyTargets([]);
   };
 
   const handleSave = async () => {
@@ -244,15 +263,54 @@ const PsychologistAvailability = () => {
 
                   {error && <p className="text-xs text-destructive">{error}</p>}
 
-                  <Button variant="outline" size="sm" onClick={() => addBlock(day)}>
-                    <Plus className="w-4 h-4 mr-1" />
-                    Adicionar horário
-                  </Button>
+                  <div className="flex flex-wrap gap-2">
+                    <Button variant="outline" size="sm" onClick={() => addBlock(day)}>
+                      <Plus className="w-4 h-4 mr-1" />
+                      Adicionar horário
+                    </Button>
+                    <Popover
+                      open={copyFrom === day}
+                      onOpenChange={(open) => {
+                        setCopyFrom(open ? day : null);
+                        setCopyTargets([]);
+                      }}
+                    >
+                      <PopoverTrigger asChild>
+                        <Button variant="ghost" size="sm" disabled={Boolean(error)}>
+                          <Copy className="w-4 h-4 mr-1" />
+                          Copiar para outros dias
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-64 space-y-2">
+                        <p className="text-sm font-medium">Usar os horários de {DAY_LABELS[day].toLowerCase()} em:</p>
+                        {DAYS_DISPLAY_ORDER.filter((d) => d !== day).map((d) => (
+                          <div key={d} className="flex min-h-10 items-center gap-2">
+                            <Checkbox
+                              id={`copy-${day}-${d}`}
+                              checked={copyTargets.includes(d)}
+                              onCheckedChange={(checked) =>
+                                setCopyTargets((prev) => (checked ? [...prev, d] : prev.filter((x) => x !== d)))
+                              }
+                            />
+                            <label htmlFor={`copy-${day}-${d}`} className="text-sm">
+                              {DAY_LABELS[d]}
+                            </label>
+                          </div>
+                        ))}
+                        <p className="text-xs text-muted-foreground">Os horários desses dias serão substituídos.</p>
+                        <Button size="sm" className="w-full" onClick={applyCopy} disabled={copyTargets.length === 0}>
+                          Copiar
+                        </Button>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                 </CardContent>
               )}
             </Card>
           );
         })}
+
+        <BookingRulesCard />
 
         <div className="sticky bottom-4 pt-2">
           <Button onClick={handleSave} disabled={saving || hasErrors} className="w-full shadow-lg">

@@ -2,6 +2,17 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
+// Plans are resolved on the server from Stripe price IDs configured as
+// secrets (STRIPE_PRICE_PLUS / STRIPE_PRICE_PREMIUM), defaulting to the
+// current live prices. An unknown price grants NO tier — there used to be a
+// fallback that promoted any price above R$ 69,99 to Premium, which, with
+// create-checkout accepting any priceId from the client, let anyone
+// subscribe to some other price in the account and be treated as Premium.
+const PLAN_PRICES = {
+  Plus: Deno.env.get("STRIPE_PRICE_PLUS") ?? "price_1S3qAKPhFwqSktZsXexQefrx",
+  Premium: Deno.env.get("STRIPE_PRICE_PREMIUM") ?? "price_1S3q9YPhFwqSktZsejrePGuS",
+} as const;
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -123,24 +134,14 @@ serve(async (req) => {
       // Determine subscription tier from price
       const priceId = subscription.items.data[0].price.id;
       
-      // Check if it's one of our specific price IDs
-      if (priceId === "price_1S3qAKPhFwqSktZsXexQefrx") {
+      if (priceId === PLAN_PRICES.Plus) {
         subscriptionTier = "Plus";
         planLimits = { appointments: 0, sos_uses: 1 };
-      } else if (priceId === "price_1S3q9YPhFwqSktZsejrePGuS") {
+      } else if (priceId === PLAN_PRICES.Premium) {
         subscriptionTier = "Premium";
         planLimits = { appointments: 1, sos_uses: 1 };
       } else {
-        // Fallback based on amount
-        const price = await stripe.prices.retrieve(priceId);
-        const amount = price.unit_amount || 0;
-        if (amount <= 6999) {
-          subscriptionTier = "Plus";
-          planLimits = { appointments: 0, sos_uses: 1 };
-        } else {
-          subscriptionTier = "Premium";
-          planLimits = { appointments: 1, sos_uses: 1 };
-        }
+        logStep("Unknown price on active subscription — no tier granted", { priceId });
       }
       logStep("Determined subscription tier", { priceId, subscriptionTier, planLimits });
     } else {

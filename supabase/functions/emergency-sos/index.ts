@@ -182,35 +182,41 @@ serve(async (req) => {
         created_at: emergencyRequest.created_at
       });
 
-      // Get online psychologists (for now, we'll get all psychologists)
-      const { data: psychologists, error: psychError } = await supabase
-        .from('profiles')
-        .select('user_id, full_name')
-        .eq('user_type', 'psychologist')
-        .eq('registration_status', 'approved');
-
-      if (psychError) {
-        console.error('Error fetching psychologists:', psychError.message);
-        throw psychError;
-      }
-
-      // Push online psychologists' devices even if none of them has the
-      // dashboard tab open — that's exactly the gap the in-app realtime
-      // queue and Web Notifications can't cover on their own. Best-effort:
-      // a push failure must never block SOS creation itself.
+      // Push psychologists' devices even when the app is closed — that's the
+      // whole point of push: the in-app realtime queue and Web Notifications
+      // only reach someone who already has the dashboard open. Targeting
+      // only psychologists seen online in the last few minutes (as before)
+      // meant exactly the people push exists for never got it. Target every
+      // approved, unblocked psychologist who isn't already in another
+      // emergency call. Best-effort: a push failure must never block SOS
+      // creation itself.
       try {
-        const onlineSince = new Date(Date.now() - 3 * 60_000).toISOString();
-        const { data: onlinePsychs } = await supabase
-          .from('psychologist_presence')
-          .select('psychologist_id')
-          .gte('last_online', onlineSince);
+        const { data: eligible } = await supabase
+          .from('psychologists')
+          .select('user_id, is_blocked, blocked_until')
+          .eq('approved', true)
+          .eq('approval_status', 'approved');
 
-        const onlineIds = (onlinePsychs ?? []).map((p) => p.psychologist_id);
-        if (onlineIds.length > 0) {
+        const now = Date.now();
+        const eligibleIds = (eligible ?? [])
+          .filter((p) => !(p.is_blocked === true && (!p.blocked_until || new Date(p.blocked_until).getTime() > now)))
+          .map((p) => p.user_id);
+
+        const { data: busy } = eligibleIds.length > 0
+          ? await supabase
+              .from('psychologist_presence')
+              .select('psychologist_id')
+              .in('psychologist_id', eligibleIds)
+              .not('current_emergency_id', 'is', null)
+          : { data: [] as { psychologist_id: string }[] };
+        const busyIds = new Set((busy ?? []).map((p) => p.psychologist_id));
+        const targetIds = eligibleIds.filter((id) => !busyIds.has(id));
+
+        if (targetIds.length > 0) {
           const { data: tokens } = await supabase
             .from('fcm_tokens')
             .select('token')
-            .in('user_id', onlineIds)
+            .in('user_id', targetIds)
             .eq('is_active', true);
 
           if (tokens && tokens.length > 0) {

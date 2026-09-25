@@ -19,6 +19,17 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Optional shared secret (same pattern as reset-weekly-goals): once
+    // CRON_SECRET is configured as an edge function secret, only callers
+    // sending a matching x-cron-secret header (the pg_cron job) get through.
+    const cronSecret = Deno.env.get('CRON_SECRET');
+    if (cronSecret && req.headers.get('x-cron-secret') !== cronSecret) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 401,
+      });
+    }
+
     // Find rejected psychologists older than 3 days
     const { data: rejectedPsychologists, error: queryError } = await supabase
       .from('psychologist_registrations')

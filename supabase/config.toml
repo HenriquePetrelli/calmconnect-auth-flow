@@ -58,9 +58,6 @@ verify_jwt = true
 [functions.emergency-sos]
 verify_jwt = true
 
-[functions.patient-progress]
-verify_jwt = true
-
 [functions.psychologist-schedule]
 verify_jwt = true
 
@@ -103,4 +100,10 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.emergency-cleanup]
+verify_jwt = false
+
+[functions.delete-own-account]
+verify_jwt = true
+
+[functions.stripe-webhook]
 verify_jwt = false

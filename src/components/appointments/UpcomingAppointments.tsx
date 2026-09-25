@@ -5,6 +5,7 @@ import { AppointmentsList } from './AppointmentsList';
 import { AppointmentDetailsModal } from './AppointmentDetailsModal';
 import { useAppointments, Appointment } from '@/hooks/useAppointments';
 import { SkeletonSectionCard } from '@/components/skeletons/Skeletons';
+import { isConsultationUpcoming } from '@/lib/consultationWindow';
 
 export const UpcomingAppointments: React.FC = () => {
   const { appointments, loading } = useAppointments();
@@ -12,10 +13,10 @@ export const UpcomingAppointments: React.FC = () => {
 
   useEffect(() => {
     // Filter for upcoming appointments (including pending ones and in progress)
-    const now = new Date();
+    // Kept until the room closes (not just until the start), otherwise the
+    // appointment vanished exactly when it became joinable.
     const upcoming = appointments.filter(appointment => {
-      const appointmentDate = new Date(appointment.scheduled_at);
-      return appointmentDate >= now && 
+      return isConsultationUpcoming(appointment) && 
              ['pending', 'scheduled', 'confirmed', 'reschedule_proposed', 'in_progress'].includes(appointment.status);
     });
     
