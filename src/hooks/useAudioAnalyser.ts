@@ -30,6 +30,13 @@ const EMPTY_LEVELS: AudioLevels = { volume: 0, bass: 0, mid: 0, treble: 0 };
  * Componentes consumidores devem ler `levelsRef.current` dentro de um
  * requestAnimationFrame próprio (Canvas) ou do MotionValue do framer-motion.
  */
+// Inferred instead of spelled out: TypeScript 5.7+ types this as
+// Uint8Array<ArrayBuffer> (what getByteFrequencyData requires), while 5.6
+// has no generic Uint8Array at all. The project's CI and Lovable's editor
+// run different versions; writing the type by hand breaks one of them.
+const createFrequencyBuffer = (size: number) => new Uint8Array(new ArrayBuffer(size));
+type FrequencyBuffer = ReturnType<typeof createFrequencyBuffer>;
+
 export function useAudioAnalyser(
   audioEl: HTMLAudioElement | null,
   options: UseAudioAnalyserOptions = {}
@@ -39,7 +46,7 @@ export function useAudioAnalyser(
   const ctxRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
-  const dataRef = useRef<Uint8Array<ArrayBuffer> | null>(null);
+  const dataRef = useRef<FrequencyBuffer | null>(null);
   const rafRef = useRef<number | null>(null);
   const levelsRef = useRef<AudioLevels>({ ...EMPTY_LEVELS });
   const [isReady, setIsReady] = useState(false);
@@ -81,9 +88,7 @@ export function useAudioAnalyser(
         }
 
 
-        dataRef.current = new Uint8Array(
-          new ArrayBuffer(analyserRef.current.frequencyBinCount)
-        );
+        dataRef.current = createFrequencyBuffer(analyserRef.current.frequencyBinCount);
         setIsReady(true);
       } catch (err) {
         // Fallback silencioso — animação usará valores zerados

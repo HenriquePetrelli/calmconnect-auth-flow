@@ -1,4 +1,4 @@
--- Teste de RLS do plano de segurança (migration 20260924040000_safety_plans).
+-- Teste de RLS do plano de segurança (migration 20260925011949_…, "Plano de segurança e contatos de emergência").
 --
 -- Política de banco só se verifica executando como o usuário, então este
 -- teste roda contra um Postgres com o schema aplicado:
