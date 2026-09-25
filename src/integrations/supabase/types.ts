@@ -1137,6 +1137,30 @@ export type Database = {
         }
         Relationships: []
       }
+      psychologist_booking_rules: {
+        Row: {
+          buffer_minutes: number
+          max_advance_days: number
+          min_notice_hours: number
+          psychologist_id: string
+          updated_at: string
+        }
+        Insert: {
+          buffer_minutes?: number
+          max_advance_days?: number
+          min_notice_hours?: number
+          psychologist_id: string
+          updated_at?: string
+        }
+        Update: {
+          buffer_minutes?: number
+          max_advance_days?: number
+          min_notice_hours?: number
+          psychologist_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       psychologist_payments: {
         Row: {
           cpf: string | null
