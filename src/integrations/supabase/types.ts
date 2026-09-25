@@ -250,6 +250,39 @@ export type Database = {
         }
         Relationships: []
       }
+      emergency_contacts: {
+        Row: {
+          created_at: string
+          id: string
+          is_primary: boolean
+          name: string
+          patient_id: string
+          phone: string
+          relationship: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          name: string
+          patient_id: string
+          phone: string
+          relationship?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          name?: string
+          patient_id?: string
+          phone?: string
+          relationship?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       emergency_requests: {
         Row: {
           accepted_at: string | null
@@ -1400,6 +1433,42 @@ export type Database = {
         }
         Relationships: []
       }
+      safety_plans: {
+        Row: {
+          coping_strategies: string[]
+          created_at: string
+          distractions: string[]
+          id: string
+          patient_id: string
+          reasons_to_live: string[]
+          safe_environment: string[]
+          updated_at: string
+          warning_signs: string[]
+        }
+        Insert: {
+          coping_strategies?: string[]
+          created_at?: string
+          distractions?: string[]
+          id?: string
+          patient_id: string
+          reasons_to_live?: string[]
+          safe_environment?: string[]
+          updated_at?: string
+          warning_signs?: string[]
+        }
+        Update: {
+          coping_strategies?: string[]
+          created_at?: string
+          distractions?: string[]
+          id?: string
+          patient_id?: string
+          reasons_to_live?: string[]
+          safe_environment?: string[]
+          updated_at?: string
+          warning_signs?: string[]
+        }
+        Relationships: []
+      }
       security_audit_log: {
         Row: {
           action: string
@@ -2098,6 +2167,7 @@ export type Database = {
       }
       get_sos_metrics: { Args: { p_days?: number }; Returns: Json }
       get_sos_patient_context: { Args: { p_request_id: string }; Returns: Json }
+      get_sos_safety_plan: { Args: { p_request_id: string }; Returns: Json }
       get_user_type: { Args: { user_id_param: string }; Returns: string }
       handle_psychologist_approval: {
         Args: { admin_id: string; psychologist_id: string }
