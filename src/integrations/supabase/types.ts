@@ -1881,14 +1881,6 @@ export type Database = {
         Returns: boolean
       }
       count_available_psychologists: { Args: never; Returns: number }
-      create_admin_account: {
-        Args: {
-          admin_email: string
-          admin_name: string
-          admin_password: string
-        }
-        Returns: Json
-      }
       create_psychologist_profile:
         | {
             Args: {
