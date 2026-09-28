@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "520470793448",
+    "project_id": "app-soliv",
+    "storage_bucket": "app-soliv.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:520470793448:android:15a28c36897a41af4e0d5d",
+        "android_client_info": {
+          "package_name": "br.com.soliv.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCLjR6j1ntVUSkSFNvQqKc3-skGLtnzJLA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
