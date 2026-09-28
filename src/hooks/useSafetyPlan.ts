@@ -6,52 +6,41 @@ import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 import { emptySafetyPlan, type SafetyPlanLists } from '@/lib/safetyPlan';
 
 export interface EmergencyContact {
-  id: string;
   name: string;
   relationship: string | null;
   phone: string;
   is_primary: boolean;
 }
 
-export type NewEmergencyContact = Omit<EmergencyContact, 'id'>;
+export interface SafetyPlanSummary {
+  id: string;
+  title: string;
+  updated_at: string;
+}
 
-/** The logged-in patient's own safety plan and emergency contacts. */
-export const useSafetyPlan = () => {
+/** The logged-in patient's safety plans (titles only), for the list screen. */
+export const useSafetyPlans = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [plan, setPlan] = useState<SafetyPlanLists>(emptySafetyPlan());
-  const [hasPlan, setHasPlan] = useState(false);
-  const [contacts, setContacts] = useState<EmergencyContact[]>([]);
+  const [plans, setPlans] = useState<SafetyPlanSummary[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
-      const [{ data: planRow, error: planError }, { data: contactRows, error: contactsError }] = await Promise.all([
-        supabase
-          .from('safety_plans')
-          .select('warning_signs, coping_strategies, distractions, safe_environment, reasons_to_live')
-          .eq('patient_id', user.id)
-          .maybeSingle(),
-        supabase
-          .from('emergency_contacts')
-          .select('id, name, relationship, phone, is_primary')
-          .eq('patient_id', user.id)
-          .order('is_primary', { ascending: false })
-          .order('created_at', { ascending: true }),
-      ]);
-      if (planError) throw planError;
-      if (contactsError) throw contactsError;
-
-      setHasPlan(Boolean(planRow));
-      setPlan(planRow ? { ...emptySafetyPlan(), ...planRow } : emptySafetyPlan());
-      setContacts(contactRows ?? []);
+      const { data, error } = await supabase
+        .from('safety_plans')
+        .select('id, title, updated_at')
+        .eq('patient_id', user.id)
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      setPlans(data ?? []);
     } catch (error) {
-      console.error('Erro ao carregar plano de segurança:', error);
+      console.error('Erro ao carregar planos de segurança:', error);
       toast({
-        title: 'Não foi possível carregar seu plano',
+        title: 'Não foi possível carregar seus planos',
         description: 'Verifique sua conexão e tente de novo.',
         variant: 'destructive',
       });
@@ -64,32 +53,132 @@ export const useSafetyPlan = () => {
     void load();
   }, [load]);
 
-  // Refreshes only the contact list. Adding or removing a contact must never
-  // reload the plan itself: the patient may have unsaved items on screen, and
-  // re-reading the plan from the database would wipe them.
-  const loadContacts = useCallback(async () => {
-    if (!user) return;
-    const { data, error } = await supabase
-      .from('emergency_contacts')
-      .select('id, name, relationship, phone, is_primary')
-      .eq('patient_id', user.id)
-      .order('is_primary', { ascending: false })
-      .order('created_at', { ascending: true });
-    if (error) throw error;
-    setContacts(data ?? []);
-  }, [user]);
+  /** Deletes a plan; its emergency contacts go with it (ON DELETE CASCADE). */
+  const deletePlan = async (planId: string): Promise<boolean> => {
+    setDeletingId(planId);
+    try {
+      const { error } = await supabase.from('safety_plans').delete().eq('id', planId);
+      if (error) throw error;
+      setPlans((prev) => prev.filter((p) => p.id !== planId));
+      toast({ title: 'Plano excluído' });
+      return true;
+    } catch (error) {
+      console.error('Erro ao excluir plano de segurança:', error);
+      toast({
+        title: 'Não foi possível excluir o plano',
+        description: getFriendlyErrorMessage(error, 'Tente de novo em instantes.'),
+        variant: 'destructive',
+      });
+      return false;
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
-  const savePlan = async (next: SafetyPlanLists): Promise<boolean> => {
-    if (!user) return false;
+  return { plans, loading, deletingId, deletePlan, reload: load };
+};
+
+export interface SafetyPlanDraft {
+  title: string;
+  lists: SafetyPlanLists;
+  contacts: EmergencyContact[];
+}
+
+/**
+ * One safety plan being created (`planId` null) or edited. Everything —
+ * title, lists and contacts — lives in a local draft and is written in a
+ * single call to save_safety_plan, so nothing on screen is lost or saved
+ * halfway.
+ */
+export const useSafetyPlan = (planId: string | null) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [initial, setInitial] = useState<SafetyPlanDraft>({ title: '', lists: emptySafetyPlan(), contacts: [] });
+  const [planCount, setPlanCount] = useState(0);
+  const [notFound, setNotFound] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      try {
+        const { count } = await supabase
+          .from('safety_plans')
+          .select('id', { count: 'exact', head: true })
+          .eq('patient_id', user.id);
+        if (!cancelled) setPlanCount(count ?? 0);
+
+        if (planId) {
+          const [{ data: plan, error: planError }, { data: contacts, error: contactsError }] = await Promise.all([
+            supabase
+              .from('safety_plans')
+              .select('title, warning_signs, coping_strategies, distractions, safe_environment, reasons_to_live')
+              .eq('id', planId)
+              .maybeSingle(),
+            supabase
+              .from('emergency_contacts')
+              .select('name, relationship, phone, is_primary')
+              .eq('plan_id', planId)
+              .order('is_primary', { ascending: false })
+              .order('created_at', { ascending: true }),
+          ]);
+          if (planError) throw planError;
+          if (contactsError) throw contactsError;
+          if (cancelled) return;
+          if (!plan) {
+            setNotFound(true);
+            return;
+          }
+          const { title, ...lists } = plan;
+          setInitial({
+            title,
+            lists: { ...emptySafetyPlan(), ...lists },
+            contacts: (contacts ?? []).map(({ name, relationship, phone, is_primary }) => ({
+              name,
+              relationship,
+              phone,
+              is_primary,
+            })),
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao carregar plano de segurança:', error);
+        if (!cancelled) {
+          toast({
+            title: 'Não foi possível carregar o plano',
+            description: 'Verifique sua conexão e tente de novo.',
+            variant: 'destructive',
+          });
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user, planId, toast]);
+
+  /** Saves the whole draft; resolves with the plan id, or null on failure. */
+  const save = async (draft: SafetyPlanDraft): Promise<string | null> => {
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('safety_plans')
-        .upsert({ patient_id: user.id, ...next }, { onConflict: 'patient_id' });
+      const { data, error } = await supabase.rpc('save_safety_plan', {
+        p_plan_id: planId,
+        p_title: draft.title.trim(),
+        p_warning_signs: draft.lists.warning_signs,
+        p_coping_strategies: draft.lists.coping_strategies,
+        p_distractions: draft.lists.distractions,
+        p_safe_environment: draft.lists.safe_environment,
+        p_reasons_to_live: draft.lists.reasons_to_live,
+        p_contacts: draft.contacts.map((c) => ({ ...c })),
+      });
       if (error) throw error;
-      setPlan(next);
-      setHasPlan(true);
-      return true;
+      setInitial(draft);
+      return data;
     } catch (error) {
       console.error('Erro ao salvar plano de segurança:', error);
       toast({
@@ -97,60 +186,11 @@ export const useSafetyPlan = () => {
         description: getFriendlyErrorMessage(error, 'Tente de novo em instantes.'),
         variant: 'destructive',
       });
-      return false;
+      return null;
     } finally {
       setSaving(false);
     }
   };
 
-  const addContact = async (contact: NewEmergencyContact): Promise<boolean> => {
-    if (!user) return false;
-    setSaving(true);
-    try {
-      // Only one primary contact: demote the others first.
-      if (contact.is_primary) {
-        const { error: demoteError } = await supabase
-          .from('emergency_contacts')
-          .update({ is_primary: false })
-          .eq('patient_id', user.id);
-        if (demoteError) throw demoteError;
-      }
-      const { error } = await supabase.from('emergency_contacts').insert({ patient_id: user.id, ...contact });
-      if (error) throw error;
-      await loadContacts();
-      return true;
-    } catch (error) {
-      console.error('Erro ao adicionar contato:', error);
-      toast({
-        title: 'Não foi possível adicionar o contato',
-        description: getFriendlyErrorMessage(error, 'Confira o telefone e tente de novo.'),
-        variant: 'destructive',
-      });
-      return false;
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const removeContact = async (contactId: string): Promise<boolean> => {
-    setSaving(true);
-    try {
-      const { error } = await supabase.from('emergency_contacts').delete().eq('id', contactId);
-      if (error) throw error;
-      setContacts((prev) => prev.filter((c) => c.id !== contactId));
-      return true;
-    } catch (error) {
-      console.error('Erro ao remover contato:', error);
-      toast({
-        title: 'Não foi possível remover o contato',
-        description: getFriendlyErrorMessage(error, 'Tente de novo em instantes.'),
-        variant: 'destructive',
-      });
-      return false;
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return { plan, hasPlan, contacts, loading, saving, savePlan, addContact, removeContact, reload: load };
+  return { initial, planCount, notFound, loading, saving, save };
 };

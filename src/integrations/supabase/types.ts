@@ -258,6 +258,7 @@ export type Database = {
           name: string
           patient_id: string
           phone: string
+          plan_id: string
           relationship: string | null
           updated_at: string
         }
@@ -268,6 +269,7 @@ export type Database = {
           name: string
           patient_id: string
           phone: string
+          plan_id: string
           relationship?: string | null
           updated_at?: string
         }
@@ -278,6 +280,7 @@ export type Database = {
           name?: string
           patient_id?: string
           phone?: string
+          plan_id?: string
           relationship?: string | null
           updated_at?: string
         }
@@ -1465,6 +1468,7 @@ export type Database = {
           id: string
           patient_id: string
           reasons_to_live: string[]
+          title: string
           safe_environment: string[]
           updated_at: string
           warning_signs: string[]
@@ -1476,6 +1480,7 @@ export type Database = {
           id?: string
           patient_id: string
           reasons_to_live?: string[]
+          title?: string
           safe_environment?: string[]
           updated_at?: string
           warning_signs?: string[]
@@ -1487,6 +1492,7 @@ export type Database = {
           id?: string
           patient_id?: string
           reasons_to_live?: string[]
+          title?: string
           safe_environment?: string[]
           updated_at?: string
           warning_signs?: string[]
@@ -2192,6 +2198,19 @@ export type Database = {
       get_sos_metrics: { Args: { p_days?: number }; Returns: Json }
       get_sos_patient_context: { Args: { p_request_id: string }; Returns: Json }
       get_sos_safety_plan: { Args: { p_request_id: string }; Returns: Json }
+      save_safety_plan: {
+        Args: {
+          p_plan_id: string | null
+          p_title: string
+          p_warning_signs: string[]
+          p_coping_strategies: string[]
+          p_distractions: string[]
+          p_safe_environment: string[]
+          p_reasons_to_live: string[]
+          p_contacts?: Json
+        }
+        Returns: string
+      }
       get_user_type: { Args: { user_id_param: string }; Returns: string }
       handle_psychologist_approval: {
         Args: { admin_id: string; psychologist_id: string }

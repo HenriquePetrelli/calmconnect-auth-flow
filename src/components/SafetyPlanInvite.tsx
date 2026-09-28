@@ -32,8 +32,8 @@ const SafetyPlanInvite = () => {
         .from('safety_plans')
         .select('id')
         .eq('patient_id', user.id)
-        .maybeSingle();
-      if (!cancelled && !error && !data) setVisible(true);
+        .limit(1);
+      if (!cancelled && !error && (data ?? []).length === 0) setVisible(true);
     })();
     return () => {
       cancelled = true;
@@ -63,7 +63,7 @@ const SafetyPlanInvite = () => {
         </div>
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
-        <Button size="sm" className="min-h-10" onClick={() => navigate('/safety-plan')}>
+        <Button size="sm" className="min-h-10" onClick={() => navigate('/safety-plan/novo')}>
           Começar
         </Button>
         <Button size="sm" variant="ghost" className="min-h-10" onClick={dismiss}>

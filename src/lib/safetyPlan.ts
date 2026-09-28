@@ -136,3 +136,13 @@ export const isInviteSnoozed = (dismissedAtIso: string | null, now: number = Dat
   if (Number.isNaN(at)) return false;
   return now - at < SAFETY_PLAN_INVITE_SNOOZE_DAYS * 24 * 60 * 60 * 1000;
 };
+
+// --- Several plans per patient ----------------------------------------------
+
+/** A patient keeps at most this many plans (also enforced by a DB trigger). */
+export const MAX_SAFETY_PLANS = 10;
+export const MAX_PLAN_TITLE_LENGTH = 80;
+
+/** "Plano de segurança 01", "…02"… — the next number after the plans that exist. */
+export const defaultPlanTitle = (existingCount: number): string =>
+  `Plano de segurança ${String(existingCount + 1).padStart(2, '0')}`;

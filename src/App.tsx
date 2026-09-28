@@ -52,7 +52,8 @@ const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const PsychologistDashboard = lazy(() => import("./pages/PsychologistDashboard"));
 const PsychologistProfile = lazy(() => import("./pages/PsychologistProfile"));
 const PsychologistAvailability = lazy(() => import("./pages/PsychologistAvailability"));
-const SafetyPlan = lazy(() => import("./pages/SafetyPlan"));
+const SafetyPlans = lazy(() => import("./pages/SafetyPlans"));
+const SafetyPlanEditor = lazy(() => import("./pages/SafetyPlanEditor"));
 const PsychologistPayments = lazy(() => import("./pages/PsychologistPayments"));
 const EmergencyCall = lazy(() => import("./pages/EmergencyCall"));
 const Chat = lazy(() => import("./pages/Chat"));
@@ -161,7 +162,12 @@ const App = () => {
                   } />
                   <Route path="/safety-plan" element={
                     <RouteGuard allowedUserTypes={['patient']}>
-                      <SafetyPlan />
+                      <SafetyPlans />
+                    </RouteGuard>
+                  } />
+                  <Route path="/safety-plan/:planId" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <SafetyPlanEditor />
                     </RouteGuard>
                   } />
                   <Route path="/journal" element={

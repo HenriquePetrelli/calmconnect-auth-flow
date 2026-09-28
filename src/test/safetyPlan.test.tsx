@@ -6,6 +6,7 @@ vi.mock('@/integrations/supabase/client', () => ({ supabase: fakeSupabase }));
 
 import {
   addItem,
+  defaultPlanTitle,
   countFilledSections,
   emptySafetyPlan,
   isInviteSnoozed,
@@ -34,6 +35,11 @@ describe('plano de segurança — regras puras', () => {
     expect(telHref('(11) 99999-0000')).toBe('tel:11999990000');
   });
 
+  it('título padrão numerado a partir dos planos existentes', () => {
+    expect(defaultPlanTitle(0)).toBe('Plano de segurança 01');
+    expect(defaultPlanTitle(9)).toBe('Plano de segurança 10');
+  });
+
   it('convite fica dispensado por 14 dias', () => {
     const now = Date.now();
     expect(isInviteSnoozed(null, now)).toBe(false);
@@ -50,8 +56,28 @@ describe('SafetyPlanSection — exibição ao psicólogo no SOS', () => {
   it('só busca o plano (e gera registro de auditoria) quando o psicólogo pede', async () => {
     const rpcSpy = vi.fn(() => ({
       data: {
-        plan: { warning_signs: ['Não consigo dormir'], coping_strategies: [], distractions: [], safe_environment: [], reasons_to_live: [], updated_at: '' },
-        contacts: [{ name: 'Irmã', relationship: null, phone: '(11) 99999-0000', is_primary: true }],
+        plans: [
+          {
+            title: 'Plano da noite',
+            warning_signs: ['Não consigo dormir'],
+            coping_strategies: [],
+            distractions: [],
+            safe_environment: [],
+            reasons_to_live: [],
+            updated_at: '',
+            contacts: [{ name: 'Irmã', relationship: null, phone: '(11) 99999-0000', is_primary: true }],
+          },
+          {
+            title: 'Plano do trabalho',
+            warning_signs: [],
+            coping_strategies: ['Respirar'],
+            distractions: [],
+            safe_environment: [],
+            reasons_to_live: [],
+            updated_at: '',
+            contacts: [],
+          },
+        ],
       },
       error: null,
     }));
@@ -63,6 +89,10 @@ describe('SafetyPlanSection — exibição ao psicólogo no SOS', () => {
     fireEvent.click(screen.getByRole('button', { name: /ver plano de segurança/i }));
 
     await waitFor(() => expect(screen.getByText('Não consigo dormir')).toBeInTheDocument());
+    // Todos os planos aparecem, cada um com seu título.
+    expect(screen.getByText('Plano da noite')).toBeInTheDocument();
+    expect(screen.getByText('Plano do trabalho')).toBeInTheDocument();
+    expect(screen.getByText('Respirar')).toBeInTheDocument();
     expect(rpcSpy).toHaveBeenCalledWith(expect.anything(), { p_request_id: 'req-1' });
     expect(screen.getByRole('link', { name: /99999-0000/ })).toHaveAttribute('href', 'tel:11999990000');
   });

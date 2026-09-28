@@ -1,4 +1,4 @@
--- Teste de RLS do plano de segurança (migration 20260925011949_…, "Plano de segurança e contatos de emergência").
+-- Teste de RLS dos planos de segurança (migrations 20260925011949_… e 20260928030000_multiple_safety_plans).
 --
 -- Política de banco só se verifica executando como o usuário, então este
 -- teste roda contra um Postgres com o schema aplicado:
@@ -17,10 +17,10 @@ INSERT INTO auth.users (id, email) VALUES
   ('c0000000-0000-0000-0000-00000000000c', 'psicologo@teste.local'),
   ('d0000000-0000-0000-0000-00000000000d', 'outro-psicologo@teste.local');
 
-INSERT INTO public.safety_plans (patient_id, warning_signs, reasons_to_live)
-VALUES ('a0000000-0000-0000-0000-00000000000a', ARRAY['Não consigo dormir'], ARRAY['Minha filha']);
-INSERT INTO public.emergency_contacts (patient_id, name, phone, is_primary)
-VALUES ('a0000000-0000-0000-0000-00000000000a', 'Irmã', '(11) 99999-0000', true);
+INSERT INTO public.safety_plans (id, patient_id, title, warning_signs, reasons_to_live)
+VALUES ('f0000000-0000-0000-0000-00000000000f', 'a0000000-0000-0000-0000-00000000000a', 'Plano da noite', ARRAY['Não consigo dormir'], ARRAY['Minha filha']);
+INSERT INTO public.emergency_contacts (patient_id, plan_id, name, phone, is_primary)
+VALUES ('a0000000-0000-0000-0000-00000000000a', 'f0000000-0000-0000-0000-00000000000f', 'Irmã', '(11) 99999-0000', true);
 
 CREATE OR REPLACE FUNCTION pg_temp.act_as(p_uid uuid) RETURNS void LANGUAGE plpgsql AS $$
 BEGIN
@@ -49,8 +49,8 @@ SELECT pg_temp.check((SELECT count(*) FROM public.emergency_contacts) = 0, 'outr
 UPDATE public.safety_plans SET warning_signs = ARRAY['invadido'];
 DO $$
 BEGIN
-  INSERT INTO public.emergency_contacts (patient_id, name, phone)
-  VALUES ('a0000000-0000-0000-0000-00000000000a', 'Intruso', '11999990000');
+  INSERT INTO public.emergency_contacts (patient_id, plan_id, name, phone)
+  VALUES ('a0000000-0000-0000-0000-00000000000a', 'f0000000-0000-0000-0000-00000000000f', 'Intruso', '11999990000');
   RAISE EXCEPTION 'FALHOU: outro paciente conseguiu inserir contato no plano alheio';
 EXCEPTION WHEN insufficient_privilege THEN
   RAISE NOTICE 'ok: outro paciente não insere contato alheio';
@@ -68,11 +68,11 @@ VALUES ('e0000000-0000-0000-0000-00000000000e', 'a0000000-0000-0000-0000-0000000
 
 SELECT pg_temp.act_as('c0000000-0000-0000-0000-00000000000c');
 SELECT pg_temp.check(
-  public.get_sos_safety_plan('e0000000-0000-0000-0000-00000000000e') -> 'plan' -> 'warning_signs' ->> 0 = 'Não consigo dormir',
+  public.get_sos_safety_plan('e0000000-0000-0000-0000-00000000000e') -> 'plans' -> 0 -> 'warning_signs' ->> 0 = 'Não consigo dormir',
   'psicólogo do SOS ativo lê o plano'
 );
 SELECT pg_temp.check(
-  jsonb_array_length(public.get_sos_safety_plan('e0000000-0000-0000-0000-00000000000e') -> 'contacts') = 1,
+  jsonb_array_length(public.get_sos_safety_plan('e0000000-0000-0000-0000-00000000000e') -> 'plans' -> 0 -> 'contacts') = 1,
   'psicólogo do SOS ativo lê os contatos'
 );
 RESET role;

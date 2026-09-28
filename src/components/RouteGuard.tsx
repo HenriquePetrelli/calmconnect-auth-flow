@@ -26,6 +26,7 @@ export const ROUTE_PERMISSIONS = {
     '/support-group/:groupId',
     '/journal',
     '/safety-plan',
+    '/safety-plan/', // cadastro (/novo) e edição (/:id)
     '/sounds',
     '/sounds/category',
     '/sounds/subcategory', 

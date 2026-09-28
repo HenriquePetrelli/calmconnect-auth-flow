@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,10 +11,14 @@ import PageHeader from '@/components/PageHeader';
 import PatientBottomNav from '@/components/PatientBottomNav';
 import HomeCrisisAccess from '@/components/HomeCrisisAccess';
 import { useToast } from '@/hooks/use-toast';
-import { useSafetyPlan } from '@/hooks/useSafetyPlan';
+import { useSafetyPlan, type EmergencyContact } from '@/hooks/useSafetyPlan';
 import {
+  MAX_PLAN_TITLE_LENGTH,
+  MAX_SAFETY_PLANS,
   SAFETY_PLAN_SECTIONS,
   TOTAL_PLAN_PARTS,
+  defaultPlanTitle,
+  emptySafetyPlan,
   addItem,
   countFilledSections,
   isValidPhone,
@@ -106,10 +111,22 @@ const SectionEditor = ({
   );
 };
 
-const SafetyPlan = () => {
+/**
+ * Create (/safety-plan/novo) or edit (/safety-plan/:planId) one safety plan.
+ * Title, lists and contacts are a local draft saved together by "Salvar
+ * plano" — adding a contact never touches the database on its own, so
+ * nothing marked on screen can be lost before saving.
+ */
+const SafetyPlanEditor = () => {
+  const { planId: planIdParam } = useParams<{ planId: string }>();
+  const planId = planIdParam && planIdParam !== 'novo' ? planIdParam : null;
+  const isNew = planId === null;
+  const navigate = useNavigate();
   const { toast } = useToast();
-  const { plan, contacts, loading, saving, savePlan, addContact, removeContact } = useSafetyPlan();
-  const [draftPlan, setDraftPlan] = useState<SafetyPlanLists>(plan);
+  const { initial, planCount, notFound, loading, saving, save } = useSafetyPlan(planId);
+  const [title, setTitle] = useState('');
+  const [draftPlan, setDraftPlan] = useState<SafetyPlanLists>(emptySafetyPlan());
+  const [contacts, setContacts] = useState<EmergencyContact[]>([]);
   const [contactName, setContactName] = useState('');
   const [contactRelationship, setContactRelationship] = useState('');
   const [contactPhone, setContactPhone] = useState('');
@@ -117,16 +134,24 @@ const SafetyPlan = () => {
   const [phoneTouched, setPhoneTouched] = useState(false);
 
   // Fill the editor from the database once, when the plan first loads. After
-  // that the draft belongs to the patient: nothing (adding a contact, a
-  // refetch) may overwrite items they marked but haven't saved yet.
+  // that the draft belongs to the patient and nothing overwrites it.
   const draftInitialized = useRef(false);
   useEffect(() => {
     if (loading || draftInitialized.current) return;
     draftInitialized.current = true;
-    setDraftPlan(plan);
-  }, [plan, loading]);
+    setTitle(initial.title);
+    setDraftPlan(initial.lists);
+    setContacts(initial.contacts);
+  }, [initial, loading]);
 
-  const dirty = useMemo(() => JSON.stringify(draftPlan) !== JSON.stringify(plan), [draftPlan, plan]);
+  const titlePlaceholder = isNew ? defaultPlanTitle(planCount) : initial.title || defaultPlanTitle(0);
+  const limitReached = isNew && planCount >= MAX_SAFETY_PLANS;
+  const dirty = useMemo(
+    () =>
+      JSON.stringify({ title, lists: draftPlan, contacts }) !==
+      JSON.stringify({ title: initial.title, lists: initial.lists, contacts: initial.contacts }),
+    [title, draftPlan, contacts, initial]
+  );
   const filled = countFilledSections(draftPlan, contacts.length);
   // Open the first part that is still empty, so filling in feels step by step.
   const firstEmpty = SAFETY_PLAN_SECTIONS.find((s) => draftPlan[s.key].length === 0)?.key
@@ -135,33 +160,61 @@ const SafetyPlan = () => {
   const phoneInvalid = phoneTouched && contactPhone.trim() !== '' && !isValidPhone(contactPhone);
 
   const handleSave = async () => {
-    const ok = await savePlan(draftPlan);
-    if (ok) toast({ title: 'Plano salvo' });
+    const finalTitle = (title.trim() || titlePlaceholder).slice(0, MAX_PLAN_TITLE_LENGTH);
+    const id = await save({ title: finalTitle, lists: draftPlan, contacts });
+    if (id) {
+      toast({ title: 'Plano salvo' });
+      navigate('/safety-plan');
+    }
   };
 
-  const handleAddContact = async () => {
+  const handleAddContact = () => {
     setPhoneTouched(true);
     if (!contactName.trim() || !isValidPhone(contactPhone)) return;
-    const ok = await addContact({
+    const makePrimary = contactPrimary || contacts.length === 0;
+    const contact: EmergencyContact = {
       name: contactName.trim(),
       relationship: contactRelationship.trim() || null,
       phone: contactPhone.trim(),
-      is_primary: contactPrimary || contacts.length === 0,
-    });
-    if (ok) {
-      setContactName('');
-      setContactRelationship('');
-      setContactPhone('');
-      setContactPrimary(false);
-      setPhoneTouched(false);
-    }
+      is_primary: makePrimary,
+    };
+    setContacts((prev) => [
+      ...(makePrimary ? prev.map((c) => ({ ...c, is_primary: false })) : prev),
+      contact,
+    ]);
+    setContactName('');
+    setContactRelationship('');
+    setContactPhone('');
+    setContactPrimary(false);
+    setPhoneTouched(false);
   };
+
+  const removeContact = (index: number) => {
+    setContacts((prev) => {
+      const next = prev.filter((_, i) => i !== index);
+      // Keep someone as primary when the primary contact is removed.
+      if (next.length > 0 && !next.some((c) => c.is_primary)) next[0] = { ...next[0], is_primary: true };
+      return next;
+    });
+  };
+
+  if (notFound) {
+    return (
+      <div className="min-h-screen bg-background">
+        <PageHeader title="Plano de segurança" backTo="/safety-plan" />
+        <main className="p-4 max-w-2xl mx-auto space-y-4">
+          <p className="text-foreground">Este plano não existe mais. Ele pode ter sido excluído.</p>
+          <Button onClick={() => navigate('/safety-plan')}>Ver meus planos</Button>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="has-tabs">
       <div className="screen">
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm">
-          <PageHeader title="Plano de segurança" backTo="/home" />
+          <PageHeader title={isNew ? "Novo plano de segurança" : "Editar plano de segurança"} backTo="/safety-plan" />
         </div>
 
         <main className="p-4 pb-40 space-y-5 max-w-2xl mx-auto">
@@ -180,6 +233,26 @@ const SafetyPlan = () => {
               </p>
             )}
           </section>
+
+          {limitReached && (
+            <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-foreground">
+              Você já tem {MAX_SAFETY_PLANS} planos de segurança, o máximo permitido. Exclua um na lista para criar outro.
+            </p>
+          )}
+
+          {!loading && (
+            <div className="space-y-1.5">
+              <Label htmlFor="plan-title">Título do plano</Label>
+              <Input
+                id="plan-title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder={titlePlaceholder}
+                maxLength={MAX_PLAN_TITLE_LENGTH}
+              />
+              <p className="text-xs text-muted-foreground">Se deixar em branco, o plano se chama "{titlePlaceholder}".</p>
+            </div>
+          )}
 
           {loading ? (
             <div className="space-y-3">
@@ -236,12 +309,13 @@ const SafetyPlan = () => {
                 <AccordionContent className="space-y-4">
                   <p className="text-sm text-muted-foreground">
                     Quem você gostaria que fosse avisado se precisar de ajuda. O contato principal aparece primeiro.
+                    Os contatos são salvos junto com o plano.
                   </p>
 
                   {contacts.length > 0 && (
                     <ul className="space-y-2">
-                      {contacts.map((c) => (
-                        <li key={c.id} className="flex items-center justify-between gap-2 rounded-lg border px-3 py-2">
+                      {contacts.map((c, index) => (
+                        <li key={`${c.name}-${c.phone}-${index}`} className="flex items-center justify-between gap-2 rounded-lg border px-3 py-2">
                           <div className="min-w-0">
                             <p className="flex items-center gap-1 text-sm font-medium text-foreground">
                               {c.is_primary && <Star className="h-3.5 w-3.5 text-primary" aria-label="Contato principal" />}
@@ -256,7 +330,7 @@ const SafetyPlan = () => {
                             variant="ghost"
                             size="icon"
                             className="h-10 w-10 shrink-0 text-muted-foreground hover:text-destructive"
-                            onClick={() => removeContact(c.id)}
+                            onClick={() => removeContact(index)}
                             disabled={saving}
                             aria-label={`Remover ${c.name}`}
                           >
@@ -271,7 +345,7 @@ const SafetyPlan = () => {
                     className="space-y-3 rounded-lg border border-dashed p-3"
                     onSubmit={(e) => {
                       e.preventDefault();
-                      void handleAddContact();
+                      handleAddContact();
                     }}
                   >
                     <div className="space-y-1.5">
@@ -318,7 +392,7 @@ const SafetyPlan = () => {
                         <Label htmlFor="contact-primary" className="font-normal">Tornar contato principal</Label>
                       </div>
                     )}
-                    <Button type="submit" variant="secondary" className="w-full" disabled={saving || !contactName.trim() || !contactPhone.trim()}>
+                    <Button type="submit" variant="secondary" className="w-full" disabled={!contactName.trim() || !contactPhone.trim()}>
                       Adicionar contato
                     </Button>
                   </form>
@@ -330,10 +404,10 @@ const SafetyPlan = () => {
           <HomeCrisisAccess />
         </main>
 
-        {dirty && (
+        {!loading && (isNew || dirty) && (
           <div className="fixed inset-x-0 bottom-20 z-20 px-4">
             <div className="mx-auto max-w-2xl">
-              <Button className="w-full min-h-12 shadow-lg" onClick={handleSave} disabled={saving}>
+              <Button className="w-full min-h-12 shadow-lg" onClick={handleSave} disabled={saving || limitReached}>
                 {saving ? 'Salvando...' : 'Salvar plano'}
               </Button>
             </div>
@@ -345,4 +419,4 @@ const SafetyPlan = () => {
   );
 };
 
-export default SafetyPlan;
+export default SafetyPlanEditor;
