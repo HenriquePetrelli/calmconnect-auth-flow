@@ -258,6 +258,7 @@ export type Database = {
           name: string
           patient_id: string
           phone: string
+          plan_id: string
           relationship: string | null
           updated_at: string
         }
@@ -268,6 +269,7 @@ export type Database = {
           name: string
           patient_id: string
           phone: string
+          plan_id: string
           relationship?: string | null
           updated_at?: string
         }
@@ -278,10 +280,19 @@ export type Database = {
           name?: string
           patient_id?: string
           phone?: string
+          plan_id?: string
           relationship?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "emergency_contacts_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "safety_plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       emergency_requests: {
         Row: {
@@ -1466,6 +1477,7 @@ export type Database = {
           patient_id: string
           reasons_to_live: string[]
           safe_environment: string[]
+          title: string
           updated_at: string
           warning_signs: string[]
         }
@@ -1477,6 +1489,7 @@ export type Database = {
           patient_id: string
           reasons_to_live?: string[]
           safe_environment?: string[]
+          title?: string
           updated_at?: string
           warning_signs?: string[]
         }
@@ -1488,6 +1501,7 @@ export type Database = {
           patient_id?: string
           reasons_to_live?: string[]
           safe_environment?: string[]
+          title?: string
           updated_at?: string
           warning_signs?: string[]
         }
@@ -2245,6 +2259,19 @@ export type Database = {
       }
       reset_patient_weekly_goals_array: { Args: never; Returns: undefined }
       reset_weekly_goals: { Args: never; Returns: undefined }
+      save_safety_plan: {
+        Args: {
+          p_contacts?: Json
+          p_coping_strategies: string[]
+          p_distractions: string[]
+          p_plan_id: string
+          p_reasons_to_live: string[]
+          p_safe_environment: string[]
+          p_title: string
+          p_warning_signs: string[]
+        }
+        Returns: string
+      }
       set_psychologist_availability: {
         Args: { p_blocks: Json }
         Returns: undefined
