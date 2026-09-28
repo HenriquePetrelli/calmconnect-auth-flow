@@ -34,14 +34,22 @@ O encarregado pode ser um dos sócios. O importante é que o e-mail seja lido e 
 8. **Guarda do chat:** as mensagens entre paciente e psicólogo são apagadas após 3 meses. Elas fazem parte do registro do atendimento e deveriam seguir o prazo de 5 anos?
 9. **e-Psi e Resolução CFP 11/2018:** exigências de cadastro para atendimento on-line.
 10. **Registros de acesso (Marco Civil, art. 15):** o provedor de aplicação deve guardar por 6 meses. Os logs do Supabase no plano atual cobrem esse prazo?
+11. **Arrependimento depois de usar o serviço:** hoje o reembolso de 7 dias é integral e automático, mesmo que a pessoa já tenha feito o SOS ou a consulta do mês (que geram repasse ao psicólogo). É possível descontar o que já foi usado?
+12. **Prova do aceite após a exclusão da conta:** o histórico de aceites (data e versão) é apagado junto com a conta. Convém guardá-lo pelo mesmo prazo dos registros de atendimento?
 
-## 3. O que precisa mudar no app antes de publicar
+## 3. Regras que o app já cumpre
 
-Os documentos descrevem estas regras, mas o app ainda não as cumpre:
+Estas mudanças foram feitas em 28/09/2026 para o app cumprir o que os documentos descrevem:
 
-- [ ] **Guarda de 5 anos na exclusão de conta.** Hoje, "Excluir minha conta" apaga também os pedidos de SOS, as consultas e as avaliações. É preciso manter esses registros (desvinculados do login) por 5 anos.
-- [ ] **Eliminação automática ao fim dos 5 anos**, com uma rotina agendada que apague os registros de atendimento vencidos.
-- [ ] **Aceite no cadastro:** caixa de confirmação "Tenho 18 anos ou mais", aceite dos Termos e da Política e **consentimento destacado** para dados de saúde, com data e versão do aceite gravadas no banco.
-- [ ] **Telas de Termos e Política no app**, com link no cadastro e no perfil, só depois da revisão jurídica e com os campos preenchidos.
-- [ ] **Novo aceite quando os textos mudarem**, pedindo que o usuário aceite a versão nova.
-- [ ] **Reembolso em 7 dias** (direito de arrependimento): hoje é feito à mão pelo suporte, no painel do Stripe. Funciona, mas precisa de um processo definido.
+- [x] **Guarda de 5 anos na exclusão de conta.** Antes de apagar a conta, "Excluir minha conta" copia os pedidos de SOS, as consultas e as avaliações (com as anotações clínicas) para um arquivo separado, sem ligação com o login. O psicólogo que atendeu continua podendo consultar esses registros. Se a cópia falhar, nada é apagado.
+- [x] **Eliminação automática ao fim dos 5 anos.** Uma rotina diária (00:30, horário de Brasília) apaga os registros de atendimento com mais de 5 anos, tanto do arquivo quanto das contas ativas.
+- [x] **Aceite no cadastro.** O cadastro de pacientes e de psicólogos só é concluído com as caixas "Tenho 18 anos ou mais" e "Li e aceito os Termos de Uso e a Política de Privacidade". O paciente também dá o **consentimento destacado** para dados de saúde. A data, a versão de cada documento e o navegador ficam gravados no banco (tabela `legal_acceptances`).
+- [x] **Telas de Termos e Política no app** em `/termos`, `/termos-psicologo` e `/privacidade`, abertas mesmo sem login, com links no cadastro e no perfil. Os textos vêm direto desta pasta. As marcações ⚖️ e o aviso de revisão do topo não aparecem no app. **Enquanto houver campos `[...]` sem preencher, a tela mostra o aviso "Versão em revisão jurídica".**
+- [x] **Novo aceite quando os textos mudarem.** A versão de cada documento é a do campo **Versão** no topo do arquivo. Ao publicar um texto novo, mude esse número (por exemplo, de 1.0 para 1.1): no próximo acesso, o app pede o aceite de novo, e quem não aceitar só pode sair da conta. Correções pequenas, que não mudam direitos, podem manter a versão.
+- [x] **Reembolso em 7 dias.** Ao cancelar pelo app em até 7 dias da primeira assinatura, o app avisa que haverá devolução e faz o reembolso na Stripe na hora. Se o reembolso falhar, a assinatura é cancelada do mesmo jeito e o caso fica registrado no log de segurança (`withdrawal_refund_failed`) para o suporte concluir.
+
+### Antes de publicar
+
+1. Preencher os campos `[...]` e revisar com o advogado (itens 1 e 2).
+2. Manter a versão **1.0** na primeira publicação e trocar `[DATA DE PUBLICAÇÃO]` pela data real.
+3. Aplicar a migration `20260928050000_care_records_retention_and_legal_acceptance.sql` e publicar as funções `delete-own-account` e `cancel-subscription`.

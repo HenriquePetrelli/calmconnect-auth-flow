@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
+import { signupAcceptanceMetadata } from '@/lib/legal';
 
 export interface PsychologistFormData {
   email: string;
@@ -59,6 +60,8 @@ export class PsychologistService {
             cpf: formData.cpf,
             crp: formData.crp,
             specialty: formData.specialty,
+            // Aceite de idade, Termos e Política marcado na tela de cadastro.
+            ...signupAcceptanceMetadata('psychologist'),
           },
           emailRedirectTo: `${window.location.origin}/`
         }

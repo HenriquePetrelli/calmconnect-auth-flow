@@ -12,6 +12,8 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { validateCPF } from "@/utils/cpf";
+import LegalConsents, { EMPTY_CONSENTS, allConsentsGiven, consentKeysFor } from "@/components/legal/LegalConsents";
+import { signupAcceptanceMetadata } from "@/lib/legal";
 
 interface SignUpFormProps {
   userType: "patient" | "psychologist";
@@ -50,6 +52,8 @@ const [formData, setFormData] = useState({
   const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
   const [showErrorAlert, setShowErrorAlert] = useState(false);
   const [isSintomasModalOpen, setIsSintomasModalOpen] = useState(false);
+  const [consents, setConsents] = useState(EMPTY_CONSENTS);
+  const [showConsentErrors, setShowConsentErrors] = useState(false);
   const navigate = useNavigate();
 
   const isPatient = userType === "patient";
@@ -189,6 +193,12 @@ const [formData, setFormData] = useState({
         return;
       }
 
+      if (!allConsentsGiven(consents, consentKeysFor(userType))) {
+        setShowConsentErrors(true);
+        toast.error("Marque as confirmações de idade e de aceite para criar a conta.");
+        return;
+      }
+
       if (formData.password !== formData.confirmPassword) {
         toast.error("As senhas não coincidem");
         setErrors({ password: true, confirmPassword: true });
@@ -212,6 +222,7 @@ const [formData, setFormData] = useState({
           data: {
             user_type: userType,
             full_name: formData.name,
+            ...signupAcceptanceMetadata(userType),
           }
         }
       });
@@ -554,6 +565,13 @@ const { error: profileError } = await supabase
               </div>
             </div>
           </div>
+
+          <LegalConsents
+            userType={userType}
+            value={consents}
+            onChange={setConsents}
+            showErrors={showConsentErrors}
+          />
 
           <Button
             type="submit"

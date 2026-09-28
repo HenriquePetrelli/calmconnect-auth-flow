@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 
+const formatBRL = (cents: number) =>
+  (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
 const SubscriptionPlans = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -17,6 +20,26 @@ const SubscriptionPlans = () => {
   const [loading, setLoading] = useState<string | null>(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showDowngradeModal, setShowDowngradeModal] = useState(false);
+  // Direito de arrependimento: dentro de 7 dias da primeira assinatura, o
+  // cancelamento devolve o valor pago. A prévia vem do próprio cancel-subscription.
+  const [refundPreview, setRefundPreview] = useState<{ amount: number; deadline: string | null } | null>(null);
+
+  useEffect(() => {
+    if (!showCancelModal) return;
+    let cancelled = false;
+    setRefundPreview(null);
+    supabase.functions
+      .invoke('cancel-subscription', { body: { preview: true } })
+      .then(({ data }) => {
+        if (!cancelled && data?.refund_eligible) {
+          setRefundPreview({ amount: data.refund_amount, deadline: data.refund_deadline });
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [showCancelModal]);
 
   const plans = [
     {
@@ -117,9 +140,22 @@ const SubscriptionPlans = () => {
       }
 
       if (data?.success) {
-        toast({
-          title: "Assinatura cancelada",
-        });
+        if (data.refund_status === "refunded") {
+          toast({
+            title: "Assinatura cancelada",
+            description: `Devolvemos ${formatBRL(data.refunded_amount)} no seu cartão. O valor aparece na fatura em até 10 dias úteis.`,
+          });
+        } else if (data.refund_status === "failed") {
+          toast({
+            title: "Assinatura cancelada",
+            description: "Não conseguimos concluir o reembolso agora. Nossa equipe vai finalizar a devolução; se preferir, fale com o suporte.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Assinatura cancelada",
+          });
+        }
         
         // Refresh subscription status
         await checkSubscription();
@@ -319,6 +355,12 @@ const SubscriptionPlans = () => {
               Tem certeza que deseja cancelar sua assinatura? Você perderá acesso aos benefícios do seu plano atual.
             </DialogDescription>
           </DialogHeader>
+          {refundPreview && (
+            <div role="note" className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm">
+              Você está no prazo de 7 dias da primeira assinatura (direito de arrependimento). Ao cancelar,
+              devolvemos {formatBRL(refundPreview.amount)} no seu cartão.
+            </div>
+          )}
           <div className="flex gap-2">
             <Button
               variant="outline"

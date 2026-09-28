@@ -12,6 +12,7 @@ import BackgroundWrapper from "@/components/BackgroundWrapper";
 import PageSkeleton from "@/components/PageSkeleton";
 import SplashScreen from "@/components/SplashScreen";
 import PendingFeedbackGate from "@/components/sos/PendingFeedbackGate";
+import LegalAcceptanceGate from "@/components/legal/LegalAcceptanceGate";
 
 // Persistent layout: MainLayout stays mounted across nested routes,
 // so sidebar/bottom nav never re-render when switching between them.
@@ -62,6 +63,7 @@ const SupportGroups = lazy(() => import("./pages/SupportGroups"));
 const SupportGroupDetail = lazy(() => import("./pages/SupportGroupDetail"));
 const PrivateJournal = lazy(() => import("./pages/PrivateJournal"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const LegalDocument = lazy(() => import("./pages/LegalDocument"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -113,6 +115,11 @@ const App = () => {
                       <PsychologistSignUpPublic />
                     </RouteGuard>
                   } />
+
+                  {/* Termos e Política: abertos a todos, com ou sem login */}
+                  <Route path="/termos" element={<LegalDocument document="terms_patient" />} />
+                  <Route path="/termos-psicologo" element={<LegalDocument document="terms_psychologist" />} />
+                  <Route path="/privacidade" element={<LegalDocument document="privacy_policy" />} />
 
                   {/* Rotas do Paciente com Layout Principal persistente */}
                   <Route element={<MainLayoutOutlet />}>
@@ -333,6 +340,7 @@ const App = () => {
                   </Routes>
                   </Suspense>
                   <PendingFeedbackGate />
+                  <LegalAcceptanceGate />
                 </BackgroundWrapper>
 
               </BrowserRouter>

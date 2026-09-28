@@ -7,6 +7,12 @@ import Stripe from "https://esm.sh/stripe@14.21.0";
 // FIRST (deleting the account while Stripe keeps charging would be worse
 // than not deleting it), and removes the tables added since.
 //
+// Care records (SOS requests, consultations, feedback and clinical notes) must
+// be kept for 5 years (Resolução CFP 01/2009). Before anything is deleted,
+// archive_patient_care_records copies them to care_record_archive, detached
+// from the login; purge_expired_care_records drops them once they expire. If
+// the copy fails, nothing is deleted.
+//
 // Psychologists can't self-delete here: their account carries payouts and
 // clinical records with legal retention duties, so it goes through support.
 
@@ -80,6 +86,14 @@ Deno.serve(async (req: Request): Promise<Response> => {
       .limit(1);
     if (liveSos && liveSos.length > 0) {
       return json({ error: "Você tem um atendimento de emergência em andamento. Encerre-o antes de excluir a conta." }, 409);
+    }
+
+    const { error: archiveError } = await supabase.rpc("archive_patient_care_records", {
+      p_patient_id: user.id,
+    });
+    if (archiveError) {
+      console.error("delete-own-account: falha ao arquivar registros de atendimento", archiveError);
+      return json({ error: "Não foi possível excluir a conta agora. Tente de novo em instantes." }, 500);
     }
 
     try {

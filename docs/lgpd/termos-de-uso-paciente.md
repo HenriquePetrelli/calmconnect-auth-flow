@@ -48,7 +48,7 @@ Os recursos de autocuidado e os grupos de apoio **não são atendimento psicoló
 ## 5. Cancelamento e reembolso
 
 - Você pode cancelar a assinatura a qualquer momento pelo app. **O cancelamento é imediato:** o acesso aos recursos do plano termina no ato. ⚖️
-- **Direito de arrependimento:** se você cancelar em até **7 dias** da primeira contratação, devolvemos o valor pago integralmente, conforme o art. 49 do Código de Defesa do Consumidor. Peça pelo suporte, em **[E-MAIL DE SUPORTE]**.
+- **Direito de arrependimento:** se você cancelar em até **7 dias** da primeira contratação, devolvemos o valor pago integralmente, conforme o art. 49 do Código de Defesa do Consumidor. A devolução é feita **automaticamente** quando você cancela pelo app dentro desse prazo, no mesmo cartão da cobrança. Se tiver qualquer problema, fale com o suporte, em **[E-MAIL DE SUPORTE]**. ⚖️
 - Fora desse prazo, os valores já pagos não são devolvidos, salvo nas situações do item 7.
 
 ## 6. Atendimento de emergência (SOS)

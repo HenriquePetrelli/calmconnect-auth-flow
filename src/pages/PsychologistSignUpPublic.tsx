@@ -18,6 +18,7 @@ import { PsychologistService } from "@/services/psychologist.service";
 import { TRANSTORNOS } from "@/data/transtornos";
 import MultiSelectModal from "@/components/ui/multi-select-modal";
 import { validateCPF } from "@/utils/cpf";
+import LegalConsents, { EMPTY_CONSENTS, allConsentsGiven, consentKeysFor } from "@/components/legal/LegalConsents";
 
 const specializations = [
   // Áreas tradicionais
@@ -86,6 +87,8 @@ const PsychologistSignUpPublic = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [documentFile, setDocumentFile] = useState<File | null>(null);
   const [isAreasModalOpen, setIsAreasModalOpen] = useState(false);
+  const [consents, setConsents] = useState(EMPTY_CONSENTS);
+  const [showConsentErrors, setShowConsentErrors] = useState(false);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -107,6 +110,12 @@ const PsychologistSignUpPublic = () => {
   });
 
   const onSubmit = async (data: FormData) => {
+    if (!allConsentsGiven(consents, consentKeysFor("psychologist"))) {
+      setShowConsentErrors(true);
+      toast.error("Marque as confirmações de idade e de aceite para se cadastrar.");
+      return;
+    }
+
     if (!documentFile) {
       toast.error("Envie um documento comprovante.");
       return;
@@ -402,6 +411,13 @@ const PsychologistSignUpPublic = () => {
                       <FormMessage />
                     </FormItem>
                   )}
+                />
+
+                <LegalConsents
+                  userType="psychologist"
+                  value={consents}
+                  onChange={setConsents}
+                  showErrors={showConsentErrors}
                 />
 
                 <div className="flex gap-4">
