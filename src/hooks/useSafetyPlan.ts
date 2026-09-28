@@ -64,6 +64,21 @@ export const useSafetyPlan = () => {
     void load();
   }, [load]);
 
+  // Refreshes only the contact list. Adding or removing a contact must never
+  // reload the plan itself: the patient may have unsaved items on screen, and
+  // re-reading the plan from the database would wipe them.
+  const loadContacts = useCallback(async () => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from('emergency_contacts')
+      .select('id, name, relationship, phone, is_primary')
+      .eq('patient_id', user.id)
+      .order('is_primary', { ascending: false })
+      .order('created_at', { ascending: true });
+    if (error) throw error;
+    setContacts(data ?? []);
+  }, [user]);
+
   const savePlan = async (next: SafetyPlanLists): Promise<boolean> => {
     if (!user) return false;
     setSaving(true);
@@ -102,7 +117,7 @@ export const useSafetyPlan = () => {
       }
       const { error } = await supabase.from('emergency_contacts').insert({ patient_id: user.id, ...contact });
       if (error) throw error;
-      await load();
+      await loadContacts();
       return true;
     } catch (error) {
       console.error('Erro ao adicionar contato:', error);

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -116,9 +116,15 @@ const SafetyPlan = () => {
   const [contactPrimary, setContactPrimary] = useState(false);
   const [phoneTouched, setPhoneTouched] = useState(false);
 
+  // Fill the editor from the database once, when the plan first loads. After
+  // that the draft belongs to the patient: nothing (adding a contact, a
+  // refetch) may overwrite items they marked but haven't saved yet.
+  const draftInitialized = useRef(false);
   useEffect(() => {
+    if (loading || draftInitialized.current) return;
+    draftInitialized.current = true;
     setDraftPlan(plan);
-  }, [plan]);
+  }, [plan, loading]);
 
   const dirty = useMemo(() => JSON.stringify(draftPlan) !== JSON.stringify(plan), [draftPlan, plan]);
   const filled = countFilledSections(draftPlan, contacts.length);
