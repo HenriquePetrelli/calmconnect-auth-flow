@@ -7,7 +7,7 @@ import { CapacitorConfig } from '@capacitor/cli';
 const devServerUrl = process.env.CAP_SERVER_URL;
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.82bda65581e5448f832eea464e8925dc',
+  appId: 'br.com.soliv.app',
   appName: 'soliv',
   webDir: 'dist',
   ...(devServerUrl
