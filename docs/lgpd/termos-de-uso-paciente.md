@@ -1,0 +1,111 @@
+# Termos de Uso do Soliv — Pacientes
+
+> **Versão para revisão jurídica — não publicar antes dela.** Campos entre colchetes (`[...]`) precisam ser preenchidos. Pontos marcados com **⚖️** merecem atenção especial do advogado.
+
+**Versão:** 1.0 · **Vigente a partir de:** [DATA DE PUBLICAÇÃO]
+
+Estes Termos regulam o uso do aplicativo Soliv por pacientes. O Soliv é operado por **[RAZÃO SOCIAL] LTDA**, CNPJ **[CNPJ]**, com sede em **[ENDEREÇO COMPLETO]** ("Soliv", "nós"). Ao criar sua conta, você declara que leu e concorda com estes Termos e com a [Política de Privacidade](./politica-de-privacidade.md).
+
+---
+
+## 1. O que é o Soliv
+
+O Soliv é uma plataforma de apoio emocional que oferece:
+
+- **recursos de autocuidado:** respiração guiada, sons terapêuticos, diário, registro de humor e planos de segurança;
+- **grupos de apoio**, com depoimentos de outros usuários;
+- **atendimento de emergência por vídeo (SOS)** com psicólogos cadastrados;
+- **consultas agendadas por vídeo** com psicólogos cadastrados.
+
+Os psicólogos que atendem pelo Soliv têm registro ativo no Conselho Regional de Psicologia. O atendimento segue as normas do Conselho Federal de Psicologia, em especial as Resoluções CFP nº 11/2018 e nº 09/2024. ⚖️
+
+## 2. O que o Soliv não é
+
+**O Soliv não é um serviço de emergência médica e não substitui o SAMU, o pronto-socorro ou o acompanhamento psiquiátrico.**
+
+Se você estiver em risco imediato de vida, ou se alguém estiver, ligue para o **SAMU (192)** ou vá ao pronto-socorro mais próximo. O **CVV (188)** atende 24 horas, gratuitamente.
+
+Os recursos de autocuidado e os grupos de apoio **não são atendimento psicológico**. Os depoimentos dos grupos refletem a experiência de outros usuários e não são orientação profissional.
+
+## 3. Quem pode usar
+
+- Você precisa ter **18 anos ou mais**.
+- As informações do cadastro devem ser verdadeiras e mantidas atualizadas.
+- A conta é pessoal e intransferível. Você é responsável por manter sua senha em segredo e por avisar o Soliv se suspeitar de uso indevido.
+
+## 4. Planos e pagamento
+
+| Plano | Preço | Inclui |
+|---|---|---|
+| **Plus** | R$ 69,90 por mês | 1 atendimento SOS por mês, de até 25 minutos |
+| **Premium** | R$ 120,00 por mês | 1 atendimento SOS por mês, de até 50 minutos, e 1 consulta agendada por mês, de 50 minutos |
+
+- A cobrança é mensal, feita no cartão de crédito por meio da Stripe, e **renova automaticamente** até você cancelar.
+- A cota do mês **não é cumulativa**: o que não for usado no mês não passa para o seguinte.
+- A cota de SOS só é consumida **quando o atendimento começa**. Um pedido que nenhum psicólogo aceita não conta.
+- Os preços podem mudar. Avisaremos com pelo menos **30 dias** de antecedência, e o novo preço só vale a partir da renovação seguinte ao aviso.
+
+## 5. Cancelamento e reembolso
+
+- Você pode cancelar a assinatura a qualquer momento pelo app. **O cancelamento é imediato:** o acesso aos recursos do plano termina no ato. ⚖️
+- **Direito de arrependimento:** se você cancelar em até **7 dias** da primeira contratação, devolvemos o valor pago integralmente, conforme o art. 49 do Código de Defesa do Consumidor. Peça pelo suporte, em **[E-MAIL DE SUPORTE]**.
+- Fora desse prazo, os valores já pagos não são devolvidos, salvo nas situações do item 7.
+
+## 6. Atendimento de emergência (SOS)
+
+- Ao pedir ajuda pelo SOS, seu pedido é enviado aos psicólogos disponíveis naquele momento.
+- **Não há garantia de atendimento em um tempo determinado.** O atendimento depende de haver um psicólogo disponível. Se ninguém aceitar o pedido em **10 minutos**, ele é encerrado, não consome a sua cota, e o app indica o CVV (188) para você conversar com alguém imediatamente. ⚖️
+- A duração máxima do atendimento é a do seu plano (25 ou 50 minutos). O tempo pausa se alguém perder a conexão.
+- Durante o atendimento, o psicólogo pode consultar os seus planos de segurança e contatos de emergência. Se ele avaliar que há risco à sua vida ou à de outra pessoa, pode acionar esses contatos ou os serviços de emergência, como preveem o Código de Ética Profissional do Psicólogo e a Resolução CFP nº 09/2024. ⚖️
+
+## 7. Consultas agendadas
+
+- Disponíveis no plano Premium: 1 consulta de 50 minutos por mês.
+- O psicólogo tem **24 horas** para aceitar, recusar ou propor outro horário. Se a consulta for recusada ou não tiver resposta, a cota do mês é devolvida.
+- A sala de vídeo abre 10 minutos antes do horário e fica disponível até 15 minutos depois do fim previsto.
+- **Falhas técnicas:** se um atendimento (SOS ou consulta) for interrompido por falha técnica, o caso é avaliado pelo suporte, que pode devolver a cota do mês. Para isso, escreva para **[E-MAIL DE SUPORTE]** em até **7 dias** depois do atendimento. ⚖️
+
+## 8. Grupos de apoio
+
+Ao publicar depoimentos, você se compromete a **não**:
+
+- publicar conteúdo ofensivo, discriminatório, de assédio ou de ódio;
+- incentivar autolesão, suicídio ou qualquer forma de violência;
+- expor dados pessoais seus ou de outras pessoas, como nome completo, telefone ou endereço;
+- fazer propaganda ou publicar spam;
+- se passar por profissional de saúde ou dar orientação clínica.
+
+Qualquer usuário pode **denunciar** um depoimento. A equipe do Soliv revisa as denúncias e pode editar ou remover conteúdo que viole estes Termos, e suspender a conta de quem violá-los repetidamente.
+
+Você continua sendo o autor dos seus depoimentos. Ao publicá-los, autoriza o Soliv a exibi-los aos demais usuários do grupo enquanto estiverem publicados.
+
+## 9. Condutas proibidas
+
+É proibido usar o Soliv para fins ilegais; tentar acessar dados de outros usuários; interferir no funcionamento do app; gravar, divulgar ou reproduzir atendimentos sem o consentimento de todos os participantes; ou ofender, ameaçar ou assediar psicólogos e outros usuários.
+
+O descumprimento pode levar à suspensão ou ao encerramento da conta, sem prejuízo das medidas legais cabíveis.
+
+## 10. Responsabilidades
+
+- **Do Soliv:** manter a plataforma funcionando com cuidado e segurança, verificar o registro profissional dos psicólogos cadastrados e tratar seus dados conforme a Política de Privacidade.
+- **Dos psicólogos:** o atendimento psicológico é de **responsabilidade técnica do psicólogo** que o realiza, nos termos do Código de Ética Profissional do Psicólogo. ⚖️
+- **Disponibilidade:** o Soliv depende da internet e de serviços de terceiros. Podem ocorrer interrupções, que buscaremos resolver o mais rápido possível. ⚖️
+
+Nada nestes Termos afasta os direitos que o Código de Defesa do Consumidor garante a você.
+
+## 11. Exclusão da conta
+
+Você pode excluir sua conta a qualquer momento em **Perfil → Alterar dados da conta → Excluir minha conta**. A exclusão cancela a assinatura e apaga seus dados, exceto os registros de atendimento, que precisamos guardar por 5 anos por exigência do Conselho Federal de Psicologia (veja a Política de Privacidade).
+
+## 12. Alterações destes Termos
+
+Podemos atualizar estes Termos. Mudanças relevantes serão avisadas no app ou por e-mail com pelo menos **15 dias** de antecedência. Se você continuar usando o Soliv depois disso, as novas condições passam a valer. Se não concordar, pode cancelar e excluir a conta.
+
+## 13. Contato
+
+- **Suporte:** [E-MAIL DE SUPORTE] ou pelo menu Suporte do app.
+- **Privacidade e dados pessoais:** [E-MAIL DO ENCARREGADO].
+
+## 14. Lei e foro
+
+Estes Termos são regidos pelas leis brasileiras. Fica eleito o foro do **domicílio do consumidor** para resolver qualquer questão relacionada a eles, conforme o Código de Defesa do Consumidor.
