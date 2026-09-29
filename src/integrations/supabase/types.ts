@@ -187,6 +187,48 @@ export type Database = {
         }
         Relationships: []
       }
+      care_record_archive: {
+        Row: {
+          archived_at: string
+          data: Json
+          former_patient_id: string | null
+          id: string
+          occurred_at: string
+          patient_email: string | null
+          patient_name: string | null
+          psychologist_id: string | null
+          record_type: string
+          retain_until: string
+          source_id: string
+        }
+        Insert: {
+          archived_at?: string
+          data: Json
+          former_patient_id?: string | null
+          id?: string
+          occurred_at: string
+          patient_email?: string | null
+          patient_name?: string | null
+          psychologist_id?: string | null
+          record_type: string
+          retain_until: string
+          source_id: string
+        }
+        Update: {
+          archived_at?: string
+          data?: Json
+          former_patient_id?: string | null
+          id?: string
+          occurred_at?: string
+          patient_email?: string | null
+          patient_name?: string | null
+          psychologist_id?: string | null
+          record_type?: string
+          retain_until?: string
+          source_id?: string
+        }
+        Relationships: []
+      }
       conversas: {
         Row: {
           created_at: string
@@ -554,6 +596,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      legal_acceptances: {
+        Row: {
+          accepted_at: string
+          document: string
+          id: string
+          user_agent: string | null
+          user_id: string
+          version: string
+        }
+        Insert: {
+          accepted_at?: string
+          document: string
+          id?: string
+          user_agent?: string | null
+          user_id: string
+          version: string
+        }
+        Update: {
+          accepted_at?: string
+          document?: string
+          id?: string
+          user_agent?: string | null
+          user_id?: string
+          version?: string
+        }
+        Relationships: []
       }
       mensagens: {
         Row: {
@@ -2005,6 +2074,10 @@ export type Database = {
         Args: { p_testimonial_id: string; p_texto: string }
         Returns: undefined
       }
+      archive_patient_care_records: {
+        Args: { p_patient_id: string }
+        Returns: number
+      }
       calculate_psychologist_average_rating: {
         Args: { psychologist_user_id: string }
         Returns: number
@@ -2249,6 +2322,7 @@ export type Database = {
         Args: { p_user_id?: string }
         Returns: boolean
       }
+      purge_expired_care_records: { Args: never; Returns: Json }
       register_push_token: {
         Args: { p_device_info?: Json; p_token: string }
         Returns: undefined
