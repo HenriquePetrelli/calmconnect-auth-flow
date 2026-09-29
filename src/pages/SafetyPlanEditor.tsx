@@ -210,6 +210,8 @@ const SafetyPlanEditor = () => {
     );
   }
 
+  const showSaveBar = !loading && (isNew || dirty);
+
   return (
     <div className="has-tabs">
       <div className="screen">
@@ -217,7 +219,11 @@ const SafetyPlanEditor = () => {
           <PageHeader title={isNew ? "Novo plano de segurança" : "Editar plano de segurança"} backTo="/safety-plan" />
         </div>
 
-        <main className="p-4 pb-40 space-y-5 max-w-2xl mx-auto">
+        <main
+          className="p-4 space-y-5 max-w-2xl mx-auto"
+          // Espaço para o fim do formulário rolar acima da barra de salvar.
+          style={showSaveBar ? { paddingBottom: 'calc(var(--tab-height) + 120px + env(safe-area-inset-bottom))' } : undefined}
+        >
           <section className="space-y-2">
             <p className="text-foreground">
               Um roteiro seu, escrito com calma, para usar quando as coisas ficarem difíceis. Preencha no seu ritmo —
@@ -404,10 +410,12 @@ const SafetyPlanEditor = () => {
           <HomeCrisisAccess />
         </main>
 
-        {!loading && (isNew || dirty) && (
-          <div className="fixed inset-x-0 bottom-20 z-20 px-4">
+        {showSaveBar && (
+          // Barra fixa com fundo, colada no menu inferior (no desktop, no rodapé),
+          // para o botão não ficar solto por cima dos campos.
+          <div className="fixed inset-x-0 bottom-[var(--tab-height)] lg:bottom-0 z-20 border-t border-border bg-background/95 backdrop-blur-sm px-4 py-3">
             <div className="mx-auto max-w-2xl">
-              <Button className="w-full min-h-12 shadow-lg" onClick={handleSave} disabled={saving || limitReached}>
+              <Button className="w-full min-h-12" onClick={handleSave} disabled={saving || limitReached}>
                 {saving ? 'Salvando...' : 'Salvar plano'}
               </Button>
             </div>
