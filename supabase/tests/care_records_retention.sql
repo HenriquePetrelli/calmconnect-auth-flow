@@ -1,5 +1,5 @@
 -- Teste da guarda de 5 anos e do aceite dos documentos legais
--- (migration 20260928050000_care_records_retention_and_legal_acceptance).
+-- (migration 20260929032414_b1647c58-…, "guarda de 5 anos e aceite legal").
 --
 -- Roda contra um Postgres com o schema aplicado:
 --   supabase start

@@ -52,4 +52,4 @@ Estas mudanças foram feitas em 28/09/2026 para o app cumprir o que os documento
 
 1. Preencher os campos `[...]` e revisar com o advogado (itens 1 e 2).
 2. Manter a versão **1.0** na primeira publicação e trocar `[DATA DE PUBLICAÇÃO]` pela data real.
-3. Aplicar a migration `20260928050000_care_records_retention_and_legal_acceptance.sql` e publicar as funções `delete-own-account` e `cancel-subscription`.
+3. ~~Aplicar a migration e publicar as funções `delete-own-account` e `cancel-subscription`~~ (feito em 29/09/2026).
