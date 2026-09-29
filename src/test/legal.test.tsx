@@ -19,6 +19,8 @@ import {
 import LegalMarkdown, { cleanLegalMarkdown } from '@/components/legal/LegalMarkdown';
 import LegalAcceptanceGate from '@/components/legal/LegalAcceptanceGate';
 import { consentKeysFor } from '@/components/legal/LegalConsents';
+import { renderHook } from '@testing-library/react';
+import { useLegalGateStatus } from '@/lib/legalGateStatus';
 
 const acceptAll = (userId: string, userType: 'patient' | 'psychologist') => {
   fakeDb.tables.legal_acceptances = REQUIRED_DOCUMENTS[userType].map((document) => ({
@@ -124,6 +126,27 @@ describe('novo aceite após o login', () => {
     expect(saved).toEqual(
       REQUIRED_DOCUMENTS.patient.map((d) => `${d}@${LEGAL_VERSIONS[d]}`).sort(),
     );
+  });
+
+  it('avisa as outras janelas (metas) para esperar até o aceite', async () => {
+    const status = renderHook(() => useLegalGateStatus());
+    renderGate();
+    const accept = await screen.findByText('Aceitar e continuar');
+    expect(status.result.current).toBe('pending');
+
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Tenho 18 anos ou mais.' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: /Li e aceito/ }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Consentimento para dados de saúde' }));
+    fireEvent.click(accept);
+
+    await waitFor(() => expect(status.result.current).toBe('clear'));
+  });
+
+  it('libera as outras janelas quando não falta aceite', async () => {
+    acceptAll('patient-1', 'patient');
+    const status = renderHook(() => useLegalGateStatus());
+    renderGate();
+    await waitFor(() => expect(status.result.current).toBe('clear'));
   });
 
   it('deixa ler os documentos sem o bloqueio por cima', async () => {

@@ -13,6 +13,7 @@ import { MoodAccordion } from "@/components/MoodAccordion";
 import { WeeklyGoalModal } from "@/components/goals/WeeklyGoalModal";
 import { GoalSelectionModal } from "@/components/goals/GoalSelectionModal";
 import { useEffect, useState } from "react";
+import { useLegalGateStatus } from "@/lib/legalGateStatus";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -36,6 +37,8 @@ const HomeContent = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showWeeklyGoalModal, setShowWeeklyGoalModal] = useState(false);
   const [showGoalSelection, setShowGoalSelection] = useState(false);
+  // A janela das metas espera o aceite dos Termos, para não abrir por cima dele.
+  const legalGateStatus = useLegalGateStatus();
 
   useEffect(() => {
     if (!user?.id) return;
@@ -293,7 +296,7 @@ const HomeContent = () => {
         {/* Modals */}
 
         <WeeklyGoalModal
-          open={showWeeklyGoalModal}
+          open={showWeeklyGoalModal && legalGateStatus === "clear"}
           onOpenChange={handleCloseWeeklyGoalModal}
           onAddGoals={handleAddGoals}
           onDontShowAgain={handleDontShowAgain}

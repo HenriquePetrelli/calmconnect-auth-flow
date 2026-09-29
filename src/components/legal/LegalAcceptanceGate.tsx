@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import LegalConsents, { EMPTY_CONSENTS, allConsentsGiven, consentKeysFor } from "@/components/legal/LegalConsents";
+import { setLegalGateStatus } from "@/lib/legalGateStatus";
 import { LEGAL_PAGES, LegalDocumentId, fetchMissingAcceptances, recordAcceptances } from "@/lib/legal";
 
 const LEGAL_PATHS = Object.values(LEGAL_PAGES).map((page) => page.path);
@@ -29,14 +30,23 @@ const LegalAcceptanceGate = () => {
     setConsents(EMPTY_CONSENTS);
     setShowErrors(false);
     const userId = user?.id;
-    if (!userId || !legalUserType) return;
+    if (!userId || !legalUserType) {
+      setLegalGateStatus("clear");
+      return;
+    }
+    setLegalGateStatus("checking");
     let cancelled = false;
     fetchMissingAcceptances(userId, legalUserType)
       .then((docs) => {
-        if (!cancelled) setMissing(docs);
+        if (cancelled) return;
+        setMissing(docs);
+        setLegalGateStatus(docs.length > 0 ? "pending" : "clear");
       })
       // Se a consulta falhar, não trava o app: o pedido volta no próximo login.
-      .catch((error) => console.error("LegalAcceptanceGate: falha ao verificar aceites", error));
+      .catch((error) => {
+        console.error("LegalAcceptanceGate: falha ao verificar aceites", error);
+        if (!cancelled) setLegalGateStatus("clear");
+      });
     return () => {
       cancelled = true;
     };
@@ -64,6 +74,7 @@ const LegalAcceptanceGate = () => {
     try {
       await recordAcceptances(user.id, missing);
       setMissing([]);
+      setLegalGateStatus("clear");
     } catch (error) {
       console.error("LegalAcceptanceGate: falha ao gravar aceite", error);
       toast.error("Não foi possível registrar o aceite. Tente de novo.");
