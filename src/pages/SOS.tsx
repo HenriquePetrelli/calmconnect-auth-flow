@@ -9,6 +9,7 @@ import SupportiveMessages from "@/components/sos/SupportiveMessages";
 import { supabase } from "@/integrations/supabase/client";
 import { useEmergencySOS } from "@/hooks/useEmergencySOS";
 import { notifySosQueueChanged, subscribeSosQueue } from "@/lib/sosQueueChannel";
+import HomeCrisisAccess from '@/components/HomeCrisisAccess';
 
 
 /** Server-side TTL for pending SOS requests (finalize_stale_emergency_sessions). */
@@ -340,15 +341,8 @@ const SOS = () => {
         </Card>
 
         {/* CVV/SAMU sempre visíveis e tocáveis durante a espera, não só quando ninguém está online */}
-        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-sm">
-          <a href="tel:188" className="inline-flex items-center gap-1.5 text-primary hover:underline">
-            <Phone className="h-3.5 w-3.5" />
-            CVV: 188
-          </a>
-          <a href="tel:192" className="inline-flex items-center gap-1.5 text-primary hover:underline">
-            <Phone className="h-3.5 w-3.5" />
-            SAMU: 192
-          </a>
+        <div className="w-full max-w-md">
+          <HomeCrisisAccess />
         </div>
 
         {/* Nenhum profissional online: orientar em vez de deixar esperando */}

@@ -1,11 +1,9 @@
 import { Phone } from "lucide-react";
 
 /**
- * Acesso rápido ao CVV/SAMU direto na home, fora de uma crise já em
- * andamento (o botão de SOS já cobre isso). Feature nova, aprovada por
- * Henrique na Fase 8 — corrige uma lacuna real: o plano original
- * presumia que isso já existia (SafetyPlanModal/SafetyPlanPrompt), mas
- * nenhum dos dois componentes chegou a ser implementado.
+ * Box "Precisa conversar agora?" com CVV e SAMU. Fica na tela de ajuda
+ * emergencial (SOS) e nas telas do plano de segurança; saiu da Home em
+ * 29/09/2026, a pedido do Henrique.
  */
 const HomeCrisisAccess = () => (
   <section className="mt-4 mb-4 rounded-xl border border-border bg-muted/40 p-4">
