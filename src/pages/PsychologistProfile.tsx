@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 import { supabase } from '@/integrations/supabase/client';
-import { LogOut, Mail, Lock, User, FileText, Pencil, Check, MessageCircle, Settings, Wallet, ChevronRight, CalendarClock, Bell, ScrollText, ShieldCheck } from 'lucide-react';
+import { LogOut, Mail, Lock, User, FileText, Pencil, Check, MessageCircle, Settings, Wallet, ChevronRight, CalendarClock, Bell, ScrollText, LockKeyhole } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { PushNotificationToggle } from '@/components/PushNotificationToggle';
@@ -361,7 +361,7 @@ const PsychologistProfile = () => {
             className="w-full flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-left hover:bg-accent hover:border-primary/30 transition-colors group"
           >
             <div className="rounded-md bg-secondary/20 p-2 group-hover:bg-secondary/30 transition-colors">
-              <ShieldCheck className="w-4 h-4 text-secondary-foreground" />
+              <LockKeyhole className="w-4 h-4 text-secondary-foreground" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium">Política de Privacidade</p>

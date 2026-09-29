@@ -6,6 +6,7 @@ import {
   Headphones, 
   TrendingUp, 
   BookOpen,
+  ShieldCheck,
   ArrowUpRight
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -196,6 +197,18 @@ const HomeContent = () => {
       bg: isDark ? 'hsl(38, 28%, 20%)' : 'hsl(48,100%,96%)',
       border: isDark ? 'hsl(38, 28%, 30%)' : 'hsl(45,93%,85%)',
       iconBg: 'hsl(41,96%,45%)',
+    },
+    {
+      icon: ShieldCheck,
+      title: "Plano de Segurança",
+      subtitle: "O que ajuda nas crises e quem chamar",
+      onClick: () => navigate('/safety-plan'),
+      color: isDark ? 'hsl(340, 75%, 80%)' : 'hsl(340,70%,45%)',
+      bg: isDark ? 'hsl(340, 25%, 20%)' : 'hsl(340,90%,97%)',
+      border: isDark ? 'hsl(340, 25%, 30%)' : 'hsl(340,75%,88%)',
+      iconBg: 'hsl(340,70%,50%)',
+      // Quinto card: ocupa a linha inteira para a grade de 2 colunas não ficar torta.
+      wide: true,
     }
   ];
 
@@ -242,7 +255,7 @@ const HomeContent = () => {
                 <button
                   key={index}
                   onClick={feature.onClick}
-                  className="group relative overflow-hidden flex items-center gap-4 rounded-2xl border p-4 lg:p-5 text-left shadow-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                  className={`group relative overflow-hidden flex items-center gap-4 rounded-2xl border p-4 lg:p-5 text-left shadow-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${feature.wide ? 'col-span-2' : ''}`}
                   style={{ backgroundColor: feature.bg, borderColor: feature.border }}
                 >
                   <div
@@ -272,16 +285,20 @@ const HomeContent = () => {
                 <button
                   key={index}
                   onClick={feature.onClick}
-                  className="group relative overflow-hidden flex aspect-square flex-col items-center justify-center gap-3 rounded-2xl border p-4 text-center shadow-sm transition-all duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                  className={`group relative overflow-hidden flex rounded-2xl border p-4 shadow-sm transition-all duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
+                    feature.wide
+                      ? 'col-span-2 flex-row items-center gap-4 text-left'
+                      : 'aspect-square flex-col items-center justify-center gap-3 text-center'
+                  }`}
                   style={{ backgroundColor: feature.bg, borderColor: feature.border }}
                 >
                   <div
-                    className="relative flex h-16 w-16 items-center justify-center rounded-2xl text-white shadow-sm transition-transform duration-200 group-active:scale-95"
+                    className={`relative flex flex-shrink-0 items-center justify-center rounded-2xl text-white shadow-sm transition-transform duration-200 group-active:scale-95 ${feature.wide ? 'h-12 w-12' : 'h-16 w-16'}`}
                     style={{ backgroundColor: feature.iconBg, boxShadow: isDark ? 'none' : `0 8px 20px -8px ${feature.color}` }}
                   >
-                    <Icon className="h-8 w-8" strokeWidth={2.25} />
+                    <Icon className={feature.wide ? 'h-6 w-6' : 'h-8 w-8'} strokeWidth={2.25} />
                   </div>
-                  <div className="relative w-full">
+                  <div className={feature.wide ? 'relative min-w-0 flex-1' : 'relative w-full'}>
                     <h3 className="text-sm font-semibold leading-tight" style={{ color: feature.color }}>{feature.title}</h3>
                     <p className="mt-1 text-xs leading-snug text-foreground/70 line-clamp-2">{feature.subtitle}</p>
                   </div>

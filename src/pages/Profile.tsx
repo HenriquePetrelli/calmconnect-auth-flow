@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Crown, LogOut, Settings, User as UserIcon, MessageCircle, Edit, ChevronDown, ShieldCheck, ScrollText } from "lucide-react";
+import { ArrowLeft, Crown, LogOut, Settings, User as UserIcon, MessageCircle, Edit, ChevronDown, LockKeyhole, ScrollText } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { DailyMoodToggle } from "@/components/DailyMoodToggle";
@@ -329,20 +329,6 @@ const Profile = () => {
               </button>
 
               <button
-                onClick={() => navigate('/safety-plan')}
-                className="w-full flex items-center gap-4 p-4 text-left hover:bg-muted/50 transition-colors"
-              >
-                <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-                  <ShieldCheck size={18} className="text-foreground" />
-                </div>
-                <div className="flex-1">
-                  <div className="text-sm font-medium">Plano de segurança</div>
-                  <div className="text-xs text-muted-foreground">O que ajuda nas crises e quem chamar</div>
-                </div>
-                <ChevronDown size={16} className="-rotate-90 text-muted-foreground" />
-              </button>
-
-              <button
                 onClick={() => navigate('/paciente/suporte')}
                 className="w-full flex items-center gap-4 p-4 text-left hover:bg-muted/50 transition-colors"
               >
@@ -375,7 +361,7 @@ const Profile = () => {
                 className="w-full flex items-center gap-4 p-4 text-left hover:bg-muted/50 transition-colors"
               >
                 <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-                  <ShieldCheck size={18} className="text-foreground" />
+                  <LockKeyhole size={18} className="text-foreground" />
                 </div>
                 <div className="flex-1">
                   <div className="text-sm font-medium">Política de Privacidade</div>
