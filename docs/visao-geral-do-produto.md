@@ -373,3 +373,4 @@ Navegação do paciente: menus lateral e inferior persistem entre Home, Chat, Co
 - 2026-09-29 — O box "Precisa conversar agora?" (CVV 188 e SAMU 192) saiu da Home e passou a aparecer na tela de ajuda emergencial (SOS), no lugar dos links soltos de CVV/SAMU. Continua também nas telas do plano de segurança.
 - 2026-09-29 — Plano de segurança virou um card da Home ("Seus recursos", ocupando a linha inteira) e saiu do Perfil. A Política de Privacidade passou a usar o ícone de cadeado nos perfis de paciente e psicólogo; o escudo fica só para o plano de segurança.
 - 2026-09-29 — Menu lateral (desktop): item ativo passa a usar o roxo da marca no tema claro (`--sidebar-primary` ainda era laranja) e o texto do botão "Ajuda Emergencial" fica branco.
+- 2026-09-30 — Removido o aviso "Monte seu plano de segurança" da Home (`SafetyPlanInvite`): o card "Plano de Segurança" em "Seus recursos" já leva à mesma tela.
