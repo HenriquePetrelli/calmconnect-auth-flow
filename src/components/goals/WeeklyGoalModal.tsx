@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { Target } from 'lucide-react';
+import { ListChecks } from 'lucide-react';
 
 interface WeeklyGoalModalProps {
   open: boolean;
@@ -30,11 +30,11 @@ export const WeeklyGoalModal = ({
             }}
             className="mx-auto mb-4 w-16 h-16 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center"
           >
-            <Target className="h-8 w-8 text-white" />
+            <ListChecks className="h-8 w-8 text-white" />
           </motion.div>
 
           <DialogTitle className="text-center text-2xl">
-            Defina suas metas semanais
+            Hábitos da semana
           </DialogTitle>
         </DialogHeader>
 
@@ -45,7 +45,7 @@ export const WeeklyGoalModal = ({
           className="space-y-4"
         >
           <p className="text-center text-muted-foreground">
-            Deseja adicionar suas metas semanais de autocuidado?
+            Quer escolher os hábitos de autocuidado desta semana? Respiração, sons, diário e humor ajudam no dia a dia.
           </p>
 
           <DialogFooter className="flex-col gap-2 sm:flex-col">
@@ -54,7 +54,7 @@ export const WeeklyGoalModal = ({
               size="lg"
               className="w-full"
             >
-              Adicionar metas
+              Escolher hábitos
             </Button>
             
             <Button 

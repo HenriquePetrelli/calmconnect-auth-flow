@@ -15,6 +15,7 @@ import { WeeklyGoalModal } from "@/components/goals/WeeklyGoalModal";
 import { GoalSelectionModal } from "@/components/goals/GoalSelectionModal";
 import { useEffect, useState } from "react";
 import { useLegalGateStatus } from "@/lib/legalGateStatus";
+import HomeHabitsCard from "@/components/habits/HomeHabitsCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -36,7 +37,7 @@ const HomeContent = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showWeeklyGoalModal, setShowWeeklyGoalModal] = useState(false);
   const [showGoalSelection, setShowGoalSelection] = useState(false);
-  // A janela das metas espera o aceite dos Termos, para não abrir por cima dele.
+  // A janela dos hábitos da semana espera o aceite dos Termos, para não abrir por cima dele.
   const legalGateStatus = useLegalGateStatus();
 
   useEffect(() => {
@@ -74,7 +75,7 @@ const HomeContent = () => {
       // Check if mood tracking is enabled
       setMoodEnabled(patientData?.daily_mood_enabled !== false);
 
-      // Verificar se deve mostrar modal de metas semanais
+      // Verificar se deve mostrar a janela dos hábitos da semana
       if (patientData?.show_weekly_goal_modal && patientData?.show_goal_modal) {
         setTimeout(() => setShowWeeklyGoalModal(true), 500);
       }
@@ -133,7 +134,7 @@ const HomeContent = () => {
 
   const handleGoalsAdded = async () => {
     setShowGoalSelection(false);
-    // Atualizar show_weekly_goal_modal para false após adicionar metas
+    // Atualizar show_weekly_goal_modal para false após escolher os hábitos
     if (userProfile?.id) {
       try {
         await supabase
@@ -144,7 +145,7 @@ const HomeContent = () => {
         console.error('Error updating weekly goal modal:', error);
       }
     }
-    toast.success('Metas semanais adicionadas!');
+    toast.success('Hábitos da semana escolhidos!');
   };
 
   const handleMoodSelected = (value: number) => {
@@ -240,6 +241,9 @@ const HomeContent = () => {
             />
           </div>
         )}
+
+        {/* Meus hábitos: o dia de hoje num relance */}
+        <HomeHabitsCard />
 
         {/* Resources Section */}
         <section className="mb-8">

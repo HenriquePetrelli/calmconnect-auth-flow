@@ -31,7 +31,7 @@ const categoryColors: Record<string, string> = {
 const categoryLabels: Record<string, string> = {
   breathing: 'Respiração',
   journal: 'Diário',
-  sound: 'Sono',
+  sound: 'Sons',
   mood: 'Humor',
   appointment: 'Consulta',
   support_group: 'Grupo de apoio',
@@ -92,7 +92,7 @@ export const GoalCard = ({ goal }: GoalCardProps) => {
         {!goal.completed && goal.progress > 0 && (
           <div className="pt-2 border-t">
             <p className="text-xs text-muted-foreground text-center inline-flex items-center gap-1 justify-center w-full">
-              Você está a <span className="font-semibold text-foreground">{goal.target - goal.progress}</span> {goal.target - goal.progress === 1 ? 'passo' : 'passos'} de completar sua meta!
+              Você está a <span className="font-semibold text-foreground">{goal.target - goal.progress}</span> {goal.target - goal.progress === 1 ? 'passo' : 'passos'} de concluir este hábito na semana!
               <Target className="w-3.5 h-3.5 text-primary" />
             </p>
           </div>

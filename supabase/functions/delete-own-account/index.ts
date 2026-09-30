@@ -119,6 +119,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
       ["group_testimonial_reports", "reporter_id"],
       ["group_testimonials", "user_id"],
       ["session_feedback", "user_id"],
+      ["habit_events", "user_id"],
+      ["user_habits", "user_id"],
       ["safety_plans", "patient_id"],
       ["emergency_contacts", "patient_id"],
       ["webrtc_sessions", "patient_id"],

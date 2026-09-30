@@ -129,9 +129,14 @@ export const usePushNotifications = () => {
       const handle = PushNotifications.addListener('pushNotificationReceived', (notification) => {
         if (notification.title) toast({ title: notification.title, description: notification.body });
       });
-      // Tapping an SOS push opens the psychologist dashboard, where the queue is.
+      // Tapping an SOS push opens the psychologist dashboard, where the queue is;
+      // a habit reminder opens that habit.
       const tapHandle = PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
-        if (action.notification.data?.type === 'sos') window.location.assign('/psychologist-dashboard');
+        const data = action.notification.data;
+        if (data?.type === 'sos') window.location.assign('/psychologist-dashboard');
+        else if (data?.type === 'habit_reminder' && typeof data.url === 'string' && data.url.startsWith('/habitos')) {
+          window.location.assign(data.url);
+        }
       });
       return () => {
         handle.then((h) => h.remove()).catch(() => {});

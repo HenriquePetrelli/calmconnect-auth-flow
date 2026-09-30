@@ -54,7 +54,7 @@ const Notifications = () => {
     if (text.includes('mensagem') || text.includes('chat') || text.includes('conversa')) return <MessageCircle className="h-5 w-5 text-primary" />;
     if (text.includes('pagamento') || text.includes('assinatura') || text.includes('plano') || text.includes('cobran')) return <CreditCard className="h-5 w-5 text-primary" />;
     if (text.includes('avali') || text.includes('feedback')) return <Star className="h-5 w-5 text-primary" />;
-    if (text.includes('conquista') || text.includes('meta')) return <Sparkles className="h-5 w-5 text-primary" />;
+    if (text.includes('conquista') || text.includes('meta') || text.includes('hábito')) return <Sparkles className="h-5 w-5 text-primary" />;
     if (text.includes('humor') || text.includes('bem-estar')) return <Heart className="h-5 w-5 text-primary" />;
     if (text.includes('sos') || text.includes('emerg')) return <AlertTriangle className="h-5 w-5 text-destructive" />;
     if (text.includes('psicólog') || text.includes('psicolog') || text.includes('profissional')) return <UserCheck className="h-5 w-5 text-primary" />;

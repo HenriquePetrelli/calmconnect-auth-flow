@@ -279,9 +279,9 @@ const Profile = () => {
 
                   <div className="flex items-center justify-between py-4">
                     <div className="space-y-0.5 pr-4">
-                      <div className="text-sm font-medium">Modal de metas semanais</div>
+                      <div className="text-sm font-medium">Hábitos da semana</div>
                       <div className="text-xs text-muted-foreground">
-                        Exibir modal toda segunda-feira para adicionar metas
+                        Lembrar toda segunda-feira de escolher os hábitos da semana
                       </div>
                     </div>
                     <Switch

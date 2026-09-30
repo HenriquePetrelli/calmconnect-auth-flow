@@ -21,11 +21,13 @@ class QueryBuilder implements PromiseLike<{ data: any; error: any; count?: numbe
   private limitN: number | null = null;
   private countRequested = false;
   private headOnly = false;
+  /** insert(...).select(): como o PostgREST, devolve a linha com o id gerado. */
+  private returning = false;
 
   constructor(private db: FakeDB, private table: string) {}
 
   select(_cols?: string, opts?: { count?: 'exact' | 'planned' | 'estimated'; head?: boolean }) {
-    if (this.mode === 'select') this.mode = 'select';
+    if (this.mode === 'insert') this.returning = true;
     this.countRequested = !!opts?.count;
     this.headOnly = !!opts?.head;
     return this;
@@ -118,6 +120,9 @@ class QueryBuilder implements PromiseLike<{ data: any; error: any; count?: numbe
 
     switch (this.mode) {
       case 'insert': {
+        if (this.returning) {
+          this.inserted = this.inserted.map((row) => ({ id: row.id ?? `fake-${Math.random().toString(36).slice(2)}`, ...row }));
+        }
         this.db.rows(this.table).push(...this.inserted);
         return { data: this.inserted, error: null };
       }

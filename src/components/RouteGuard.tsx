@@ -27,6 +27,8 @@ export const ROUTE_PERMISSIONS = {
     '/journal',
     '/safety-plan',
     '/safety-plan/', // cadastro (/novo) e edição (/:id)
+    '/habitos',
+    '/habitos/', // novo, detalhe e edição
     '/sounds',
     '/sounds/category',
     '/sounds/subcategory', 

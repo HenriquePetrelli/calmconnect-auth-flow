@@ -55,6 +55,9 @@ const PsychologistProfile = lazy(() => import("./pages/PsychologistProfile"));
 const PsychologistAvailability = lazy(() => import("./pages/PsychologistAvailability"));
 const SafetyPlans = lazy(() => import("./pages/SafetyPlans"));
 const SafetyPlanEditor = lazy(() => import("./pages/SafetyPlanEditor"));
+const Habits = lazy(() => import("./pages/Habits"));
+const HabitSetup = lazy(() => import("./pages/HabitSetup"));
+const HabitDetail = lazy(() => import("./pages/HabitDetail"));
 const PsychologistPayments = lazy(() => import("./pages/PsychologistPayments"));
 const EmergencyCall = lazy(() => import("./pages/EmergencyCall"));
 const Chat = lazy(() => import("./pages/Chat"));
@@ -175,6 +178,31 @@ const App = () => {
                   <Route path="/safety-plan/:planId" element={
                     <RouteGuard allowedUserTypes={['patient']}>
                       <SafetyPlanEditor />
+                    </RouteGuard>
+                  } />
+                  <Route path="/habitos" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <Habits />
+                    </RouteGuard>
+                  } />
+                  <Route path="/habitos/novo" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <HabitSetup />
+                    </RouteGuard>
+                  } />
+                  <Route path="/habitos/novo/:kind" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <HabitSetup />
+                    </RouteGuard>
+                  } />
+                  <Route path="/habitos/:habitId" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <HabitDetail />
+                    </RouteGuard>
+                  } />
+                  <Route path="/habitos/:habitId/editar" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <HabitSetup />
                     </RouteGuard>
                   } />
                   <Route path="/journal" element={

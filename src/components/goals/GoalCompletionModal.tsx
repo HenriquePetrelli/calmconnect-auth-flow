@@ -76,9 +76,9 @@ export const GoalCompletionModal = ({ goal, onClose }: GoalCompletionModalProps)
               <div className="flex items-start gap-3 mb-4">
                 <CheckCircle2 className="h-6 w-6 text-success flex-shrink-0 mt-1" />
                 <div>
-                  <h3 className="font-semibold text-lg mb-1">Meta Concluída!</h3>
+                  <h3 className="font-semibold text-lg mb-1">Hábito concluído!</h3>
                   <p className="text-sm text-muted-foreground">
-                    Você completou sua meta semanal:
+                    Você concluiu um hábito da semana:
                   </p>
                 </div>
               </div>
