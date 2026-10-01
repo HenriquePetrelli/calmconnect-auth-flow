@@ -70,9 +70,17 @@ const SafetyPlans = () => {
           ) : (
             <ul className="space-y-2" aria-label="Seus planos de segurança">
               {plans.map((plan) => (
-                <li key={plan.id} className="flex items-center gap-2 rounded-xl border bg-card px-4 py-2">
-                  <ShieldCheck className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
-                  <span className="min-w-0 flex-1 truncate font-medium text-foreground">{plan.title}</span>
+                <li key={plan.id} className="flex items-center gap-1 rounded-xl border bg-card py-1 pl-1 pr-2">
+                  {/* Tocar no plano abre a leitura; o lápis leva à edição. */}
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/safety-plan/${plan.id}/ver`)}
+                    className="flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-lg px-3 py-2 text-left hover:bg-muted/50"
+                    aria-label={`Ver ${plan.title}`}
+                  >
+                    <ShieldCheck className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
+                    <span className="min-w-0 flex-1 truncate font-medium text-foreground">{plan.title}</span>
+                  </button>
                   <Button
                     variant="ghost"
                     size="icon"

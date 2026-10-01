@@ -14,6 +14,7 @@ vi.mock('@/components/PatientBottomNav', () => ({ default: () => <div /> }));
 
 import SafetyPlans from '@/pages/SafetyPlans';
 import SafetyPlanEditor from '@/pages/SafetyPlanEditor';
+import SafetyPlanView from '@/pages/SafetyPlanView';
 
 const renderAt = (path: string) =>
   render(
@@ -21,6 +22,7 @@ const renderAt = (path: string) =>
       <Routes>
         <Route path="/safety-plan" element={<SafetyPlans />} />
         <Route path="/safety-plan/:planId" element={<SafetyPlanEditor />} />
+        <Route path="/safety-plan/:planId/ver" element={<SafetyPlanView />} />
       </Routes>
     </MemoryRouter>
   );
@@ -152,5 +154,35 @@ describe('cadastro de plano de segurança', () => {
     expect(params.p_title).toBe('Plano das noites difíceis');
     expect(params.p_reasons_to_live).toEqual(['Minha filha']);
     expect(params.p_contacts).toEqual([{ name: 'Mãe', relationship: null, phone: '11988880000', is_primary: true }]);
+  });
+});
+
+describe('leitura do plano', () => {
+  it('tocar no plano da lista abre a leitura, com razões, seções e botão de ligar', async () => {
+    fakeDb.seed('safety_plans', [
+      { ...plan('1', 'Plano da noite'), warning_signs: ['Não consigo dormir'], coping_strategies: ['Tomar um banho'], reasons_to_live: ['Minha filha'] },
+    ]);
+    fakeDb.seed('emergency_contacts', [
+      { patient_id: 'patient-1', plan_id: '1', name: 'Irmã', relationship: 'Irmã', phone: '(11) 99999-0000', is_primary: true },
+    ]);
+    renderAt('/safety-plan');
+
+    fireEvent.click(await screen.findByLabelText('Ver Plano da noite'));
+    expect(await screen.findByText('Minhas razões para seguir')).toBeInTheDocument();
+    expect(screen.getByText('Minha filha')).toBeInTheDocument();
+    expect(screen.getByText('Não consigo dormir')).toBeInTheDocument();
+    expect(screen.getByText('Tomar um banho')).toBeInTheDocument();
+    expect(screen.getByLabelText('Ligar para Irmã')).toHaveAttribute('href', 'tel:11999990000');
+    // Só as partes preenchidas aparecem; o resto vira um convite para completar.
+    expect(screen.queryByText('Como deixar o ambiente mais seguro')).not.toBeInTheDocument();
+    expect(screen.getByText(/4 de 6 partes preenchidas/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Editar plano/ }));
+    expect(await screen.findByText('Editar plano de segurança')).toBeInTheDocument();
+  });
+
+  it('avisa quando o plano não existe mais', async () => {
+    renderAt('/safety-plan/inexistente/ver');
+    expect(await screen.findByText(/Este plano não existe mais/)).toBeInTheDocument();
   });
 });

@@ -1,4 +1,4 @@
--- Teste de "Meus hábitos" (migration 20260930120000_user_habits).
+-- Teste de "Meus hábitos" (migration 20261001030059_…, "Meus hábitos").
 --
 --   supabase start
 --   psql "$(supabase status -o env | grep DB_URL | cut -d= -f2- | tr -d '"')" -f supabase/tests/user_habits.sql
