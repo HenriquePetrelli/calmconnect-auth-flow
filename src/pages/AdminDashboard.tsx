@@ -243,7 +243,7 @@ const AdminDashboard = () => {
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3 md:py-4">
           <div className="flex items-center justify-between gap-2 sm:gap-4">
             <div className="min-w-0 flex-1">
-              <p className="text-[10px] sm:text-[11px] font-medium uppercase tracking-wider text-primary-foreground/70 flex items-center gap-1.5">
+              <p className="text-xs font-medium uppercase tracking-wider text-primary-foreground/70 flex items-center gap-1.5">
                 <Shield className="w-3 h-3" /> Painel Administrativo
               </p>
               <h1 className="text-base sm:text-lg md:text-xl font-semibold text-white truncate">
@@ -264,7 +264,7 @@ const AdminDashboard = () => {
                 {unreadCount > 0 && (
                   <Badge
                     variant="destructive"
-                    className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 flex items-center justify-center text-[10px] leading-none"
+                    className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 flex items-center justify-center text-xs leading-none"
                   >
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </Badge>
@@ -421,13 +421,13 @@ const AdminDashboard = () => {
                         <CardContent className="p-3 sm:p-5">
                           <div className="flex items-start justify-between gap-2 sm:gap-3">
                             <div className="min-w-0">
-                              <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wide leading-tight">
+                              <p className="text-xs font-medium text-muted-foreground leading-tight">
                                 {label}
                               </p>
                               <p className={`text-xl sm:text-3xl font-bold mt-1 sm:mt-1.5 ${s.value}`}>
                                 {value}
                               </p>
-                              <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 leading-tight">
+                              <p className="text-xs text-muted-foreground mt-0.5 sm:mt-1 leading-tight">
                                 {hint}
                               </p>
                             </div>
@@ -455,7 +455,7 @@ const AdminDashboard = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                  <CardTitle className="flex items-center gap-2">
                     <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                     Resumo de Atividade
                   </CardTitle>
@@ -494,7 +494,7 @@ const AdminDashboard = () => {
 
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                  <CardTitle className="flex items-center gap-2">
                     <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-warning" />
                     Ações Necessárias
                   </CardTitle>

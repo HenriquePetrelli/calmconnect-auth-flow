@@ -45,7 +45,7 @@ export const AppointmentScheduler: React.FC<AppointmentSchedulerProps> = ({
           </Button>
         ) : null}
         <div>
-          <h1 className="text-xl font-semibold text-foreground">
+          <h1 className="text-lg font-semibold text-foreground">
             {currentStep === 'selection' ? 'Escolher Psicólogo' : 'Agendar Consulta'}
           </h1>
           <p className="text-sm text-muted-foreground">

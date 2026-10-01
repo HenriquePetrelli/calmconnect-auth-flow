@@ -220,10 +220,10 @@ const SubscriptionPlans = () => {
 
         <div className="text-center mb-16">
           <div className="mb-8">
-            <h1 className="text-4xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-3xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               Escolha seu Plano
             </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            <p className="text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">
               Acesso completo aos nossos serviços de bem-estar mental com profissionais qualificados
             </p>
           </div>
@@ -281,7 +281,7 @@ const SubscriptionPlans = () => {
               )}
               
               <CardHeader className="text-center pb-8">
-                <CardTitle className="text-3xl font-bold mb-2">{plan.name}</CardTitle>
+                <CardTitle className="text-2xl mb-2">{plan.name}</CardTitle>
                 <CardDescription className="mb-4">
                   <div className="flex items-baseline justify-center gap-1">
                     <span className="text-4xl font-bold text-foreground">{plan.price}</span>

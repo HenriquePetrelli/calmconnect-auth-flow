@@ -179,7 +179,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversaId, onVolt
           <div className="min-w-0 flex-1">
             <h3 className="text-base font-semibold text-foreground truncate">{nomeOutro}</h3>
             <div className="flex items-center gap-2 mt-0.5">
-              <Badge variant="secondary" className="gap-1 text-[10px] px-1.5 py-0">
+              <Badge variant="secondary" className="gap-1 text-xs px-1.5 py-0">
                 {statusInfo.icon}
                 {statusInfo.text}
               </Badge>
@@ -223,7 +223,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversaId, onVolt
                 )}
                 <div className={`flex ${isMinhaMsg ? 'justify-end' : 'justify-start'} gap-2`}>
                   {!isMinhaMsg && (
-                    <div className="w-7 h-7 rounded-full bg-primary/15 text-primary flex items-center justify-center text-[10px] font-semibold shrink-0 mt-auto">
+                    <div className="w-7 h-7 rounded-full bg-primary/15 text-primary flex items-center justify-center text-xs font-semibold shrink-0 mt-auto">
                       {getInitials(nomeOutro)}
                     </div>
                   )}
@@ -246,7 +246,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversaId, onVolt
                         <p className="whitespace-pre-wrap break-words">{mensagem.conteudo}</p>
                       )}
                     </div>
-                    <span className="flex items-center gap-1 text-[10px] text-muted-foreground mt-1 px-1">
+                    <span className="flex items-center gap-1 text-xs text-muted-foreground mt-1 px-1">
                       {format(dataMsg, 'HH:mm')}
                       {isMinhaMsg && (
                         mensagem.lida_em ? (

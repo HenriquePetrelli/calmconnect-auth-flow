@@ -148,7 +148,7 @@ const ActivityHistory = () => {
             {/* Month Filter and Export Buttons */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Filtrar por Mês</CardTitle>
+                <CardTitle>Filtrar por Mês</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <Select value={selectedMonth} onValueChange={(value) => {

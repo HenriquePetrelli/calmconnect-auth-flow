@@ -171,7 +171,7 @@ const Statistics = () => {
                       {s.label}
                     </div>
                     {s.sublabel && (
-                      <div className="text-[11px] font-medium text-primary mt-0.5">
+                      <div className="text-xs font-medium text-primary mt-0.5">
                         {s.sublabel}
                       </div>
                     )}

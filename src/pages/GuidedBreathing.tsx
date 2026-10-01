@@ -236,7 +236,7 @@ const GuidedBreathing = () => {
               <Waves className="w-7 h-7 text-primary" />
             </div>
             <div>
-              <h2 className="text-lg sm:text-xl font-bold text-foreground leading-tight">
+              <h2 className="text-lg font-semibold text-foreground leading-tight">
                 Respire com calma e equilibre sua mente
               </h2>
               <p className="text-sm text-muted-foreground mt-1">
@@ -283,7 +283,7 @@ const GuidedBreathing = () => {
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold text-foreground">Técnicas de respiração</h2>
+              <h2 className="text-lg font-semibold text-foreground">Técnicas de respiração</h2>
               <p className="text-sm text-muted-foreground">Escolha um exercício e comece</p>
             </div>
             <span className="text-sm text-muted-foreground">
@@ -328,7 +328,7 @@ const GuidedBreathing = () => {
                       <div className="flex items-center gap-2 flex-wrap">
                         <span
                           className={cn(
-                            "text-[11px] font-medium px-2 py-0.5 rounded-full",
+                            "text-xs font-medium px-2 py-0.5 rounded-full",
                             difficultyColor[technique.difficulty]
                           )}
                         >
@@ -351,7 +351,7 @@ const GuidedBreathing = () => {
         {!searchQuery && activeFilter === "all" && featuredTechnique && (
           <section className="space-y-4">
             <div>
-              <h2 className="text-xl font-bold text-foreground">Recomendado para você</h2>
+              <h2 className="text-lg font-semibold text-foreground">Recomendado para você</h2>
               <p className="text-sm text-muted-foreground">A técnica mais usada para relaxar</p>
             </div>
 

@@ -122,7 +122,7 @@ const SoundsLibrary = () => {
               <Headphones className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg sm:text-xl font-bold text-foreground leading-tight">
+              <h2 className="text-lg font-semibold text-foreground leading-tight">
                 Encontre o som perfeito para o seu momento
               </h2>
               <p className="text-sm text-muted-foreground mt-1">
@@ -196,7 +196,7 @@ const SoundsLibrary = () => {
             {/* Main Categories */}
             <section className="space-y-4">
               <div>
-                <h2 className="text-xl font-bold text-foreground">Categorias Principais</h2>
+                <h2 className="text-lg font-semibold text-foreground">Categorias Principais</h2>
                 <p className="text-sm text-muted-foreground">Escolha um objetivo para começar</p>
               </div>
 
@@ -235,7 +235,7 @@ const SoundsLibrary = () => {
             {/* Playlists */}
             <section className="space-y-4">
               <div>
-                <h2 className="text-xl font-bold text-foreground">Playlists</h2>
+                <h2 className="text-lg font-semibold text-foreground">Playlists</h2>
                 <p className="text-sm text-muted-foreground">Coleções por estilo de som</p>
               </div>
 
@@ -275,7 +275,7 @@ const SoundsLibrary = () => {
             {featuredSound && (
               <section className="space-y-4">
                 <div>
-                  <h2 className="text-xl font-bold text-foreground">Recomendados para você</h2>
+                  <h2 className="text-lg font-semibold text-foreground">Recomendados para você</h2>
                   <p className="text-sm text-muted-foreground">Baseado no seu histórico de uso</p>
                 </div>
 

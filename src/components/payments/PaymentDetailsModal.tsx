@@ -97,7 +97,7 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
             {/* Basic Info */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">{payment.name}</CardTitle>
+                <CardTitle>{payment.name}</CardTitle>
                 <CardDescription>{payment.email}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">

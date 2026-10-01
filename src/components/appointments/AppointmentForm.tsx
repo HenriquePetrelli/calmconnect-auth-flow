@@ -110,7 +110,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
           <ArrowLeft size={20} />
         </Button>
         <div>
-          <h2 className="text-xl font-semibold text-foreground">Agendar Consulta</h2>
+          <h2 className="text-lg font-semibold text-foreground">Agendar Consulta</h2>
           <p className="text-muted-foreground">
             com {psychologist.full_name}
           </p>

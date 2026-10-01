@@ -57,7 +57,7 @@ export const SafetyPlanSection = ({ requestId }: { requestId: string | null }) =
           <Button variant="outline" size="sm" className="w-full" onClick={open} disabled={!requestId}>
             Ver plano de segurança e contatos
           </Button>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             O acesso fica registrado e só vale enquanto este atendimento estiver ativo.
           </p>
           {state === 'error' && (
@@ -116,7 +116,7 @@ export const SafetyPlanSection = ({ requestId }: { requestId: string | null }) =
 
               {sections.map((s) => (
                 <div key={s.key} className="space-y-1">
-                  <p className="text-[11px] font-semibold text-muted-foreground">{s.shortLabel}</p>
+                  <p className="text-xs font-semibold text-muted-foreground">{s.shortLabel}</p>
                   <ul className="list-disc space-y-0.5 pl-4 text-xs text-foreground">
                     {plan[s.key].map((item) => (
                       <li key={item}>{item}</li>

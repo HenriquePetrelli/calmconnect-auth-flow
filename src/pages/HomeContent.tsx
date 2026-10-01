@@ -267,7 +267,7 @@ const HomeContent = () => {
                     <Icon className="h-5 w-5 lg:h-6 lg:w-6" strokeWidth={2.25} />
                   </div>
                   <div className="relative min-w-0 flex-1">
-                    <h3 className="text-sm lg:text-[15px] font-semibold leading-tight" style={{ color: feature.color }}>{feature.title}</h3>
+                    <h3 className="text-sm lg:text-base font-semibold leading-tight" style={{ color: feature.color }}>{feature.title}</h3>
                     <p className="mt-0.5 lg:mt-1 text-xs lg:text-sm leading-snug text-foreground/70">{feature.subtitle}</p>
                   </div>
                   <ArrowUpRight

@@ -29,7 +29,7 @@ export const PsychologistModal: React.FC<PsychologistModalProps> = ({
               <User className="text-primary" size={24} />
             </div>
             <div>
-              <h2 className="text-xl font-bold">{psychologist.full_name}</h2>
+              <h2 className="text-lg font-semibold">{psychologist.full_name}</h2>
               <p className="text-muted-foreground font-normal">
                 {psychologist.specialty || psychologist.specialization || 'Psicologia Geral'}
               </p>

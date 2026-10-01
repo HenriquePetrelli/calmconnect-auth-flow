@@ -439,7 +439,7 @@ const SoundPlayer = () => {
 
         {/* Title */}
         <div className="text-center shrink-0">
-          <h2 className="text-xl font-bold text-foreground leading-tight">{currentSound.name}</h2>
+          <h2 className="text-xl font-semibold text-foreground leading-tight">{currentSound.name}</h2>
           <p className="text-sm text-muted-foreground mt-0.5">{currentSound.category}</p>
         </div>
 

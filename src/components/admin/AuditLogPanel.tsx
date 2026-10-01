@@ -66,7 +66,7 @@ export const AuditLogPanel = () => {
   return (
     <div className="space-y-4 sm:space-y-6">
       <div>
-        <h2 className="text-lg sm:text-xl font-semibold text-foreground">Histórico de Ações Administrativas</h2>
+        <h2 className="text-lg font-semibold text-foreground">Histórico de Ações Administrativas</h2>
         <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
           Todo bloqueio, edição ou exclusão de conta feito por um admin fica registrado aqui — quem fez, quando e por quê.
         </p>

@@ -306,7 +306,7 @@ const PatternStep = ({
       {icon}
     </div>
     <div className="min-w-0">
-      <p className="text-[11px] text-muted-foreground leading-none">{label}</p>
+      <p className="text-xs text-muted-foreground leading-none">{label}</p>
       <p className="text-sm font-semibold text-foreground tabular-nums">{value}s</p>
     </div>
   </div>
@@ -410,7 +410,7 @@ const ExerciseView = ({
       <div className="flex-1 min-h-0 flex flex-col items-center justify-between px-5 py-5 max-w-xl w-full mx-auto">
         <div className="shrink-0 flex items-center gap-2 px-3 py-1 rounded-full bg-muted/60 border border-border/60">
           <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />
-          <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+          <span className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
             Ciclo {cycleCount + 1}
           </span>
         </div>
@@ -497,7 +497,7 @@ const ExerciseView = ({
         </div>
 
         <div className="shrink-0 w-full mt-5 space-y-3">
-          <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-medium">
+          <div className="flex items-center justify-between text-xs uppercase tracking-[0.14em] text-muted-foreground font-medium">
             <span>Sessão</span>
             <span className="tabular-nums text-foreground/80">{formatTime(timeRemaining)}</span>
           </div>

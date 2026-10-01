@@ -65,7 +65,7 @@ export const SosHistoryPanel: React.FC<SosHistoryPanelProps> = ({
       {withMetrics && metrics && Object.keys(metrics.end_reasons ?? {}).length > 0 && (
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Motivos de encerramento (30 dias)</CardTitle>
+            <CardTitle>Motivos de encerramento (30 dias)</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
             {Object.entries(metrics.end_reasons).map(([reason, qty]) => (

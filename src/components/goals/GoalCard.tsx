@@ -59,7 +59,7 @@ export const GoalCard = ({ goal }: GoalCardProps) => {
             <Icon className="h-6 w-6" />
           </div>
           <div className="flex-1">
-            <CardTitle className="text-lg font-semibold mb-1">{goal.weekly_goals.title}</CardTitle>
+            <CardTitle className="mb-1">{goal.weekly_goals.title}</CardTitle>
             {goal.weekly_goals.category && (
               <Badge variant="outline" className="mb-2">
                 {categoryLabels[goal.weekly_goals.category] || goal.weekly_goals.category}

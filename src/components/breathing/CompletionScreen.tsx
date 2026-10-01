@@ -47,7 +47,7 @@ const CompletionScreen = ({
           </div>
 
           <div>
-            <h1 className="text-2xl font-bold text-foreground mb-2">Sessão Concluída!</h1>
+            <h1 className="text-2xl font-semibold text-foreground mb-2">Sessão Concluída!</h1>
             <p className="text-muted-foreground">
               Esperamos que você se sinta mais calmo e centrado.
             </p>

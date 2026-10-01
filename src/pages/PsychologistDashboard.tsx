@@ -172,7 +172,7 @@ const PsychologistDashboard = () => {
           <div className="relative flex items-center justify-between gap-2 sm:gap-4">
             {/* Lado esquerdo - saudação */}
             <div className="min-w-0 flex-1">
-              <p className="text-[10px] sm:text-[11px] font-medium uppercase tracking-wider text-primary-foreground/70">
+              <p className="text-xs font-medium uppercase tracking-wider text-primary-foreground/70">
                 Área do Psicólogo
               </p>
               <h1 className="text-base sm:text-lg md:text-xl font-semibold text-white truncate">
@@ -211,7 +211,7 @@ const PsychologistDashboard = () => {
                 {unreadCount > 0 && (
                   <Badge
                     variant="destructive"
-                    className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 flex items-center justify-center text-[10px] leading-none"
+                    className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 flex items-center justify-center text-xs leading-none"
                   >
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </Badge>
@@ -252,9 +252,9 @@ const PsychologistDashboard = () => {
             <CardContent className="p-3 sm:p-5">
               <div className="flex items-start justify-between gap-2 sm:gap-3">
                 <div className="min-w-0">
-                  <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wide truncate">Emergências</p>
+                  <p className="text-xs font-medium text-muted-foreground truncate">Emergências</p>
                   <p className="text-xl sm:text-3xl font-bold text-destructive mt-1 sm:mt-1.5">{pendingEmergencies}</p>
-                  <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 hidden sm:block">pendentes</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 sm:mt-1 hidden sm:block">pendentes</p>
                 </div>
                 <div className="rounded-lg bg-destructive/10 p-1.5 sm:p-2.5 shrink-0">
                   <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-destructive" />
@@ -267,9 +267,9 @@ const PsychologistDashboard = () => {
             <CardContent className="p-3 sm:p-5">
               <div className="flex items-start justify-between gap-2 sm:gap-3">
                 <div className="min-w-0">
-                  <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wide truncate">Hoje</p>
+                  <p className="text-xs font-medium text-muted-foreground truncate">Hoje</p>
                   <p className="text-xl sm:text-3xl font-bold text-primary mt-1 sm:mt-1.5">{todayConsultations}</p>
-                  <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 hidden sm:block">consultas</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 sm:mt-1 hidden sm:block">consultas</p>
                 </div>
                 <div className="rounded-lg bg-primary/10 p-1.5 sm:p-2.5 shrink-0">
                   <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
@@ -282,9 +282,9 @@ const PsychologistDashboard = () => {
             <CardContent className="p-3 sm:p-5">
               <div className="flex items-start justify-between gap-2 sm:gap-3">
                 <div className="min-w-0">
-                  <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wide truncate">Próximas</p>
+                  <p className="text-xs font-medium text-muted-foreground truncate">Próximas</p>
                   <p className="text-xl sm:text-3xl font-bold text-secondary-foreground mt-1 sm:mt-1.5">{upcomingConsultations}</p>
-                  <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 hidden sm:block">agendadas</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 sm:mt-1 hidden sm:block">agendadas</p>
                 </div>
                 <div className="rounded-lg bg-secondary/20 p-1.5 sm:p-2.5 shrink-0">
                   <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-secondary-foreground" />
@@ -301,7 +301,7 @@ const PsychologistDashboard = () => {
               <Bell className="w-4 h-4 shrink-0" />
               <span>Emergências</span>
               {pendingEmergencies > 0 && (
-                <Badge variant="destructive" className="ml-0.5 h-4 sm:h-5 px-1 sm:px-1.5 text-[10px] sm:text-xs">
+                <Badge variant="destructive" className="ml-0.5 h-4 sm:h-5 px-1 sm:px-1.5 text-xs">
                   {pendingEmergencies}
                 </Badge>
               )}

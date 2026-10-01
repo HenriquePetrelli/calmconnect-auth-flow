@@ -73,7 +73,7 @@ export const PatientContextPanel: React.FC<PatientContextPanelProps> = ({ reques
               <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Sintomas relatados</h3>
               <div className="flex flex-wrap gap-1.5">
                 {patient.symptoms.slice(0, 12).map((s) => (
-                  <Badge key={s} variant="outline" className="text-[11px] font-normal">
+                  <Badge key={s} variant="outline" className="text-xs font-normal">
                     {s}
                   </Badge>
                 ))}
@@ -115,7 +115,7 @@ export const PatientContextPanel: React.FC<PatientContextPanelProps> = ({ reques
                     <li key={r.id} className="rounded-lg border border-border/60 px-2.5 py-2 text-xs">
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-muted-foreground">{formatDateTime(r.created_at)}</span>
-                        <Badge variant="outline" className="text-[10px]">
+                        <Badge variant="outline" className="text-xs">
                           {sosStatusLabel(r.status)}
                         </Badge>
                       </div>

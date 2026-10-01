@@ -56,7 +56,7 @@ const HabitSetup = () => {
 
   const renderCatalogGroup = (label: string, kinds: HabitKind[]) => (
     <section className="space-y-2">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">{label}</h2>
+      <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</h2>
       {kinds.map((k) => {
         const { icon: Icon, color, soft } = HABIT_VISUALS[k];
         const already = k !== 'quit_custom' && activeKinds.has(k);

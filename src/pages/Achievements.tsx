@@ -28,7 +28,7 @@ const Achievements = () => {
             <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center">
               <Trophy className="w-12 h-12 text-muted-foreground" />
             </div>
-            <h2 className="text-xl font-semibold text-foreground">
+            <h2 className="text-lg font-semibold text-foreground">
               Nenhuma conquista ainda
             </h2>
             <p className="text-muted-foreground text-center max-w-md">

@@ -62,7 +62,7 @@ export const PsychologistAuthGuard = ({ children }: { children: React.ReactNode 
                 <AlertTriangle className="h-16 w-16 text-warning" />
               )}
             </div>
-            <CardTitle className="text-2xl">
+            <CardTitle className="text-xl">
               {approvalStatus?.status === 'blocked' && 'Acesso Bloqueado'}
               {approvalStatus?.status === 'pending' && 'Cadastro em Análise'}
               {approvalStatus?.status === 'rejected' && 'Cadastro Rejeitado'}

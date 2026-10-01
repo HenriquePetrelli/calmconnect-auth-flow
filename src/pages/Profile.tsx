@@ -163,7 +163,7 @@ const Profile = () => {
                   </div>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-2xl font-semibold text-foreground truncate">
+                  <h2 className="text-xl font-semibold text-foreground truncate">
                     {user?.profile?.full_name || 'Usuário'}
                   </h2>
                   <p className="text-sm text-muted-foreground truncate">{user?.email}</p>

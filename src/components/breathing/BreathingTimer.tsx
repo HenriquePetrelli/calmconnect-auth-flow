@@ -58,7 +58,7 @@ const BreathingTimer = ({ pattern, state }: BreathingTimerProps) => {
           return (
             <div key={p} className="text-center" style={{ width: `${widthPct}%` }}>
               <p
-                className="text-[10px] font-semibold uppercase tracking-[0.12em] truncate transition-colors"
+                className="text-xs font-semibold uppercase tracking-[0.12em] truncate transition-colors"
                 style={{
                   color: isCurrent ? phaseMeta[p].color : 'hsl(var(--muted-foreground) / 0.7)',
                 }}
@@ -66,7 +66,7 @@ const BreathingTimer = ({ pattern, state }: BreathingTimerProps) => {
                 {phaseMeta[p].label}
               </p>
               <p
-                className="text-[11px] font-medium tabular-nums transition-colors"
+                className="text-xs font-medium tabular-nums transition-colors"
                 style={{
                   color: isCurrent ? phaseMeta[p].color : 'hsl(var(--muted-foreground) / 0.5)',
                 }}

@@ -143,7 +143,7 @@ export const CallDiagnosticsPanel: React.FC<CallDiagnosticsPanelProps> = ({ data
                   <li key={event.id} className="flex items-center justify-between gap-2 text-xs">
                     <span className="font-mono text-foreground/90">{event.event_type}</span>
                     <span className="flex items-center gap-1.5 text-muted-foreground">
-                      <Badge variant="outline" className="px-1 py-0 text-[10px]">
+                      <Badge variant="outline" className="px-1 py-0 text-xs">
                         {event.actor_type}
                       </Badge>
                       {new Date(event.created_at).toLocaleTimeString('pt-BR')}

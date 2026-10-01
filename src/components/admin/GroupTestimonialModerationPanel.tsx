@@ -80,7 +80,7 @@ export const GroupTestimonialModerationPanel = () => {
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-lg sm:text-xl font-semibold text-foreground">Grupos de Apoio — Depoimentos</h2>
+        <h2 className="text-lg font-semibold text-foreground">Grupos de Apoio — Depoimentos</h2>
         <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
           Depoimentos denunciados por usuários ou com 10 ou mais "não gostei" ficam sinalizados aqui para revisão —
           nada é excluído automaticamente. Edite, exclua ou arquive as denúncias quando necessário.
@@ -138,7 +138,7 @@ export const GroupTestimonialModerationPanel = () => {
                             {t.likes_negativos}
                           </span>
                           {t.flagged && (
-                            <Badge variant="destructive" className="text-[10px]">
+                            <Badge variant="destructive" className="text-xs">
                               Revisar
                             </Badge>
                           )}

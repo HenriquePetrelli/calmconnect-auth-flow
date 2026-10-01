@@ -136,7 +136,7 @@ export const PaymentsPanel = () => {
       {/* Header with actions */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h2 className="text-lg sm:text-xl font-semibold text-foreground">
+          <h2 className="text-lg font-semibold text-foreground">
             Gerenciamento de Pagamentos
           </h2>
           <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
@@ -160,7 +160,7 @@ export const PaymentsPanel = () => {
             <div className="text-lg sm:text-2xl font-bold text-primary truncate">
               {formatCurrency(totalPending)}
             </div>
-            <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 line-clamp-2">
+            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
               {pendingPayments} psicólogo(s) pendente(s)
             </p>
           </CardContent>
@@ -175,7 +175,7 @@ export const PaymentsPanel = () => {
             <div className="text-lg sm:text-2xl font-bold text-success truncate">
               {formatCurrency(totalPaid)}
             </div>
-            <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
+            <p className="text-xs text-muted-foreground mt-0.5">
               Pagamentos confirmados
             </p>
           </CardContent>
@@ -188,7 +188,7 @@ export const PaymentsPanel = () => {
           </CardHeader>
           <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
             <div className="text-lg sm:text-2xl font-bold">{payments.length}</div>
-            <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
+            <p className="text-xs text-muted-foreground mt-0.5">
               Com histórico de pagamentos
             </p>
           </CardContent>
@@ -198,7 +198,7 @@ export const PaymentsPanel = () => {
       {/* Payments Table */}
       <Card>
         <CardHeader className="p-4 sm:p-6">
-          <CardTitle className="text-base sm:text-lg">Lista de Pagamentos</CardTitle>
+          <CardTitle>Lista de Pagamentos</CardTitle>
           <CardDescription className="text-xs sm:text-sm">
             Consultas agendadas = R$ 90,00 | Emergências = R$ 50,00
           </CardDescription>
@@ -236,7 +236,7 @@ export const PaymentsPanel = () => {
                         <div className="text-xs text-muted-foreground truncate">{payment.email}</div>
                       </div>
                       <div className="text-right shrink-0">
-                        <div className="text-[10px] text-muted-foreground uppercase">Pendente</div>
+                        <div className="text-xs text-muted-foreground uppercase">Pendente</div>
                         <div className={`text-sm font-semibold ${payment.total_pending_amount > 0 ? "text-primary" : "text-muted-foreground"}`}>
                           {formatCurrency(payment.total_pending_amount)}
                         </div>
@@ -247,7 +247,7 @@ export const PaymentsPanel = () => {
                       <div className="text-xs">
                         <span className="text-muted-foreground">PIX: </span>
                         <span className="font-mono">{payment.pix_key}</span>
-                        <Badge variant="secondary" className="text-[10px] ml-2">
+                        <Badge variant="secondary" className="text-xs ml-2">
                           {getPixTypeLabel(payment.pix_type)}
                         </Badge>
                       </div>

@@ -32,7 +32,7 @@ const GroupCard = ({ group, onToggleFavorite, onViewGroup }: GroupCardProps) => 
           <div className="flex items-start gap-3">
             <div className="flex-1 space-y-2">
               <div className="flex items-center gap-2">
-                <CardTitle className="text-lg leading-tight">
+                <CardTitle>
                   {group.nome}
                 </CardTitle>
                 {group.is_favorited && (

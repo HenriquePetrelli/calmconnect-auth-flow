@@ -63,7 +63,7 @@ const Stat = ({ icon: Icon, label, value, hint }: { icon: typeof Flame; label: s
       {label}
     </p>
     <p className="mt-1 break-words text-lg font-bold tabular-nums text-foreground">{value}</p>
-    {hint && <p className="text-[11px] leading-tight text-muted-foreground">{hint}</p>}
+    {hint && <p className="text-xs leading-tight text-muted-foreground">{hint}</p>}
   </div>
 );
 
@@ -155,7 +155,7 @@ const DailyDetail = ({
       </section>
 
       <section className="space-y-2 rounded-2xl border border-border bg-card p-4" aria-labelledby="week-chart">
-        <h2 id="week-chart" className="text-sm font-semibold text-foreground">Últimos 7 dias</h2>
+        <h2 id="week-chart" className="text-base font-semibold text-foreground">Últimos 7 dias</h2>
         <div className="flex h-32 gap-2" role="list">
           {week.map((day) => {
             const [y, m, d] = day.date.split('-').map(Number);
@@ -168,7 +168,7 @@ const DailyDetail = ({
                     style={{ height: `${Math.min(100, (day.total / goal) * 100)}%`, backgroundColor: day.reached ? color : `${color.replace(')', ' / 0.45)')}` }}
                   />
                 </div>
-                <span className={`text-[11px] ${day.date === today ? 'font-bold text-foreground' : 'text-muted-foreground'}`}>{weekday}</span>
+                <span className={`text-xs ${day.date === today ? 'font-bold text-foreground' : 'text-muted-foreground'}`}>{weekday}</span>
               </div>
             );
           })}
@@ -176,7 +176,7 @@ const DailyDetail = ({
       </section>
 
       <section className="space-y-2 rounded-2xl border border-border bg-card p-4" aria-labelledby="today-entries">
-        <h2 id="today-entries" className="text-sm font-semibold text-foreground">Registros de hoje</h2>
+        <h2 id="today-entries" className="text-base font-semibold text-foreground">Registros de hoje</h2>
         {todayEntries.length === 0 ? (
           <p className="text-sm text-muted-foreground">Nada registrado ainda hoje.</p>
         ) : (
@@ -298,7 +298,7 @@ const QuitDetail = ({
       </section>
 
       <section className="space-y-3 rounded-2xl border border-border bg-card p-4" aria-labelledby="milestones">
-        <h2 id="milestones" className="text-sm font-semibold text-foreground">Conquistas</h2>
+        <h2 id="milestones" className="text-base font-semibold text-foreground">Conquistas</h2>
         {reached.length === 0 ? (
           <p className="text-sm text-muted-foreground">A primeira conquista chega com 1 dia. Você consegue.</p>
         ) : (
@@ -315,7 +315,7 @@ const QuitDetail = ({
 
       {habit.kind === 'quit_smoking' && (
         <section className="space-y-3 rounded-2xl border border-border bg-card p-4" aria-labelledby="health">
-          <h2 id="health" className="text-sm font-semibold text-foreground">Como o seu corpo se recupera</h2>
+          <h2 id="health" className="text-base font-semibold text-foreground">Como o seu corpo se recupera</h2>
           <ol className="space-y-3">
             {healthMilestoneProgress(stats.seconds).map((m) => (
               <li key={m.when} className="space-y-1">

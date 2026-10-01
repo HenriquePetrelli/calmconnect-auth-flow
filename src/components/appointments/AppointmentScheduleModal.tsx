@@ -102,7 +102,7 @@ export const AppointmentScheduleModal = ({
           {/* Psychologist Selection */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Selecionar Psicólogo</CardTitle>
+              <CardTitle>Selecionar Psicólogo</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -132,7 +132,7 @@ export const AppointmentScheduleModal = ({
           {/* Date and Time Selection */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Data e Horário</CardTitle>
+              <CardTitle>Data e Horário</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <Calendar

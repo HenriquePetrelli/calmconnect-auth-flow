@@ -183,7 +183,7 @@ const BreathingOrb = ({ state, isPlaying }: BreathingOrbProps) => {
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
         <span
           key={state.phase}
-          className="text-[11px] font-semibold uppercase tracking-[0.24em] text-foreground/90 drop-shadow-sm animate-fade-in"
+          className="text-xs font-semibold uppercase tracking-[0.24em] text-foreground/90 drop-shadow-sm animate-fade-in"
         >
           {PHASE_LABEL[state.phase]}
         </span>

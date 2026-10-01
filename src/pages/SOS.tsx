@@ -299,7 +299,7 @@ const SOS = () => {
 
             {expired ? (
               <div className="space-y-3">
-                <h2 className="text-2xl font-semibold text-foreground">
+                <h2 className="text-xl font-semibold text-foreground">
                   Ainda não encontramos um profissional livre
                 </h2>
                 <p className="text-muted-foreground text-sm">
@@ -323,7 +323,7 @@ const SOS = () => {
               </div>
             ) : (
               <div className="space-y-3">
-                <h2 className="text-2xl font-semibold text-foreground">
+                <h2 className="text-xl font-semibold text-foreground">
                   Buscando profissional...
                 </h2>
                 <p className="text-primary font-medium">

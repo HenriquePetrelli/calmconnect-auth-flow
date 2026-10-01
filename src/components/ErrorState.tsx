@@ -42,7 +42,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
       <div className="rounded-full p-3 mb-3 bg-destructive/10">
         <Icon className="h-6 w-6 text-destructive" />
       </div>
-      <h3 className="text-sm sm:text-base font-semibold text-foreground">{title}</h3>
+      <h3 className="text-base font-semibold text-foreground">{title}</h3>
       {description && (
         <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-md">
           {description}

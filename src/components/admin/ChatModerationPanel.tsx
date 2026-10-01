@@ -57,7 +57,7 @@ export const ChatModerationPanel = () => {
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-lg sm:text-xl font-semibold text-foreground">Chat — Uso e Moderação</h2>
+        <h2 className="text-lg font-semibold text-foreground">Chat — Uso e Moderação</h2>
         <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
           Métricas agregadas e metadados das conversas. O conteúdo das mensagens não é exibido — preserva a
           privacidade do atendimento.

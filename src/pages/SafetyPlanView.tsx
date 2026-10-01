@@ -62,7 +62,7 @@ const SafetyPlanView = () => {
             <>
               {reasons.length > 0 && (
                 <section className="rounded-2xl bg-primary/10 p-5" aria-labelledby="reasons">
-                  <h2 id="reasons" className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-primary">
+                  <h2 id="reasons" className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-primary">
                     <Heart className="h-4 w-4" aria-hidden="true" />
                     Minhas razões para seguir
                   </h2>

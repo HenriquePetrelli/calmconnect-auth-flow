@@ -121,7 +121,7 @@ const registrationData = {
       <Card className="w-full max-w-2xl mx-auto">
         <CardContent className="p-8 text-center">
           <CheckCircle className="h-16 w-16 text-success mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-foreground mb-2">
+          <h2 className="text-2xl font-semibold text-foreground mb-2">
             Cadastro Enviado com Sucesso!
           </h2>
           <p className="text-muted-foreground mb-4">

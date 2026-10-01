@@ -33,7 +33,7 @@ const SubscriptionSuccess = () => {
           <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <Check className="w-8 h-8 text-primary" />
           </div>
-          <CardTitle className="text-2xl">Assinatura Ativada!</CardTitle>
+          <CardTitle className="text-xl">Assinatura Ativada!</CardTitle>
           <CardDescription>
             Parabéns! Sua assinatura foi processada com sucesso. Agora você tem acesso completo aos nossos serviços.
           </CardDescription>

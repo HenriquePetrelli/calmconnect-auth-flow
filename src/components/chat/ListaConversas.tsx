@@ -247,7 +247,7 @@ export const ListaConversas: React.FC<ListaConversasProps> = ({ onSelectConversa
 
                       <Badge
                         variant="secondary"
-                        className="gap-1 text-[10px] px-1.5 py-0 shrink-0"
+                        className="gap-1 text-xs px-1.5 py-0 shrink-0"
                       >
                         {getStatusIcon(conversa.status)}
                         {getStatusText(conversa.status)}

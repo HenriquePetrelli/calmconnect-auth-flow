@@ -1264,7 +1264,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
               {formatTime(timeLeft)}
             </div>
             {isTimerPaused && (
-              <div className="text-[10px] md:text-xs text-muted-foreground mt-1">Pausado</div>
+              <div className="text-xs text-muted-foreground mt-1">Pausado</div>
             )}
           </div>
 
@@ -1344,7 +1344,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
                 )}
                 <span className="text-xs md:text-sm font-medium">{banner.title}</span>
               </div>
-              <span className="text-[11px] md:text-xs opacity-90">{banner.description}</span>
+              <span className="text-xs opacity-90">{banner.description}</span>
               {banner.showRetry && (
                 <Button
                   size="sm"
@@ -1368,7 +1368,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
             className={`absolute ${banner.visible ? 'top-24' : 'top-4'} left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 rounded-full bg-muted/90 text-muted-foreground px-3 py-1.5 shadow-md backdrop-blur-sm`}
           >
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            <span className="text-[11px] md:text-xs font-medium">
+            <span className="text-xs font-medium">
               Status de câmera/microfone desatualizado — sincronizando...
             </span>
           </div>

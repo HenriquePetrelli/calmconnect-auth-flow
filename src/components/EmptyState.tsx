@@ -41,7 +41,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       <div className={cn("rounded-full p-3 mb-3", accent.bg)}>
         <Icon className={cn("h-6 w-6", accent.text)} />
       </div>
-      <h3 className="text-sm sm:text-base font-semibold text-foreground">{title}</h3>
+      <h3 className="text-base font-semibold text-foreground">{title}</h3>
       {description && (
         <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-md">
           {description}
