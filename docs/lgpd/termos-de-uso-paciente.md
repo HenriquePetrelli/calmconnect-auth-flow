@@ -45,6 +45,10 @@ Os recursos de autocuidado e os grupos de apoio **não são atendimento psicoló
 - A cota de SOS só é consumida **quando o atendimento começa**. Um pedido que nenhum psicólogo aceita não conta.
 - Os preços podem mudar. Avisaremos com pelo menos **30 dias** de antecedência, e o novo preço só vale a partir da renovação seguinte ao aviso.
 
+### 4.1 Plano oferecido pela empresa
+
+Se a sua empresa oferece o Soliv, você pode usar o código de convite do RH (no cadastro ou em **Perfil → Benefício da empresa**) e ter o plano contratado por ela, sem cobrança para você. O benefício vale enquanto você estiver vinculado à empresa e enquanto o contrato dela com o Soliv estiver ativo. Se acabar, o acesso ao plano termina, mas a sua conta e os seus dados continuam com você. A empresa não tem acesso aos seus dados de uso (veja a Política de Privacidade). ⚖️
+
 ## 5. Cancelamento e reembolso
 
 - Você pode cancelar a assinatura a qualquer momento pelo app. **O cancelamento é imediato:** o acesso aos recursos do plano termina no ato. ⚖️

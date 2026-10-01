@@ -85,68 +85,48 @@ serve(async (req) => {
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    
-    if (customers.data.length === 0) {
-      logStep("No customer found, updating unsubscribed state");
-      await supabaseClient.from("subscribers").upsert({
-        email: user.email,
-        user_id: user.id,
-        stripe_customer_id: null,
-        subscribed: false,
-        subscription_tier: null,
-        subscription_end: null,
-        plan_limits: { appointments: 0, sos_uses: 0 },
-        current_usage: { appointments: 0, sos_uses: 0 },
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'email' });
-      return new Response(JSON.stringify({
-        subscribed: false,
-        plan_limits: { appointments: 0, sos_uses: 0 },
-        current_usage: { appointments: 0, sos_uses: 0 },
-        can_use_sos: false,
-        reason: "Usuário não possui assinatura ativa",
-        can_schedule_appointment: false,
-        appointment_reason: "Usuário não possui assinatura ativa"
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
+    const customerId: string | null = customers.data[0]?.id ?? null;
+    logStep(customerId ? "Found Stripe customer" : "No Stripe customer", { customerId });
+
+    let stripeTier: "Plus" | "Premium" | null = null;
+    let stripeEnd: string | null = null;
+    if (customerId) {
+      const subscriptions = await stripe.subscriptions.list({
+        customer: customerId,
+        status: "active",
+        limit: 1,
       });
-    }
-
-    const customerId = customers.data[0].id;
-    logStep("Found Stripe customer", { customerId });
-
-    const subscriptions = await stripe.subscriptions.list({
-      customer: customerId,
-      status: "active",
-      limit: 1,
-    });
-    const hasActiveSub = subscriptions.data.length > 0;
-    let subscriptionTier = null;
-    let subscriptionEnd = null;
-    let planLimits = { appointments: 0, sos_uses: 0 };
-
-    if (hasActiveSub) {
-      const subscription = subscriptions.data[0];
-      subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
-      logStep("Active subscription found", { subscriptionId: subscription.id, endDate: subscriptionEnd });
-      
-      // Determine subscription tier from price
-      const priceId = subscription.items.data[0].price.id;
-      
-      if (priceId === PLAN_PRICES.Plus) {
-        subscriptionTier = "Plus";
-        planLimits = { appointments: 0, sos_uses: 1 };
-      } else if (priceId === PLAN_PRICES.Premium) {
-        subscriptionTier = "Premium";
-        planLimits = { appointments: 1, sos_uses: 1 };
+      if (subscriptions.data.length > 0) {
+        const subscription = subscriptions.data[0];
+        stripeEnd = new Date(subscription.current_period_end * 1000).toISOString();
+        const priceId = subscription.items.data[0].price.id;
+        if (priceId === PLAN_PRICES.Plus) stripeTier = "Plus";
+        else if (priceId === PLAN_PRICES.Premium) stripeTier = "Premium";
+        else logStep("Unknown price on active subscription — no tier granted", { priceId });
+        logStep("Active subscription found", { subscriptionId: subscription.id, stripeTier, stripeEnd });
       } else {
-        logStep("Unknown price on active subscription — no tier granted", { priceId });
+        logStep("No active subscription found");
       }
-      logStep("Determined subscription tier", { priceId, subscriptionTier, planLimits });
-    } else {
-      logStep("No active subscription found");
     }
+
+    // B2B: plano oferecido pela empresa (organization_members). Vale o maior
+    // entre o do Stripe e o da empresa — o mesmo que o trigger
+    // apply_organization_entitlement grava em `subscribers`.
+    const { data: orgRows } = await supabaseClient.rpc("organization_entitlement", { p_user_id: user.id });
+    const org = (orgRows ?? [])[0] as { tier: "Plus" | "Premium"; organization_name: string; ends_on: string | null } | undefined;
+    const rank = (t: string | null | undefined) => (t === "Premium" ? 2 : t === "Plus" ? 1 : 0);
+    const fromOrganization = Boolean(org && rank(org.tier) > rank(stripeTier));
+
+    const subscriptionTier: "Plus" | "Premium" | null = fromOrganization ? org!.tier : stripeTier;
+    const hasActiveSub = subscriptionTier !== null;
+    const subscriptionEnd = fromOrganization ? (org!.ends_on ? new Date(`${org!.ends_on}T23:59:59-03:00`).toISOString() : null) : stripeEnd;
+    const planLimits =
+      subscriptionTier === "Premium"
+        ? { appointments: 1, sos_uses: 1 }
+        : subscriptionTier === "Plus"
+          ? { appointments: 0, sos_uses: 1 }
+          : { appointments: 0, sos_uses: 0 };
+    logStep("Determined subscription tier", { subscriptionTier, source: fromOrganization ? "organization" : "stripe" });
 
     // Get current usage and SOS flags from database
     const { data: existingSubscriberRow } = await supabaseClient
@@ -232,14 +212,17 @@ serve(async (req) => {
     }
 
     // Update subscriber in database
+    // Grava o estado do Stripe (entitlement_source = 'stripe'); o trigger do
+    // banco soma o plano da empresa, se houver.
     await supabaseClient.from("subscribers").upsert({
       email: user.email,
       user_id: user.id,
       stripe_customer_id: customerId,
-      subscribed: hasActiveSub,
-      subscription_tier: subscriptionTier,
-      subscription_end: subscriptionEnd,
-      plan_limits: planLimits,
+      subscribed: stripeTier !== null,
+      subscription_tier: stripeTier,
+      subscription_end: stripeEnd,
+      plan_limits: stripeTier === "Premium" ? { appointments: 1, sos_uses: 1 } : stripeTier === "Plus" ? { appointments: 0, sos_uses: 1 } : { appointments: 0, sos_uses: 0 },
+      entitlement_source: "stripe",
       current_usage: currentUsage,
       sos_used_this_month: sosUsedThisMonth,
       sos_last_used: sosLastUsed,
@@ -259,7 +242,9 @@ serve(async (req) => {
       reason: sosReason,
       can_schedule_appointment: canScheduleAppointment,
       appointment_reason: appointmentReason,
-      plan_type: subscriptionTier
+      plan_type: subscriptionTier,
+      entitlement_source: hasActiveSub ? (fromOrganization ? "organization" : "stripe") : null,
+      organization_name: fromOrganization ? org!.organization_name : null,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

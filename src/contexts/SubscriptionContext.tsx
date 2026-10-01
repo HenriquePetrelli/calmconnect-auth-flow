@@ -11,6 +11,10 @@ interface SubscriptionContextType {
   currentUsage: { appointments: number; sos_uses: number };
   canScheduleAppointment: boolean;
   appointmentReason: string | null;
+  /** De onde vem o plano: assinatura própria (Stripe) ou benefício da empresa (B2B). */
+  entitlementSource: 'stripe' | 'organization' | null;
+  /** Nome da empresa, quando o plano vem dela. */
+  organizationName: string | null;
   loading: boolean;
   checkSubscription: () => Promise<void>;
 }
@@ -33,6 +37,8 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [currentUsage, setCurrentUsage] = useState({ appointments: 0, sos_uses: 0 });
   const [canScheduleAppointment, setCanScheduleAppointment] = useState(false);
   const [appointmentReason, setAppointmentReason] = useState<string | null>(null);
+  const [entitlementSource, setEntitlementSource] = useState<'stripe' | 'organization' | null>(null);
+  const [organizationName, setOrganizationName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -63,6 +69,8 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       setCurrentUsage(data.current_usage || { appointments: 0, sos_uses: 0 });
       setCanScheduleAppointment(data.can_schedule_appointment ?? false);
       setAppointmentReason(data.appointment_reason ?? null);
+      setEntitlementSource(data.entitlement_source ?? null);
+      setOrganizationName(data.organization_name ?? null);
     } catch (error) {
       console.error('Error checking subscription:', error);
     } finally {
@@ -79,6 +87,8 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       setCurrentUsage({ appointments: 0, sos_uses: 0 });
       setCanScheduleAppointment(false);
       setAppointmentReason(null);
+      setEntitlementSource(null);
+      setOrganizationName(null);
       setLoading(false);
       return;
     }
@@ -107,6 +117,8 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         currentUsage,
         canScheduleAppointment,
         appointmentReason,
+        entitlementSource,
+        organizationName,
         loading,
         checkSubscription,
       }}

@@ -24,6 +24,7 @@ Quase tudo o que o paciente registra é **dado pessoal sensível referente à sa
 | Cidade, estado, sintomas selecionados, humor | `patients`, `patient_mood_logs` | paciente | personalizar o app; contexto para o psicólogo no SOS | até excluir a conta |
 | Diário privado | `private_journals` | paciente | registro pessoal (só o paciente lê) | até excluir a conta |
 | Hábitos (água, sono, movimento, consumo de cigarro/álcool, vontades e recaídas; **dado de saúde**) | `user_habits`, `habit_events` | paciente | autocuidado e lembretes por push; só o paciente lê | até excluir a conta |
+| Vínculo com empresa (B2B) | `organizations`, `organization_members` | paciente e RH | liberar o plano pago pela empresa; o RH vê só totais agregados (5+ pessoas); o admin vê a lista para controlar vagas | enquanto durar o vínculo; o vínculo removido fica como histórico |
 | Plano de segurança e contatos de emergência (dados de **terceiros**) | `safety_plans`, `emergency_contacts` | paciente (+ contatos) | atendimento em crise; o psicólogo do SOS ativo lê, com registro em log | até excluir a conta |
 | Metas, conquistas, estatísticas | `patient_weekly_goals`, `patient_achievements`, `patient_statistics` | paciente | engajamento | atividades: 3 meses (`cleanup_quarterly_activities`); o resto até excluir a conta |
 | Depoimentos, curtidas e denúncias em grupos | `group_testimonials`, `group_testimonial_likes`, `group_testimonial_reports` | paciente | comunidade de apoio; moderação | até excluir a conta ou o admin remover |

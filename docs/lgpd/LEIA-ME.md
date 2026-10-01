@@ -36,6 +36,7 @@ O encarregado pode ser um dos sócios. O importante é que o e-mail seja lido e 
 10. **Registros de acesso (Marco Civil, art. 15):** o provedor de aplicação deve guardar por 6 meses. Os logs do Supabase no plano atual cobrem esse prazo?
 11. **Arrependimento depois de usar o serviço:** hoje o reembolso de 7 dias é integral e automático, mesmo que a pessoa já tenha feito o SOS ou a consulta do mês (que geram repasse ao psicólogo). É possível descontar o que já foi usado?
 12. **Prova do aceite após a exclusão da conta:** o histórico de aceites (data e versão) é apagado junto com a conta. Convém guardá-lo pelo mesmo prazo dos registros de atendimento?
+13. **B2B (empresas):** o contrato com a empresa precisa de cláusulas próprias (a empresa como cliente, sem acesso a dados individuais; LGPD na relação empresa–Soliv–colaborador; desligamento do colaborador). O RH vê só totais com 5 ou mais pessoas: isso basta como anonimização?
 
 ## 3. Regras que o app já cumpre
 

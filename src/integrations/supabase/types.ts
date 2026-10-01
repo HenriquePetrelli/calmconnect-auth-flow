@@ -813,6 +813,90 @@ export type Database = {
         }
         Relationships: []
       }
+      organization_members: {
+        Row: {
+          id: string
+          joined_at: string
+          organization_id: string
+          removed_at: string | null
+          role: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          organization_id: string
+          removed_at?: string | null
+          role?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          organization_id?: string
+          removed_at?: string | null
+          role?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      organizations: {
+        Row: {
+          allowed_email_domain: string | null
+          cnpj: string | null
+          contact_email: string | null
+          contact_name: string | null
+          created_at: string
+          ends_on: string | null
+          id: string
+          invite_code: string
+          name: string
+          notes: string | null
+          plan_tier: string
+          seats: number
+          starts_on: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          allowed_email_domain?: string | null
+          cnpj?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          created_at?: string
+          ends_on?: string | null
+          id?: string
+          invite_code?: string
+          name: string
+          notes?: string | null
+          plan_tier: string
+          seats: number
+          starts_on?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          allowed_email_domain?: string | null
+          cnpj?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          created_at?: string
+          ends_on?: string | null
+          id?: string
+          invite_code?: string
+          name?: string
+          notes?: string | null
+          plan_tier?: string
+          seats?: number
+          starts_on?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       patient_achievements: {
         Row: {
           achieved: boolean
@@ -1783,7 +1867,9 @@ export type Database = {
           created_at: string
           current_usage: Json | null
           email: string
+          entitlement_source: string | null
           id: string
+          organization_id: string | null
           plan_limits: Json | null
           sos_last_used: string | null
           sos_used_this_month: boolean
@@ -1800,7 +1886,9 @@ export type Database = {
           created_at?: string
           current_usage?: Json | null
           email: string
+          entitlement_source?: string | null
           id?: string
+          organization_id?: string | null
           plan_limits?: Json | null
           sos_last_used?: string | null
           sos_used_this_month?: boolean
@@ -1817,7 +1905,9 @@ export type Database = {
           created_at?: string
           current_usage?: Json | null
           email?: string
+          entitlement_source?: string | null
           id?: string
+          organization_id?: string | null
           plan_limits?: Json | null
           sos_last_used?: string | null
           sos_used_this_month?: boolean
@@ -2143,6 +2233,37 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_add_organization_manager: {
+        Args: { p_email: string; p_org: string }
+        Returns: Json
+      }
+      admin_list_organization_members: {
+        Args: { p_org: string }
+        Returns: {
+          email: string
+          full_name: string
+          joined_at: string
+          member_id: string
+          role: string
+          status: string
+          user_id: string
+        }[]
+      }
+      check_organization_code: { Args: { p_code: string }; Returns: Json }
+      get_organization_dashboard: { Args: { p_org: string }; Returns: Json }
+      is_organization_manager: { Args: { p_org: string }; Returns: boolean }
+      join_organization: { Args: { p_code: string }; Returns: Json }
+      leave_organization: { Args: never; Returns: undefined }
+      organization_entitlement: {
+        Args: { p_user_id: string }
+        Returns: {
+          ends_on: string | null
+          organization_id: string
+          organization_name: string
+          tier: string
+        }[]
+      }
+      rotate_organization_invite_code: { Args: { p_org: string }; Returns: string }
       add_patient_activity: {
         Args: {
           p_activity_date?: string

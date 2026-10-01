@@ -138,6 +138,9 @@ serve(async (req) => {
       subscription_end: null,
       plan_limits: { appointments: 0, sos_uses: 0 },
       current_usage: { appointments: 0, sos_uses: 0 },
+      // Só a assinatura do Stripe acabou; o trigger do banco mantém o plano da
+      // empresa (B2B), se houver.
+      entitlement_source: "stripe",
       updated_at: new Date().toISOString(),
     }, { onConflict: 'email' });
 

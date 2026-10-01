@@ -128,9 +128,11 @@ serve(async (req) => {
       });
     }
 
-    // Only apply for Plus plan
-    if ((subscriber.subscription_tier || '').toLowerCase() !== 'plus') {
-      logStep("Not Plus plan, no SOS usage recorded", { patientId, tier: subscriber.subscription_tier });
+    // Plus e Premium têm 1 SOS por mês (tela de planos, Termos, can_use_sos).
+    // Antes só o Plus era marcado, e o SOS do Premium ficava ilimitado.
+    const tier = (subscriber.subscription_tier || '').toLowerCase();
+    if (tier !== 'plus' && tier !== 'premium') {
+      logStep("Plan without SOS quota, no usage recorded", { patientId, tier: subscriber.subscription_tier });
       return new Response(JSON.stringify({ ok: true, skipped: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,

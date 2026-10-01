@@ -58,6 +58,8 @@ const SafetyPlans = lazy(() => import("./pages/SafetyPlans"));
 const SafetyPlanEditor = lazy(() => import("./pages/SafetyPlanEditor"));
 const SafetyPlanView = lazy(() => import("./pages/SafetyPlanView"));
 const Habits = lazy(() => import("./pages/Habits"));
+const CompanyBenefit = lazy(() => import("./pages/CompanyBenefit"));
+const CompanyPortal = lazy(() => import("./pages/CompanyPortal"));
 const HabitSetup = lazy(() => import("./pages/HabitSetup"));
 const HabitDetail = lazy(() => import("./pages/HabitDetail"));
 const PsychologistPayments = lazy(() => import("./pages/PsychologistPayments"));
@@ -189,6 +191,16 @@ const App = () => {
                   <Route path="/safety-plan/:planId" element={
                     <RouteGuard allowedUserTypes={['patient']}>
                       <SafetyPlanEditor />
+                    </RouteGuard>
+                  } />
+                  <Route path="/beneficio-empresa" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <CompanyBenefit />
+                    </RouteGuard>
+                  } />
+                  <Route path="/empresa" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <CompanyPortal />
                     </RouteGuard>
                   } />
                   <Route path="/habitos" element={

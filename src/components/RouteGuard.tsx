@@ -29,6 +29,8 @@ export const ROUTE_PERMISSIONS = {
     '/safety-plan/', // cadastro (/novo) e edição (/:id)
     '/habitos',
     '/habitos/', // novo, detalhe e edição
+    '/beneficio-empresa', // B2B: código da empresa
+    '/empresa', // B2B: portal do RH
     '/sounds',
     '/sounds/category',
     '/sounds/subcategory', 

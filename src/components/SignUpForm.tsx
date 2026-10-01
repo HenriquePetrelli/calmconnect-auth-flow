@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { validateCPF } from "@/utils/cpf";
 import LegalConsents, { EMPTY_CONSENTS, allConsentsGiven, consentKeysFor } from "@/components/legal/LegalConsents";
 import { signupAcceptanceMetadata } from "@/lib/legal";
+import { joinErrorMessage, normalizeInviteCode, type JoinErrorCode } from "@/lib/organizations";
 
 interface SignUpFormProps {
   userType: "patient" | "psychologist";
@@ -54,6 +55,34 @@ const [formData, setFormData] = useState({
   const [isSintomasModalOpen, setIsSintomasModalOpen] = useState(false);
   const [consents, setConsents] = useState(EMPTY_CONSENTS);
   const [showConsentErrors, setShowConsentErrors] = useState(false);
+  // B2B: código da empresa (opcional). O banco aplica no momento do cadastro.
+  const [showCompanyCode, setShowCompanyCode] = useState(false);
+  const [companyCode, setCompanyCode] = useState("");
+  const [companyCheck, setCompanyCheck] = useState<{ valid: boolean; message: string } | null>(null);
+
+  const checkCompanyCode = async (): Promise<boolean> => {
+    const code = normalizeInviteCode(companyCode);
+    if (!code) {
+      setCompanyCheck(null);
+      return true;
+    }
+    const { data, error } = await supabase.rpc('check_organization_code', { p_code: code });
+    const result = data as unknown as { valid: boolean; error?: JoinErrorCode; organization?: string; tier?: string; domain?: string | null } | null;
+    if (error || !result) {
+      setCompanyCheck({ valid: false, message: 'Não foi possível conferir o código agora.' });
+      return false;
+    }
+    if (!result.valid) {
+      setCompanyCheck({ valid: false, message: joinErrorMessage({ error: result.error }) });
+      return false;
+    }
+    if (result.domain && !formData.email.toLowerCase().endsWith(`@${result.domain}`)) {
+      setCompanyCheck({ valid: false, message: joinErrorMessage({ error: 'domain_mismatch', domain: result.domain }) });
+      return false;
+    }
+    setCompanyCheck({ valid: true, message: `Plano ${result.tier} pela ${result.organization}` });
+    return true;
+  };
   const navigate = useNavigate();
 
   const isPatient = userType === "patient";
@@ -193,6 +222,11 @@ const [formData, setFormData] = useState({
         return;
       }
 
+      if (isPatient && companyCode.trim() && !(await checkCompanyCode())) {
+        toast.error("Confira o código da empresa ou apague o campo para continuar.");
+        return;
+      }
+
       if (!allConsentsGiven(consents, consentKeysFor(userType))) {
         setShowConsentErrors(true);
         toast.error("Marque as confirmações de idade e de aceite para criar a conta.");
@@ -223,6 +257,7 @@ const [formData, setFormData] = useState({
             user_type: userType,
             full_name: formData.name,
             ...signupAcceptanceMetadata(userType),
+            ...(isPatient && normalizeInviteCode(companyCode) ? { organization_code: normalizeInviteCode(companyCode) } : {}),
           }
         }
       });
@@ -565,6 +600,44 @@ const { error: profileError } = await supabase
               </div>
             </div>
           </div>
+
+          {isPatient && (
+            <div className="space-y-2">
+              {!showCompanyCode ? (
+                <button
+                  type="button"
+                  onClick={() => setShowCompanyCode(true)}
+                  className="text-sm font-medium text-primary underline underline-offset-2"
+                >
+                  Tenho um código da empresa
+                </button>
+              ) : (
+                <>
+                  <Label htmlFor="company-code" className="text-foreground font-medium">
+                    Código da empresa (opcional)
+                  </Label>
+                  <Input
+                    id="company-code"
+                    value={companyCode}
+                    onChange={(e) => {
+                      setCompanyCode(e.target.value.toUpperCase());
+                      setCompanyCheck(null);
+                    }}
+                    onBlur={() => void checkCompanyCode()}
+                    autoComplete="off"
+                    maxLength={20}
+                    placeholder="Código enviado pelo RH"
+                    className="h-12 rounded-xl border-border font-mono tracking-widest"
+                  />
+                  {companyCheck && (
+                    <p role={companyCheck.valid ? undefined : 'alert'} className={`text-sm ${companyCheck.valid ? 'text-success' : 'text-destructive'}`}>
+                      {companyCheck.message}
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
+          )}
 
           <LegalConsents
             userType={userType}

@@ -28,6 +28,7 @@ import {
   MessageSquareWarning,
   History,
   Bell,
+  Building2,
 } from 'lucide-react';
 import AdminProfile from '@/components/AdminProfile';
 import { PsychologistApprovalPanel } from '@/components/psychologist/PsychologistApprovalPanel';
@@ -37,6 +38,7 @@ import { SosHistoryPanel } from '@/components/sos/SosHistoryPanel';
 import { ChatModerationPanel } from '@/components/admin/ChatModerationPanel';
 import { GroupTestimonialModerationPanel } from '@/components/admin/GroupTestimonialModerationPanel';
 import { AuditLogPanel } from '@/components/admin/AuditLogPanel';
+import { OrganizationsPanel } from '@/components/admin/OrganizationsPanel';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -72,6 +74,7 @@ const AdminDashboard = () => {
     { value: 'chat', label: 'Chat', icon: MessageSquare },
     { value: 'groups', label: 'Grupos', icon: MessageSquareWarning },
     { value: 'payments', label: 'Pagamentos', icon: CreditCard },
+    { value: 'companies', label: 'Empresas', icon: Building2 },
     { value: 'audit', label: 'Auditoria', icon: History },
     { value: 'profile', label: 'Perfil', icon: UserCog },
   ] as const;
@@ -360,7 +363,7 @@ const AdminDashboard = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-          <TabsList className="hidden md:grid w-full h-auto p-1 bg-muted/60 grid-cols-9 gap-1 rounded-lg">
+          <TabsList className="hidden md:grid w-full h-auto p-1 bg-muted/60 grid-cols-10 gap-1 rounded-lg">
             <TabsTrigger value="overview" className={tabTriggerClass}>
               <LayoutDashboard className="w-4 h-4 shrink-0" />
               <span>Visão Geral</span>
@@ -388,6 +391,10 @@ const AdminDashboard = () => {
             <TabsTrigger value="payments" className={tabTriggerClass}>
               <CreditCard className="w-4 h-4 shrink-0" />
               <span>Pagamentos</span>
+            </TabsTrigger>
+            <TabsTrigger value="companies" className={tabTriggerClass}>
+              <Building2 className="w-4 h-4 shrink-0" />
+              <span>Empresas</span>
             </TabsTrigger>
             <TabsTrigger value="audit" className={tabTriggerClass}>
               <History className="w-4 h-4 shrink-0" />
@@ -569,6 +576,10 @@ const AdminDashboard = () => {
 
           <TabsContent value="payments" className="mt-4">
             <PaymentsPanel />
+          </TabsContent>
+
+          <TabsContent value="companies" className="mt-4">
+            <OrganizationsPanel />
           </TabsContent>
 
           <TabsContent value="audit" className="mt-4">

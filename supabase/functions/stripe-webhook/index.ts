@@ -74,6 +74,8 @@ const syncSubscription = async (subscription: Stripe.Subscription, userIdHint?: 
     subscription_tier: tier,
     subscription_end: live ? new Date(subscription.current_period_end * 1000).toISOString() : null,
     plan_limits: tier ? PLAN_LIMITS[tier] : { appointments: 0, sos_uses: 0 },
+    // Estado do Stripe; o trigger do banco soma o plano da empresa (B2B), se houver.
+    entitlement_source: "stripe",
     updated_at: new Date().toISOString(),
   };
 

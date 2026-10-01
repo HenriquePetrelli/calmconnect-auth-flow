@@ -69,6 +69,10 @@ Grande parte do que você registra no Soliv é **dado pessoal sensível referent
 - **Outros usuários dos grupos de apoio:** veem os depoimentos que você publicar. Se você marcar o depoimento como **anônimo**, seu nome e sua identificação não são mostrados a ninguém, nem enviados ao aparelho de outros usuários.
 - **Equipe do Soliv (administradores):** acessa apenas o necessário para operar o serviço (por exemplo, moderar depoimentos denunciados, verificar psicólogos, processar repasses). **A equipe não tem acesso ao seu diário, aos seus planos de segurança nem aos seus hábitos.** Os psicólogos também não veem os seus hábitos.
 
+### 5.1 Benefício oferecido pela sua empresa
+
+Se você usa o Soliv pelo benefício da sua empresa (código de convite), a empresa paga o plano, mas **não recebe nenhum dado seu**: nem que você usa o app, nem atendimentos, humor, diário, hábitos ou planos de segurança. O RH da empresa vê apenas o número de vagas em uso e **totais da empresa toda** (atendimentos SOS e consultas no mês, pessoas ativas nos últimos 30 dias), e só quando há 5 ou mais colaboradores no benefício, para que ninguém possa ser identificado. A equipe do Soliv vê quem está vinculado a cada empresa, para controlar as vagas e atender pedidos de inclusão ou desligamento. ⚖️
+
 ## 6. Com quem compartilhamos (operadores)
 
 Usamos empresas que prestam serviços para nós e tratam dados apenas conforme nossas instruções:

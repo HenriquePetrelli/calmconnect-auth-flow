@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Crown, LogOut, Settings, User as UserIcon, MessageCircle, Edit, ChevronDown, LockKeyhole, ScrollText } from "lucide-react";
+import { ArrowLeft, Crown, LogOut, Settings, User as UserIcon, MessageCircle, Edit, ChevronDown, LockKeyhole, ScrollText, Building2 } from "lucide-react";
 import ExpandableCard from "@/components/ExpandableCard";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { DailyMoodToggle } from "@/components/DailyMoodToggle";
@@ -19,7 +19,8 @@ import EditSymptomsModal from "@/components/EditSymptomsModal";
 
 const Profile = () => {
   const navigate = useNavigate();
-  const { subscribed, subscriptionTier } = useSubscription();
+  const { subscribed, subscriptionTier, entitlementSource, organizationName } = useSubscription();
+  const fromCompany = entitlementSource === 'organization';
   const { toast } = useToast();
   const { getShowGoalModalPreference, setShowGoalModal } = useWeeklyGoals();
   const [user, setUser] = useState<any>(null);
@@ -193,7 +194,7 @@ const Profile = () => {
             open={planDropdownOpen}
             onOpenChange={setPlanDropdownOpen}
             title={planInfo.name}
-            subtitle={`${planInfo.price}/mês`}
+            subtitle={fromCompany ? `Oferecido pela ${organizationName}` : `${planInfo.price}/mês`}
             contentClassName="px-0 pb-0"
           >
                 <div className="px-4 pb-4 space-y-5 border-t border-border/60 pt-4">
@@ -209,7 +210,11 @@ const Profile = () => {
                     </ul>
                   </div>
 
-                  {!subscribed ? (
+                  {fromCompany ? (
+                    <Button variant="outline" className="w-full h-11" onClick={() => navigate('/beneficio-empresa')}>
+                      Ver benefício da empresa
+                    </Button>
+                  ) : !subscribed ? (
                     <Button className="w-full h-11" onClick={handleManageSubscription}>
                       <Crown size={16} className="mr-2" />
                       Fazer upgrade
@@ -306,6 +311,22 @@ const Profile = () => {
                 <div className="flex-1">
                   <div className="text-sm font-medium">Suporte</div>
                   <div className="text-xs text-muted-foreground">Fale com nossa equipe</div>
+                </div>
+                <ChevronDown size={16} className="-rotate-90 text-muted-foreground" />
+              </button>
+
+              <button
+                onClick={() => navigate('/beneficio-empresa')}
+                className="w-full flex items-center gap-4 p-4 text-left hover:bg-muted/50 transition-colors"
+              >
+                <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                  <Building2 size={18} className="text-foreground" />
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm font-medium">Benefício da empresa</div>
+                  <div className="text-xs text-muted-foreground">
+                    {fromCompany ? `Plano ${subscriptionTier} pela ${organizationName}` : 'Tem um código da sua empresa?'}
+                  </div>
                 </div>
                 <ChevronDown size={16} className="-rotate-90 text-muted-foreground" />
               </button>

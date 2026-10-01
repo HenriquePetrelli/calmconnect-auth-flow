@@ -16,7 +16,10 @@ const formatBRL = (cents: number) =>
 const SubscriptionPlans = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { subscribed, subscriptionTier, checkSubscription } = useSubscription();
+  const { subscribed, subscriptionTier, checkSubscription, entitlementSource, organizationName } = useSubscription();
+  // B2B: o plano vem da empresa; não há o que pagar, cancelar ou trocar para baixo.
+  const fromCompany = entitlementSource === 'organization';
+  const tierRank = (tier: string | null) => (tier === 'Premium' ? 2 : tier === 'Plus' ? 1 : 0);
   const [loading, setLoading] = useState<string | null>(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showDowngradeModal, setShowDowngradeModal] = useState(false);
@@ -228,7 +231,22 @@ const SubscriptionPlans = () => {
             </p>
           </div>
           
-          {subscribed && (
+          {fromCompany && (
+            <div className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-2xl p-6 border border-primary/20">
+              <div className="flex flex-col items-center gap-3">
+                <Badge variant="secondary" className="text-base px-5 py-2 bg-primary/10 text-primary border border-primary/20">
+                  <Crown className="w-5 h-5 mr-2" />
+                  Plano {subscriptionTier} pela {organizationName}
+                </Badge>
+                <p className="text-sm text-muted-foreground">Sua empresa paga o plano. Não há cobrança para você.</p>
+                <Button variant="outline" className="bg-background" onClick={() => navigate('/beneficio-empresa')}>
+                  Ver benefício da empresa
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {subscribed && !fromCompany && (
             <div className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-2xl p-8 border border-primary/20">
               <div className="flex flex-col items-center gap-4">
                 <Badge 
@@ -304,7 +322,11 @@ const SubscriptionPlans = () => {
                 
                 <Button
                   onClick={() => handleSubscribe(plan)}
-                  disabled={loading === plan.id || (subscribed && subscriptionTier === plan.name)}
+                  disabled={
+                    loading === plan.id ||
+                    (subscribed && subscriptionTier === plan.name) ||
+                    (fromCompany && tierRank(plan.name) <= tierRank(subscriptionTier))
+                  }
                   className={`w-full py-6 text-lg font-semibold ${
                     plan.popular ? 'bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90' : ''
                   }`}
@@ -316,6 +338,8 @@ const SubscriptionPlans = () => {
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                       Processando...
                     </div>
+                  ) : fromCompany && tierRank(plan.name) <= tierRank(subscriptionTier) ? (
+                    "Incluído no plano da empresa"
                   ) : subscriptionTier === plan.name ? (
                     <div className="flex items-center gap-2">
                       <Crown className="w-5 h-5" />
@@ -333,6 +357,14 @@ const SubscriptionPlans = () => {
         </div>
 
         <div className="mt-12 text-center">
+          {!fromCompany && (
+            <p className="mb-4 text-sm text-muted-foreground">
+              Sua empresa oferece o Soliv?{' '}
+              <button type="button" className="font-medium text-primary underline underline-offset-2" onClick={() => navigate('/beneficio-empresa')}>
+                Usar o código da empresa
+              </button>
+            </p>
+          )}
           <Button 
             onClick={checkSubscription}
             variant="ghost"
