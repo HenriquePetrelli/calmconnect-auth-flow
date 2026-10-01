@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Crown, LogOut, Settings, User as UserIcon, MessageCircle, Edit, ChevronDown, LockKeyhole, ScrollText } from "lucide-react";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import ExpandableCard from "@/components/ExpandableCard";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { DailyMoodToggle } from "@/components/DailyMoodToggle";
 import { PushNotificationToggle } from "@/components/PushNotificationToggle";
@@ -189,28 +189,14 @@ const Profile = () => {
           </Card>
 
           {/* Plan */}
-          <Collapsible open={planDropdownOpen} onOpenChange={setPlanDropdownOpen}>
-            <Card className="overflow-hidden border-border/60">
-              <CollapsibleTrigger className="w-full text-left">
-                <div className="flex items-center justify-between p-5">
-                  <div className="flex items-center gap-4">
-                    <div className="w-11 h-11 rounded-xl bg-premium-primary/10 flex items-center justify-center">
-                      <Crown className="text-premium-primary" size={20} />
-                    </div>
-                    <div>
-                      <h3 className="text-base font-semibold text-foreground">{planInfo.name}</h3>
-                      <p className="text-xs text-muted-foreground">{planInfo.price}/mês</p>
-                    </div>
-                  </div>
-                  <ChevronDown
-                    className={`text-muted-foreground transition-transform duration-300 ${planDropdownOpen ? 'rotate-180' : ''}`}
-                    size={18}
-                  />
-                </div>
-              </CollapsibleTrigger>
-
-              <CollapsibleContent className="animate-accordion-down">
-                <div className="px-5 pb-5 space-y-5 border-t border-border/60 pt-5">
+          <ExpandableCard
+            open={planDropdownOpen}
+            onOpenChange={setPlanDropdownOpen}
+            title={planInfo.name}
+            subtitle={`${planInfo.price}/mês`}
+            contentClassName="px-0 pb-0"
+          >
+                <div className="px-4 pb-4 space-y-5 border-t border-border/60 pt-4">
                   <div className="space-y-2">
                     <h4 className="text-sm font-semibold text-foreground">Benefícios inclusos</h4>
                     <ul className="space-y-1.5">
@@ -234,33 +220,17 @@ const Profile = () => {
                     </Button>
                   )}
                 </div>
-              </CollapsibleContent>
-            </Card>
-          </Collapsible>
+          </ExpandableCard>
 
           {/* Settings */}
-          <Collapsible open={settingsDropdownOpen} onOpenChange={setSettingsDropdownOpen}>
-            <Card className="overflow-hidden border-border/60">
-              <CollapsibleTrigger className="w-full text-left">
-                <div className="flex items-center justify-between p-5">
-                  <div className="flex items-center gap-4">
-                    <div className="w-11 h-11 rounded-xl bg-muted flex items-center justify-center">
-                      <Settings size={20} className="text-foreground" />
-                    </div>
-                    <div>
-                      <h3 className="text-base font-semibold text-foreground">Configurações</h3>
-                      <p className="text-xs text-muted-foreground">Preferências do aplicativo</p>
-                    </div>
-                  </div>
-                  <ChevronDown
-                    className={`text-muted-foreground transition-transform duration-300 ${settingsDropdownOpen ? 'rotate-180' : ''}`}
-                    size={18}
-                  />
-                </div>
-              </CollapsibleTrigger>
-
-              <CollapsibleContent className="animate-accordion-down">
-                <div className="px-5 pb-5 pt-5 border-t border-border/60 divide-y divide-border/60">
+          <ExpandableCard
+            open={settingsDropdownOpen}
+            onOpenChange={setSettingsDropdownOpen}
+            title="Configurações"
+            subtitle="Preferências do aplicativo"
+            contentClassName="px-0 pb-0"
+          >
+                <div className="px-4 pb-2 pt-1 border-t border-border/60 divide-y divide-border/60">
                   <div className="flex items-center justify-between py-4">
                     <div className="space-y-0.5 pr-4">
                       <div className="text-sm font-medium">Tema do aplicativo</div>
@@ -307,9 +277,7 @@ const Profile = () => {
                     </Button>
                   </div>
                 </div>
-              </CollapsibleContent>
-            </Card>
-          </Collapsible>
+          </ExpandableCard>
 
           {/* Account actions */}
           <Card className="overflow-hidden border-border/60">

@@ -271,8 +271,8 @@ const SafetyPlanEditor = () => {
               {SAFETY_PLAN_SECTIONS.map((section, index) => {
                 const count = draftPlan[section.key].length;
                 return (
-                  <AccordionItem key={section.key} value={section.key} className="rounded-xl border bg-card px-4">
-                    <AccordionTrigger className="min-h-14 text-left hover:no-underline">
+                  <AccordionItem key={section.key} value={section.key} className="rounded-2xl border border-border/70 bg-card/80 px-3 shadow-sm data-[state=open]:border-border sm:px-4">
+                    <AccordionTrigger className="min-h-14 text-left hover:no-underline [&>svg]:h-5 [&>svg]:w-5 [&>svg]:text-muted-foreground">
                       <span className="flex items-center gap-3">
                         <span
                           className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
@@ -282,7 +282,7 @@ const SafetyPlanEditor = () => {
                         >
                           {count > 0 ? <Check className="h-4 w-4" /> : index + 1}
                         </span>
-                        <span className="font-medium">{section.title}</span>
+                        <span className="text-sm font-semibold text-foreground sm:text-base">{section.title}</span>
                         {count > 0 && <span className="text-xs text-muted-foreground">({count})</span>}
                       </span>
                     </AccordionTrigger>
@@ -297,8 +297,8 @@ const SafetyPlanEditor = () => {
                 );
               })}
 
-              <AccordionItem value="contacts" className="rounded-xl border bg-card px-4">
-                <AccordionTrigger className="min-h-14 text-left hover:no-underline">
+              <AccordionItem value="contacts" className="rounded-2xl border border-border/70 bg-card/80 px-3 shadow-sm data-[state=open]:border-border sm:px-4">
+                <AccordionTrigger className="min-h-14 text-left hover:no-underline [&>svg]:h-5 [&>svg]:w-5 [&>svg]:text-muted-foreground">
                   <span className="flex items-center gap-3">
                     <span
                       className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
@@ -308,7 +308,7 @@ const SafetyPlanEditor = () => {
                     >
                       {contacts.length > 0 ? <Check className="h-4 w-4" /> : SAFETY_PLAN_SECTIONS.length + 1}
                     </span>
-                    <span className="font-medium">Pessoas a quem posso pedir ajuda</span>
+                    <span className="text-sm font-semibold text-foreground sm:text-base">Pessoas a quem posso pedir ajuda</span>
                     {contacts.length > 0 && <span className="text-xs text-muted-foreground">({contacts.length})</span>}
                   </span>
                 </AccordionTrigger>

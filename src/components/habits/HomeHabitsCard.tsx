@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, ListChecks, Plus } from 'lucide-react';
+import { ChevronRight, Plus } from 'lucide-react';
+import ExpandableCard from '@/components/ExpandableCard';
 import { Button } from '@/components/ui/button';
 import ProgressRing from '@/components/habits/ProgressRing';
 import { HABIT_VISUALS } from '@/components/habits/habitVisuals';
@@ -33,19 +34,27 @@ const HomeHabitsCard = () => {
   const today = localDateString();
   const shown = habits.slice(0, MAX_ON_HOME);
 
-  return (
-    <section className="mb-6 rounded-2xl border border-border bg-card p-4 shadow-sm" aria-labelledby="home-habits">
-      <div className="mb-3 flex items-center justify-between">
-        <h2 id="home-habits" className="flex items-center gap-2 text-lg font-semibold text-foreground">
-          <ListChecks className="h-5 w-5 text-primary" aria-hidden="true" />
-          Meus hábitos
-        </h2>
-        <Button variant="ghost" size="sm" className="gap-1 text-primary" onClick={() => navigate('/habitos')}>
-          {habits.length > 0 ? 'Ver tudo' : 'Abrir'}
-          <ChevronRight className="h-4 w-4" aria-hidden="true" />
-        </Button>
-      </div>
+  // Fechado, o subtítulo já resume o dia (como o "Humor de hoje").
+  const summary =
+    habits.length === 0
+      ? 'Água, sono, parar de fumar ou de beber'
+      : shown
+          .slice(0, 2)
+          .map((habit) => {
+            if (isQuitHabit(habit.kind)) {
+              const days = quitStats(habit, now).days;
+              return `${days} ${days === 1 ? 'dia' : 'dias'} ${quitLabel(habit)}`;
+            }
+            const unit = HABIT_CATALOG[habit.kind].unit!;
+            const goal = habit.daily_goal ?? HABIT_CATALOG[habit.kind].defaultGoal!;
+            const total = totalsByDate(eventsByHabit.get(habit.id) ?? []).get(today) ?? 0;
+            const name = habit.kind === 'water' ? 'Água' : habit.kind === 'sleep' ? 'Sono' : 'Movimento';
+            return `${name}: ${formatAmount(unit, total)} de ${formatAmount(unit, goal)}`;
+          })
+          .join(' · ');
 
+  return (
+    <ExpandableCard className="mb-6" title="Meus hábitos" subtitle={summary}>
       {habits.length === 0 ? (
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">
@@ -122,7 +131,13 @@ const HomeHabitsCard = () => {
           })}
         </ul>
       )}
-    </section>
+      {habits.length > 0 && (
+        <Button variant="ghost" size="sm" className="mt-2 w-full gap-1 text-primary" onClick={() => navigate('/habitos')}>
+          Ver todos os hábitos
+          <ChevronRight className="h-4 w-4" aria-hidden="true" />
+        </Button>
+      )}
+    </ExpandableCard>
   );
 };
 

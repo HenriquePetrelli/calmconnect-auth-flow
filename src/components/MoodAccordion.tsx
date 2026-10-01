@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ChevronDown, Smile, Heart, Meh, Frown, CloudRain, Check } from 'lucide-react';
+import { Smile, Heart, Meh, Frown, CloudRain, Check } from 'lucide-react';
+import ExpandableCard from '@/components/ExpandableCard';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useMoodLog } from '@/hooks/useMoodLog';
@@ -72,63 +73,29 @@ export const MoodAccordion: React.FC<MoodAccordionProps> = ({ currentValue, onMo
   const HeaderIcon = selected?.Icon;
 
   return (
-    <div
-      className={cn(
-        'w-full rounded-2xl border bg-card/80 backdrop-blur-sm shadow-sm transition-all',
-        open ? 'border-border' : 'border-border/70'
-      )}
-    >
-      {/* Header (trigger) */}
-      <div className="w-full flex items-center justify-between p-3 sm:p-4 gap-2 sm:gap-3">
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          className="flex items-center gap-3 text-left flex-1 min-w-0"
-          aria-expanded={open}
-        >
-          {selected && HeaderIcon ? (
-            <>
-              <HeaderIcon className={cn('w-5 h-5 sm:w-6 sm:h-6 shrink-0', selected.colorClass)} />
-              <div className="min-w-0">
-                <p className="text-xs sm:text-sm text-muted-foreground">Humor de hoje</p>
-                <p className={cn('text-sm sm:text-base font-semibold truncate', selected.colorClass)}>{selected.label}</p>
-              </div>
-            </>
-          ) : (
-            <div className="min-w-0">
-              <p className="text-sm sm:text-base font-semibold text-foreground">Registre seu humor</p>
-              <p className="text-xs sm:text-sm text-muted-foreground">Como você está se sentindo hoje?</p>
-            </div>
-          )}
-        </button>
-
-        <div className="flex items-center gap-2 shrink-0">
-          {open && (
-            <button
-              type="button"
-              onClick={handleHideMoodDaily}
-              disabled={isHiding}
-              className="text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground px-2 sm:px-3 py-1 sm:py-1.5 rounded-md border border-border hover:bg-muted transition-colors disabled:opacity-50"
-            >
-              {isHiding ? 'Ocultando...' : 'Ocultar'}
-            </button>
-          )}
+    <ExpandableCard
+      open={open}
+      onOpenChange={setOpen}
+      leading={selected && HeaderIcon ? <HeaderIcon className={selected.colorClass} /> : undefined}
+      title={selected ? selected.label : 'Registre seu humor'}
+      titleClassName={selected?.colorClass}
+      subtitle={selected ? 'Humor de hoje' : 'Como você está se sentindo hoje?'}
+      actions={
+        open ? (
           <button
             type="button"
-            onClick={() => setOpen((v) => !v)}
-            aria-label={open ? 'Recolher' : 'Expandir'}
-            className="p-1 text-muted-foreground hover:text-foreground"
+            onClick={handleHideMoodDaily}
+            disabled={isHiding}
+            className="text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground px-2 sm:px-3 py-1 sm:py-1.5 rounded-md border border-border hover:bg-muted transition-colors disabled:opacity-50"
           >
-            <ChevronDown className={cn('w-5 h-5 transition-transform', open && 'rotate-180')} />
+            {isHiding ? 'Ocultando...' : 'Ocultar'}
           </button>
-        </div>
-      </div>
-
-
-
+        ) : undefined
+      }
+      contentClassName="relative"
+    >
       {/* Content */}
-      {open && (
-        <div className="relative px-4 pb-4">
+      <div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-2">
             {MOOD_OPTIONS.map((mood) => {
               const Icon = mood.Icon;
@@ -166,9 +133,8 @@ export const MoodAccordion: React.FC<MoodAccordionProps> = ({ currentValue, onMo
               <span>Humor registrado! Estamos aqui para apoiar você em cada passo da sua jornada.</span>
             </div>
           )}
-        </div>
-      )}
-    </div>
+      </div>
+    </ExpandableCard>
   );
 };
 

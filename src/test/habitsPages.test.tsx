@@ -11,8 +11,6 @@ const toastMock = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
 vi.mock('sonner', () => ({ toast: toastMock }));
 vi.mock('@/components/PageHeader', () => ({ default: ({ title }: { title: string }) => <h1>{title}</h1> }));
 vi.mock('@/components/PatientBottomNav', () => ({ default: () => <div /> }));
-// A seção semanal tem os próprios testes e dependências.
-vi.mock('@/components/habits/WeeklyHabitsSection', () => ({ default: () => <div>Hábitos da semana</div> }));
 
 import Habits from '@/pages/Habits';
 import HabitSetup from '@/pages/HabitSetup';
@@ -163,17 +161,22 @@ describe('detalhe de quem está parando', () => {
 });
 
 describe('card da Home', () => {
-  it('resume o dia e registra direto da Home', async () => {
+  it('fechado, resume o dia; aberto, registra direto da Home', async () => {
     fakeDb.seed('user_habits', [water, smoking]);
     renderAt('/home');
-    expect(await screen.findByText('10 dias sem fumar')).toBeInTheDocument();
-    expect(screen.getByText(/R\$\s120,0\d economizados/)).toBeInTheDocument();
+    // Fechado, como o "Registre seu humor": o subtítulo resume o dia.
+    expect(await screen.findByText('Água: 0 ml de 2 L · 10 dias sem fumar')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Registrar 200 ml em Beber água' })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Meus hábitos'));
+    expect(await screen.findByText(/R\$\s120,0\d economizados/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Registrar 200 ml em Beber água' }));
     await waitFor(() => expect(fakeDb.tables.habit_events).toHaveLength(1));
   });
 
   it('convida a adicionar quando está vazio', async () => {
     renderAt('/home');
+    fireEvent.click(await screen.findByText('Meus hábitos'));
     expect(await screen.findByRole('button', { name: /Adicionar hábito/ })).toBeInTheDocument();
   });
 });

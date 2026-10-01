@@ -6,13 +6,12 @@ import PageHeader from '@/components/PageHeader';
 import PatientBottomNav from '@/components/PatientBottomNav';
 import DailyHabitCard from '@/components/habits/DailyHabitCard';
 import QuitHabitCard from '@/components/habits/QuitHabitCard';
-import WeeklyHabitsSection from '@/components/habits/WeeklyHabitsSection';
 import { useHabitLogger } from '@/components/habits/useHabitLogger';
 import { useHabits } from '@/hooks/useHabits';
 import { useNow } from '@/hooks/useNow';
 import { MAX_ACTIVE_HABITS, isQuitHabit } from '@/lib/habits';
 
-/** Meus hábitos: o do dia, os que estou largando e os da semana. */
+/** Meus hábitos: os do dia e os que estou largando. Os hábitos da semana ficam em Meu Progresso. */
 const Habits = () => {
   const navigate = useNavigate();
   const { habits, eventsByHabit, loading, error, logIntake, deleteEvent } = useHabits();
@@ -97,7 +96,6 @@ const Habits = () => {
             </>
           )}
 
-          <WeeklyHabitsSection />
         </main>
       </div>
       <PatientBottomNav />
