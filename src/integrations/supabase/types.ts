@@ -783,6 +783,98 @@ export type Database = {
           },
         ]
       }
+      organization_members: {
+        Row: {
+          id: string
+          joined_at: string
+          organization_id: string
+          removed_at: string | null
+          role: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          organization_id: string
+          removed_at?: string | null
+          role?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          organization_id?: string
+          removed_at?: string | null
+          role?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_members_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          allowed_email_domain: string | null
+          cnpj: string | null
+          contact_email: string | null
+          contact_name: string | null
+          created_at: string
+          ends_on: string | null
+          id: string
+          invite_code: string
+          name: string
+          notes: string | null
+          plan_tier: string
+          seats: number
+          starts_on: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          allowed_email_domain?: string | null
+          cnpj?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          created_at?: string
+          ends_on?: string | null
+          id?: string
+          invite_code?: string
+          name: string
+          notes?: string | null
+          plan_tier: string
+          seats: number
+          starts_on?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          allowed_email_domain?: string | null
+          cnpj?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          created_at?: string
+          ends_on?: string | null
+          id?: string
+          invite_code?: string
+          name?: string
+          notes?: string | null
+          plan_tier?: string
+          seats?: number
+          starts_on?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       participant_presence: {
         Row: {
           created_at: string
@@ -1783,7 +1875,9 @@ export type Database = {
           created_at: string
           current_usage: Json | null
           email: string
+          entitlement_source: string | null
           id: string
+          organization_id: string | null
           plan_limits: Json | null
           sos_last_used: string | null
           sos_used_this_month: boolean
@@ -1800,7 +1894,9 @@ export type Database = {
           created_at?: string
           current_usage?: Json | null
           email: string
+          entitlement_source?: string | null
           id?: string
+          organization_id?: string | null
           plan_limits?: Json | null
           sos_last_used?: string | null
           sos_used_this_month?: boolean
@@ -1817,7 +1913,9 @@ export type Database = {
           created_at?: string
           current_usage?: Json | null
           email?: string
+          entitlement_source?: string | null
           id?: string
+          organization_id?: string | null
           plan_limits?: Json | null
           sos_last_used?: string | null
           sos_used_this_month?: boolean
@@ -1828,7 +1926,15 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "subscribers_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       suporte_psicologo: {
         Row: {
@@ -2159,6 +2265,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      admin_add_organization_manager: {
+        Args: { p_email: string; p_org: string }
+        Returns: Json
+      }
       admin_archive_conversa: {
         Args: { p_conversa_id: string }
         Returns: undefined
@@ -2170,6 +2280,18 @@ export type Database = {
       admin_dismiss_testimonial_reports: {
         Args: { p_testimonial_id: string }
         Returns: undefined
+      }
+      admin_list_organization_members: {
+        Args: { p_org: string }
+        Returns: {
+          email: string
+          full_name: string
+          joined_at: string
+          member_id: string
+          role: string
+          status: string
+          user_id: string
+        }[]
       }
       admin_update_testimonial: {
         Args: { p_testimonial_id: string; p_texto: string }
@@ -2199,6 +2321,7 @@ export type Database = {
           reason: string
         }[]
       }
+      check_organization_code: { Args: { p_code: string }; Returns: Json }
       check_rate_limit: {
         Args: {
           p_key: string
@@ -2278,6 +2401,7 @@ export type Database = {
             }
             Returns: Json
           }
+      expire_organization_entitlements: { Args: never; Returns: number }
       finalize_stale_emergency_sessions: {
         Args: never
         Returns: {
@@ -2368,6 +2492,7 @@ export type Database = {
         Args: { p_appointment_id: string }
         Returns: string
       }
+      get_organization_dashboard: { Args: { p_org: string }; Returns: Json }
       get_patient_statistics: {
         Args: { patient_user_id: string }
         Returns: {
@@ -2418,10 +2543,36 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: undefined
       }
+      is_organization_manager: { Args: { p_org: string }; Returns: boolean }
       is_super_admin: { Args: { user_id_param?: string }; Returns: boolean }
+      join_organization: { Args: { p_code: string }; Returns: Json }
+      join_organization_for_user: {
+        Args: { p_code: string; p_user_id: string }
+        Returns: Json
+      }
+      leave_organization: { Args: never; Returns: undefined }
       marcar_mensagens_como_lidas: {
         Args: { p_conversa_id: string }
         Returns: undefined
+      }
+      normalize_invite_code: { Args: { p_code: string }; Returns: string }
+      organization_entitlement: {
+        Args: { p_user_id: string }
+        Returns: {
+          ends_on: string
+          organization_id: string
+          organization_name: string
+          tier: string
+        }[]
+      }
+      organization_entitlement_internal: {
+        Args: { p_user_id: string }
+        Returns: {
+          ends_on: string
+          organization_id: string
+          organization_name: string
+          tier: string
+        }[]
       }
       pode_criar_conversa: {
         Args: { p_paciente_id: string; p_psicologo_id: string }
@@ -2437,6 +2588,10 @@ export type Database = {
         Returns: boolean
       }
       purge_expired_care_records: { Args: never; Returns: Json }
+      refresh_subscriber_entitlement: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
       register_habit_relapse: {
         Args: { p_habit_id: string; p_local_date: string; p_note?: string }
         Returns: string
@@ -2451,6 +2606,10 @@ export type Database = {
       }
       reset_patient_weekly_goals_array: { Args: never; Returns: undefined }
       reset_weekly_goals: { Args: never; Returns: undefined }
+      rotate_organization_invite_code: {
+        Args: { p_org: string }
+        Returns: string
+      }
       save_safety_plan: {
         Args: {
           p_contacts?: Json
