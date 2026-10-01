@@ -12,6 +12,7 @@ import BackgroundWrapper from "@/components/BackgroundWrapper";
 import PageSkeleton from "@/components/PageSkeleton";
 import SplashScreen from "@/components/SplashScreen";
 import PendingFeedbackGate from "@/components/sos/PendingFeedbackGate";
+import AppErrorBoundary from "@/components/AppErrorBoundary";
 import LegalAcceptanceGate from "@/components/legal/LegalAcceptanceGate";
 
 // Persistent layout: MainLayout stays mounted across nested routes,
@@ -68,6 +69,7 @@ const SupportGroupDetail = lazy(() => import("./pages/SupportGroupDetail"));
 const PrivateJournal = lazy(() => import("./pages/PrivateJournal"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const LegalDocument = lazy(() => import("./pages/LegalDocument"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -82,6 +84,7 @@ const queryClient = new QueryClient({
 
 const App = () => {
   return (
+    <AppErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <ThemeProvider
         attribute="class"
@@ -124,6 +127,8 @@ const App = () => {
                   <Route path="/termos" element={<LegalDocument document="terms_patient" />} />
                   <Route path="/termos-psicologo" element={<LegalDocument document="terms_psychologist" />} />
                   <Route path="/privacidade" element={<LegalDocument document="privacy_policy" />} />
+                  {/* Destino do link de recuperação de senha (sessão temporária do Supabase) */}
+                  <Route path="/reset-password" element={<ResetPassword />} />
 
                   {/* Rotas do Paciente com Layout Principal persistente */}
                   <Route element={<MainLayoutOutlet />}>
@@ -382,6 +387,7 @@ const App = () => {
         </AuthProvider>
     </ThemeProvider>
   </QueryClientProvider>
+    </AppErrorBoundary>
   );
 };
 

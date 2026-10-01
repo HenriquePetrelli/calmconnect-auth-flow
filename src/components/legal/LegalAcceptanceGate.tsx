@@ -8,7 +8,8 @@ import LegalConsents, { EMPTY_CONSENTS, allConsentsGiven, consentKeysFor } from 
 import { setLegalGateStatus } from "@/lib/legalGateStatus";
 import { LEGAL_PAGES, LegalDocumentId, fetchMissingAcceptances, recordAcceptances } from "@/lib/legal";
 
-const LEGAL_PATHS = Object.values(LEGAL_PAGES).map((page) => page.path);
+// Documentos legais e a troca de senha nunca ficam atrás do pedido de aceite.
+const LEGAL_PATHS = [...Object.values(LEGAL_PAGES).map((page) => page.path), '/reset-password'];
 
 /**
  * Pede o aceite quando falta algum documento na versão atual: contas criadas

@@ -253,6 +253,9 @@ export class FakeDB {
   channels: FakeChannel[] = [];
   failNextWith: any = null;
   failSelectWith: any = null;
+  authListeners: ((event: string, session: unknown) => void)[] = [];
+  authUpdates: Row[] = [];
+  authUpdateError: any = null;
   /** Handlers extras/sobrepostos por teste, além dos padrões em DEFAULT_RPC_HANDLERS. */
   rpcHandlers: Record<string, RpcHandler> = {};
 
@@ -288,6 +291,30 @@ export class FakeDB {
           data: { user: db.currentUserId ? { id: db.currentUserId } : null },
           error: db.currentUserId ? null : { message: 'not authenticated' },
         }),
+        getSession: async () => ({
+          data: { session: db.currentUserId ? { user: { id: db.currentUserId } } : null },
+          error: null,
+        }),
+        onAuthStateChange: (callback: (event: string, session: unknown) => void) => {
+          db.authListeners.push(callback);
+          return {
+            data: {
+              subscription: {
+                unsubscribe: () => {
+                  db.authListeners = db.authListeners.filter((l) => l !== callback);
+                },
+              },
+            },
+          };
+        },
+        updateUser: async (attrs: Row) => {
+          db.authUpdates.push(attrs);
+          return { data: { user: db.currentUserId ? { id: db.currentUserId } : null }, error: db.authUpdateError };
+        },
+        signOut: async () => {
+          db.currentUserId = null;
+          return { error: null };
+        },
       },
     };
   }

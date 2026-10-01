@@ -29,7 +29,6 @@ import { Calendar, Eye, Filter, Download, FileText } from 'lucide-react';
 import { useAppointments, type Appointment } from '@/hooks/useAppointments';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import jsPDF from 'jspdf';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -137,8 +136,10 @@ export const AppointmentHistory = () => {
     link.click();
   };
 
-  const exportToPDF = () => {
+  const exportToPDF = async () => {
     if (filteredAppointments.length === 0) return;
+    // Carregada só ao exportar: a biblioteca de PDF pesa ~600 KB.
+    const { default: jsPDF } = await import('jspdf');
     const doc = new jsPDF();
     doc.setFontSize(16);
     doc.text('Histórico de Consultas', 20, 20);

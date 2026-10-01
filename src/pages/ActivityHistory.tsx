@@ -11,7 +11,6 @@ import { SkeletonSectionCard } from "@/components/skeletons/Skeletons";
 import { SosHistoryPanel } from "@/components/sos/SosHistoryPanel";
 import { useAuth } from "@/contexts/AuthContext";
 import PatientBottomNav from "@/components/PatientBottomNav";
-import jsPDF from 'jspdf';
 
 const ActivityHistory = () => {
   const navigate = useNavigate();
@@ -95,9 +94,11 @@ const ActivityHistory = () => {
   };
 
   // Export to PDF
-  const exportToPDF = () => {
+  const exportToPDF = async () => {
     if (filteredActivities.length === 0) return;
 
+    // Carregada só ao exportar: a biblioteca de PDF pesa ~600 KB.
+    const { default: jsPDF } = await import('jspdf');
     const doc = new jsPDF();
     
     // Title

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getSessionUserId } from '@/lib/currentUser';
 
 export interface ActiveEmergencyCall {
   requestId: string;
@@ -20,8 +21,8 @@ export const useActiveEmergencyCall = () => {
   const [loading, setLoading] = useState(true);
 
   const check = useCallback(async () => {
-    const { data: auth } = await supabase.auth.getUser();
-    const userId = auth.user?.id;
+    // Roda a cada 20 s e a cada mudança em pedidos de SOS: sessão local, sem rede.
+    const userId = await getSessionUserId();
     if (!userId) {
       setActiveCall(null);
       setLoading(false);

@@ -43,12 +43,10 @@ export const ROUTE_PERMISSIONS = {
     '/notifications',
     '/statistics',
     '/statistics/activity-history',
-    '/goals',
     '/achievements',
     '/subscription-plans',
     '/subscription-success',
     '/subscription-cancel',
-    '/webrtc-test',
     '/chat', // chat disponível para pacientes
     '/emergency-call', // paciente e psicólogo podem acessar
     '/emergency-call/', // rotas com parâmetros

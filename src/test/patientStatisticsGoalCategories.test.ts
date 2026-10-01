@@ -12,7 +12,7 @@ import { getCurrentWeekRange } from '@/hooks/useWeeklyGoals';
 
 const PATIENT = mockUser.id;
 
-const seedGoal = (id: string, category: string) => {
+const seedGoal = (id: string, category: string, extra: Record<string, unknown> = {}) => {
   const { weekStart, weekEnd } = getCurrentWeekRange();
   fakeDb.rows('patient_weekly_goals').push({
     id,
@@ -24,7 +24,8 @@ const seedGoal = (id: string, category: string) => {
     week_start_date: weekStart,
     week_end_date: weekEnd,
     created_at: new Date().toISOString(),
-    weekly_goals: { id: `${id}-template`, category, title: category },
+    weekly_goals: { id: `${id}-template`, category, title: category, type: 'count' },
+    ...extra,
   });
 };
 
@@ -86,5 +87,37 @@ describe('usePatientStatistics.addActivity — mapeamento de categoria por prefi
     });
 
     expect(fakeDb.rows('patient_weekly_goals').find((g) => g.id === 'pwg-sound')?.progress).toBe(0);
+  });
+
+  it('hábito "todos os dias" conta uma vez por dia, mesmo com a atividade repetida', async () => {
+    seedGoal('pwg-mood', 'mood', {
+      progress: 1,
+      updated_at: new Date().toISOString(),
+      weekly_goals: { id: 'pwg-mood-template', category: 'mood', title: 'Humor Diário', type: 'daily' },
+    });
+    const { result } = renderHook(() => usePatientStatistics());
+    await settle();
+
+    await act(async () => {
+      await result.current.addActivity('Registro de Humor');
+    });
+
+    expect(fakeDb.rows('patient_weekly_goals').find((g) => g.id === 'pwg-mood')?.progress).toBe(1);
+  });
+
+  it('hábito "todos os dias" avança no primeiro registro de um dia novo', async () => {
+    seedGoal('pwg-mood', 'mood', {
+      progress: 1,
+      updated_at: new Date(Date.now() - 2 * 86_400_000).toISOString(),
+      weekly_goals: { id: 'pwg-mood-template', category: 'mood', title: 'Humor Diário', type: 'daily' },
+    });
+    const { result } = renderHook(() => usePatientStatistics());
+    await settle();
+
+    await act(async () => {
+      await result.current.addActivity('Registro de Humor');
+    });
+
+    expect(fakeDb.rows('patient_weekly_goals').find((g) => g.id === 'pwg-mood')?.progress).toBe(2);
   });
 });

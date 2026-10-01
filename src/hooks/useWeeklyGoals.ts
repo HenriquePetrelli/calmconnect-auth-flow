@@ -135,6 +135,7 @@ export const useWeeklyGoals = () => {
 
       if (isCompleted && !goal.completed) {
         setNewlyCompleted({ ...goal, progress: newProgress, completed: true });
+        toast.success(`Hábito da semana concluído: ${goal.weekly_goals.title} 🎉`);
       }
 
       await fetchGoals();
@@ -144,7 +145,15 @@ export const useWeeklyGoals = () => {
   }, [goals, fetchGoals]);
 
   const checkAndUpdateGoals = useCallback(async (category: string) => {
-    const categoryGoals = goals.filter(g => g.weekly_goals.category === category && !g.completed);
+    const today = new Date().toDateString();
+    const categoryGoals = goals.filter(
+      (g) =>
+        g.weekly_goals.category === category &&
+        !g.completed &&
+        // Hábitos "todos os dias" (humor, sons) contam uma vez por dia, mesmo
+        // que a atividade se repita no mesmo dia.
+        !(g.weekly_goals.type === 'daily' && g.progress > 0 && new Date(g.updated_at).toDateString() === today),
+    );
     
     for (const goal of categoryGoals) {
       await updateGoalProgress(goal.id, 1);
