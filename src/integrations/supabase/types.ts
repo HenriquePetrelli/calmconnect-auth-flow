@@ -435,39 +435,6 @@ export type Database = {
         }
         Relationships: []
       }
-      habit_events: {
-        Row: {
-          amount: number | null
-          details: Json
-          habit_id: string
-          id: string
-          kind: string
-          local_date: string
-          occurred_at: string
-          user_id: string
-        }
-        Insert: {
-          amount?: number | null
-          details?: Json
-          habit_id: string
-          id?: string
-          kind: string
-          local_date: string
-          occurred_at?: string
-          user_id: string
-        }
-        Update: {
-          amount?: number | null
-          details?: Json
-          habit_id?: string
-          id?: string
-          kind?: string
-          local_date?: string
-          occurred_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       group_favorites: {
         Row: {
           favoritado_em: string
@@ -1924,66 +1891,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_habits: {
-        Row: {
-          archived_at: string | null
-          best_streak_seconds: number
-          created_at: string
-          daily_goal: number | null
-          id: string
-          kind: string
-          last_reminder_at: string | null
-          quit_started_at: string | null
-          reminder_end: string
-          reminder_interval_minutes: number | null
-          reminder_start: string
-          reminders_enabled: boolean
-          settings: Json
-          timezone: string
-          title: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          archived_at?: string | null
-          best_streak_seconds?: number
-          created_at?: string
-          daily_goal?: number | null
-          id?: string
-          kind: string
-          last_reminder_at?: string | null
-          quit_started_at?: string | null
-          reminder_end?: string
-          reminder_interval_minutes?: number | null
-          reminder_start?: string
-          reminders_enabled?: boolean
-          settings?: Json
-          timezone?: string
-          title?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          archived_at?: string | null
-          best_streak_seconds?: number
-          created_at?: string
-          daily_goal?: number | null
-          id?: string
-          kind?: string
-          last_reminder_at?: string | null
-          quit_started_at?: string | null
-          reminder_end?: string
-          reminder_interval_minutes?: number | null
-          reminder_start?: string
-          reminders_enabled?: boolean
-          settings?: Json
-          timezone?: string
-          title?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       user_preferences: {
         Row: {
           background_blur: boolean | null
@@ -2135,19 +2042,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      claim_due_habit_reminders: {
-        Args: never
-        Returns: {
-          daily_goal: number | null
-          habit_id: string
-          kind: string
-          quit_started_at: string | null
-          settings: Json
-          title: string | null
-          today_total: number
-          user_id: string
-        }[]
-      }
       add_patient_activity: {
         Args: {
           p_activity_date?: string
@@ -2429,10 +2323,6 @@ export type Database = {
         Returns: boolean
       }
       purge_expired_care_records: { Args: never; Returns: Json }
-      register_habit_relapse: {
-        Args: { p_habit_id: string; p_local_date: string; p_note?: string | null }
-        Returns: string
-      }
       register_push_token: {
         Args: { p_device_info?: Json; p_token: string }
         Returns: undefined
