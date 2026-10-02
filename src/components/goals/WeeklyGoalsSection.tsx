@@ -9,6 +9,7 @@ import { GoalCard } from '@/components/goals/GoalCard';
 import { SkeletonSectionCard } from '@/components/skeletons/Skeletons';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { stepDoneToday } from '@/lib/challenges';
 
 /**
  * Metas da semana: as atividades de autocuidado do app (respiração, sons,
@@ -17,7 +18,7 @@ import { useAuth } from '@/contexts/AuthContext';
  */
 const WeeklyGoalsSection = () => {
   const { user } = useAuth();
-  const { goals, loading, fetchGoals } = useWeeklyGoals();
+  const { goals, loading, fetchGoals, updateGoalProgress } = useWeeklyGoals();
   const [modalOpen, setModalOpen] = useState(false);
 
   // Escolha feita em outra aba/dispositivo (ou o reset automático das
@@ -68,7 +69,7 @@ const WeeklyGoalsSection = () => {
               <div>
                 <h4 className="text-base font-semibold text-foreground">Nenhuma meta escolhida para a semana</h4>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Respiração, sons, diário, humor: escolha o que quer praticar nesta semana.
+                  Respiração, sons, diário, humor ou um desafio de 7 dias: escolha o que quer praticar nesta semana.
                 </p>
               </div>
               <Button onClick={() => setModalOpen(true)} className="gap-2">
@@ -88,7 +89,14 @@ const WeeklyGoalsSection = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {goals.map((goal) => (
-                  <GoalCard key={goal.id} goal={goal} />
+                  <GoalCard
+                    key={goal.id}
+                    goal={goal}
+                    onStepDone={(g) => {
+                      // Um passo por dia: o card só mostra o botão se o de hoje não foi feito.
+                      if (!stepDoneToday(g.progress, g.updated_at)) void updateGoalProgress(g.id, 1);
+                    }}
+                  />
                 ))}
               </div>
 

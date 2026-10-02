@@ -23,6 +23,8 @@ import { usePatientEngagementMetrics } from "@/hooks/usePatientEngagementMetrics
 import { getRelativeTime, formatDateTime } from "@/utils/dateFormatters";
 import WeeklyGoalsSection from "@/components/goals/WeeklyGoalsSection";
 import { MoodTrendChart } from "@/components/progress/MoodTrendChart";
+import InsightsCard from "@/components/progress/InsightsCard";
+import QuestionnairesCard from "@/components/progress/QuestionnairesCard";
 import { SkeletonList } from "@/components/skeletons/Skeletons";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -128,6 +130,12 @@ const Statistics = () => {
 
         {/* Evolução do humor */}
         <MoodTrendChart />
+
+        {/* O que anda junto com os dias melhores */}
+        <InsightsCard />
+
+        {/* GAD-7 e PHQ-9, uma vez por mês */}
+        <QuestionnairesCard />
 
         {/* Metas da semana: atividades de uso do app (os hábitos diários ficam em Meus hábitos) */}
         <WeeklyGoalsSection />

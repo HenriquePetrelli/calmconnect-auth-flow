@@ -9,10 +9,10 @@ import HabitForm from '@/components/habits/HabitForm';
 import { HABIT_VISUALS } from '@/components/habits/habitVisuals';
 import { useHabits, type HabitDraft } from '@/hooks/useHabits';
 import {
-  DAILY_HABIT_KINDS,
   HABIT_CATALOG,
   MAX_ACTIVE_HABITS,
   QUIT_HABIT_KINDS,
+  allowsMultiple,
   type HabitKind,
 } from '@/lib/habits';
 
@@ -59,7 +59,7 @@ const HabitSetup = () => {
       <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</h2>
       {kinds.map((k) => {
         const { icon: Icon, color, soft } = HABIT_VISUALS[k];
-        const already = k !== 'quit_custom' && activeKinds.has(k);
+        const already = !allowsMultiple(k) && activeKinds.has(k);
         return (
           <button
             key={k}
@@ -97,7 +97,9 @@ const HabitSetup = () => {
             <HabitForm key={editing?.id ?? kind} kind={kind} habit={editing} saving={saving} onSubmit={handleSubmit} />
           ) : (
             <>
-              {renderCatalogGroup('Hábitos do dia', DAILY_HABIT_KINDS)}
+              {renderCatalogGroup('Corpo e rotina', ['water', 'sleep', 'movement', 'meals'])}
+              {renderCatalogGroup('Saúde', ['medication'])}
+              {renderCatalogGroup('Bem-estar', ['joy', 'screen_time', 'caffeine'])}
               {renderCatalogGroup('Largar um hábito', QUIT_HABIT_KINDS)}
             </>
           )}

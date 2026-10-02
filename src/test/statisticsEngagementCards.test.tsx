@@ -52,6 +52,8 @@ vi.mock('@/hooks/usePatientEngagementMetrics', () => ({
 }));
 
 vi.mock('@/components/progress/MoodTrendChart', () => ({ MoodTrendChart: () => <div /> }));
+vi.mock('@/components/progress/InsightsCard', () => ({ default: () => <div /> }));
+vi.mock('@/components/progress/QuestionnairesCard', () => ({ default: () => <div /> }));
 
 beforeEach(() => {
   navigateMock.mockClear();

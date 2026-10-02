@@ -37,6 +37,9 @@ export const ROUTE_PERMISSIONS = {
     '/sounds/player',
     '/sounds/feedback',
     '/breathing',
+    '/comer-com-atencao',
+    '/questionarios',
+    '/questionarios/', // responder (/gad7, /phq9)
     '/sos',
     '/profile',
     '/account-settings',

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { AlertTriangle, BellRing } from 'lucide-react';
+import { AlertTriangle, BellRing, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,10 +10,16 @@ import { HABIT_VISUALS } from '@/components/habits/habitVisuals';
 import type { HabitDraft } from '@/hooks/useHabits';
 import {
   HABIT_CATALOG,
+  JOY_ACTIVITIES,
   formatAmount,
+  formatHabitAmount,
+  isLimitHabit,
   isQuitHabit,
+  isValidTime,
+  shiftTime,
   waterGoalFromWeight,
   type HabitKind,
+  type HabitSettings,
   type UserHabit,
 } from '@/lib/habits';
 
@@ -92,7 +98,12 @@ const HabitForm = ({ kind, habit, saving, onSubmit }: HabitFormProps) => {
   const [pricePerDrink, setPricePerDrink] = useState(String(settings.price_per_drink ?? ''));
   const [dailyCost, setDailyCost] = useState(settings.daily_cost ? String(settings.daily_cost) : '');
   const [reason, setReason] = useState(settings.reason ?? '');
-  const [remindersEnabled, setRemindersEnabled] = useState(habit?.reminders_enabled ?? kind === 'water');
+  const [cutoff, setCutoff] = useState(settings.cutoff_time ?? '14:00');
+  const [doseTimes, setDoseTimes] = useState<string[]>(settings.times?.length ? settings.times : ['08:00']);
+  const [bedtime, setBedtime] = useState(settings.bedtime ?? '23:00');
+  const [activities, setActivities] = useState<string[]>(settings.activities ?? catalog.defaultSettings.activities ?? []);
+  const [newActivity, setNewActivity] = useState('');
+  const [remindersEnabled, setRemindersEnabled] = useState(habit?.reminders_enabled ?? (kind === 'water' || kind === 'medication'));
   const [reminderStart, setReminderStart] = useState(habit?.reminder_start ?? catalog.defaultReminder.start);
   const [reminderEnd, setReminderEnd] = useState(habit?.reminder_end ?? catalog.defaultReminder.end);
   const [reminderInterval, setReminderInterval] = useState(String(habit?.reminder_interval_minutes ?? catalog.defaultReminder.interval ?? 120));
@@ -100,6 +111,19 @@ const HabitForm = ({ kind, habit, saving, onSubmit }: HabitFormProps) => {
 
   const suggestedWater = useMemo(() => (weight ? waterGoalFromWeight(num(weight)) : null), [weight]);
   const usesInterval = kind === 'water';
+  const limit = isLimitHabit(kind);
+  // Remédio avisa nos horários das doses; tela, 1 hora antes de dormir.
+  const reminderTimeEditable = kind !== 'medication' && kind !== 'screen_time';
+  const goalSuffix =
+    catalog.unit === 'ml' ? 'ml' : catalog.unit === 'h' ? 'horas' : catalog.unit === 'mg' ? 'mg' : catalog.unit === 'count' ? catalog.countNoun?.[1] ?? '' : 'minutos';
+  const goalHint: Partial<Record<HabitKind, string>> = {
+    movement: 'A OMS recomenda ao menos 150 minutos por semana.',
+    sleep: 'Adultos costumam precisar de 7 a 9 horas.',
+    caffeine: 'Até 400 mg por dia é a referência geral para adultos (cerca de 4 a 5 xícaras de café). Na gravidez, até 200 mg.',
+    screen_time: 'Conte o tempo em redes sociais, vídeos e jogos no celular. O próprio celular mostra esse total.',
+    meals: 'Café da manhã, almoço e jantar: 3 é um bom começo.',
+    joy: 'Uma por dia já ajuda. Atividades prazerosas são uma das técnicas com mais evidência contra a depressão.',
+  };
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -117,13 +141,33 @@ const HabitForm = ({ kind, habit, saving, onSubmit }: HabitFormProps) => {
       reminder_interval_minutes: usesInterval ? Number(reminderInterval) : null,
     };
 
-    if (!quit) {
+    if (kind === 'medication') {
+      const name = title.trim();
+      if (!name) {
+        setError('Informe o nome do remédio.');
+        return;
+      }
+      const times = [...new Set(doseTimes.filter(isValidTime))].sort();
+      if (times.length === 0) {
+        setError('Informe ao menos um horário.');
+        return;
+      }
+      draft.title = name.slice(0, 60);
+      draft.daily_goal = times.length;
+      draft.settings = { times };
+      draft.reminder_start = '00:00';
+      draft.reminder_end = '23:59';
+    } else if (!quit) {
       const goalValue = num(goal);
       if (!(goalValue >= catalog.goalMin! && goalValue <= catalog.goalMax!)) {
-        setError(`A meta precisa ficar entre ${formatAmount(catalog.unit!, catalog.goalMin!)} e ${formatAmount(catalog.unit!, catalog.goalMax!)}.`);
+        setError(`${limit ? 'O limite' : 'A meta'} precisa ficar entre ${formatHabitAmount(kind, catalog.goalMin!)} e ${formatHabitAmount(kind, catalog.goalMax!)}.`);
         return;
       }
       draft.daily_goal = goalValue;
+      if (kind === 'joy' && activities.length === 0) {
+        setError('Escolha ao menos uma atividade.');
+        return;
+      }
       if (kind === 'water') {
         const cupSizes = cups.map(num).filter((c) => c >= 50 && c <= 2000);
         if (cupSizes.length === 0) {
@@ -132,6 +176,17 @@ const HabitForm = ({ kind, habit, saving, onSubmit }: HabitFormProps) => {
         }
         draft.settings = { cup_sizes: cupSizes, ...(num(weight) > 0 ? { weight_kg: num(weight) } : {}) };
       }
+      const extra: HabitSettings = {};
+      if (kind === 'caffeine' && isValidTime(cutoff)) extra.cutoff_time = cutoff;
+      if (kind === 'screen_time' && isValidTime(bedtime)) {
+        extra.bedtime = bedtime;
+        // O lembrete chega 1 hora antes de dormir.
+        draft.reminder_start = shiftTime(bedtime, -60);
+        draft.reminder_end = '23:59';
+        if (draft.reminder_start >= draft.reminder_end) draft.reminder_start = '23:00';
+      }
+      if (kind === 'joy') extra.activities = activities.slice(0, 12);
+      draft.settings = { ...draft.settings, ...extra };
     } else {
       const started = startMode === 'now' && !habit ? new Date() : new Date(startedAt);
       if (Number.isNaN(started.getTime()) || started.getTime() > Date.now() + 60_000) {
@@ -186,7 +241,45 @@ const HabitForm = ({ kind, habit, saving, onSubmit }: HabitFormProps) => {
         </div>
       )}
 
-      {!quit && (
+      {kind === 'medication' && (
+        <section className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="habit-title">Nome do remédio</Label>
+            <Input id="habit-title" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={60} placeholder="Ex.: sertralina" className="h-11" />
+            <p className="text-xs text-muted-foreground">Só você vê. Se preferir, use um apelido.</p>
+          </div>
+          <fieldset className="space-y-2">
+            <legend className="text-sm font-medium">Horários das doses</legend>
+            {doseTimes.map((time, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <Input
+                  aria-label={`Horário da dose ${i + 1}`}
+                  type="time"
+                  value={time}
+                  onChange={(e) => setDoseTimes((prev) => prev.map((t, j) => (j === i ? e.target.value : t)))}
+                  className="h-11"
+                />
+                {doseTimes.length > 1 && (
+                  <Button type="button" variant="ghost" size="icon" aria-label={`Tirar o horário ${time}`} onClick={() => setDoseTimes((prev) => prev.filter((_, j) => j !== i))}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            ))}
+            {doseTimes.length < 6 && (
+              <Button type="button" variant="outline" size="sm" className="gap-1" onClick={() => setDoseTimes((prev) => [...prev, '20:00'])}>
+                <Plus className="h-4 w-4" aria-hidden="true" />
+                Adicionar horário
+              </Button>
+            )}
+          </fieldset>
+          <p role="note" className="rounded-lg border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
+            Use os horários que o seu médico indicou. O Soliv só lembra: não muda dose nem orienta tratamento.
+          </p>
+        </section>
+      )}
+
+      {!quit && kind !== 'medication' && (
         <section className="space-y-4">
           {kind === 'water' && (
             <NumberField
@@ -205,13 +298,72 @@ const HabitForm = ({ kind, habit, saving, onSubmit }: HabitFormProps) => {
           )}
           <NumberField
             id="habit-goal"
-            label="Meta diária"
+            label={limit ? 'Limite por dia' : 'Meta diária'}
             value={goal}
             onChange={setGoal}
-            suffix={catalog.unit === 'ml' ? 'ml' : catalog.unit === 'h' ? 'horas' : 'minutos'}
+            suffix={goalSuffix}
             step={String(catalog.goalStep)}
-            hint={kind === 'movement' ? 'A OMS recomenda ao menos 150 minutos por semana.' : kind === 'sleep' ? 'Adultos costumam precisar de 7 a 9 horas.' : undefined}
+            hint={goalHint[kind]}
           />
+          {kind === 'caffeine' && (
+            <div className="space-y-1.5">
+              <Label htmlFor="habit-cutoff">Último café do dia até</Label>
+              <Input id="habit-cutoff" type="time" value={cutoff} onChange={(e) => setCutoff(e.target.value)} className="h-11" />
+              <p className="text-xs text-muted-foreground">A cafeína fica horas no corpo. Depois deste horário, avisamos que pode atrapalhar o sono.</p>
+            </div>
+          )}
+          {kind === 'screen_time' && (
+            <div className="space-y-1.5">
+              <Label htmlFor="habit-bedtime">Que horas você costuma dormir?</Label>
+              <Input id="habit-bedtime" type="time" value={bedtime} onChange={(e) => setBedtime(e.target.value)} className="h-11" />
+              <p className="text-xs text-muted-foreground">Telas antes de deitar atrasam o sono. O lembrete chega 1 hora antes.</p>
+            </div>
+          )}
+          {kind === 'joy' && (
+            <fieldset className="space-y-2">
+              <legend className="text-sm font-medium">Suas atividades favoritas</legend>
+              <p className="text-xs text-muted-foreground">Viram botões de registro rápido. Escolha de 1 a 12.</p>
+              <div className="flex flex-wrap gap-2">
+                {[...new Set([...activities, ...JOY_ACTIVITIES])].map((activity) => {
+                  const on = activities.includes(activity);
+                  return (
+                    <button
+                      key={activity}
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() => setActivities((prev) => (on ? prev.filter((a) => a !== activity) : prev.length < 12 ? [...prev, activity] : prev))}
+                      className={`min-h-9 rounded-full border px-3 text-sm transition-colors ${on ? 'border-primary bg-primary/10 font-medium text-primary' : 'border-border text-foreground hover:bg-muted/50'}`}
+                    >
+                      {activity}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  aria-label="Outra atividade"
+                  value={newActivity}
+                  maxLength={40}
+                  onChange={(e) => setNewActivity(e.target.value)}
+                  placeholder="Outra atividade"
+                  className="h-11"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-11"
+                  disabled={!newActivity.trim() || activities.length >= 12}
+                  onClick={() => {
+                    const value = newActivity.trim();
+                    if (value && !activities.includes(value)) setActivities((prev) => [...prev, value]);
+                    setNewActivity('');
+                  }}
+                >
+                  Adicionar
+                </Button>
+              </div>
+            </fieldset>
+          )}
           {kind === 'water' && (
             <fieldset className="space-y-1.5">
               <legend className="text-sm font-medium">Seus copos (botões de registro rápido)</legend>
@@ -320,11 +472,17 @@ const HabitForm = ({ kind, habit, saving, onSubmit }: HabitFormProps) => {
         <p className="text-sm text-muted-foreground">
           {kind === 'water'
             ? 'Avisamos no intervalo escolhido e paramos quando você bate a meta do dia.'
-            : quit
-              ? 'Uma mensagem por dia com a sua contagem, para lembrar do quanto você já avançou.'
-              : 'Um lembrete por dia para anotar o seu progresso.'}
+            : kind === 'medication'
+              ? 'Avisamos em cada horário, até 2 horas depois, se a dose ainda não foi marcada.'
+              : kind === 'screen_time'
+                ? 'Um lembrete 1 hora antes de dormir para largar o celular.'
+                : kind === 'caffeine'
+                  ? 'Um lembrete perto do horário do último café.'
+                  : quit
+                    ? 'Uma mensagem por dia com a sua contagem, para lembrar do quanto você já avançou.'
+                    : 'Um lembrete por dia para anotar o seu progresso.'}
         </p>
-        {remindersEnabled && (
+        {remindersEnabled && reminderTimeEditable && (
           <div className="grid gap-4 sm:grid-cols-3">
             {usesInterval && (
               <div className="space-y-1.5">

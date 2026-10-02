@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { BellRing, CalendarCheck, Check, Flame, HeartPulse, Pencil, PiggyBank, Plus, Trash2, Trophy, Wind } from 'lucide-react';
+import { BellRing, CalendarCheck, Check, ChevronRight, Flame, HeartPulse, Leaf, MoonStar, Pencil, PiggyBank, Pill, Plus, Trash2, Trophy, Wind } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,36 +21,46 @@ import PatientBottomNav from '@/components/PatientBottomNav';
 import ProgressRing from '@/components/habits/ProgressRing';
 import CravingDialog from '@/components/habits/CravingDialog';
 import RelapseDialog from '@/components/habits/RelapseDialog';
-import { HABIT_VISUALS } from '@/components/habits/habitVisuals';
-import { quickAmountsFor } from '@/components/habits/DailyHabitCard';
-import { useHabitLogger } from '@/components/habits/useHabitLogger';
+import { HABIT_VISUALS, OVER_LIMIT_COLOR } from '@/components/habits/habitVisuals';
+import { OFFLINE_ITEM, offlineEventToday } from '@/components/habits/DailyHabitCard';
+import { customItem, useHabitLogger } from '@/components/habits/useHabitLogger';
+import { cn } from '@/lib/utils';
 import { useHabits } from '@/hooks/useHabits';
 import { useNow } from '@/hooks/useNow';
 import {
+  CAFFEINE_DRINKS,
   HABIT_CATALOG,
+  JOY_FEELINGS,
   KCAL_PER_DRINK,
+  MEALS,
+  MEAL_FEELINGS,
   MINUTES_OF_LIFE_PER_CIGARETTE,
   addDays,
   bestGoalStreak,
   cravingTriggerRanking,
-  formatAmount,
+  dayOk,
   formatBRL,
   formatDurationShort,
   formatNumber,
-  goalStreak,
+  formatHabitAmount,
+  habitStreak,
   habitTitle,
   healthMilestoneProgress,
+  isLimitHabit,
   isQuitHabit,
   lastDays,
   localDateString,
   milestoneLabel,
   nextMilestone,
+  onceEventFor,
+  quickItemsFor,
   quitLabel,
   quitStats,
   reachedMilestones,
   splitDuration,
   totalsByDate,
   type HabitEvent,
+  type QuickItem,
   type UserHabit,
 } from '@/lib/habits';
 
@@ -69,6 +79,7 @@ const Stat = ({ icon: Icon, label, value, hint }: { icon: typeof Flame; label: s
 
 const reminderSummary = (habit: UserHabit) => {
   if (!habit.reminders_enabled) return 'Lembretes desligados';
+  if (habit.kind === 'medication') return `Lembretes às ${(habit.settings.times ?? []).join(', ')}`;
   if (habit.reminder_interval_minutes) {
     const h = habit.reminder_interval_minutes / 60;
     return `Lembretes a cada ${formatNumber(h, 1)} h, das ${habit.reminder_start} às ${habit.reminder_end}`;
@@ -78,94 +89,248 @@ const reminderSummary = (habit: UserHabit) => {
 
 // ------------------------------------------------------------ do dia
 
+/** Nome de um registro do dia ("Almoço", "Café (xícara)", "Dose das 08:00"). */
+const entryLabel = (habit: UserHabit, entry: HabitEvent) => {
+  const d = entry.details ?? {};
+  if (habit.kind === 'meals') return MEALS.find((m) => m.key === d.meal)?.label ?? 'Refeição';
+  if (habit.kind === 'caffeine') {
+    const drink = CAFFEINE_DRINKS.find((c) => c.key === d.drink)?.label;
+    return drink ? `${drink} · ${formatHabitAmount('caffeine', entry.amount ?? 0)}` : formatHabitAmount('caffeine', entry.amount ?? 0);
+  }
+  if (habit.kind === 'medication') return `Dose das ${String(d.slot ?? '')}`;
+  if (habit.kind === 'joy') return String(d.activity ?? 'Atividade');
+  return formatHabitAmount(habit.kind, entry.amount ?? 0);
+};
+
+const entryNote = (habit: UserHabit, entry: HabitEvent) => {
+  const d = entry.details ?? {};
+  if (habit.kind === 'meals' && d.feeling) return `antes: ${String(d.feeling).toLowerCase()}`;
+  if (habit.kind === 'joy' && d.feeling) {
+    const label = JOY_FEELINGS.find((f) => f.key === d.feeling)?.label;
+    return label ? `depois: ${label.toLowerCase()}` : null;
+  }
+  return null;
+};
+
 const DailyDetail = ({
   habit,
   events,
   onLog,
   onDeleteEvent,
+  onUpdateDetails,
+  onToggleOffline,
 }: {
   habit: UserHabit;
   events: HabitEvent[];
-  onLog: (amount: number) => void;
+  onLog: (item: QuickItem) => Promise<string | null>;
   onDeleteEvent: (id: string) => void;
+  onUpdateDetails: (id: string, details: Record<string, unknown>) => void;
+  onToggleOffline: () => void;
 }) => {
+  const navigate = useNavigate();
   const [custom, setCustom] = useState('');
+  // Depois de registrar refeição ou atividade, pergunta como a pessoa estava (opcional).
+  const [askFor, setAskFor] = useState<string | null>(null);
   const { icon: Icon, color, soft } = HABIT_VISUALS[habit.kind];
-  const unit = HABIT_CATALOG[habit.kind].unit!;
-  const goal = habit.daily_goal ?? HABIT_CATALOG[habit.kind].defaultGoal!;
+  const catalog = HABIT_CATALOG[habit.kind];
+  const limit = isLimitHabit(habit.kind);
+  const goal = habit.daily_goal ?? catalog.defaultGoal!;
   const today = localDateString();
   const totals = totalsByDate(events);
   const total = totals.get(today) ?? 0;
+  const over = limit && total > goal;
+  const ringColor = over ? OVER_LIMIT_COLOR : color;
   const week = lastDays(totals, goal, today, 7);
   const weekAverage = week.reduce((sum, d) => sum + d.total, 0) / 7;
+  const weekOk = week.filter((d) => dayOk(habit.kind, d.total, goal) && (habit.kind !== 'screen_time' || totals.has(d.date))).length;
   const todayEntries = events.filter((e) => e.kind === 'intake' && e.local_date === today).reverse();
-  const remaining = Math.max(0, goal - total);
+  const items = quickItemsFor(habit, true);
+  const allowsCustom = catalog.unit !== 'count';
+  const chartMax = Math.max(goal, ...week.map((d) => d.total)) || 1;
+  const offline = habit.kind === 'screen_time' ? offlineEventToday(events, today) : undefined;
+  const askedEntry = askFor ? events.find((e) => e.id === askFor) : undefined;
+
+  const headline = (() => {
+    if (limit) {
+      return over
+        ? `Você passou ${formatHabitAmount(habit.kind, total - goal)} do limite de hoje`
+        : `Ainda cabem ${formatHabitAmount(habit.kind, goal - total)} no limite de hoje`;
+    }
+    const remaining = Math.max(0, goal - total);
+    return remaining === 0 ? 'Meta de hoje batida! 🎉' : `Faltam ${formatHabitAmount(habit.kind, remaining)} para a meta de hoje`;
+  })();
+
+  const log = async (item: QuickItem) => {
+    const id = await onLog(item);
+    if (id && (habit.kind === 'meals' || habit.kind === 'joy')) setAskFor(id);
+  };
 
   const submitCustom = (event: React.FormEvent) => {
     event.preventDefault();
     const value = Number(custom.replace(',', '.'));
     if (!(value > 0 && value <= 20000)) return;
-    onLog(value);
+    void log(customItem(habit, value));
     setCustom('');
   };
 
   return (
     <>
       <section className="flex flex-col items-center gap-3 rounded-2xl p-4 text-center sm:p-6" style={{ backgroundColor: soft }}>
-        <ProgressRing value={total / goal} color={color} size={148} stroke={12} label={`${Math.round((total / goal) * 100)}% da meta de hoje`}>
+        <ProgressRing value={total / goal} color={ringColor} size={148} stroke={12} label={`${Math.round((total / goal) * 100)}% ${limit ? 'do limite' : 'da meta'} de hoje`}>
           <div className="flex flex-col items-center">
-            <Icon className="h-6 w-6" style={{ color }} aria-hidden="true" />
-            <span className="mt-1 text-xl font-bold tabular-nums text-foreground">{formatAmount(unit, total)}</span>
-            <span className="text-xs text-muted-foreground">de {formatAmount(unit, goal)}</span>
+            <Icon className="h-6 w-6" style={{ color: ringColor }} aria-hidden="true" />
+            <span className="mt-1 text-xl font-bold tabular-nums text-foreground">{formatHabitAmount(habit.kind, total)}</span>
+            <span className="text-xs text-muted-foreground">
+              {limit ? 'limite' : 'de'} {formatHabitAmount(habit.kind, goal)}
+            </span>
           </div>
         </ProgressRing>
-        <p className="text-sm font-medium text-foreground" aria-live="polite">
-          {remaining === 0 ? 'Meta de hoje batida! 🎉' : `Faltam ${formatAmount(unit, remaining)} para a meta de hoje`}
+        <p className={cn('text-sm font-medium', over ? 'text-destructive' : 'text-foreground')} aria-live="polite">
+          {headline}
         </p>
-        <div className="flex w-full gap-2">
-          {quickAmountsFor(habit).map((amount) => (
-            <Button key={amount} className="min-w-0 flex-1 min-h-11 gap-1 rounded-full px-2" variant="secondary" onClick={() => onLog(amount)}>
-              <Plus className="h-4 w-4" aria-hidden="true" />
-              {formatAmount(unit, amount)}
-            </Button>
-          ))}
+
+        <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-3">
+          {items.map((item) => {
+            const doneItem = Boolean(onceEventFor(events, item, today));
+            return (
+              <Button
+                key={item.key}
+                className="min-h-11 min-w-0 gap-1 rounded-full px-3"
+                variant={doneItem ? 'default' : 'secondary'}
+                style={doneItem ? { backgroundColor: color } : undefined}
+                aria-pressed={item.once ? doneItem : undefined}
+                onClick={() => void log(item)}
+              >
+                {doneItem ? <Check className="h-4 w-4 shrink-0" aria-hidden="true" /> : <Plus className="h-4 w-4 shrink-0" aria-hidden="true" />}
+                <span className="truncate">{item.label}</span>
+              </Button>
+            );
+          })}
         </div>
-        <form onSubmit={submitCustom} className="flex w-full gap-2">
-          <Input
-            aria-label={`Outra quantidade em ${unit}`}
-            type="number"
-            inputMode="decimal"
-            min="0"
-            step="any"
-            placeholder={`Outra quantidade (${unit})`}
-            value={custom}
-            onChange={(e) => setCustom(e.target.value)}
-            className="h-11 min-w-0 bg-card"
-          />
-          <Button type="submit" variant="outline" className="h-11 shrink-0" disabled={!custom}>
-            Registrar
+
+        {allowsCustom && (
+          <form onSubmit={submitCustom} className="flex w-full gap-2">
+            <Input
+              aria-label={`Outra quantidade em ${catalog.unit}`}
+              type="number"
+              inputMode="decimal"
+              min="0"
+              step="any"
+              placeholder={`Outra quantidade (${catalog.unit})`}
+              value={custom}
+              onChange={(e) => setCustom(e.target.value)}
+              className="h-11 min-w-0 bg-card"
+            />
+            <Button type="submit" variant="outline" className="h-11 shrink-0" disabled={!custom}>
+              Registrar
+            </Button>
+          </form>
+        )}
+
+        {habit.kind === 'screen_time' && (
+          <Button variant="outline" className="w-full min-h-11 gap-2 bg-card" aria-pressed={Boolean(offline)} onClick={onToggleOffline}>
+            {offline ? <Check className="h-4 w-4 text-success" aria-hidden="true" /> : <MoonStar className="h-4 w-4" aria-hidden="true" />}
+            {offline ? 'Sem tela 1 h antes de dormir ✓' : 'Fiquei sem tela 1 h antes de dormir'}
           </Button>
-        </form>
+        )}
       </section>
 
+      {askedEntry && (
+        <section className="space-y-2 rounded-2xl border border-border bg-card p-4" aria-labelledby="ask-feeling">
+          <h2 id="ask-feeling" className="text-sm font-semibold text-foreground">
+            {habit.kind === 'meals' ? 'Antes de comer, você estava… (opcional)' : 'Como você se sente agora? (opcional)'}
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {(habit.kind === 'meals' ? MEAL_FEELINGS.map((f) => ({ key: f, label: f })) : JOY_FEELINGS).map((f) => (
+              <Button
+                key={f.key}
+                size="sm"
+                variant="outline"
+                className="rounded-full"
+                onClick={() => {
+                  onUpdateDetails(askedEntry.id, { ...askedEntry.details, feeling: f.key });
+                  setAskFor(null);
+                }}
+              >
+                {f.label}
+              </Button>
+            ))}
+            <Button size="sm" variant="ghost" onClick={() => setAskFor(null)}>
+              Pular
+            </Button>
+          </div>
+        </section>
+      )}
+
+      {habit.kind === 'caffeine' && (
+        <p role="note" className="rounded-xl border border-border bg-card p-3 text-sm text-muted-foreground">
+          {habit.settings.cutoff_time
+            ? `Depois das ${habit.settings.cutoff_time}, prefira descafeinado: a cafeína fica horas no corpo e atrapalha o sono. `
+            : ''}
+          Ansiedade, coração acelerado e insônia pioram com cafeína em excesso. Valores por porção são aproximados.
+        </p>
+      )}
+
+      {habit.kind === 'medication' && (
+        <p role="note" className="flex gap-2 rounded-xl border border-border bg-card p-3 text-sm text-muted-foreground">
+          <Pill className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+          O Soliv só lembra. Não mude a dose nem pare o remédio sem falar com o seu médico.
+        </p>
+      )}
+
+      {habit.kind === 'meals' && (
+        <button
+          type="button"
+          onClick={() => navigate('/comer-com-atencao')}
+          className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left shadow-sm hover:bg-muted/40"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: soft }}>
+            <Leaf className="h-5 w-5" style={{ color }} aria-hidden="true" />
+          </span>
+          <span className="flex-1">
+            <span className="block font-semibold text-foreground">Comer com atenção</span>
+            <span className="block text-sm text-muted-foreground">Exercício guiado de 3 minutos para a próxima refeição</span>
+          </span>
+          <ChevronRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+        </button>
+      )}
+
       <section className="grid grid-cols-3 gap-2">
-        <Stat icon={Flame} label="Sequência" value={`${goalStreak(totals, goal, today)} d`} hint="dias seguidos na meta" />
-        <Stat icon={Trophy} label="Melhor" value={`${bestGoalStreak(totals, goal, today)} d`} hint="nos últimos 60 dias" />
-        <Stat icon={CalendarCheck} label="Média" value={formatAmount(unit, Math.round(weekAverage * 10) / 10)} hint="por dia na semana" />
+        <Stat
+          icon={Flame}
+          label="Sequência"
+          value={`${habitStreak(habit, totals, goal, today)} d`}
+          hint={limit ? 'dias seguidos no limite' : 'dias seguidos na meta'}
+        />
+        {limit ? (
+          <Stat icon={Trophy} label="No limite" value={`${weekOk} de 7`} hint="dias da semana" />
+        ) : (
+          <Stat icon={Trophy} label="Melhor" value={`${bestGoalStreak(totals, goal, today)} d`} hint="nos últimos 60 dias" />
+        )}
+        <Stat
+          icon={CalendarCheck}
+          label="Média"
+          value={formatHabitAmount(habit.kind, Math.round(weekAverage * 10) / 10)}
+          hint="por dia na semana"
+        />
       </section>
 
       <section className="space-y-2 rounded-2xl border border-border bg-card p-4" aria-labelledby="week-chart">
         <h2 id="week-chart" className="text-base font-semibold text-foreground">Últimos 7 dias</h2>
-        <div className="flex h-32 gap-2" role="list">
+        <div className="relative flex h-32 gap-2" role="list">
           {week.map((day) => {
             const [y, m, d] = day.date.split('-').map(Number);
             const weekday = WEEKDAY[new Date(y, m - 1, d).getDay()];
+            const ok = dayOk(habit.kind, day.total, goal);
+            const barColor = limit ? (day.total > goal ? OVER_LIMIT_COLOR : color) : ok ? color : `${color.replace(')', ' / 0.45)')}`;
             return (
-              <div key={day.date} role="listitem" className="flex min-w-0 flex-1 flex-col items-center gap-1" aria-label={`${weekday}: ${formatAmount(unit, day.total)}`}>
+              <div key={day.date} role="listitem" className="flex min-w-0 flex-1 flex-col items-center gap-1" aria-label={`${weekday}: ${formatHabitAmount(habit.kind, day.total)}`}>
                 <div className="relative flex w-full flex-1 items-end overflow-hidden rounded-md bg-muted">
+                  <div className="w-full rounded-md transition-all" style={{ height: `${Math.min(100, (day.total / chartMax) * 100)}%`, backgroundColor: barColor }} />
                   <div
-                    className="w-full rounded-md transition-all"
-                    style={{ height: `${Math.min(100, (day.total / goal) * 100)}%`, backgroundColor: day.reached ? color : `${color.replace(')', ' / 0.45)')}` }}
+                    className="pointer-events-none absolute inset-x-0 border-t border-dashed border-foreground/40"
+                    style={{ bottom: `${(goal / chartMax) * 100}%` }}
+                    aria-hidden="true"
                   />
                 </div>
                 <span className={`text-xs ${day.date === today ? 'font-bold text-foreground' : 'text-muted-foreground'}`}>{weekday}</span>
@@ -173,6 +338,7 @@ const DailyDetail = ({
             );
           })}
         </div>
+        <p className="text-xs text-muted-foreground">A linha tracejada é {limit ? 'o limite' : 'a meta'} do dia.</p>
       </section>
 
       <section className="space-y-2 rounded-2xl border border-border bg-card p-4" aria-labelledby="today-entries">
@@ -181,25 +347,30 @@ const DailyDetail = ({
           <p className="text-sm text-muted-foreground">Nada registrado ainda hoje.</p>
         ) : (
           <ul className="divide-y divide-border">
-            {todayEntries.map((entry) => (
-              <li key={entry.id} className="flex items-center justify-between py-2 text-sm">
-                <span>
-                  <span className="font-medium text-foreground">{formatAmount(unit, entry.amount ?? 0)}</span>
-                  <span className="ml-2 text-muted-foreground">
-                    {new Date(entry.occurred_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+            {todayEntries.map((entry) => {
+              const note = entryNote(habit, entry);
+              const label = entryLabel(habit, entry);
+              return (
+                <li key={entry.id} className="flex items-center justify-between gap-2 py-2 text-sm">
+                  <span className="min-w-0">
+                    <span className="font-medium text-foreground">{label}</span>
+                    <span className="ml-2 text-muted-foreground">
+                      {new Date(entry.occurred_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                    {note && <span className="block text-xs text-muted-foreground">{note}</span>}
                   </span>
-                </span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label={`Apagar registro de ${formatAmount(unit, entry.amount ?? 0)}`}
-                  onClick={() => onDeleteEvent(entry.id)}
-                  disabled={entry.id.startsWith('tmp-')}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </li>
-            ))}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`Apagar registro: ${label}`}
+                    onClick={() => onDeleteEvent(entry.id)}
+                    disabled={entry.id.startsWith('tmp-')}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>
@@ -359,7 +530,7 @@ const QuitDetail = ({
 const HabitDetail = () => {
   const navigate = useNavigate();
   const { habitId } = useParams();
-  const { habits, eventsByHabit, loading, logIntake, deleteEvent, logCraving, registerRelapse, archiveHabit } = useHabits();
+  const { habits, eventsByHabit, loading, logIntake, deleteEvent, updateEventDetails, logCraving, registerRelapse, archiveHabit } = useHabits();
   const log = useHabitLogger(logIntake, deleteEvent);
   const [cravingOpen, setCravingOpen] = useState(false);
   const [relapseOpen, setRelapseOpen] = useState(false);
@@ -407,8 +578,14 @@ const HabitDetail = () => {
                 <DailyDetail
                   habit={habit}
                   events={events}
-                  onLog={(amount) => log(habit, events, amount)}
+                  onLog={(item) => log(habit, events, item)}
                   onDeleteEvent={(id) => deleteEvent(id).catch(() => toast.error('Não foi possível apagar o registro.'))}
+                  onUpdateDetails={(id, details) => updateEventDetails(id, details).catch(() => toast.error('Não foi possível salvar.'))}
+                  onToggleOffline={() => {
+                    const existing = offlineEventToday(events);
+                    const action = existing ? deleteEvent(existing.id) : logIntake(habit.id, 0, { item: OFFLINE_ITEM }, 'check');
+                    action.catch(() => toast.error('Não foi possível registrar agora.'));
+                  }}
                 />
               )}
 

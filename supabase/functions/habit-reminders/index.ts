@@ -4,7 +4,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 //
 // Quem decide o que está devido é claim_due_habit_reminders(): água dentro da
 // janela e do intervalo escolhidos, enquanto a meta do dia não foi batida; e
-// uma mensagem por dia para quem está parando de fumar/beber. A função marca
+// uma mensagem por dia para quem está parando de fumar/beber e para os outros
+// hábitos do dia; no remédio, um lembrete em cada horário de dose ainda não
+// marcada. A função marca
 // cada lembrete como enviado na mesma operação, então chamadas repetidas (ou
 // de fora) não disparam lembretes a mais — por isso esta função não exige o
 // CRON_SECRET, mas o aceita se estiver configurado.
@@ -23,6 +25,8 @@ interface DueReminder {
   today_total: number;
   quit_started_at: string | null;
   settings: Record<string, unknown> | null;
+  /** Remédio: o horário da dose que está sendo lembrada. */
+  due_slot?: string | null;
 }
 
 const formatMl = (ml: number) =>
@@ -52,6 +56,37 @@ export const buildMessage = (r: DueReminder): { title: string; body: string } =>
       return {
         title: "Bora se mexer?",
         body: total > 0 ? `Você já fez ${Math.round(total)} min hoje. Faltam ${Math.max(0, Math.round(goal - total))} min.` : `A meta de hoje é ${Math.round(goal)} min de movimento.`,
+      };
+    case "caffeine": {
+      const cutoff = typeof r.settings?.cutoff_time === "string" ? r.settings.cutoff_time : null;
+      return {
+        title: "Último café do dia? ☕",
+        body: cutoff
+          ? `Depois das ${cutoff}, a cafeína pode atrapalhar o sono. Hoje: ${Math.round(total)} mg de ${Math.round(goal)} mg.`
+          : `Hoje: ${Math.round(total)} mg de ${Math.round(goal)} mg.`,
+      };
+    }
+    case "meals":
+      return {
+        title: "Já comeu?",
+        body: total >= goal
+          ? "Refeições do dia em dia. Que bom!"
+          : "Ficar muitas horas sem comer pode aumentar a ansiedade. Marque as refeições em Meus hábitos.",
+      };
+    case "medication":
+      return {
+        title: `Hora do remédio${r.due_slot ? ` (${r.due_slot})` : ""} 💊`,
+        body: `${r.title ?? "Seu remédio"}: marque em Meus hábitos quando tomar.`,
+      };
+    case "screen_time":
+      return {
+        title: "Hora de desacelerar 🌙",
+        body: "Que tal deixar o celular de lado na próxima hora? O sono agradece.",
+      };
+    case "joy":
+      return {
+        title: "Já fez algo que te faz bem hoje?",
+        body: "Ler, ouvir música, caminhar: um momento seu também é autocuidado.",
       };
     case "quit_smoking":
     case "quit_alcohol":

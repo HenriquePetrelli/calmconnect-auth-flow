@@ -4,17 +4,20 @@ import ExpandableCard from '@/components/ExpandableCard';
 import { Button } from '@/components/ui/button';
 import ProgressRing from '@/components/habits/ProgressRing';
 import { HABIT_VISUALS } from '@/components/habits/habitVisuals';
-import { quickAmountsFor } from '@/components/habits/DailyHabitCard';
+import { dailySummary } from '@/components/habits/DailyHabitCard';
 import { useHabitLogger } from '@/components/habits/useHabitLogger';
 import { useHabits } from '@/hooks/useHabits';
 import { useNow } from '@/hooks/useNow';
 import {
   HABIT_CATALOG,
-  formatAmount,
   formatBRL,
+  formatHabitAmount,
   habitTitle,
+  isLimitHabit,
   isQuitHabit,
   localDateString,
+  onceEventFor,
+  quickItemsFor,
   quitLabel,
   quitStats,
   totalsByDate,
@@ -37,7 +40,7 @@ const HomeHabitsCard = () => {
   // Fechado, o subtítulo já resume o dia (como o "Humor de hoje").
   const summary =
     habits.length === 0
-      ? 'Água, sono, parar de fumar ou de beber'
+      ? 'Água, sono, remédio, menos café ou tela'
       : shown
           .slice(0, 2)
           .map((habit) => {
@@ -45,11 +48,10 @@ const HomeHabitsCard = () => {
               const days = quitStats(habit, now).days;
               return `${days} ${days === 1 ? 'dia' : 'dias'} ${quitLabel(habit)}`;
             }
-            const unit = HABIT_CATALOG[habit.kind].unit!;
             const goal = habit.daily_goal ?? HABIT_CATALOG[habit.kind].defaultGoal!;
             const total = totalsByDate(eventsByHabit.get(habit.id) ?? []).get(today) ?? 0;
-            const name = habit.kind === 'water' ? 'Água' : habit.kind === 'sleep' ? 'Sono' : 'Movimento';
-            return `${name}: ${formatAmount(unit, total)} de ${formatAmount(unit, goal)}`;
+            const name = habit.kind === 'medication' ? habitTitle(habit) : HABIT_CATALOG[habit.kind].shortName;
+            return `${name}: ${formatHabitAmount(habit.kind, total)} de ${formatHabitAmount(habit.kind, goal)}`;
           })
           .join(' · ');
 
@@ -58,8 +60,8 @@ const HomeHabitsCard = () => {
       {habits.length === 0 ? (
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            Beber mais água, dormir melhor, parar de fumar ou de beber: acompanhe o seu dia, os dias sem e o dinheiro
-            economizado.
+            Beber água, dormir melhor, tomar o remédio na hora, menos café ou tela, parar de fumar ou de beber:
+            acompanhe o seu dia.
           </p>
           <Button onClick={() => navigate('/habitos/novo')} className="w-full min-h-11">
             <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
@@ -97,33 +99,33 @@ const HomeHabitsCard = () => {
               );
             }
 
-            const unit = HABIT_CATALOG[habit.kind].unit!;
             const goal = habit.daily_goal ?? HABIT_CATALOG[habit.kind].defaultGoal!;
             const total = totalsByDate(events).get(today) ?? 0;
-            const quick = quickAmountsFor(habit)[0];
+            // O botão rápido da Home: o próximo ainda não feito (refeição, dose) ou o primeiro.
+            const items = quickItemsFor(habit);
+            const quick = items.find((item) => !onceEventFor(events, item, today));
+            const over = isLimitHabit(habit.kind) && total > goal;
             return (
               <li key={habit.id} className="flex items-center gap-3 rounded-xl p-2">
                 <button type="button" onClick={() => navigate(`/habitos/${habit.id}`)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
-                  <ProgressRing value={total / goal} color={color} size={40} stroke={4} label={`${habitTitle(habit)}: ${Math.round((total / goal) * 100)}%`}>
+                  <ProgressRing value={total / goal} color={over ? 'hsl(0 72% 46%)' : color} size={40} stroke={4} label={`${habitTitle(habit)}: ${Math.round((total / goal) * 100)}%`}>
                     <Icon className="h-4 w-4" style={{ color }} aria-hidden="true" />
                   </ProgressRing>
                   <span className="min-w-0">
-                    <span className="block font-semibold text-foreground">{habitTitle(habit)}</span>
-                    <span className="block text-xs text-muted-foreground">
-                      {formatAmount(unit, total)} de {formatAmount(unit, goal)}
-                    </span>
+                    <span className="block truncate font-semibold text-foreground">{habitTitle(habit)}</span>
+                    <span className={`block truncate text-xs ${over ? 'text-destructive' : 'text-muted-foreground'}`}>{dailySummary(habit, total)}</span>
                   </span>
                 </button>
                 {quick && (
                   <Button
                     size="sm"
                     variant="secondary"
-                    className="shrink-0 gap-1 rounded-full"
+                    className="max-w-[45%] shrink-0 gap-1 rounded-full"
                     onClick={() => log(habit, events, quick)}
-                    aria-label={`Registrar ${formatAmount(unit, quick)} em ${habitTitle(habit)}`}
+                    aria-label={`Registrar ${quick.label} em ${habitTitle(habit)}`}
                   >
-                    <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-                    {formatAmount(unit, quick)}
+                    <Plus className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                    <span className="truncate">{quick.label}</span>
                   </Button>
                 )}
               </li>

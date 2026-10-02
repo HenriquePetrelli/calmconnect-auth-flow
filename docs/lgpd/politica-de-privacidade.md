@@ -27,7 +27,7 @@ O Soliv é destinado **somente a maiores de 18 anos**. Não coletamos consciente
 | Categoria | Exemplos | Quem |
 |---|---|---|
 | Cadastro | nome, e-mail, senha (guardada de forma criptografada), cidade e estado | todos |
-| **Dados de saúde** ⚖️ | sintomas selecionados, registros de humor, anotações do diário, planos de segurança, depoimentos em grupos de apoio, hábitos (água, sono, movimento, consumo de cigarro e de álcool, vontades e recaídas) | pacientes |
+| **Dados de saúde** ⚖️ | sintomas selecionados, registros de humor, anotações do diário, planos de segurança, depoimentos em grupos de apoio, hábitos (água, sono, movimento, refeições, cafeína, tempo de tela, atividades de que você gosta, nome e horários de remédios, consumo de cigarro e de álcool, vontades e recaídas), respostas dos questionários de ansiedade e humor (GAD-7 e PHQ-9) | pacientes |
 | Contatos de emergência | nome, telefone e relação das pessoas que você indicar nos seus planos de segurança | pacientes (dados de terceiros) |
 | Atendimento | pedidos de SOS, consultas agendadas, avaliação do atendimento, mensagens trocadas no chat | pacientes e psicólogos |
 | Registros profissionais | anotações clínicas e resumos de sessão feitos pelo psicólogo | psicólogos |
@@ -67,7 +67,7 @@ Grande parte do que você registra no Soliv é **dado pessoal sensível referent
   - **Durante um SOS:** o psicólogo que aceitou o seu pedido vê seu nome, cidade, sintomas, humor recente e histórico de pedidos de SOS. **Somente se ele abrir**, vê também os seus planos de segurança e contatos de emergência. **Cada abertura fica registrada**, e o acesso termina quando o atendimento termina.
   - **Nas consultas agendadas:** o psicólogo da consulta vê o necessário para o atendimento e registra as próprias anotações.
 - **Outros usuários dos grupos de apoio:** veem os depoimentos que você publicar. Se você marcar o depoimento como **anônimo**, seu nome e sua identificação não são mostrados a ninguém, nem enviados ao aparelho de outros usuários.
-- **Equipe do Soliv (administradores):** acessa apenas o necessário para operar o serviço (por exemplo, moderar depoimentos denunciados, verificar psicólogos, processar repasses). **A equipe não tem acesso ao seu diário, aos seus planos de segurança nem aos seus hábitos.** Os psicólogos também não veem os seus hábitos.
+- **Equipe do Soliv (administradores):** acessa apenas o necessário para operar o serviço (por exemplo, moderar depoimentos denunciados, verificar psicólogos, processar repasses). **A equipe não tem acesso ao seu diário, aos seus planos de segurança, aos seus hábitos nem aos seus questionários.** Os psicólogos também não veem os seus hábitos; os resultados dos questionários, só se você escolher mostrar, e apenas aos psicólogos com quem você tem consulta.
 
 ### 5.1 Benefício oferecido pela sua empresa
 
@@ -94,7 +94,7 @@ Também podemos compartilhar dados quando a lei ou uma ordem judicial exigir.
 
 | Dado | Prazo |
 |---|---|
-| Conta, cadastro, diário, humor, planos de segurança, hábitos, depoimentos, preferências | enquanto a conta existir; apagados quando você exclui a conta |
+| Conta, cadastro, diário, humor, planos de segurança, hábitos, questionários, depoimentos, preferências | enquanto a conta existir; apagados quando você exclui a conta |
 | **Registros de atendimento** (pedidos de SOS, consultas, avaliações, anotações clínicas e resumos de sessão) | **5 anos a partir do atendimento**, conforme a Resolução CFP nº 01/2009, **mesmo que a conta seja excluída**. Depois, são eliminados. ⚖️ |
 | Mensagens do chat | arquivadas após 1 mês e apagadas após 3 meses |
 | Dados fiscais e de pagamento | pelo prazo exigido pela legislação fiscal (em regra, 5 anos) |

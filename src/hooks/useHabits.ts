@@ -143,16 +143,16 @@ export const useHabits = () => {
   );
 
   const logIntake = useCallback(
-    async (habitId: string, amount: number): Promise<string | null> => {
+    async (habitId: string, amount: number, details: Record<string, unknown> = {}, kind: 'intake' | 'check' = 'intake'): Promise<string | null> => {
       if (!user?.id) return null;
       const optimistic: HabitEvent = {
         id: `tmp-${Date.now()}`,
         habit_id: habitId,
-        kind: 'intake',
-        amount,
+        kind,
+        amount: kind === 'check' ? null : amount,
         local_date: localDateString(),
         occurred_at: new Date().toISOString(),
-        details: {},
+        details,
       };
       // Registro instantâneo na tela: tocar num copo tem que responder na hora.
       setEvents((prev) => [...prev, optimistic]);
@@ -161,9 +161,10 @@ export const useHabits = () => {
         .insert({
           habit_id: habitId,
           user_id: user.id,
-          kind: 'intake',
-          amount,
+          kind,
+          amount: optimistic.amount,
           local_date: optimistic.local_date,
+          details: details as Json,
         })
         .select('id')
         .single();
@@ -184,6 +185,19 @@ export const useHabits = () => {
       if (deleteError) {
         await load();
         throw deleteError;
+      }
+    },
+    [load],
+  );
+
+  /** Completa um registro já feito (ex.: como estava antes de comer). */
+  const updateEventDetails = useCallback(
+    async (eventId: string, details: Record<string, unknown>) => {
+      setEvents((prev) => prev.map((e) => (e.id === eventId ? { ...e, details } : e)));
+      const { error: updateError } = await supabase.from('habit_events').update({ details: details as Json }).eq('id', eventId);
+      if (updateError) {
+        await load();
+        throw updateError;
       }
     },
     [load],
@@ -231,6 +245,7 @@ export const useHabits = () => {
     archiveHabit,
     logIntake,
     deleteEvent,
+    updateEventDetails,
     logCraving,
     registerRelapse,
   };

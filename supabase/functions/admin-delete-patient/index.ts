@@ -89,6 +89,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
       await supabase.from("appointments").delete().eq("patient_id", userId);
       await supabase.from("fcm_tokens").delete().eq("user_id", userId);
       await supabase.from("user_preferences").delete().eq("user_id", userId);
+      await supabase.from("habit_events").delete().eq("user_id", userId);
+      await supabase.from("user_habits").delete().eq("user_id", userId);
+      await supabase.from("mental_health_screenings").delete().eq("user_id", userId);
       await supabase.from("subscribers").delete().eq("user_id", userId);
       await supabase.from("support_tickets").delete().eq("user_id", userId);
     }

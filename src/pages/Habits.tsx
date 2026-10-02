@@ -1,12 +1,14 @@
 import { useNavigate } from 'react-router-dom';
 import { Plus, Sparkles } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import PageHeader from '@/components/PageHeader';
 import PatientBottomNav from '@/components/PatientBottomNav';
-import DailyHabitCard from '@/components/habits/DailyHabitCard';
+import DailyHabitCard, { OFFLINE_ITEM, offlineEventToday } from '@/components/habits/DailyHabitCard';
 import QuitHabitCard from '@/components/habits/QuitHabitCard';
 import { useHabitLogger } from '@/components/habits/useHabitLogger';
+import InsightsCard from '@/components/progress/InsightsCard';
 import { useHabits } from '@/hooks/useHabits';
 import { useNow } from '@/hooks/useNow';
 import { MAX_ACTIVE_HABITS, isQuitHabit } from '@/lib/habits';
@@ -16,6 +18,11 @@ const Habits = () => {
   const navigate = useNavigate();
   const { habits, eventsByHabit, loading, error, logIntake, deleteEvent } = useHabits();
   const log = useHabitLogger(logIntake, deleteEvent);
+  const toggleOffline = (habitId: string) => {
+    const existing = offlineEventToday(eventsByHabit.get(habitId) ?? []);
+    const action = existing ? deleteEvent(existing.id) : logIntake(habitId, 0, { item: OFFLINE_ITEM }, 'check');
+    action.catch(() => toast.error('Não foi possível registrar agora.'));
+  };
   const now = useNow(60_000);
 
   const daily = habits.filter((h) => !isQuitHabit(h.kind));
@@ -48,8 +55,8 @@ const Habits = () => {
               <Sparkles className="mx-auto h-8 w-8 text-primary" aria-hidden="true" />
               <h2 className="text-lg font-semibold text-foreground">Comece por um hábito</h2>
               <p className="text-sm text-muted-foreground">
-                Beber mais água, dormir melhor, parar de fumar ou de beber. Acompanhe os dias, o dinheiro economizado e
-                receba lembretes.
+                Beber água, dormir melhor, tomar o remédio na hora, menos café ou menos tela, parar de fumar ou de beber.
+                Acompanhe o seu dia e receba lembretes.
               </p>
               <Button onClick={() => navigate('/habitos/novo')} className="min-h-11">
                 <Plus className="mr-2 h-4 w-4" />
@@ -66,8 +73,9 @@ const Habits = () => {
                       key={habit.id}
                       habit={habit}
                       events={eventsByHabit.get(habit.id) ?? []}
-                      onLog={(amount) => log(habit, eventsByHabit.get(habit.id) ?? [], amount)}
+                      onLog={(item) => log(habit, eventsByHabit.get(habit.id) ?? [], item)}
                       onOpen={() => navigate(`/habitos/${habit.id}`)}
+                      onToggleOffline={() => toggleOffline(habit.id)}
                     />
                   ))}
                 </section>
@@ -81,6 +89,8 @@ const Habits = () => {
                   ))}
                 </section>
               )}
+
+              <InsightsCard max={2} />
 
               <div className="space-y-1">
                 <Button variant="outline" className="w-full min-h-11" onClick={() => navigate('/habitos/novo')} disabled={limitReached}>

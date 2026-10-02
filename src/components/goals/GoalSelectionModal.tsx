@@ -5,7 +5,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { motion } from 'framer-motion';
 import { useWeeklyGoals, WeeklyGoalTemplate, getCurrentWeekRange } from '@/hooks/useWeeklyGoals';
-import { Loader2 } from 'lucide-react';
+import { Flag, Loader2 } from 'lucide-react';
+import { daysLeftInWeek, isChallenge } from '@/lib/challenges';
 
 interface GoalSelectionModalProps {
   open: boolean;
@@ -87,44 +88,67 @@ export const GoalSelectionModal = ({
           <DialogTitle className="text-2xl">Escolha suas metas da semana</DialogTitle>
         </DialogHeader>
 
-        <div className="grid gap-4 py-4">
-          {goalOptions.map((goal, index) => {
-            const isSelected = tempSelectedGoals.includes(goal.id);
+        {[
+          { key: 'goals', title: 'Metas', options: goalOptions.filter((g) => !isChallenge(g)) },
+          { key: 'challenges', title: 'Desafios de 7 dias', options: goalOptions.filter((g) => isChallenge(g)) },
+        ]
+          .filter((group) => group.options.length > 0)
+          .map((group) => (
+            <section key={group.key} className="space-y-3 pt-2">
+              <div>
+                <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  {group.key === 'challenges' && <Flag className="h-4 w-4" aria-hidden="true" />}
+                  {group.title}
+                </h3>
+                {group.key === 'challenges' && (
+                  <p className="text-xs text-muted-foreground">
+                    Um passo por dia.{' '}
+                    {daysLeftInWeek() < 7
+                      ? `Esta semana ainda tem ${daysLeftInWeek()} ${daysLeftInWeek() === 1 ? 'dia' : 'dias'}; para fazer os 7 passos, escolha no domingo.`
+                      : 'Começando hoje, dá para fazer os 7 passos nesta semana.'}
+                  </p>
+                )}
+              </div>
+              <div className="grid gap-3">
+                {group.options.map((goal, index) => {
+                  const isSelected = tempSelectedGoals.includes(goal.id);
 
-            return (
-              <motion.div
-                key={goal.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <Label
-                  htmlFor={goal.id}
-                  className={`flex items-start gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                    isSelected 
-                      ? 'border-primary bg-primary/5' 
-                      : 'border-border hover:border-primary/50'
-                  }`}
-                >
-                  <Checkbox
-                    id={goal.id}
-                    checked={isSelected}
-                    onCheckedChange={() => handleToggleGoal(goal.id)}
-                    className="mt-1"
-                  />
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-semibold">{goal.title}</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {goal.description}
-                    </p>
-                  </div>
-                </Label>
-              </motion.div>
-            );
-          })}
-        </div>
+                  return (
+                    <motion.div
+                      key={goal.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                    >
+                      <Label
+                        htmlFor={goal.id}
+                        className={`flex items-start gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                          isSelected
+                            ? 'border-primary bg-primary/5'
+                            : 'border-border hover:border-primary/50'
+                        }`}
+                      >
+                        <Checkbox
+                          id={goal.id}
+                          checked={isSelected}
+                          onCheckedChange={() => handleToggleGoal(goal.id)}
+                          className="mt-1"
+                        />
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-semibold">{goal.title}</span>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {goal.description}
+                          </p>
+                        </div>
+                      </Label>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </section>
+          ))}
 
         <DialogFooter>
           <Button

@@ -5,6 +5,7 @@ import { Calendar, FileText, History } from 'lucide-react';
 import { EmptyState } from '@/components/EmptyState';
 import { usePatientSessionHistory } from '@/hooks/usePatientSessionHistory';
 import { formatBrazilTime } from '@/utils/timezone';
+import { SharedScreenings } from './SharedScreenings';
 
 interface PatientHistoryModalProps {
   isOpen: boolean;
@@ -34,6 +35,8 @@ export const PatientHistoryModal = ({ isOpen, onClose, patientId, patientName }:
             Resumos das consultas anteriores concluídas com este paciente.
           </DialogDescription>
         </DialogHeader>
+
+        {isOpen && patientId && <SharedScreenings patientId={patientId} />}
 
         {loading ? (
           <div className="space-y-3">

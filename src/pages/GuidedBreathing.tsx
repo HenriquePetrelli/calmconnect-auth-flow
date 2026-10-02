@@ -15,6 +15,7 @@ import {
   Sparkles,
   Clock,
   Play,
+  Leaf,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import type { LucideIcon } from "lucide-react";
@@ -346,6 +347,31 @@ const GuidedBreathing = () => {
             </div>
           )}
         </section>
+
+        {/* Outras práticas guiadas */}
+        {!searchQuery && activeFilter === "all" && (
+          <section className="space-y-3">
+            <h2 className="text-lg font-semibold text-foreground">Outras práticas</h2>
+            <button
+              type="button"
+              onClick={() => navigate("/comer-com-atencao")}
+              className="flex w-full items-start gap-4 rounded-2xl border border-border bg-card p-4 text-left transition-all hover:border-[#7C3AED]/40"
+            >
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#B45309] text-white shadow-md">
+                <Leaf className="h-6 w-6" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="font-semibold text-foreground">Comer com atenção</h3>
+                <p className="mb-2 text-xs text-muted-foreground">
+                  Para fazer durante uma refeição: comer devagar, perceber a comida e a fome, sem julgamento.
+                </p>
+                <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Clock className="h-3 w-3" />3 min
+                </span>
+              </div>
+            </button>
+          </section>
+        )}
 
         {/* Featured technique */}
         {!searchQuery && activeFilter === "all" && featuredTechnique && (

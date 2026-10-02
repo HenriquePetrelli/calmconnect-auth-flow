@@ -37,6 +37,9 @@ const SoundCategory = lazy(() => import("./pages/SoundCategory"));
 const SoundPlayer = lazy(() => import("./pages/SoundPlayer"));
 const SoundFeedback = lazy(() => import("./pages/SoundFeedback"));
 const GuidedBreathing = lazy(() => import("./pages/GuidedBreathing"));
+const MindfulEating = lazy(() => import("./pages/MindfulEating"));
+const Questionnaires = lazy(() => import("./pages/Questionnaires"));
+const QuestionnaireForm = lazy(() => import("./pages/QuestionnaireForm"));
 const SOS = lazy(() => import("./pages/SOS"));
 const Profile = lazy(() => import("./pages/Profile"));
 const AccountSettings = lazy(() => import("./pages/AccountSettings"));
@@ -266,6 +269,21 @@ const App = () => {
                   <Route path="/breathing" element={
                     <RouteGuard allowedUserTypes={['patient']}>
                       <GuidedBreathing />
+                    </RouteGuard>
+                  } />
+                  <Route path="/comer-com-atencao" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <MindfulEating />
+                    </RouteGuard>
+                  } />
+                  <Route path="/questionarios" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <Questionnaires />
+                    </RouteGuard>
+                  } />
+                  <Route path="/questionarios/:instrument" element={
+                    <RouteGuard allowedUserTypes={['patient']}>
+                      <QuestionnaireForm />
                     </RouteGuard>
                   } />
                   <Route path="/sos" element={
