@@ -785,6 +785,7 @@ export type Database = {
       }
       organization_members: {
         Row: {
+          access_until: string | null
           id: string
           joined_at: string
           organization_id: string
@@ -794,6 +795,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          access_until?: string | null
           id?: string
           joined_at?: string
           organization_id: string
@@ -803,6 +805,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          access_until?: string | null
           id?: string
           joined_at?: string
           organization_id?: string
@@ -824,6 +827,7 @@ export type Database = {
       organizations: {
         Row: {
           allowed_email_domain: string | null
+          billing_day: number | null
           cnpj: string | null
           contact_email: string | null
           contact_name: string | null
@@ -834,6 +838,7 @@ export type Database = {
           name: string
           notes: string | null
           plan_tier: string
+          price_per_seat: number | null
           seats: number
           starts_on: string
           status: string
@@ -841,6 +846,7 @@ export type Database = {
         }
         Insert: {
           allowed_email_domain?: string | null
+          billing_day?: number | null
           cnpj?: string | null
           contact_email?: string | null
           contact_name?: string | null
@@ -851,6 +857,7 @@ export type Database = {
           name: string
           notes?: string | null
           plan_tier: string
+          price_per_seat?: number | null
           seats: number
           starts_on?: string
           status?: string
@@ -858,6 +865,7 @@ export type Database = {
         }
         Update: {
           allowed_email_domain?: string | null
+          billing_day?: number | null
           cnpj?: string | null
           contact_email?: string | null
           contact_name?: string | null
@@ -868,6 +876,7 @@ export type Database = {
           name?: string
           notes?: string | null
           plan_tier?: string
+          price_per_seat?: number | null
           seats?: number
           starts_on?: string
           status?: string
@@ -2284,6 +2293,7 @@ export type Database = {
       admin_list_organization_members: {
         Args: { p_org: string }
         Returns: {
+          access_until: string
           email: string
           full_name: string
           joined_at: string
@@ -2599,6 +2609,10 @@ export type Database = {
       register_push_token: {
         Args: { p_device_info?: Json; p_token: string }
         Returns: undefined
+      }
+      remove_organization_member_by_email: {
+        Args: { p_email: string; p_org: string }
+        Returns: Json
       }
       report_group_testimonial: {
         Args: { p_details?: string; p_reason: string; p_testimonial_id: string }
