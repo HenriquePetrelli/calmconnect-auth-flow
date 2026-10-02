@@ -2,11 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { SkeletonFullPage, SkeletonStatsGrid } from '@/components/skeletons/Skeletons';
 import { ContentTransition } from '@/components/skeletons/ContentTransition';
 
-import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -19,16 +18,8 @@ import {
   TrendingUp,
   Activity,
   Check,
-  LogOut,
-  LayoutDashboard,
-  UserCog,
   Menu,
-  LifeBuoy,
-  MessageSquare,
-  MessageSquareWarning,
-  History,
   Bell,
-  Building2,
 } from 'lucide-react';
 import AdminProfile from '@/components/AdminProfile';
 import { PsychologistApprovalPanel } from '@/components/psychologist/PsychologistApprovalPanel';
@@ -39,6 +30,9 @@ import { ChatModerationPanel } from '@/components/admin/ChatModerationPanel';
 import { GroupTestimonialModerationPanel } from '@/components/admin/GroupTestimonialModerationPanel';
 import { AuditLogPanel } from '@/components/admin/AuditLogPanel';
 import { OrganizationsPanel } from '@/components/admin/OrganizationsPanel';
+import { AdminNav } from '@/components/admin/AdminNav';
+import { ADMIN_NAV_ITEMS, adminNavGroupOf, isAdminSection, type AdminSection } from '@/components/admin/adminNavConfig';
+import logoImg from '@/assets/soliv-logo.svg';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -60,26 +54,21 @@ const AdminDashboard = () => {
   const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
   const [metricsLoading, setMetricsLoading] = useState(true);
   const [metricsError, setMetricsError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("overview");
+  // A seção fica na URL (?secao=pacientes): recarregar a página ou voltar
+  // no navegador mantém o admin onde estava.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const sectionParam = searchParams.get('secao');
+  const activeTab: AdminSection = isAdminSection(sectionParam) ? sectionParam : 'overview';
+  const setActiveTab = (section: AdminSection) => {
+    setSearchParams(section === 'overview' ? {} : { secao: section });
+    window.scrollTo({ top: 0 });
+  };
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { unreadCount } = useNotifications();
 
-  const navItems = [
-    { value: 'overview', label: 'Visão Geral', icon: LayoutDashboard },
-    { value: 'psychologists', label: 'Psicólogos', icon: UserCheck },
-    { value: 'patients', label: 'Pacientes', icon: Users },
-    { value: 'sos', label: 'SOS', icon: LifeBuoy },
-    { value: 'chat', label: 'Chat', icon: MessageSquare },
-    { value: 'groups', label: 'Grupos', icon: MessageSquareWarning },
-    { value: 'payments', label: 'Pagamentos', icon: CreditCard },
-    { value: 'companies', label: 'Empresas', icon: Building2 },
-    { value: 'audit', label: 'Auditoria', icon: History },
-    { value: 'profile', label: 'Perfil', icon: UserCog },
-  ] as const;
-
-  const activeNav = navItems.find(n => n.value === activeTab) ?? navItems[0];
+  const activeNav = ADMIN_NAV_ITEMS.find((n) => n.value === activeTab) ?? ADMIN_NAV_ITEMS[0];
 
   useEffect(() => {
     checkAdminAccess();
@@ -157,14 +146,11 @@ const AdminDashboard = () => {
     return <SkeletonFullPage />;
   }
 
-  const tabTriggerClass =
-    'flex items-center justify-center gap-1.5 sm:gap-2 py-2 sm:py-2.5 px-2 text-xs sm:text-sm font-medium rounded-md ' +
-    'data-[state=active]:bg-secondary data-[state=active]:text-white data-[state=active]:shadow-sm transition-colors';
-
   const metricCards = metrics
     ? [
         {
           label: 'Total de Pacientes',
+          target: 'patients' as AdminSection,
           value: metrics.total_patients,
           hint: 'Pacientes registrados',
           icon: Users,
@@ -172,6 +158,7 @@ const AdminDashboard = () => {
         },
         {
           label: 'Psicólogos Ativos',
+          target: 'psychologists' as AdminSection,
           value: metrics.active_psychologists,
           hint: 'Aprovados e não bloqueados',
           icon: UserCheck,
@@ -179,6 +166,7 @@ const AdminDashboard = () => {
         },
         {
           label: 'Psicólogos Pendentes',
+          target: 'psychologists' as AdminSection,
           value: metrics.pending_psychologists,
           hint: 'Cadastros aguardando aprovação do admin',
           icon: AlertTriangle,
@@ -186,6 +174,7 @@ const AdminDashboard = () => {
         },
         {
           label: 'Consultas (30d)',
+          target: null as AdminSection | null,
           value: metrics.appointments_last_30_days,
           hint: 'Últimos 30 dias',
           icon: Calendar,
@@ -193,6 +182,7 @@ const AdminDashboard = () => {
         },
         {
           label: 'SOS (30d)',
+          target: 'sos' as AdminSection,
           value: metrics.sos_requests_last_30_days,
           hint: 'Pedidos de emergência',
           icon: Activity,
@@ -200,6 +190,7 @@ const AdminDashboard = () => {
         },
         {
           label: 'Assinantes Ativos',
+          target: null as AdminSection | null,
           value: metrics.active_subscribers,
           hint: 'Planos pagos',
           icon: CreditCard,
@@ -216,12 +207,13 @@ const AdminDashboard = () => {
       iconText: 'text-primary',
       value: 'text-primary',
     },
+    // Antes usava a cor secundária, clara demais: número e ícone quase sumiam.
     secondary: {
-      border: 'border-secondary/30',
-      bg: 'bg-gradient-to-br from-secondary/10 to-transparent',
-      iconBg: 'bg-secondary/20',
-      iconText: 'text-secondary',
-      value: 'text-secondary',
+      border: 'border-success/30',
+      bg: 'bg-gradient-to-br from-success/10 to-transparent',
+      iconBg: 'bg-success/15',
+      iconText: 'text-success',
+      value: 'text-success',
     },
     destructive: {
       border: 'border-destructive/20',
@@ -239,175 +231,84 @@ const AdminDashboard = () => {
     },
   };
 
+  const badges = { psychologists: metrics?.pending_psychologists ?? 0 };
+  const selectFromMenu = (section: AdminSection) => {
+    setActiveTab(section);
+    setMobileNavOpen(false);
+  };
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-30 bg-primary text-primary-foreground border-b border-primary/40 shadow-sm">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3 md:py-4">
-          <div className="flex items-center justify-between gap-2 sm:gap-4">
+      {/* Desktop: menu lateral fixo */}
+      <aside className="hidden lg:fixed lg:inset-y-0 lg:z-30 lg:flex lg:w-64 lg:flex-col lg:border-r lg:border-sidebar-border lg:bg-sidebar">
+        <div className="flex items-center gap-3 border-b border-sidebar-border px-5 py-4">
+          <img src={logoImg} alt="" className="h-9 w-9 shrink-0 object-contain" draggable={false} />
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-sidebar-foreground">Soliv</p>
+            <p className="flex items-center gap-1 text-xs text-sidebar-foreground/70">
+              <Shield className="h-3 w-3" aria-hidden="true" /> Painel administrativo
+            </p>
+          </div>
+        </div>
+        <AdminNav active={activeTab} onSelect={setActiveTab} onLogout={handleLogout} badges={badges} />
+      </aside>
+
+      <div className="lg:pl-64">
+        {/* Barra do topo: no celular abre o menu; no desktop mostra onde você está */}
+        <header className="sticky top-0 z-20 border-b border-border bg-card/95 backdrop-blur-sm">
+          <div className="mx-auto flex h-14 max-w-7xl items-center gap-2 px-3 sm:px-4 lg:h-16 lg:px-8">
+            <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0 lg:hidden" aria-label="Abrir menu">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="flex w-[85vw] max-w-xs flex-col gap-0 border-sidebar-border bg-sidebar p-0">
+                <SheetHeader className="border-b border-sidebar-border p-4 text-left">
+                  <SheetTitle className="flex items-center gap-2 text-sm text-sidebar-foreground">
+                    <Shield className="h-4 w-4" aria-hidden="true" /> Painel administrativo
+                  </SheetTitle>
+                  <p className="truncate text-xs text-sidebar-foreground/70">{user?.email}</p>
+                </SheetHeader>
+                <AdminNav active={activeTab} onSelect={selectFromMenu} onLogout={handleLogout} badges={badges} />
+              </SheetContent>
+            </Sheet>
+
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-medium uppercase tracking-wider text-primary-foreground/70 flex items-center gap-1.5">
-                <Shield className="w-3 h-3" /> Painel Administrativo
-              </p>
-              <h1 className="text-base sm:text-lg md:text-xl font-semibold text-white truncate">
-                {user?.email}
+              <p className="hidden text-xs text-muted-foreground sm:block">{adminNavGroupOf(activeTab)}</p>
+              <h1 className="flex items-center gap-2 truncate text-base font-semibold text-foreground lg:text-lg">
+                <activeNav.icon className="h-4 w-4 shrink-0 text-primary sm:hidden" aria-hidden="true" />
+                {activeNav.label}
               </h1>
             </div>
-            <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="relative rounded-full text-white hover:bg-white/15 hover:text-white h-9 w-9"
-                onMouseEnter={() => import('./Notifications')}
-                onClick={() => navigate('/admin-notifications')}
-                title="Notificações"
-                aria-label="Notificações"
-              >
-                <Bell className="w-[18px] h-[18px]" />
-                {unreadCount > 0 && (
-                  <Badge
-                    variant="destructive"
-                    className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 flex items-center justify-center text-xs leading-none"
-                  >
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </Badge>
-                )}
-              </Button>
-              <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
-                <SheetTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="md:hidden rounded-full text-white hover:bg-white/15 hover:text-white h-9 w-9"
-                    aria-label="Abrir menu"
-                  >
-                    <Menu className="w-[18px] h-[18px]" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="w-[82vw] max-w-xs p-0 bg-primary text-primary-foreground border-r-0">
-                  <SheetHeader className="p-4 border-b border-white/10 text-left">
-                    <SheetTitle className="text-white flex items-center gap-2 text-sm">
-                      <Shield className="w-4 h-4" /> Painel Administrativo
-                    </SheetTitle>
-                    <p className="text-xs text-white/70 truncate">{user?.email}</p>
-                  </SheetHeader>
-                  <nav className="p-2">
-                    {navItems.map((item) => {
-                      const Icon = item.icon;
-                      const isActive = activeTab === item.value;
-                      return (
-                        <button
-                          key={item.value}
-                          onClick={() => {
-                            setActiveTab(item.value);
-                            setMobileNavOpen(false);
-                          }}
-                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
-                            isActive
-                              ? 'bg-white/15 text-white'
-                              : 'text-white/85 hover:bg-white/10 hover:text-white'
-                          }`}
-                        >
-                          <Icon className="w-4 h-4 shrink-0" />
-                          <span>{item.label}</span>
-                        </button>
-                      );
-                    })}
-                    <div className="mt-2 pt-2 border-t border-white/10">
-                      <button
-                        onClick={() => {
-                          setMobileNavOpen(false);
-                          handleLogout();
-                        }}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-white/85 hover:bg-destructive/30 hover:text-white transition-colors"
-                      >
-                        <LogOut className="w-4 h-4 shrink-0" />
-                        <span>Sair</span>
-                      </button>
-                    </div>
-                  </nav>
-                </SheetContent>
-              </Sheet>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="hidden md:inline-flex rounded-full text-white hover:bg-destructive/40 hover:text-white h-9 w-9"
-                onClick={handleLogout}
-                title="Sair"
-                aria-label="Sair"
-              >
-                <LogOut className="w-[18px] h-[18px]" />
-              </Button>
-            </div>
 
+            <span className="hidden max-w-56 truncate text-sm text-muted-foreground md:block">{user?.email}</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative h-10 w-10 shrink-0 rounded-full"
+              onMouseEnter={() => import('./Notifications')}
+              onClick={() => navigate('/admin-notifications')}
+              aria-label={unreadCount > 0 ? `Notificações: ${unreadCount} não lidas` : 'Notificações'}
+            >
+              <Bell className="h-5 w-5" />
+              {unreadCount > 0 && (
+                <Badge
+                  variant="destructive"
+                  className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center px-1 text-xs leading-none"
+                >
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </Badge>
+              )}
+            </Button>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-4 md:py-6 space-y-4 sm:space-y-5 md:space-y-6">
-        {/* Mobile: current section indicator */}
-        <div className="md:hidden flex items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2.5">
-          <div className="flex items-center gap-2 min-w-0">
-            <activeNav.icon className="w-4 h-4 text-secondary shrink-0" />
-            <span className="text-sm font-semibold truncate">{activeNav.label}</span>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 gap-1.5 text-xs"
-            onClick={() => setMobileNavOpen(true)}
-          >
-            <Menu className="w-4 h-4" />
-            Menu
-          </Button>
-        </div>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-          <TabsList className="hidden md:grid w-full h-auto p-1 bg-muted/60 grid-cols-10 gap-1 rounded-lg">
-            <TabsTrigger value="overview" className={tabTriggerClass}>
-              <LayoutDashboard className="w-4 h-4 shrink-0" />
-              <span>Visão Geral</span>
-            </TabsTrigger>
-            <TabsTrigger value="psychologists" className={tabTriggerClass}>
-              <UserCheck className="w-4 h-4 shrink-0" />
-              <span>Psicólogos</span>
-            </TabsTrigger>
-            <TabsTrigger value="patients" className={tabTriggerClass}>
-              <Users className="w-4 h-4 shrink-0" />
-              <span>Pacientes</span>
-            </TabsTrigger>
-            <TabsTrigger value="sos" className={tabTriggerClass}>
-              <LifeBuoy className="w-4 h-4 shrink-0" />
-              <span>SOS</span>
-            </TabsTrigger>
-            <TabsTrigger value="chat" className={tabTriggerClass}>
-              <MessageSquare className="w-4 h-4 shrink-0" />
-              <span>Chat</span>
-            </TabsTrigger>
-            <TabsTrigger value="groups" className={tabTriggerClass}>
-              <MessageSquareWarning className="w-4 h-4 shrink-0" />
-              <span>Grupos</span>
-            </TabsTrigger>
-            <TabsTrigger value="payments" className={tabTriggerClass}>
-              <CreditCard className="w-4 h-4 shrink-0" />
-              <span>Pagamentos</span>
-            </TabsTrigger>
-            <TabsTrigger value="companies" className={tabTriggerClass}>
-              <Building2 className="w-4 h-4 shrink-0" />
-              <span>Empresas</span>
-            </TabsTrigger>
-            <TabsTrigger value="audit" className={tabTriggerClass}>
-              <History className="w-4 h-4 shrink-0" />
-              <span>Auditoria</span>
-            </TabsTrigger>
-            <TabsTrigger value="profile" className={tabTriggerClass}>
-              <UserCog className="w-4 h-4 shrink-0" />
-              <span>Perfil</span>
-            </TabsTrigger>
-          </TabsList>
+        <main className="mx-auto max-w-7xl px-3 py-4 sm:px-4 md:py-6 lg:px-8">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as AdminSection)} className="space-y-4 sm:space-y-6">
 
 
-          <TabsContent value="overview" className="space-y-4 sm:space-y-6 mt-4">
+          <TabsContent value="overview" className="mt-0 space-y-4 sm:space-y-6">
             {/* Métricas Gerais */}
             <ContentTransition
               loading={metricsLoading}
@@ -421,29 +322,35 @@ const AdminDashboard = () => {
             >
               {metrics ? (
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
-                  {metricCards.map(({ label, value, hint, icon: Icon, accent }) => {
+                  {metricCards.map(({ label, value, hint, icon: Icon, accent, target }) => {
                     const s = accentStyles[accent];
-                    return (
-                      <Card key={label} className={`${s.border} ${s.bg}`}>
-                        <CardContent className="p-3 sm:p-5">
-                          <div className="flex items-start justify-between gap-2 sm:gap-3">
-                            <div className="min-w-0">
-                              <p className="text-xs font-medium text-muted-foreground leading-tight">
-                                {label}
-                              </p>
-                              <p className={`text-xl sm:text-3xl font-bold mt-1 sm:mt-1.5 ${s.value}`}>
-                                {value}
-                              </p>
-                              <p className="text-xs text-muted-foreground mt-0.5 sm:mt-1 leading-tight">
-                                {hint}
-                              </p>
-                            </div>
-                            <div className={`rounded-lg p-1.5 sm:p-2.5 shrink-0 ${s.iconBg}`}>
-                              <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${s.iconText}`} />
-                            </div>
+                    const body = (
+                      <CardContent className="p-3 sm:p-5">
+                        <div className="flex items-start justify-between gap-2 sm:gap-3">
+                          <div className="min-w-0">
+                            <p className="text-xs font-medium text-muted-foreground leading-tight">{label}</p>
+                            <p className={`text-xl sm:text-3xl font-bold mt-1 sm:mt-1.5 ${s.value}`}>{value}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5 sm:mt-1 leading-tight">{hint}</p>
                           </div>
-                        </CardContent>
-                      </Card>
+                          <div className={`rounded-lg p-1.5 sm:p-2.5 shrink-0 ${s.iconBg}`}>
+                            <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${s.iconText}`} />
+                          </div>
+                        </div>
+                      </CardContent>
+                    );
+                    // Cartões com seção própria levam até ela.
+                    return target ? (
+                      <button
+                        key={label}
+                        type="button"
+                        onClick={() => setActiveTab(target)}
+                        className="rounded-xl text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                        aria-label={`${label}: ${value}. Abrir ${ADMIN_NAV_ITEMS.find((n) => n.value === target)?.label}`}
+                      >
+                        <Card className={`${s.border} ${s.bg} h-full transition-shadow hover:shadow-md`}>{body}</Card>
+                      </button>
+                    ) : (
+                      <Card key={label} className={`${s.border} ${s.bg}`}>{body}</Card>
                     );
                   })}
                 </div>
@@ -511,10 +418,10 @@ const AdminDashboard = () => {
                     <div className="flex items-center justify-between p-3 bg-primary/5 rounded-lg border border-primary/20">
                       <div className="min-w-0">
                         <p className="font-medium text-sm text-foreground">
-                          {metrics.pending_psychologists} psicólogo(s) pendente(s)
+                          {metrics.pending_psychologists === 1 ? '1 psicólogo aguardando aprovação' : `${metrics.pending_psychologists} psicólogos aguardando aprovação`}
                         </p>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                          Necessita aprovação
+                          Confira os documentos e o CRP
                         </p>
                       </div>
                       <Button size="sm" variant="outline" onClick={() => setActiveTab("psychologists")}>
@@ -554,42 +461,49 @@ const AdminDashboard = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="psychologists" className="mt-4">
+          <TabsContent value="psychologists" className="mt-0">
             <PsychologistApprovalPanel adminUserId={user?.id} onDataChange={fetchMetrics} />
           </TabsContent>
 
-          <TabsContent value="patients" className="mt-4">
+          <TabsContent value="patients" className="mt-0">
             <PatientsPanel />
           </TabsContent>
 
-          <TabsContent value="sos" className="mt-4">
-            <SosHistoryPanel withMetrics title="Todas as solicitações SOS" />
+          <TabsContent value="sos" className="mt-0">
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-lg font-semibold text-foreground">Atendimentos SOS</h2>
+                <p className="text-sm text-muted-foreground">Pedidos de emergência, quem atendeu e como terminaram.</p>
+              </div>
+              <SosHistoryPanel withMetrics title="Todas as solicitações SOS" />
+            </div>
           </TabsContent>
 
-          <TabsContent value="chat" className="mt-4">
+          <TabsContent value="chat" className="mt-0">
             <ChatModerationPanel />
           </TabsContent>
 
-          <TabsContent value="groups" className="mt-4">
+          <TabsContent value="groups" className="mt-0">
             <GroupTestimonialModerationPanel />
           </TabsContent>
 
-          <TabsContent value="payments" className="mt-4">
+          <TabsContent value="payments" className="mt-0">
             <PaymentsPanel />
           </TabsContent>
 
-          <TabsContent value="companies" className="mt-4">
+          <TabsContent value="companies" className="mt-0">
             <OrganizationsPanel />
           </TabsContent>
 
-          <TabsContent value="audit" className="mt-4">
+          <TabsContent value="audit" className="mt-0">
             <AuditLogPanel />
           </TabsContent>
 
-          <TabsContent value="profile" className="mt-4">
+          <TabsContent value="profile" className="mt-0">
             <AdminProfile />
           </TabsContent>
         </Tabs>
+        </main>
       </div>
     </div>
   );

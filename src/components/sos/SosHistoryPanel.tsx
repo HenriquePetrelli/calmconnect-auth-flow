@@ -80,7 +80,7 @@ export const SosHistoryPanel: React.FC<SosHistoryPanelProps> = ({
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-base">
-            <LifeBuoy className="h-4 w-4 text-secondary" aria-hidden="true" />
+            <LifeBuoy className="h-4 w-4 text-primary" aria-hidden="true" />
             {title}
           </CardTitle>
         </CardHeader>

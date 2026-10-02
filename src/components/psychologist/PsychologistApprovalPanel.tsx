@@ -244,10 +244,10 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
 
       <Tabs value={filter} onValueChange={(value) => setFilter(value as any)} className="w-full">
         <TabsList className="w-full h-auto p-1 bg-muted/60 grid grid-cols-2 sm:grid-cols-4 gap-1 rounded-lg">
-          <TabsTrigger value="pending" className="text-xs sm:text-sm data-[state=active]:bg-secondary data-[state=active]:text-white">Pendentes ({pendingPsychologists.filter(p => p.approval_status === 'pending').length})</TabsTrigger>
-          <TabsTrigger value="approved" className="text-xs sm:text-sm data-[state=active]:bg-secondary data-[state=active]:text-white">Aprovados ({pendingPsychologists.filter(p => p.approval_status === 'approved').length})</TabsTrigger>
-          <TabsTrigger value="rejected" className="text-xs sm:text-sm data-[state=active]:bg-secondary data-[state=active]:text-white">Rejeitados ({pendingPsychologists.filter(p => p.approval_status === 'rejected').length})</TabsTrigger>
-          <TabsTrigger value="all" className="text-xs sm:text-sm data-[state=active]:bg-secondary data-[state=active]:text-white">Todos ({pendingPsychologists.length})</TabsTrigger>
+          <TabsTrigger value="pending" className="text-xs sm:text-sm data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Pendentes ({pendingPsychologists.filter(p => p.approval_status === 'pending').length})</TabsTrigger>
+          <TabsTrigger value="approved" className="text-xs sm:text-sm data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Aprovados ({pendingPsychologists.filter(p => p.approval_status === 'approved').length})</TabsTrigger>
+          <TabsTrigger value="rejected" className="text-xs sm:text-sm data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Rejeitados ({pendingPsychologists.filter(p => p.approval_status === 'rejected').length})</TabsTrigger>
+          <TabsTrigger value="all" className="text-xs sm:text-sm data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm">Todos ({pendingPsychologists.length})</TabsTrigger>
         </TabsList>
       </Tabs>
 
@@ -714,14 +714,14 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
       </Dialog>
 
 
-      {filteredPsychologists.length === 0 && !loading && (
+      {filteredPsychologists.length === 0 && !loading && !error && (
         <EmptyState
           icon={Users}
           title="Nenhum psicólogo encontrado"
           description={
             filter === 'pending'
               ? 'Não há cadastros pendentes de aprovação no momento.'
-              : `Não há psicólogos com status "${filter}" no momento.`
+              : ({ approved: 'Não há psicólogos aprovados no momento.', rejected: 'Não há cadastros rejeitados.', all: 'Ainda não há psicólogos cadastrados.' } as Record<string, string>)[filter] ?? 'Nenhum resultado.'
           }
           variant={filter === 'pending' ? 'primary' : 'muted'}
         />

@@ -184,7 +184,7 @@ export const PaymentsPanel = () => {
         <Card className="col-span-2 md:col-span-1">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-6">
             <CardTitle className="text-xs sm:text-sm font-medium">Psicólogos Ativos</CardTitle>
-            <DollarSign className="h-4 w-4 text-secondary shrink-0" />
+            <DollarSign className="h-4 w-4 text-primary shrink-0" />
           </CardHeader>
           <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
             <div className="text-lg sm:text-2xl font-bold">{payments.length}</div>
