@@ -55,3 +55,23 @@ export const SINTOMAS = [
 ] as const;
 
 export type Sintoma = typeof SINTOMAS[number];
+
+/**
+ * Os sintomas em grupos, para a escolha no cadastro: 53 itens soltos numa
+ * lista eram difíceis de percorrer. Cada sintoma está em exatamente um grupo
+ * (testado em src/test/sintomas.test.ts).
+ */
+const grupo = (titulo: string, indices: number[]) => ({ titulo, itens: indices.map((i) => SINTOMAS[i]) as Sintoma[] });
+
+export const SINTOMA_GRUPOS = [
+  grupo('Ansiedade e preocupação', [0, 1, 2, 3, 4, 5, 50]),
+  grupo('Corpo e crises de pânico', [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]),
+  grupo('Sono', [6, 42, 43, 44, 45]),
+  grupo('Preocupação com o futuro', [46, 47, 48, 49]),
+  grupo('Situações sociais', [19, 20, 21, 22, 23]),
+  grupo('Medos específicos', [24, 25, 26, 27]),
+  grupo('Separação de pessoas próximas', [28, 29, 30, 31, 32, 33]),
+  grupo('Trauma', [34, 35, 36, 37]),
+  grupo('Pensamentos e rituais repetitivos', [38, 39]),
+  grupo('Humor, substâncias e impacto na rotina', [51, 40, 41, 52]),
+];

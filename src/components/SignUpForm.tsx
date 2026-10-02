@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Eye, EyeOff, AlertCircle } from "lucide-react";
 import MultiSelectModal from "./ui/multi-select-modal";
-import { SINTOMAS } from "@/data/sintomas";
+import { SINTOMAS, SINTOMA_GRUPOS } from "@/data/sintomas";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -496,15 +496,23 @@ const { error: profileError } = await supabase
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-sm text-foreground font-normal">
-                    Sintomas que você apresenta *
+                  <Label htmlFor="sintomas" className="text-foreground font-medium">
+                    O que você tem sentido?
                   </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Escolha um ou mais. Isso ajuda o psicólogo a te atender melhor, e você pode mudar depois no Perfil.
+                  </p>
                   <MultiSelectModal
+                    id="sintomas"
                     options={[...SINTOMAS]}
+                    groups={SINTOMA_GRUPOS}
                     selectedValues={formData.sintomas}
                     onSelectionChange={(sintomas) => handleInputChange("sintomas", sintomas)}
-                    placeholder="Selecione os sintomas que você apresenta"
-                    title="Selecionar sintomas"
+                    placeholder="Escolher sintomas"
+                    title="O que você tem sentido?"
+                    description="Marque tudo o que tem acontecido com você nas últimas semanas."
+                    noun={["sintoma", "sintomas"]}
+                    invalid={Boolean(errors.sintomas)}
                     isOpen={isSintomasModalOpen}
                     onOpenChange={setIsSintomasModalOpen}
                   />

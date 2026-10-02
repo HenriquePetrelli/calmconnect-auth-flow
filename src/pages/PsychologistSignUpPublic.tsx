@@ -360,6 +360,7 @@ const PsychologistSignUpPublic = () => {
                       onSelectionChange={field.onChange}
                       placeholder="Selecione as áreas de atendimento"
                       title="Selecionar áreas de atendimento"
+                      noun={["área", "áreas"]}
                       isOpen={isAreasModalOpen}
                       onOpenChange={setIsAreasModalOpen}
                     />
