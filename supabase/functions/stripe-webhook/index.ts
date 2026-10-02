@@ -1,36 +1,27 @@
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { PLAN_LIMITS, stripeState } from "../_shared/billing.ts";
+import { PLAN_PRICES, listSubscriptions, newStripe } from "../_shared/stripe.ts";
 
-// Keeps `subscribers` in sync with Stripe on its own. Until now the table was
-// only refreshed when the user opened the app (check-subscription): a
-// cancellation, a failed renewal or a plan change done in the customer
-// portal only showed up whenever that person happened to come back — and
-// SOS/appointment quotas were decided on stale data in between.
+// Mantém `subscribers` em dia com o Stripe sem depender de a pessoa abrir o
+// app (check-subscription): cancelamento, renovação recusada, troca de plano
+// pelo portal etc.
 //
-// Configure in Stripe → Developers → Webhooks, pointing to
-// https://<project>.supabase.co/functions/v1/stripe-webhook, with events:
+// Configure em Stripe → Developers → Webhooks, apontando para
+// https://<project>.supabase.co/functions/v1/stripe-webhook, com os eventos:
 //   checkout.session.completed, customer.subscription.created,
 //   customer.subscription.updated, customer.subscription.deleted,
-//   invoice.payment_failed
-// and set the signing secret as the STRIPE_WEBHOOK_SECRET edge function secret.
-
-const PLAN_PRICES = {
-  Plus: Deno.env.get("STRIPE_PRICE_PLUS") ?? "price_1S3qAKPhFwqSktZsXexQefrx",
-  Premium: Deno.env.get("STRIPE_PRICE_PREMIUM") ?? "price_1S3q9YPhFwqSktZsejrePGuS",
-} as const;
-
-const PLAN_LIMITS = {
-  Plus: { appointments: 0, sos_uses: 1 },
-  Premium: { appointments: 1, sos_uses: 1 },
-} as const;
+//   invoice.paid, invoice.payment_failed
+// e grave o signing secret como STRIPE_WEBHOOK_SECRET.
+//
+// Cada evento sincroniza o CLIENTE inteiro, lendo as assinaturas direto do
+// Stripe: os eventos podem chegar fora de ordem (um "updated" antigo depois do
+// "deleted") e o payload do evento pode estar desatualizado.
 
 const log = (step: string, details?: unknown) =>
   console.log(`[STRIPE-WEBHOOK] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
 
-const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
-  apiVersion: "2023-10-16",
-  httpClient: Stripe.createFetchHttpClient(),
-});
+const stripe = newStripe();
 const cryptoProvider = Stripe.createSubtleCryptoProvider();
 
 const supabase = createClient(
@@ -39,58 +30,65 @@ const supabase = createClient(
   { auth: { persistSession: false } }
 );
 
-const tierForPrice = (priceId: string | undefined): keyof typeof PLAN_PRICES | null => {
-  if (priceId === PLAN_PRICES.Plus) return "Plus";
-  if (priceId === PLAN_PRICES.Premium) return "Premium";
+const customerIdOf = (customer: string | { id: string } | null | undefined) =>
+  !customer ? null : typeof customer === "string" ? customer : customer.id;
+
+/** A linha de `subscribers` da pessoa: pelo cliente do Stripe, pelo user_id ou pelo e-mail. */
+const findSubscriberRow = async (customerId: string, userId: string | null, email: string | null) => {
+  const byCustomer = await supabase.from("subscribers").select("id").eq("stripe_customer_id", customerId).order("updated_at", { ascending: false }).limit(1);
+  if (byCustomer.data?.[0]) return byCustomer.data[0].id as string;
+  if (userId) {
+    const byUser = await supabase.from("subscribers").select("id").eq("user_id", userId).order("updated_at", { ascending: false }).limit(1);
+    if (byUser.data?.[0]) return byUser.data[0].id as string;
+  }
+  if (email) {
+    const byEmail = await supabase.from("subscribers").select("id").eq("email", email).maybeSingle();
+    if (byEmail.data) return byEmail.data.id as string;
+  }
   return null;
 };
 
-const customerEmail = async (customer: string | Stripe.Customer | Stripe.DeletedCustomer | null): Promise<string | null> => {
-  if (!customer) return null;
-  if (typeof customer !== "string") return "deleted" in customer ? null : customer.email;
-  const c = await stripe.customers.retrieve(customer);
-  return "deleted" in c ? null : c.email;
-};
-
-/** Applies a subscription's current state to the subscriber row. */
-const syncSubscription = async (subscription: Stripe.Subscription, userIdHint?: string | null) => {
-  const email = await customerEmail(subscription.customer);
-  if (!email) {
-    log("Subscription without customer email, skipped", { id: subscription.id });
+const syncCustomer = async (customerId: string, userIdHint?: string | null) => {
+  const customer = await stripe.customers.retrieve(customerId);
+  if ("deleted" in customer && customer.deleted) {
+    log("Deleted customer, skipped", { customerId });
     return;
   }
-
-  // Only "active"/"trialing" count as subscribed — same rule as
-  // check-subscription, which lists active subscriptions only. past_due
-  // (failed renewal still being retried) stops granting SOS/appointments.
-  const live = subscription.status === "active" || subscription.status === "trialing";
-  const tier = live ? tierForPrice(subscription.items.data[0]?.price.id) : null;
-  if (live && !tier) log("Unknown price, no tier granted", { price: subscription.items.data[0]?.price.id });
+  const subscriptions = await listSubscriptions(stripe, customerId);
+  const state = stripeState(PLAN_PRICES, subscriptions, Math.floor(Date.now() / 1000));
+  const userId = userIdHint ?? customer.metadata?.user_id ?? subscriptions.find((s) => s.metadata?.user_id)?.metadata.user_id ?? null;
 
   const patch = {
-    email,
-    stripe_customer_id: typeof subscription.customer === "string" ? subscription.customer : subscription.customer.id,
-    subscribed: Boolean(live && tier),
-    subscription_tier: tier,
-    subscription_end: live ? new Date(subscription.current_period_end * 1000).toISOString() : null,
-    plan_limits: tier ? PLAN_LIMITS[tier] : { appointments: 0, sos_uses: 0 },
+    stripe_customer_id: customerId,
+    subscribed: state.tier !== null,
+    subscription_tier: state.tier,
+    subscription_end: state.periodEnd,
+    plan_limits: PLAN_LIMITS[state.tier ?? "none"],
     // Estado do Stripe; o trigger do banco soma o plano da empresa (B2B), se houver.
     entitlement_source: "stripe",
     updated_at: new Date().toISOString(),
   };
 
-  const { data: existing } = await supabase.from("subscribers").select("user_id").eq("email", email).maybeSingle();
-  const userId = existing?.user_id ?? userIdHint ?? null;
-  if (!userId) {
-    // No row yet and nothing tying the email to an account: check-subscription
-    // will create it on the user's next visit.
-    log("No subscriber row for email yet, skipped", { email });
+  const rowId = await findSubscriberRow(customerId, userId, customer.email);
+  if (rowId) {
+    const { error } = await supabase.from("subscribers").update(patch).eq("id", rowId);
+    if (error) throw error;
+  } else if (userId) {
+    const { data: authUser } = await supabase.auth.admin.getUserById(userId);
+    const email = authUser?.user?.email ?? customer.email;
+    if (!email) {
+      log("No email for new subscriber row, skipped", { customerId });
+      return;
+    }
+    const { error } = await supabase.from("subscribers").upsert({ ...patch, user_id: userId, email }, { onConflict: "email" });
+    if (error) throw error;
+  } else {
+    // Nada liga o cliente a uma conta: check-subscription cria a linha na
+    // próxima visita.
+    log("No subscriber row and no user id, skipped", { customerId });
     return;
   }
-
-  const { error } = await supabase.from("subscribers").upsert({ ...patch, user_id: userId }, { onConflict: "email" });
-  if (error) throw error;
-  log("Subscriber synced", { email, status: subscription.status, tier });
+  log("Subscriber synced", { customerId, status: state.status, tier: state.tier, cancelAtPeriodEnd: state.cancelAtPeriodEnd });
 };
 
 Deno.serve(async (req) => {
@@ -113,24 +111,27 @@ Deno.serve(async (req) => {
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
-        if (session.mode === "subscription" && session.subscription) {
-          const subscription = await stripe.subscriptions.retrieve(String(session.subscription));
-          await syncSubscription(subscription, session.metadata?.user_id ?? null);
+        const customerId = customerIdOf(session.customer);
+        if (session.mode === "subscription" && customerId) {
+          await syncCustomer(customerId, session.metadata?.user_id ?? session.client_reference_id ?? null);
         }
         break;
       }
       case "customer.subscription.created":
       case "customer.subscription.updated":
       case "customer.subscription.deleted":
-        await syncSubscription(event.data.object as Stripe.Subscription);
+      case "customer.subscription.paused":
+      case "customer.subscription.resumed": {
+        const subscription = event.data.object as Stripe.Subscription;
+        await syncCustomer(customerIdOf(subscription.customer)!, subscription.metadata?.user_id ?? null);
         break;
+      }
+      case "invoice.paid":
       case "invoice.payment_failed": {
         const invoice = event.data.object as Stripe.Invoice;
-        if (invoice.subscription) {
-          const subscription = await stripe.subscriptions.retrieve(String(invoice.subscription));
-          await syncSubscription(subscription);
-        }
-        log("Payment failed", { invoice: invoice.id, attempt: invoice.attempt_count });
+        const customerId = customerIdOf(invoice.customer);
+        if (customerId && invoice.subscription) await syncCustomer(customerId);
+        if (event.type === "invoice.payment_failed") log("Payment failed", { invoice: invoice.id, attempt: invoice.attempt_count });
         break;
       }
       default:
@@ -138,7 +139,7 @@ Deno.serve(async (req) => {
     }
     return new Response(JSON.stringify({ received: true }), { headers: { "Content-Type": "application/json" } });
   } catch (err) {
-    // 500 makes Stripe retry later, which is what we want for transient failures.
+    // 500 faz o Stripe tentar de novo, que é o que queremos em falhas passageiras.
     log("Error handling event", { type: event.type, message: err instanceof Error ? err.message : String(err) });
     return new Response("Webhook handler failed", { status: 500 });
   }

@@ -1,0 +1,81 @@
+import { describe, it, expect } from 'vitest';
+import {
+  cancelMode,
+  changeDirection,
+  pendingChange,
+  rankLiveSubscriptions,
+  stripeState,
+  type SubscriptionLike,
+} from '../../supabase/functions/_shared/billing';
+
+const prices = { Plus: 'price_plus', Premium: 'price_premium' };
+const NOW = 1_790_000_000;
+
+const sub = (overrides: Partial<SubscriptionLike> & { price?: string } = {}): SubscriptionLike => ({
+  id: overrides.id ?? 'sub_1',
+  status: overrides.status ?? 'active',
+  created: overrides.created ?? NOW - 1000,
+  current_period_end: overrides.current_period_end ?? NOW + 10 * 86400,
+  cancel_at_period_end: overrides.cancel_at_period_end ?? false,
+  items: { data: [{ id: 'si_1', price: { id: overrides.price ?? 'price_plus' } }] },
+  schedule: overrides.schedule ?? null,
+});
+
+describe('regras de assinatura (Stripe)', () => {
+  it('sem assinatura, sem plano', () => {
+    expect(stripeState(prices, [], NOW)).toMatchObject({ tier: null, status: null, extraSubscriptions: 0 });
+  });
+
+  it('pagamento atrasado mantém o plano e é sinalizado', () => {
+    const state = stripeState(prices, [sub({ status: 'past_due' })], NOW);
+    expect(state.tier).toBe('Plus');
+    expect(state.status).toBe('past_due');
+  });
+
+  it('assinaturas canceladas ou incompletas não dão acesso', () => {
+    expect(stripeState(prices, [sub({ status: 'canceled' }), sub({ status: 'incomplete' })], NOW).tier).toBeNull();
+  });
+
+  it('preço desconhecido não vira plano', () => {
+    expect(stripeState(prices, [sub({ price: 'price_outro' })], NOW).tier).toBeNull();
+  });
+
+  it('com duas assinaturas vivas (cobrança em dobro), vale a maior e o app avisa', () => {
+    const ranked = rankLiveSubscriptions(prices, [sub({ id: 'a', price: 'price_plus' }), sub({ id: 'b', price: 'price_premium' })]);
+    expect(ranked.map((s) => s.id)).toEqual(['b', 'a']);
+    expect(stripeState(prices, ranked, NOW)).toMatchObject({ tier: 'Premium', extraSubscriptions: 1 });
+  });
+
+  it('cancelamento agendado continua dando acesso até o fim do período', () => {
+    const state = stripeState(prices, [sub({ cancel_at_period_end: true })], NOW);
+    expect(state).toMatchObject({ tier: 'Plus', cancelAtPeriodEnd: true });
+    expect(state.periodEnd).toBe(new Date((NOW + 10 * 86400) * 1000).toISOString());
+  });
+
+  it('lê a troca para baixo agendada', () => {
+    const schedule = {
+      id: 'sched_1',
+      phases: [
+        { start_date: NOW - 1000, end_date: NOW + 500, items: [{ price: 'price_premium' }] },
+        { start_date: NOW + 500, items: [{ price: { id: 'price_plus' } }] },
+      ],
+    };
+    const premium = sub({ price: 'price_premium', schedule });
+    expect(pendingChange(prices, premium, NOW)).toEqual({ tier: 'Plus', from: NOW + 500 });
+    expect(stripeState(prices, [premium], NOW)).toMatchObject({ tier: 'Premium', pendingTier: 'Plus' });
+    // Fase futura no mesmo plano não é troca.
+    expect(pendingChange(prices, sub({ price: 'price_plus', schedule }), NOW)).toEqual(null);
+  });
+
+  it('subir cobra agora; descer vale na renovação', () => {
+    expect(changeDirection('Plus', 'Premium')).toBe('upgrade');
+    expect(changeDirection('Premium', 'Plus')).toBe('downgrade');
+    expect(changeDirection('Plus', 'Plus')).toBe('same');
+  });
+
+  it('cancelamento: na hora só no arrependimento (7 dias) ou com pagamento atrasado', () => {
+    expect(cancelMode(true, 'active')).toBe('immediate');
+    expect(cancelMode(false, 'past_due')).toBe('immediate');
+    expect(cancelMode(false, 'active')).toBe('period_end');
+  });
+});

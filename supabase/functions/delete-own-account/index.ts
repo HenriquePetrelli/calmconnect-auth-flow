@@ -1,5 +1,5 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import Stripe from "https://esm.sh/stripe@14.21.0";
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { findCustomerId, liveSubscriptions, newStripe } from "../_shared/stripe.ts";
 
 // Account deletion requested by the patient themself — the data subject's
 // right under LGPD (art. 18, VI) and a requirement of both app stores.
@@ -35,17 +35,16 @@ const json = (body: unknown, status = 200) =>
 
 const CONFIRMATION_WORD = "EXCLUIR";
 
-const cancelStripeSubscriptions = async (email: string | undefined): Promise<void> => {
-  const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-  if (!stripeKey || !email) return;
-  const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
-  const customers = await stripe.customers.list({ email, limit: 1 });
-  if (customers.data.length === 0) return;
-  for (const status of ["active", "trialing", "past_due"] as const) {
-    const subs = await stripe.subscriptions.list({ customer: customers.data[0].id, status, limit: 20 });
-    for (const sub of subs.data) {
-      await stripe.subscriptions.cancel(sub.id);
-    }
+// O cliente do Stripe é achado pelo ID gravado para o user_id (não só pelo
+// e-mail): quem trocou o e-mail da conta continuaria sendo cobrado depois de
+// excluí-la.
+const cancelStripeSubscriptions = async (supabase: SupabaseClient, user: { id: string; email?: string | null }): Promise<void> => {
+  if (!Deno.env.get("STRIPE_SECRET_KEY")) return;
+  const stripe = newStripe();
+  const customerId = await findCustomerId(stripe, supabase, user);
+  if (!customerId) return;
+  for (const sub of await liveSubscriptions(stripe, customerId)) {
+    await stripe.subscriptions.cancel(sub.id);
   }
 };
 
@@ -97,7 +96,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     }
 
     try {
-      await cancelStripeSubscriptions(user.email);
+      await cancelStripeSubscriptions(supabase, user);
     } catch (stripeError) {
       console.error("delete-own-account: falha ao cancelar assinatura", stripeError);
       return json({

@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Check, AlertTriangle, Crown } from "lucide-react";
+import { Check, AlertTriangle, Crown, CreditCard } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -12,31 +12,67 @@ import { useSubscription } from "@/contexts/SubscriptionContext";
 
 const formatBRL = (cents: number) =>
   (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const formatDay = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString("pt-BR") : "");
+
+/**
+ * Checkout e portal do Stripe não abrem dentro de iframe (pré-visualização da
+ * Lovable): ali abre em outra aba. No app, na mesma aba — o Safari do iPhone
+ * bloqueia window.open depois de uma chamada assíncrona.
+ */
+const goToStripe = (url: string) => {
+  if (window.self !== window.top) window.open(url, "_blank");
+  else window.location.assign(url);
+};
+
+interface ChangePreview {
+  direction: "upgrade" | "downgrade";
+  amount_due?: number;
+  proration_date?: number;
+  renews_on?: string;
+  effective_on?: string;
+}
 
 const SubscriptionPlans = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { subscribed, subscriptionTier, checkSubscription, entitlementSource, organizationName, personalSubscriptionTier } = useSubscription();
+  const {
+    subscribed,
+    subscriptionTier,
+    subscriptionEnd,
+    checkSubscription,
+    entitlementSource,
+    organizationName,
+    personalSubscriptionTier,
+    cancelAtPeriodEnd,
+    pendingTier,
+    pendingFrom,
+    paymentIssue,
+    extraSubscriptions,
+  } = useSubscription();
   // B2B: o plano vem da empresa; não há o que pagar, cancelar ou trocar para baixo.
   const fromCompany = entitlementSource === 'organization';
   const tierRank = (tier: string | null) => (tier === 'Premium' ? 2 : tier === 'Plus' ? 1 : 0);
   const [loading, setLoading] = useState<string | null>(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [showDowngradeModal, setShowDowngradeModal] = useState(false);
-  // Direito de arrependimento: dentro de 7 dias da primeira assinatura, o
-  // cancelamento devolve o valor pago. A prévia vem do próprio cancel-subscription.
+  // Troca de plano de quem já assina (manage-subscription), com prévia do valor.
+  const [changeTarget, setChangeTarget] = useState<string | null>(null);
+  const [changePreview, setChangePreview] = useState<ChangePreview | null>(null);
+  // Prévia do cancelamento: no prazo de arrependimento (7 dias) acaba na hora
+  // e devolve o valor; fora dele, o plano segue até o fim do período pago.
+  const [cancelPreview, setCancelPreview] = useState<{ mode: "immediate" | "period_end"; accessUntil: string | null } | null>(null);
   const [refundPreview, setRefundPreview] = useState<{ amount: number; deadline: string | null } | null>(null);
 
   useEffect(() => {
     if (!showCancelModal) return;
     let cancelled = false;
     setRefundPreview(null);
+    setCancelPreview(null);
     supabase.functions
       .invoke('cancel-subscription', { body: { preview: true } })
       .then(({ data }) => {
-        if (!cancelled && data?.refund_eligible) {
-          setRefundPreview({ amount: data.refund_amount, deadline: data.refund_deadline });
-        }
+        if (cancelled || !data) return;
+        if (data.refund_eligible) setRefundPreview({ amount: data.refund_amount, deadline: data.refund_deadline });
+        if (data.mode) setCancelPreview({ mode: data.mode, accessUntil: data.access_until ?? null });
       })
       .catch(() => {});
     return () => {
@@ -111,9 +147,13 @@ const SubscriptionPlans = () => {
         return;
       }
 
-      if (data?.url) {
-        window.open(data.url, '_blank');
+      if (data?.error_code === 'already_subscribed') {
+        toast({ title: "Você já tem uma assinatura", description: "Atualizamos a tela. Para mudar de plano, use o botão do plano." });
+        await checkSubscription();
+        return;
       }
+
+      if (data?.url) goToStripe(data.url);
     } catch (error) {
       console.error('Error subscribing:', error);
       toast({
@@ -154,17 +194,15 @@ const SubscriptionPlans = () => {
             description: "Não conseguimos concluir o reembolso agora. Nossa equipe vai finalizar a devolução; se preferir, fale com o suporte.",
             variant: "destructive",
           });
-        } else {
+        } else if (data.mode === "period_end" && data.access_until) {
           toast({
             title: "Assinatura cancelada",
+            description: `Você continua com o plano até ${formatDay(data.access_until)}. Não haverá nova cobrança.`,
           });
+        } else {
+          toast({ title: "Assinatura cancelada" });
         }
-        
-        // Refresh subscription status
         await checkSubscription();
-        
-        // Redirect to feedback page
-        navigate('/subscription-cancel');
       }
     } catch (error) {
       console.error('Error cancelling subscription:', error);
@@ -179,8 +217,74 @@ const SubscriptionPlans = () => {
     }
   };
 
-  const handleDowngrade = () => {
-    setShowDowngradeModal(true);
+  const manage = async (body: Record<string, unknown>) => {
+    const { data, error } = await supabase.functions.invoke('manage-subscription', { body });
+    if (error) throw error;
+    return data;
+  };
+
+  const openChange = async (planName: string) => {
+    setChangeTarget(planName);
+    setChangePreview(null);
+    try {
+      const data = await manage({ action: 'preview_change', plan: planName });
+      if (data?.direction) setChangePreview(data);
+      else {
+        setChangeTarget(null);
+        toast({
+          title: data?.error_code === 'payment_issue' ? "Atualize o pagamento primeiro" : "Não foi possível mudar de plano agora",
+          description: data?.error_code === 'payment_issue' ? "A última cobrança não passou. Atualize o cartão em Gerenciar pagamento." : undefined,
+          variant: "destructive",
+        });
+        await checkSubscription();
+      }
+    } catch {
+      setChangeTarget(null);
+      toast({ title: "Erro", description: "Não foi possível calcular a troca de plano.", variant: "destructive" });
+    }
+  };
+
+  const confirmChange = async () => {
+    if (!changeTarget || !changePreview) return;
+    setLoading("change");
+    try {
+      const data = await manage({ action: 'change_plan', plan: changeTarget, proration_date: changePreview.proration_date });
+      if (data?.ok) {
+        toast(
+          changePreview.direction === "upgrade"
+            ? { title: `Pronto! Você agora é ${changeTarget}.` }
+            : { title: "Troca agendada", description: `Você passa para o ${changeTarget} em ${formatDay(data.effective_on ?? changePreview.effective_on ?? null)}.` },
+        );
+        setChangeTarget(null);
+        await checkSubscription();
+      } else if (data?.error_code === 'payment_failed') {
+        toast({
+          title: "O cartão recusou a cobrança",
+          description: "Nada mudou na sua assinatura. Atualize o cartão em Gerenciar pagamento e tente de novo.",
+          variant: "destructive",
+        });
+      } else {
+        toast({ title: "Erro", description: "Não foi possível mudar de plano agora.", variant: "destructive" });
+      }
+    } catch {
+      toast({ title: "Erro", description: "Não foi possível mudar de plano agora.", variant: "destructive" });
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  const undo = async (action: 'resume' | 'keep_current', success: string) => {
+    setLoading(action);
+    try {
+      const data = await manage({ action });
+      if (!data?.ok) throw new Error(data?.error_code ?? 'failed');
+      toast({ title: success });
+      await checkSubscription();
+    } catch {
+      toast({ title: "Erro", description: "Não foi possível concluir agora. Tente de novo.", variant: "destructive" });
+    } finally {
+      setLoading(null);
+    }
   };
 
   const handleManagePayment = async () => {
@@ -199,9 +303,7 @@ const SubscriptionPlans = () => {
         return;
       }
 
-      if (data?.url) {
-        window.open(data.url, '_blank');
-      }
+      if (data?.url) goToStripe(data.url);
     } catch (error) {
       console.error('Error opening customer portal:', error);
       toast({
@@ -257,33 +359,78 @@ const SubscriptionPlans = () => {
           )}
 
           {subscribed && !fromCompany && (
-            <div className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-2xl p-8 border border-primary/20">
+            <div className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-2xl p-6 sm:p-8 border border-primary/20">
               <div className="flex flex-col items-center gap-4">
-                <Badge 
-                  variant="secondary" 
+                <Badge
+                  variant="secondary"
                   className="text-lg px-6 py-3 bg-primary/10 text-primary border border-primary/20"
                 >
                   <Crown className="w-5 h-5 mr-2" />
                   Plano Atual: {subscriptionTier}
                 </Badge>
-                
+
+                {paymentIssue ? (
+                  <div role="alert" className="w-full max-w-md rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-left text-sm text-foreground">
+                    Não conseguimos cobrar a renovação. Atualize o cartão para não perder o plano — vamos tentar cobrar de novo nos próximos dias.
+                  </div>
+                ) : cancelAtPeriodEnd ? (
+                  <div role="note" className="w-full max-w-md rounded-lg border border-warning/40 bg-warning/10 p-3 text-left text-sm text-foreground">
+                    Assinatura cancelada. Seu plano continua até {formatDay(subscriptionEnd)} e não será renovado.
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-2 w-full bg-background"
+                      disabled={loading === "resume"}
+                      onClick={() => undo("resume", "Pronto! Sua assinatura continua.")}
+                    >
+                      {loading === "resume" ? "Reativando..." : "Manter minha assinatura"}
+                    </Button>
+                  </div>
+                ) : pendingTier ? (
+                  <div role="note" className="w-full max-w-md rounded-lg border border-primary/30 bg-background p-3 text-left text-sm text-foreground">
+                    A partir de {formatDay(pendingFrom)}, seu plano passa a ser {pendingTier}.
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-2 w-full"
+                      disabled={loading === "keep_current"}
+                      onClick={() => undo("keep_current", `Pronto! Você continua no ${subscriptionTier}.`)}
+                    >
+                      {loading === "keep_current" ? "Salvando..." : `Continuar no ${subscriptionTier}`}
+                    </Button>
+                  </div>
+                ) : (
+                  subscriptionEnd && <p className="text-sm text-muted-foreground">Renova em {formatDay(subscriptionEnd)}.</p>
+                )}
+
+                {extraSubscriptions > 0 && (
+                  <div role="alert" className="w-full max-w-md rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-left text-sm text-foreground">
+                    Você tem mais de uma assinatura ativa e está sendo cobrado em dobro. Cancele a que sobrou em "Gerenciar
+                    pagamento" ou fale com o suporte para receber a diferença de volta.
+                  </div>
+                )}
+
                 <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
                   <Button
                     onClick={handleManagePayment}
                     disabled={loading === "portal"}
-                    variant="outline"
-                    className="flex-1 bg-background hover:bg-muted"
+                    variant={paymentIssue ? "default" : "outline"}
+                    className={paymentIssue ? "flex-1 gap-2" : "flex-1 gap-2 bg-background hover:bg-muted"}
                   >
-                    {loading === "portal" ? "Abrindo..." : "Gerenciar Pagamento"}
+                    <CreditCard className="h-4 w-4" aria-hidden="true" />
+                    {loading === "portal" ? "Abrindo..." : paymentIssue ? "Atualizar pagamento" : "Gerenciar pagamento"}
                   </Button>
-                  <Button
-                    onClick={handleDowngrade}
-                    variant="outline"
-                    className="flex-1 bg-background hover:bg-muted"
-                  >
-                    Fazer Downgrade
-                  </Button>
+                  {!cancelAtPeriodEnd && (
+                    <Button
+                      onClick={() => setShowCancelModal(true)}
+                      variant="outline"
+                      className="flex-1 bg-background hover:bg-muted"
+                    >
+                      Cancelar assinatura
+                    </Button>
+                  )}
                 </div>
+                <p className="text-xs text-muted-foreground">Cartão, faturas e recibos ficam em "Gerenciar pagamento".</p>
               </div>
             </div>
           )}
@@ -310,12 +457,12 @@ const SubscriptionPlans = () => {
               
               <CardHeader className="text-center pb-8">
                 <CardTitle className="text-2xl mb-2">{plan.name}</CardTitle>
-                <CardDescription className="mb-4">
+                <div className="mb-4">
                   <div className="flex items-baseline justify-center gap-1">
                     <span className="text-4xl font-bold text-foreground">{plan.price}</span>
                     <span className="text-lg text-muted-foreground">{plan.period}</span>
                   </div>
-                </CardDescription>
+                </div>
               </CardHeader>
               
               <CardContent className="space-y-8">
@@ -330,37 +477,50 @@ const SubscriptionPlans = () => {
                   ))}
                 </ul>
                 
-                <Button
-                  onClick={() => handleSubscribe(plan)}
-                  disabled={
-                    loading === plan.id ||
-                    (subscribed && subscriptionTier === plan.name) ||
-                    (fromCompany && tierRank(plan.name) <= tierRank(subscriptionTier))
-                  }
-                  className={`w-full py-6 text-lg font-semibold ${
-                    plan.popular ? 'bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90' : ''
-                  }`}
-                  variant={subscriptionTier === plan.name ? "secondary" : "default"}
-                  size="lg"
-                >
-                  {loading === plan.id ? (
-                    <div className="flex items-center gap-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Processando...
-                    </div>
-                  ) : fromCompany && tierRank(plan.name) <= tierRank(subscriptionTier) ? (
-                    "Incluído no plano da empresa"
-                  ) : subscriptionTier === plan.name ? (
-                    <div className="flex items-center gap-2">
-                      <Crown className="w-5 h-5" />
-                      Plano Atual
-                    </div>
-                  ) : subscribed ? (
-                    `Trocar para ${plan.name}`
-                  ) : (
-                    "Assinar Agora"
-                  )}
-                </Button>
+                {(() => {
+                  const includedByCompany = fromCompany && tierRank(plan.name) <= tierRank(subscriptionTier);
+                  const isCurrent = subscribed && !fromCompany && subscriptionTier === plan.name;
+                  const isScheduled = !fromCompany && pendingTier === plan.name;
+                  // Quem já paga troca de plano na mesma assinatura (nunca um
+                  // segundo checkout, que cobraria as duas).
+                  const switchesPlan = subscribed && !fromCompany && !isCurrent;
+                  const label = loading === plan.id
+                    ? null
+                    : includedByCompany
+                      ? "Incluído no plano da empresa"
+                      : isCurrent
+                        ? "Plano Atual"
+                        : isScheduled
+                          ? `Começa em ${formatDay(pendingFrom)}`
+                          : switchesPlan
+                            ? `Mudar para ${plan.name}`
+                            : "Assinar Agora";
+                  return (
+                    <Button
+                      onClick={() => (switchesPlan ? openChange(plan.name) : handleSubscribe(plan))}
+                      disabled={loading === plan.id || includedByCompany || isCurrent || isScheduled || (switchesPlan && paymentIssue)}
+                      className={`w-full py-6 text-lg font-semibold ${
+                        plan.popular ? 'bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90' : ''
+                      }`}
+                      variant={isCurrent ? "secondary" : "default"}
+                      size="lg"
+                    >
+                      {label === null ? (
+                        <div className="flex items-center gap-2">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          Processando...
+                        </div>
+                      ) : isCurrent ? (
+                        <div className="flex items-center gap-2">
+                          <Crown className="w-5 h-5" />
+                          {label}
+                        </div>
+                      ) : (
+                        label
+                      )}
+                    </Button>
+                  );
+                })()}
               </CardContent>
             </Card>
           ))}
@@ -394,7 +554,11 @@ const SubscriptionPlans = () => {
               Cancelar Assinatura
             </DialogTitle>
             <DialogDescription>
-              Tem certeza que deseja cancelar sua assinatura? Você perderá acesso aos benefícios do seu plano atual.
+              {refundPreview || cancelPreview?.mode === "immediate"
+                ? "O plano acaba agora e você perde o acesso aos benefícios dele."
+                : cancelPreview?.accessUntil
+                  ? `Seu plano continua até ${formatDay(cancelPreview.accessUntil)} e não será renovado. Até lá, você pode voltar atrás.`
+                  : "Seu plano continua até o fim do período já pago e não será renovado."}
             </DialogDescription>
           </DialogHeader>
           {refundPreview && (
@@ -424,47 +588,25 @@ const SubscriptionPlans = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Downgrade Modal */}
-      <Dialog open={showDowngradeModal} onOpenChange={setShowDowngradeModal}>
+      {/* Troca de plano */}
+      <Dialog open={changeTarget !== null} onOpenChange={(open) => !open && loading !== "change" && setChangeTarget(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Opções de Downgrade</DialogTitle>
+            <DialogTitle>Mudar para o {changeTarget}</DialogTitle>
             <DialogDescription>
-              Escolha uma das opções abaixo para alterar sua assinatura.
+              {!changePreview
+                ? "Calculando..."
+                : changePreview.direction === "upgrade"
+                  ? `O ${changeTarget} vale a partir de agora. Hoje cobramos ${formatBRL(changePreview.amount_due ?? 0)}, só a diferença proporcional até a sua renovação em ${formatDay(changePreview.renews_on ?? null)}. Depois, ${plans.find((p) => p.name === changeTarget)?.price}/mês.`
+                  : `Você continua no ${subscriptionTier} até ${formatDay(changePreview.effective_on ?? null)}, o período que já pagou. Depois, passa para o ${changeTarget} por ${plans.find((p) => p.name === changeTarget)?.price}/mês. Nada é cobrado agora.`}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-3">
-            {subscriptionTier === "Premium" && (
-              <Card className="p-4">
-                <div className="space-y-2">
-                  <h4 className="font-semibold">Plano Plus - R$ 69,90/mês</h4>
-                  <ul className="text-sm text-muted-foreground space-y-1">
-                    <li>• 1 chamada emergencial por mês (25 min)</li>
-                    <li>• Acesso à biblioteca de sons</li>
-                    <li>• Exercícios de respiração</li>
-                  </ul>
-                  <Button 
-                    className="w-full"
-                    onClick={() => {
-                      setShowDowngradeModal(false);
-                      handleSubscribe(plans[0]);
-                    }}
-                  >
-                    Trocar para Plus
-                  </Button>
-                </div>
-              </Card>
-            )}
-            
-            <Button
-              variant="destructive"
-              className="w-full"
-              onClick={() => {
-                setShowDowngradeModal(false);
-                setShowCancelModal(true);
-              }}
-            >
-              Cancelar Assinatura
+          <div className="flex gap-2">
+            <Button variant="outline" className="flex-1" onClick={() => setChangeTarget(null)} disabled={loading === "change"}>
+              Voltar
+            </Button>
+            <Button className="flex-1" onClick={confirmChange} disabled={!changePreview || loading === "change"}>
+              {loading === "change" ? "Mudando..." : "Confirmar"}
             </Button>
           </div>
         </DialogContent>

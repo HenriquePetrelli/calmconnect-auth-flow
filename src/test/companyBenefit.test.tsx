@@ -135,7 +135,7 @@ describe('portal do RH', () => {
   it('desliga um colaborador pelo e-mail com acesso até o fim do mês', async () => {
     fakeDb.seed('organization_members', [{ user_id: 'patient-1', organization_id: 'org-1', role: 'manager', status: 'active' }]);
     fakeDb.rpcHandlers.get_organization_dashboard = () => ({ data: dashboard, error: null });
-    const remove = vi.fn(() => ({ data: { ok: true, access_until: '2026-10-31' }, error: null }));
+    const remove = vi.fn((_db: unknown, _params: Record<string, unknown>) => ({ data: { ok: true, access_until: '2026-10-31' }, error: null }));
     fakeDb.rpcHandlers.remove_organization_member_by_email = remove;
     renderAt('/empresa');
 

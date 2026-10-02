@@ -1,4 +1,5 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { findCustomerId, liveSubscriptions, newStripe } from "../_shared/stripe.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -53,6 +54,22 @@ Deno.serve(async (req: Request): Promise<Response> => {
     if (!patient) return json({ error: "Paciente não encontrado" }, 404);
 
     const userId: string | null = patient.user_id;
+
+    if (userId && Deno.env.get("STRIPE_SECRET_KEY")) {
+      // Antes de apagar: a assinatura do Stripe continuaria cobrando uma
+      // conta que não existe mais.
+      try {
+        const { data: authUser } = await supabase.auth.admin.getUserById(userId);
+        const stripe = newStripe();
+        const customerId = await findCustomerId(stripe, supabase, { id: userId, email: authUser?.user?.email ?? null });
+        if (customerId) {
+          for (const sub of await liveSubscriptions(stripe, customerId)) await stripe.subscriptions.cancel(sub.id);
+        }
+      } catch (stripeError) {
+        console.error("admin-delete-patient: falha ao cancelar assinatura", stripeError);
+        return json({ error: "Não foi possível cancelar a assinatura do paciente no Stripe; nada foi excluído. Tente de novo." }, 502);
+      }
+    }
 
     if (userId) {
       await supabase.from("notifications").delete().eq("patient_id", userId);

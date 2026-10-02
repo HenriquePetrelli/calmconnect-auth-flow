@@ -1,59 +1,80 @@
-import { useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, ArrowRight } from "lucide-react";
+import { Check, ArrowRight, Clock } from "lucide-react";
 import { useSubscription } from "@/contexts/SubscriptionContext";
-import { useToast } from "@/hooks/use-toast";
+import { PLAN_INCLUDES } from "@/lib/organizations";
 
+const ATTEMPTS = 6;
+const INTERVAL_MS = 2500;
+
+/**
+ * Volta do checkout do Stripe. Só diz "ativada" depois que o servidor
+ * confirma a assinatura (webhook/check-subscription); antes dizia sempre,
+ * mesmo com o pagamento ainda pendente.
+ */
 const SubscriptionSuccess = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const { checkSubscription } = useSubscription();
-  const { toast } = useToast();
+  const { subscribed, subscriptionTier, entitlementSource, checkSubscription } = useSubscription();
+  const [attempt, setAttempt] = useState(0);
+  const confirmed = subscribed && entitlementSource === "stripe";
+  const gaveUp = !confirmed && attempt >= ATTEMPTS;
 
   useEffect(() => {
-    const sessionId = searchParams.get('session_id');
-    if (sessionId) {
-      // Wait a moment then check subscription status
-      setTimeout(() => {
-        checkSubscription();
-      }, 2000);
-      
-      toast({
-        title: "Assinatura ativada!",
-      });
-    }
-  }, [searchParams, checkSubscription, toast]);
+    if (confirmed || attempt >= ATTEMPTS) return;
+    const timer = setTimeout(async () => {
+      await checkSubscription();
+      setAttempt((n) => n + 1);
+    }, attempt === 0 ? 800 : INTERVAL_MS);
+    return () => clearTimeout(timer);
+    // checkSubscription muda de identidade a cada render do provider.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [attempt, confirmed]);
+
+  const tier = subscriptionTier === "Premium" || subscriptionTier === "Plus" ? subscriptionTier : null;
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="max-w-md w-full text-center">
         <CardHeader>
           <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Check className="w-8 h-8 text-primary" />
+            {confirmed ? <Check className="w-8 h-8 text-primary" /> : <Clock className="w-8 h-8 text-primary" />}
           </div>
-          <CardTitle className="text-xl">Assinatura Ativada!</CardTitle>
+          <CardTitle className="text-xl">
+            {confirmed ? `Plano ${tier ?? ""} ativado!` : gaveUp ? "Pagamento em processamento" : "Confirmando seu pagamento..."}
+          </CardTitle>
           <CardDescription>
-            Parabéns! Sua assinatura foi processada com sucesso. Agora você tem acesso completo aos nossos serviços.
+            {confirmed
+              ? "Tudo certo. O recibo foi enviado para o seu e-mail."
+              : gaveUp
+                ? "O banco ainda não confirmou o pagamento. Assim que confirmar, o plano é liberado sozinho — você não precisa pagar de novo."
+                : "Isso leva só alguns segundos."}
           </CardDescription>
         </CardHeader>
-        
+
         <CardContent className="space-y-4">
-          <div className="bg-muted/50 p-4 rounded-lg">
-            <h3 className="font-semibold mb-2">O que você pode fazer agora:</h3>
-            <ul className="text-sm text-muted-foreground space-y-2">
-              <li>• Agendar consultas mensais</li>
-              <li>• Usar o botão SOS quando necessário</li>
-              <li>• Acessar toda a biblioteca de sons</li>
-              <li>• Praticar exercícios de respiração</li>
-            </ul>
-          </div>
-          
-          <Button 
-            onClick={() => navigate("/")}
-            className="w-full"
-          >
+          {confirmed && tier && (
+            <div className="bg-muted/50 p-4 rounded-lg text-left">
+              <h3 className="font-semibold mb-2">O que você tem agora:</h3>
+              <ul className="text-sm text-muted-foreground space-y-2">
+                {PLAN_INCLUDES[tier].map((item) => (
+                  <li key={item} className="flex items-start gap-2">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {gaveUp && (
+            <Button variant="outline" className="w-full" onClick={() => setAttempt(0)}>
+              Verificar de novo
+            </Button>
+          )}
+
+          <Button onClick={() => navigate("/home")} className="w-full">
             Ir para o Início
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>

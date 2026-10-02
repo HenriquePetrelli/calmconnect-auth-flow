@@ -1,27 +1,19 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-
-// Plans are resolved on the server from Stripe price IDs configured as
-// secrets (STRIPE_PRICE_PLUS / STRIPE_PRICE_PREMIUM), defaulting to the
-// current live prices. An unknown price grants NO tier — there used to be a
-// fallback that promoted any price above R$ 69,99 to Premium, which, with
-// create-checkout accepting any priceId from the client, let anyone
-// subscribe to some other price in the account and be treated as Premium.
-const PLAN_PRICES = {
-  Plus: Deno.env.get("STRIPE_PRICE_PLUS") ?? "price_1S3qAKPhFwqSktZsXexQefrx",
-  Premium: Deno.env.get("STRIPE_PRICE_PREMIUM") ?? "price_1S3q9YPhFwqSktZsejrePGuS",
-} as const;
+import { PLAN_PRICES, findCustomerId, liveSubscriptions, newStripe } from "../_shared/stripe.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const logStep = (step: string, details?: any) => {
+const logStep = (step: string, details?: unknown) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[CREATE-CHECKOUT] ${step}${detailsStr}`);
 };
+
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status });
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -30,76 +22,67 @@ serve(async (req) => {
 
   const supabaseClient = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    { auth: { persistSession: false } },
   );
 
   try {
-    logStep("Function started");
-
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
-    logStep("Stripe key verified");
+    if (!Deno.env.get("STRIPE_SECRET_KEY")) throw new Error("STRIPE_SECRET_KEY is not set");
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("No authorization header provided");
-    logStep("Authorization header found");
-
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+    const { data: userData, error: userError } = await supabaseClient.auth.getUser(authHeader.replace("Bearer ", ""));
     if (userError) throw new Error(`Authentication error: ${userError.message}`);
     const user = userData.user;
     if (!user?.email) throw new Error("User not authenticated or email not available");
-    logStep("User authenticated", { userId: user.id, email: user.email });
+    logStep("User authenticated", { userId: user.id });
 
-    // The client only says which plan; the price comes from the server.
+    // O cliente só diz o plano; o preço vem do servidor.
     const { plan: requestedPlan } = await req.json();
     const plan = String(requestedPlan ?? "").toLowerCase() === "premium" ? "Premium"
       : String(requestedPlan ?? "").toLowerCase() === "plus" ? "Plus"
       : null;
     if (!plan) throw new Error("Plano inválido");
-    const priceId = PLAN_PRICES[plan];
-    logStep("Request data", { priceId, plan });
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    let customerId;
-    if (customers.data.length > 0) {
-      customerId = customers.data[0].id;
-      logStep("Found existing customer", { customerId });
-    } else {
-      logStep("No existing customer found, will create one");
+    const stripe = newStripe();
+    let customerId = await findCustomerId(stripe, supabaseClient, user);
+
+    // Quem já assina troca de plano pela manage-subscription (com cobrança
+    // proporcional). Um novo checkout criaria uma segunda assinatura e a
+    // pessoa pagaria as duas — era o que acontecia no "Trocar para".
+    if (customerId && (await liveSubscriptions(stripe, customerId)).length > 0) {
+      logStep("Already subscribed, checkout refused", { customerId });
+      return json({ error_code: "already_subscribed" });
     }
 
+    if (!customerId) {
+      const customer = await stripe.customers.create(
+        { email: user.email, metadata: { user_id: user.id } },
+        { idempotencyKey: `customer-${user.id}` },
+      );
+      customerId = customer.id;
+      logStep("Customer created", { customerId });
+    }
+
+    const origin = req.headers.get("origin") ?? "";
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
-      customer_email: customerId ? undefined : user.email,
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
-        },
-      ],
+      client_reference_id: user.id,
+      line_items: [{ price: PLAN_PRICES[plan], quantity: 1 }],
       mode: "subscription",
-      success_url: `${req.headers.get("origin")}/subscription-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${req.headers.get("origin")}/subscription-cancel`,
-      metadata: {
-        user_id: user.id,
-        plan: plan,
-      },
+      locale: "pt-BR",
+      allow_promotion_codes: true,
+      subscription_data: { metadata: { user_id: user.id, plan } },
+      success_url: `${origin}/subscription-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/subscription-plans`,
+      metadata: { user_id: user.id, plan },
     });
 
-    logStep("Checkout session created", { sessionId: session.id, url: session.url });
-
-    return new Response(JSON.stringify({ url: session.url }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
+    logStep("Checkout session created", { sessionId: session.id });
+    return json({ url: session.url });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in create-checkout", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    return json({ error: errorMessage }, 500);
   }
 });

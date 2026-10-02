@@ -1,0 +1,160 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import type Stripe from "https://esm.sh/stripe@14.21.0";
+import { changeDirection, tierForPrice, type Tier } from "../_shared/billing.ts";
+import { PLAN_PRICES, findCustomerId, liveSubscriptions, newStripe, releaseSchedule } from "../_shared/stripe.ts";
+
+// Mudanças na assinatura própria, sem passar por um novo checkout:
+//   - preview_change / change_plan: subir de plano cobra só a diferença
+//     proporcional na hora e libera o plano novo já; descer de plano vale na
+//     próxima renovação (a pessoa usa até o fim o que já pagou), via
+//     subscription schedule do Stripe.
+//   - keep_current: desiste de uma troca para baixo já agendada.
+//   - resume: desfaz um cancelamento agendado para o fim do período.
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+const log = (step: string, details?: unknown) =>
+  console.log(`[MANAGE-SUBSCRIPTION] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
+
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status });
+
+const iso = (seconds: number) => new Date(seconds * 1000).toISOString();
+
+const parsePlan = (value: unknown): Tier | null =>
+  String(value ?? "").toLowerCase() === "premium" ? "Premium" : String(value ?? "").toLowerCase() === "plus" ? "Plus" : null;
+
+/** Quanto será cobrado agora ao subir de plano (só as linhas proporcionais). */
+const upgradeAmount = async (stripe: Stripe, subscription: Stripe.Subscription, price: string, prorationDate: number) => {
+  const upcoming = await stripe.invoices.retrieveUpcoming({
+    customer: typeof subscription.customer === "string" ? subscription.customer : subscription.customer.id,
+    subscription: subscription.id,
+    subscription_items: [{ id: subscription.items.data[0].id, price }],
+    subscription_proration_behavior: "always_invoice",
+    subscription_proration_date: prorationDate,
+  });
+  return upcoming.lines.data.filter((line) => line.proration).reduce((total, line) => total + line.amount, 0);
+};
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  try {
+    if (!Deno.env.get("STRIPE_SECRET_KEY")) throw new Error("STRIPE_SECRET_KEY is not set");
+    const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "", {
+      auth: { persistSession: false },
+    });
+
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) return json({ error: "Missing authorization header" }, 401);
+    const { data: userData, error: userError } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
+    const user = userData?.user;
+    if (userError || !user) return json({ error: "Unauthorized" }, 401);
+
+    const body = await req.json().catch(() => ({}));
+    const action = String(body?.action ?? "");
+
+    const stripe = newStripe();
+    const customerId = await findCustomerId(stripe, supabase, user);
+    const subscription = customerId ? (await liveSubscriptions(stripe, customerId))[0] : undefined;
+    if (!subscription) return json({ error_code: "no_subscription" });
+
+    const currentPrice = subscription.items.data[0]?.price.id;
+    const currentTier = tierForPrice(PLAN_PRICES, currentPrice);
+
+    if (action === "resume") {
+      await stripe.subscriptions.update(subscription.id, { cancel_at_period_end: false });
+      log("Cancellation undone", { subscription: subscription.id });
+      return json({ ok: true });
+    }
+
+    if (action === "keep_current") {
+      await releaseSchedule(stripe, subscription);
+      log("Scheduled change undone", { subscription: subscription.id });
+      return json({ ok: true });
+    }
+
+    if (action !== "preview_change" && action !== "change_plan") return json({ error: "Ação inválida" }, 400);
+
+    const target = parsePlan(body?.plan);
+    if (!target) return json({ error: "Plano inválido" }, 400);
+    if (subscription.status === "past_due") return json({ error_code: "payment_issue" });
+
+    const direction = changeDirection(currentTier, target);
+    if (direction === "same") return json({ error_code: "same_plan" });
+    const targetPrice = PLAN_PRICES[target];
+
+    if (direction === "upgrade") {
+      const prorationDate = Number.isInteger(body?.proration_date) ? Number(body.proration_date) : Math.floor(Date.now() / 1000);
+      if (action === "preview_change") {
+        return json({
+          direction,
+          amount_due: await upgradeAmount(stripe, subscription, targetPrice, prorationDate),
+          proration_date: prorationDate,
+          renews_on: iso(subscription.current_period_end),
+        });
+      }
+      // Uma troca para baixo agendada ou um cancelamento agendado deixam de
+      // valer: quem sobe de plano quer continuar.
+      await releaseSchedule(stripe, subscription);
+      try {
+        await stripe.subscriptions.update(subscription.id, {
+          items: [{ id: subscription.items.data[0].id, price: targetPrice }],
+          proration_behavior: "always_invoice",
+          proration_date: prorationDate,
+          // Se o cartão recusar a diferença, nada muda (não fica pela metade).
+          payment_behavior: "error_if_incomplete",
+          cancel_at_period_end: false,
+          metadata: { ...subscription.metadata, user_id: user.id, plan: target },
+        });
+      } catch (error) {
+        log("Upgrade payment failed", { message: error instanceof Error ? error.message : String(error) });
+        return json({ error_code: "payment_failed" });
+      }
+      log("Upgraded", { subscription: subscription.id, from: currentTier, to: target });
+      return json({ ok: true, direction });
+    }
+
+    // Descer de plano: vale na renovação.
+    if (action === "preview_change") {
+      return json({ direction, effective_on: iso(subscription.current_period_end) });
+    }
+    if (subscription.cancel_at_period_end) {
+      // Uma assinatura com cancelamento agendado não aceita agenda de troca;
+      // escolher outro plano é desistir do cancelamento.
+      await stripe.subscriptions.update(subscription.id, { cancel_at_period_end: false });
+    }
+    const scheduleRef = subscription.schedule;
+    const scheduleId =
+      (typeof scheduleRef === "string" ? scheduleRef : scheduleRef?.id) ??
+      (await stripe.subscriptionSchedules.create({ from_subscription: subscription.id })).id;
+    const schedule = await stripe.subscriptionSchedules.retrieve(scheduleId);
+    const currentPhaseStart = schedule.current_phase?.start_date ?? subscription.current_period_start;
+    await stripe.subscriptionSchedules.update(scheduleId, {
+      end_behavior: "release",
+      phases: [
+        {
+          items: [{ price: currentPrice, quantity: 1 }],
+          start_date: currentPhaseStart,
+          end_date: subscription.current_period_end,
+          proration_behavior: "none",
+        },
+        {
+          items: [{ price: targetPrice, quantity: 1 }],
+          iterations: 1,
+          proration_behavior: "none",
+          metadata: { user_id: user.id, plan: target },
+        },
+      ],
+    });
+    log("Downgrade scheduled", { subscription: subscription.id, to: target, on: iso(subscription.current_period_end) });
+    return json({ ok: true, direction, effective_on: iso(subscription.current_period_end) });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    log("ERROR", { message });
+    return json({ error: message }, 500);
+  }
+});

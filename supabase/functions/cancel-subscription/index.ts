@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { cancelMode } from "../_shared/billing.ts";
+import { findCustomerId, liveSubscriptions, newStripe, releaseSchedule } from "../_shared/stripe.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -84,18 +86,19 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    
-    if (customers.data.length === 0) {
+    const stripe = newStripe();
+    const customerId = await findCustomerId(stripe, supabaseClient, user);
+    if (!customerId) {
       throw new Error("No Stripe customer found for this user");
     }
-
-    const customerId = customers.data[0].id;
     logStep("Found Stripe customer", { customerId });
 
     const body = await req.json().catch(() => null);
     const withdrawal = await findWithdrawalRefund(stripe, customerId);
+    const subscriptions = await liveSubscriptions(stripe, customerId);
+    const main = subscriptions[0];
+    const mode = cancelMode(withdrawal.eligible, main?.status ?? "active");
+    const accessUntil = mode === "period_end" && main ? new Date(main.current_period_end * 1000).toISOString() : null;
 
     // Só consulta: o app mostra, antes de confirmar, se haverá reembolso.
     if (body?.preview === true) {
@@ -103,46 +106,47 @@ serve(async (req) => {
         refund_eligible: withdrawal.eligible,
         refund_amount: withdrawal.amount,
         refund_deadline: withdrawal.deadline,
+        mode,
+        access_until: accessUntil,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       });
     }
 
-    // Get active subscriptions
-    const subscriptions = await stripe.subscriptions.list({
-      customer: customerId,
-      status: "active",
-      limit: 10,
-    });
-
-    if (subscriptions.data.length === 0) {
+    if (subscriptions.length === 0) {
       throw new Error("No active subscription found to cancel");
     }
 
-    // Cancel all active subscriptions
-    const cancelledSubscriptions = [];
-    for (const subscription of subscriptions.data) {
-      const cancelled = await stripe.subscriptions.cancel(subscription.id);
-      cancelledSubscriptions.push(cancelled.id);
-      logStep("Cancelled subscription", { subscriptionId: cancelled.id });
+    // Fora do prazo de arrependimento, o plano segue até o fim do período já
+    // pago e não renova (como Calm, Headspace e Spotify). Antes o
+    // cancelamento cortava o acesso na hora, sem devolver o resto do mês.
+    const cancelledSubscriptions: string[] = [];
+    for (const subscription of subscriptions) {
+      await releaseSchedule(stripe, subscription);
+      if (mode === "period_end" && subscription.status !== "past_due") {
+        await stripe.subscriptions.update(subscription.id, { cancel_at_period_end: true });
+        logStep("Subscription set to cancel at period end", { subscriptionId: subscription.id });
+      } else {
+        await stripe.subscriptions.cancel(subscription.id);
+        logStep("Cancelled subscription", { subscriptionId: subscription.id });
+      }
+      cancelledSubscriptions.push(subscription.id);
     }
 
-    // Update subscriber status in database
-    await supabaseClient.from("subscribers").upsert({
-      email: user.email,
-      user_id: user.id,
-      stripe_customer_id: customerId,
-      subscribed: false,
-      subscription_tier: null,
-      subscription_end: null,
-      plan_limits: { appointments: 0, sos_uses: 0 },
-      current_usage: { appointments: 0, sos_uses: 0 },
-      // Só a assinatura do Stripe acabou; o trigger do banco mantém o plano da
-      // empresa (B2B), se houver.
-      entitlement_source: "stripe",
-      updated_at: new Date().toISOString(),
-    }, { onConflict: 'email' });
+    if (mode === "immediate") {
+      // Só a assinatura do Stripe acabou; o trigger do banco mantém o plano
+      // da empresa (B2B), se houver. Os contadores do mês ficam como estão.
+      await supabaseClient.from("subscribers").update({
+        stripe_customer_id: customerId,
+        subscribed: false,
+        subscription_tier: null,
+        subscription_end: null,
+        plan_limits: { appointments: 0, sos_uses: 0 },
+        entitlement_source: "stripe",
+        updated_at: new Date().toISOString(),
+      }).eq("user_id", user.id);
+    }
 
     logStep("Updated database with cancellation", { cancelledSubscriptions });
 
@@ -193,6 +197,8 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       success: true,
       message: "Assinatura cancelada com sucesso",
+      mode,
+      access_until: accessUntil,
       cancelled_subscriptions: cancelledSubscriptions,
       refund_status: refundStatus,
       refunded_amount: refundedAmount,

@@ -1,17 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-
-// Plans are resolved on the server from Stripe price IDs configured as
-// secrets (STRIPE_PRICE_PLUS / STRIPE_PRICE_PREMIUM), defaulting to the
-// current live prices. An unknown price grants NO tier — there used to be a
-// fallback that promoted any price above R$ 69,99 to Premium, which, with
-// create-checkout accepting any priceId from the client, let anyone
-// subscribe to some other price in the account and be treated as Premium.
-const PLAN_PRICES = {
-  Plus: Deno.env.get("STRIPE_PRICE_PLUS") ?? "price_1S3qAKPhFwqSktZsXexQefrx",
-  Premium: Deno.env.get("STRIPE_PRICE_PREMIUM") ?? "price_1S3q9YPhFwqSktZsejrePGuS",
-} as const;
+import { PLAN_LIMITS, stripeState, tierRank } from "../_shared/billing.ts";
+import { PLAN_PRICES, findCustomerId, listSubscriptions, newStripe, syncCustomerEmail } from "../_shared/stripe.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -83,57 +73,54 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    const customerId: string | null = customers.data[0]?.id ?? null;
+    const stripe = newStripe();
+    const customerId = await findCustomerId(stripe, supabaseClient, user);
     logStep(customerId ? "Found Stripe customer" : "No Stripe customer", { customerId });
 
-    let stripeTier: "Plus" | "Premium" | null = null;
-    let stripeEnd: string | null = null;
+    // Todas as assinaturas: em dia, em teste ou com pagamento atrasado (que
+    // mantém o acesso enquanto o Stripe tenta cobrar de novo).
+    const stripeSub = customerId
+      ? stripeState(PLAN_PRICES, await listSubscriptions(stripe, customerId), Math.floor(Date.now() / 1000))
+      : stripeState(PLAN_PRICES, [], 0);
+    const stripeTier = stripeSub.tier;
+    const stripeEnd = stripeSub.periodEnd;
+    if (stripeSub.extraSubscriptions > 0) logStep("More than one live subscription (double charge)", { customerId, extra: stripeSub.extraSubscriptions });
     if (customerId) {
-      const subscriptions = await stripe.subscriptions.list({
-        customer: customerId,
-        status: "active",
-        limit: 1,
-      });
-      if (subscriptions.data.length > 0) {
-        const subscription = subscriptions.data[0];
-        stripeEnd = new Date(subscription.current_period_end * 1000).toISOString();
-        const priceId = subscription.items.data[0].price.id;
-        if (priceId === PLAN_PRICES.Plus) stripeTier = "Plus";
-        else if (priceId === PLAN_PRICES.Premium) stripeTier = "Premium";
-        else logStep("Unknown price on active subscription — no tier granted", { priceId });
-        logStep("Active subscription found", { subscriptionId: subscription.id, stripeTier, stripeEnd });
-      } else {
-        logStep("No active subscription found");
-      }
+      // Quem trocou o e-mail da conta passa a receber recibos no e-mail novo.
+      await syncCustomerEmail(stripe, customerId, user).catch((e) => logStep("Could not sync customer email", { message: String(e) }));
     }
+    logStep("Stripe state", stripeSub);
 
     // B2B: plano oferecido pela empresa (organization_members). Vale o maior
     // entre o do Stripe e o da empresa — o mesmo que o trigger
     // apply_organization_entitlement grava em `subscribers`.
     const { data: orgRows } = await supabaseClient.rpc("organization_entitlement", { p_user_id: user.id });
     const org = (orgRows ?? [])[0] as { tier: "Plus" | "Premium"; organization_name: string; ends_on: string | null } | undefined;
-    const rank = (t: string | null | undefined) => (t === "Premium" ? 2 : t === "Plus" ? 1 : 0);
-    const fromOrganization = Boolean(org && rank(org.tier) > rank(stripeTier));
+    const fromOrganization = Boolean(org && tierRank(org.tier) > tierRank(stripeTier));
 
     const subscriptionTier: "Plus" | "Premium" | null = fromOrganization ? org!.tier : stripeTier;
     const hasActiveSub = subscriptionTier !== null;
     const subscriptionEnd = fromOrganization ? (org!.ends_on ? new Date(`${org!.ends_on}T23:59:59-03:00`).toISOString() : null) : stripeEnd;
-    const planLimits =
-      subscriptionTier === "Premium"
-        ? { appointments: 1, sos_uses: 1 }
-        : subscriptionTier === "Plus"
-          ? { appointments: 0, sos_uses: 1 }
-          : { appointments: 0, sos_uses: 0 };
+    const planLimits = PLAN_LIMITS[subscriptionTier ?? "none"];
     logStep("Determined subscription tier", { subscriptionTier, source: fromOrganization ? "organization" : "stripe" });
 
     // Get current usage and SOS flags from database
-    const { data: existingSubscriberRow } = await supabaseClient
+    // A linha é da pessoa (user_id), não do e-mail: quem troca o e-mail da
+    // conta continua com a mesma linha e os mesmos contadores do mês (antes
+    // ganhava uma linha nova, zerada, e o SOS do mês "voltava").
+    const subscriberColumns = "id, email, current_usage, sos_used_this_month, sos_last_used, appointments_used_this_month, appointments_last_used, subscribed, subscription_tier, user_id";
+    const { data: byUser } = await supabaseClient
       .from("subscribers")
-      .select("current_usage, sos_used_this_month, sos_last_used, appointments_used_this_month, appointments_last_used, subscribed, subscription_tier, user_id")
-      .eq("email", user.email)
-      .maybeSingle();
+      .select(subscriberColumns)
+      .eq("user_id", user.id)
+      .order("updated_at", { ascending: false })
+      .limit(1);
+    let existingSubscriberRow = byUser?.[0] ?? null;
+    if (!existingSubscriberRow) {
+      const { data: byEmail } = await supabaseClient.from("subscribers").select(subscriberColumns).eq("email", user.email).maybeSingle();
+      existingSubscriberRow = byEmail ?? null;
+    }
+    const rowFilter = existingSubscriberRow ? { column: "id", value: existingSubscriberRow.id } : { column: "email", value: user.email };
 
     const currentUsage = existingSubscriberRow?.current_usage || { appointments: 0, sos_uses: 0 };
     let sosUsedThisMonth = existingSubscriberRow?.sos_used_this_month ?? false;
@@ -158,7 +145,7 @@ serve(async (req) => {
         await supabaseClient
           .from("subscribers")
           .update({ sos_used_this_month: false, sos_last_used: null, updated_at: new Date().toISOString() })
-          .eq("email", user.email);
+          .eq(rowFilter.column, rowFilter.value);
         sosUsedThisMonth = false;
         sosLastUsed = null;
       }
@@ -171,7 +158,7 @@ serve(async (req) => {
         await supabaseClient
           .from("subscribers")
           .update({ sos_used_this_month: false, sos_last_used: null, updated_at: new Date().toISOString() })
-          .eq("email", user.email);
+          .eq(rowFilter.column, rowFilter.value);
         sosUsedThisMonth = false;
         sosLastUsed = null;
       }
@@ -200,7 +187,7 @@ serve(async (req) => {
         await supabaseClient
           .from("subscribers")
           .update({ appointments_used_this_month: false, appointments_last_used: null, updated_at: new Date().toISOString() })
-          .eq("email", user.email);
+          .eq(rowFilter.column, rowFilter.value);
         appointmentsUsedThisMonth = false;
         appointmentsLastUsed = null;
       }
@@ -214,14 +201,14 @@ serve(async (req) => {
     // Update subscriber in database
     // Grava o estado do Stripe (entitlement_source = 'stripe'); o trigger do
     // banco soma o plano da empresa, se houver.
-    await supabaseClient.from("subscribers").upsert({
+    const stripeRow = {
       email: user.email,
       user_id: user.id,
       stripe_customer_id: customerId,
       subscribed: stripeTier !== null,
       subscription_tier: stripeTier,
       subscription_end: stripeEnd,
-      plan_limits: stripeTier === "Premium" ? { appointments: 1, sos_uses: 1 } : stripeTier === "Plus" ? { appointments: 0, sos_uses: 1 } : { appointments: 0, sos_uses: 0 },
+      plan_limits: PLAN_LIMITS[stripeTier ?? "none"],
       entitlement_source: "stripe",
       current_usage: currentUsage,
       sos_used_this_month: sosUsedThisMonth,
@@ -229,7 +216,11 @@ serve(async (req) => {
       appointments_used_this_month: appointmentsUsedThisMonth,
       appointments_last_used: appointmentsLastUsed,
       updated_at: new Date().toISOString(),
-    }, { onConflict: 'email' });
+    };
+    const { error: writeError } = existingSubscriberRow
+      ? await supabaseClient.from("subscribers").update(stripeRow).eq("id", existingSubscriberRow.id)
+      : await supabaseClient.from("subscribers").upsert(stripeRow, { onConflict: "email" });
+    if (writeError) logStep("Could not write subscriber row", { message: writeError.message });
 
     logStep("Updated database with subscription info", { subscribed: hasActiveSub, subscriptionTier, planLimits });
     return new Response(JSON.stringify({
@@ -248,6 +239,13 @@ serve(async (req) => {
       // Paga uma assinatura própria além do benefício da empresa: o app avisa
       // que pode cancelar (é o que Headspace e Calm fazem com quem já pagava).
       personal_subscription_tier: fromOrganization ? stripeTier : null,
+      // Estado da assinatura própria, para a tela de planos.
+      stripe_status: stripeSub.status,
+      cancel_at_period_end: stripeSub.cancelAtPeriodEnd,
+      pending_tier: stripeSub.pendingTier,
+      pending_from: stripeSub.pendingFrom,
+      payment_issue: stripeSub.status === "past_due",
+      extra_subscriptions: stripeSub.extraSubscriptions,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

@@ -13,16 +13,16 @@ const SubscriptionCancel = () => {
           <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <X className="w-8 h-8 text-destructive" />
           </div>
-          <CardTitle className="text-xl">Assinatura Cancelada</CardTitle>
+          <CardTitle className="text-xl">Pagamento não concluído</CardTitle>
           <CardDescription>
-            Sua assinatura foi cancelada. Você pode tentar novamente a qualquer momento.
+            Você saiu do pagamento antes de terminar. Nenhuma cobrança foi feita.
           </CardDescription>
         </CardHeader>
         
         <CardContent className="space-y-4">
           <div className="bg-muted/50 p-4 rounded-lg">
             <p className="text-sm text-muted-foreground">
-              Não se preocupe! Você ainda pode acessar nossos recursos gratuitos e tentar assinar novamente quando estiver pronto.
+              Você continua com acesso aos recursos gratuitos e pode assinar quando quiser.
             </p>
           </div>
           
@@ -35,7 +35,7 @@ const SubscriptionCancel = () => {
             </Button>
             
             <Button 
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/home")}
               variant="outline"
               className="w-full"
             >

@@ -40,7 +40,9 @@ Os recursos de autocuidado e os grupos de apoio **não são atendimento psicoló
 | **Plus** | R$ 69,90 por mês | 1 atendimento SOS por mês, de até 25 minutos |
 | **Premium** | R$ 120,00 por mês | 1 atendimento SOS por mês, de até 50 minutos, e 1 consulta agendada por mês, de 50 minutos |
 
-- A cobrança é mensal, feita no cartão de crédito por meio da Stripe, e **renova automaticamente** até você cancelar.
+- A cobrança é mensal, feita no cartão de crédito por meio da Stripe, e **renova automaticamente** até você cancelar. O recibo de cada cobrança vai para o seu e-mail, e as faturas ficam em **Planos → Gerenciar pagamento**.
+- **Troca de plano:** ao passar do Plus para o Premium, o Premium vale na hora e cobramos só a diferença proporcional até a sua próxima renovação. Ao passar do Premium para o Plus, você continua no Premium até o fim do período já pago, e o Plus vale a partir da renovação.
+- **Pagamento recusado:** se a renovação não for aprovada, avisamos no app e tentamos cobrar de novo nos dias seguintes; o plano continua enquanto isso. Se nenhuma tentativa der certo, a assinatura é encerrada.
 - A cota do mês **não é cumulativa**: o que não for usado no mês não passa para o seguinte.
 - A cota de SOS só é consumida **quando o atendimento começa**. Um pedido que nenhum psicólogo aceita não conta.
 - Os preços podem mudar. Avisaremos com pelo menos **30 dias** de antecedência, e o novo preço só vale a partir da renovação seguinte ao aviso.
@@ -51,8 +53,8 @@ Se a sua empresa oferece o Soliv, você pode usar o código de convite do RH (no
 
 ## 5. Cancelamento e reembolso
 
-- Você pode cancelar a assinatura a qualquer momento pelo app. **O cancelamento é imediato:** o acesso aos recursos do plano termina no ato. ⚖️
-- **Direito de arrependimento:** se você cancelar em até **7 dias** da primeira contratação, devolvemos o valor pago integralmente, conforme o art. 49 do Código de Defesa do Consumidor. A devolução é feita **automaticamente** quando você cancela pelo app dentro desse prazo, no mesmo cartão da cobrança. Se tiver qualquer problema, fale com o suporte, em **[E-MAIL DE SUPORTE]**. ⚖️
+- Você pode cancelar a assinatura a qualquer momento pelo app. **O plano continua até o fim do período já pago** e não é renovado; até lá, você pode desfazer o cancelamento. ⚖️
+- **Direito de arrependimento:** se você cancelar em até **7 dias** da primeira contratação, devolvemos o valor pago integralmente, conforme o art. 49 do Código de Defesa do Consumidor; nesse caso, o plano termina no ato do cancelamento. A devolução é feita **automaticamente** quando você cancela pelo app dentro desse prazo, no mesmo cartão da cobrança. Se tiver qualquer problema, fale com o suporte, em **[E-MAIL DE SUPORTE]**. ⚖️
 - Fora desse prazo, os valores já pagos não são devolvidos, salvo nas situações do item 7.
 
 ## 6. Atendimento de emergência (SOS)

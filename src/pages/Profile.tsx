@@ -19,7 +19,7 @@ import EditSymptomsModal from "@/components/EditSymptomsModal";
 
 const Profile = () => {
   const navigate = useNavigate();
-  const { subscribed, subscriptionTier, entitlementSource, organizationName } = useSubscription();
+  const { subscribed, subscriptionTier, entitlementSource, organizationName, paymentIssue, cancelAtPeriodEnd, subscriptionEnd } = useSubscription();
   const fromCompany = entitlementSource === 'organization';
   const { toast } = useToast();
   const { getShowGoalModalPreference, setShowGoalModal } = useWeeklyGoals();
@@ -194,7 +194,15 @@ const Profile = () => {
             open={planDropdownOpen}
             onOpenChange={setPlanDropdownOpen}
             title={planInfo.name}
-            subtitle={fromCompany ? `Oferecido pela ${organizationName}` : `${planInfo.price}/mês`}
+            subtitle={
+              fromCompany
+                ? `Oferecido pela ${organizationName}`
+                : paymentIssue
+                  ? 'Pagamento recusado: atualize o cartão'
+                  : cancelAtPeriodEnd && subscriptionEnd
+                    ? `Cancelado, ativo até ${new Date(subscriptionEnd).toLocaleDateString('pt-BR')}`
+                    : `${planInfo.price}/mês`
+            }
             contentClassName="px-0 pb-0"
           >
                 <div className="px-4 pb-4 space-y-5 border-t border-border/60 pt-4">

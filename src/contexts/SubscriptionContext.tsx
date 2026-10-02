@@ -17,6 +17,15 @@ interface SubscriptionContextType {
   organizationName: string | null;
   /** Assinatura própria (Stripe) que a pessoa ainda paga, mesmo com o plano da empresa. */
   personalSubscriptionTier: string | null;
+  /** Assinatura própria: cancelada, mas ativa até `subscriptionEnd`. */
+  cancelAtPeriodEnd: boolean;
+  /** Troca para baixo agendada para a renovação. */
+  pendingTier: string | null;
+  pendingFrom: string | null;
+  /** Renovação recusada: o Stripe está tentando cobrar de novo. */
+  paymentIssue: boolean;
+  /** Assinaturas a mais pagas ao mesmo tempo (cobrança em dobro). */
+  extraSubscriptions: number;
   loading: boolean;
   checkSubscription: () => Promise<void>;
 }
@@ -42,6 +51,11 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [entitlementSource, setEntitlementSource] = useState<'stripe' | 'organization' | null>(null);
   const [organizationName, setOrganizationName] = useState<string | null>(null);
   const [personalSubscriptionTier, setPersonalSubscriptionTier] = useState<string | null>(null);
+  const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(false);
+  const [pendingTier, setPendingTier] = useState<string | null>(null);
+  const [pendingFrom, setPendingFrom] = useState<string | null>(null);
+  const [paymentIssue, setPaymentIssue] = useState(false);
+  const [extraSubscriptions, setExtraSubscriptions] = useState(0);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -75,6 +89,11 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       setEntitlementSource(data.entitlement_source ?? null);
       setOrganizationName(data.organization_name ?? null);
       setPersonalSubscriptionTier(data.personal_subscription_tier ?? null);
+      setCancelAtPeriodEnd(data.cancel_at_period_end ?? false);
+      setPendingTier(data.pending_tier ?? null);
+      setPendingFrom(data.pending_from ?? null);
+      setPaymentIssue(data.payment_issue ?? false);
+      setExtraSubscriptions(data.extra_subscriptions ?? 0);
     } catch (error) {
       console.error('Error checking subscription:', error);
     } finally {
@@ -94,6 +113,11 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       setEntitlementSource(null);
       setOrganizationName(null);
       setPersonalSubscriptionTier(null);
+      setCancelAtPeriodEnd(false);
+      setPendingTier(null);
+      setPendingFrom(null);
+      setPaymentIssue(false);
+      setExtraSubscriptions(0);
       setLoading(false);
       return;
     }
@@ -125,6 +149,11 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         entitlementSource,
         organizationName,
         personalSubscriptionTier,
+        cancelAtPeriodEnd,
+        pendingTier,
+        pendingFrom,
+        paymentIssue,
+        extraSubscriptions,
         loading,
         checkSubscription,
       }}
