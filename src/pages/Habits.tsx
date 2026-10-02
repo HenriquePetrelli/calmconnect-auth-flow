@@ -11,7 +11,7 @@ import { useHabits } from '@/hooks/useHabits';
 import { useNow } from '@/hooks/useNow';
 import { MAX_ACTIVE_HABITS, isQuitHabit } from '@/lib/habits';
 
-/** Meus hábitos: os do dia e os que estou largando. Os hábitos da semana ficam em Meu Progresso. */
+/** Meus hábitos: os do dia e os que estou largando. As metas da semana ficam em Meu Progresso. */
 const Habits = () => {
   const navigate = useNavigate();
   const { habits, eventsByHabit, loading, error, logIntake, deleteEvent } = useHabits();

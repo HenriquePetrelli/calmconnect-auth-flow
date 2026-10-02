@@ -37,7 +37,7 @@ const HomeContent = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showWeeklyGoalModal, setShowWeeklyGoalModal] = useState(false);
   const [showGoalSelection, setShowGoalSelection] = useState(false);
-  // A janela dos hábitos da semana espera o aceite dos Termos, para não abrir por cima dele.
+  // A janela das metas da semana espera o aceite dos Termos, para não abrir por cima dele.
   const legalGateStatus = useLegalGateStatus();
 
   useEffect(() => {
@@ -75,7 +75,7 @@ const HomeContent = () => {
       // Check if mood tracking is enabled
       setMoodEnabled(patientData?.daily_mood_enabled !== false);
 
-      // Verificar se deve mostrar a janela dos hábitos da semana
+      // Verificar se deve mostrar a janela das metas da semana
       if (patientData?.show_weekly_goal_modal && patientData?.show_goal_modal) {
         setTimeout(() => setShowWeeklyGoalModal(true), 500);
       }
@@ -134,7 +134,7 @@ const HomeContent = () => {
 
   const handleGoalsAdded = async () => {
     setShowGoalSelection(false);
-    // Atualizar show_weekly_goal_modal para false após escolher os hábitos
+    // Atualizar show_weekly_goal_modal para false após escolher as metas
     if (userProfile?.id) {
       try {
         await supabase
@@ -145,7 +145,7 @@ const HomeContent = () => {
         console.error('Error updating weekly goal modal:', error);
       }
     }
-    toast.success('Hábitos da semana escolhidos!');
+    toast.success('Metas da semana escolhidas!');
   };
 
   const handleMoodSelected = (value: number) => {

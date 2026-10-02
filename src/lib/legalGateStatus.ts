@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from "react";
 
 // Situação do aceite dos documentos legais, publicada pelo
-// LegalAcceptanceGate. Outras janelas automáticas (como a dos hábitos da semana) esperam
+// LegalAcceptanceGate. Outras janelas automáticas (como a das metas da semana) esperam
 // o "clear" para não abrir por cima do pedido de aceite.
 export type LegalGateStatus = "checking" | "pending" | "clear";
 

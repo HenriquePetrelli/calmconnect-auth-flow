@@ -12,7 +12,7 @@ const toISODate = (date: Date): string =>
  * `patients` (usado pela tela inicial para saber se já respondeu hoje) e
  * grava/atualiza a entrada de `patient_mood_logs` do dia (histórico real,
  * usado para o gráfico de evolução do humor). Também conta como atividade
- * para os hábitos da semana da categoria "mood".
+ * para as metas da semana da categoria "mood".
  */
 export const useMoodLog = () => {
   const { user } = useAuth();

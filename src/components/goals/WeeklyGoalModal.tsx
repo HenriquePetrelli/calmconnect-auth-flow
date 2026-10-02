@@ -34,7 +34,7 @@ export const WeeklyGoalModal = ({
           </motion.div>
 
           <DialogTitle className="text-center text-2xl">
-            Hábitos da semana
+            Metas da semana
           </DialogTitle>
         </DialogHeader>
 
@@ -45,7 +45,7 @@ export const WeeklyGoalModal = ({
           className="space-y-4"
         >
           <p className="text-center text-muted-foreground">
-            Quer escolher os hábitos de autocuidado desta semana? Respiração, sons, diário e humor ajudam no dia a dia.
+            Quer escolher suas metas de autocuidado desta semana? Respiração, sons, diário e humor ajudam no dia a dia.
           </p>
 
           <DialogFooter className="flex-col gap-2 sm:flex-col">
@@ -54,7 +54,7 @@ export const WeeklyGoalModal = ({
               size="lg"
               className="w-full"
             >
-              Escolher hábitos
+              Escolher metas
             </Button>
             
             <Button 

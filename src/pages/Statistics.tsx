@@ -21,7 +21,7 @@ import { usePatientStatistics } from "@/hooks/usePatientStatistics";
 import { useAchievements } from "@/hooks/useAchievements";
 import { usePatientEngagementMetrics } from "@/hooks/usePatientEngagementMetrics";
 import { getRelativeTime, formatDateTime } from "@/utils/dateFormatters";
-import WeeklyHabitsSection from "@/components/habits/WeeklyHabitsSection";
+import WeeklyGoalsSection from "@/components/goals/WeeklyGoalsSection";
 import { MoodTrendChart } from "@/components/progress/MoodTrendChart";
 import { SkeletonList } from "@/components/skeletons/Skeletons";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -129,8 +129,8 @@ const Statistics = () => {
         {/* Evolução do humor */}
         <MoodTrendChart />
 
-        {/* Hábitos da semana (antes "Metas da semana") */}
-        <WeeklyHabitsSection />
+        {/* Metas da semana: atividades de uso do app (os hábitos diários ficam em Meus hábitos) */}
+        <WeeklyGoalsSection />
 
         {/* Visão geral */}
         <Card className="border-l-4 border-l-secondary">

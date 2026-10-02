@@ -11,17 +11,17 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
 /**
- * Hábitos da semana: as atividades de autocuidado do app (respiração, sons,
+ * Metas da semana: as atividades de autocuidado do app (respiração, sons,
  * diário, humor...) escolhidas para a semana. Antes se chamavam "metas
  * semanais"; o banco continua com os nomes antigos (weekly_goals).
  */
-const WeeklyHabitsSection = () => {
+const WeeklyGoalsSection = () => {
   const { user } = useAuth();
   const { goals, loading, fetchGoals } = useWeeklyGoals();
   const [modalOpen, setModalOpen] = useState(false);
 
   // Escolha feita em outra aba/dispositivo (ou o reset automático das
-  // segundas): recarrega os hábitos desta semana.
+  // segundas): recarrega as metas desta semana.
   useEffect(() => {
     if (!user?.id) return;
     const channel = supabase
@@ -52,9 +52,9 @@ const WeeklyHabitsSection = () => {
               <ListChecks className="text-primary" size={18} />
             </div>
             <div>
-              <h3 className="text-base font-semibold text-foreground">Hábitos da semana</h3>
+              <h3 className="text-base font-semibold text-foreground">Metas da semana</h3>
               <p className="text-sm text-muted-foreground font-normal">
-                {total > 0 ? `${completed} de ${total} concluídos` : 'Escolha seus hábitos de autocuidado'}
+                {total > 0 ? `${completed} de ${total} concluídos` : 'Escolha suas metas de autocuidado'}
               </p>
             </div>
           </CardTitle>
@@ -66,14 +66,14 @@ const WeeklyHabitsSection = () => {
                 <ListChecks className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <h4 className="text-base font-semibold text-foreground">Nenhum hábito escolhido para a semana</h4>
+                <h4 className="text-base font-semibold text-foreground">Nenhuma meta escolhida para a semana</h4>
                 <p className="text-sm text-muted-foreground mt-1">
                   Respiração, sons, diário, humor: escolha o que quer praticar nesta semana.
                 </p>
               </div>
               <Button onClick={() => setModalOpen(true)} className="gap-2">
                 <ListChecks size={16} />
-                Escolher hábitos da semana
+                Escolher metas da semana
               </Button>
             </div>
           ) : (
@@ -94,7 +94,7 @@ const WeeklyHabitsSection = () => {
 
               <Button onClick={() => setModalOpen(true)} variant="outline" size="sm" className="w-full gap-2">
                 <ListChecks size={14} />
-                Editar hábitos da semana
+                Editar metas da semana
               </Button>
             </div>
           )}
@@ -113,4 +113,4 @@ const WeeklyHabitsSection = () => {
   );
 };
 
-export default WeeklyHabitsSection;
+export default WeeklyGoalsSection;

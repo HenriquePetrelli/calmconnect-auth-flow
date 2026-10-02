@@ -53,7 +53,7 @@ export const GoalSelectionModal = ({
 
       // `updateSelectedGoals` só grava a lista de IDs escolhidos — sem isto,
       // nenhuma linha de progresso (patient_weekly_goals) chega a existir e
-      // o hábito nunca sai de 0%. Cria as que faltam pra semana atual e para
+      // a meta nunca sai de 0%. Cria as que faltam pra semana atual e para
       // de rastrear as que foram desmarcadas.
       const { weekStart, weekEnd } = getCurrentWeekRange();
       const trackedGoalIds = new Set(goals.map((g) => g.goal_id));
@@ -84,7 +84,7 @@ export const GoalSelectionModal = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl">Escolha seus hábitos da semana</DialogTitle>
+          <DialogTitle className="text-2xl">Escolha suas metas da semana</DialogTitle>
         </DialogHeader>
 
         <div className="grid gap-4 py-4">

@@ -79,10 +79,10 @@ export const useWeeklyGoals = () => {
 
       setSelectedGoals(goalIds);
       await setShowWeeklyGoalModal(false);
-      toast.success('Hábitos da semana atualizados');
+      toast.success('Metas da semana atualizadas');
     } catch (error) {
       console.error('Error updating selected goals:', error);
-      toast.error('Erro ao atualizar os hábitos da semana');
+      toast.error('Erro ao atualizar as metas da semana');
       throw error;
     }
   }, [user]);
@@ -135,7 +135,7 @@ export const useWeeklyGoals = () => {
 
       if (isCompleted && !goal.completed) {
         setNewlyCompleted({ ...goal, progress: newProgress, completed: true });
-        toast.success(`Hábito da semana concluído: ${goal.weekly_goals.title} 🎉`);
+        toast.success(`Meta da semana concluída: ${goal.weekly_goals.title} 🎉`);
       }
 
       await fetchGoals();
@@ -150,7 +150,7 @@ export const useWeeklyGoals = () => {
       (g) =>
         g.weekly_goals.category === category &&
         !g.completed &&
-        // Hábitos "todos os dias" (humor, sons) contam uma vez por dia, mesmo
+        // Metas "todos os dias" (humor, sons) contam uma vez por dia, mesmo
         // que a atividade se repita no mesmo dia.
         !(g.weekly_goals.type === 'daily' && g.progress > 0 && new Date(g.updated_at).toDateString() === today),
     );
@@ -181,11 +181,11 @@ export const useWeeklyGoals = () => {
       await fetchGoals();
     } catch (error) {
       console.error('Error creating goal:', error);
-      toast.error('Erro ao adicionar o hábito');
+      toast.error('Erro ao adicionar a meta');
     }
   }, [user, fetchGoals]);
 
-  /** Remove um hábito da semana que o paciente deixou de selecionar, parando de rastreá-la nesta semana. */
+  /** Remove uma meta da semana que o paciente deixou de selecionar, parando de rastreá-la nesta semana. */
   const deleteGoal = useCallback(async (patientWeeklyGoalId: string) => {
     try {
       const { error } = await supabase
@@ -198,7 +198,7 @@ export const useWeeklyGoals = () => {
       await fetchGoals();
     } catch (error) {
       console.error('Error deleting goal:', error);
-      toast.error('Erro ao remover o hábito');
+      toast.error('Erro ao remover a meta');
     }
   }, [fetchGoals]);
 
@@ -245,7 +245,7 @@ export const useWeeklyGoals = () => {
 
       if (error) throw error;
       
-      toast.success(value ? 'Lembrete dos hábitos da semana ativado' : 'Lembrete dos hábitos da semana desativado');
+      toast.success(value ? 'Lembrete das metas da semana ativado' : 'Lembrete das metas da semana desativado');
     } catch (error) {
       console.error('Error updating goal modal preference:', error);
       toast.error('Erro ao atualizar preferência');
