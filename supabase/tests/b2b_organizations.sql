@@ -1,4 +1,4 @@
--- Teste do B2B (migrations 20261001120000_b2b_organizations e 20261002120000_b2b_offboarding_and_billing).
+-- Teste do B2B (migrations 20261001120000_b2b_organizations e 20261002041100_666bab46… (offboarding e cobrança)).
 --
 --   psql "$(supabase status -o env | grep DB_URL | cut -d= -f2- | tr -d '"')" -f supabase/tests/b2b_organizations.sql
 -- Tudo roda numa transação desfeita no final; qualquer falha interrompe com "FALHOU: ...".
