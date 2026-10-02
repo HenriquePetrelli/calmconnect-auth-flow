@@ -61,16 +61,29 @@ const LoginForm = ({ onForgotPassword, onSignUp }: LoginFormProps) => {
         return;
       }
 
+      // Admin não tem linha em `profiles` (fica em admin_users): resolve antes,
+      // senão o login mostrava "Erro ao carregar perfil" e só depois entrava.
+      const { data: isAdmin } = await supabase.rpc('is_super_admin', { user_id_param: data.user.id });
+      if (isAdmin === true || data.user.user_metadata?.is_super_admin === true) {
+        toast.success('Bem-vindo ao painel administrativo!');
+        navigate('/admin-dashboard');
+        setEmail("");
+        setPassword("");
+        return;
+      }
+
       // Verificar o perfil do usuário
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('user_type, full_name')
         .eq('user_id', data.user.id)
-        .single();
+        .maybeSingle();
 
       if (profileError || !profile) {
-        toast.error("Erro ao carregar perfil do usuário");
+        toast.error("Erro ao carregar perfil do usuário. Fale com o suporte.");
         console.error("Profile error:", profileError);
+        // Sem perfil não há para onde ir: não deixa a sessão aberta pela metade.
+        await supabase.auth.signOut();
         return;
       }
 

@@ -254,6 +254,8 @@ export class FakeDB {
   failNextWith: any = null;
   failSelectWith: any = null;
   authListeners: ((event: string, session: unknown) => void)[] = [];
+  /** Contas para signInWithPassword, por e-mail. */
+  loginUsers: Record<string, { id: string; user_metadata?: Row }> = {};
   authUpdates: Row[] = [];
   authUpdateError: any = null;
   /** Handlers extras/sobrepostos por teste, além dos padrões em DEFAULT_RPC_HANDLERS. */
@@ -310,6 +312,12 @@ export class FakeDB {
         updateUser: async (attrs: Row) => {
           db.authUpdates.push(attrs);
           return { data: { user: db.currentUserId ? { id: db.currentUserId } : null }, error: db.authUpdateError };
+        },
+        signInWithPassword: async ({ email }: { email: string; password: string }) => {
+          const user = db.loginUsers[email];
+          if (!user) return { data: { user: null, session: null }, error: { message: 'Invalid login credentials' } };
+          db.currentUserId = user.id;
+          return { data: { user, session: { user } }, error: null };
         },
         signOut: async () => {
           db.currentUserId = null;
