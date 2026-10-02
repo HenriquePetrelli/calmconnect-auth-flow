@@ -98,7 +98,7 @@ const CompanyPortal = () => {
   }, [load, membershipLoading, orgId]);
 
   const inviteMessage = data
-    ? `A ${data.name} oferece o Soliv, app de apoio emocional, para você. Baixe o app, crie sua conta e use o código ${data.invite_code} em Perfil → Benefício da empresa (ou já no cadastro).`
+    ? `A ${data.name} oferece o Soliv, app de apoio emocional, para você. Baixe o app, crie sua conta e use o código ${data.invite_code} no cadastro (opção "Tenho um código da empresa"). Se já tiver conta, use em Planos → Usar o código da empresa.`
     : '';
 
   const copy = async (text: string, what: string) => {

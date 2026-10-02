@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useToast } from "@/hooks/use-toast";
 import { useWeeklyGoals } from "@/hooks/useWeeklyGoals";
+import { useCompanyBenefit } from "@/hooks/useCompanyBenefit";
 
 import ProfileSkeleton from "@/components/ProfileSkeleton";
 import EditSymptomsModal from "@/components/EditSymptomsModal";
@@ -21,6 +22,10 @@ const Profile = () => {
   const navigate = useNavigate();
   const { subscribed, subscriptionTier, entitlementSource, organizationName, paymentIssue, cancelAtPeriodEnd, subscriptionEnd } = useSubscription();
   const fromCompany = entitlementSource === 'organization';
+  // "Benefício da empresa" só aparece para quem tem vínculo (colaborador ou RH).
+  // Quem ainda não tem usa o código no cadastro ou em Planos.
+  const { benefit: companyBenefit, managedOrganizationIds } = useCompanyBenefit();
+  const linkedToCompany = Boolean(companyBenefit) || managedOrganizationIds.length > 0;
   const { toast } = useToast();
   const { getShowGoalModalPreference, setShowGoalModal } = useWeeklyGoals();
   const [user, setUser] = useState<any>(null);
@@ -323,21 +328,25 @@ const Profile = () => {
                 <ChevronDown size={16} className="-rotate-90 text-muted-foreground" />
               </button>
 
-              <button
-                onClick={() => navigate('/beneficio-empresa')}
-                className="w-full flex items-center gap-4 p-4 text-left hover:bg-muted/50 transition-colors"
-              >
-                <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-                  <Building2 size={18} className="text-foreground" />
-                </div>
-                <div className="flex-1">
-                  <div className="text-sm font-medium">Benefício da empresa</div>
-                  <div className="text-xs text-muted-foreground">
-                    {fromCompany ? `Plano ${subscriptionTier} pela ${organizationName}` : 'Tem um código da sua empresa?'}
+              {linkedToCompany && (
+                <button
+                  onClick={() => navigate('/beneficio-empresa')}
+                  className="w-full flex items-center gap-4 p-4 text-left hover:bg-muted/50 transition-colors"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                    <Building2 size={18} className="text-foreground" />
                   </div>
-                </div>
-                <ChevronDown size={16} className="-rotate-90 text-muted-foreground" />
-              </button>
+                  <div className="flex-1">
+                    <div className="text-sm font-medium">Benefício da empresa</div>
+                    <div className="text-xs text-muted-foreground">
+                      {companyBenefit
+                        ? `Plano ${companyBenefit.tier} pela ${companyBenefit.organizationName}`
+                        : 'Portal da empresa'}
+                    </div>
+                  </div>
+                  <ChevronDown size={16} className="-rotate-90 text-muted-foreground" />
+                </button>
+              )}
 
               <button
                 onClick={() => navigate('/termos')}

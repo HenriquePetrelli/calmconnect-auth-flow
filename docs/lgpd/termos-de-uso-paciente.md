@@ -49,7 +49,7 @@ Os recursos de autocuidado e os grupos de apoio **não são atendimento psicoló
 
 ### 4.1 Plano oferecido pela empresa
 
-Se a sua empresa oferece o Soliv, você pode usar o código de convite do RH (no cadastro ou em **Perfil → Benefício da empresa**) e ter o plano contratado por ela, sem cobrança para você. O benefício vale enquanto você estiver vinculado à empresa e enquanto o contrato dela com o Soliv estiver ativo. Se acabar, o acesso ao plano termina, mas a sua conta e os seus dados continuam com você. A empresa não tem acesso aos seus dados de uso (veja a Política de Privacidade). ⚖️
+Se a sua empresa oferece o Soliv, você pode usar o código de convite do RH (no cadastro ou em **Planos → Usar o código da empresa**) e ter o plano contratado por ela, sem cobrança para você. O benefício vale enquanto você estiver vinculado à empresa e enquanto o contrato dela com o Soliv estiver ativo. Se acabar, o acesso ao plano termina, mas a sua conta e os seus dados continuam com você. A empresa não tem acesso aos seus dados de uso (veja a Política de Privacidade). ⚖️
 
 ## 5. Cancelamento e reembolso
 
