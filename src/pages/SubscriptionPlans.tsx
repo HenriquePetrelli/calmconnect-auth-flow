@@ -16,7 +16,7 @@ const formatBRL = (cents: number) =>
 const SubscriptionPlans = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { subscribed, subscriptionTier, checkSubscription, entitlementSource, organizationName } = useSubscription();
+  const { subscribed, subscriptionTier, checkSubscription, entitlementSource, organizationName, personalSubscriptionTier } = useSubscription();
   // B2B: o plano vem da empresa; não há o que pagar, cancelar ou trocar para baixo.
   const fromCompany = entitlementSource === 'organization';
   const tierRank = (tier: string | null) => (tier === 'Premium' ? 2 : tier === 'Plus' ? 1 : 0);
@@ -238,7 +238,17 @@ const SubscriptionPlans = () => {
                   <Crown className="w-5 h-5 mr-2" />
                   Plano {subscriptionTier} pela {organizationName}
                 </Badge>
-                <p className="text-sm text-muted-foreground">Sua empresa paga o plano. Não há cobrança para você.</p>
+                {personalSubscriptionTier ? (
+                  <div role="note" className="max-w-md rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm text-foreground">
+                    Você ainda paga uma assinatura própria ({personalSubscriptionTier}). Como a empresa já cobre o seu plano,
+                    você pode cancelá-la e parar de ser cobrado.
+                    <Button variant="outline" size="sm" className="mt-2 w-full bg-background" onClick={() => setShowCancelModal(true)}>
+                      Cancelar minha assinatura própria
+                    </Button>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Sua empresa paga o plano. Não há cobrança para você.</p>
+                )}
                 <Button variant="outline" className="bg-background" onClick={() => navigate('/beneficio-empresa')}>
                   Ver benefício da empresa
                 </Button>

@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Copy, RefreshCw, ShieldCheck, Users } from 'lucide-react';
+import { Copy, RefreshCw, ShieldCheck, UserMinus, Users } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -49,6 +51,35 @@ const CompanyPortal = () => {
   const [data, setData] = useState<Dashboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [rotateOpen, setRotateOpen] = useState(false);
+  const [offboardEmail, setOffboardEmail] = useState('');
+  const [offboardResult, setOffboardResult] = useState<string | null>(null);
+  const [offboarding, setOffboarding] = useState(false);
+
+  // Desligamento: o acesso vai até o fim do mês e a vaga fica livre na hora.
+  // A resposta é a mesma exista ou não alguém com o e-mail (sigilo).
+  const offboard = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!orgId || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(offboardEmail.trim())) {
+      setOffboardResult('Digite um e-mail válido.');
+      return;
+    }
+    setOffboarding(true);
+    const { data: result, error } = await supabase.rpc('remove_organization_member_by_email', {
+      p_org: orgId,
+      p_email: offboardEmail.trim(),
+    });
+    setOffboarding(false);
+    if (error) {
+      setOffboardResult('Não foi possível concluir agora. Tente de novo.');
+      return;
+    }
+    const until = (result as unknown as { access_until?: string })?.access_until;
+    setOffboardResult(
+      `Pronto. Se ${offboardEmail.trim()} estiver usando o benefício, o acesso vai até ${until ? formatDate(until) : 'o fim do mês'}.`,
+    );
+    setOffboardEmail('');
+    load();
+  };
 
   const load = useCallback(async () => {
     if (!orgId) return;
@@ -171,10 +202,41 @@ const CompanyPortal = () => {
                 )}
                 <p className="flex items-start gap-2 rounded-lg bg-primary/5 p-3 text-xs text-muted-foreground">
                   <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-                  Por sigilo e pela LGPD, a empresa não vê quem usa o Soliv nem o que cada pessoa faz. Para incluir ou tirar
-                  alguém, como em desligamentos, fale com o Soliv.
+                  Por sigilo e pela LGPD, a empresa não vê quem usa o Soliv nem o que cada pessoa faz.
                 </p>
               </section>
+
+              <form onSubmit={offboard} className="rounded-2xl border border-border bg-card p-5 space-y-3">
+                <h2 className="flex items-center gap-2 text-base font-semibold text-foreground">
+                  <UserMinus className="h-5 w-5 text-primary" aria-hidden="true" />
+                  Desligamento
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Quando alguém sair da empresa, informe o e-mail. A pessoa mantém o acesso até o fim do mês e a vaga fica
+                  livre na hora.
+                </p>
+                <div className="space-y-1.5">
+                  <Label htmlFor="offboard-email">E-mail do colaborador</Label>
+                  <Input
+                    id="offboard-email"
+                    type="email"
+                    value={offboardEmail}
+                    onChange={(e) => {
+                      setOffboardEmail(e.target.value);
+                      setOffboardResult(null);
+                    }}
+                    className="h-11"
+                  />
+                </div>
+                {offboardResult && (
+                  <p role="status" className="text-sm text-foreground">
+                    {offboardResult}
+                  </p>
+                )}
+                <Button type="submit" variant="outline" className="w-full min-h-11" disabled={offboarding}>
+                  {offboarding ? 'Enviando...' : 'Encerrar acesso'}
+                </Button>
+              </form>
             </>
           )}
         </main>

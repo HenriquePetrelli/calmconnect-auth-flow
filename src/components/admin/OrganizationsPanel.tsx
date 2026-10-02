@@ -23,6 +23,7 @@ interface Member {
   role: string;
   status: string;
   joined_at: string;
+  access_until: string | null;
 }
 
 const STATUS: Record<string, { label: string; className: string }> = {
@@ -45,7 +46,12 @@ const emptyForm = {
   ends_on: '',
   allowed_email_domain: '',
   notes: '',
+  price_per_seat: '',
+  billing_day: '',
 };
+
+const brl = (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const formatDate = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString('pt-BR');
 
 /**
  * Empresas (B2B) no painel do admin: contrato, vagas, código de convite, RH
@@ -96,6 +102,8 @@ export const OrganizationsPanel = () => {
             ends_on: org.ends_on ?? '',
             allowed_email_domain: org.allowed_email_domain ?? '',
             notes: org.notes ?? '',
+            price_per_seat: org.price_per_seat != null ? String(org.price_per_seat) : '',
+            billing_day: org.billing_day != null ? String(org.billing_day) : '',
           },
     );
   };
@@ -105,6 +113,16 @@ export const OrganizationsPanel = () => {
     const seats = Number(form.seats);
     if (!form.name.trim() || !(seats >= 1)) {
       toast.error('Informe o nome e o número de vagas.');
+      return;
+    }
+    const price = form.price_per_seat.trim() ? Number(form.price_per_seat.replace(',', '.')) : null;
+    if (price !== null && !(price >= 0)) {
+      toast.error('Valor por vaga inválido.');
+      return;
+    }
+    const billingDay = form.billing_day.trim() ? Number(form.billing_day) : null;
+    if (billingDay !== null && !(Number.isInteger(billingDay) && billingDay >= 1 && billingDay <= 28)) {
+      toast.error('O dia de cobrança vai de 1 a 28.');
       return;
     }
     const cnpj = form.cnpj.replace(/\D/g, '');
@@ -124,6 +142,8 @@ export const OrganizationsPanel = () => {
       ends_on: form.ends_on || null,
       allowed_email_domain: form.allowed_email_domain.trim().toLowerCase().replace(/^@/, '') || null,
       notes: form.notes.trim() || null,
+      price_per_seat: price,
+      billing_day: billingDay,
     };
     setSaving(true);
     const { error } =
@@ -223,8 +243,14 @@ export const OrganizationsPanel = () => {
                       </p>
                       <p className="text-xs text-muted-foreground">
                         Plano {org.plan_tier} · {used} de {org.seats} vagas
-                        {org.ends_on ? ` · até ${new Date(`${org.ends_on}T12:00:00`).toLocaleDateString('pt-BR')}` : ''}
+                        {org.ends_on ? ` · até ${formatDate(org.ends_on)}` : ''}
                       </p>
+                      {org.price_per_seat != null && (
+                        <p className="text-xs text-muted-foreground">
+                          Fatura: {brl(org.seats * Number(org.price_per_seat))}/mês ({brl(Number(org.price_per_seat))} por vaga)
+                          {org.billing_day ? ` · dia ${org.billing_day}` : ''}
+                        </p>
+                      )}
                     </div>
                     <Badge className={status.className}>{status.label}</Badge>
                   </div>
@@ -320,6 +346,17 @@ export const OrganizationsPanel = () => {
                 <Input id="org-contact-email" type="email" {...field('contact_email')} />
               </div>
             </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="org-price">Valor por vaga (R$/mês)</Label>
+                <Input id="org-price" inputMode="decimal" placeholder="Ex.: 19,90" {...field('price_per_seat')} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="org-billing-day">Dia da cobrança</Label>
+                <Input id="org-billing-day" type="number" min="1" max="28" {...field('billing_day')} />
+              </div>
+            </div>
+            <p className="-mt-2 text-xs text-muted-foreground">A cobrança é feita fora do app (nota fiscal/boleto), sobre as vagas contratadas.</p>
             <div className="space-y-1.5">
               <Label htmlFor="org-domain">Domínio de e-mail permitido (opcional)</Label>
               <Input id="org-domain" placeholder="empresa.com.br" {...field('allowed_email_domain')} />
@@ -360,7 +397,11 @@ export const OrganizationsPanel = () => {
                   <p className="truncate font-medium text-foreground">{member.full_name || member.email}</p>
                   <p className="truncate text-xs text-muted-foreground">
                     {member.email} · {member.role === 'manager' ? 'Gestor (RH)' : 'Colaborador'}
-                    {member.status === 'removed' ? ' · removido' : ''}
+                    {member.status === 'removed'
+                      ? member.access_until
+                        ? ` · desligado, acesso até ${formatDate(member.access_until)}`
+                        : ' · removido'
+                      : ''}
                   </p>
                 </div>
                 {member.status === 'active' && (

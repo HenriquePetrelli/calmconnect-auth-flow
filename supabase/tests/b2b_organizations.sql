@@ -1,4 +1,4 @@
--- Teste do B2B (migration 20261001120000_b2b_organizations).
+-- Teste do B2B (migrations 20261001120000_b2b_organizations e 20261002120000_b2b_offboarding_and_billing).
 --
 --   psql "$(supabase status -o env | grep DB_URL | cut -d= -f2- | tr -d '"')" -f supabase/tests/b2b_organizations.sql
 -- Tudo roda numa transação desfeita no final; qualquer falha interrompe com "FALHOU: ...".
@@ -104,7 +104,7 @@ SELECT pg_temp.check(
 );
 
 -- 6. Vencimento pela rotina diária
-UPDATE public.organizations SET starts_on = current_date - 30, ends_on = current_date - 1 WHERE id = 'e0000000-0000-0000-0000-00000000000e';
+UPDATE public.organizations SET starts_on = (now() AT TIME ZONE 'America/Sao_Paulo')::date - 30, ends_on = (now() AT TIME ZONE 'America/Sao_Paulo')::date - 1 WHERE id = 'e0000000-0000-0000-0000-00000000000e';
 SELECT pg_temp.check(
   (SELECT NOT subscribed FROM public.subscribers WHERE user_id = 'a0000000-0000-0000-0000-00000000000a'),
   'contrato vencido tira o acesso'
@@ -174,6 +174,54 @@ SELECT pg_temp.check(
   (public.get_organization_dashboard('e0000000-0000-0000-0000-00000000000e') -> 'usage' ->> 'sos_this_month')::int = 1,
   'com 5+ colaboradores, o RH vê só o total de SOS do mês'
 );
+
+-- 11. Desligamento pelo RH: acesso até o fim do mês, vaga livre na hora, sem revelar quem usa
+SELECT pg_temp.act_as('c0000000-0000-0000-0000-00000000000c');
+SELECT pg_temp.check(
+  (public.remove_organization_member_by_email('e0000000-0000-0000-0000-00000000000e', 'C1@EMPRESA.COM.BR') ->> 'ok')::boolean,
+  'RH desliga pelo e-mail (sem diferenciar maiúsculas)'
+);
+SELECT pg_temp.check(
+  (public.remove_organization_member_by_email('e0000000-0000-0000-0000-00000000000e', 'ninguem@empresa.com.br') ->> 'ok')::boolean,
+  'e-mail que não está no benefício recebe a mesma resposta'
+);
+SELECT pg_temp.as_service();
+SELECT pg_temp.check(
+  (SELECT subscribed FROM public.subscribers WHERE user_id = '90000000-0000-0000-0000-000000000001'),
+  'desligado mantém o acesso até o fim do mês'
+);
+SELECT pg_temp.check(
+  (SELECT subscription_end::date = (date_trunc('month', now() AT TIME ZONE 'America/Sao_Paulo') + interval '1 month - 1 day')::date + 1
+   FROM public.subscribers WHERE user_id = '90000000-0000-0000-0000-000000000001'),
+  'fim do acesso fica registrado (último dia do mês)'
+);
+SELECT pg_temp.check(
+  (SELECT count(*) FROM public.organization_members WHERE organization_id = 'e0000000-0000-0000-0000-00000000000e' AND role = 'member' AND status = 'active') = 5,
+  'vaga do desligado fica livre na hora'
+);
+UPDATE public.organization_members SET access_until = (now() AT TIME ZONE 'America/Sao_Paulo')::date - 1 WHERE user_id = '90000000-0000-0000-0000-000000000001';
+SELECT public.expire_organization_entitlements();
+SELECT pg_temp.check(
+  (SELECT NOT subscribed FROM public.subscribers WHERE user_id = '90000000-0000-0000-0000-000000000001'),
+  'passado o prazo, a rotina diária tira o acesso'
+);
+
+-- 12. O RH também pode usar o benefício (o código é lido antes, sem RLS)
+SELECT pg_temp.as_service();
+SELECT invite_code AS codigo FROM public.organizations WHERE id = 'e0000000-0000-0000-0000-00000000000e' \gset
+SELECT pg_temp.act_as('c0000000-0000-0000-0000-00000000000c');
+SELECT pg_temp.check((public.join_organization(:'codigo') ->> 'ok')::boolean, 'gestor também entra como colaborador');
+SELECT pg_temp.check(public.is_organization_manager('e0000000-0000-0000-0000-00000000000e'), 'e continua gestor');
+SELECT pg_temp.as_service();
+SELECT pg_temp.check((SELECT subscribed FROM public.subscribers WHERE user_id = 'c0000000-0000-0000-0000-00000000000c'), 'gestor-colaborador tem o plano');
+
+-- 13. Colaborador comum não desliga ninguém
+SELECT pg_temp.act_as('b0000000-0000-0000-0000-00000000000b');
+DO $$ BEGIN
+  PERFORM public.remove_organization_member_by_email('e0000000-0000-0000-0000-00000000000e', 'c2@empresa.com.br');
+  RAISE EXCEPTION 'FALHOU: colaborador comum desligou alguém';
+EXCEPTION WHEN insufficient_privilege THEN RAISE NOTICE 'ok: só RH ou admin desligam';
+END $$;
 
 RESET role;
 ROLLBACK;

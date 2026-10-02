@@ -245,6 +245,9 @@ serve(async (req) => {
       plan_type: subscriptionTier,
       entitlement_source: hasActiveSub ? (fromOrganization ? "organization" : "stripe") : null,
       organization_name: fromOrganization ? org!.organization_name : null,
+      // Paga uma assinatura própria além do benefício da empresa: o app avisa
+      // que pode cancelar (é o que Headspace e Calm fazem com quem já pagava).
+      personal_subscription_tier: fromOrganization ? stripeTier : null,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

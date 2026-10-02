@@ -15,6 +15,8 @@ interface SubscriptionContextType {
   entitlementSource: 'stripe' | 'organization' | null;
   /** Nome da empresa, quando o plano vem dela. */
   organizationName: string | null;
+  /** Assinatura própria (Stripe) que a pessoa ainda paga, mesmo com o plano da empresa. */
+  personalSubscriptionTier: string | null;
   loading: boolean;
   checkSubscription: () => Promise<void>;
 }
@@ -39,6 +41,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [appointmentReason, setAppointmentReason] = useState<string | null>(null);
   const [entitlementSource, setEntitlementSource] = useState<'stripe' | 'organization' | null>(null);
   const [organizationName, setOrganizationName] = useState<string | null>(null);
+  const [personalSubscriptionTier, setPersonalSubscriptionTier] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -71,6 +74,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       setAppointmentReason(data.appointment_reason ?? null);
       setEntitlementSource(data.entitlement_source ?? null);
       setOrganizationName(data.organization_name ?? null);
+      setPersonalSubscriptionTier(data.personal_subscription_tier ?? null);
     } catch (error) {
       console.error('Error checking subscription:', error);
     } finally {
@@ -89,6 +93,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       setAppointmentReason(null);
       setEntitlementSource(null);
       setOrganizationName(null);
+      setPersonalSubscriptionTier(null);
       setLoading(false);
       return;
     }
@@ -119,6 +124,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         appointmentReason,
         entitlementSource,
         organizationName,
+        personalSubscriptionTier,
         loading,
         checkSubscription,
       }}

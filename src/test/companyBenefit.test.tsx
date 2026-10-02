@@ -7,7 +7,7 @@ vi.mock('@/integrations/supabase/client', () => ({ supabase: fakeSupabase }));
 const user = { id: 'patient-1' };
 vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => ({ user }) }));
 const checkSubscription = vi.fn();
-vi.mock('@/contexts/SubscriptionContext', () => ({ useSubscription: () => ({ checkSubscription }) }));
+vi.mock('@/contexts/SubscriptionContext', () => ({ useSubscription: () => ({ checkSubscription, personalSubscriptionTier: personalTier }) }));
 const toastMock = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
 vi.mock('sonner', () => ({ toast: toastMock }));
 vi.mock('@/components/PageHeader', () => ({ default: ({ title }: { title: string }) => <h1>{title}</h1> }));
@@ -27,6 +27,7 @@ const renderAt = (path: string) =>
     </MemoryRouter>,
   );
 
+let personalTier: string | null = null;
 let entitled: { tier: string; organization_name: string; ends_on: string | null } | null;
 
 beforeEach(() => {
@@ -34,6 +35,7 @@ beforeEach(() => {
   fakeDb.rpcHandlers = {};
   fakeDb.currentUserId = 'patient-1';
   entitled = null;
+  personalTier = null;
   checkSubscription.mockClear();
   toastMock.success.mockClear();
   fakeDb.rpcHandlers.organization_entitlement = () => ({ data: entitled ? [entitled] : [], error: null });
@@ -81,6 +83,13 @@ describe('benefício da empresa (colaborador)', () => {
     expect(await screen.findByLabelText('Código da empresa')).toBeInTheDocument();
   });
 
+  it('avisa quem ainda paga assinatura própria com o plano da empresa ativo', async () => {
+    entitled = { tier: 'Premium', organization_name: 'Empresa X', ends_on: null };
+    personalTier = 'Plus';
+    renderAt('/beneficio-empresa');
+    expect(await screen.findByRole('note')).toHaveTextContent('Você ainda paga uma assinatura própria (Plus)');
+  });
+
   it('mensagem do domínio cita o domínio da empresa', () => {
     expect(joinErrorMessage({ error: 'domain_mismatch', domain: 'empresa.com.br' })).toContain('@empresa.com.br');
   });
@@ -121,6 +130,20 @@ describe('portal do RH', () => {
     renderAt('/empresa');
     expect(await screen.findByText('Atendimentos SOS')).toBeInTheDocument();
     expect(screen.getByText('4')).toBeInTheDocument();
+  });
+
+  it('desliga um colaborador pelo e-mail com acesso até o fim do mês', async () => {
+    fakeDb.seed('organization_members', [{ user_id: 'patient-1', organization_id: 'org-1', role: 'manager', status: 'active' }]);
+    fakeDb.rpcHandlers.get_organization_dashboard = () => ({ data: dashboard, error: null });
+    const remove = vi.fn(() => ({ data: { ok: true, access_until: '2026-10-31' }, error: null }));
+    fakeDb.rpcHandlers.remove_organization_member_by_email = remove;
+    renderAt('/empresa');
+
+    fireEvent.change(await screen.findByLabelText('E-mail do colaborador'), { target: { value: 'ana@empresa.com.br ' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Encerrar acesso' }));
+
+    expect(await screen.findByRole('status')).toHaveTextContent('o acesso vai até 31/10/2026');
+    expect(remove.mock.calls[0][1]).toEqual({ p_org: 'org-1', p_email: 'ana@empresa.com.br' });
   });
 
   it('quem não é gestor não vê o portal', async () => {

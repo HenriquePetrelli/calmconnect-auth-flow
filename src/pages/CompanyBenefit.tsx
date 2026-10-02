@@ -19,6 +19,7 @@ import {
 import PageHeader from '@/components/PageHeader';
 import PatientBottomNav from '@/components/PatientBottomNav';
 import { useCompanyBenefit } from '@/hooks/useCompanyBenefit';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import { PLAN_INCLUDES, joinErrorMessage, normalizeInviteCode } from '@/lib/organizations';
 
 const formatDate = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString('pt-BR');
@@ -27,6 +28,7 @@ const formatDate = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateStri
 const CompanyBenefit = () => {
   const navigate = useNavigate();
   const { benefit, managedOrganizationIds, loading, join, leave } = useCompanyBenefit();
+  const { personalSubscriptionTier } = useSubscription();
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [joining, setJoining] = useState(false);
@@ -84,6 +86,15 @@ const CompanyBenefit = () => {
                   </li>
                 ))}
               </ul>
+              {personalSubscriptionTier && (
+                <div role="note" className="rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm text-foreground">
+                  Você ainda paga uma assinatura própria ({personalSubscriptionTier}). Como a empresa já cobre o seu plano,
+                  você pode cancelá-la.{' '}
+                  <button type="button" className="font-medium text-primary underline underline-offset-2" onClick={() => navigate('/subscription-plans')}>
+                    Ver minha assinatura
+                  </button>
+                </div>
+              )}
               <p className="rounded-lg bg-card p-3 text-xs text-muted-foreground">
                 A sua empresa paga o plano, mas não vê o que você faz no app: nem atendimentos, nem humor, diário ou
                 hábitos. O RH recebe só números gerais de uso da empresa toda.
