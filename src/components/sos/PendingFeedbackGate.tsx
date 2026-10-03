@@ -13,8 +13,9 @@ const PendingFeedbackGate = () => {
   const location = useLocation();
   const { pending, recheck, clear } = usePendingCallFeedback();
 
-  // Never interfere with an ongoing call screen.
-  const insideCall = location.pathname.startsWith('/emergency-call') ||
+  // Never interfere with an ongoing call screen (nor with the SOS queue).
+  const insideCall = location.pathname === '/sos' ||
+    location.pathname.startsWith('/emergency-call') ||
     location.pathname.startsWith('/emergency/call') ||
     location.pathname.startsWith('/consultation-call');
 

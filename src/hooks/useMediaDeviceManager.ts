@@ -51,6 +51,27 @@ export const useMediaDeviceManager = () => {
   ): Promise<{ stream: MediaStream; error?: MediaError }> => {
     console.log('🎥 Attempting to get media stream...', { audioDeviceId, videoDeviceId });
 
+    // Sem câmera (negada, ausente ou em uso por outro app), a pessoa entra só
+    // com o microfone em vez de ficar fora da consulta/SOS.
+    const audioOnlyFallback = async (): Promise<{ stream: MediaStream; error: MediaError } | null> => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+          video: false,
+        });
+        return {
+          stream,
+          error: {
+            type: 'device',
+            message: 'Câmera indisponível: você entrou só com áudio',
+            details: 'A conversa continua normalmente. Para ligar a câmera, permita o acesso nas configurações do navegador.',
+          },
+        };
+      } catch {
+        return null;
+      }
+    };
+
     // First, try to get basic permissions.
     // IMPORTANT: the probe stream must be released immediately, otherwise every
     // media init / settings save leaks a camera+microphone capture.
@@ -59,14 +80,19 @@ export const useMediaDeviceManager = () => {
       probe.getTracks().forEach((track) => track.stop());
     } catch (error: any) {
       console.error('❌ Permission check failed:', error);
-      
+
+      if (['NotAllowedError', 'NotFoundError', 'NotReadableError', 'OverconstrainedError'].includes(error.name)) {
+        const audioOnly = await audioOnlyFallback();
+        if (audioOnly) return audioOnly;
+      }
+
       if (error.name === 'NotAllowedError') {
         return {
           stream: new MediaStream(),
           error: {
             type: 'permission',
-            message: 'Permissão negada para câmera e/ou microfone',
-            details: 'Clique no ícone de câmera na barra de endereços e permita o acesso'
+            message: 'Permissão negada para o microfone',
+            details: 'Sem o microfone não dá para conversar. Toque no cadeado ao lado do endereço do site (ou nas configurações do celular) e permita o microfone.'
           }
         };
       }
@@ -177,6 +203,8 @@ export const useMediaDeviceManager = () => {
       return { stream };
     } catch (error: any) {
       console.error('❌ All media constraints failed:', error);
+      const audioOnly = await audioOnlyFallback();
+      if (audioOnly) return audioOnly;
       
       let mediaError: MediaError = {
         type: 'unknown',

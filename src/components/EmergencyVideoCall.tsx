@@ -4,9 +4,13 @@ import { isRealTermination, getTerminationMessage } from '@/lib/callTermination'
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Mic, MicOff, Camera, CameraOff, PhoneOff, Loader2, AlertTriangle, Settings, Shield, Video, WifiOff, RefreshCw, Activity, UserRound } from 'lucide-react';
+import { Mic, MicOff, Camera, CameraOff, PhoneOff, Loader2, AlertTriangle, Settings, Shield, Video, WifiOff, RefreshCw, Activity, UserRound, Phone, Clock } from 'lucide-react';
 import { useWebRTC } from '@/hooks/useWebRTC';
 import { useCallPresence } from '@/hooks/useCallPresence';
+import { useRemoteAbsence } from '@/hooks/useRemoteAbsence';
+import { SOS_ABSENCE_THRESHOLD_SECONDS } from '@/lib/remoteAbsence';
+import RemoteAbsentPanel from '@/components/calls/RemoteAbsentPanel';
+import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 import { useParticipantHeartbeat } from '@/hooks/useParticipantHeartbeat';
 
 import { useSharedCallTimer } from '@/hooks/useSharedCallTimer';
@@ -128,6 +132,11 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   const isMutedRef = useRef(false);
   const isCameraOffRef = useRef(false);
   const [callTerminatedMessage, setCallTerminatedMessage] = useState<string | null>(null);
+  // O atendimento foi passado para outro psicólogo (o primeiro ficou sem
+  // conexão): não é um fim normal, então não pede avaliação.
+  const [redirected, setRedirected] = useState(false);
+  const [absenceSnoozedUntil, setAbsenceSnoozedUntil] = useState(0);
+  const [requestingOther, setRequestingOther] = useState(false);
   // Moment this client joined the call — used to ignore stale "call ended" events.
   const joinedAtRef = useRef<number>(Date.now());
   // Diagnostics overlay (incident triage). Opt-in via ?debug=1, stored flag or Ctrl+Shift+D.
@@ -204,6 +213,15 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     enabled: Boolean(sessionId) && !callTerminatedMessage,
   });
 
+
+  // O outro lado não entrou ou caiu e não voltou: depois de 90s oferece saídas.
+  const absenceSeconds = useRemoteAbsence({
+    remotePresent,
+    remoteLeftAt,
+    enabled: Boolean(sessionId) && sessionValid && !callTerminatedMessage && !callEndedBy && !redirected,
+  });
+  const showAbsencePanel =
+    absenceSeconds >= SOS_ABSENCE_THRESHOLD_SECONDS && Date.now() >= absenceSnoozedUntil && !isNetworkOffline;
 
   const remoteDroppedInvoluntarily = isRemoteDropInvoluntary(
     remotePresent,
@@ -626,6 +644,12 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
           
           // Check if call was terminated (ignore stale terminations from
           // previous sessions/reconnections)
+          if (newData.status === 'completed' && newData.end_reason === 'psychologist_unavailable') {
+            setRedirected(true);
+            enhancedCleanup();
+            return;
+          }
+
           if (isRealTermination(newData, joinedAtRef.current)) {
             const message = getTerminationMessage(newData.ended_by_type);
 
@@ -735,12 +759,17 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
       // Get emergency request with patient details
       const { data: emergencyRequest, error: emergencyError } = await supabase
         .from('emergency_requests')
-        .select('patient_details, accepted_by, patient_id')
+        .select('patient_details, accepted_by, patient_id, status, end_reason')
         .eq('id', webrtcSession.emergency_request_id)
         .single();
 
       if (emergencyError) {
         console.error('Error fetching emergency request:', emergencyError);
+        return;
+      }
+
+      if (emergencyRequest.end_reason === 'psychologist_unavailable') {
+        setRedirected(true);
         return;
       }
 
@@ -1049,11 +1078,66 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
 
   // Any termination (local or remote) opens the mandatory feedback modal.
   useEffect(() => {
-    if (callFinished) setShowFeedbackModal(true);
-  }, [callFinished]);
+    if (callFinished && !redirected) setShowFeedbackModal(true);
+  }, [callFinished, redirected]);
+
+  // Paciente: o psicólogo sumiu. Encerra este chamado (sem gastar o SOS) e
+  // volta para a fila na hora, para outro psicólogo atender.
+  const handleRequestOtherPsychologist = async () => {
+    const requestId = emergencyRequestIdRef.current;
+    if (!requestId) return;
+    setRequestingOther(true);
+    try {
+      const { error: rpcError } = await supabase.rpc('sos_request_other_psychologist', { p_request_id: requestId });
+      if (rpcError) throw rpcError;
+      setRedirected(true);
+      await enhancedCleanup();
+      cleanup();
+      navigate('/sos', { replace: true });
+    } catch (err) {
+      toast({
+        title: 'Não foi possível chamar outro psicólogo agora',
+        description: getFriendlyErrorMessage(err, 'Tente de novo em instantes.'),
+        variant: 'destructive',
+      });
+    } finally {
+      setRequestingOther(false);
+    }
+  };
 
   const status = getConnectionStatus();
   const displayError = getDisplayError();
+
+  if (redirected) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-6" data-testid="sos-redirected">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-6 text-center space-y-4">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+              {userType === 'patient' ? (
+                <Loader2 className="h-6 w-6 animate-spin text-primary motion-reduce:animate-none" aria-hidden="true" />
+              ) : (
+                <UserRound className="h-6 w-6 text-primary" aria-hidden="true" />
+              )}
+            </div>
+            <h2 className="text-lg font-semibold text-foreground">
+              {userType === 'patient' ? 'Chamando outro psicólogo...' : 'Atendimento encaminhado'}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {userType === 'patient'
+                ? 'Seu pedido voltou para a fila. Você não gasta outro SOS.'
+                : 'A conexão com você ficou fora por muito tempo e o paciente foi encaminhado para outro psicólogo. Este atendimento não conta no repasse.'}
+            </p>
+            {userType === 'psychologist' && (
+              <Button className="w-full" onClick={() => navigate('/psychologist-dashboard', { replace: true })}>
+                Voltar ao painel
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   // Call over: show only the feedback step. Saving it redirects home.
   if (callFinished && !showFeedbackModal) {
@@ -1360,6 +1444,32 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
           </div>
         )}
 
+
+        {/* O outro lado sumiu: saídas para ninguém ficar preso esperando */}
+        {showAbsencePanel && (
+          userType === 'patient' ? (
+            <RemoteAbsentPanel
+              icon={Clock}
+              title={remoteLeftAt ? 'O psicólogo perdeu a conexão' : 'O psicólogo ainda não entrou'}
+              description="Você pode esperar mais um pouco ou chamar outro psicólogo agora, sem gastar outro SOS. Se precisar de ajuda imediata, ligue para o CVV (188) ou o SAMU (192)."
+              actions={[
+                { label: 'Chamar outro psicólogo', icon: UserRound, variant: 'default', loading: requestingOther, onClick: handleRequestOtherPsychologist },
+                { label: 'Continuar esperando', onClick: () => setAbsenceSnoozedUntil(Date.now() + 2 * 60 * 1000) },
+                { label: 'Ligar para o CVV (188)', icon: Phone, variant: 'ghost', href: 'tel:188' },
+              ]}
+            />
+          ) : (
+            <RemoteAbsentPanel
+              icon={Clock}
+              title={remoteLeftAt ? 'O paciente perdeu a conexão' : 'O paciente ainda não entrou'}
+              description="A sala continua aberta e ele pode voltar a qualquer momento. Se ele não voltar, encerre o atendimento e registre o que aconteceu."
+              actions={[
+                { label: 'Continuar aguardando', variant: 'default', onClick: () => setAbsenceSnoozedUntil(Date.now() + 3 * 60 * 1000) },
+                { label: 'Encerrar atendimento', icon: PhoneOff, onClick: () => setShowEndConfirm(true) },
+              ]}
+            />
+          )
+        )}
 
         {/* Aviso: estado de câmera/microfone do outro participante pode estar desatualizado */}
         {isRemoteMediaStale && isConnected && (

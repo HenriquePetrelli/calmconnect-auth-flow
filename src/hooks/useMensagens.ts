@@ -170,7 +170,30 @@ export const useMensagens = (conversaId?: string) => {
       )
       .subscribe();
 
+    // O realtime não reenvia o que chegou com o socket caído (tela apagada,
+    // troca de rede): ao voltar, busca o que faltou sem recarregar a tela.
+    const sincronizar = async () => {
+      if (document.visibilityState !== 'visible') return;
+      const { data } = await supabase
+        .from('mensagens')
+        .select('*')
+        .eq('conversa_id', conversaId)
+        .order('created_at', { ascending: true });
+      if (!data) return;
+      setMensagens((prev) => {
+        const novas = (data as Mensagem[]).filter((m) => !prev.some((p) => p.id === m.id));
+        const porId = new Map((data as Mensagem[]).map((m) => [m.id, m]));
+        const atualizadas = prev.map((m) => porId.get(m.id) ?? m);
+        return novas.length ? [...atualizadas, ...novas] : atualizadas;
+      });
+      marcarComoLidas();
+    };
+    window.addEventListener('online', sincronizar);
+    document.addEventListener('visibilitychange', sincronizar);
+
     return () => {
+      window.removeEventListener('online', sincronizar);
+      document.removeEventListener('visibilitychange', sincronizar);
       supabase.removeChannel(channel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -210,6 +210,44 @@ const SOS = () => {
     };
   }, [navigate]);
 
+  // Rede alternativa ao realtime: se o socket cair (tela apagada, troca de
+  // Wi-Fi para 4G), o aceite do psicólogo não chegava e o paciente ficava na
+  // fila enquanto o psicólogo esperava na sala. Confere o pedido a cada 5s e
+  // assim que a internet ou a tela voltam.
+  useEffect(() => {
+    if (!requestId) return;
+    let active = true;
+    const checkRequest = async () => {
+      if (!active || acceptedRef.current) return;
+      const { data } = await supabase
+        .from('emergency_requests')
+        .select('status, room_url, video_room_id')
+        .eq('id', requestId)
+        .maybeSingle();
+      if (!active || !data || acceptedRef.current) return;
+      const sessionId = data.video_room_id || data.room_url;
+      if (['accepted', 'in_progress'].includes(data.status) && sessionId) {
+        acceptedRef.current = true;
+        navigate(`/emergency-call/${sessionId}?userType=patient&requestId=${requestId}`);
+      } else if (['cancelled', 'completed', 'expired'].includes(data.status)) {
+        acceptedRef.current = true;
+        setExpired(true);
+      }
+    };
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') void checkRequest();
+    };
+    const interval = window.setInterval(checkRequest, 5000);
+    window.addEventListener('online', checkRequest);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+      window.removeEventListener('online', checkRequest);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [requestId, navigate]);
+
   // Track professionals that are really available (fresh heartbeat + free)
   useEffect(() => {
     let active = true;

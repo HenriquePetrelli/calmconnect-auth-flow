@@ -25,10 +25,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Calendar, Eye, Filter, Download, FileText, Star } from 'lucide-react';
+import { Calendar, Eye, Filter, Download, FileText, Star, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { FeedbackModal } from '@/components/sos/FeedbackModal';
 import { canRateAppointment } from '@/lib/appointmentRating';
+import { canReportConsultationProblem } from '@/lib/consultationProblem';
+import ReportConsultationProblemDialog from '@/components/appointments/ReportConsultationProblemDialog';
 import { useAppointments, type Appointment } from '@/hooks/useAppointments';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -43,6 +45,7 @@ export const AppointmentHistory = () => {
   const [loading, setLoading] = useState(true);
   const [ratings, setRatings] = useState<Record<string, number>>({});
   const [ratingTarget, setRatingTarget] = useState<Appointment | null>(null);
+  const [problemTarget, setProblemTarget] = useState<string | null>(null);
 
   const loadRatings = useCallback(async (list: Appointment[]) => {
     const sessionIds = list.map((a) => a.video_room_id).filter((id): id is string => !!id);
@@ -507,6 +510,27 @@ export const AppointmentHistory = () => {
                 </div>
               )}
 
+              {canReportConsultationProblem(selectedAppointment) && (
+                <div className="rounded-lg border p-3 space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    A chamada caiu ou a consulta não aconteceu direito? Conte para o psicólogo: se a consulta não
+                    aconteceu, a consulta do mês volta para você.
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={() => {
+                      setProblemTarget(selectedAppointment.id);
+                      setSelectedAppointment(null);
+                    }}
+                  >
+                    <AlertTriangle className="h-4 w-4" aria-hidden="true" />
+                    Relatar problema
+                  </Button>
+                </div>
+              )}
+
               {selectedAppointment.session_summary && (
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">
@@ -521,6 +545,12 @@ export const AppointmentHistory = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      <ReportConsultationProblemDialog
+        appointmentId={problemTarget}
+        role="patient"
+        onOpenChange={(open) => !open && setProblemTarget(null)}
+      />
 
       {ratingTarget?.video_room_id && (
         <FeedbackModal

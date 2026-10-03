@@ -13,6 +13,7 @@ import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { useMediaDeviceManager } from '@/hooks/useMediaDeviceManager';
 import { getReconnectDelay, MAX_RECONNECT_ATTEMPTS as RECONNECT_MAX_ATTEMPTS } from '@/lib/reconnect';
+import { getIceServers } from '@/lib/iceServers';
 
 interface WebRTCSession {
   id: string;
@@ -132,18 +133,19 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
         // Show specific error message
         const errorMessage = result.error.message + (result.error.details ? ` - ${result.error.details}` : '');
         console.error('❌ Media device error:', result.error);
-        
-        setError(errorMessage);
-        toast({
-          title: `Erro de ${result.error.type === 'permission' ? 'Permissão' : 'Dispositivo'}`,
-          description: errorMessage,
-          variant: 'destructive',
-        });
 
-        // If we have a stream but with warnings, proceed anyway
+        // If we have a stream but with warnings (ex.: só áudio), proceed anyway:
+        // it's a notice, not an error that blocks the call.
         if (result.stream.getTracks().length > 0) {
           console.log('⚠️ Proceeding with available stream despite warnings');
+          toast({ title: result.error.message, description: result.error.details });
         } else {
+          setError(errorMessage);
+          toast({
+            title: `Erro de ${result.error.type === 'permission' ? 'Permissão' : 'Dispositivo'}`,
+            description: errorMessage,
+            variant: 'destructive',
+          });
           throw new Error(errorMessage);
         }
       }
@@ -184,12 +186,11 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     
     try {
       // Use the singleton connection manager
+      // STUN + TURN (quando configurado): sem TURN a chamada não conecta em
+      // redes com NAT restritivo (comum no 4G/5G e em redes corporativas).
+      const iceServers = await getIceServers();
       const pc = await connectionManager.getConnection(sessionId, {
-        iceServers: [
-          { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:stun1.l.google.com:19302' },
-          { urls: 'stun:stun2.l.google.com:19302' }
-        ],
+        iceServers,
         iceCandidatePoolSize: 10
       });
 
@@ -920,13 +921,13 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
         try {
           const { data: existingSession } = await supabase
             .from('webrtc_sessions')
-            .select('status, ended_at')
+            .select('status, ended_at, ended_by, ended_by_type')
             .eq('id', sessionId)
             .maybeSingle();
 
           if (existingSession?.status === 'completed') {
             console.log('♻️ Reopening stale completed session');
-            await supabase
+            const { error: reopenError } = await supabase
               .from('webrtc_sessions')
               .update({
                 status: 'active',
@@ -936,6 +937,21 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
                 updated_at: new Date().toISOString(),
               })
               .eq('id', sessionId);
+
+            // O banco recusa reabrir a sala de um SOS/consulta que já terminou
+            // (ex.: o paciente chamou outro psicólogo): mostra como encerrada
+            // em vez de deixar a pessoa esperando alguém que não vem.
+            if (reopenError) {
+              console.log('🚫 Session belongs to a finished call, not reopening');
+              setCallEndedBy({
+                userId: existingSession.ended_by ?? '',
+                userType: existingSession.ended_by_type ?? 'system',
+              });
+              stream.getTracks().forEach((track) => track.stop());
+              pc.close();
+              setIsInitializing(false);
+              return;
+            }
           }
         } catch (e) {
           console.warn('Could not verify session state:', e);

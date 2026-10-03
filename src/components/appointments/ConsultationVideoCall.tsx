@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Mic, MicOff, PhoneOff, Camera, CameraOff, Settings, Loader2, WifiOff, RefreshCw } from "lucide-react";
+import { Mic, MicOff, PhoneOff, Camera, CameraOff, Settings, Loader2, WifiOff, RefreshCw, BellRing, Clock, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatTimeOnly } from "@/utils/timezone";
 import { useWebRTC } from "@/hooks/useWebRTC";
@@ -17,6 +17,9 @@ import { FeedbackModal } from "@/components/sos/FeedbackModal";
 import { getFriendlyErrorMessage } from "@/utils/errorMessage";
 import { dismissAppointmentFeedback } from "@/hooks/usePendingCallFeedback";
 import { ConnectionQuality } from "@/components/sos/ConnectionQuality";
+import RemoteAbsentPanel from "@/components/calls/RemoteAbsentPanel";
+import { useRemoteAbsence } from "@/hooks/useRemoteAbsence";
+import { CONSULTATION_ABSENCE_THRESHOLD_SECONDS } from "@/lib/remoteAbsence";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -59,6 +62,13 @@ const ConsultationVideoCall = ({ appointment, onEndCall }: ConsultationVideoCall
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  // A sala não abriu (internet, fora do horário...): mostra o motivo e "Tentar de novo".
+  const [sessionError, setSessionError] = useState<string | null>(null);
+  const [openingRoom, setOpeningRoom] = useState(false);
+  // "Continuar esperando" esconde o aviso de ausência por um tempo.
+  const [absenceSnoozedUntil, setAbsenceSnoozedUntil] = useState(0);
+  const [notifying, setNotifying] = useState(false);
+  const [notified, setNotified] = useState(false);
   // Set when the OTHER participant ended the consultation.
   const [endedMessage, setEndedMessage] = useState<string | null>(null);
   const endedLocallyRef = useRef(false);
@@ -112,6 +122,17 @@ const ConsultationVideoCall = ({ appointment, onEndCall }: ConsultationVideoCall
   });
 
   const remoteDroppedInvoluntarily = isRemoteDropInvoluntary(remotePresent, remoteLeftAt, callOver);
+
+  // O outro lado não entrou (ou caiu e não voltou): conta a partir do horário
+  // marcado, para quem entra adiantado não receber o aviso antes da hora.
+  const absenceSeconds = useRemoteAbsence({
+    remotePresent,
+    remoteLeftAt,
+    enabled: Boolean(sessionId) && !callOver,
+    notBefore: new Date(appointment.scheduled_at).getTime(),
+  });
+  const showAbsencePanel =
+    absenceSeconds >= CONSULTATION_ABSENCE_THRESHOLD_SECONDS && Date.now() >= absenceSnoozedUntil && !isNetworkOffline;
   const banner = getConnectionBannerState({
     isReconnecting,
     isNetworkOffline,
@@ -171,6 +192,8 @@ const ConsultationVideoCall = ({ appointment, onEndCall }: ConsultationVideoCall
   }, [callEndedBy, endedMessage, cleanupWebRTC]);
 
   const initializeConsultationSession = async () => {
+    setOpeningRoom(true);
+    setSessionError(null);
     try {
       // Reuses the same WebRTC session for both participants — keyed by the
       // appointment itself, not created fresh per browser tab — so patient
@@ -183,11 +206,30 @@ const ConsultationVideoCall = ({ appointment, onEndCall }: ConsultationVideoCall
       setSessionId(roomId);
     } catch (error) {
       console.error('Error creating consultation session:', error);
+      setSessionError(getFriendlyErrorMessage(error, 'Verifique sua conexão e tente entrar de novo.'));
+    } finally {
+      setOpeningRoom(false);
+    }
+  };
+
+  const handleNotifyRemote = async () => {
+    setNotifying(true);
+    try {
+      const { error } = await supabase.rpc('notify_consultation_waiting', { p_appointment_id: appointment.id });
+      if (error) throw error;
+      setNotified(true);
       toast({
-        title: 'Não foi possível abrir a videochamada',
-        description: getFriendlyErrorMessage(error, 'Verifique sua conexão e tente entrar de novo.'),
+        title: userType === 'patient' ? 'Avisamos o psicólogo' : 'Avisamos o paciente',
+        description: 'Ele recebe uma notificação no celular para entrar na sala.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Não foi possível avisar agora',
+        description: getFriendlyErrorMessage(error, 'Tente de novo em instantes.'),
         variant: 'destructive',
       });
+    } finally {
+      setNotifying(false);
     }
   };
 
@@ -257,6 +299,10 @@ const ConsultationVideoCall = ({ appointment, onEndCall }: ConsultationVideoCall
     .toUpperCase();
 
   const waitingForRemote = !remotePresent && !remoteLeftAt;
+  const remoteLabel = userType === 'patient' ? 'O psicólogo' : 'O paciente';
+  const absenceDescription = userType === 'patient'
+    ? 'Você pode avisá-lo pelo celular. Se a consulta não acontecer, ela fica como não realizada e a consulta do mês volta para você automaticamente.'
+    : 'Você pode avisá-lo pelo celular. Se ele não entrar, a consulta fica como não realizada automaticamente, sem descontar do plano dele.';
   const statusText = waitingForRemote
     ? `Aguardando ${userType === 'patient' ? 'o psicólogo' : 'o paciente'} entrar na sala...`
     : connectionState === 'connected' ? 'Conectado' : 'Conectando...';
@@ -367,6 +413,49 @@ const ConsultationVideoCall = ({ appointment, onEndCall }: ConsultationVideoCall
           )}
         </div>
 
+        {/* O outro lado não entrou ou não voltou: dá para avisá-lo */}
+        {showAbsencePanel && !callOver && (
+          <RemoteAbsentPanel
+            icon={Clock}
+            title={remoteLeftAt ? `${remoteLabel} saiu da sala` : `${remoteLabel} ainda não entrou`}
+            description={absenceDescription}
+            actions={[
+              {
+                label: notified ? 'Avisar de novo' : `Avisar ${userType === 'patient' ? 'o psicólogo' : 'o paciente'}`,
+                icon: BellRing,
+                variant: 'default',
+                loading: notifying,
+                onClick: handleNotifyRemote,
+              },
+              {
+                label: 'Continuar esperando',
+                onClick: () => setAbsenceSnoozedUntil(Date.now() + 3 * 60 * 1000),
+              },
+            ]}
+          />
+        )}
+
+        {/* A sala não abriu */}
+        {!sessionId && sessionError && (
+          <div
+            data-testid="consultation-room-error"
+            className="absolute inset-0 z-50 flex items-center justify-center bg-background/95 p-6"
+          >
+            <div className="max-w-sm text-center space-y-4">
+              <AlertTriangle className="w-10 h-10 mx-auto text-destructive" />
+              <h2 className="text-xl font-semibold text-foreground">Não foi possível abrir a sala</h2>
+              <p className="text-muted-foreground">{sessionError}</p>
+              <Button className="w-full" onClick={initializeConsultationSession} disabled={openingRoom}>
+                {openingRoom ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
+                Tentar de novo
+              </Button>
+              <Button variant="outline" className="w-full" onClick={onEndCall}>
+                Voltar
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* O outro participante encerrou */}
         {endedMessage && !showFeedbackModal && (
           <div
@@ -435,7 +524,15 @@ const ConsultationVideoCall = ({ appointment, onEndCall }: ConsultationVideoCall
           <p className="text-sm text-muted-foreground">
             Consulta de {consultationDurationMinutes(appointment)} minutos
           </p>
-          {error && <p className="text-xs text-destructive mt-2">{error}</p>}
+          {error && (
+            <div role="alert" className="mx-auto mt-3 flex max-w-md flex-col items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/5 p-3">
+              <p className="text-sm text-destructive">{error}</p>
+              <Button size="sm" variant="outline" onClick={() => window.location.reload()}>
+                <RefreshCw className="w-3 h-3 mr-1" />
+                Tentar de novo
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 

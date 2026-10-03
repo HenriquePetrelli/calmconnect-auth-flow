@@ -58,7 +58,7 @@ export const usePendingCallFeedback = () => {
 
     const query = supabase
       .from('emergency_requests')
-      .select('id, video_room_id, ended_at, started_at')
+      .select('id, video_room_id, ended_at, started_at, end_reason')
       .not('ended_at', 'is', null)
       .not('video_room_id', 'is', null)
       .not('started_at', 'is', null)
@@ -71,8 +71,11 @@ export const usePendingCallFeedback = () => {
         ? await query.eq('patient_id', user.id)
         : await query.eq('accepted_by', user.id);
 
-    if (!error && data?.length) {
-      const sessionIds = data.map((r) => r.video_room_id as string);
+    // O paciente trocou de psicólogo porque o primeiro sumiu: não há o que avaliar.
+    const rateable = (data ?? []).filter((r) => r.end_reason !== 'psychologist_unavailable');
+
+    if (!error && rateable.length) {
+      const sessionIds = rateable.map((r) => r.video_room_id as string);
       const { data: feedbacks } = await supabase
         .from('session_feedback')
         .select('session_id')
@@ -80,7 +83,7 @@ export const usePendingCallFeedback = () => {
         .in('session_id', sessionIds);
 
       const rated = new Set((feedbacks ?? []).map((f) => f.session_id));
-      const next = data.find((r) => !rated.has(r.video_room_id as string));
+      const next = rateable.find((r) => !rated.has(r.video_room_id as string));
       if (next) {
         setPending({ kind: 'emergency', sessionId: next.video_room_id as string, requestId: next.id, endedAt: next.ended_at });
         return;

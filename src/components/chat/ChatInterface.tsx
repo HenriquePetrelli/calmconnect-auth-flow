@@ -98,8 +98,11 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversaId, onVolt
       if (imagemUrl) {
         sucesso = await enviarMensagem('', 'imagem', imagemUrl);
       }
-      setImagemSelecionada(null);
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      // Se falhou (ex.: sem internet), mantém a imagem para tentar de novo.
+      if (sucesso) {
+        setImagemSelecionada(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }
     } else {
       sucesso = await enviarMensagem(novaMensagem);
     }

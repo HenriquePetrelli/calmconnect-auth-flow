@@ -24,7 +24,9 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
-import { History, Search, Download, Eye, FileText, User, LifeBuoy, CalendarDays } from 'lucide-react';
+import { History, Search, Download, Eye, FileText, User, LifeBuoy, CalendarDays, AlertTriangle } from 'lucide-react';
+import { canReportConsultationProblem } from '@/lib/consultationProblem';
+import ReportConsultationProblemDialog from '@/components/appointments/ReportConsultationProblemDialog';
 import { usePsychologistSchedule } from '@/hooks/usePsychologistSchedule';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
@@ -60,6 +62,7 @@ const ConsultationHistory = () => {
   const [selected, setSelected] = useState<ConsultationRow | null>(null);
   const [sessionSummary, setSessionSummary] = useState('');
   const [savingSummary, setSavingSummary] = useState(false);
+  const [interruptTarget, setInterruptTarget] = useState<string | null>(null);
 
   useEffect(() => {
     loadHistory();
@@ -547,6 +550,27 @@ const ConsultationHistory = () => {
                     />
                   </div>
 
+                  {canReportConsultationProblem({ status: selected.status, scheduled_at: selected.occurred_at }) && (
+                    <div className="rounded-lg border p-3 space-y-2">
+                      <p className="text-sm text-muted-foreground">
+                        A consulta não pôde acontecer ou foi interrompida por falha de conexão? Marque como
+                        interrompida: a consulta do mês volta para o paciente, que é avisado para remarcar.
+                      </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1.5"
+                        onClick={() => {
+                          setInterruptTarget(selected.id);
+                          setSelected(null);
+                        }}
+                      >
+                        <AlertTriangle className="h-4 w-4" aria-hidden="true" />
+                        Consulta interrompida
+                      </Button>
+                    </div>
+                  )}
+
                   <div className="flex justify-end gap-2">
                     <Button onClick={handleSaveSummary} disabled={savingSummary}>
                       {savingSummary ? (
@@ -563,6 +587,16 @@ const ConsultationHistory = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      <ReportConsultationProblemDialog
+        appointmentId={interruptTarget}
+        role="psychologist"
+        onOpenChange={(open) => !open && setInterruptTarget(null)}
+        onReported={(refunded) => {
+          if (!refunded || !interruptTarget) return;
+          setRows((prev) => prev.map((row) => (row.id === interruptTarget ? { ...row, status: 'cancelled' } : row)));
+        }}
+      />
     </div>
   );
 };
