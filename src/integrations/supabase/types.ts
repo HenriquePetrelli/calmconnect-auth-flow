@@ -2697,15 +2697,6 @@ export type Database = {
           user_like: string
         }[]
       }
-      get_my_psychologist_private: {
-        Args: never
-        Returns: {
-          cpf: string
-          email: string
-          pix_key: string
-          pix_type: string
-        }[]
-      }
       get_or_create_appointment_webrtc_session: {
         Args: { p_appointment_id: string }
         Returns: string
