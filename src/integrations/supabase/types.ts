@@ -742,42 +742,6 @@ export type Database = {
         }
         Relationships: []
       }
-      mental_health_screenings: {
-        Row: {
-          answers: number[]
-          created_at: string
-          id: string
-          instrument: string
-          score: number
-          self_harm_flag: boolean
-          severity: string
-          shared_with_psychologist: boolean
-          user_id: string
-        }
-        Insert: {
-          answers: number[]
-          created_at?: string
-          id?: string
-          instrument: string
-          score?: number
-          self_harm_flag?: boolean
-          severity?: string
-          shared_with_psychologist?: boolean
-          user_id: string
-        }
-        Update: {
-          answers?: number[]
-          created_at?: string
-          id?: string
-          instrument?: string
-          score?: number
-          self_harm_flag?: boolean
-          severity?: string
-          shared_with_psychologist?: boolean
-          user_id?: string
-        }
-        Relationships: []
-      }
       notifications: {
         Row: {
           appointment_id: string | null
@@ -2381,7 +2345,6 @@ export type Database = {
         Returns: {
           daily_goal: number
           habit_id: string
-          due_slot: string
           kind: string
           quit_started_at: string
           settings: Json
