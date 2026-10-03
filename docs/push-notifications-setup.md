@@ -24,7 +24,7 @@ VITE_FIREBASE_APP_ID="..."
 VITE_FIREBASE_VAPID_KEY="..."
 ```
 
-**`public/firebase-messaging-sw.js`** — cole os mesmos 6 valores do `firebaseConfig` (sem o VAPID key, esse só vai no `.env`) no bloco `firebase.initializeApp({...})` no topo do arquivo. É obrigatório duplicar: um service worker não consegue ler variáveis de ambiente do Vite.
+**`public/firebase-messaging-sw.js`** não precisa de edição: o app passa a configuração do Firebase para o service worker pela URL de registro (`firebaseServiceWorkerUrl()` em `src/lib/firebase.ts`).
 
 Nenhum desses 7 valores é secreto — são os mesmos que qualquer app Firebase Web expõe no navegador de qualquer usuário. Não tem problema esse arquivo estar versionado.
 
@@ -41,10 +41,14 @@ A edge function `firebase-notifications` é quem realmente envia o push, e para 
 
 ## O que já está ligado a push hoje
 
-- **SOS**: quando um paciente abre uma nova solicitação de emergência, os psicólogos que estão online (`psychologist_presence`, últimos 3 minutos) recebem um push imediatamente — mesmo com o painel fechado. É o único caso com uso real hoje; os outros tipos de notificação (mensagem, consulta, conquista) continuam só em app aberto/Web Notifications, como já funcionavam.
-- Cada usuário ativa em **Perfil → Configurações → Notificações push** (paciente e psicólogo). O toggle pede a permissão do navegador, registra o token no Supabase (`fcm_tokens`) e a partir daí a Edge Function consegue te achar.
-- Tokens que o Firebase reporta como inválidos (app desinstalado, permissão revogada) são desativados automaticamente na tabela — nada de repetir envio pra um token morto.
+Lista completa e como validar: `docs/fluxos/07-notificacoes-e-push.md`. Em resumo:
+
+- **SOS**: o pedido de emergência manda push na hora aos psicólogos.
+- **Consultas** (pedido, confirmação, mudança, lembretes de 24 h e 1 h, "estão esperando você"), **chat** (nova mensagem) e **acompanhamento do SOS**: viram linha em `notifications` com `push = true`. A rotina `notification-push` (a cada minuto) envia.
+- **Hábitos**: a rotina `habit-reminders` (a cada 15 min).
+- Cada usuário ativa em **Perfil → Configurações → Notificações push**. O toggle pede a permissão do navegador e registra o token em `fcm_tokens`. Sair da conta desativa o token daquele aparelho.
+- Tokens que o Firebase reporta como inválidos são desativados automaticamente.
 
 ## Para ligar push em outros eventos
 
-Qualquer edge function que já cria uma notificação in-app pode adicionar o mesmo padrão usado em `emergency-sos/index.ts`: buscar os tokens ativos do destinatário em `fcm_tokens` e chamar `supabase.functions.invoke('firebase-notifications', { body: { title, body, tokens, data } })` — best-effort, nunca deve derrubar o fluxo principal se o push falhar.
+O jeito mais simples é criar a notificação in-app com `push = true` e `link` (a tela que abre ao tocar). A rotina `notification-push` cuida do envio. Para algo que não pode esperar até 1 minuto (como o SOS), siga o padrão de `emergency-sos/index.ts`: buscar os tokens ativos do destinatário em `fcm_tokens` e chamar `firebase-notifications`. O envio é sempre "melhor esforço": se o push falhar, o fluxo principal continua.
