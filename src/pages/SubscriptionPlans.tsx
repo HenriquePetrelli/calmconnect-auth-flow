@@ -1,3 +1,4 @@
+import { PLAN_LIST } from "@/lib/plans";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -80,41 +81,7 @@ const SubscriptionPlans = () => {
     };
   }, [showCancelModal]);
 
-  const plans = [
-    {
-      id: "plus",
-      name: "Plus",
-      price: "R$ 69,90",
-      period: "/mês",
-      features: [
-        "1 chamada emergencial por mês",
-        "Duração: 25 minutos",
-        "Acesso à biblioteca de sons",
-        "Exercícios de respiração",
-      ],
-      appointments: 0,
-      sosUses: 1,
-      duration: "25 minutos",
-    },
-    {
-      id: "premium",
-      name: "Premium",
-      price: "R$ 120,00",
-      period: "/mês",
-      features: [
-        "1 chamada emergencial por mês",
-        "1 consulta agendada por mês",
-        "Duração: 50 minutos",
-        "Acesso à biblioteca de sons",
-        "Exercícios de respiração",
-        "Suporte prioritário",
-      ],
-      appointments: 1,
-      sosUses: 1,
-      duration: "50 minutos",
-      popular: true,
-    },
-  ];
+  const plans = PLAN_LIST;
 
   const handleSubscribe = async (plan: typeof plans[0]) => {
     try {

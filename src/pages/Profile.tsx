@@ -1,3 +1,4 @@
+import { FREE_PLAN, PLANS } from "@/lib/plans";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -92,53 +93,9 @@ const Profile = () => {
   };
 
   const getPlanInfo = () => {
-    if (!subscribed) {
-      return {
-        name: "Plano Grátis",
-        price: "R$ 0",
-        features: [
-          "• Acesso à biblioteca de sons",
-          "• Exercícios de respiração básicos"
-        ]
-      };
-    }
-    
-    if (subscriptionTier === "Plus") {
-      return {
-        name: "Plano Plus",
-        price: "R$ 69,90",
-        features: [
-          "• 1 chamada emergencial por mês",
-          "• Duração: 25 minutos",
-          "• Acesso à biblioteca de sons",
-          "• Exercícios de respiração"
-        ]
-      };
-    }
-    
-    if (subscriptionTier === "Premium") {
-      return {
-        name: "Plano Premium",
-        price: "R$ 120,00",
-        features: [
-          "• 1 chamada emergencial por mês",
-          "• 1 consulta agendada por mês",
-          "• Duração: 50 minutos",
-          "• Acesso à biblioteca de sons",
-          "• Exercícios de respiração",
-          "• Suporte prioritário"
-        ]
-      };
-    }
-    
-    return {
-      name: "Plano Grátis",
-      price: "R$ 0",
-      features: [
-        "• Acesso à biblioteca de sons",
-        "• Exercícios de respiração básicos"
-      ]
-    };
+    const plan = subscribed && (subscriptionTier === "Plus" || subscriptionTier === "Premium") ? PLANS[subscriptionTier] : null;
+    const info = plan ? { name: `Plano ${plan.name}`, price: plan.price, features: plan.features } : FREE_PLAN;
+    return { ...info, features: info.features.map((feature) => `• ${feature}`) };
   };
 
   if (loading) {

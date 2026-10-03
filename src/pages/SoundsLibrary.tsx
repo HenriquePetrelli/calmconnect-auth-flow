@@ -32,7 +32,7 @@ const SoundsLibrary = () => {
       title: "Para Dormir",
       description: "Sons relaxantes profundos e sono reparador",
       iconBg: "bg-[#7C3AED]",
-      sounds: 6,
+      sounds: soundsData.categories.sleep.sounds.length,
     },
     {
       id: "meditate",
@@ -40,7 +40,7 @@ const SoundsLibrary = () => {
       title: "Para Meditar",
       description: "Paisagens sonoras para mindfulness",
       iconBg: "bg-[#D97706]",
-      sounds: 5,
+      sounds: soundsData.categories.meditate.sounds.length,
     },
     {
       id: "focus",
@@ -48,7 +48,7 @@ const SoundsLibrary = () => {
       title: "Para Focar",
       description: "Concentração e produtividade",
       iconBg: "bg-[#10B981]",
-      sounds: 5,
+      sounds: soundsData.categories.focus.sounds.length,
     },
   ];
 

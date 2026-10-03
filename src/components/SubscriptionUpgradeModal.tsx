@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Crown, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { PLANS } from '@/lib/plans';
 
 interface SubscriptionUpgradeModalProps {
   isOpen: boolean;
@@ -45,11 +46,11 @@ const SubscriptionUpgradeModal: React.FC<SubscriptionUpgradeModalProps> = ({
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center p-3 bg-muted/50 rounded-lg">
               <div className="text-sm font-medium text-foreground">Plano Plus</div>
-              <div className="text-xs text-muted-foreground">A partir de R$ 19,90/mês</div>
+              <div className="text-xs text-muted-foreground">{PLANS.Plus.price}{PLANS.Plus.period}</div>
             </div>
             <div className="text-center p-3 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg border border-primary/20">
               <div className="text-sm font-medium text-primary">Plano Premium</div>
-              <div className="text-xs text-muted-foreground">A partir de R$ 39,90/mês</div>
+              <div className="text-xs text-muted-foreground">{PLANS.Premium.price}{PLANS.Premium.period}</div>
             </div>
           </div>
 

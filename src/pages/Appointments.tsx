@@ -1,3 +1,4 @@
+import { PLANS } from "@/lib/plans";
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -115,12 +116,14 @@ const Appointments = () => {
           </DialogHeader>
           <div className="space-y-4">
             <div className="bg-muted p-4 rounded-lg">
-              <h4 className="font-semibold mb-2">Plano Premium - R$ 120,00/mês</h4>
+              <h4 className="font-semibold mb-2">
+                Plano Premium - {PLANS.Premium.price}
+                {PLANS.Premium.period}
+              </h4>
               <ul className="text-sm space-y-1">
-                <li>• 1 consulta agendada por mês (50 minutos)</li>
-                <li>• 1 chamada emergencial por mês</li>
-                <li>• Acesso completo à biblioteca de sons</li>
-                <li>• Suporte prioritário</li>
+                {PLANS.Premium.features.map((feature) => (
+                  <li key={feature}>• {feature}</li>
+                ))}
               </ul>
             </div>
             <div className="flex gap-2">

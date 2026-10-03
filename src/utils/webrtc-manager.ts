@@ -427,9 +427,6 @@ export class WebRTCManager {
       };
 
       console.log('📊 Connection stats:', connectionStats);
-      
-      // You could store these in a separate analytics table
-      // await supabase.from('webrtc_stats').insert(connectionStats);
     } catch (error) {
       console.error('❌ Error logging connection stats:', error);
     }
@@ -486,20 +483,6 @@ export class WebRTCManager {
     });
 
     return processed;
-  }
-
-  async simulateNetworkConditions(condition: 'good' | 'poor' | 'unstable'): Promise<void> {
-    // This would be used in development/testing to simulate different network conditions
-    console.log(`🌐 Simulating network condition: ${condition}`);
-    
-    const conditions = {
-      good: { latency: 50, packetLoss: 0 },
-      poor: { latency: 300, packetLoss: 0.05 },
-      unstable: { latency: 150, packetLoss: 0.02 }
-    };
-
-    const selected = conditions[condition];
-    console.log(`📊 Network simulation - Latency: ${selected.latency}ms, Loss: ${selected.packetLoss * 100}%`);
   }
 
   // New method to get managed connection
