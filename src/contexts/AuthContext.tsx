@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { deactivateStoredPushToken } from '@/lib/pushToken';
+import { goOfflineOnSignOut } from '@/hooks/usePsychologistPresence';
 import { toast } from 'sonner';
 
 type UserType = 'admin' | 'psychologist' | 'patient' | 'unknown';
@@ -196,7 +197,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // outgoing user's pushes (shared phones, handing the device over).
     try {
       await deactivateStoredPushToken();
-    } catch {}
+    } catch {
+      // segue saindo mesmo assim
+    }
+    // Psicólogo sai do SOS na hora (não fica "online" depois de sair).
+    if (userType === 'psychologist' && user?.id) await goOfflineOnSignOut(user.id);
     try {
       // "global" encerra a sessão em todos os aparelhos. Se o servidor falhar
       // (rede, 5xx), o Supabase NÃO apaga a sessão local; aí a tela de login
@@ -207,7 +212,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Sign out error:', error);
       try {
         await supabase.auth.signOut({ scope: 'local' });
-      } catch {}
+      } catch {
+        // segue saindo mesmo assim
+      }
     }
     cleanupAuthState();
     // Always reset to light mode on logout; dark mode is per-logged-in-user
@@ -215,7 +222,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('theme', 'light');
       document.documentElement.classList.remove('dark');
       document.documentElement.classList.add('light');
-    } catch {}
+    } catch {
+      // segue saindo mesmo assim
+    }
     // Recarrega para começar do zero na tela de login
     window.location.href = '/';
   };

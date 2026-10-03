@@ -1,3 +1,4 @@
+import { goOfflineOnSignOut } from '@/hooks/usePsychologistPresence';
 import { useEffect, ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -146,6 +147,7 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
         .maybeSingle();
       if (cancelled || !data || !isCurrentlyBlocked(data as any)) return;
       await notifyBlockedAccess(data as any);
+      await goOfflineOnSignOut(user.id);
       await supabase.auth.signOut();
 
       navigate('/', { replace: true });

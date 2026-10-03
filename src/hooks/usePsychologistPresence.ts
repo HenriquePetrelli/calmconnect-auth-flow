@@ -58,6 +58,21 @@ export const teardownPsychologistPresence = () => {
   setState({ isOnline: false, initialized: false, userId: null });
 };
 
+/**
+ * Fica offline ao sair da conta: apaga o registro de presença (igual ao botão
+ * "Offline") enquanto a sessão ainda existe. Sem isso o psicólogo continuava
+ * "online" para o SOS até o servidor limpar o registro (até ~7 minutos).
+ */
+export const goOfflineOnSignOut = async (userId: string) => {
+  stopHeartbeat();
+  try {
+    await supabase.from('psychologist_presence').delete().eq('psychologist_id', userId);
+  } catch (error) {
+    console.error('Error going offline on sign out:', error);
+  }
+  teardownPsychologistPresence();
+};
+
 const bootstrap = async () => {
   if (bootstrapped) return;
   bootstrapped = true;
