@@ -18,14 +18,13 @@ const AchievementToast = ({ achievement, onClose }: { achievement: CelebratedAch
   const reduce = useReducedMotion();
   const theme = achievementTheme(achievement.icon);
   const phrase = PHRASES[achievement.title.length % PHRASES.length];
-  const colors = [theme.from, theme.to, '#FACC15', '#F97316', '#7C3AED'];
+  const colors = [theme.color, '#7C3AED', '#F97316', '#10B981', '#0EA5E9'];
 
   return (
     <div
       role="status"
       aria-live="polite"
       className="relative flex w-[min(92vw,380px)] items-center gap-4 overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-xl"
-      style={{ backgroundImage: `linear-gradient(135deg, ${theme.soft}, transparent 70%)` }}
     >
       <div className="relative">
         {!reduce &&
@@ -55,7 +54,7 @@ const AchievementToast = ({ achievement, onClose }: { achievement: CelebratedAch
           <motion.span
             aria-hidden="true"
             className="absolute inset-0 rounded-full"
-            style={{ backgroundColor: theme.to }}
+            style={{ backgroundColor: theme.color }}
             initial={{ scale: 1, opacity: 0.45 }}
             animate={{ scale: 1.9, opacity: 0 }}
             transition={{ duration: 1.1, delay: 0.1, repeat: 1, repeatDelay: 0.4, ease: 'easeOut' }}
@@ -77,7 +76,7 @@ const AchievementToast = ({ achievement, onClose }: { achievement: CelebratedAch
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.2, duration: 0.3 }}
       >
-        <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: theme.to }}>
+        <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: theme.color }}>
           Conquista desbloqueada · {phrase}
         </p>
         <p className="mt-0.5 break-words text-base font-bold text-foreground">{achievement.title}</p>

@@ -1,11 +1,12 @@
 import { useEffect, useRef } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { Sparkles, Trophy } from 'lucide-react';
+import { Flower2, Leaf, Sparkles, Sprout, Star, TreeDeciduous, Trees, Trophy } from 'lucide-react';
 import { useAchievements } from '@/hooks/useAchievements';
 import AchievementMedal from '@/components/achievements/AchievementMedal';
 import { ACHIEVEMENT_GROUPS, achievementTheme } from '@/components/achievements/achievementIcons';
 import type { AchievementProgress } from '@/lib/achievementRules';
 import { SkeletonCardGrid } from '@/components/skeletons/Skeletons';
+import { Progress } from '@/components/ui/progress';
 import PageHeader from '@/components/PageHeader';
 import PatientBottomNav from '@/components/PatientBottomNav';
 import { cn } from '@/lib/utils';
@@ -14,11 +15,11 @@ const formatDay = (iso: string) => new Date(iso).toLocaleDateString('pt-BR', { d
 
 /** Níveis pela fração desbloqueada: a jornada cresce como uma planta. */
 const LEVELS = [
-  { min: 0, name: 'Semente', emoji: '🌱' },
-  { min: 0.2, name: 'Broto', emoji: '🌿' },
-  { min: 0.4, name: 'Florescendo', emoji: '🌸' },
-  { min: 0.6, name: 'Árvore forte', emoji: '🌳' },
-  { min: 0.9, name: 'Floresta', emoji: '🏞️' },
+  { min: 0, name: 'Semente', icon: Sprout },
+  { min: 0.2, name: 'Broto', icon: Leaf },
+  { min: 0.4, name: 'Florescendo', icon: Flower2 },
+  { min: 0.6, name: 'Árvore forte', icon: TreeDeciduous },
+  { min: 0.9, name: 'Floresta', icon: Trees },
 ];
 
 const levelFor = (achieved: number, total: number) => {
@@ -104,40 +105,28 @@ const Achievements = () => {
           ) : (
             <>
               {/* Nível */}
-              <section
-                className="relative overflow-hidden rounded-3xl p-5 text-white shadow-lg"
-                style={{ backgroundImage: 'linear-gradient(135deg, #7C3AED 0%, #A855F7 55%, #F97316 120%)' }}
-              >
-                <span className="pointer-events-none absolute -right-8 -top-10 h-40 w-40 rounded-full bg-white/10" aria-hidden="true" />
-                <span className="pointer-events-none absolute -bottom-12 right-16 h-28 w-28 rounded-full bg-white/10" aria-hidden="true" />
-                <div className="relative flex items-center gap-4">
+              <section className="space-y-3 rounded-2xl border border-border bg-card p-4 shadow-sm">
+                <div className="flex items-center gap-3">
                   <motion.span
-                    className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-4xl backdrop-blur-sm"
-                    animate={reduce ? undefined : { y: [0, -4, 0] }}
+                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10"
+                    animate={reduce ? undefined : { y: [0, -3, 0] }}
                     transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
                     aria-hidden="true"
                   >
-                    {level.emoji}
+                    <level.icon className="h-6 w-6 text-primary" />
                   </motion.span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-white/80">Nível {level.number}</p>
-                    <h2 className="text-2xl font-bold leading-tight">{level.name}</h2>
-                    <p className="text-sm text-white/85">
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Nível {level.number}</p>
+                    <h2 className="text-lg font-semibold leading-tight text-foreground">{level.name}</h2>
+                    <p className="text-sm text-muted-foreground">
                       {achievedCount} de {totalCount} conquistas
                     </p>
                   </div>
                 </div>
-                <div className="relative mt-4 h-2.5 overflow-hidden rounded-full bg-white/25">
-                  <motion.div
-                    className="h-full rounded-full bg-white"
-                    initial={reduce ? false : { width: 0 }}
-                    animate={{ width: `${(achievedCount / totalCount) * 100}%` }}
-                    transition={{ duration: 0.8, ease: 'easeOut' }}
-                  />
-                </div>
-                <p className="relative mt-2 text-sm text-white/90">
+                <Progress value={(achievedCount / totalCount) * 100} className="h-2" aria-label="Conquistas desbloqueadas" />
+                <p className="text-sm text-muted-foreground">
                   {level.next
-                    ? `Mais ${level.toNext} ${level.toNext === 1 ? 'conquista' : 'conquistas'} para virar ${level.next.name} ${level.next.emoji}`
+                    ? `Mais ${level.toNext} ${level.toNext === 1 ? 'conquista' : 'conquistas'} para chegar ao nível ${level.next.name}.`
                     : 'Você chegou ao último nível. Que jornada!'}
                 </p>
               </section>
@@ -162,7 +151,7 @@ const Achievements = () => {
                           <div className="min-w-0 flex-1 space-y-1">
                             <p className="break-words font-semibold text-foreground">{achievement.title}</p>
                             <p className="break-words text-xs text-muted-foreground">{achievement.description}</p>
-                            <ProgressLine progress={progress[achievement.title]} color={theme.to} />
+                            <ProgressLine progress={progress[achievement.title]} color={theme.color} />
                           </div>
                         </motion.li>
                       );
@@ -172,12 +161,15 @@ const Achievements = () => {
               )}
 
               {/* Medalhas por tema */}
-              {[...grouped, ...(others.length > 0 ? [{ title: 'Outras', emoji: '⭐', icons: [], items: others }] : [])].map(
+              {[...grouped, ...(others.length > 0 ? [{ title: 'Outras', icon: Star, icons: [], items: others }] : [])].map(
                 (group) => (
                   <section key={group.title} className="space-y-3" aria-labelledby={`group-${group.title}`}>
                     <div className="flex items-center justify-between gap-2">
-                      <h2 id={`group-${group.title}`} className="text-base font-semibold text-foreground">
-                        <span aria-hidden="true">{group.emoji}</span> {group.title}
+                      <h2 id={`group-${group.title}`} className="flex items-center gap-2 text-base font-semibold text-foreground">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                          <group.icon className="h-4 w-4 text-primary" aria-hidden="true" />
+                        </span>
+                        {group.title}
                       </h2>
                       <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium tabular-nums text-muted-foreground">
                         {group.items.filter((a) => a.achieved).length}/{group.items.length}
@@ -195,7 +187,7 @@ const Achievements = () => {
                               'flex min-w-0 flex-col items-center gap-2 rounded-2xl border p-3 text-center shadow-sm',
                               achievement.achieved ? 'border-transparent' : 'border-border bg-card',
                             )}
-                            style={achievement.achieved ? { backgroundColor: theme.soft, borderColor: `${theme.to}40` } : undefined}
+                            style={achievement.achieved ? { backgroundColor: theme.soft, borderColor: `${theme.color}40` } : undefined}
                           >
                             <AchievementMedal icon={achievement.icon} achieved={achievement.achieved} />
                             <p
@@ -211,12 +203,12 @@ const Achievements = () => {
                               {achievement.achieved ? (
                                 <span
                                   className="inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold text-white"
-                                  style={{ backgroundColor: theme.to }}
+                                  style={{ backgroundColor: theme.color }}
                                 >
                                   {achievement.achieved_at ? formatDay(achievement.achieved_at) : 'Desbloqueada'}
                                 </span>
                               ) : itemProgress ? (
-                                <ProgressLine progress={itemProgress} color={theme.to} />
+                                <ProgressLine progress={itemProgress} color={theme.color} />
                               ) : (
                                 <span className="text-xs font-medium text-muted-foreground">Ainda não</span>
                               )}
