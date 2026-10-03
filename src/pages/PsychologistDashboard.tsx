@@ -128,11 +128,10 @@ const PsychologistDashboard = () => {
       setProfile(profile);
 
       // Check PIX information
-      const { data: psychData } = await supabase
-        .from('psychologists')
-        .select('pix_key, pix_type')
-        .eq('user_id', user.id)
-        .single();
+      // CPF/Pix não são lidos direto da tabela (outros usuários também leem
+      // a linha do psicólogo); vêm por uma função que só devolve os do próprio.
+      const { data: privateRows } = await supabase.rpc('get_my_psychologist_private');
+      const psychData = privateRows?.[0] ?? null;
 
       setPsychologistData(psychData);
 

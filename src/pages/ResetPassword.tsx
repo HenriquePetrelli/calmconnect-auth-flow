@@ -9,8 +9,8 @@ import { Label } from '@/components/ui/label';
 import Logo from '@/components/Logo';
 import PasswordResetModal from '@/components/PasswordResetModal';
 import { supabase } from '@/integrations/supabase/client';
+import { passwordProblem, PASSWORD_HINT } from '@/lib/password';
 
-const MIN_PASSWORD = 6;
 
 /**
  * Destino do link "Recuperar senha" enviado por e-mail. O cliente do Supabase
@@ -62,8 +62,9 @@ const ResetPassword = () => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError(null);
-    if (password.length < MIN_PASSWORD) {
-      setError(`A senha precisa ter pelo menos ${MIN_PASSWORD} caracteres.`);
+    const weakPassword = passwordProblem(password);
+    if (weakPassword) {
+      setError(weakPassword);
       return;
     }
     if (password !== confirm) {
@@ -145,7 +146,7 @@ const ResetPassword = () => {
                       {show ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>
                   </div>
-                  <p className="text-xs text-muted-foreground">Pelo menos {MIN_PASSWORD} caracteres.</p>
+                  <p className="text-xs text-muted-foreground">{PASSWORD_HINT}.</p>
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="confirm-password">Repita a nova senha</Label>

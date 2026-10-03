@@ -8,7 +8,8 @@ export type JoinErrorCode =
   | 'no_seats'
   | 'already_member'
   | 'not_patient'
-  | 'not_authenticated';
+  | 'not_authenticated'
+  | 'too_many_attempts';
 
 export interface JoinResult {
   ok: boolean;
@@ -31,6 +32,8 @@ export const joinErrorMessage = (result: Pick<JoinResult, 'error' | 'domain'>): 
       return 'As vagas do benefício da sua empresa acabaram. Fale com o RH.';
     case 'already_member':
       return 'Você já tem o benefício de outra empresa. Saia dele antes de usar este código.';
+    case 'too_many_attempts':
+      return 'Muitas tentativas de código. Aguarde 15 minutos e tente de novo.';
     case 'not_patient':
       return 'O benefício da empresa é para contas de paciente.';
     default:

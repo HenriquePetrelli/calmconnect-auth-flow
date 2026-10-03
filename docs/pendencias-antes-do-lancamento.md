@@ -47,19 +47,29 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 - **Como testar:** fazer uma chamada com um lado no 4G e o outro numa rede corporativa ou de outra operadora e confirmar que o vídeo conecta.
 - **Registrado em:** 2026-10-04.
 
+### 6. Ajustes de segurança no painel do Supabase (Authentication)
+
+- **Onde:** Supabase → Authentication → Policies/Settings (não dá para configurar pelo código).
+- **O que fazer:**
+  1. Tamanho mínimo de senha: 8 (o app já exige 8 com letras e números nas contas novas; o servidor ainda aceita 6 de quem chamar a API direto).
+  2. Ativar "Leaked password protection" (recusa senhas que já vazaram na internet).
+  3. Confirmar que "Confirm email" está ligado.
+  4. Ativar a verificação em duas etapas (MFA) para as contas de admin.
+- **Registrado em:** 2026-10-04.
+
 ## Melhorias sugeridas
 
-### 6. SOS por mensagem de texto
+### 7. SOS por mensagem de texto
 
 - Apps como Crisis Text Line e o chat do CVV atendem por texto: muita gente em crise não consegue falar (está em casa com outras pessoas, no trabalho, sem voz). Hoje o SOS do Soliv é só por vídeo (dá para desligar a câmera, mas não para falar sem voz).
 - **Registrado em:** 2026-10-04.
 
-### 7. Triagem rápida de risco no SOS
+### 8. Triagem rápida de risco no SOS
 
 - Antes de entrar na fila, 1 ou 2 perguntas (ex.: "Você está pensando em se machucar agora?"). Se sim: mostrar CVV 188 e SAMU 192 em destaque e marcar o pedido como prioritário para o psicólogo. É o que fazem serviços como o 988 e o Wysa.
 - **Registrado em:** 2026-10-04.
 
-### 8. Plano pós-crise para o paciente
+### 9. Plano pós-crise para o paciente
 
 - Ao fim do SOS, o psicólogo registra notas só para ele. Serviços de crise costumam deixar com a pessoa um resumo curto e combinados ("o que fazer nas próximas 24h", "procure atendimento se..."), que poderiam virar parte do plano de segurança.
 - **Registrado em:** 2026-10-04.
@@ -70,3 +80,8 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 
 - O fim da chamada já pedia a avaliação; faltava o resto. Agora: se o paciente fechar o app ou a chamada cair antes da tela de avaliação, o app convida a avaliar ao abrir de novo (sem bloquear, dá para pular); o histórico de consultas mostra a nota de cada consulta ou o botão "Avaliar" (até 30 dias depois); a avaliação fica ligada à consulta e ao psicólogo e entra na média dele.
 - Achados no caminho e corrigidos: o histórico de consultas do paciente aparecia sempre vazio (usava a lista de próximas consultas), e qualquer usuário podia gravar avaliação para uma sessão da qual não participou, mexendo na média de qualquer psicólogo.
+
+### Varredura de segurança (resolvida em 2026-10-04)
+
+- Corrigido (migration `20261004210000_security_hardening.sql` e edge functions): rotinas agendadas que qualquer pessoa podia disparar com a chave pública do app; psicólogo não aprovado lendo e aceitando pedidos de SOS (com nome e sintomas do paciente); Premium grátis inserindo a própria assinatura; psicólogo se aprovando e paciente se desbloqueando direto na tabela; CPF, Pix, e-mail e documentos de todos os psicólogos visíveis para qualquer usuário; funções que gravavam dados de outros usuários; limite de requisições que dava para esgotar no nome de outra pessoa (bloquear o SOS dela); cancelamento do SOS de outra pessoa; injeção de HTML nos e-mails de suporte; papel do usuário (admin/psicólogo) lido de um campo que o próprio usuário edita; força bruta de código de empresa; uploads sem limite de tipo e tamanho no servidor.
+- Verificado sem problema: SQL injection (todas as consultas usam parâmetros; o SQL dinâmico só existe em migrations, com identificadores escapados), XSS (o React escapa o texto; o único HTML cru é o CSS do gráfico), webhook do Stripe (assinatura conferida), prompt injection (o app não usa IA).

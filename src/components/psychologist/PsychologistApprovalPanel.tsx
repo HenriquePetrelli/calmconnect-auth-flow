@@ -594,7 +594,7 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => window.open(selectedPsychologist.document_url, '_blank')}
+                                    onClick={() => window.open(selectedPsychologist.document_url, '_blank', 'noopener,noreferrer')}
                                   >
                                     <Eye className="h-4 w-4 mr-1" />
                                     Visualizar
@@ -602,7 +602,7 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={() => window.open(selectedPsychologist.document_url, '_blank')}
+                                    onClick={() => window.open(selectedPsychologist.document_url, '_blank', 'noopener,noreferrer')}
                                   >
                                     <Download className="h-4 w-4" />
                                   </Button>

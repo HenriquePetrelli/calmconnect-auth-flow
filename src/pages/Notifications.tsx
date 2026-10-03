@@ -69,7 +69,8 @@ const Notifications = () => {
     }
 
     // Notificações novas trazem o destino (link) gravado pelo servidor.
-    if (typeof notification.link === 'string' && notification.link.startsWith('/')) {
+    // Só caminhos do próprio app: "//site.com" também começa com "/".
+    if (typeof notification.link === 'string' && /^\/(?!\/)/.test(notification.link)) {
       navigate(notification.link);
       return;
     }

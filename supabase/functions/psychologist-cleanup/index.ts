@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { isTrustedCaller, unauthorized } from '../_shared/guards.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -22,13 +23,8 @@ const handler = async (req: Request): Promise<Response> => {
     // Optional shared secret (same pattern as reset-weekly-goals): once
     // CRON_SECRET is configured as an edge function secret, only callers
     // sending a matching x-cron-secret header (the pg_cron job) get through.
-    const cronSecret = Deno.env.get('CRON_SECRET');
-    if (cronSecret && req.headers.get('x-cron-secret') !== cronSecret) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 401,
-      });
-    }
+    // Só o pg_cron (x-cron-secret) ou outra função (service role).
+    if (!(await isTrustedCaller(req))) return unauthorized(corsHeaders);
 
     // Find rejected psychologists older than 3 days
     const { data: rejectedPsychologists, error: queryError } = await supabase

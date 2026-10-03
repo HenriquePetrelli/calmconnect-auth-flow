@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { escapeHtml, isBoundedText, isValidEmail, withinRateLimit } from '../_shared/guards.ts';
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -25,9 +26,9 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const { email, phone, description }: SupportRequest = await req.json();
 
-    if (!email || !description) {
+    if (!isValidEmail(email) || !isBoundedText(description, 5000) || !isBoundedText(phone, 30, false)) {
       return new Response(
-        JSON.stringify({ error: "Email e descrição são obrigatórios" }),
+        JSON.stringify({ error: "Confira o e-mail e a descrição (até 5000 caracteres)." }),
         {
           status: 400,
           headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -72,11 +73,9 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Each send costs a real email via Resend and creates a ticket for a
     // human to read — cap how many a session can fire off.
-    const { data: withinLimit } = await supabase.rpc('check_rate_limit', {
-      p_key: `support-request:${user.id}`,
-      p_max_requests: 3,
-      p_window_seconds: 3600,
-    });
+    // Pelo service role: a RPC não é mais exposta a usuários (dava para
+    // esgotar o limite de outra pessoa passando a chave dela).
+    const withinLimit = await withinRateLimit(`support-request:${user.id}`, 3, 3600);
     if (withinLimit === false) {
       return new Response(
         JSON.stringify({ error: "Muitas solicitações em pouco tempo. Aguarde antes de enviar outra." }),
@@ -126,15 +125,15 @@ const handler = async (req: Request): Promise<Response> => {
             <h3 style="margin-top: 0; color: #495057;">Informações do Usuário:</h3>
             <p><strong>ID do Ticket:</strong> ${ticket.id}</p>
             <p><strong>ID do Usuário:</strong> ${user.id}</p>
-            <p><strong>Email:</strong> ${email}</p>
-            ${phone ? `<p><strong>Telefone:</strong> ${phone}</p>` : ''}
+            <p><strong>Email:</strong> ${escapeHtml(email)}</p>
+            ${phone ? `<p><strong>Telefone:</strong> ${escapeHtml(phone)}</p>` : ''}
             <p><strong>Data:</strong> ${new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</p>
           </div>
           
           <div style="background-color: #fff; padding: 20px; border: 1px solid #dee2e6; border-radius: 8px;">
             <h3 style="margin-top: 0; color: #495057;">Descrição do Problema:</h3>
             <div style="background-color: #f8f9fa; padding: 15px; border-left: 4px solid #007bff; font-style: italic;">
-              ${description.replace(/\n/g, '<br>')}
+              ${escapeHtml(description).replace(/\n/g, '<br>')}
             </div>
           </div>
           
@@ -164,7 +163,7 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error("Error in send-support-request function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: 'Não foi possível enviar agora. Tente de novo em instantes.' }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },

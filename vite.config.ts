@@ -2,6 +2,18 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
+import { CONTENT_SECURITY_POLICY } from "./src/lib/contentSecurityPolicy";
+
+// CSP e cabeçalhos de segurança só no build publicado.
+const securityMeta = () => ({
+  name: "soliv-security-meta",
+  apply: "build" as const,
+  transformIndexHtml: (html: string) =>
+    html.replace(
+      "<meta charset=\"UTF-8\" />",
+      `<meta charset="UTF-8" />\n    <meta http-equiv="Content-Security-Policy" content="${CONTENT_SECURITY_POLICY}" />\n    <meta name="referrer" content="strict-origin-when-cross-origin" />`,
+    ),
+});
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -20,6 +32,7 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
+    securityMeta(),
     mode === 'development' && componentTagger(),
   ].filter(Boolean),
   resolve: {

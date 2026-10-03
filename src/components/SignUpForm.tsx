@@ -15,6 +15,7 @@ import { validateCPF } from "@/utils/cpf";
 import LegalConsents, { EMPTY_CONSENTS, allConsentsGiven, consentKeysFor } from "@/components/legal/LegalConsents";
 import { signupAcceptanceMetadata } from "@/lib/legal";
 import { joinErrorMessage, normalizeInviteCode, type JoinErrorCode } from "@/lib/organizations";
+import { passwordProblem, PASSWORD_HINT } from '@/lib/password';
 
 interface SignUpFormProps {
   userType: "patient" | "psychologist";
@@ -239,8 +240,9 @@ const [formData, setFormData] = useState({
         return;
       }
 
-      if (formData.password.length < 6) {
-        toast.error("A senha deve ter pelo menos 6 caracteres");
+      const weakPassword = passwordProblem(formData.password);
+      if (weakPassword) {
+        toast.error(weakPassword);
         setErrors({ password: true });
         return;
       }
@@ -266,7 +268,7 @@ const [formData, setFormData] = useState({
         if (error.message.includes("User already registered")) {
           toast.error("Este email já está cadastrado. Tente fazer login.");
         } else if (error.message.includes("Password should be at least")) {
-          toast.error("A senha deve ter pelo menos 6 caracteres");
+          toast.error(PASSWORD_HINT);
         } else if (error.message.includes("Unable to validate email address")) {
           toast.error("Email inválido. Verifique o endereço informado.");
         } else {
@@ -570,7 +572,7 @@ const { error: profileError } = await supabase
                   type={showPassword ? "text" : "password"}
                   value={formData.password}
                   onChange={(e) => handleInputChange("password", e.target.value)}
-                  placeholder="Digite sua senha (mín. 6 caracteres)"
+                  placeholder={PASSWORD_HINT}
                   required
                   className={`h-12 rounded-xl border-border focus:ring-primary pr-12 ${errors.password ? 'border-destructive' : ''}`}
                 />

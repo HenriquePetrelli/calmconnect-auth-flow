@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { isTrustedCaller } from "../_shared/guards.ts";
 
 // Envia para o celular as notificações do app marcadas com `push` (consultas:
 // nova solicitação, confirmação, recusa, remarcação, cancelamento e lembretes
@@ -27,9 +28,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const json = (body: unknown, status = 200) =>
     new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-  const cronSecret = Deno.env.get("CRON_SECRET");
-  const sentSecret = req.headers.get("x-cron-secret");
-  if (cronSecret && sentSecret && sentSecret !== cronSecret) return json({ error: "Unauthorized" }, 401);
+  // Só o pg_cron (x-cron-secret) ou outra função (service role).
+  if (!(await isTrustedCaller(req))) return json({ error: "Unauthorized" }, 401);
 
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey, {

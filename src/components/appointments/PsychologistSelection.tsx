@@ -54,7 +54,7 @@ export const PsychologistSelection: React.FC<PsychologistSelectionProps> = ({
       // Buscar diretamente da tabela psychologists com approved = true
       const { data, error } = await supabase
         .from('psychologists')
-        .select('*, total_appointments')
+        .select('id, user_id, full_name, specialization, bio, crp_number, city, state, address, approved, total_appointments')
         .eq('approved', true)
         .order('full_name', { ascending: true });
   
@@ -74,7 +74,6 @@ export const PsychologistSelection: React.FC<PsychologistSelectionProps> = ({
         approved: psych.approved,
         // Adicionar outros campos necessários
         state: psych.state,
-        document_url: psych.document_url,
         total_appointments: psych.total_appointments || 0
       })) || [];
   

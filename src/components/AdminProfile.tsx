@@ -9,6 +9,7 @@ import { LogOut, Mail, Key, Save, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { getFriendlyErrorMessage } from '@/utils/errorMessage';
+import { passwordProblem } from '@/lib/password';
 
 const AdminProfile = () => {
   const { toast } = useToast();
@@ -40,8 +41,9 @@ const AdminProfile = () => {
         if (formData.newPassword !== formData.confirmPassword) {
           throw new Error('As senhas não coincidem');
         }
-        if (formData.newPassword.length < 6) {
-          throw new Error('A nova senha deve ter pelo menos 6 caracteres');
+        const weakPassword = passwordProblem(formData.newPassword);
+        if (weakPassword) {
+          throw new Error(weakPassword);
         }
         if (!formData.currentPassword) {
           throw new Error('Senha atual é obrigatória para alterar a senha');

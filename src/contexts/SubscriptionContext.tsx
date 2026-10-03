@@ -40,6 +40,25 @@ export const useSubscription = () => {
   return context;
 };
 
+const CACHE_PREFIX = 'soliv:subscription:';
+
+const readCachedSubscription = (userId: string): unknown | null => {
+  try {
+    const raw = sessionStorage.getItem(CACHE_PREFIX + userId);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
+const writeCachedSubscription = (userId: string, data: unknown) => {
+  try {
+    sessionStorage.setItem(CACHE_PREFIX + userId, JSON.stringify(data));
+  } catch {
+    // armazenamento bloqueado (modo privado): segue sem cache
+  }
+};
+
 export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [subscribed, setSubscribed] = useState(false);
   const [subscriptionTier, setSubscriptionTier] = useState<string | null>(null);
@@ -60,6 +79,25 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const { toast } = useToast();
   const { user } = useAuth();
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const applySubscriptionData = (data: any) => {
+    setSubscribed(data.subscribed || false);
+    setSubscriptionTier(data.subscription_tier);
+    setSubscriptionEnd(data.subscription_end);
+    setPlanLimits(data.plan_limits || { appointments: 0, sos_uses: 0 });
+    setCurrentUsage(data.current_usage || { appointments: 0, sos_uses: 0 });
+    setCanScheduleAppointment(data.can_schedule_appointment ?? false);
+    setAppointmentReason(data.appointment_reason ?? null);
+    setEntitlementSource(data.entitlement_source ?? null);
+    setOrganizationName(data.organization_name ?? null);
+    setPersonalSubscriptionTier(data.personal_subscription_tier ?? null);
+    setCancelAtPeriodEnd(data.cancel_at_period_end ?? false);
+    setPendingTier(data.pending_tier ?? null);
+    setPendingFrom(data.pending_from ?? null);
+    setPaymentIssue(data.payment_issue ?? false);
+    setExtraSubscriptions(data.extra_subscriptions ?? 0);
+  };
+
   const checkSubscription = async () => {
     try {
       if (!user) {
@@ -79,21 +117,8 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         return;
       }
 
-      setSubscribed(data.subscribed || false);
-      setSubscriptionTier(data.subscription_tier);
-      setSubscriptionEnd(data.subscription_end);
-      setPlanLimits(data.plan_limits || { appointments: 0, sos_uses: 0 });
-      setCurrentUsage(data.current_usage || { appointments: 0, sos_uses: 0 });
-      setCanScheduleAppointment(data.can_schedule_appointment ?? false);
-      setAppointmentReason(data.appointment_reason ?? null);
-      setEntitlementSource(data.entitlement_source ?? null);
-      setOrganizationName(data.organization_name ?? null);
-      setPersonalSubscriptionTier(data.personal_subscription_tier ?? null);
-      setCancelAtPeriodEnd(data.cancel_at_period_end ?? false);
-      setPendingTier(data.pending_tier ?? null);
-      setPendingFrom(data.pending_from ?? null);
-      setPaymentIssue(data.payment_issue ?? false);
-      setExtraSubscriptions(data.extra_subscriptions ?? 0);
+      applySubscriptionData(data);
+      writeCachedSubscription(user.id, data);
     } catch (error) {
       console.error('Error checking subscription:', error);
     } finally {
@@ -120,6 +145,15 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       setExtraSubscriptions(0);
       setLoading(false);
       return;
+    }
+
+    // Mostra na hora o último plano conhecido nesta sessão; a conferência no
+    // Stripe (1-2s) roda em seguida e corrige se algo mudou. Só exibição: o
+    // servidor confere o plano de novo em cada uso (SOS, agendamento).
+    const cached = readCachedSubscription(user.id);
+    if (cached) {
+      applySubscriptionData(cached);
+      setLoading(false);
     }
 
     const scheduleCheck = () => checkSubscription();

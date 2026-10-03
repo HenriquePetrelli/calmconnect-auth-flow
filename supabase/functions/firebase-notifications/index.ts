@@ -202,7 +202,7 @@ Deno.serve(async (req) => {
                 notification: { title: payload.title, body: payload.body },
                 data: payload.data ?? {},
                 // Tocar na notificação (web) abre a tela certa.
-                ...(payload.data?.url?.startsWith('/')
+                ...(/^\/(?!\/)/.test(payload.data?.url ?? '')
                   ? { webpush: { fcm_options: { link: payload.data.url } } }
                   : {}),
               },

@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 import type { AdminPatient } from '@/hooks/usePatientManagement';
+import { passwordProblem } from '@/lib/password';
 
 interface EditPatientModalProps {
   open: boolean;
@@ -51,7 +52,7 @@ export const EditPatientModal = ({ open, onOpenChange, patient, onSaved }: EditP
     if (!patient) return;
     if (form.full_name.trim().length < 2) return toast.error('Informe o nome completo');
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email.trim())) return toast.error('E-mail inválido');
-    if (form.password && form.password.length < 6) return toast.error('A senha deve ter ao menos 6 caracteres');
+    if (form.password && passwordProblem(form.password)) return toast.error(passwordProblem(form.password)!);
 
     setSaving(true);
     try {

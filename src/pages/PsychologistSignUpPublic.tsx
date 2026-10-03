@@ -19,6 +19,7 @@ import { TRANSTORNOS } from "@/data/transtornos";
 import MultiSelectModal from "@/components/ui/multi-select-modal";
 import { validateCPF } from "@/utils/cpf";
 import LegalConsents, { EMPTY_CONSENTS, allConsentsGiven, consentKeysFor } from "@/components/legal/LegalConsents";
+import { passwordProblem, PASSWORD_HINT } from '@/lib/password';
 
 const specializations = [
   // Áreas tradicionais
@@ -58,7 +59,7 @@ const specializations = [
 
 const formSchema = z.object({
   email: z.string().email("Email inválido"),
-  password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
+  password: z.string().refine((v) => passwordProblem(v) === null, { message: PASSWORD_HINT }),
   confirmPassword: z.string(),
   fullName: z.string().min(2, "Nome completo é obrigatório"),
   cpf: z.string().min(1, "CPF é obrigatório"),

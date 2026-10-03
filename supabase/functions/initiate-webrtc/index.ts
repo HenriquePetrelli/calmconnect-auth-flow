@@ -230,6 +230,18 @@ serve(async (req) => {
       });
     }
 
+    // O tipo vem do cliente: confirma no banco que quem diz ser psicólogo é
+    // um psicólogo aprovado (senão um paciente pegaria um SOS pendente).
+    if (user_type === "psychologist") {
+      const { data: canAttend } = await supabaseAdmin.rpc("psychologist_can_attend", { p_user_id: user.id });
+      if (!canAttend) {
+        return new Response(JSON.stringify({ error: "Acesso negado" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     // Verify user has access to this emergency request
     const hasAccess = (user_type === "patient" && emergencyRequest.patient_id === user.id) ||
                      (user_type === "psychologist" && (

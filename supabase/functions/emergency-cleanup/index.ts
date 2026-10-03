@@ -62,7 +62,7 @@ serve(async (req) => {
       );
     }
 
-    const { request_id, patient_id, authorization } = requestBody;
+    const { request_id, patient_id, access_token } = requestBody;
 
     if (!request_id || !patient_id) {
       return new Response(
@@ -71,6 +71,19 @@ serve(async (req) => {
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
+      );
+    }
+
+    // Só o próprio paciente cancela o pedido. Antes bastava saber o id do
+    // pedido e do paciente (o psicólogo vê os dois na fila) para cancelar o
+    // SOS de outra pessoa.
+    const { data: auth } = typeof access_token === 'string'
+      ? await supabase.auth.getUser(access_token)
+      : { data: { user: null } };
+    if (!auth.user || auth.user.id !== patient_id) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 

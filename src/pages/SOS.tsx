@@ -66,13 +66,26 @@ const SOS = () => {
     };
   }, []); // Empty dependency array - only runs on unmount
 
+  // O beacon não manda cabeçalho de login: vai o token no corpo, para o
+  // servidor confirmar que é o próprio paciente cancelando o pedido.
+  const accessTokenRef = useRef<string | null>(null);
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      accessTokenRef.current = data.session?.access_token ?? null;
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      accessTokenRef.current = session?.access_token ?? null;
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
   // Closing the tab / app must also drop the request from the psychologist queue.
   useEffect(() => {
     const handleUnload = () => {
       const id = requestIdRef.current;
-      if (!id || acceptedRef.current || !userId) return;
+      if (!id || acceptedRef.current || !userId || !accessTokenRef.current) return;
 
-      const payload = JSON.stringify({ request_id: id, patient_id: userId });
+      const payload = JSON.stringify({ request_id: id, patient_id: userId, access_token: accessTokenRef.current });
       try {
         navigator.sendBeacon(
           `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/emergency-cleanup`,

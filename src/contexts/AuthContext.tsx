@@ -27,7 +27,8 @@ const cleanupAuthState = () => {
     }
   });
   Object.keys(sessionStorage || {}).forEach((key) => {
-    if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+    // soliv:subscription: plano guardado para abrir mais rápido (SubscriptionContext).
+    if (key.startsWith('supabase.auth.') || key.includes('sb-') || key.startsWith('soliv:subscription:')) {
       sessionStorage.removeItem(key);
     }
   });
@@ -44,39 +45,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const meta = authUser.user_metadata ?? {};
 
     try {
-      // Super admin (flag legada de metadata)
-      if (meta.is_super_admin === true) {
-        console.log('[AuthContext] getUserType -> admin (is_super_admin meta)', { userId, email: authUser.email });
-        return 'admin';
-      }
-
+      // user_metadata é editável pelo próprio usuário (supabase.auth.updateUser):
+      // só serve de atalho para "paciente", nunca para dar mais acesso. Admin e
+      // psicólogo aprovado vêm sempre do banco.
       // Fast path: user type já presente no JWT
-      if (meta.user_type === 'patient') {
+      if (meta.user_type === 'patient' && meta.is_super_admin !== true) {
         console.log('[AuthContext] getUserType -> patient (meta)', { userId, email: authUser.email });
         return 'patient';
       }
-      if (
-        meta.user_type === 'psychologist' &&
-        meta.account_status === 'approved'
-      ) {
-        return 'psychologist';
-      }
 
-      // Check if user is a super admin (admin_users table)
-      try {
-        const { data: isAdminData, error: isAdminError } = await supabase
-          .rpc('is_super_admin', { user_id_param: userId });
-        if (!isAdminError && isAdminData === true) {
-          console.log('[AuthContext] getUserType -> admin (admin_users)', { userId });
-          return 'admin';
-        }
-      } catch (e) {
-        console.warn('[AuthContext] is_super_admin check failed', e);
+      // As consultas não dependem umas das outras: em paralelo (login mais rápido).
+      const [adminResult, rejectionResult, profileResult, registrationResult, psychologistResult] = await Promise.all([
+        supabase.rpc('is_super_admin', { user_id_param: userId }),
+        supabase.rpc('get_psychologist_rejection_status', { p_user_id: userId }),
+        supabase.from('profiles').select('user_type').eq('user_id', userId).maybeSingle(),
+        supabase.from('psychologist_registrations').select('status, rejected_at').eq('user_id', userId).maybeSingle(),
+        supabase.from('psychologists').select('approved, approval_status').eq('user_id', userId).maybeSingle(),
+      ]);
+
+      if (!adminResult.error && adminResult.data === true) {
+        console.log('[AuthContext] getUserType -> admin (admin_users)', { userId });
+        return 'admin';
       }
 
       // Check if psychologist is rejected and show specific message
-      const { data: rejectionStatus, error: rejectionError } = await supabase
-        .rpc('get_psychologist_rejection_status', { p_user_id: userId });
+      const { data: rejectionStatus, error: rejectionError } = rejectionResult;
 
       if (!rejectionError && rejectionStatus?.[0]?.is_rejected) {
         const rejectionData = rejectionStatus[0];
@@ -94,21 +87,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // Check profile for psychologist/patient
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('user_type')
-        .eq('user_id', userId)
-        .single();
+      const profileData = profileResult.data;
 
       if (profileData?.user_type === 'psychologist') {
-        // For psychologists, check if approved
-        const { data: registrationData } = await supabase
-          .from('psychologist_registrations')
-          .select('status, rejected_at')
-          .eq('user_id', userId)
-          .single();
+        // For psychologists, check if approved (no banco, não no metadata)
+        const registrationData = registrationResult.data;
+        const psychologistRow = psychologistResult.data;
 
-        if (registrationData?.status === 'approved' || authUser.user_metadata?.account_status === 'approved') {
+        if (
+          registrationData?.status === 'approved' ||
+          (psychologistRow?.approved === true && psychologistRow.approval_status === 'approved')
+        ) {
           return 'psychologist';
         }
         
@@ -143,36 +132,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const handleAuthStateChange = async (event: string, session: Session | null) => {
-    console.log('[AuthContext] event:', event, 'user:', session?.user?.email, 'meta:', session?.user?.user_metadata);
+    console.log('[AuthContext] event:', event);
     setSession(session);
     setUser(session?.user ?? null);
 
     if (session?.user) {
       const meta = session.user.user_metadata ?? {};
 
-      // Super admin via metadata (precedência máxima)
-      if (meta.is_super_admin === true) {
-        console.log('[AuthContext] -> admin (fast path)');
-        setUserType('admin');
-        setLoading(false);
-        return;
-      }
-
       // Paciente via metadata
-      if (meta.user_type === 'patient') {
+      if (meta.user_type === 'patient' && meta.is_super_admin !== true) {
         console.log('[AuthContext] -> patient (fast path)');
         setUserType('patient');
-        setLoading(false);
-        return;
-      }
-
-      // Psicólogo aprovado via metadata
-      if (
-        meta.user_type === 'psychologist' &&
-        meta.account_status === 'approved'
-      ) {
-        console.log('[AuthContext] -> psychologist (fast path)');
-        setUserType('psychologist');
         setLoading(false);
         return;
       }

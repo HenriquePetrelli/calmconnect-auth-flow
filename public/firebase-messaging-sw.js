@@ -42,7 +42,8 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const data = event.notification.data || {};
   if (data.FCM_MSG) return; // notificação mostrada pelo Firebase: ele cuida do clique
-  const target = typeof data.url === 'string' && data.url.startsWith('/') ? data.url : '/';
+  // Só caminhos do próprio app ("//site.com" também começa com "/").
+  const target = typeof data.url === 'string' && /^\/(?!\/)/.test(data.url) ? data.url : '/';
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
       for (const client of clients) {

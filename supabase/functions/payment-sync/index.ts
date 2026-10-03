@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { isTrustedCaller } from '../_shared/guards.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -21,32 +22,37 @@ Deno.serve(async (req) => {
     // endpoint never checked who was calling it — recalculating pending
     // payment amounts is triggered from the admin panel, not a public
     // action.
+    // O job semanal (pg_cron) chama com x-cron-secret; antes ele mandava a
+    // chave anônima e era sempre recusado aqui (só admin passava).
+    const trusted = await isTrustedCaller(req);
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
+    if (!trusted && !authHeader) {
       return new Response(
         JSON.stringify({ error: 'Missing authorization header' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
-    if (userError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    if (!trusted) {
+      const { data: { user }, error: userError } = await supabase.auth.getUser(
+        (authHeader ?? '').replace('Bearer ', '')
       );
-    }
+      if (userError || !user) {
+        return new Response(
+          JSON.stringify({ error: 'Unauthorized' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
 
-    const { data: isAdmin, error: adminError } = await supabase.rpc('is_super_admin', {
-      user_id_param: user.id,
-    });
-    if (adminError || !isAdmin) {
-      return new Response(
-        JSON.stringify({ error: 'Admin access required' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      const { data: isAdmin, error: adminError } = await supabase.rpc('is_super_admin', {
+        user_id_param: user.id,
+      });
+      if (adminError || !isAdmin) {
+        return new Response(
+          JSON.stringify({ error: 'Admin access required' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     // Call the sync function

@@ -70,7 +70,7 @@ const PsychologistProfile = () => {
 
         const { data: psych } = await supabase
           .from('psychologists')
-          .select('full_name, specialization, bio, email')
+          .select('full_name, specialization, bio')
           .eq('user_id', user.id)
           .maybeSingle();
 

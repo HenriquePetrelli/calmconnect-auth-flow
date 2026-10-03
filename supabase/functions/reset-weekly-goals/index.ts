@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { isTrustedCaller, unauthorized } from '../_shared/guards.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -26,13 +27,8 @@ serve(async (req) => {
     // isn't configured, so this doesn't break the existing cron job; (2) a
     // hard requirement that it only runs on Monday in Brazil's calendar,
     // which holds regardless of whether the secret is configured yet.
-    const cronSecret = Deno.env.get('CRON_SECRET');
-    if (cronSecret && req.headers.get('x-cron-secret') !== cronSecret) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 401,
-      });
-    }
+    // Só o pg_cron (x-cron-secret) ou outra função (service role).
+    if (!(await isTrustedCaller(req))) return unauthorized(corsHeaders);
 
     const brazilNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
     if (brazilNow.getDay() !== 1) { // 0 = Sunday, 1 = Monday

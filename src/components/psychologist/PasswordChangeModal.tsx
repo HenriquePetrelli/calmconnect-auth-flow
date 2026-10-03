@@ -6,6 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 import { supabase } from '@/integrations/supabase/client';
+import { passwordProblem } from '@/lib/password';
 
 interface PasswordChangeModalProps {
   open: boolean;
@@ -44,8 +45,9 @@ export const PasswordChangeModal = ({ open, onOpenChange, currentEmail }: Passwo
   }, [open]);
 
   const handleSave = async () => {
-    if (!newPassword || newPassword.length < 8) {
-      toast({ title: 'Senha inválida', description: 'A nova senha deve ter pelo menos 8 caracteres.', variant: 'destructive' });
+    const weakPassword = passwordProblem(newPassword ?? '');
+    if (weakPassword) {
+      toast({ title: 'Senha inválida', description: weakPassword, variant: 'destructive' });
       return;
     }
     if (newPassword !== confirmPassword) {

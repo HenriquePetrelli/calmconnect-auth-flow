@@ -10,6 +10,7 @@ import { SPECIALIZATIONS } from '@/data/specializations';
 import { toast } from 'sonner';
 import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 import { Eye, EyeOff, FileText, Loader2, Upload } from 'lucide-react';
+import { passwordProblem } from '@/lib/password';
 
 interface EditablePsychologist {
   id: string;
@@ -111,7 +112,7 @@ export const EditPsychologistModal = ({
     if (!form.full_name?.trim()) return toast.error('Nome completo é obrigatório');
     if (!form.email?.trim()) return toast.error('Email é obrigatório');
     if (!form.crp_number?.trim()) return toast.error('CRP é obrigatório');
-    if (password && password.length < 6) return toast.error('A senha deve ter ao menos 6 caracteres');
+    if (password && passwordProblem(password)) return toast.error(passwordProblem(password)!);
 
     setSaving(true);
     try {
@@ -299,7 +300,7 @@ export const EditPsychologistModal = ({
               </div>
               <div className="flex gap-2">
                 {form.document_url && (
-                  <Button variant="outline" size="sm" onClick={() => window.open(form.document_url!, '_blank')}>
+                  <Button variant="outline" size="sm" onClick={() => window.open(form.document_url!, '_blank', 'noopener,noreferrer')}>
                     Visualizar
                   </Button>
                 )}

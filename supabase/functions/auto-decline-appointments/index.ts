@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.52.1";
+import { isTrustedCaller, unauthorized } from '../_shared/guards.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -10,6 +11,9 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  // Rotina agendada: só o pg_cron (x-cron-secret) ou outra função (service role).
+  if (!(await isTrustedCaller(req))) return unauthorized(corsHeaders);
 
   try {
     const supabase = createClient(
