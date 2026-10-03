@@ -2518,6 +2518,7 @@ export type Database = {
             Returns: Json
           }
       expire_organization_entitlements: { Args: never; Returns: number }
+      finalize_stale_appointments: { Args: never; Returns: number }
       finalize_stale_emergency_sessions: {
         Args: never
         Returns: {
