@@ -11,6 +11,7 @@ import type { HabitDraft } from '@/hooks/useHabits';
 import {
   HABIT_CATALOG,
   JOY_ACTIVITIES,
+  MEALS,
   formatAmount,
   formatHabitAmount,
   isLimitHabit,
@@ -20,6 +21,7 @@ import {
   waterGoalFromWeight,
   type HabitKind,
   type HabitSettings,
+  type MealKey,
   type UserHabit,
 } from '@/lib/habits';
 
@@ -103,7 +105,9 @@ const HabitForm = ({ kind, habit, saving, onSubmit }: HabitFormProps) => {
   const [bedtime, setBedtime] = useState(settings.bedtime ?? '23:00');
   const [activities, setActivities] = useState<string[]>(settings.activities ?? catalog.defaultSettings.activities ?? []);
   const [newActivity, setNewActivity] = useState('');
-  const [remindersEnabled, setRemindersEnabled] = useState(habit?.reminders_enabled ?? (kind === 'water' || kind === 'medication'));
+  // Refeições: horário de cada uma; sem horário = sem lembrete daquela refeição.
+  const [mealTimes, setMealTimes] = useState<Partial<Record<MealKey, string>>>(settings.meal_times ?? (habit ? {} : catalog.defaultSettings.meal_times ?? {}));
+  const [remindersEnabled, setRemindersEnabled] = useState(habit?.reminders_enabled ?? (kind === 'water' || kind === 'medication' || kind === 'meals'));
   const [reminderStart, setReminderStart] = useState(habit?.reminder_start ?? catalog.defaultReminder.start);
   const [reminderEnd, setReminderEnd] = useState(habit?.reminder_end ?? catalog.defaultReminder.end);
   const [reminderInterval, setReminderInterval] = useState(String(habit?.reminder_interval_minutes ?? catalog.defaultReminder.interval ?? 120));
@@ -113,7 +117,7 @@ const HabitForm = ({ kind, habit, saving, onSubmit }: HabitFormProps) => {
   const usesInterval = kind === 'water';
   const limit = isLimitHabit(kind);
   // Remédio avisa nos horários das doses; tela, 1 hora antes de dormir.
-  const reminderTimeEditable = kind !== 'medication' && kind !== 'screen_time';
+  const reminderTimeEditable = kind !== 'medication' && kind !== 'screen_time' && kind !== 'meals';
   const goalSuffix =
     catalog.unit === 'ml' ? 'ml' : catalog.unit === 'h' ? 'horas' : catalog.unit === 'mg' ? 'mg' : catalog.unit === 'count' ? catalog.countNoun?.[1] ?? '' : 'minutos';
   const goalHint: Partial<Record<HabitKind, string>> = {
@@ -186,6 +190,12 @@ const HabitForm = ({ kind, habit, saving, onSubmit }: HabitFormProps) => {
         if (draft.reminder_start >= draft.reminder_end) draft.reminder_start = '23:00';
       }
       if (kind === 'joy') extra.activities = activities.slice(0, 12);
+      if (kind === 'meals') {
+        const times = Object.fromEntries(Object.entries(mealTimes).filter(([, t]) => t && isValidTime(t)));
+        extra.meal_times = times;
+        draft.reminder_start = '00:00';
+        draft.reminder_end = '23:59';
+      }
       draft.settings = { ...draft.settings, ...extra };
     } else {
       const started = startMode === 'now' && !habit ? new Date() : new Date(startedAt);
@@ -318,6 +328,42 @@ const HabitForm = ({ kind, habit, saving, onSubmit }: HabitFormProps) => {
               <Input id="habit-bedtime" type="time" value={bedtime} onChange={(e) => setBedtime(e.target.value)} className="h-11" />
               <p className="text-xs text-muted-foreground">Telas antes de deitar atrasam o sono. O lembrete chega 1 hora antes.</p>
             </div>
+          )}
+          {kind === 'meals' && (
+            <fieldset className="space-y-2">
+              <legend className="text-sm font-medium">Horário de cada refeição</legend>
+              <p className="text-xs text-muted-foreground">Ligue as refeições em que você quer lembrete e ajuste o horário.</p>
+              {MEALS.map((meal) => {
+                const on = Boolean(mealTimes[meal.key]);
+                return (
+                  <div key={meal.key} className="flex items-center gap-3">
+                    <Switch
+                      id={`meal-${meal.key}`}
+                      checked={on}
+                      onCheckedChange={(checked) =>
+                        setMealTimes((prev) => {
+                          const next = { ...prev };
+                          if (checked) next[meal.key] = prev[meal.key] ?? meal.defaultTime;
+                          else delete next[meal.key];
+                          return next;
+                        })
+                      }
+                    />
+                    <Label htmlFor={`meal-${meal.key}`} className="flex-1">
+                      {meal.label}
+                    </Label>
+                    <Input
+                      aria-label={`Horário do ${meal.label.toLowerCase()}`}
+                      type="time"
+                      value={mealTimes[meal.key] ?? meal.defaultTime}
+                      disabled={!on}
+                      onChange={(e) => setMealTimes((prev) => ({ ...prev, [meal.key]: e.target.value }))}
+                      className="h-11 w-32"
+                    />
+                  </div>
+                );
+              })}
+            </fieldset>
           )}
           {kind === 'joy' && (
             <fieldset className="space-y-2">
@@ -474,6 +520,8 @@ const HabitForm = ({ kind, habit, saving, onSubmit }: HabitFormProps) => {
             ? 'Avisamos no intervalo escolhido e paramos quando você bate a meta do dia.'
             : kind === 'medication'
               ? 'Avisamos em cada horário, até 2 horas depois, se a dose ainda não foi marcada.'
+              : kind === 'meals'
+                ? 'Avisamos no horário de cada refeição, até 2 horas depois, se ela ainda não foi marcada.'
               : kind === 'screen_time'
                 ? 'Um lembrete 1 hora antes de dormir para largar o celular.'
                 : kind === 'caffeine'

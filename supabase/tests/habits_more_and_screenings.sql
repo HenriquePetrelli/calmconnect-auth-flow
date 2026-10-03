@@ -1,4 +1,4 @@
--- Teste da migration 20261003120000_habits_more_and_screenings (rodar num banco
+-- Teste da migration 20261003000704_430065d1-08fe-4c94-b0ba-9912555d03f3.sql (rodar num banco
 -- de teste com a migration de hábitos e esta aplicadas). Cada checagem imprime
 -- uma linha "ok"; qualquer falha aborta com erro.
 \set ON_ERROR_STOP 1

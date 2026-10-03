@@ -35,6 +35,13 @@ const formatMl = (ml: number) =>
 const daysSince = (iso: string | null) =>
   iso ? Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000)) : 0;
 
+const MEAL_LABELS: Record<string, string> = {
+  breakfast: "café da manhã",
+  lunch: "almoço",
+  snack: "lanche",
+  dinner: "jantar",
+};
+
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 export const buildMessage = (r: DueReminder): { title: string; body: string } => {
@@ -66,13 +73,21 @@ export const buildMessage = (r: DueReminder): { title: string; body: string } =>
           : `Hoje: ${Math.round(total)} mg de ${Math.round(goal)} mg.`,
       };
     }
-    case "meals":
+    case "meals": {
+      const meal = MEAL_LABELS[r.due_slot ?? ""];
+      if (meal) {
+        return {
+          title: `Hora do ${meal} 🍽️`,
+          body: "Já comeu? Marque em Meus hábitos. Ficar muitas horas sem comer pode aumentar a ansiedade.",
+        };
+      }
       return {
         title: "Já comeu?",
         body: total >= goal
           ? "Refeições do dia em dia. Que bom!"
           : "Ficar muitas horas sem comer pode aumentar a ansiedade. Marque as refeições em Meus hábitos.",
       };
+    }
     case "medication":
       return {
         title: `Hora do remédio${r.due_slot ? ` (${r.due_slot})` : ""} 💊`,

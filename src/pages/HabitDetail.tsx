@@ -80,6 +80,10 @@ const Stat = ({ icon: Icon, label, value, hint }: { icon: typeof Flame; label: s
 const reminderSummary = (habit: UserHabit) => {
   if (!habit.reminders_enabled) return 'Lembretes desligados';
   if (habit.kind === 'medication') return `Lembretes às ${(habit.settings.times ?? []).join(', ')}`;
+  if (habit.kind === 'meals' && habit.settings.meal_times) {
+    const list = MEALS.filter((m) => habit.settings.meal_times?.[m.key]).map((m) => `${m.label.toLowerCase()} ${habit.settings.meal_times?.[m.key]}`);
+    return list.length > 0 ? `Lembretes: ${list.join(', ')}` : 'Nenhuma refeição com lembrete';
+  }
   if (habit.reminder_interval_minutes) {
     const h = habit.reminder_interval_minutes / 60;
     return `Lembretes a cada ${formatNumber(h, 1)} h, das ${habit.reminder_start} às ${habit.reminder_end}`;

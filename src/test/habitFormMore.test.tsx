@@ -58,4 +58,21 @@ describe('formulário dos novos hábitos', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Começar' }));
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ daily_goal: 1, settings: { activities: ['Tricô'] } }));
   });
+
+  it('refeições: um horário por refeição, com lembrete ligado', () => {
+    const onSubmit = vi.fn();
+    render(<HabitForm kind="meals" saving={false} onSubmit={onSubmit} />);
+    fireEvent.change(screen.getByLabelText('Horário do almoço'), { target: { value: '13:00' } });
+    fireEvent.click(screen.getByRole('switch', { name: 'Lanche' }));
+    fireEvent.click(screen.getByRole('switch', { name: 'Jantar' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Começar' }));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        kind: 'meals',
+        reminders_enabled: true,
+        reminder_start: '00:00',
+        settings: { meal_times: { breakfast: '08:00', lunch: '13:00', snack: '16:00' } },
+      }),
+    );
+  });
 });

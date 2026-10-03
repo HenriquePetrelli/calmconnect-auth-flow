@@ -45,7 +45,11 @@ export interface HabitSettings {
   bedtime?: string;
   // Algo que me faz bem: atividades favoritas.
   activities?: string[];
+  // Comer nos horários: horário de cada refeição com lembrete ({ lunch: "12:30" }).
+  meal_times?: Partial<Record<MealKey, string>>;
 }
+
+export type MealKey = "breakfast" | "lunch" | "snack" | "dinner";
 
 export interface UserHabit {
   id: string;
@@ -184,8 +188,8 @@ export const HABIT_CATALOG: Record<HabitKind, HabitCatalogEntry> = {
     goalStep: 1,
     goalMin: 1,
     goalMax: 6,
-    defaultSettings: {},
-    defaultReminder: { start: "12:30", end: "13:30", interval: null },
+    defaultSettings: { meal_times: { breakfast: "08:00", lunch: "12:30", dinner: "19:30" } },
+    defaultReminder: { start: "00:00", end: "23:59", interval: null },
   },
   medication: {
     kind: "medication",
@@ -381,12 +385,12 @@ export const CAFFEINE_DRINKS = [
   { key: "pre_workout", label: "Pré-treino (dose)", mg: 200 },
 ] as const;
 
-export const MEALS = [
-  { key: "breakfast", label: "Café da manhã" },
-  { key: "lunch", label: "Almoço" },
-  { key: "snack", label: "Lanche" },
-  { key: "dinner", label: "Jantar" },
-] as const;
+export const MEALS: { key: MealKey; label: string; defaultTime: string }[] = [
+  { key: "breakfast", label: "Café da manhã", defaultTime: "08:00" },
+  { key: "lunch", label: "Almoço", defaultTime: "12:30" },
+  { key: "snack", label: "Lanche", defaultTime: "16:00" },
+  { key: "dinner", label: "Jantar", defaultTime: "19:30" },
+];
 
 export const JOY_ACTIVITIES = [
   "Ler",
