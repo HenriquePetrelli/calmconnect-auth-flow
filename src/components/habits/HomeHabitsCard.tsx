@@ -32,16 +32,14 @@ const HomeHabitsCard = () => {
   const log = useHabitLogger(logIntake, deleteEvent);
   const now = useNow(60_000);
 
-  if (loading || error) return null;
+  // Sem hábitos, nada aqui: o card "Melhorar hábitos" em Seus recursos leva à tela.
+  if (loading || error || habits.length === 0) return null;
 
   const today = localDateString();
   const shown = habits.slice(0, MAX_ON_HOME);
 
   // Fechado, o subtítulo já resume o dia (como o "Humor de hoje").
-  const summary =
-    habits.length === 0
-      ? 'Água, sono, remédio, menos café ou tela'
-      : shown
+  const summary = shown
           .slice(0, 2)
           .map((habit) => {
             if (isQuitHabit(habit.kind)) {
@@ -57,19 +55,7 @@ const HomeHabitsCard = () => {
 
   return (
     <ExpandableCard className="mb-6" title="Meus hábitos" subtitle={summary}>
-      {habits.length === 0 ? (
-        <div className="space-y-3">
-          <p className="text-sm text-muted-foreground">
-            Beber água, dormir melhor, tomar o remédio na hora, menos café ou tela, parar de fumar ou de beber:
-            acompanhe o seu dia.
-          </p>
-          <Button onClick={() => navigate('/habitos/novo')} className="w-full min-h-11">
-            <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
-            Adicionar hábito
-          </Button>
-        </div>
-      ) : (
-        <ul className="space-y-2">
+      <ul className="space-y-2">
           {shown.map((habit) => {
             const { icon: Icon, color, soft } = HABIT_VISUALS[habit.kind];
             const events = eventsByHabit.get(habit.id) ?? [];
@@ -132,13 +118,10 @@ const HomeHabitsCard = () => {
             );
           })}
         </ul>
-      )}
-      {habits.length > 0 && (
-        <Button variant="ghost" size="sm" className="mt-2 w-full gap-1 text-primary" onClick={() => navigate('/habitos')}>
-          Ver todos os hábitos
-          <ChevronRight className="h-4 w-4" aria-hidden="true" />
-        </Button>
-      )}
+      <Button variant="ghost" size="sm" className="mt-2 w-full gap-1 text-primary" onClick={() => navigate('/habitos')}>
+        Ver todos os hábitos
+        <ChevronRight className="h-4 w-4" aria-hidden="true" />
+      </Button>
     </ExpandableCard>
   );
 };

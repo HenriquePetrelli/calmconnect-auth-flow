@@ -174,9 +174,9 @@ describe('card da Home', () => {
     await waitFor(() => expect(fakeDb.tables.habit_events).toHaveLength(1));
   });
 
-  it('convida a adicionar quando está vazio', async () => {
-    renderAt('/home');
-    fireEvent.click(await screen.findByText('Meus hábitos'));
-    expect(await screen.findByRole('button', { name: /Adicionar hábito/ })).toBeInTheDocument();
+  it('não aparece para quem ainda não tem hábitos (o card "Melhorar hábitos" leva à tela)', async () => {
+    const { container } = renderAt('/home');
+    await waitFor(() => expect(container).toBeEmptyDOMElement());
+    expect(screen.queryByText('Meus hábitos')).not.toBeInTheDocument();
   });
 });

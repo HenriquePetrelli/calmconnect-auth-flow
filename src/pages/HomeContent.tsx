@@ -7,6 +7,7 @@ import {
   TrendingUp, 
   BookOpen,
   ShieldCheck,
+  Sprout,
   ArrowUpRight
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -199,6 +200,16 @@ const HomeContent = () => {
       iconBg: 'hsl(41,96%,45%)',
     },
     {
+      icon: Sprout,
+      title: "Melhorar hábitos",
+      subtitle: "Água, sono, remédio, menos tela e mais",
+      onClick: () => navigate('/habitos'),
+      color: isDark ? 'hsl(174, 55%, 70%)' : 'hsl(174,72%,30%)',
+      bg: isDark ? 'hsl(174, 25%, 18%)' : 'hsl(170,60%,95%)',
+      border: isDark ? 'hsl(174, 25%, 28%)' : 'hsl(170,45%,82%)',
+      iconBg: 'hsl(174,72%,33%)',
+    },
+    {
       icon: ShieldCheck,
       title: "Plano de Segurança",
       subtitle: "O que ajuda nas crises e quem chamar",
@@ -207,10 +218,8 @@ const HomeContent = () => {
       bg: isDark ? 'hsl(340, 25%, 20%)' : 'hsl(340,90%,97%)',
       border: isDark ? 'hsl(340, 25%, 30%)' : 'hsl(340,75%,88%)',
       iconBg: 'hsl(340,70%,50%)',
-      // Quinto card: ocupa a linha inteira para a grade de 2 colunas não ficar torta.
-      wide: true,
     }
-  ];
+  ] as { icon: typeof Activity; title: string; subtitle: string; onClick: () => void; color: string; bg: string; border: string; iconBg: string; wide?: boolean }[];
 
 
   if (isLoading) {
@@ -242,7 +251,7 @@ const HomeContent = () => {
           </div>
         )}
 
-        {/* Meus hábitos: o dia de hoje num relance */}
+        {/* Meus hábitos: o dia de hoje num relance (só para quem já tem hábitos) */}
         <HomeHabitsCard />
 
         {/* Resources Section */}
