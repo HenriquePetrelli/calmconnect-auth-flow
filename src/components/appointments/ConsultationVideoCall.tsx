@@ -14,6 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { VideoCallSettingsModal } from "@/components/sos/VideoCallSettingsModal";
 import { FeedbackModal } from "@/components/sos/FeedbackModal";
+import { dismissAppointmentFeedback } from "@/hooks/usePendingCallFeedback";
 import { ConnectionQuality } from "@/components/sos/ConnectionQuality";
 import {
   AlertDialog,
@@ -236,6 +237,8 @@ const ConsultationVideoCall = ({ appointment, onEndCall }: ConsultationVideoCall
   };
 
   const handleFeedbackClose = () => {
+    // Avaliou ou pulou: não pergunta de novo dessa consulta ao reabrir o app.
+    if (userType === 'patient' && sessionId) dismissAppointmentFeedback(sessionId);
     setShowFeedbackModal(false);
     onEndCall();
   };

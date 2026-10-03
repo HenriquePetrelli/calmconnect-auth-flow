@@ -62,6 +62,11 @@ class QueryBuilder implements PromiseLike<{ data: any; error: any; count?: numbe
     this.filters.push({ apply: (r) => values.includes(r[col]) });
     return this;
   }
+  not(col: string, op: string, value: any) {
+    if (op === 'is') this.filters.push({ apply: (r) => (r[col] ?? null) !== value });
+    else if (op === 'eq') this.filters.push({ apply: (r) => r[col] !== value });
+    return this;
+  }
   is(col: string, value: null) {
     this.filters.push({ apply: (r) => (r[col] ?? null) === value });
     return this;

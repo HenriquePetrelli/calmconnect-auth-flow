@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { SkeletonSectionCard } from '@/components/skeletons/Skeletons';
 import {
   Table,
@@ -25,7 +25,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Calendar, Eye, Filter, Download, FileText } from 'lucide-react';
+import { Calendar, Eye, Filter, Download, FileText, Star } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { FeedbackModal } from '@/components/sos/FeedbackModal';
+import { canRateAppointment } from '@/lib/appointmentRating';
 import { useAppointments, type Appointment } from '@/hooks/useAppointments';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -33,7 +36,72 @@ import { ptBR } from 'date-fns/locale';
 const ITEMS_PER_PAGE = 10;
 
 export const AppointmentHistory = () => {
-  const { appointments, psychologists, loading } = useAppointments();
+  const { psychologists, fetchAppointmentHistory } = useAppointments();
+  // Antes usava a lista de PRÓXIMAS consultas (só as futuras), então o
+  // histórico de concluídas aparecia sempre vazio.
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [ratings, setRatings] = useState<Record<string, number>>({});
+  const [ratingTarget, setRatingTarget] = useState<Appointment | null>(null);
+
+  const loadRatings = useCallback(async (list: Appointment[]) => {
+    const sessionIds = list.map((a) => a.video_room_id).filter((id): id is string => !!id);
+    if (sessionIds.length === 0) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { data } = await supabase
+      .from('session_feedback')
+      .select('session_id, rating')
+      .eq('user_id', user.id)
+      .in('session_id', sessionIds);
+    setRatings(Object.fromEntries((data ?? []).map((f) => [f.session_id, f.rating])));
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const list = ((await fetchAppointmentHistory(1, 200)) ?? []) as Appointment[];
+      if (cancelled) return;
+      setAppointments(list);
+      setLoading(false);
+      void loadRatings(list);
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /** Estrelas da avaliação, ou o botão para avaliar (consulta concluída nos últimos 30 dias). */
+  const renderRating = (appointment: Appointment, compact = false) => {
+    if (appointment.status !== 'completed' || !appointment.video_room_id) return null;
+    const rating = ratings[appointment.video_room_id];
+    if (rating) {
+      return (
+        <span className="inline-flex items-center gap-0.5" aria-label={`Sua avaliação: ${rating} de 5`}>
+          {[1, 2, 3, 4, 5].map((n) => (
+            <Star
+              key={n}
+              className={`h-3.5 w-3.5 ${n <= rating ? 'fill-warning text-warning' : 'text-muted-foreground/40'}`}
+              aria-hidden="true"
+            />
+          ))}
+        </span>
+      );
+    }
+    if (!canRateAppointment(appointment)) return null;
+    return (
+      <Button
+        variant="outline"
+        size="sm"
+        className={compact ? 'h-8 gap-1.5' : 'w-full gap-1.5'}
+        onClick={() => setRatingTarget(appointment)}
+      >
+        <Star className="h-4 w-4" aria-hidden="true" />
+        Avaliar
+      </Button>
+    );
+  };
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [filterPsychologist, setFilterPsychologist] = useState<string>('');
   const [filterMonth, setFilterMonth] = useState<string>('');
@@ -71,7 +139,7 @@ export const AppointmentHistory = () => {
 
   const filteredAppointments = useMemo(() => {
     return appointments.filter((appointment) => {
-      const isHistoryAppointment = ['declined', 'completed'].includes(appointment.status);
+      const isHistoryAppointment = ['declined', 'completed', 'cancelled'].includes(appointment.status);
       if (!isHistoryAppointment) return false;
 
       const matchesPsychologist = filterPsychologist === 'all' || !filterPsychologist ||
@@ -87,7 +155,7 @@ export const AppointmentHistory = () => {
   const availableMonths = useMemo(() => {
     const months = new Set<string>();
     appointments.forEach((a) => {
-      if (['declined', 'completed'].includes(a.status)) {
+      if (['declined', 'completed', 'cancelled'].includes(a.status)) {
         months.add(format(new Date(a.scheduled_at), 'yyyy-MM'));
       }
     });
@@ -281,6 +349,7 @@ export const AppointmentHistory = () => {
                       </div>
                       <span>{format(new Date(appointment.scheduled_at), 'HH:mm')}</span>
                     </div>
+                    {renderRating(appointment)}
                     <Button
                       variant="outline"
                       size="sm"
@@ -325,9 +394,12 @@ export const AppointmentHistory = () => {
                           )}
                         </TableCell>
                         <TableCell>
-                          <Badge className={getStatusColor(appointment.status)}>
-                            {getStatusText(appointment.status)}
-                          </Badge>
+                          <div className="flex flex-col items-start gap-1.5">
+                            <Badge className={getStatusColor(appointment.status)}>
+                              {getStatusText(appointment.status)}
+                            </Badge>
+                            {renderRating(appointment, true)}
+                          </div>
                         </TableCell>
                         <TableCell className="text-right">
                           <Button
@@ -447,6 +519,19 @@ export const AppointmentHistory = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {ratingTarget?.video_room_id && (
+        <FeedbackModal
+          isOpen
+          userType="patient"
+          sessionId={ratingTarget.video_room_id}
+          partnerName={ratingTarget.psychologist?.full_name}
+          onClose={() => {
+            setRatingTarget(null);
+            void loadRatings(appointments);
+          }}
+        />
+      )}
     </>
   );
 };

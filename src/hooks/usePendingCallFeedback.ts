@@ -3,10 +3,34 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
 export interface PendingFeedback {
+  /** SOS bloqueia o app até avaliar; consulta agendada só pede (dá para pular). */
+  kind: 'emergency' | 'appointment';
   sessionId: string;
   requestId: string;
   endedAt: string | null;
+  partnerName?: string;
 }
+
+const DISMISSED_KEY = 'soliv:feedback-dismissed';
+
+const readDismissed = (): string[] => {
+  try {
+    const raw = localStorage.getItem(DISMISSED_KEY);
+    return raw ? (JSON.parse(raw) as string[]) : [];
+  } catch {
+    return [];
+  }
+};
+
+/** "Pular" na avaliação de uma consulta agendada: não pergunta de novo naquela consulta. */
+export const dismissAppointmentFeedback = (sessionId: string) => {
+  try {
+    const next = [...new Set([...readDismissed(), sessionId])].slice(-50);
+    localStorage.setItem(DISMISSED_KEY, JSON.stringify(next));
+  } catch {
+    // sem armazenamento: pode perguntar de novo, sem problema
+  }
+};
 
 /** Only calls finished in the last 7 days block the app. */
 const WINDOW_DAYS = 7;
@@ -17,6 +41,8 @@ const WINDOW_DAYS = 7;
  * After an emergency call ends, both patient and psychologist MUST rate it.
  * If the app was closed before rating, the pending evaluation is detected on
  * the next app open and blocks usage until it is submitted.
+ *
+ * Consultas agendadas: o paciente também é convidado a avaliar, mas pode pular.
  */
 export const usePendingCallFeedback = () => {
   const { user, userType } = useAuth();
@@ -45,26 +71,63 @@ export const usePendingCallFeedback = () => {
         ? await query.eq('patient_id', user.id)
         : await query.eq('accepted_by', user.id);
 
-    if (error || !data?.length) {
-      setPending(null);
-      return;
+    if (!error && data?.length) {
+      const sessionIds = data.map((r) => r.video_room_id as string);
+      const { data: feedbacks } = await supabase
+        .from('session_feedback')
+        .select('session_id')
+        .eq('user_id', user.id)
+        .in('session_id', sessionIds);
+
+      const rated = new Set((feedbacks ?? []).map((f) => f.session_id));
+      const next = data.find((r) => !rated.has(r.video_room_id as string));
+      if (next) {
+        setPending({ kind: 'emergency', sessionId: next.video_room_id as string, requestId: next.id, endedAt: next.ended_at });
+        return;
+      }
     }
 
-    const sessionIds = data.map((r) => r.video_room_id as string);
-    const { data: feedbacks } = await supabase
-      .from('session_feedback')
-      .select('session_id')
-      .eq('user_id', user.id)
-      .in('session_id', sessionIds);
+    // Consulta agendada concluída e ainda sem avaliação do paciente (ex.: fechou
+    // o app ou a chamada caiu antes da tela de avaliação).
+    if (userType === 'patient') {
+      const { data: appointments } = await supabase
+        .from('appointments')
+        .select('id, video_room_id, scheduled_at, psychologists!psychologist_id(full_name)')
+        .eq('patient_id', user.id)
+        .eq('status', 'completed')
+        .not('video_room_id', 'is', null)
+        .gte('scheduled_at', since)
+        .order('scheduled_at', { ascending: false })
+        .limit(10);
 
-    const rated = new Set((feedbacks ?? []).map((f) => f.session_id));
-    const next = data.find((r) => !rated.has(r.video_room_id as string));
+      if (appointments?.length) {
+        const sessionIds = appointments.map((a) => a.video_room_id as string);
+        const { data: feedbacks } = await supabase
+          .from('session_feedback')
+          .select('session_id')
+          .eq('user_id', user.id)
+          .in('session_id', sessionIds);
+        const rated = new Set((feedbacks ?? []).map((f) => f.session_id));
+        const dismissed = new Set(readDismissed());
+        const next = appointments.find(
+          (a) => !rated.has(a.video_room_id as string) && !dismissed.has(a.video_room_id as string)
+        );
+        if (next) {
+          const psychologist = next.psychologists as { full_name?: string } | { full_name?: string }[] | null;
+          const name = Array.isArray(psychologist) ? psychologist[0]?.full_name : psychologist?.full_name;
+          setPending({
+            kind: 'appointment',
+            sessionId: next.video_room_id as string,
+            requestId: next.id,
+            endedAt: next.scheduled_at,
+            partnerName: name ?? undefined,
+          });
+          return;
+        }
+      }
+    }
 
-    setPending(
-      next
-        ? { sessionId: next.video_room_id as string, requestId: next.id, endedAt: next.ended_at }
-        : null
-    );
+    setPending(null);
   }, [user, userType]);
 
   useEffect(() => {

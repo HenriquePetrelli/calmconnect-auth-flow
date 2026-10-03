@@ -30,14 +30,9 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 - **O que fazer:** trocar por "ocultar só para mim", como no WhatsApp: a conversa sai da lista de quem ocultou e continua para o outro lado.
 - **Registrado em:** 2026-10-04.
 
-## Melhorias sugeridas
-
-### 4. Avaliação da consulta agendada
-
-- **Situação:** o atendimento de SOS pede avaliação (estrelas) ao final; a consulta agendada não. A tela já tem o componente de estrelas, mas ele não está ligado a nada, e a tabela de consultas não guarda avaliação.
-- **O que fazer:** pedir a avaliação ao paciente ao fim da consulta (ou ao abrir o app depois dela), guardar a nota e considerá-la na média do psicólogo.
-- **Registrado em:** 2026-10-04.
-
 ## Resolvidas
 
-_(nenhuma ainda)_
+### Avaliação da consulta agendada (registrada em 2026-10-04, resolvida em 2026-10-04)
+
+- O fim da chamada já pedia a avaliação; faltava o resto. Agora: se o paciente fechar o app ou a chamada cair antes da tela de avaliação, o app convida a avaliar ao abrir de novo (sem bloquear, dá para pular); o histórico de consultas mostra a nota de cada consulta ou o botão "Avaliar" (até 30 dias depois); a avaliação fica ligada à consulta e ao psicólogo e entra na média dele.
+- Achados no caminho e corrigidos: o histórico de consultas do paciente aparecia sempre vazio (usava a lista de próximas consultas), e qualquer usuário podia gravar avaliação para uma sessão da qual não participou, mexendo na média de qualquer psicólogo.

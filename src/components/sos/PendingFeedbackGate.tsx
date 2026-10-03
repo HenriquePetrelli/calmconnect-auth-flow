@@ -1,11 +1,12 @@
 import { useLocation } from 'react-router-dom';
 import { FeedbackModal } from '@/components/sos/FeedbackModal';
-import { usePendingCallFeedback } from '@/hooks/usePendingCallFeedback';
+import { dismissAppointmentFeedback, usePendingCallFeedback } from '@/hooks/usePendingCallFeedback';
 import { useAuth } from '@/contexts/AuthContext';
 
 /**
  * Blocks the app while the last emergency call has no evaluation.
  * Mounted globally: patient and psychologist can only continue after rating.
+ * Também convida o paciente a avaliar a última consulta agendada (sem bloquear).
  */
 const PendingFeedbackGate = () => {
   const { userType } = useAuth();
@@ -24,10 +25,13 @@ const PendingFeedbackGate = () => {
   return (
     <FeedbackModal
       isOpen
-      required
+      required={pending.kind === 'emergency'}
       userType={userType}
       sessionId={pending.sessionId}
+      partnerName={pending.partnerName}
       onClose={() => {
+        // Consulta agendada: pular ou enviar, não pergunta de novo nessa sessão.
+        if (pending.kind === 'appointment') dismissAppointmentFeedback(pending.sessionId);
         clear();
         recheck();
       }}

@@ -14,6 +14,8 @@ export interface Appointment {
   rating?: number;
   proposed_scheduled_at?: string;
   proposal_notes?: string;
+  /** Sala de vídeo da consulta (também é o id da avaliação em session_feedback). */
+  video_room_id?: string | null;
   psychologist: {
     full_name: string;
     specialty?: string;
@@ -160,8 +162,12 @@ export const useAppointments = () => {
         .range((page - 1) * limit, page * limit - 1);
       
       if (appointmentsError) throw appointmentsError;
-      
-      return appointmentsData || [];
+
+      // Mesmo formato da edge function (psychologist no singular).
+      return (appointmentsData || []).map((appointment) => ({
+        ...appointment,
+        psychologist: Array.isArray(appointment.psychologists) ? appointment.psychologists[0] : appointment.psychologists,
+      }));
     } catch (error: any) {
       console.error('Error fetching appointment history:', error);
       toast({
