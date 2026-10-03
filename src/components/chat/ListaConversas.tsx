@@ -231,7 +231,11 @@ export const ListaConversas: React.FC<ListaConversasProps> = ({ onSelectConversa
 
                     <div className="flex items-center justify-between gap-2 mt-0.5">
                       {conversa.ultima_mensagem ? (
-                        <p className="text-xs text-muted-foreground truncate flex items-center gap-1 min-w-0">
+                        <p
+                          className={`text-xs truncate flex items-center gap-1 min-w-0 ${
+                            conversa.nao_lidas > 0 ? 'text-foreground font-medium' : 'text-muted-foreground'
+                          }`}
+                        >
                           {conversa.ultima_mensagem.tipo === 'imagem' ? (
                             <>
                               <Camera className="w-3 h-3 shrink-0" />
@@ -245,13 +249,22 @@ export const ListaConversas: React.FC<ListaConversasProps> = ({ onSelectConversa
                         <p className="text-xs text-muted-foreground italic">Sem mensagens</p>
                       )}
 
-                      <Badge
-                        variant="secondary"
-                        className="gap-1 text-xs px-1.5 py-0 shrink-0"
-                      >
-                        {getStatusIcon(conversa.status)}
-                        {getStatusText(conversa.status)}
-                      </Badge>
+                      {conversa.nao_lidas > 0 ? (
+                        <span
+                          className="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold flex items-center justify-center shrink-0"
+                          aria-label={`${conversa.nao_lidas} ${conversa.nao_lidas === 1 ? 'mensagem não lida' : 'mensagens não lidas'}`}
+                        >
+                          {conversa.nao_lidas > 99 ? '99+' : conversa.nao_lidas}
+                        </span>
+                      ) : conversa.status !== 'ativa' ? (
+                        <Badge
+                          variant="secondary"
+                          className="gap-1 text-xs px-1.5 py-0 shrink-0"
+                        >
+                          {getStatusIcon(conversa.status)}
+                          {getStatusText(conversa.status)}
+                        </Badge>
+                      ) : null}
                     </div>
                   </div>
 

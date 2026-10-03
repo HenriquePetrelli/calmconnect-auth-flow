@@ -68,6 +68,12 @@ const Notifications = () => {
       toast.success('Notificação marcada como lida');
     }
 
+    // Notificações novas trazem o destino (link) gravado pelo servidor.
+    if (typeof notification.link === 'string' && notification.link.startsWith('/')) {
+      navigate(notification.link);
+      return;
+    }
+
     // If notification is related to an appointment, navigate to the
     // appointments view for whichever side is looking at it.
     if (notification.appointment_id) {

@@ -22,6 +22,8 @@ export interface Conversa {
     created_at: string;
     tipo: string;
   };
+  /** Mensagens do outro participante ainda não lidas. */
+  nao_lidas: number;
 }
 
 export interface PsicologoDisponivel {
@@ -44,44 +46,30 @@ export const useConversas = () => {
 
     try {
       setLoading(true);
-      
-      // Buscar conversas do usuário
-      const { data: conversasData, error: conversasError } = await supabase
-        .from('conversas')
-        .select('*')
-        .order('updated_at', { ascending: false });
 
-      if (conversasError) throw conversasError;
+      // Uma consulta só: conversa, nome do outro participante, última
+      // mensagem e quantas não lidas (antes eram 2 consultas por conversa).
+      const { data, error } = await supabase.rpc('listar_conversas');
+      if (error) throw error;
 
-      // Para cada conversa, buscar dados do outro usuário
-      const conversasComDados = await Promise.all(
-        (conversasData || []).map(async (conversa) => {
-          const outroUserId = userType === 'patient' ? conversa.psicologo_id : conversa.paciente_id;
-          
-          const { data: outroUsuario } = await supabase
-            .from('profiles')
-            .select('full_name, user_type')
-            .eq('user_id', outroUserId)
-            .single();
-
-          // Buscar última mensagem
-          const { data: ultimaMensagem } = await supabase
-            .from('mensagens')
-            .select('conteudo, created_at, tipo')
-            .eq('conversa_id', conversa.id)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .single();
-
-          return {
-            ...conversa,
-            outro_usuario: outroUsuario || undefined,
-            ultima_mensagem: ultimaMensagem || undefined
-          } as Conversa;
-        })
+      setConversas(
+        (data ?? []).map((row) => ({
+          id: row.id,
+          paciente_id: row.paciente_id,
+          psicologo_id: row.psicologo_id,
+          data_inicio: row.data_inicio,
+          status: row.status as Conversa['status'],
+          created_at: row.created_at,
+          updated_at: row.updated_at,
+          outro_usuario: row.outro_nome
+            ? { full_name: row.outro_nome, user_type: userType === 'patient' ? 'psychologist' : 'patient' }
+            : undefined,
+          ultima_mensagem: row.ultima_em
+            ? { conteudo: row.ultima_conteudo ?? '', created_at: row.ultima_em, tipo: row.ultima_tipo ?? 'texto' }
+            : undefined,
+          nao_lidas: row.nao_lidas ?? 0,
+        })),
       );
-
-      setConversas(conversasComDados);
     } catch (error) {
       console.error('Erro ao buscar conversas:', error);
       toast({
@@ -171,8 +159,8 @@ export const useConversas = () => {
     } catch (error) {
       console.error('Erro ao criar conversa:', error);
       toast({
-        title: 'Erro',
-        description: 'Erro ao criar nova conversa',
+        title: 'Não foi possível iniciar a conversa',
+        description: 'O chat abre com psicólogos com quem você teve consulta nos últimos 30 dias.',
         variant: 'destructive',
       });
       return null;
@@ -213,31 +201,36 @@ export const useConversas = () => {
     }
   }, [user, userType, conversas]);
 
-  // Configurar realtime para conversas
+  // Tempo real: muda a conversa (status, nova conversa) ou chega/é lida uma
+  // mensagem → atualiza lista, última mensagem e não lidas.
   useEffect(() => {
     if (!user) return;
 
     const channel = supabase
-      .channel('conversas-changes')
+      .channel(`conversas-${user.id}-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'conversas',
-          filter: userType === 'patient' 
-            ? `paciente_id=eq.${user.id}` 
+          filter: userType === 'patient'
+            ? `paciente_id=eq.${user.id}`
             : `psicologo_id=eq.${user.id}`
         },
         () => {
           fetchConversas();
         }
       )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'mensagens' }, () => {
+        fetchConversas();
+      })
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, userType]);
 
   return {

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { getToken, onMessage } from 'firebase/messaging';
-import { getFirebaseMessaging, isFirebaseConfigured, FIREBASE_VAPID_KEY } from '@/lib/firebase';
+import { getFirebaseMessaging, firebaseServiceWorkerUrl, isFirebaseConfigured, FIREBASE_VAPID_KEY } from '@/lib/firebase';
 import { deactivateStoredPushToken, getStoredPushToken, saveActivePushToken } from '@/lib/pushToken';
 import { useToast } from '@/hooks/use-toast';
 
@@ -88,7 +88,7 @@ export const usePushNotifications = () => {
         setPermission(result as PermissionState);
         if (result !== 'granted') return;
 
-        const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+        const registration = await navigator.serviceWorker.register(firebaseServiceWorkerUrl());
         const messaging = getFirebaseMessaging();
         if (!messaging) return;
         token = await getToken(messaging, { vapidKey: FIREBASE_VAPID_KEY, serviceWorkerRegistration: registration });

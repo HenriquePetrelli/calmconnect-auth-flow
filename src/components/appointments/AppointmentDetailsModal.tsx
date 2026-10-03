@@ -15,6 +15,9 @@ import { Calendar, Clock, User, FileText, CheckCircle, XCircle } from 'lucide-re
 import { Appointment } from '@/hooks/useAppointments';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getFunctionErrorMessage } from '@/utils/errorMessage';
+import { canCancelAppointment } from '@/lib/appointmentCancellation';
+import CancelAppointmentDialog from './CancelAppointmentDialog';
 
 interface AppointmentDetailsModalProps {
   appointment: Appointment | null;
@@ -31,6 +34,7 @@ export const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = (
 }) => {
   const { toast } = useToast();
   const [respondingAction, setRespondingAction] = useState<'accept' | 'reject' | null>(null);
+  const [cancelOpen, setCancelOpen] = useState(false);
 
   if (!appointment) return null;
 
@@ -46,6 +50,10 @@ export const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = (
         return 'bg-destructive/15 text-destructive border-destructive/20';
       case 'reschedule_proposed':
         return 'bg-secondary/15 text-secondary-active border-secondary/20';
+      case 'cancelled':
+        return 'bg-muted text-muted-foreground border-border';
+      case 'in_progress':
+        return 'bg-primary/15 text-primary border-primary/20';
       default:
         return 'bg-muted text-foreground border-border';
     }
@@ -63,6 +71,10 @@ export const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = (
         return 'Recusada';
       case 'reschedule_proposed':
         return 'Reagendamento proposto';
+      case 'cancelled':
+        return 'Cancelada';
+      case 'in_progress':
+        return 'Em andamento';
       default:
         return status;
     }
@@ -95,7 +107,7 @@ export const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = (
       console.error('Error responding to reschedule:', error);
       toast({
         title: 'Erro',
-        description: 'Erro ao responder reagendamento. Tente novamente.',
+        description: await getFunctionErrorMessage(error, 'Erro ao responder reagendamento. Tente novamente.'),
         variant: 'destructive',
       });
     } finally {
@@ -246,6 +258,14 @@ export const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = (
             </div>
           )}
 
+          {/* Cancelar */}
+          {canCancelAppointment(appointment) && (
+            <Button variant="outline" className="w-full text-destructive hover:text-destructive" onClick={() => setCancelOpen(true)}>
+              <XCircle className="h-4 w-4 mr-2" />
+              Cancelar consulta
+            </Button>
+          )}
+
           {/* Session Summary */}
           {appointment.session_summary && (
             <div className="space-y-1">
@@ -260,6 +280,16 @@ export const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = (
           )}
         </div>
       </DialogContent>
+      <CancelAppointmentDialog
+        appointment={appointment}
+        by="patient"
+        open={cancelOpen}
+        onOpenChange={setCancelOpen}
+        onCancelled={() => {
+          onUpdate?.();
+          onClose();
+        }}
+      />
     </Dialog>
   );
 };

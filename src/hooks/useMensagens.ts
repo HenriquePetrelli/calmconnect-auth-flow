@@ -32,7 +32,7 @@ export const useMensagens = (conversaId?: string) => {
 
     try {
       setLoading(true);
-      
+
       const { data, error } = await supabase
         .from('mensagens')
         .select('*')
@@ -41,23 +41,7 @@ export const useMensagens = (conversaId?: string) => {
 
       if (error) throw error;
 
-      // Buscar dados do autor para cada mensagem
-      const mensagensComAutor = await Promise.all(
-        (data || []).map(async (msg) => {
-          const { data: autor } = await supabase
-            .from('profiles')
-            .select('full_name, user_type')
-            .eq('user_id', msg.autor_id)
-            .single();
-
-          return {
-            ...msg,
-            autor: autor || undefined
-          } as Mensagem;
-        })
-      );
-
-      setMensagens(mensagensComAutor);
+      setMensagens((data ?? []) as Mensagem[]);
     } catch (error) {
       console.error('Erro ao buscar mensagens:', error);
       toast({
@@ -88,7 +72,7 @@ export const useMensagens = (conversaId?: string) => {
     try {
       setEnviando(true);
 
-      const { error } = await supabase
+      const { data: inserida, error } = await supabase
         .from('mensagens')
         .insert({
           conversa_id: conversaId,
@@ -96,9 +80,15 @@ export const useMensagens = (conversaId?: string) => {
           conteudo: tipo === 'texto' ? conteudo : null,
           tipo,
           imagem_url: imagemUrl
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
+      // Aparece na hora (sem esperar o tempo real).
+      if (inserida) {
+        setMensagens((prev) => (prev.some((m) => m.id === inserida.id) ? prev : [...prev, inserida as Mensagem]));
+      }
 
       // Atualizar updated_at da conversa
       await supabase
@@ -120,23 +110,23 @@ export const useMensagens = (conversaId?: string) => {
     }
   };
 
+  /**
+   * Envia a imagem para o bucket privado e devolve o caminho (não um link
+   * público: o bucket é privado, e o link público não abria — a imagem
+   * aparecia quebrada para os dois lados). A tela gera um link temporário.
+   */
   const uploadImagem = async (file: File): Promise<string | null> => {
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user?.id}-${Date.now()}.${fileExt}`;
-      const filePath = `chat-images/${fileName}`;
+      const fileExt = (file.type.split('/')[1] || file.name.split('.').pop() || 'jpg').replace(/[^a-z0-9]/gi, '').slice(0, 5);
+      const filePath = `chat-images/${user?.id}-${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('documents')
-        .upload(filePath, file);
+        .upload(filePath, file, { contentType: file.type });
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('documents')
-        .getPublicUrl(filePath);
-
-      return publicUrl;
+      return filePath;
     } catch (error) {
       console.error('Erro ao fazer upload da imagem:', error);
       toast({
@@ -154,22 +144,28 @@ export const useMensagens = (conversaId?: string) => {
     }
   }, [conversaId]);
 
-  // Configurar realtime para mensagens (INSERT de novas mensagens e UPDATE de recibos de leitura)
+  // Tempo real: nova mensagem entra no fim da lista; leitura (lida_em) só
+  // atualiza a mensagem. Antes cada evento recarregava a conversa inteira.
   useEffect(() => {
     if (!conversaId) return;
 
     const channel = supabase
-      .channel(`mensagens-${conversaId}`)
+      .channel(`mensagens-${conversaId}-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'mensagens',
-          filter: `conversa_id=eq.${conversaId}`
-        },
-        () => {
-          fetchMensagens().then(marcarComoLidas);
+        { event: 'INSERT', schema: 'public', table: 'mensagens', filter: `conversa_id=eq.${conversaId}` },
+        (payload) => {
+          const nova = payload.new as Mensagem;
+          setMensagens((prev) => (prev.some((m) => m.id === nova.id) ? prev : [...prev, nova]));
+          if (nova.autor_id !== user?.id) marcarComoLidas();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'mensagens', filter: `conversa_id=eq.${conversaId}` },
+        (payload) => {
+          const atualizada = payload.new as Mensagem;
+          setMensagens((prev) => prev.map((m) => (m.id === atualizada.id ? { ...m, ...atualizada } : m)));
         }
       )
       .subscribe();
@@ -177,7 +173,8 @@ export const useMensagens = (conversaId?: string) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [conversaId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversaId, user?.id]);
 
   return {
     mensagens,

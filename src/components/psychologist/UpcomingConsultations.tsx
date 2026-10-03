@@ -4,7 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clock, User, Calendar, MessageSquare, Video, History } from 'lucide-react';
+import { Clock, User, Calendar, MessageSquare, Video, History, XCircle } from 'lucide-react';
+import { canCancelAppointment, type CancellableAppointment } from '@/lib/appointmentCancellation';
+import CancelAppointmentDialog from '@/components/appointments/CancelAppointmentDialog';
 import { usePsychologistSchedule } from '@/hooks/usePsychologistSchedule';
 import { format, isToday, isTomorrow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -32,8 +34,11 @@ const UpcomingConsultations = () => {
     todayAppointments: todayRaw,
     upcomingAppointments: upcomingRaw,
     loading,
-    updateAppointment
+    updateAppointment,
+    fetchTodayAppointments,
+    fetchUpcomingAppointments,
   } = usePsychologistSchedule();
+  const [cancelTarget, setCancelTarget] = useState<(CancellableAppointment & { id: string }) | null>(null);
 
   const now = new Date();
   const acceptedStatuses = ['scheduled', 'confirmed', 'in_progress'];
@@ -166,6 +171,18 @@ const UpcomingConsultations = () => {
                     </Button>
                   );
                 })()}
+                {canCancelAppointment(appointment) && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCancelTarget(appointment)}
+                    title="Cancelar consulta"
+                    aria-label="Cancelar consulta"
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <XCircle className="w-4 h-4" />
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   size="sm"
@@ -250,6 +267,19 @@ const UpcomingConsultations = () => {
             )}
           </CardContent>
         </Card>
+      )}
+
+      {cancelTarget && (
+        <CancelAppointmentDialog
+          appointment={cancelTarget}
+          by="psychologist"
+          open={!!cancelTarget}
+          onOpenChange={(open) => !open && setCancelTarget(null)}
+          onCancelled={() => {
+            void fetchTodayAppointments();
+            void fetchUpcomingAppointments();
+          }}
+        />
       )}
 
       <PatientHistoryModal

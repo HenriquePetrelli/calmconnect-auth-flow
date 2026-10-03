@@ -19,6 +19,7 @@ import {
 import { format, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
+import ChatImage from './ChatImage';
 import { useMensagens } from '@/hooks/useMensagens';
 import { useAuth } from '@/contexts/AuthContext';
 import { useConversas } from '@/hooks/useConversas';
@@ -143,7 +144,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversaId, onVolt
         return {
           icon: <Clock className="w-3.5 h-3.5 text-warning" />,
           text: 'Somente leitura',
-          description: 'Esta conversa expirou para envio de mensagens',
+          description: 'Mensagens pausadas: o chat abre por 30 dias depois de cada consulta e volta na próxima.',
         };
       case 'expirada':
         return {
@@ -236,11 +237,10 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversaId, onVolt
                       }`}
                     >
                       {mensagem.tipo === 'imagem' ? (
-                        <img
-                          src={mensagem.imagem_url}
+                        <ChatImage
+                          value={mensagem.imagem_url ?? ''}
                           alt="Imagem da conversa"
-                          className="max-w-full h-auto rounded-lg"
-                          style={{ maxHeight: '280px' }}
+                          className="max-w-full h-auto max-h-[280px] rounded-lg"
                         />
                       ) : (
                         <p className="whitespace-pre-wrap break-words">{mensagem.conteudo}</p>

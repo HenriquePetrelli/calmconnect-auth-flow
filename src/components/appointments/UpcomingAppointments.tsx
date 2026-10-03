@@ -8,7 +8,7 @@ import { SkeletonSectionCard } from '@/components/skeletons/Skeletons';
 import { isConsultationUpcoming } from '@/lib/consultationWindow';
 
 export const UpcomingAppointments: React.FC = () => {
-  const { appointments, loading } = useAppointments();
+  const { appointments, loading, fetchAppointments } = useAppointments();
   const [upcomingAppointments, setUpcomingAppointments] = useState<Appointment[]>([]);
 
   useEffect(() => {
@@ -67,8 +67,7 @@ export const UpcomingAppointments: React.FC = () => {
         isOpen={!!selectedAppointment}
         onClose={() => setSelectedAppointment(null)}
         onUpdate={() => {
-          // Refresh appointments after updates
-          window.location.reload();
+          void fetchAppointments();
         }}
       />
     </>

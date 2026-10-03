@@ -46,3 +46,25 @@ export const getFriendlyErrorMessage = (error: unknown, fallback: string): strin
 
   return fallback;
 };
+
+/**
+ * Erro de edge function (supabase.functions.invoke): a mensagem do erro é
+ * sempre "Edge Function returned a non-2xx status code"; o motivo de verdade
+ * ("Este horário já está ocupado", "A consulta já começou"...) vem no corpo
+ * da resposta. Devolve esse motivo quando existir, senão o próprio erro.
+ */
+export const unwrapFunctionError = async (error: unknown): Promise<unknown> => {
+  const context = (error as { context?: Response } | null)?.context;
+  if (!context || typeof context.json !== 'function') return error;
+  try {
+    const body = await context.clone().json();
+    if (body && typeof body.error === 'string') return body.error;
+  } catch {
+    // corpo não é JSON: fica o erro original
+  }
+  return error;
+};
+
+/** Mensagem amigável para um erro de edge function (usa o motivo do servidor). */
+export const getFunctionErrorMessage = async (error: unknown, fallback: string): Promise<string> =>
+  getFriendlyErrorMessage(await unwrapFunctionError(error), fallback);

@@ -224,6 +224,9 @@ serve(async (req) => {
     message,
     status: 'unread',
     patient_id: recipientId,
+    // Também vai para o celular (a função notification-push envia a cada minuto).
+    push: true,
+    link: psychologist_id ? '/psychologist-dashboard' : '/appointments',
   };
 
   const { error: notificationError } = await supabase

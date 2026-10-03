@@ -16,6 +16,19 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
+/**
+ * Endereço do service worker com a configuração na URL: o service worker não
+ * lê import.meta.env, e antes a configuração dele era um "REPLACE_WITH_..."
+ * fixo, então o push com o app fechado nunca funcionava.
+ */
+export const firebaseServiceWorkerUrl = (): string => {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(firebaseConfig)) {
+    if (value) params.set(key, String(value));
+  }
+  return `/firebase-messaging-sw.js?${params.toString()}`;
+};
+
 export const FIREBASE_VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY as string | undefined;
 
 export const isFirebaseConfigured = (): boolean =>

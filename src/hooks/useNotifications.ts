@@ -6,6 +6,7 @@ export interface Notification {
   id: string;
   patient_id: string;
   appointment_id?: string;
+  link?: string | null;
   title: string;
   message: string;
   status: 'unread' | 'read';

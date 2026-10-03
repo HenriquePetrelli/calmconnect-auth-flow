@@ -201,6 +201,10 @@ Deno.serve(async (req) => {
                 token,
                 notification: { title: payload.title, body: payload.body },
                 data: payload.data ?? {},
+                // Tocar na notificação (web) abre a tela certa.
+                ...(payload.data?.url?.startsWith('/')
+                  ? { webpush: { fcm_options: { link: payload.data.url } } }
+                  : {}),
               },
             }),
           }

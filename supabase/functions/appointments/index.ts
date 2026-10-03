@@ -207,11 +207,11 @@ serve(async (req) => {
           )
         `)
         .eq('patient_id', user.id)
-        .gte('scheduled_at', new Date().toISOString())
+        // Inclui as que já começaram: a sala fica aberta até 15 min depois do
+        // fim (src/lib/consultationWindow.ts). Antes, a consulta sumia da lista
+        // no horário de início e quem caiu da chamada não conseguia voltar.
+        .gte('scheduled_at', new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString())
         .order('scheduled_at', { ascending: true });
-
-      console.log('Appointments query result:', { appointments, error });
-      console.log('Sample appointment:', appointments?.[0]);
 
       if (error) {
         console.error('Error fetching appointments:', error);
@@ -228,8 +228,6 @@ serve(async (req) => {
           : null
       })) || [];
 
-      console.log('Transformed appointments:', transformedAppointments);
-
       return new Response(
         JSON.stringify(transformedAppointments),
         {
@@ -244,7 +242,6 @@ serve(async (req) => {
       
       try {
         const text = await req.text();
-        console.log('Request body text:', text);
         
         if (text && text.trim()) {
           requestBody = JSON.parse(text);
@@ -263,8 +260,6 @@ serve(async (req) => {
       }
       
       const { psychologist_id, scheduled_at, duration, appointment_type, notes } = requestBody;
-
-      console.log('Received appointment data:', { psychologist_id, scheduled_at, duration, appointment_type, notes });
 
       // Cap how many booking attempts one patient can make in a short
       // window — nothing legitimate needs more than a handful per hour,
@@ -303,8 +298,6 @@ serve(async (req) => {
       // Validate appointment_type
       const validTypes = ['regular', 'emergency'];
       const finalAppointmentType = appointment_type && validTypes.includes(appointment_type) ? appointment_type : 'regular';
-
-      console.log('Final appointment type:', finalAppointmentType);
 
       // Enforce the Premium-only, 1x/month scheduling quota server-side —
       // the client-side gate (subscriptionTier === 'Premium') can be
@@ -475,7 +468,7 @@ serve(async (req) => {
     // limited), not server malfunctions.
     const isConflict = /ocupado/i.test(msg);
     const isRateLimited = /muitas (tentativas|solicitações)/i.test(msg);
-    const isValidation = /obrigat|inválid|intervalo|entre 07h|10 minutos|required|dispon|limite mensal/i.test(msg);
+    const isValidation = /obrigat|inválid|intervalo|entre 07h|10 minutos|required|dispon|limite mensal|anteced|agenda|plano premium|passou/i.test(msg);
     const status = isConflict ? 409 : isRateLimited ? 429 : isValidation ? 400 : 500;
     return new Response(
       JSON.stringify({ error: msg }),

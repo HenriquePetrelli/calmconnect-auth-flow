@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { getFriendlyErrorMessage } from '@/utils/errorMessage';
+import { getFunctionErrorMessage } from '@/utils/errorMessage';
 
 export interface Appointment {
   id: string;
@@ -124,7 +124,7 @@ export const useAppointments = () => {
       console.error('Error creating appointment:', error);
       toast({
         title: 'Erro',
-        description: getFriendlyErrorMessage(error, 'Não foi possível agendar a consulta.'),
+        description: await getFunctionErrorMessage(error, 'Não foi possível agendar a consulta.'),
         variant: 'destructive',
       });
       throw error;
@@ -202,7 +202,7 @@ export const useAppointments = () => {
       console.error('Error responding to reschedule:', error);
       toast({
         title: 'Erro',
-        description: getFriendlyErrorMessage(error, 'Não foi possível responder ao reagendamento.'),
+        description: await getFunctionErrorMessage(error, 'Não foi possível responder ao reagendamento.'),
         variant: 'destructive',
       });
       throw error;

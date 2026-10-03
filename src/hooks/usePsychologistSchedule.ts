@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getFunctionErrorMessage } from '@/utils/errorMessage';
 
 interface PatientInfo {
   full_name: string;
@@ -144,7 +145,7 @@ export const usePsychologistSchedule = () => {
       console.error('Error updating appointment:', error);
       toast({
         title: 'Erro',
-        description: 'Erro ao atualizar consulta',
+        description: await getFunctionErrorMessage(error, 'Erro ao atualizar consulta'),
         variant: 'destructive',
       });
       throw error;
@@ -175,7 +176,7 @@ export const usePsychologistSchedule = () => {
       console.error('Error accepting appointment:', error);
       toast({
         title: 'Erro',
-        description: 'Erro ao confirmar consulta',
+        description: await getFunctionErrorMessage(error, 'Erro ao confirmar consulta'),
         variant: 'destructive',
       });
       throw error;
@@ -206,7 +207,7 @@ export const usePsychologistSchedule = () => {
       console.error('Error declining appointment:', error);
       toast({
         title: 'Erro',
-        description: 'Erro ao recusar consulta',
+        description: await getFunctionErrorMessage(error, 'Erro ao recusar consulta'),
         variant: 'destructive',
       });
       throw error;

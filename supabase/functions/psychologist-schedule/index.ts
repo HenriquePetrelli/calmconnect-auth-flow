@@ -85,6 +85,50 @@ const isWithinPsychologistAvailability = async (
   return ranges.some((r) => timeToMinutes(r.start_time) <= startMin && endMin <= timeToMinutes(r.end_time));
 };
 
+/** Erro de regra de negócio: vira 4xx com a mensagem para a pessoa (não 500). */
+class HttpError extends Error {
+  constructor(message: string, public status = 400) {
+    super(message);
+  }
+}
+
+const SLOT_MS = 50 * 60 * 1000;
+
+/** Garante que o horário não bate com outra consulta já confirmada do psicólogo. */
+const assertNoConflict = async (
+  // deno-lint-ignore no-explicit-any
+  supabase: any,
+  psychologistId: string,
+  startISO: string,
+  excludeId: string,
+) => {
+  const start = new Date(startISO).getTime();
+  const { data, error } = await supabase
+    .from('appointments')
+    .select('id, scheduled_at, duration')
+    .eq('psychologist_id', psychologistId)
+    .in('status', ['scheduled', 'confirmed', 'in_progress'])
+    .neq('id', excludeId)
+    .gte('scheduled_at', new Date(start - 4 * 60 * 60 * 1000).toISOString())
+    .lte('scheduled_at', new Date(start + 4 * 60 * 60 * 1000).toISOString());
+  if (error) throw error;
+  for (const other of (data ?? []) as { scheduled_at: string; duration: number | null }[]) {
+    const otherStart = new Date(other.scheduled_at).getTime();
+    const otherEnd = otherStart + (other.duration || 50) * 60 * 1000;
+    if (start < otherEnd && otherStart < start + SLOT_MS) {
+      throw new HttpError('Esse horário já está ocupado por outra consulta confirmada.', 409);
+    }
+  }
+};
+
+/** Etapas permitidas para o psicólogo, a partir do status atual. */
+const PSYCHOLOGIST_TRANSITIONS: Record<string, string[]> = {
+  pending: ['scheduled', 'declined', 'reschedule_proposed'],
+  scheduled: ['reschedule_proposed', 'in_progress', 'completed'],
+  confirmed: ['reschedule_proposed', 'in_progress', 'completed'],
+  in_progress: ['completed'],
+};
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -415,6 +459,50 @@ serve(async (req) => {
       throw appointmentError;
     }
 
+    // Regras de cada etapa. Antes qualquer status era aceito a qualquer
+    // momento: o paciente podia "aceitar uma proposta" numa consulta pendente
+    // (confirmando sozinho, sem o psicólogo), confirmar horário que já passou
+    // ou que conflita com outra consulta, propor horário no passado etc.
+    const nowMs = Date.now();
+    const startMs = new Date(appointment.scheduled_at).getTime();
+    if (userType === 'patient') {
+      if (appointment.status !== 'reschedule_proposed') {
+        throw new HttpError('Não há proposta de novo horário para responder nesta consulta.', 409);
+      }
+      if (status === 'scheduled') {
+        const proposed = appointment.proposed_scheduled_at;
+        if (!proposed || new Date(proposed).getTime() <= nowMs) {
+          throw new HttpError('O horário proposto já passou. Agende um novo horário.', 409);
+        }
+        await assertNoConflict(supabase, appointment.psychologist_id, proposed, appointment.id);
+      }
+    } else if (status && status !== appointment.status) {
+      if (!(PSYCHOLOGIST_TRANSITIONS[appointment.status] ?? []).includes(status)) {
+        throw new HttpError('Esta consulta não pode mais ser alterada desse jeito.', 409);
+      }
+      if (status === 'scheduled') {
+        if (startMs <= nowMs) {
+          throw new HttpError('O horário desta consulta já passou. Recuse ou proponha outro horário.', 409);
+        }
+        await assertNoConflict(supabase, user.id, appointment.scheduled_at, appointment.id);
+      }
+      if (status === 'reschedule_proposed') {
+        if (!proposedScheduledAt || new Date(proposedScheduledAt).getTime() <= nowMs) {
+          throw new HttpError('Escolha um novo horário no futuro.', 400);
+        }
+        if (appointment.status !== 'pending' && startMs <= nowMs) {
+          throw new HttpError('A consulta já começou e não pode mais ser remarcada.', 409);
+        }
+        await assertNoConflict(supabase, user.id, proposedScheduledAt, appointment.id);
+      }
+      if (status === 'in_progress' && nowMs < startMs - 10 * 60 * 1000) {
+        throw new HttpError('A sala abre 10 minutos antes do horário da consulta.', 409);
+      }
+      if (status === 'completed' && nowMs < startMs) {
+        throw new HttpError('Só dá para concluir a consulta depois do horário de início.', 409);
+      }
+    }
+
     const updateData: any = {};
     if (status) updateData.status = status;
     if (sessionSummary) updateData.session_summary = sessionSummary;
@@ -546,7 +634,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ error: error.message }),
       {
-        status: 500,
+        status: error instanceof HttpError ? error.status : 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );

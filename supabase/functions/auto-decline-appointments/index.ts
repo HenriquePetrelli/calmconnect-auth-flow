@@ -17,20 +17,34 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Encontrar consultas pending que passaram de 24h sem resposta
+    // Pedidos sem resposta: pendentes há mais de 24h OU cujo horário já
+    // chegou (com 2h de antecedência mínima, um pedido pode vencer antes das
+    // 24h e ficava "Aguardando confirmação" depois do horário). Propostas de
+    // novo horário sem resposta do paciente vencem quando o horário proposto
+    // chega.
+    const nowISO = new Date().toISOString();
     const twentyFourHoursAgo = new Date();
     twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
 
-    const { data: expiredAppointments, error: selectError } = await supabase
-      .from('appointments')
-      .select('id, patient_id, scheduled_at, psychologist_id, appointment_type')
-      .eq('status', 'pending')
-      .lt('created_at', twentyFourHoursAgo.toISOString());
+    const [pendingResult, proposalResult] = await Promise.all([
+      supabase
+        .from('appointments')
+        .select('id, patient_id, scheduled_at, psychologist_id, appointment_type')
+        .eq('status', 'pending')
+        .or(`created_at.lt.${twentyFourHoursAgo.toISOString()},scheduled_at.lte.${nowISO}`),
+      supabase
+        .from('appointments')
+        .select('id, patient_id, scheduled_at, psychologist_id, appointment_type, proposed_scheduled_at')
+        .eq('status', 'reschedule_proposed')
+        .or(`proposed_scheduled_at.lte.${nowISO},and(proposed_scheduled_at.is.null,scheduled_at.lte.${nowISO})`),
+    ]);
 
+    const selectError = pendingResult.error ?? proposalResult.error;
     if (selectError) {
       console.error('Error selecting expired appointments:', selectError);
       throw selectError;
     }
+    const expiredAppointments = [...(pendingResult.data ?? []), ...(proposalResult.data ?? [])];
 
     if (expiredAppointments && expiredAppointments.length > 0) {
       console.log(`Found ${expiredAppointments.length} expired pending appointments`);

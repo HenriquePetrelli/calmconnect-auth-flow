@@ -1,36 +1,56 @@
 // Handles push notifications while the app is closed or in the background.
-// Firebase Web config isn't a secret — it identifies the project, it
-// doesn't authenticate anything — but a service worker can't read
-// import.meta.env, so it's duplicated here from src/lib/firebase.ts.
-// Fill in both places with the same values after creating a Firebase
-// project with Cloud Messaging enabled.
+// The Firebase Web config isn't a secret (it identifies the project, it
+// doesn't authenticate anything). A service worker can't read
+// import.meta.env, so the app passes it in the registration URL
+// (src/lib/firebase.ts → firebaseServiceWorkerUrl). Before, this file had
+// "REPLACE_WITH_..." placeholders and background push never worked.
 
 importScripts('https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.13.0/firebase-messaging-compat.js');
 
-firebase.initializeApp({
-  apiKey: 'REPLACE_WITH_VITE_FIREBASE_API_KEY',
-  authDomain: 'REPLACE_WITH_VITE_FIREBASE_AUTH_DOMAIN',
-  projectId: 'REPLACE_WITH_VITE_FIREBASE_PROJECT_ID',
-  storageBucket: 'REPLACE_WITH_VITE_FIREBASE_STORAGE_BUCKET',
-  messagingSenderId: 'REPLACE_WITH_VITE_FIREBASE_MESSAGING_SENDER_ID',
-  appId: 'REPLACE_WITH_VITE_FIREBASE_APP_ID',
-});
+const params = new URL(self.location.href).searchParams;
+const config = {
+  apiKey: params.get('apiKey'),
+  authDomain: params.get('authDomain'),
+  projectId: params.get('projectId'),
+  storageBucket: params.get('storageBucket'),
+  messagingSenderId: params.get('messagingSenderId'),
+  appId: params.get('appId'),
+};
 
-const messaging = firebase.messaging();
+if (config.apiKey && config.projectId && config.messagingSenderId && config.appId) {
+  firebase.initializeApp(config);
+  const messaging = firebase.messaging();
 
-messaging.onBackgroundMessage((payload) => {
-  const { title, body } = payload.notification || {};
-  if (!title) return;
+  // Mensagens com "notification" o próprio Firebase já mostra (e abre o
+  // fcm_options.link ao tocar); aqui só as que vêm só com dados.
+  messaging.onBackgroundMessage((payload) => {
+    if (payload.notification) return;
+    const { title, body } = payload.data || {};
+    if (!title) return;
 
-  self.registration.showNotification(title, {
-    body: body || '',
-    icon: '/favicon.ico',
-    data: payload.data || {},
+    self.registration.showNotification(title, {
+      body: body || '',
+      icon: '/favicon.ico',
+      data: payload.data || {},
+    });
   });
-});
+}
 
+// Tocar na notificação abre a tela certa (data.url: consultas, chat, hábito...).
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  event.waitUntil(self.clients.openWindow('/'));
+  const data = event.notification.data || {};
+  if (data.FCM_MSG) return; // notificação mostrada pelo Firebase: ele cuida do clique
+  const target = typeof data.url === 'string' && data.url.startsWith('/') ? data.url : '/';
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+      for (const client of clients) {
+        if ('focus' in client && 'navigate' in client) {
+          return client.navigate(target).then((c) => (c || client).focus());
+        }
+      }
+      return self.clients.openWindow(target);
+    }),
+  );
 });
