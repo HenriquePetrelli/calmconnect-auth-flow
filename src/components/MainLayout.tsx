@@ -48,6 +48,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     };
   }, [user?.id]);
 
+  // "Dias seguidos": conta o dia sempre que o paciente abre o app, não só em Meu progresso.
+  useEffect(() => {
+    if (!user?.id) return;
+    void supabase.rpc('update_patient_streak', { p_patient_id: user.id });
+  }, [user?.id]);
+
   const handleSOSConfirm = () => {
     setShowSOSModal(false);
     navigate('/sos');

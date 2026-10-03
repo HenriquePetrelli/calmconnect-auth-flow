@@ -41,7 +41,7 @@ import { SkeletonList } from "@/components/skeletons/Skeletons";
  */
 const Statistics = () => {
   const navigate = useNavigate();
-  const { statistics, loading, updateStreak } = usePatientStatistics();
+  const { statistics, loading, updateStreak, refreshStatistics } = usePatientStatistics();
   const { achievements, loading: achievementsLoading, checkAchievements, unlockAchievement } = useAchievements();
   const { journalEntriesCount, supportGroupParticipationCount, appointmentCompletionRate, loading: engagementLoading } =
     usePatientEngagementMetrics();
@@ -51,7 +51,9 @@ const Statistics = () => {
 
   useEffect(() => {
     const init = async () => {
+      // Atualiza a sequência antes de mostrar (senão aparece o valor da última visita).
       await updateStreak();
+      await refreshStatistics();
       await checkAchievements();
     };
     init();
