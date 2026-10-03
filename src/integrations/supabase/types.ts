@@ -711,6 +711,24 @@ export type Database = {
           },
         ]
       }
+      internal_secrets: {
+        Row: {
+          created_at: string
+          name: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          name: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          name?: string
+          value?: string
+        }
+        Relationships: []
+      }
       legal_acceptances: {
         Row: {
           accepted_at: string
@@ -2448,7 +2466,23 @@ export type Database = {
         }
         Returns: undefined
       }
+      add_patient_activity_unchecked: {
+        Args: {
+          p_activity_date?: string
+          p_activity_name: string
+          p_patient_id: string
+        }
+        Returns: undefined
+      }
       add_quarterly_activity: {
+        Args: {
+          p_activity_date?: string
+          p_activity_name: string
+          p_patient_id: string
+        }
+        Returns: undefined
+      }
+      add_quarterly_activity_unchecked: {
         Args: {
           p_activity_date?: string
           p_activity_name: string
@@ -2493,6 +2527,7 @@ export type Database = {
         Args: { p_patient_id: string }
         Returns: number
       }
+      assert_caller_is: { Args: { p_user_id: string }; Returns: undefined }
       calculate_psychologist_average_rating: {
         Args: { psychologist_user_id: string }
         Returns: number
@@ -2608,6 +2643,23 @@ export type Database = {
             }
             Returns: Json
           }
+      create_psychologist_profile_unchecked: {
+        Args: {
+          p_address?: string
+          p_area_atendimento?: string
+          p_bio: string
+          p_city: string
+          p_cpf?: string
+          p_crp_number: string
+          p_document_url?: string
+          p_email: string
+          p_full_name: string
+          p_specialization: string
+          p_state: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       expire_organization_entitlements: { Args: never; Returns: number }
       finalize_stale_appointments: { Args: never; Returns: number }
       finalize_stale_emergency_sessions: {
@@ -2697,6 +2749,15 @@ export type Database = {
           user_like: string
         }[]
       }
+      get_my_psychologist_private: {
+        Args: never
+        Returns: {
+          cpf: string
+          email: string
+          pix_key: string
+          pix_type: string
+        }[]
+      }
       get_or_create_appointment_webrtc_session: {
         Args: { p_appointment_id: string }
         Returns: string
@@ -2710,11 +2771,29 @@ export type Database = {
           sos_count: number
         }[]
       }
+      get_patient_statistics_unchecked: {
+        Args: { patient_user_id: string }
+        Returns: {
+          average_rating: number
+          consultation_count: number
+          sos_count: number
+        }[]
+      }
       get_psychologist_document_url: {
         Args: { document_path: string }
         Returns: string
       }
       get_psychologist_rejection_status: {
+        Args: { p_user_id: string }
+        Returns: {
+          is_rejected: boolean
+          rejected_at: string
+          rejection_reason: string
+          should_cleanup: boolean
+          should_show_rejection_message: boolean
+        }[]
+      }
+      get_psychologist_rejection_status_unchecked: {
         Args: { p_user_id: string }
         Returns: {
           is_rejected: boolean
@@ -2744,7 +2823,15 @@ export type Database = {
         Args: { p_psychologist_id: string }
         Returns: undefined
       }
+      increment_emergency_accepted_unchecked: {
+        Args: { p_psychologist_id: string }
+        Returns: undefined
+      }
       increment_emergency_rejected: {
+        Args: { p_psychologist_id: string }
+        Returns: undefined
+      }
+      increment_emergency_rejected_unchecked: {
         Args: { p_psychologist_id: string }
         Returns: undefined
       }
@@ -2752,6 +2839,11 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: undefined
       }
+      initialize_patient_achievements_unchecked: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
+      internal_cron_secret: { Args: never; Returns: string }
       is_organization_manager: { Args: { p_org: string }; Returns: boolean }
       is_super_admin: { Args: { user_id_param?: string }; Returns: boolean }
       join_organization: { Args: { p_code: string }; Returns: Json }
@@ -2787,6 +2879,7 @@ export type Database = {
         Args: { p_appointment_id: string }
         Returns: Json
       }
+      organization_code_attempt_allowed: { Args: never; Returns: boolean }
       organization_entitlement: {
         Args: { p_user_id: string }
         Returns: {
@@ -2875,6 +2968,14 @@ export type Database = {
       sync_consultation_counts: { Args: never; Returns: undefined }
       sync_psychologist_payments: { Args: never; Returns: undefined }
       update_patient_activity_time: {
+        Args: {
+          p_activity_type: string
+          p_duration_minutes: number
+          p_patient_id: string
+        }
+        Returns: undefined
+      }
+      update_patient_activity_time_unchecked: {
         Args: {
           p_activity_type: string
           p_duration_minutes: number
