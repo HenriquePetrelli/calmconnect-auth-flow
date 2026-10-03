@@ -48,7 +48,7 @@ export const findCustomerId = async (
   }
   if (!user.email) return null;
   const byEmail = await stripe.customers.list({ email: user.email, limit: 10 });
-  const mine = byEmail.data.find((customer) => customer.metadata?.user_id === user.id);
+  const mine = byEmail.data.find((customer: Stripe.Customer) => customer.metadata?.user_id === user.id);
   return (mine ?? byEmail.data[0])?.id ?? null;
 };
 
