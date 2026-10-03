@@ -709,6 +709,42 @@ export type Database = {
           },
         ]
       }
+      mental_health_screenings: {
+        Row: {
+          answers: number[]
+          created_at: string
+          id: string
+          instrument: string
+          score: number
+          self_harm_flag: boolean
+          severity: string
+          shared_with_psychologist: boolean
+          user_id: string
+        }
+        Insert: {
+          answers: number[]
+          created_at?: string
+          id?: string
+          instrument: string
+          score?: number
+          self_harm_flag?: boolean
+          severity?: string
+          shared_with_psychologist?: boolean
+          user_id: string
+        }
+        Update: {
+          answers?: number[]
+          created_at?: string
+          id?: string
+          instrument?: string
+          score?: number
+          self_harm_flag?: boolean
+          severity?: string
+          shared_with_psychologist?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       notification_logs: {
         Row: {
           body: string
@@ -2344,6 +2380,7 @@ export type Database = {
         Args: never
         Returns: {
           daily_goal: number
+          due_slot: string
           habit_id: string
           kind: string
           quit_started_at: string
