@@ -140,22 +140,14 @@ export const useConversas = () => {
     if (!user) return null;
 
     try {
-      const { data, error } = await supabase
-        .from('conversas')
-        .insert({
-          paciente_id: user.id,
-          psicologo_id: psicologoId,
-          status: 'ativa'
-        })
-        .select()
-        .single();
+      // Reabre a conversa que já existe (inclusive uma que o paciente ocultou)
+      // ou cria uma nova; o banco confere a consulta nos últimos 30 dias.
+      const { data: conversaId, error } = await supabase.rpc('abrir_conversa', { p_psicologo_id: psicologoId });
 
       if (error) throw error;
 
-      toast({ title: 'Conversa criada' });
-
       await fetchConversas();
-      return data;
+      return conversaId ? { id: conversaId as string } : null;
     } catch (error) {
       console.error('Erro ao criar conversa:', error);
       toast({
@@ -167,23 +159,22 @@ export const useConversas = () => {
     }
   };
 
+  // Some só da lista de quem excluiu (o outro lado continua com o histórico);
+  // volta se chegar mensagem nova.
   const excluirConversa = async (conversaId: string) => {
     try {
-      const { error } = await supabase
-        .from('conversas')
-        .delete()
-        .eq('id', conversaId);
+      const { error } = await supabase.rpc('ocultar_conversa', { p_conversa_id: conversaId });
 
       if (error) throw error;
 
-      toast({ title: 'Conversa excluída' });
+      toast({ title: 'Conversa removida da sua lista' });
 
       await fetchConversas();
     } catch (error) {
       console.error('Erro ao excluir conversa:', error);
       toast({
-        title: 'Erro',
-        description: 'Erro ao excluir conversa',
+        title: 'Não foi possível remover a conversa',
+        description: 'Tente de novo em instantes.',
         variant: 'destructive',
       });
     }

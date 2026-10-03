@@ -1,7 +1,7 @@
 # 13. Questionários do mês (GAD-7 e PHQ-9)
 
-> **Status:** Pronto, com uma pendência pequena (ver Pendências).
-> **Última verificação:** 2026-10-03.
+> **Status:** Pronto.
+> **Última verificação:** 2026-10-04 (pontuação recalculada em qualquer alteração).
 > **Quem usa:** paciente (responde) e psicólogo com consulta com o paciente (vê, se o paciente compartilhar).
 
 ## Resumo
@@ -20,7 +20,7 @@ Dois questionários validados internacionalmente: **GAD-7** (ansiedade) e **PHQ-
 
 1. O app indica quais questionários estão "para responder": nunca respondidos ou com mais de um mês do último.
 2. Pergunta padrão: "Nas últimas 2 semanas, com que frequência você se sentiu incomodado(a) por…", com 4 opções de 0 a 3.
-3. Ao enviar, o gatilho `score_mental_health_screening` calcula a pontuação e a faixa no banco. O app não envia a pontuação.
+3. Ao enviar, o gatilho `score_mental_health_screening` calcula a pontuação e a faixa no banco, e recalcula em qualquer alteração. Nem o app nem o paciente conseguem gravar outra pontuação.
 4. Faixas:
 
    | Faixa | GAD-7 | PHQ-9 |
@@ -67,9 +67,7 @@ from mental_health_screenings where user_id = '<id>' order by created_at desc;
 
 ## Pendências
 
-Registradas também no item 7 de `docs/pendencias-antes-do-lancamento.md`.
-
-- **Pontuação editável pela API** (achado em 2026-10-04, baixo impacto): o gatilho recalcula a pontuação só quando as respostas mudam. Chamando a API direto, o próprio paciente consegue alterar `score`/`severity` de um resultado já gravado, sem mudar as respostas, e isso apareceria para o psicólogo se compartilhado. Correção: recriar o gatilho para rodar em qualquer `UPDATE` (`BEFORE INSERT OR UPDATE ON mental_health_screenings`).
+Nenhuma. A pontuação editável pela API foi corrigida em 2026-10-04 (migration `20261004230000_privacy_fixes.sql`).
 
 ## Problemas comuns
 

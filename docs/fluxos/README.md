@@ -20,17 +20,17 @@ Para regras de negócio em texto corrido e o histórico de cada mudança, veja `
 | 3 | Chamada de vídeo (SOS e consulta) | [03-chamada-de-video.md](03-chamada-de-video.md) | Pronto, com pendência externa | 2026-10-04 |
 | 4 | Consultas agendadas | [04-consultas-agendadas.md](04-consultas-agendadas.md) | Pronto | 2026-10-04 |
 | 5 | Agenda do psicólogo | [05-agenda-do-psicologo.md](05-agenda-do-psicologo.md) | Pronto | 2026-09-24 |
-| 6 | Chat paciente e psicólogo | [06-chat.md](06-chat.md) | Pronto, com pendência | 2026-10-04 |
+| 6 | Chat paciente e psicólogo | [06-chat.md](06-chat.md) | Pronto | 2026-10-04 |
 | 7 | Notificações e push | [07-notificacoes-e-push.md](07-notificacoes-e-push.md) | Pronto, com pendência externa | 2026-10-04 |
 | 8 | Assinaturas e pagamentos (Stripe) | [08-assinaturas-e-pagamentos.md](08-assinaturas-e-pagamentos.md) | Pronto, com pendência externa | 2026-10-02 |
 | 9 | Repasses aos psicólogos | [09-repasses.md](09-repasses.md) | Pronto, com decisão pendente | 2026-10-04 |
 | 10 | Empresas (B2B) | [10-empresas-b2b.md](10-empresas-b2b.md) | Pronto | 2026-10-04 |
 | 11 | Meus hábitos | [11-meus-habitos.md](11-meus-habitos.md) | Pronto | 2026-10-03 |
 | 12 | Meu progresso (humor, sequência, conquistas, metas) | [12-meu-progresso.md](12-meu-progresso.md) | Pronto | 2026-10-04 |
-| 13 | Questionários (GAD-7 e PHQ-9) | [13-questionarios.md](13-questionarios.md) | Pronto, com pendência | 2026-10-04 |
+| 13 | Questionários (GAD-7 e PHQ-9) | [13-questionarios.md](13-questionarios.md) | Pronto | 2026-10-04 |
 | 14 | Plano de segurança | [14-plano-de-seguranca.md](14-plano-de-seguranca.md) | Pronto | 2026-10-04 |
-| 15 | Autocuidado (respiração, sons, comer com atenção, diário) | [15-autocuidado.md](15-autocuidado.md) | Funciona, sem varredura recente | 2026-09-03 |
-| 16 | Grupos de apoio | [16-grupos-de-apoio.md](16-grupos-de-apoio.md) | Funciona, sem varredura recente | 2026-09-24 |
+| 15 | Autocuidado (respiração, sons, comer com atenção, diário) | [15-autocuidado.md](15-autocuidado.md) | Pronto | 2026-10-04 |
+| 16 | Grupos de apoio | [16-grupos-de-apoio.md](16-grupos-de-apoio.md) | Pronto | 2026-10-04 |
 | 17 | Suporte (paciente e psicólogo) | [17-suporte.md](17-suporte.md) | Pronto | 2026-10-04 |
 | 18 | Privacidade e LGPD (termos, exportar, excluir conta) | [18-privacidade-e-lgpd.md](18-privacidade-e-lgpd.md) | Pronto, documentos em revisão | 2026-09-28 |
 | 19 | Painel do admin | [19-painel-admin.md](19-painel-admin.md) | Pronto, com pendência crítica | 2026-10-02 |

@@ -308,6 +308,8 @@ export type Database = {
           data_fim: string | null
           data_inicio: string
           id: string
+          oculta_paciente_em: string | null
+          oculta_psicologo_em: string | null
           paciente_id: string
           psicologo_id: string
           status: string
@@ -318,6 +320,8 @@ export type Database = {
           data_fim?: string | null
           data_inicio?: string
           id?: string
+          oculta_paciente_em?: string | null
+          oculta_psicologo_em?: string | null
           paciente_id: string
           psicologo_id: string
           status?: string
@@ -328,6 +332,8 @@ export type Database = {
           data_fim?: string | null
           data_inicio?: string
           id?: string
+          oculta_paciente_em?: string | null
+          oculta_psicologo_em?: string | null
           paciente_id?: string
           psicologo_id?: string
           status?: string
@@ -2458,6 +2464,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      abrir_conversa: { Args: { p_psicologo_id: string }; Returns: string }
       add_patient_activity: {
         Args: {
           p_activity_date?: string
@@ -2880,6 +2887,7 @@ export type Database = {
         Returns: Json
       }
       organization_code_attempt_allowed: { Args: never; Returns: boolean }
+      ocultar_conversa: { Args: { p_conversa_id: string }; Returns: undefined }
       organization_entitlement: {
         Args: { p_user_id: string }
         Returns: {

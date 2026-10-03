@@ -4,6 +4,7 @@ import App from './App.tsx'
 import './index.css'
 import { preloadCoreRoutesWhenIdle } from './lib/routePreload'
 import { silenceVerboseLogsInProduction } from './lib/productionLogging'
+import { currentFrameContext, isUntrustedFrame, renderFrameBlockedNotice } from './lib/frameGuard'
 
 let storage: Storage | null = null
 try {
@@ -13,7 +14,12 @@ try {
 }
 silenceVerboseLogsInProduction(import.meta.env.PROD, window.location.search, storage)
 
-createRoot(document.getElementById("root")!).render(<App />);
+// Outro site exibindo o Soliv num iframe: não monta o app (clickjacking).
+if (isUntrustedFrame(currentFrameContext())) {
+  renderFrameBlockedNotice()
+} else {
+  createRoot(document.getElementById("root")!).render(<App />);
+}
 
 // Preload core route chunks when browser is idle
 preloadCoreRoutesWhenIdle();

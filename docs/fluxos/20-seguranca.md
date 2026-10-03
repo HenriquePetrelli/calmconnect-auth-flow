@@ -33,6 +33,10 @@
 | Senha fraca | 8+ caracteres com letras e números no app | Ficha 01 |
 | Reabrir atendimento encerrado | Gatilho `prevent_reopen_finished_call` | Ficha 03 |
 | Prompt injection | O app não usa IA | Não se aplica |
+| App dentro de outro site (clickjacking) | `src/lib/frameGuard.ts`: fora do editor da Lovable, o app não abre dentro de iframe de outro site | Página com `<iframe src="...">` de outro domínio → aviso "o Soliv não abre dentro de outros sites" |
+| Ver quem curtiu nos grupos | Curtidas legíveis só pelo dono | Ficha 16 |
+| Alterar a própria pontuação de questionário | Gatilho recalcula em qualquer alteração | Ficha 13 |
+| Burlar o limite do diário | Gatilho `enforce_journal_daily_limit` | Ficha 15 |
 | Webhook falso do Stripe | Assinatura conferida com `STRIPE_WEBHOOK_SECRET` | Ficha 08 |
 | TURN usado por estranhos (custo) | `ice-servers` só entrega TURN a usuário logado | Chamada sem login → resposta sem TURN |
 
@@ -55,15 +59,15 @@ select
 ## Onde está no código
 
 - **Edge functions**: `supabase/functions/_shared/guards.ts` (`isTrustedCaller`, `withinRateLimit`, `escapeHtml`, `isValidEmail`, `isBoundedText`, `safeEqual`).
-- **App**: `src/lib/requestDedupe.ts`, `installRequestDedupe.ts`, `contentSecurityPolicy.ts` (CSP aplicada pelo `vite.config.ts` só no build), `password.ts`, `src/contexts/AuthContext.tsx`.
-- **Banco**: migrações de segurança `20261003210511_25be134c-….sql` e `20261004220000_storage_upload_limits.sql`.
+- **App**: `src/lib/requestDedupe.ts`, `installRequestDedupe.ts`, `contentSecurityPolicy.ts` (CSP aplicada pelo `vite.config.ts` só no build), `frameGuard.ts`, `password.ts`, `src/contexts/AuthContext.tsx`.
+- **Banco**: migrações de segurança `20261003210511_25be134c-….sql`, `20261004220000_storage_upload_limits.sql` e `20261004230000_privacy_fixes.sql`.
+- **Mensagens de erro**: `src/utils/errorMessage.ts` mostra as mensagens de regra do banco e esconde o texto técnico.
 
 ## Pendências
 
 - **Senha do admin exposta** numa migração antiga (pendência 1).
-- **Painel do Supabase** (pendência 6): senha mínima 8, "Leaked password protection", "Confirm email" e verificação em duas etapas para admin.
-- **Achados pequenos registrados nas fichas**: pontuação de questionário editável pelo próprio paciente (ficha 13); curtidas dos grupos expõem quem curtiu e contadores editáveis pelo autor (ficha 16).
-- **Sem cabeçalhos de hospedagem** como `X-Frame-Options`: a Lovable não permite configurar. A CSP no HTML cobre scripts, mas não impede o app de ser exibido dentro de outro site.
+- **Painel do Supabase** (pendência 5): senha mínima 8, "Leaked password protection", "Confirm email" e verificação em duas etapas para admin.
+- **Sem cabeçalhos de hospedagem** como `X-Frame-Options` (a Lovable não permite configurar). A proteção contra clickjacking é feita pelo próprio app (`frameGuard`), e cobre Chrome, Edge e Safari; no Firefox, que não informa o site de fora, o app abre normalmente.
 
 ## Como reagir a um incidente
 

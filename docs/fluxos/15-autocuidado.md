@@ -1,7 +1,7 @@
 # 15. Autocuidado: respiração, sons, comer com atenção e diário
 
-> **Status:** Funciona, sem varredura recente. Revisado no levantamento do paciente de 2026-09-03; comer com atenção é de 2026-10-03. Faça o teste manual abaixo antes do lançamento.
-> **Última verificação:** 2026-10-04 (só os limites de tempo registrado e a proteção das funções de estatística).
+> **Status:** Pronto.
+> **Última verificação:** 2026-10-04 (varredura: respiração, sons, comer com atenção e diário; limite do diário no banco).
 > **Quem usa:** paciente.
 
 ## Resumo
@@ -48,7 +48,7 @@ Exercício guiado de cerca de 3 min, em etapas (`src/lib/mindfulEating.ts`). Tam
 
 ### Diário privado
 - Texto e humor do momento.
-- **Limite de 2 anotações por dia**, contado no horário de Brasília. Ao atingir o limite, a janela continua aberta com o texto digitado, para não perder o que foi escrito.
+- **Limite de 2 anotações por dia**, contado no horário de Brasília e conferido também no banco (gatilho `enforce_journal_daily_limit`, que também impede data retroativa). Ao atingir o limite, aparece um aviso só, e a janela continua aberta com o texto digitado.
 - Só o paciente lê. Nem o psicólogo nem o admin veem.
 
 ## Onde está no código
@@ -70,7 +70,7 @@ Exercício guiado de cerca de 3 min, em etapas (`src/lib/mindfulEating.ts`). Tam
 6. Logado como psicólogo, confirmar que não existe acesso ao diário do paciente.
 
 ### Testes automáticos
-Não há testes específicos destas telas. São cobertos indiretamente por `statisticsEngagementCards`, `usePatientEngagementMetrics` e `progressFeedAchievements`.
+`privateJournal` (limite do dia, aviso único, mensagem do servidor). Respiração e sons são cobertos indiretamente por `statisticsEngagementCards`, `usePatientEngagementMetrics` e `progressFeedAchievements`.
 
 ### Conferência no banco
 ```sql
@@ -80,7 +80,7 @@ select criado_em, humor from private_journals where user_id = '<id>' order by cr
 
 ## Pendências
 
-- Sem testes automáticos próprios. Vale o teste manual antes do lançamento.
+Nenhuma conhecida.
 
 ## Problemas comuns
 

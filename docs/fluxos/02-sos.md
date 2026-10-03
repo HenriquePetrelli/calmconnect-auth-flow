@@ -112,10 +112,10 @@ from subscribers where user_id = '<id do paciente>';
 
 ## Pendências
 
-- **TURN não configurado** (pendência 5): sem ele, parte das chamadas não conecta em 4G e em redes de empresa. O app funciona, só sem o retransmissor.
+- **TURN não configurado** (pendência 4): sem ele, parte das chamadas não conecta em 4G e em redes de empresa. O app funciona, só sem o retransmissor.
 - **Push**: depende da configuração do Firebase (pendência 2). Sem ele, o psicólogo só vê o pedido com o painel aberto.
-- **SOS de antes de 2026-10-04 sem repasse**: decisão de pagamento pendente (pendência 4).
-- **Sugestões de produto** (não são defeitos): SOS por texto, triagem de risco e plano pós-crise (pendências 8 a 10).
+- **SOS de antes de 2026-10-04 sem repasse**: decisão de pagamento pendente (pendência 3).
+- **Sugestões de produto** (não são defeitos): SOS por texto, triagem de risco e plano pós-crise (pendências 6 a 8).
 
 ## Problemas comuns
 

@@ -2,6 +2,10 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { fromZonedTime } from 'date-fns-tz';
+import { getFriendlyErrorMessage } from '@/utils/errorMessage';
+
+export const JOURNAL_DAILY_LIMIT = 2;
+const LIMIT_MESSAGE = 'Limite diário de 2 anotações atingido. Tente novamente amanhã.';
 
 const PATIENT_TIMEZONE = 'America/Sao_Paulo';
 
@@ -68,13 +72,9 @@ export const usePrivateJournal = () => {
 
       if (countError) throw countError;
 
-      if (todayEntries && todayEntries.length >= 2) {
-        toast({
-          title: 'Limite diário atingido',
-          description: 'Limite diário de 2 anotações atingido. Tente novamente amanhã.',
-          variant: 'destructive',
-        });
-        throw new Error('Limite diário atingido');
+      // Aviso antecipado; o banco confere de novo (gatilho enforce_journal_daily_limit).
+      if (todayEntries && todayEntries.length >= JOURNAL_DAILY_LIMIT) {
+        throw new Error(LIMIT_MESSAGE);
       }
 
       const { data, error } = await supabase
@@ -94,10 +94,12 @@ export const usePrivateJournal = () => {
 
       return data;
     } catch (error) {
+      // Um aviso só (antes o limite mostrava dois: o do limite e um genérico).
       console.error('Erro ao criar entrada:', error);
+      const message = getFriendlyErrorMessage(error, 'Não foi possível criar a anotação.');
       toast({
-        title: 'Erro',
-        description: 'Não foi possível criar a anotação.',
+        title: message === LIMIT_MESSAGE ? 'Limite diário atingido' : 'Não foi possível salvar',
+        description: message,
         variant: 'destructive',
       });
       throw error;

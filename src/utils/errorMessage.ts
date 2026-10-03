@@ -7,7 +7,19 @@
  * looks like it was written for a person, not a stack trace.
  */
 export const getFriendlyErrorMessage = (error: unknown, fallback: string): string => {
-  const raw = error instanceof Error ? error.message : typeof error === 'string' ? error : '';
+  // Erros do Supabase (banco e RPC) chegam como objeto simples { message, code },
+  // não como Error. Antes eram ignorados e toda mensagem de regra do banco
+  // ("Esta consulta já entrou no repasse", "Muitas ações em pouco tempo"...)
+  // virava a mensagem genérica.
+  const objectMessage = (error as { message?: unknown } | null)?.message;
+  const raw =
+    error instanceof Error
+      ? error.message
+      : typeof error === 'string'
+        ? error
+        : typeof objectMessage === 'string'
+          ? objectMessage
+          : '';
   if (!raw) return fallback;
 
   const message = raw.toLowerCase();

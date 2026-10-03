@@ -143,6 +143,7 @@ const AddTestimonialForm = ({ groupId, groupName, onSuccess, onCancel }: AddTest
             }, 300);
           }}
           rows={4}
+          maxLength={500}
           required
         />
         <div className="text-xs text-muted-foreground">

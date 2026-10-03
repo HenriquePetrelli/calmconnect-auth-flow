@@ -1,12 +1,12 @@
 # 06. Chat entre paciente e psicólogo
 
-> **Status:** Pronto, com uma pendência de produto ("excluir conversa" apaga para os dois lados).
-> **Última verificação:** 2026-10-04.
+> **Status:** Pronto.
+> **Última verificação:** 2026-10-04 (ocultar conversa só para quem excluiu).
 > **Quem usa:** paciente e psicólogo que tiveram consulta concluída nos últimos 30 dias.
 
 ## Resumo
 
-O chat dá continuidade ao cuidado depois de uma consulta. Só nasce de uma consulta realizada, fica aberto para escrita por 1 mês e é apagado depois de 3 meses. Aceita texto e foto. O conteúdo nunca aparece para o admin.
+O chat dá continuidade ao cuidado depois de uma consulta. Só nasce de uma consulta realizada, fica aberto para escrita por 1 mês (renovado a cada consulta concluída) e é apagado 3 meses depois de aberto. Aceita texto e foto. O conteúdo nunca aparece para o admin.
 
 ## Telas
 
@@ -16,13 +16,14 @@ O chat dá continuidade ao cuidado depois de uma consulta. Só nasce de uma cons
 
 ## Como funciona
 
-1. **Criar conversa**: o paciente inicia com um psicólogo com quem teve consulta **concluída nos últimos 30 dias**. O banco confere essa regra (`pode_criar_conversa`) e recusa qualquer outra tentativa.
+1. **Criar conversa**: o paciente inicia com um psicólogo com quem teve consulta **concluída nos últimos 30 dias** (`abrir_conversa`). O banco confere essa regra (`pode_criar_conversa`) e recusa qualquer outra tentativa. Se já existe conversa com esse psicólogo, ela é reaberta.
 2. **Mensagens**: texto (até 5.000 caracteres) ou foto (até 10 MB, imagem). A foto vai para o storage privado e é exibida por link temporário assinado.
 3. **Tempo real**: a mensagem nova entra no fim da lista sem recarregar. Se o tempo real caiu (tela apagada, troca de rede), a conversa busca o que faltou quando a internet ou a tela voltam.
 4. **Leitura**: ao abrir a conversa, as mensagens do outro lado são marcadas como lidas (`marcar_mensagens_como_lidas`). Mensagens próprias mostram um check (enviada) ou dois (lida).
 5. **Notificação**: mensagem nova gera aviso no app e push, sem repetir um aviso por mensagem em sequência curta. Com a aba aberta em segundo plano, o navegador também avisa.
-6. **Expiração** (rotina diária `expire-old-conversas`): com 1 mês, a conversa vira **somente leitura**; com 3 meses, é apagada.
-7. **Falha ao enviar**: o texto digitado fica na caixa e a foto selecionada continua selecionada, para tentar de novo.
+6. **Expiração** (rotina diária `expire-old-conversas`): com 1 mês, a conversa vira **somente leitura**; com 3 meses, é apagada. Cada consulta concluída com o mesmo psicólogo reabre a conversa por mais 30 dias.
+7. **Excluir** (paciente): a conversa some **só da lista de quem excluiu** (`ocultar_conversa`). O psicólogo continua com o histórico. Ela volta para a lista se chegar mensagem nova, ou se o paciente reabrir com o mesmo psicólogo.
+8. **Falha ao enviar**: o texto digitado fica na caixa e a foto selecionada continua selecionada, para tentar de novo.
 
 ## Regras
 
@@ -36,7 +37,7 @@ O chat dá continuidade ao cuidado depois de uma consulta. Só nasce de uma cons
 - **Telas e componentes**: `src/pages/Chat.tsx`, `ChatContent.tsx`; em `src/components/chat/`: `ListaConversas`, `ChatInterface`, `ChatImage`.
 - **Hooks**: `useConversas` (usa `listar_conversas`, com não lidas), `useMensagens` (envio, tempo real, nova sincronização), `useChatModeration` (admin).
 - **Regras puras**: `src/lib/chatImage.ts`, `browserNotifications.ts`.
-- **Banco**: `conversas`, `mensagens`; bucket `documents` (pasta `chat-images`). Funções: `pode_criar_conversa`, `listar_conversas`, `marcar_mensagens_como_lidas`, `gerenciar_expiracao_conversas`, `get_admin_conversas_overview`.
+- **Banco**: `conversas`, `mensagens`; bucket `documents` (pasta `chat-images`). Funções: `pode_criar_conversa`, `listar_conversas` (sem as ocultadas), `abrir_conversa`, `ocultar_conversa`, `marcar_mensagens_como_lidas`, `gerenciar_expiracao_conversas`, `get_admin_conversas_overview`.
 
 ## Como validar
 
@@ -47,6 +48,7 @@ O chat dá continuidade ao cuidado depois de uma consulta. Só nasce de uma cons
 4. Mandar uma foto (tirar uma no celular, inclusive iPhone) → abre do outro lado.
 5. Desligar o Wi-Fi do psicólogo, mandar 2 mensagens do paciente, religar → as mensagens aparecem sem recarregar.
 6. Com o app do psicólogo fechado → chega o push "Nova mensagem".
+7. Paciente exclui a conversa → some da lista dele; o psicólogo ainda a vê. O psicólogo manda mensagem → a conversa volta para o paciente.
 
 ### Testes automáticos
 `consultasChatRules`, `chatReadReceipts.render`, `chatBrowserNotifications`, `chatModerationPanel.render`.
@@ -62,7 +64,7 @@ select conversa_id, count(*), max(created_at) from mensagens group by conversa_i
 
 ## Pendências
 
-- **"Excluir conversa" apaga para os dois lados** (pendência 3): o certo seria "ocultar só para mim", como no WhatsApp.
+Nenhuma. "Excluir conversa" passou a ocultar só para quem excluiu em 2026-10-04 (migration `20261004230000_privacy_fixes.sql`).
 
 ## Problemas comuns
 

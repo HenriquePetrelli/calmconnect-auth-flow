@@ -23,21 +23,14 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 - **O que fazer:** confirmar que as variáveis estão configuradas com os valores do projeto no Firebase e testar num celular: ativar as notificações no perfil, fechar o app e mandar uma mensagem no chat a partir de outra conta.
 - **Registrado em:** 2026-10-04.
 
-### 3. Excluir conversa apaga para os dois lados
-
-- **Onde:** lista de conversas do paciente (ícone de lixeira).
-- **Problema:** quando o paciente exclui uma conversa, ela some também para o psicólogo, inclusive do histórico dele com aquele paciente.
-- **O que fazer:** trocar por "ocultar só para mim", como no WhatsApp: a conversa sai da lista de quem ocultou e continua para o outro lado.
-- **Registrado em:** 2026-10-04.
-
-### 4. Decidir sobre SOS atendidos antes da correção do repasse
+### 3. Decidir sobre SOS atendidos antes da correção do repasse
 
 - **Situação:** até 2026-10-04 o repasse nunca contava os atendimentos de SOS (contava pela tabela de consultas, onde o SOS não aparece), então nenhum psicólogo recebeu por SOS. A correção passa a contar os SOS concluídos daqui para frente; os anteriores foram registrados em `payout_items` (`source_type = 'sos'`, `backfilled = true`) sem somar ao valor a pagar.
 - **O que fazer:** decidir se paga os atendimentos antigos. Para ver quanto é por psicólogo:
   `select p.full_name, count(*), sum(i.amount) from payout_items i join psychologists p on p.user_id = i.psychologist_user_id where i.source_type = 'sos' and i.backfilled group by p.full_name;`
 - **Registrado em:** 2026-10-04.
 
-### 5. Configurar o TURN das chamadas de vídeo
+### 4. Configurar o TURN das chamadas de vídeo
 
 - **Onde:** secrets das edge functions (função `ice-servers`).
 - **Por quê:** sem TURN, a chamada de vídeo (SOS e consulta) não conecta quando um dos lados está em rede que bloqueia conexão direta: muitas redes 4G/5G (NAT da operadora) e redes corporativas. Estimativa comum: 10% a 20% das chamadas. O app já está pronto; falta a conta.
@@ -47,7 +40,7 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 - **Como testar:** fazer uma chamada com um lado no 4G e o outro numa rede corporativa ou de outra operadora e confirmar que o vídeo conecta.
 - **Registrado em:** 2026-10-04.
 
-### 6. Ajustes de segurança no painel do Supabase (Authentication)
+### 5. Ajustes de segurança no painel do Supabase (Authentication)
 
 - **Onde:** Supabase → Authentication → Policies/Settings (não dá para configurar pelo código).
 - **O que fazer:**
@@ -57,25 +50,19 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
   4. Ativar a verificação em duas etapas (MFA) para as contas de admin.
 - **Registrado em:** 2026-10-04.
 
-### 7. Dois ajustes pequenos de privacidade achados ao documentar
-
-- **Grupos de apoio, curtidas:** qualquer usuário logado lê a tabela `group_testimonial_likes` inteira, com o ID de quem curtiu, e assim descobre quem interage com quais grupos (ex.: depressão). Corrigir: limitar a leitura às curtidas da própria pessoa e entregar só os totais. Detalhes em `docs/fluxos/16-grupos-de-apoio.md`.
-- **Questionários:** o próprio paciente consegue alterar pela API a pontuação já gravada, sem mudar as respostas. Corrigir: o gatilho de pontuação rodar em qualquer alteração. Também os contadores de curtidas, editáveis pelo autor do depoimento. Detalhes em `docs/fluxos/13-questionarios.md`.
-- **Registrado em:** 2026-10-04.
-
 ## Melhorias sugeridas
 
-### 8. SOS por mensagem de texto
+### 6. SOS por mensagem de texto
 
 - Apps como Crisis Text Line e o chat do CVV atendem por texto: muita gente em crise não consegue falar (está em casa com outras pessoas, no trabalho, sem voz). Hoje o SOS do Soliv é só por vídeo (dá para desligar a câmera, mas não para falar sem voz).
 - **Registrado em:** 2026-10-04.
 
-### 9. Triagem rápida de risco no SOS
+### 7. Triagem rápida de risco no SOS
 
 - Antes de entrar na fila, 1 ou 2 perguntas (ex.: "Você está pensando em se machucar agora?"). Se sim: mostrar CVV 188 e SAMU 192 em destaque e marcar o pedido como prioritário para o psicólogo. É o que fazem serviços como o 988 e o Wysa.
 - **Registrado em:** 2026-10-04.
 
-### 10. Plano pós-crise para o paciente
+### 8. Plano pós-crise para o paciente
 
 - Ao fim do SOS, o psicólogo registra notas só para ele. Serviços de crise costumam deixar com a pessoa um resumo curto e combinados ("o que fazer nas próximas 24h", "procure atendimento se..."), que poderiam virar parte do plano de segurança.
 - **Registrado em:** 2026-10-04.
@@ -91,3 +78,13 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 
 - Corrigido (migrations `20261003210511_25be134c-176c-4bfc-8b28-4715f7b98a8f.sql` e `20261004220000_storage_upload_limits.sql` e edge functions): rotinas agendadas que qualquer pessoa podia disparar com a chave pública do app; psicólogo não aprovado lendo e aceitando pedidos de SOS (com nome e sintomas do paciente); Premium grátis inserindo a própria assinatura; psicólogo se aprovando e paciente se desbloqueando direto na tabela; CPF, Pix, e-mail e documentos de todos os psicólogos visíveis para qualquer usuário; funções que gravavam dados de outros usuários; limite de requisições que dava para esgotar no nome de outra pessoa (bloquear o SOS dela); cancelamento do SOS de outra pessoa; injeção de HTML nos e-mails de suporte; papel do usuário (admin/psicólogo) lido de um campo que o próprio usuário edita; força bruta de código de empresa; uploads sem limite de tipo e tamanho no servidor.
 - Verificado sem problema: SQL injection (todas as consultas usam parâmetros; o SQL dinâmico só existe em migrations, com identificadores escapados), XSS (o React escapa o texto; o único HTML cru é o CSS do gráfico), webhook do Stripe (assinatura conferida), prompt injection (o app não usa IA).
+
+### Excluir conversa apagava para os dois lados (registrada em 2026-10-04, resolvida em 2026-10-04)
+
+- "Excluir" agora oculta a conversa só para quem excluiu, como no WhatsApp; o outro lado continua com o histórico, e a conversa volta à lista se chegar mensagem nova. Reabrir com o mesmo psicólogo recupera a conversa (antes dava erro de conversa duplicada). Migration `20261004230000_privacy_fixes.sql`.
+
+### Ajustes de privacidade achados ao documentar (registrados e resolvidos em 2026-10-04)
+
+- Curtidas dos grupos de apoio não são mais legíveis por outros usuários (só os totais); trocar a reação passou a funcionar (falhava em silêncio); o autor não altera mais os contadores do próprio depoimento; a pontuação dos questionários é recalculada em qualquer alteração; o limite de 2 anotações por dia do diário é conferido também no banco (e a data não pode ser retroativa). Migration `20261004230000_privacy_fixes.sql`.
+- Mensagens de regra do banco voltaram a aparecer para o usuário: o app trocava todas por uma mensagem genérica, porque os erros do Supabase chegam como objeto e não como `Error` (`src/utils/errorMessage.ts`).
+- O app publicado não abre mais dentro de outros sites (proteção contra clickjacking, `src/lib/frameGuard.ts`), já que a hospedagem não permite o cabeçalho `X-Frame-Options`.

@@ -1,7 +1,7 @@
 # 16. Grupos de apoio
 
-> **Status:** Funciona, sem varredura recente, com duas pendências pequenas de privacidade (ver Pendências).
-> **Última verificação:** 2026-10-04 (políticas de acesso relidas para esta ficha). Anonimato e moderação revistos em 2026-09-24.
+> **Status:** Pronto.
+> **Última verificação:** 2026-10-04 (varredura: curtidas privadas, troca de reação corrigida, contadores protegidos, mensagens de erro do servidor).
 > **Quem usa:** paciente (lê, escreve, curte, denuncia) e admin (modera).
 
 ## Resumo
@@ -19,8 +19,8 @@ Grupos por tema (ex.: ansiedade, depressão) onde pacientes deixam depoimentos, 
 ## Como funciona
 
 1. O paciente abre um grupo e lê os depoimentos (`get_group_testimonials`). Depoimento anônimo não traz nome nem identificação do autor na resposta.
-2. **Escrever**: texto (até 3.000 caracteres), humor e, se quiser, um sintoma da lista do grupo, marcando ou não "Anônimo". O limite é 5 depoimentos por hora.
-3. **Curtir**: "me ajudou" ou "não me ajudou", uma vez por depoimento, com limite de 60 por minuto.
+2. **Escrever**: texto (até 500 caracteres na tela; 3.000 no banco), humor e, se quiser, um sintoma da lista do grupo, marcando ou não "Anônimo". O limite é 5 depoimentos por hora.
+3. **Curtir**: "me ajudou" ou "não me ajudou", uma vez por depoimento, com limite de 60 por minuto. Dá para trocar a reação. Cada pessoa vê só as próprias curtidas; dos outros, só os totais.
 4. **Denunciar** (`report_group_testimonial`): motivo e detalhes. Vai para a moderação.
 5. **Admin**: lista todos com curtidas e denúncias, destaca os que chegaram a 10 "não me ajudou" e pode editar ou excluir.
 6. **Favoritar** um grupo deixa ele no topo da lista.
@@ -35,7 +35,7 @@ Grupos por tema (ex.: ansiedade, depressão) onde pacientes deixam depoimentos, 
 
 ### Teste manual
 1. Paciente A escreve um depoimento **anônimo** → paciente B vê "Anônimo", sem nome.
-2. Paciente B curte "me ajudou" → o contador sobe; curtir de novo não duplica.
+2. Paciente B curte "me ajudou" → o contador sobe; curtir de novo não duplica. Trocar para "não me ajudou" → um contador desce e o outro sobe (e continua assim ao recarregar).
 3. Paciente B denuncia → o admin vê a denúncia na aba Grupos.
 4. O admin edita o texto → todos veem o texto novo. O admin exclui → some.
 5. Paciente A escreve 6 depoimentos seguidos → o 6º é recusado ("Muitas ações em pouco tempo").
@@ -49,12 +49,14 @@ select id, group_id, anonimo, likes_positivos, likes_negativos, criado_em
 from group_testimonials order by criado_em desc limit 20;
 ```
 
+## Regras de privacidade
+
+- Curtidas: cada pessoa lê só as próprias (o admin lê todas). Os totais vêm por `get_group_testimonials`.
+- Contadores de curtidas só mudam pelo gatilho de contagem (`a_guard_testimonial_client_write`); o autor não os altera.
+
 ## Pendências
 
-Registradas também no item 7 de `docs/pendencias-antes-do-lancamento.md`.
-
-- **Curtidas expõem quem curtiu** (achado em 2026-10-04): a tabela `group_testimonial_likes` pode ser lida inteira por qualquer usuário logado, com o ID de quem curtiu. Dá para saber quais pessoas interagem com quais grupos (ex.: depressão), um dado sensível. Correção: limitar a leitura às curtidas da própria pessoa e entregar só os totais pela função `get_group_testimonials`.
-- **Contadores editáveis pelo autor** (baixo impacto): a política de edição do próprio depoimento não restringe colunas, então o autor pode alterar `likes_positivos` e `likes_negativos` do próprio texto pela API. Correção: gatilho que preserve esses contadores em alterações vindas do app.
+Nenhuma. As duas pendências de privacidade foram corrigidas em 2026-10-04 (migration `20261004230000_privacy_fixes.sql`), junto com a troca de reação, que falhava em silêncio.
 
 ## Problemas comuns
 

@@ -70,7 +70,7 @@ Para conferir se o TURN está ativo, a resposta de `ice-servers` traz `"turn": t
 
 ## Pendências
 
-- **TURN** (pendência 5): configurar `CLOUDFLARE_TURN_KEY_ID` e `CLOUDFLARE_TURN_API_TOKEN` (ou `TURN_URLS`, `TURN_USERNAME`, `TURN_CREDENTIAL`) nos secrets das edge functions. Sem isso, estima-se que de 10% a 20% das chamadas em redes restritivas não conectem.
+- **TURN** (pendência 4): configurar `CLOUDFLARE_TURN_KEY_ID` e `CLOUDFLARE_TURN_API_TOKEN` (ou `TURN_URLS`, `TURN_USERNAME`, `TURN_CREDENTIAL`) nos secrets das edge functions. Sem isso, estima-se que de 10% a 20% das chamadas em redes restritivas não conectem.
 
 ## Problemas comuns
 

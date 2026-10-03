@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useSubscription } from '@/contexts/SubscriptionContext';
+import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 
 export interface SupportGroup {
   id: string;
@@ -239,7 +240,7 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
       console.error('Error adding testimonial:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível adicionar o depoimento",
+        description: getFriendlyErrorMessage(error, 'Não foi possível adicionar o depoimento.'),
         variant: "destructive"
       });
       return false;
@@ -269,7 +270,7 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
       console.error('Error updating testimonial:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível atualizar o depoimento",
+        description: getFriendlyErrorMessage(error, 'Não foi possível atualizar o depoimento.'),
         variant: "destructive"
       });
       return false;
@@ -293,7 +294,7 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
       console.error('Error deleting testimonial:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível excluir o depoimento",
+        description: getFriendlyErrorMessage(error, 'Não foi possível excluir o depoimento.'),
         variant: "destructive"
       });
       return false;
@@ -318,7 +319,7 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
       console.error('Error reporting testimonial:', error);
       toast({
         title: 'Não foi possível enviar a denúncia',
-        description: 'Tente novamente em instantes.',
+        description: getFriendlyErrorMessage(error, 'Tente novamente em instantes.'),
         variant: 'destructive',
       });
       return false;
@@ -455,7 +456,7 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
       
       toast({
         title: "Erro",
-        description: "Não foi possível processar sua avaliação",
+        description: getFriendlyErrorMessage(error, 'Não foi possível processar sua avaliação.'),
         variant: "destructive",
       });
       return false;

@@ -285,9 +285,9 @@ export const ListaConversas: React.FC<ListaConversasProps> = ({ onSelectConversa
                         <AlertDialogHeader>
                           <AlertDialogTitle>Excluir conversa</AlertDialogTitle>
                           <AlertDialogDescription>
-                            Tem certeza que deseja excluir esta conversa com{' '}
-                            {conversa.outro_usuario?.full_name}? Esta ação não pode ser desfeita e
-                            todas as mensagens serão permanentemente removidas.
+                            A conversa com {conversa.outro_usuario?.full_name} sai da sua lista.
+                            Ela volta se chegar uma mensagem nova, e você pode reabrir quando
+                            quiser enquanto o chat estiver disponível.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>

@@ -158,6 +158,7 @@ const EditTestimonialForm = ({ groupName, testimonial, onSave, onCancel }: EditT
             }, 300);
           }}
           rows={4}
+          maxLength={500}
           required
         />
         <div className="text-xs text-muted-foreground">

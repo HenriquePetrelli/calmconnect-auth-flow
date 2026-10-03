@@ -73,7 +73,7 @@ where psychologist_id = '<id>' order by created_at desc;
 
 ## Pendências
 
-- **SOS atendidos antes de 2026-10-04** (pendência 4): nunca foram pagos (a contagem antiga ignorava o SOS). Estão no livro com `backfilled = true` e **não** somam ao pendente. Falta decidir se serão pagos. A consulta do total está no doc de pendências.
+- **SOS atendidos antes de 2026-10-04** (pendência 3): nunca foram pagos (a contagem antiga ignorava o SOS). Estão no livro com `backfilled = true` e **não** somam ao pendente. Falta decidir se serão pagos. A consulta do total está no doc de pendências.
 
 ## Problemas comuns
 
