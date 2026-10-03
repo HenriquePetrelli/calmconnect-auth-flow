@@ -74,9 +74,38 @@ export type Database = {
         }
         Relationships: []
       }
+      appointment_reminders_sent: {
+        Row: {
+          appointment_id: string
+          kind: string
+          sent_at: string
+        }
+        Insert: {
+          appointment_id: string
+          kind: string
+          sent_at?: string
+        }
+        Update: {
+          appointment_id?: string
+          kind?: string
+          sent_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_reminders_sent_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointments: {
         Row: {
           appointment_type: string
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
           created_at: string
           duration: number | null
           id: string
@@ -93,6 +122,9 @@ export type Database = {
         }
         Insert: {
           appointment_type?: string
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           created_at?: string
           duration?: number | null
           id?: string
@@ -109,6 +141,9 @@ export type Database = {
         }
         Update: {
           appointment_type?: string
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           created_at?: string
           duration?: number | null
           id?: string
@@ -783,8 +818,11 @@ export type Database = {
           appointment_id: string | null
           created_at: string | null
           id: string
+          link: string | null
           message: string
           patient_id: string
+          push: boolean
+          push_sent_at: string | null
           status: string | null
           title: string
           updated_at: string | null
@@ -793,8 +831,11 @@ export type Database = {
           appointment_id?: string | null
           created_at?: string | null
           id?: string
+          link?: string | null
           message: string
           patient_id: string
+          push?: boolean
+          push_sent_at?: string | null
           status?: string | null
           title: string
           updated_at?: string | null
@@ -803,8 +844,11 @@ export type Database = {
           appointment_id?: string | null
           created_at?: string | null
           id?: string
+          link?: string | null
           message?: string
           patient_id?: string
+          push?: boolean
+          push_sent_at?: string | null
           status?: string | null
           title?: string
           updated_at?: string | null
@@ -2367,6 +2411,10 @@ export type Database = {
           reason: string
         }[]
       }
+      cancel_appointment: {
+        Args: { p_appointment_id: string; p_reason?: string }
+        Returns: Json
+      }
       check_organization_code: { Args: { p_code: string }; Returns: Json }
       check_rate_limit: {
         Args: {
@@ -2387,6 +2435,16 @@ export type Database = {
           settings: Json
           title: string
           today_total: number
+          user_id: string
+        }[]
+      }
+      claim_pending_pushes: {
+        Args: never
+        Returns: {
+          id: string
+          link: string
+          message: string
+          title: string
           user_id: string
         }[]
       }
@@ -2457,6 +2515,7 @@ export type Database = {
           timed_out_count: number
         }[]
       }
+      format_br_datetime: { Args: { p_at: string }; Returns: string }
       gerenciar_expiracao_conversas: { Args: never; Returns: undefined }
       get_admin_audit_log: {
         Args: { p_limit?: number; p_offset?: number }
@@ -2598,6 +2657,24 @@ export type Database = {
         Returns: Json
       }
       leave_organization: { Args: never; Returns: undefined }
+      listar_conversas: {
+        Args: never
+        Returns: {
+          created_at: string
+          data_inicio: string
+          id: string
+          nao_lidas: number
+          outro_nome: string
+          paciente_id: string
+          psicologo_id: string
+          status: string
+          ultima_autor_id: string
+          ultima_conteudo: string
+          ultima_em: string
+          ultima_tipo: string
+          updated_at: string
+        }[]
+      }
       marcar_mensagens_como_lidas: {
         Args: { p_conversa_id: string }
         Returns: undefined
@@ -2635,6 +2712,7 @@ export type Database = {
         Returns: boolean
       }
       purge_expired_care_records: { Args: never; Returns: Json }
+      queue_appointment_reminders: { Args: never; Returns: number }
       refresh_subscriber_entitlement: {
         Args: { p_user_id: string }
         Returns: undefined
