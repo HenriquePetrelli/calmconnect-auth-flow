@@ -56,7 +56,7 @@ const syncCustomer = async (customerId: string, userIdHint?: string | null) => {
   }
   const subscriptions = await listSubscriptions(stripe, customerId);
   const state = stripeState(PLAN_PRICES, subscriptions, Math.floor(Date.now() / 1000));
-  const userId = userIdHint ?? customer.metadata?.user_id ?? subscriptions.find((s) => s.metadata?.user_id)?.metadata.user_id ?? null;
+  const userId = userIdHint ?? customer.metadata?.user_id ?? subscriptions.find((s: Stripe.Subscription) => s.metadata?.user_id)?.metadata.user_id ?? null;
 
   const patch = {
     stripe_customer_id: customerId,
