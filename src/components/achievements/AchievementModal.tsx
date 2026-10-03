@@ -1,9 +1,10 @@
+import { achievementIcon } from './achievementIcons';
 import { motion, AnimatePresence } from 'framer-motion';
 import Confetti from 'react-confetti';
 import { useWindowSize } from '@/hooks/use-window-size';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { User as UserIcon, Wind, NotebookPen, MessageCircle, BarChart3, PartyPopper, Trophy, Music2, Headphones } from 'lucide-react';
+import { PartyPopper } from 'lucide-react';
 
 interface AchievementModalProps {
   isOpen: boolean;
@@ -13,16 +14,7 @@ interface AchievementModalProps {
   icon: string;
 }
 
-const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  undraw_meditation: UserIcon,
-  undraw_yoga: Wind,
-  undraw_note_list: NotebookPen,
-  undraw_chat: MessageCircle,
-  undraw_profile_data: BarChart3,
-  undraw_celebration: PartyPopper,
-  undraw_music: Music2,
-  undraw_headphones: Headphones,
-};
+
 
 export const AchievementModal = ({
   isOpen,
@@ -69,7 +61,7 @@ export const AchievementModal = ({
                   className="w-28 h-28 rounded-full bg-primary/15 flex items-center justify-center"
                 >
                   {(() => {
-                    const IconComp = iconMap[icon] || Trophy;
+                    const IconComp = achievementIcon(icon);
                     return <IconComp className="h-14 w-14 text-primary" />;
                   })()}
                 </motion.div>

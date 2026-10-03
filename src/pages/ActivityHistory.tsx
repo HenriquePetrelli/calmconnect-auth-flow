@@ -4,7 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, Clock, Download, FileText } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { useNavigate } from "react-router-dom";
-import { useQuarterlyActivities } from "@/hooks/useQuarterlyActivities";
+import { useActivityFeed } from "@/hooks/useActivityFeed";
+import { FEED_FILTERS, type FeedCategory } from "@/lib/activityFeed";
+import FeedList from "@/components/progress/FeedList";
+import { cn } from "@/lib/utils";
 import { formatDateTime } from "@/utils/dateFormatters";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SkeletonSectionCard } from "@/components/skeletons/Skeletons";
@@ -15,7 +18,8 @@ import PatientBottomNav from "@/components/PatientBottomNav";
 const ActivityHistory = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { quarterlyActivities, loading } = useQuarterlyActivities();
+  const { items: quarterlyActivities, loading } = useActivityFeed();
+  const [category, setCategory] = useState<'all' | FeedCategory>('all');
   const [selectedMonth, setSelectedMonth] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -43,9 +47,9 @@ const ActivityHistory = () => {
     return quarterlyActivities.filter(activity => {
       const date = new Date(activity.date);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      return monthKey === selectedMonth;
+      return monthKey === selectedMonth && (category === 'all' || activity.category === category);
     });
-  }, [quarterlyActivities, selectedMonth]);
+  }, [quarterlyActivities, selectedMonth, category]);
 
   // Pagination
   const totalPages = Math.ceil(filteredActivities.length / itemsPerPage);
@@ -77,12 +81,12 @@ const ActivityHistory = () => {
     if (filteredActivities.length === 0) return;
 
     const csvContent = [
-      ['Atividade', 'Data', 'Hora'].join(','),
+      ['Atividade', 'Detalhe', 'Data', 'Hora'].join(','),
       ...filteredActivities.map(activity => {
         const date = new Date(activity.date);
         const dateStr = date.toLocaleDateString('pt-BR');
         const timeStr = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-        return [escapeCSVField(activity.name), dateStr, timeStr].join(',');
+        return [escapeCSVField(activity.name), escapeCSVField(activity.detail ?? ''), dateStr, timeStr].join(',');
       })
     ].join('\n');
 
@@ -123,7 +127,7 @@ const ActivityHistory = () => {
       const dateStr = date.toLocaleDateString('pt-BR');
       const timeStr = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
       
-      doc.text(`${index + 1}. ${activity.name}`, 20, yPos);
+      doc.text(`${index + 1}. ${activity.name}${activity.detail ? ` (${activity.detail})` : ''}`, 20, yPos);
       doc.text(`${dateStr} às ${timeStr}`, 30, yPos + 5);
       yPos += 15;
     });
@@ -132,31 +136,29 @@ const ActivityHistory = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-24 lg:pb-0">
-      <PatientBottomNav />
-      <PageHeader title="Histórico de Atividades" backTo="/statistics" />
+    <div className="has-tabs">
+      <div className="screen">
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm">
+          <PageHeader title="Histórico completo" backTo="/statistics" />
+        </div>
 
-      {/* Content */}
-      <div className="p-4 space-y-6">
-        {loading ? (
-          <SkeletonSectionCard rows={6} accent="primary" />
-        ) : availableMonths.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            Nenhuma atividade registrada nos últimos 3 meses
-          </div>
-        ) : (
-          <>
-            {/* Month Filter and Export Buttons */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Filtrar por Mês</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Select value={selectedMonth} onValueChange={(value) => {
-                  setSelectedMonth(value);
-                  setCurrentPage(1);
-                }}>
-                  <SelectTrigger>
+        <main className="mx-auto w-full max-w-3xl space-y-4 p-4">
+          {loading ? (
+            <SkeletonSectionCard rows={6} accent="primary" />
+          ) : availableMonths.length === 0 ? (
+            <p className="py-8 text-center text-muted-foreground">Nenhuma atividade registrada nos últimos 3 meses.</p>
+          ) : (
+            <>
+              {/* Filtros: mês e tipo */}
+              <section className="space-y-3 rounded-2xl border border-border bg-card p-4 shadow-sm" aria-label="Filtros">
+                <Select
+                  value={selectedMonth}
+                  onValueChange={(value) => {
+                    setSelectedMonth(value);
+                    setCurrentPage(1);
+                  }}
+                >
+                  <SelectTrigger className="h-11 rounded-xl" aria-label="Mês">
                     <SelectValue placeholder="Selecione um mês" />
                   </SelectTrigger>
                   <SelectContent>
@@ -167,78 +169,51 @@ const ActivityHistory = () => {
                     ))}
                   </SelectContent>
                 </Select>
-
-                <div className="flex gap-2">
-                  <Button 
-                    onClick={exportToPDF} 
-                    disabled={filteredActivities.length === 0}
-                    className="flex-1"
-                    variant="outline"
-                  >
-                    <FileText size={16} className="mr-2" />
-                    Exportar PDF
-                  </Button>
-                  <Button 
-                    onClick={exportToCSV} 
-                    disabled={filteredActivities.length === 0}
-                    className="flex-1"
-                    variant="outline"
-                  >
-                    <Download size={16} className="mr-2" />
-                    Exportar CSV
-                  </Button>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4" role="group" aria-label="Tipo">
+                  {FEED_FILTERS.map((filter) => (
+                    <button
+                      key={filter.key}
+                      type="button"
+                      aria-pressed={category === filter.key}
+                      onClick={() => {
+                        setCategory(filter.key);
+                        setCurrentPage(1);
+                      }}
+                      className={cn(
+                        'min-h-10 rounded-full border px-3 text-sm transition-colors',
+                        category === filter.key ? 'border-primary bg-primary/10 font-medium text-primary' : 'border-border text-foreground hover:bg-muted/50',
+                      )}
+                    >
+                      {filter.label}
+                    </button>
+                  ))}
                 </div>
-              </CardContent>
-            </Card>
+              </section>
 
-            {/* Activities List */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="text-primary" size={20} />
-                  Atividades - {formatMonthDisplay(selectedMonth)}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {filteredActivities.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    Nenhuma atividade neste mês
+              {/* Lista */}
+              <section className="rounded-2xl border border-border bg-card p-4 shadow-sm" aria-labelledby="history-title">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                    <Calendar className="h-5 w-5 text-primary" aria-hidden="true" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <h2 id="history-title" className="text-base font-semibold text-foreground">
+                      {formatMonthDisplay(selectedMonth).replace(/^./, (c) => c.toUpperCase())}
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      {filteredActivities.length} {filteredActivities.length === 1 ? 'registro' : 'registros'}
+                    </p>
                   </div>
+                </div>
+
+                {filteredActivities.length === 0 ? (
+                  <p className="py-8 text-center text-sm text-muted-foreground">Nada deste tipo neste mês.</p>
                 ) : (
                   <>
-                    <div className="space-y-3">
-                      {paginatedActivities.map((activity, index) => {
-                        const date = new Date(activity.date);
-                        return (
-                          <div
-                            key={index}
-                            className="flex flex-col gap-2 p-4 rounded-lg border bg-gradient-to-r from-muted/30 to-transparent"
-                          >
-                            <div className="flex items-start justify-between">
-                              <p className="font-semibold text-base">{activity.name}</p>
-                              <span className="text-sm font-medium text-primary flex items-center gap-1">
-                                <Clock size={14} />
-                                {date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <Calendar size={12} />
-                              {formatDateTime(activity.date)}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    {/* Pagination */}
+                    <FeedList items={paginatedActivities} />
                     {totalPages > 1 && (
-                      <div className="flex justify-center items-center gap-2 mt-6">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                          disabled={currentPage === 1}
-                        >
+                      <div className="mt-4 flex items-center justify-center gap-2">
+                        <Button variant="outline" size="sm" onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))} disabled={currentPage === 1}>
                           Anterior
                         </Button>
                         <span className="text-sm text-muted-foreground">
@@ -247,7 +222,7 @@ const ActivityHistory = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                          onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
                           disabled={currentPage === totalPages}
                         >
                           Próxima
@@ -256,14 +231,25 @@ const ActivityHistory = () => {
                     )}
                   </>
                 )}
-              </CardContent>
-            </Card>
-          </>
-        )}
 
-        <SosHistoryPanel patientId={user?.id ?? null} title="Minhas solicitações SOS" />
+                <div className="mt-4 grid grid-cols-2 gap-2 border-t border-border pt-4">
+                  <Button onClick={exportToPDF} disabled={filteredActivities.length === 0} variant="outline" className="gap-2">
+                    <FileText className="h-4 w-4" aria-hidden="true" />
+                    Exportar PDF
+                  </Button>
+                  <Button onClick={exportToCSV} disabled={filteredActivities.length === 0} variant="outline" className="gap-2">
+                    <Download className="h-4 w-4" aria-hidden="true" />
+                    Exportar CSV
+                  </Button>
+                </div>
+              </section>
+            </>
+          )}
+
+          <SosHistoryPanel patientId={user?.id ?? null} title="Minhas solicitações SOS" />
+        </main>
       </div>
-
+      <PatientBottomNav />
     </div>
   );
 };

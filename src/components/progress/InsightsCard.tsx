@@ -1,10 +1,10 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Lightbulb } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useHabits } from '@/hooks/useHabits';
 import { usePatientMoodHistory } from '@/hooks/usePatientMoodHistory';
 import { computeInsights, daysWithData } from '@/lib/insights';
+import { ProgressSection } from './ProgressSection';
 
 /** Quantos dias com humor e hábitos registrados costumam bastar para aparecer algo. */
 const DAYS_TO_START = 7;
@@ -13,7 +13,7 @@ const DAYS_TO_START = 7;
  * "Seus padrões": o que o humor tem a ver com sono, movimento, água, cafeína,
  * tela e atividades, a partir do que a própria pessoa registra.
  */
-const InsightsCard = ({ max = 3 }: { max?: number }) => {
+const InsightsCard = ({ max = 3, onInsightFound }: { max?: number; onInsightFound?: () => void }) => {
   const { habits, events, loading: habitsLoading } = useHabits();
   const { entries, loading: moodLoading } = usePatientMoodHistory(60);
 
@@ -21,17 +21,17 @@ const InsightsCard = ({ max = 3 }: { max?: number }) => {
   const insights = useMemo(() => computeInsights(moodByDate, habits, events), [moodByDate, habits, events]);
   const withData = daysWithData(moodByDate, events);
 
+  // Conquista "Seus Padrões" na primeira vez que aparece um padrão.
+  useEffect(() => {
+    if (insights.length > 0) onInsightFound?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [insights.length > 0]);
+
   if (habitsLoading || moodLoading) return <Skeleton className="h-32 w-full rounded-2xl" />;
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2">
-          <Lightbulb className="h-5 w-5 text-primary" aria-hidden="true" />
-          Seus padrões
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
+    <ProgressSection icon={Lightbulb} title="Seus padrões" subtitle="O que anda junto com os seus dias melhores">
+      <div className="space-y-3">
         {insights.length > 0 ? (
           <>
             <ul className="space-y-2">
@@ -54,8 +54,8 @@ const InsightsCard = ({ max = 3 }: { max?: number }) => {
                 : 'Ainda não apareceu nenhum padrão claro. Continue registrando: ele pode surgir nas próximas semanas.'}
           </p>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </ProgressSection>
   );
 };
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check, ChevronLeft, ChevronRight, Leaf, Pause, Play, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,8 @@ import { Progress } from '@/components/ui/progress';
 import PageHeader from '@/components/PageHeader';
 import PatientBottomNav from '@/components/PatientBottomNav';
 import { MINDFUL_EATING_STEPS, startOfStep, stepAt, totalSeconds } from '@/lib/mindfulEating';
+import { usePatientStatistics } from '@/hooks/usePatientStatistics';
+import { useAchievements } from '@/hooks/useAchievements';
 
 const STEPS = MINDFUL_EATING_STEPS;
 const TOTAL = totalSeconds(STEPS);
@@ -19,6 +21,19 @@ const MindfulEating = () => {
   const [elapsed, setElapsed] = useState(0);
   const { index, remaining } = stepAt(STEPS, elapsed);
   const finished = index >= STEPS.length;
+  const { addActivity } = usePatientStatistics();
+  const { loading: achievementsLoading, unlockAchievement } = useAchievements();
+  const logged = useRef(false);
+
+  // Ao terminar: entra no histórico e desbloqueia a conquista (uma vez por sessão).
+  useEffect(() => {
+    if (!finished || !started) return;
+    if (!logged.current) {
+      logged.current = true;
+      void addActivity('Comer com Atenção');
+    }
+    if (!achievementsLoading) void unlockAchievement('Comer com Atenção');
+  }, [finished, started, achievementsLoading, addActivity, unlockAchievement]);
 
   useEffect(() => {
     if (!running || finished) return;

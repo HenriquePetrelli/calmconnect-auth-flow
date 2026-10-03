@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ProgressSection } from './ProgressSection';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -16,19 +16,8 @@ export const MoodTrendChart = () => {
   const { entries, loading, average, trend } = usePatientMoodHistory(30);
 
   return (
-    <Card className="border-l-4 border-l-pink-400">
-      <CardHeader className="bg-gradient-to-r from-pink-500/5 to-transparent">
-        <CardTitle className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-pink-500/15 rounded-full flex items-center justify-center">
-            <Smile className="text-pink-600" size={18} />
-          </div>
-          <div>
-            <h3 className="text-base font-semibold text-foreground">Evolução do humor</h3>
-            <p className="text-sm text-muted-foreground font-normal">Últimos 30 dias</p>
-          </div>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="pt-6">
+    <ProgressSection icon={Smile} title="Evolução do humor" subtitle="Últimos 30 dias">
+      <div>
         {loading ? (
           <div className="h-40 bg-muted animate-pulse rounded-lg" />
         ) : entries.length === 0 ? (
@@ -91,8 +80,8 @@ export const MoodTrendChart = () => {
             )}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </ProgressSection>
   );
 };
 

@@ -19,6 +19,7 @@ class QueryBuilder implements PromiseLike<{ data: any; error: any; count?: numbe
   private orderKey: string | null = null;
   private ascending = true;
   private limitN: number | null = null;
+  private offset = 0;
   private countRequested = false;
   private headOnly = false;
   /** insert(...).select(): como o PostgREST, devolve a linha com o id gerado. */
@@ -92,6 +93,11 @@ class QueryBuilder implements PromiseLike<{ data: any; error: any; count?: numbe
     this.limitN = n;
     return this;
   }
+  range(from: number, to: number) {
+    this.offset = from;
+    this.limitN = to - from + 1;
+    return this;
+  }
 
   private matching(): Row[] {
     const rows = this.db.rows(this.table).filter((r) => this.filters.every((f) => f.apply(r)));
@@ -103,7 +109,7 @@ class QueryBuilder implements PromiseLike<{ data: any; error: any; count?: numbe
         return this.ascending ? av.localeCompare(bv) : bv.localeCompare(av);
       });
     }
-    return this.limitN != null ? rows.slice(0, this.limitN) : rows;
+    return this.limitN != null ? rows.slice(this.offset, this.offset + this.limitN) : rows.slice(this.offset);
   }
 
   private run(): { data: any; error: any; count?: number } {

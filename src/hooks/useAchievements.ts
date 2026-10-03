@@ -2,6 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { getCurrentWeekRange } from '@/hooks/useWeeklyGoals';
+import { unlockedTitles } from '@/lib/achievementRules';
+import { localDateString, type HabitEvent, type UserHabit } from '@/lib/habits';
 
 interface Achievement {
   id: string;
@@ -89,40 +92,47 @@ export const useAchievements = () => {
 
   const checkAchievements = useCallback(async () => {
     if (!user || isChecking) return;
-    
+
     setIsChecking(true);
     try {
-      // Single query for both stats and journal count
-      const [statsResult, journalResult] = await Promise.all([
+      const since = new Date();
+      since.setDate(since.getDate() - 60);
+      const { weekStart, weekEnd } = getCurrentWeekRange();
+      const [statsResult, journalResult, habitsResult, eventsResult, goalsResult, screeningsResult] = await Promise.all([
+        supabase.from('patient_statistics').select('*').eq('patient_id', user.id).maybeSingle(),
+        supabase.from('private_journals').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
+        supabase.from('user_habits').select('*').eq('user_id', user.id),
+        supabase.from('habit_events').select('*').eq('user_id', user.id).gte('local_date', localDateString(since)),
         supabase
-          .from('patient_statistics')
-          .select('*')
-          .eq('patient_id', user.id)
-          .maybeSingle(),
-        supabase
-          .from('private_journals')
-          .select('*', { count: 'exact', head: true })
+          .from('patient_weekly_goals')
+          .select('completed, weekly_goals(type)')
           .eq('user_id', user.id)
+          .gte('week_start_date', weekStart)
+          .lte('week_end_date', weekEnd),
+        supabase.from('mental_health_screenings').select('instrument').eq('user_id', user.id),
       ]);
 
-      const stats = statsResult.data;
-      const journalCount = journalResult.count || 0;
+      const toUnlock = unlockedTitles({
+        stats: statsResult.data ?? null,
+        journalCount: journalResult.count || 0,
+        habits: ((habitsResult.data ?? []) as Record<string, unknown>[]).map((row) => ({
+          ...(row as unknown as UserHabit),
+          daily_goal: row.daily_goal == null ? null : Number(row.daily_goal),
+          best_streak_seconds: Number(row.best_streak_seconds ?? 0),
+          settings: (row.settings as UserHabit['settings']) ?? {},
+        })),
+        events: ((eventsResult.data ?? []) as Record<string, unknown>[]).map((row) => ({
+          ...(row as unknown as HabitEvent),
+          amount: row.amount == null ? null : Number(row.amount),
+          details: (row.details as Record<string, unknown>) ?? {},
+        })),
+        weekGoals: ((goalsResult.data ?? []) as { completed: boolean | null; weekly_goals: { type: string } | null }[]).map((g) => ({
+          completed: Boolean(g.completed),
+          type: g.weekly_goals?.type ?? '',
+        })),
+        screeningInstruments: (screeningsResult.data ?? []).map((s) => s.instrument as string),
+      });
 
-      if (!stats) return;
-
-      // Batch check all achievements
-      const toUnlock: string[] = [];
-      
-      if (stats.total_guided_breathing_time > 0) toUnlock.push('Primeiro Passo');
-      if (stats.total_guided_breathing_time >= 5) toUnlock.push('Respirador Experiente');
-      if (journalCount >= 7) toUnlock.push('Escritor Consciente');
-      if (stats.total_scheduled_consultations >= 3) toUnlock.push('Comprometido com a Terapia');
-      if (stats.streak_days >= 7) toUnlock.push('Mestre do Humor');
-      if (stats.streak_days >= 30) toUnlock.push('Cuidado Constante');
-      if (stats.total_therapeutic_sound_time > 0) toUnlock.push('Primeiro Som');
-      if (stats.total_therapeutic_sound_time >= 5) toUnlock.push('Ouvinte Dedicado');
-
-      // Unlock all achievements at once
       for (const title of toUnlock) {
         await unlockAchievement(title);
       }
@@ -143,6 +153,7 @@ export const useAchievements = () => {
     newlyUnlocked,
     setNewlyUnlocked,
     checkAchievements,
+    unlockAchievement,
     refreshAchievements: fetchAchievements,
   };
 };

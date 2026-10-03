@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ListChecks } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ProgressSection } from '@/components/progress/ProgressSection';
 import { Progress } from '@/components/ui/progress';
 import { useWeeklyGoals } from '@/hooks/useWeeklyGoals';
 import { GoalSelectionModal } from '@/components/goals/GoalSelectionModal';
@@ -9,7 +9,8 @@ import { GoalCard } from '@/components/goals/GoalCard';
 import { SkeletonSectionCard } from '@/components/skeletons/Skeletons';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { stepDoneToday } from '@/lib/challenges';
+import { currentStep, stepDoneToday } from '@/lib/challenges';
+import { usePatientStatistics } from '@/hooks/usePatientStatistics';
 
 /**
  * Metas da semana: as atividades de autocuidado do app (respiração, sons,
@@ -19,6 +20,7 @@ import { stepDoneToday } from '@/lib/challenges';
 const WeeklyGoalsSection = () => {
   const { user } = useAuth();
   const { goals, loading, fetchGoals, updateGoalProgress } = useWeeklyGoals();
+  const { addActivity } = usePatientStatistics();
   const [modalOpen, setModalOpen] = useState(false);
 
   // Escolha feita em outra aba/dispositivo (ou o reset automático das
@@ -46,21 +48,11 @@ const WeeklyGoalsSection = () => {
 
   return (
     <>
-      <Card className="border-l-4 border-l-primary">
-        <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">
-          <CardTitle className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
-              <ListChecks className="text-primary" size={18} />
-            </div>
-            <div>
-              <h3 className="text-base font-semibold text-foreground">Metas da semana</h3>
-              <p className="text-sm text-muted-foreground font-normal">
-                {total > 0 ? `${completed} de ${total} concluídos` : 'Escolha suas metas de autocuidado'}
-              </p>
-            </div>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-6">
+      <ProgressSection
+        icon={ListChecks}
+        title="Metas da semana"
+        subtitle={total > 0 ? `${completed} de ${total} concluídas` : 'Escolha suas metas de autocuidado'}
+      >
           {total === 0 ? (
             <div className="text-center py-6 space-y-3">
               <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
@@ -94,7 +86,11 @@ const WeeklyGoalsSection = () => {
                     goal={goal}
                     onStepDone={(g) => {
                       // Um passo por dia: o card só mostra o botão se o de hoje não foi feito.
-                      if (!stepDoneToday(g.progress, g.updated_at)) void updateGoalProgress(g.id, 1);
+                      if (stepDoneToday(g.progress, g.updated_at)) return;
+                      const step = currentStep(g.weekly_goals.category, g.progress);
+                      void updateGoalProgress(g.id, 1);
+                      // Entra no histórico: "Desafio de 7 dias: Uma hora sem tela".
+                      if (step) void addActivity(`Desafio de 7 dias: ${step.step.title}`);
                     }}
                   />
                 ))}
@@ -106,8 +102,7 @@ const WeeklyGoalsSection = () => {
               </Button>
             </div>
           )}
-        </CardContent>
-      </Card>
+      </ProgressSection>
 
       <GoalSelectionModal
         open={modalOpen}
