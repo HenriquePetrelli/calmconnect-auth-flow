@@ -501,6 +501,17 @@ serve(async (req) => {
       if (status === 'completed' && nowMs < startMs) {
         throw new HttpError('Só dá para concluir a consulta depois do horário de início.', 409);
       }
+      // Concluir conta para o repasse: só consultas em que a chamada conectou
+      // os dois lados (a sessão de vídeo tem `answer`). Antes dava para marcar
+      // como concluída uma consulta em que ninguém entrou.
+      if (status === 'completed' && appointment.status !== 'in_progress') {
+        const { data: session } = appointment.video_room_id
+          ? await supabase.from('webrtc_sessions').select('answer').eq('id', appointment.video_room_id).maybeSingle()
+          : { data: null };
+        if (!session?.answer) {
+          throw new HttpError('Esta consulta não chegou a acontecer pela chamada do app, então não pode ser concluída.', 409);
+        }
+      }
     }
 
     const updateData: any = {};

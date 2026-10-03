@@ -132,6 +132,8 @@ export const AppointmentHistory = () => {
         return 'Cancelada';
       case 'declined':
         return 'Recusada';
+      case 'no_show':
+        return 'Não realizada';
       default:
         return status;
     }
@@ -139,7 +141,7 @@ export const AppointmentHistory = () => {
 
   const filteredAppointments = useMemo(() => {
     return appointments.filter((appointment) => {
-      const isHistoryAppointment = ['declined', 'completed', 'cancelled'].includes(appointment.status);
+      const isHistoryAppointment = ['declined', 'completed', 'cancelled', 'no_show'].includes(appointment.status);
       if (!isHistoryAppointment) return false;
 
       const matchesPsychologist = filterPsychologist === 'all' || !filterPsychologist ||
@@ -155,7 +157,7 @@ export const AppointmentHistory = () => {
   const availableMonths = useMemo(() => {
     const months = new Set<string>();
     appointments.forEach((a) => {
-      if (['declined', 'completed', 'cancelled'].includes(a.status)) {
+      if (['declined', 'completed', 'cancelled', 'no_show'].includes(a.status)) {
         months.add(format(new Date(a.scheduled_at), 'yyyy-MM'));
       }
     });

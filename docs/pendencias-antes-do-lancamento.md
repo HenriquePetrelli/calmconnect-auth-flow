@@ -30,6 +30,30 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 - **O que fazer:** trocar por "ocultar só para mim", como no WhatsApp: a conversa sai da lista de quem ocultou e continua para o outro lado.
 - **Registrado em:** 2026-10-04.
 
+### 4. Decidir sobre SOS atendidos antes da correção do repasse
+
+- **Situação:** até 2026-10-04 o repasse nunca contava os atendimentos de SOS (contava pela tabela de consultas, onde o SOS não aparece), então nenhum psicólogo recebeu por SOS. A correção passa a contar os SOS concluídos daqui para frente; os anteriores foram registrados em `payout_items` (`source_type = 'sos'`, `backfilled = true`) sem somar ao valor a pagar.
+- **O que fazer:** decidir se paga os atendimentos antigos. Para ver quanto é por psicólogo:
+  `select p.full_name, count(*), sum(i.amount) from payout_items i join psychologists p on p.user_id = i.psychologist_user_id where i.source_type = 'sos' and i.backfilled group by p.full_name;`
+- **Registrado em:** 2026-10-04.
+
+## Melhorias sugeridas
+
+### 5. SOS por mensagem de texto
+
+- Apps como Crisis Text Line e o chat do CVV atendem por texto: muita gente em crise não consegue falar (está em casa com outras pessoas, no trabalho, sem voz). Hoje o SOS do Soliv é só por vídeo (dá para desligar a câmera, mas não para falar sem voz).
+- **Registrado em:** 2026-10-04.
+
+### 6. Triagem rápida de risco no SOS
+
+- Antes de entrar na fila, 1 ou 2 perguntas (ex.: "Você está pensando em se machucar agora?"). Se sim: mostrar CVV 188 e SAMU 192 em destaque e marcar o pedido como prioritário para o psicólogo. É o que fazem serviços como o 988 e o Wysa.
+- **Registrado em:** 2026-10-04.
+
+### 7. Plano pós-crise para o paciente
+
+- Ao fim do SOS, o psicólogo registra notas só para ele. Serviços de crise costumam deixar com a pessoa um resumo curto e combinados ("o que fazer nas próximas 24h", "procure atendimento se..."), que poderiam virar parte do plano de segurança.
+- **Registrado em:** 2026-10-04.
+
 ## Resolvidas
 
 ### Avaliação da consulta agendada (registrada em 2026-10-04, resolvida em 2026-10-04)

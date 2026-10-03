@@ -75,6 +75,8 @@ export const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = (
         return 'Cancelada';
       case 'in_progress':
         return 'Em andamento';
+      case 'no_show':
+        return 'Não realizada';
       default:
         return status;
     }

@@ -171,7 +171,7 @@ const ConsultationHistory = () => {
         className: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-500/15 dark:text-red-300 dark:border-red-500/30',
       },
       no_show: {
-        label: 'Faltou',
+        label: 'Não realizada',
         className: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-500/15 dark:text-slate-300 dark:border-slate-500/30',
       },
       reschedule_proposed: {
@@ -346,7 +346,7 @@ const ConsultationHistory = () => {
                   <SelectItem value="completed">Concluída</SelectItem>
                   <SelectItem value="cancelled">Cancelada</SelectItem>
                   <SelectItem value="declined">Recusada</SelectItem>
-                  <SelectItem value="no_show">Faltou</SelectItem>
+                  <SelectItem value="no_show">Não realizada</SelectItem>
                   <SelectItem value="reschedule_proposed">Reagendamento proposto</SelectItem>
                   <SelectItem value="expired">Expirada</SelectItem>
                 </SelectContent>

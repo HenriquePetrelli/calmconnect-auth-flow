@@ -52,6 +52,8 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
         return 'Concluído';
       case 'cancelled':
         return 'Cancelado';
+      case 'no_show':
+        return 'Não realizada';
       case 'declined':
         return 'Recusado';
       case 'reschedule_proposed':

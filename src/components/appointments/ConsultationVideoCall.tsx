@@ -14,6 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { VideoCallSettingsModal } from "@/components/sos/VideoCallSettingsModal";
 import { FeedbackModal } from "@/components/sos/FeedbackModal";
+import { getFriendlyErrorMessage } from "@/utils/errorMessage";
 import { dismissAppointmentFeedback } from "@/hooks/usePendingCallFeedback";
 import { ConnectionQuality } from "@/components/sos/ConnectionQuality";
 import {
@@ -184,7 +185,7 @@ const ConsultationVideoCall = ({ appointment, onEndCall }: ConsultationVideoCall
       console.error('Error creating consultation session:', error);
       toast({
         title: 'Não foi possível abrir a videochamada',
-        description: 'Verifique sua conexão e tente entrar de novo.',
+        description: getFriendlyErrorMessage(error, 'Verifique sua conexão e tente entrar de novo.'),
         variant: 'destructive',
       });
     }

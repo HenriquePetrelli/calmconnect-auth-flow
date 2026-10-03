@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import { AlertTriangle, Phone, Wind } from "lucide-react";
+import { AlertTriangle, Phone, ShieldCheck, Wind } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import SosBreathingDialog from "@/components/sos/SosBreathingDialog";
+import SosSafetyPlanDialog from "@/components/sos/SosSafetyPlanDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import PageHeader from "@/components/PageHeader";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -26,6 +28,8 @@ const SOS = () => {
   const location = useLocation();
   const [availableProfessionals, setAvailableProfessionals] = useState(0);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [breathingOpen, setBreathingOpen] = useState(false);
+  const [safetyPlanOpen, setSafetyPlanOpen] = useState(false);
   const [requestId, setRequestId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string>('');
@@ -340,6 +344,21 @@ const SOS = () => {
           </CardContent>
         </Card>
 
+        {/* Enquanto espera: plano de segurança e respiração sem sair da tela
+            (sair da tela de SOS cancela o pedido). */}
+        {!expired && (
+          <div className="grid w-full max-w-md grid-cols-2 gap-2">
+            <Button variant="outline" className="min-h-12" onClick={() => setSafetyPlanOpen(true)}>
+              <ShieldCheck className="h-4 w-4" />
+              Meu plano
+            </Button>
+            <Button variant="outline" className="min-h-12" onClick={() => setBreathingOpen(true)}>
+              <Wind className="h-4 w-4" />
+              Respirar
+            </Button>
+          </div>
+        )}
+
         {/* CVV/SAMU sempre visíveis e tocáveis durante a espera, não só quando ninguém está online */}
         <div className="w-full max-w-md">
           <HomeCrisisAccess />
@@ -363,7 +382,7 @@ const SOS = () => {
               </div>
 
               <div className="grid gap-2">
-                <Button variant="secondary" onClick={() => navigate('/breathing')}>
+                <Button variant="secondary" onClick={() => setBreathingOpen(true)}>
                   <Wind className="h-4 w-4" />
                   Respiração guiada
                 </Button>
@@ -401,6 +420,9 @@ const SOS = () => {
           Cancelar
         </Button>
       </div>
+
+      <SosBreathingDialog open={breathingOpen} onOpenChange={setBreathingOpen} />
+      <SosSafetyPlanDialog open={safetyPlanOpen} onOpenChange={setSafetyPlanOpen} />
 
       <CancelConfirmationModal
         open={showCancelModal}
