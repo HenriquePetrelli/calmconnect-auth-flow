@@ -1307,6 +1307,36 @@ export type Database = {
           },
         ]
       }
+      payout_items: {
+        Row: {
+          amount: number
+          backfilled: boolean
+          counted_at: string
+          occurred_at: string
+          psychologist_user_id: string
+          source_id: string
+          source_type: string
+        }
+        Insert: {
+          amount: number
+          backfilled?: boolean
+          counted_at?: string
+          occurred_at: string
+          psychologist_user_id: string
+          source_id: string
+          source_type: string
+        }
+        Update: {
+          amount?: number
+          backfilled?: boolean
+          counted_at?: string
+          occurred_at?: string
+          psychologist_user_id?: string
+          source_id?: string
+          source_type?: string
+        }
+        Relationships: []
+      }
       private_journals: {
         Row: {
           atualizado_em: string
@@ -1910,6 +1940,29 @@ export type Database = {
             columns: ["appointment_id"]
             isOneToOne: false
             referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sos_followups_sent: {
+        Row: {
+          request_id: string
+          sent_at: string
+        }
+        Insert: {
+          request_id: string
+          sent_at?: string
+        }
+        Update: {
+          request_id?: string
+          sent_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sos_followups_sent_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: true
+            referencedRelation: "emergency_requests"
             referencedColumns: ["id"]
           },
         ]
@@ -2725,6 +2778,7 @@ export type Database = {
       }
       purge_expired_care_records: { Args: never; Returns: Json }
       queue_appointment_reminders: { Args: never; Returns: number }
+      queue_sos_followups: { Args: never; Returns: number }
       refresh_subscriber_entitlement: {
         Args: { p_user_id: string }
         Returns: undefined
