@@ -77,9 +77,6 @@ export type Database = {
       appointments: {
         Row: {
           appointment_type: string
-          cancellation_reason: string | null
-          cancelled_at: string | null
-          cancelled_by: string | null
           created_at: string
           duration: number | null
           id: string
@@ -96,9 +93,6 @@ export type Database = {
         }
         Insert: {
           appointment_type?: string
-          cancellation_reason?: string | null
-          cancelled_at?: string | null
-          cancelled_by?: string | null
           created_at?: string
           duration?: number | null
           id?: string
@@ -115,9 +109,6 @@ export type Database = {
         }
         Update: {
           appointment_type?: string
-          cancellation_reason?: string | null
-          cancelled_at?: string | null
-          cancelled_by?: string | null
           created_at?: string
           duration?: number | null
           id?: string
@@ -792,11 +783,8 @@ export type Database = {
           appointment_id: string | null
           created_at: string | null
           id: string
-          link: string | null
           message: string
           patient_id: string
-          push: boolean
-          push_sent_at: string | null
           status: string | null
           title: string
           updated_at: string | null
@@ -805,11 +793,8 @@ export type Database = {
           appointment_id?: string | null
           created_at?: string | null
           id?: string
-          link?: string | null
           message: string
           patient_id: string
-          push?: boolean
-          push_sent_at?: string | null
           status?: string | null
           title: string
           updated_at?: string | null
@@ -818,11 +803,8 @@ export type Database = {
           appointment_id?: string | null
           created_at?: string | null
           id?: string
-          link?: string | null
           message?: string
           patient_id?: string
-          push?: boolean
-          push_sent_at?: string | null
           status?: string | null
           title?: string
           updated_at?: string | null
@@ -2312,10 +2294,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      cancel_appointment: {
-        Args: { p_appointment_id: string; p_reason?: string }
-        Returns: Json
-      }
       add_patient_activity: {
         Args: {
           p_activity_date?: string
@@ -2620,24 +2598,6 @@ export type Database = {
         Returns: Json
       }
       leave_organization: { Args: never; Returns: undefined }
-      listar_conversas: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          id: string
-          paciente_id: string
-          psicologo_id: string
-          status: string
-          data_inicio: string
-          created_at: string
-          updated_at: string
-          outro_nome: string | null
-          ultima_conteudo: string | null
-          ultima_tipo: string | null
-          ultima_em: string | null
-          ultima_autor_id: string | null
-          nao_lidas: number
-        }[]
-      }
       marcar_mensagens_como_lidas: {
         Args: { p_conversa_id: string }
         Returns: undefined
