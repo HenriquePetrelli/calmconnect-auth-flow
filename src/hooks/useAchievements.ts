@@ -3,7 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { getCurrentWeekRange } from '@/hooks/useWeeklyGoals';
-import { unlockedTitles } from '@/lib/achievementRules';
+import { achievementProgress, unlockedTitles, type AchievementInput, type AchievementProgress } from '@/lib/achievementRules';
+import { celebrateAchievement } from '@/components/achievements/celebrateAchievement';
 import { localDateString, type HabitEvent, type UserHabit } from '@/lib/habits';
 
 interface Achievement {
@@ -23,7 +24,7 @@ export const useAchievements = () => {
   const { toast } = useToast();
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [loading, setLoading] = useState(true);
-  const [newlyUnlocked, setNewlyUnlocked] = useState<Achievement | null>(null);
+  const [progress, setProgress] = useState<Record<string, AchievementProgress>>({});
   const [isChecking, setIsChecking] = useState(false);
 
   const fetchAchievements = useCallback(async () => {
@@ -83,8 +84,8 @@ export const useAchievements = () => {
         )
       );
 
-      // Show celebration modal
-      setNewlyUnlocked({ ...achievement, achieved: true, achieved_at: new Date().toISOString() });
+      // Comemora em qualquer tela
+      celebrateAchievement(achievement);
     } catch (error) {
       console.error('Error unlocking achievement:', error);
     }
@@ -112,7 +113,7 @@ export const useAchievements = () => {
         supabase.from('mental_health_screenings').select('instrument').eq('user_id', user.id),
       ]);
 
-      const toUnlock = unlockedTitles({
+      const input: AchievementInput = {
         stats: statsResult.data ?? null,
         journalCount: journalResult.count || 0,
         habits: ((habitsResult.data ?? []) as Record<string, unknown>[]).map((row) => ({
@@ -131,7 +132,9 @@ export const useAchievements = () => {
           type: g.weekly_goals?.type ?? '',
         })),
         screeningInstruments: (screeningsResult.data ?? []).map((s) => s.instrument as string),
-      });
+      };
+      setProgress(achievementProgress(input));
+      const toUnlock = unlockedTitles(input);
 
       for (const title of toUnlock) {
         await unlockAchievement(title);
@@ -150,8 +153,7 @@ export const useAchievements = () => {
   return {
     achievements,
     loading,
-    newlyUnlocked,
-    setNewlyUnlocked,
+    progress,
     checkAchievements,
     unlockAchievement,
     refreshAchievements: fetchAchievements,

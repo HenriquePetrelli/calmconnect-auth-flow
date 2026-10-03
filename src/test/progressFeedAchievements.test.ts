@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { unlockedTitles, type AchievementInput } from '@/lib/achievementRules';
+import { achievementProgress, unlockedTitles, type AchievementInput } from '@/lib/achievementRules';
 import { buildFeed, iconForActivity } from '@/lib/activityFeed';
 import { addDays, localDateString, type HabitEvent, type UserHabit } from '@/lib/habits';
 
@@ -95,6 +95,28 @@ describe('conquistas', () => {
     expect(partial).toContain('Desafio Concluído');
     expect(partial).not.toContain('Semana Completa');
     expect(partial).not.toContain('Autoconhecimento');
+  });
+});
+
+describe('progresso das conquistas', () => {
+  it('mostra quanto falta, sem passar da meta', () => {
+    const progress = achievementProgress({
+      ...base,
+      stats: { total_guided_breathing_time: 3, total_therapeutic_sound_time: 12, total_scheduled_consultations: 1, streak_days: 12 },
+      journalCount: 2,
+      weekGoals: [
+        { completed: true, type: 'breathing' },
+        { completed: false, type: 'mood' },
+      ],
+      screeningInstruments: ['phq9'],
+    });
+    expect(progress['Respirador Experiente']).toEqual({ current: 3, target: 5, unit: 'min' });
+    expect(progress['Ouvinte Dedicado'].current).toBe(5);
+    expect(progress['Cuidado Constante']).toMatchObject({ current: 12, target: 30 });
+    expect(progress['Semana Completa']).toMatchObject({ current: 1, target: 2 });
+    expect(progress['Autoconhecimento']).toMatchObject({ current: 1, target: 2 });
+    expect(progress['Novo Hábito']).toBeUndefined();
+    expect(achievementProgress(base)['Semana Completa']).toBeUndefined();
   });
 });
 

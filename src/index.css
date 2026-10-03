@@ -976,3 +976,14 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* Conquistas: brilho que passa pela medalha desbloqueada de tempos em tempos. */
+.medal-shine {
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.55) 48%, transparent 66%);
+  background-size: 250% 100%;
+  animation: medal-shine 3.2s ease-in-out infinite;
+}
+@keyframes medal-shine {
+  0%, 55% { background-position: 150% 0; }
+  100% { background-position: -100% 0; }
+}
