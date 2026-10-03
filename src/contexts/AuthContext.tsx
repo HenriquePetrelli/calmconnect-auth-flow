@@ -192,28 +192,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
+    // While the session still exists: stop this device from receiving the
+    // outgoing user's pushes (shared phones, handing the device over).
     try {
-      // While the session still exists: stop this device from receiving the
-      // outgoing user's pushes (shared phones, handing the device over).
       await deactivateStoredPushToken();
-      cleanupAuthState();
-      // Always reset to light mode on logout; dark mode is per-logged-in-user
-      try {
-        localStorage.setItem('theme', 'light');
-        document.documentElement.classList.remove('dark');
-        document.documentElement.classList.add('light');
-      } catch {}
-      await supabase.auth.signOut({ scope: 'global' });
-      // Force page reload for clean state
-      window.location.href = '/';
+    } catch {}
+    try {
+      // "global" encerra a sessão em todos os aparelhos. Se o servidor falhar
+      // (rede, 5xx), o Supabase NÃO apaga a sessão local; aí a tela de login
+      // via a pessoa ainda logada e voltava para o painel. "local" sempre apaga.
+      const { error } = await supabase.auth.signOut({ scope: 'global' });
+      if (error) await supabase.auth.signOut({ scope: 'local' });
     } catch (error) {
       console.error('Sign out error:', error);
       try {
-        localStorage.setItem('theme', 'light');
+        await supabase.auth.signOut({ scope: 'local' });
       } catch {}
-      // Force reload even if sign out fails
-      window.location.href = '/';
     }
+    cleanupAuthState();
+    // Always reset to light mode on logout; dark mode is per-logged-in-user
+    try {
+      localStorage.setItem('theme', 'light');
+      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.add('light');
+    } catch {}
+    // Recarrega para começar do zero na tela de login
+    window.location.href = '/';
   };
 
   useEffect(() => {

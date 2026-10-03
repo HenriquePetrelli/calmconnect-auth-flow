@@ -1,3 +1,4 @@
+import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from 'react';
 import { SkeletonFullPage } from '@/components/skeletons/Skeletons';
 import { useNavigate } from 'react-router-dom';
@@ -147,10 +148,9 @@ const PsychologistDashboard = () => {
     }
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/');
-  };
+  // Sair: sempre pelo signOut central (garante voltar para a tela de login).
+  const { signOut } = useAuth();
+  const handleLogout = () => signOut();
 
   if (loading) {
     return <SkeletonFullPage />;

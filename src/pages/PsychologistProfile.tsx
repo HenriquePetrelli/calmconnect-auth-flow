@@ -1,3 +1,4 @@
+import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useRef, useState } from 'react';
 import { SkeletonFullPage } from '@/components/skeletons/Skeletons';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -159,12 +160,9 @@ const PsychologistProfile = () => {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut({ scope: 'global' });
-      window.location.href = '/';
-    } catch { }
-  };
+  // Sair: sempre pelo signOut central (garante voltar para a tela de login).
+  const { signOut } = useAuth();
+  const handleLogout = () => signOut();
 
   if (loading) {
     return <SkeletonFullPage />;

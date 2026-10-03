@@ -12,6 +12,7 @@ vi.mock('@/contexts/SubscriptionContext', () => ({
   useSubscription: () => ({ subscribed: false, subscriptionTier: null, entitlementSource: null, organizationName: null }),
 }));
 vi.mock('@/hooks/use-toast', () => ({ useToast: () => ({ toast: vi.fn() }) }));
+vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => ({ signOut: vi.fn() }) }));
 vi.mock('@/hooks/useWeeklyGoals', () => ({
   useWeeklyGoals: () => ({ getShowGoalModalPreference: async () => true, setShowGoalModal: async () => {} }),
 }));

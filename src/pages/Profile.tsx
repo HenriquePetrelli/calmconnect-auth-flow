@@ -1,3 +1,4 @@
+import { useAuth } from "@/contexts/AuthContext";
 import { FREE_PLAN, PLANS } from "@/lib/plans";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -74,19 +75,9 @@ const Profile = () => {
   };
 
 
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-      navigate('/');
-      toast({ title: "Logout realizado" });
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao fazer logout.",
-        variant: "destructive"
-      });
-    }
-  };
+  // Sair: sempre pelo signOut central (garante voltar para a tela de login).
+  const { signOut } = useAuth();
+  const handleLogout = () => signOut();
 
   const handleManageSubscription = () => {
     navigate('/subscription-plans');
