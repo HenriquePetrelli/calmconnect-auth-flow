@@ -157,7 +157,8 @@ const DailyDetail = ({
         : `Ainda cabem ${formatHabitAmount(habit.kind, goal - total)} no limite de hoje`;
     }
     const remaining = Math.max(0, goal - total);
-    return remaining === 0 ? 'Meta de hoje batida! 🎉' : `Faltam ${formatHabitAmount(habit.kind, remaining)} para a meta de hoje`;
+    if (remaining === 0) return 'Meta de hoje batida! 🎉';
+    return `${remaining === 1 ? 'Falta' : 'Faltam'} ${formatHabitAmount(habit.kind, remaining)} para a meta de hoje`;
   })();
 
   const log = async (item: QuickItem) => {
@@ -195,14 +196,14 @@ const DailyDetail = ({
             return (
               <Button
                 key={item.key}
-                className="min-h-11 min-w-0 gap-1 rounded-full px-3"
+                className="h-auto min-h-11 min-w-0 gap-1 whitespace-normal rounded-full px-3 py-2 leading-tight"
                 variant={doneItem ? 'default' : 'secondary'}
                 style={doneItem ? { backgroundColor: color } : undefined}
                 aria-pressed={item.once ? doneItem : undefined}
                 onClick={() => void log(item)}
               >
                 {doneItem ? <Check className="h-4 w-4 shrink-0" aria-hidden="true" /> : <Plus className="h-4 w-4 shrink-0" aria-hidden="true" />}
-                <span className="truncate">{item.label}</span>
+                <span>{item.label}</span>
               </Button>
             );
           })}
@@ -307,12 +308,22 @@ const DailyDetail = ({
         ) : (
           <Stat icon={Trophy} label="Melhor" value={`${bestGoalStreak(totals, goal, today)} d`} hint="nos últimos 60 dias" />
         )}
-        <Stat
-          icon={CalendarCheck}
-          label="Média"
-          value={formatHabitAmount(habit.kind, Math.round(weekAverage * 10) / 10)}
-          hint="por dia na semana"
-        />
+        {habit.kind === 'medication' ? (
+          // Remédio: quantas doses dos últimos 7 dias foram marcadas.
+          <Stat
+            icon={CalendarCheck}
+            label="Doses (7 dias)"
+            value={`${Math.round((Math.min(weekAverage * 7, goal * 7) / (goal * 7)) * 100)}%`}
+            hint={`${Math.round(weekAverage * 7)} de ${goal * 7} marcadas`}
+          />
+        ) : (
+          <Stat
+            icon={CalendarCheck}
+            label="Média"
+            value={catalog.unit === 'count' ? formatNumber(weekAverage, 1) : formatHabitAmount(habit.kind, Math.round(weekAverage * 10) / 10)}
+            hint={catalog.unit === 'count' ? `${catalog.countNoun?.[1] ?? ''} por dia na semana` : 'por dia na semana'}
+          />
+        )}
       </section>
 
       <section className="space-y-2 rounded-2xl border border-border bg-card p-4" aria-labelledby="week-chart">
@@ -328,7 +339,7 @@ const DailyDetail = ({
                 <div className="relative flex w-full flex-1 items-end overflow-hidden rounded-md bg-muted">
                   <div className="w-full rounded-md transition-all" style={{ height: `${Math.min(100, (day.total / chartMax) * 100)}%`, backgroundColor: barColor }} />
                   <div
-                    className="pointer-events-none absolute inset-x-0 border-t border-dashed border-foreground/40"
+                    className="pointer-events-none absolute inset-x-0 z-10 border-t-2 border-dashed border-foreground/60"
                     style={{ bottom: `${(goal / chartMax) * 100}%` }}
                     aria-hidden="true"
                   />

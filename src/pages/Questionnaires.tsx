@@ -21,11 +21,11 @@ const formatDate = (iso: string) => new Date(iso).toLocaleDateString('pt-BR', { 
 
 /** Evolução das últimas pontuações: barras do mais antigo ao mais recente. */
 const ScoreHistory = ({ items, max }: { items: Screening[]; max: number }) => (
-  <div className="flex h-24 items-end gap-2" role="list" aria-label="Pontuações anteriores">
+  <div className="flex items-end gap-2" role="list" aria-label="Pontuações anteriores">
     {items.map((s) => (
       <div key={s.id} role="listitem" className="flex min-w-0 flex-1 flex-col items-center gap-1" aria-label={`${formatDate(s.created_at)}: ${s.score} pontos`}>
         <span className="text-xs tabular-nums text-muted-foreground">{s.score}</span>
-        <div className="flex w-full flex-1 items-end rounded-md bg-muted">
+        <div className="flex h-16 w-full items-end rounded-md bg-muted">
           <div className="w-full rounded-md bg-primary/70" style={{ height: `${Math.max(4, (s.score / max) * 100)}%` }} />
         </div>
         <span className="text-xs text-muted-foreground">{formatDate(s.created_at)}</span>

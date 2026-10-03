@@ -258,7 +258,7 @@ export const HABIT_CATALOG: Record<HabitKind, HabitCatalogEntry> = {
     group: "quit",
     title: "Largar outro hábito",
     shortName: "Outro hábito",
-    description: "Refrigerante, apostas, redes sociais à noite… você escolhe o nome.",
+    description: "Refrigerante, doces, roer as unhas… você escolhe o nome.",
     defaultSettings: { daily_cost: 0 },
     defaultReminder: { start: "09:00", end: "21:00", interval: null },
   },

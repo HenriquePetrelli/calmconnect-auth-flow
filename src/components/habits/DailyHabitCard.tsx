@@ -42,6 +42,8 @@ export const dailySummary = (habit: UserHabit, total: number) => {
       ? `${formatHabitAmount(habit.kind, total)} · ${formatHabitAmount(habit.kind, total - goal)} acima do limite`
       : `${formatHabitAmount(habit.kind, total)} de ${formatHabitAmount(habit.kind, goal)} (limite)`;
   }
+  // "1 de 3 refeições" (e não "1 refeição de 3 refeições").
+  if (HABIT_CATALOG[habit.kind].unit === 'count') return `${total} de ${formatHabitAmount(habit.kind, goal)}`;
   return `${formatHabitAmount(habit.kind, total)} de ${formatHabitAmount(habit.kind, goal)}`;
 };
 
@@ -96,14 +98,14 @@ const DailyHabitCard = ({ habit, events, onLog, onOpen, onToggleOffline, compact
                 type="button"
                 variant="outline"
                 size="sm"
-                className={cn('min-w-0 flex-1 basis-[calc(33%-0.5rem)] gap-1 rounded-full', doneItem && 'font-semibold')}
+                className={cn('h-auto min-h-9 min-w-[28%] flex-1 basis-auto gap-1 whitespace-normal rounded-full py-1.5 leading-tight', doneItem && 'font-semibold')}
                 style={{ backgroundColor: doneItem ? color : soft, borderColor: 'transparent', color: doneItem ? 'white' : undefined }}
                 onClick={() => onLog(item)}
                 aria-pressed={item.once ? doneItem : undefined}
                 aria-label={item.once ? item.label : `Registrar ${item.label}`}
               >
                 {doneItem ? <Check className="h-3.5 w-3.5" aria-hidden="true" /> : <Plus className="h-3.5 w-3.5" aria-hidden="true" />}
-                <span className="truncate">{item.label}</span>
+                <span>{item.label}</span>
               </Button>
             );
           })}

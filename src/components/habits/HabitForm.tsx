@@ -237,7 +237,7 @@ const HabitForm = ({ kind, habit, saving, onSubmit }: HabitFormProps) => {
       {kind === 'quit_custom' && (
         <div className="space-y-1.5">
           <Label htmlFor="habit-title">O que você quer largar?</Label>
-          <Input id="habit-title" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={60} placeholder="Ex.: refrigerante, apostas, redes sociais à noite" className="h-11" />
+          <Input id="habit-title" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={60} placeholder="Ex.: refrigerante, doces, roer as unhas" className="h-11" />
         </div>
       )}
 

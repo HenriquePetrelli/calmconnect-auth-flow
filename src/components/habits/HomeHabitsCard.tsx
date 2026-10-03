@@ -51,7 +51,7 @@ const HomeHabitsCard = () => {
             const goal = habit.daily_goal ?? HABIT_CATALOG[habit.kind].defaultGoal!;
             const total = totalsByDate(eventsByHabit.get(habit.id) ?? []).get(today) ?? 0;
             const name = habit.kind === 'medication' ? habitTitle(habit) : HABIT_CATALOG[habit.kind].shortName;
-            return `${name}: ${formatHabitAmount(habit.kind, total)} de ${formatHabitAmount(habit.kind, goal)}`;
+            return `${name}: ${HABIT_CATALOG[habit.kind].unit === 'count' ? total : formatHabitAmount(habit.kind, total)} de ${formatHabitAmount(habit.kind, goal)}`;
           })
           .join(' · ');
 
