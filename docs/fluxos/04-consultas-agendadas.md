@@ -1,7 +1,7 @@
 # 04. Consultas agendadas
 
 > **Status:** Pronto.
-> **Última verificação:** 2026-10-04 (varredura de ponta a ponta, avaliação, fluxos alternativos).
+> **Última verificação:** 2026-10-04 (nova varredura: cota reservada sem brecha, conclusão só com chamada conectada, devolução da cota do mês certo).
 > **Quem usa:** paciente Premium (1 consulta por mês, incluindo o plano da empresa) e psicólogo aprovado.
 
 ## Resumo
@@ -21,11 +21,11 @@ O paciente escolhe psicólogo, dia e horário dentro da agenda real dele. O psic
 
 ### 1. Agendar
 1. O paciente escolhe o psicólogo e vê só os horários livres: horário-padrão combinado com exceções do dia, sem férias, sem conflito com outras consultas, respeitando antecedência mínima, intervalo entre consultas e até quantos dias à frente (ficha 05).
-2. Confirma. A edge function `appointments` confere de novo, no servidor, a agenda, os conflitos, o plano Premium e a cota do mês. Também limita a 10 tentativas por hora.
+2. Confirma. A edge function `appointments` confere de novo, no servidor, a agenda, os conflitos e o plano Premium, e **reserva a cota do mês numa única operação** (dois pedidos ao mesmo tempo não passam os dois). Se a consulta não for criada, a reserva é desfeita. Também limita a 10 tentativas por hora. Toda consulta criada pelo app é do tipo `regular` (o servidor ignora outro tipo enviado) e a observação é cortada em 1.000 caracteres.
 3. A consulta nasce como `pending` e o psicólogo é notificado (app e push).
 
 ### 2. Resposta do psicólogo (`psychologist-schedule`)
-- **Aceitar** → `scheduled`; o paciente é avisado e a cota do mês passa a contar.
+- **Aceitar** → `scheduled`; o paciente é avisado. A cota do mês já foi reservada no pedido.
 - **Recusar** → `declined`; a cota volta.
 - **Propor outro horário** → `reschedule_proposed`. O paciente aceita (o horário muda) ou recusa (a cota volta).
 - **Sem resposta**: o pedido expira em 24 h ou quando o horário chega (`auto-decline-appointments`, de hora em hora); a cota volta.
@@ -39,7 +39,9 @@ O paciente escolhe psicólogo, dia e horário dentro da agenda real dele. O psic
 3. O cronômetro compartilhado avisa aos 5 min finais e ao zerar, mas não derruba a chamada.
 
 ### 5. Conclusão
-- O psicólogo só consegue concluir se a chamada **conectou** (`webrtc_sessions.answer` preenchido).
+- Só conta como concluída se a chamada **conectou** os dois lados (`webrtc_sessions.connected_at`, gravado na primeira conexão e mantido mesmo se a chamada cair depois). Vale para o botão "Concluir" do psicólogo e para o "Encerrar" da sala.
+- Quem sai da sala sem a outra pessoa ter entrado não encerra a consulta: ela continua "em andamento" até o fim da janela (a outra pessoa ainda pode entrar), e o app avisa isso.
+- Salvar o resumo da sessão no histórico não muda o status da consulta.
 - A rotina `finalize-stale-appointments` (a cada 10 min) fecha o que ficou aberto 30 min após o fim previsto:
   - **conectou** → `completed`, e entra no repasse do psicólogo (ficha 09);
   - **não conectou** → `no_show`, a consulta do mês volta para o paciente e ele é avisado.
@@ -56,6 +58,8 @@ O paciente escolhe psicólogo, dia e horário dentro da agenda real dele. O psic
 | Paciente | Pedido ainda não confirmado, ou com 24 h ou mais de antecedência | Sim |
 | Paciente | Com menos de 24 h | Não, conta como usada (o app avisa antes) |
 | Psicólogo | Qualquer momento antes do início | Sim, e o paciente é avisado |
+
+Toda devolução da consulta do mês (cancelar, recusar, expirar, não realizada, interrompida) passa por `release_appointment_quota`: só devolve se a cota marcada é do mesmo mês em que a consulta foi pedida. Assim, recusar em outubro um pedido feito em setembro não libera uma segunda consulta em outubro.
 
 ### 8. Problema técnico
 - **Paciente**: no histórico, **Relatar problema** (do horário da consulta até 48 h depois). O psicólogo é avisado.
@@ -74,7 +78,7 @@ O paciente escolhe psicólogo, dia e horário dentro da agenda real dele. O psic
 - **Hooks**: `useAppointments`, `useAvailableTimeSlots`, `usePsychologistSchedule`, `useAppointmentVideoCall`, `usePendingCallFeedback`.
 - **Regras puras**: `src/lib/appointmentCancellation.ts`, `appointmentRating.ts`, `consultationWindow.ts`, `consultationProblem.ts`, `bookingRules.ts`.
 - **Edge functions**: `appointments` (criar e listar), `psychologist-schedule` (aceitar, recusar, propor, concluir), `auto-decline-appointments`, `send-appointment-notification`, `notification-push`.
-- **Banco**: `appointments`, `appointment_reminders_sent`, `appointment_problem_reports`, `session_feedback`, `subscribers` (cota). Funções: `cancel_appointment`, `get_or_create_appointment_webrtc_session`, `notify_consultation_waiting`, `report_consultation_problem`, `finalize_stale_appointments`, `queue_appointment_reminders`. Gatilho `guard_appointment_client_update`.
+- **Banco**: `appointments`, `appointment_reminders_sent`, `appointment_problem_reports`, `session_feedback`, `subscribers` (cota). Funções: `release_appointment_quota`, `appointment_call_connected`, `cancel_appointment`, `get_or_create_appointment_webrtc_session`, `notify_consultation_waiting`, `report_consultation_problem`, `finalize_stale_appointments`, `queue_appointment_reminders`. Gatilhos `guard_appointment_client_update` e `track_call_connected` (em `webrtc_sessions`). Migração mais recente: `20261004240000_consultas_repasses_fixes.sql`.
 
 ## Como validar
 
@@ -86,7 +90,9 @@ O paciente escolhe psicólogo, dia e horário dentro da agenda real dele. O psic
 5. **Cancelar** com mais de 24 h → o aviso diz que a consulta do mês volta → agendar outra funciona.
 6. **Dia da consulta**: 10 min antes, o botão "Entrar" fica ativo → os dois entram → chamada conecta → o psicólogo encerra → o paciente avalia.
 7. **Ninguém aparece**: entrar sozinho → depois de 2 min, "Avisar" → o outro recebe push. Deixar passar 30 min após o fim → a consulta vira "Não realizada" e a consulta do mês volta.
-8. **Histórico**: "Avaliar" em consulta concluída; "Relatar problema" (paciente) e "Consulta interrompida" (psicólogo).
+8. **Saiu sozinho**: o psicólogo entra, ninguém aparece, ele sai → aviso "Você saiu da sala"; a consulta continua "Em andamento" e depois vira "Não realizada", sem entrar no repasse.
+9. **Duplo agendamento**: dois toques rápidos em "Agendar" (ou duas abas) → só uma consulta é criada.
+10. **Histórico**: "Avaliar" em consulta concluída; "Relatar problema" (paciente) e "Consulta interrompida" (psicólogo).
 
 ### Testes automáticos
 `availableTimeSlots`, `bookingRules`, `consultationWindow`, `consultationProblem`, `consultasChatRules`, `appointmentFeedback`, `upcomingConsultationsStartCall`, `consultationCallRouteAccess`, `consultationVideoCallSession`, `webrtcSessionReuse.e2e`.
@@ -98,7 +104,7 @@ select id, status, scheduled_at, duration, video_room_id, cancellation_reason
 from appointments where patient_id = '<id>' order by scheduled_at desc;
 
 -- A chamada conectou?
-select a.id, a.status, (s.answer is not null) as conectou
+select a.id, a.status, s.connected_at, (s.connected_at is not null) as conectou
 from appointments a left join webrtc_sessions s on s.id::text = a.video_room_id
 where a.id = '<id da consulta>';
 
@@ -121,5 +127,6 @@ Nenhuma no fluxo. O push dos lembretes depende do Firebase (pendência 2).
 | Nenhum horário disponível | Psicólogo sem horário-padrão, de férias ou com antecedência mínima maior que o dia escolhido | Ficha 05; `psychologist_availability`, `psychologist_vacations`, `psychologist_booking_rules` |
 | "Seu plano não inclui consultas" | Paciente não é Premium (ou plano vencido) | `subscribers` |
 | Botão "Entrar" não aparece | Fora da janela (10 min antes até 15 min depois do fim) ou consulta não confirmada | Status e horário da consulta |
-| Psicólogo não consegue concluir | A chamada nunca conectou | `webrtc_sessions.answer`; a rotina vai marcar `no_show` |
+| Psicólogo não consegue concluir | A chamada nunca conectou | `webrtc_sessions.connected_at`; a rotina vai marcar `no_show` |
+| Encerrou e a consulta continuou "Em andamento" | A outra pessoa nunca entrou | Esperado; a rotina fecha como `no_show` |
 | Consulta ficou "Em andamento" | Ninguém concluiu | A rotina fecha 30 min após o fim previsto; conferir `cron.job_run_details` (ficha 21) |

@@ -1,7 +1,7 @@
 # 09. Repasses aos psicólogos
 
 > **Status:** Pronto, com decisão pendente (SOS atendidos antes de 2026-10-04).
-> **Última verificação:** 2026-10-04 (contagem do SOS e livro de itens sem duplicidade).
+> **Última verificação:** 2026-10-04 (só entram chamadas que conectaram; chave Pix sempre atual).
 > **Quem usa:** admin (paga) e psicólogo (acompanha).
 
 ## Resumo
@@ -10,8 +10,8 @@ Cada atendimento realizado vira um item a pagar ao psicólogo:
 
 | Atendimento | Valor | Quando entra |
 |---|---|---|
-| Consulta agendada | R$ 90,00 | Status `completed`, ou seja, a chamada conectou |
-| SOS | R$ 50,00 | Status `completed` |
+| Consulta agendada | R$ 90,00 | Status `completed` **e** a chamada conectou os dois lados |
+| SOS | R$ 50,00 | Status `completed` **e** a chamada conectou os dois lados |
 
 O admin paga por PIX fora do app e registra no painel com o **código E2E do PIX**. O psicólogo vê o pendente, o pago e os comprovantes.
 
@@ -24,7 +24,7 @@ O admin paga por PIX fora do app e registra no painel com o **código E2E do PIX
 
 ## Como funciona
 
-1. **Contagem** (`sync_psychologist_payments`): cada consulta ou SOS concluído entra **uma única vez** num livro de itens (`payout_items`, chave única por origem), e o valor pendente é somado a partir dele. Rodar várias vezes não duplica.
+1. **Contagem** (`sync_psychologist_payments`): cada consulta ou SOS concluído, em que a chamada conectou (`webrtc_sessions.connected_at`), entra **uma única vez** num livro de itens (`payout_items`, chave única por origem), e o valor pendente é somado a partir dele. Rodar várias vezes não duplica.
 2. **Quando roda**: toda segunda às 9h (rotina `weekly-payment-sync`, que chama a edge function `payment-sync`) e quando o admin toca em "Sincronizar".
 3. **Pagar**: o admin faz o PIX e, no painel, toca em "Confirmar". Informa o **E2E** (32 caracteres, obrigatório) e, se quiser, o comprovante (imagem ou PDF até 5 MB).
 4. **Confirmar** (`confirm-payment`): só confirma se o valor pendente ainda for o que o admin viu. Assim, dois cliques ou duas abas não pagam duas vezes, e atendimentos novos no meio do caminho não entram sem ser vistos. E2E já usado é recusado.
@@ -36,13 +36,15 @@ O admin paga por PIX fora do app e registra no painel com o **código E2E do PIX
 - Só admin confirma pagamento. O psicólogo só lê os próprios dados.
 - O CPF e a chave Pix do psicólogo não são visíveis para outros usuários (ficha 20).
 - SOS que o paciente redirecionou para outro psicólogo (`psychologist_unavailable`) **não** entra no repasse.
+- Psicólogo sozinho na sala não recebe: consulta ou SOS sem a chamada conectar os dois lados não entra, mesmo concluído.
+- A chave Pix do repasse pendente acompanha a do cadastro: trocou a chave, o painel do admin mostra a nova na hora (gatilho `sync_payment_pix_key`).
 
 ## Onde está no código
 
 - **Telas e componentes**: `src/pages/PsychologistPayments.tsx`; em `src/components/payments/`: `PaymentsPanel`, `ConfirmPayoutDialog`, `PaymentDetailsModal`, `PayoutHistory`.
 - **Hooks**: `usePayments`.
 - **Edge functions**: `payment-sync` (admin ou rotina agendada), `confirm-payment`.
-- **Banco**: `payout_items`, `psychologist_payments`, `payment_logs`; bucket `payment-receipts`. Função: `sync_psychologist_payments`.
+- **Banco**: `payout_items`, `psychologist_payments`, `payment_logs`; bucket `payment-receipts`. Funções: `sync_psychologist_payments`, `appointment_call_connected`, `sos_call_connected`; gatilho `sync_payment_pix_key`. Migração: `20261004240000_consultas_repasses_fixes.sql`.
 
 ## Como validar
 
@@ -52,6 +54,8 @@ O admin paga por PIX fora do app e registra no painel com o **código E2E do PIX
 3. "Sincronizar" de novo → continua R$ 140,00 (não duplica).
 4. "Confirmar" com E2E de 32 caracteres → o pendente zera; o psicólogo vê em "Repasses recebidos".
 5. Tentar confirmar de novo com o mesmo E2E → recusado.
+6. Psicólogo entra sozinho numa consulta e sai → ela não entra no repasse (fica "não realizada").
+7. Psicólogo troca a chave Pix no perfil → o admin vê a chave nova em Repasses.
 
 ### Testes automáticos
 `confirmPayoutDialog`.
@@ -80,6 +84,7 @@ where psychologist_id = '<id>' order by created_at desc;
 | Sintoma | Causa provável | O que olhar |
 |---|---|---|
 | Consulta feita não aparece no repasse | Chamada não conectou (virou `no_show`) ou a sincronização ainda não rodou | Status da consulta; "Sincronizar" |
+| SOS ou consulta concluída não entrou | A chamada não chegou a conectar os dois lados | `connected_at` da sessão em `webrtc_sessions` |
 | Valor dobrado | Não deve acontecer (chave única no livro) | `payout_items` com o mesmo `source_id` |
 | "O valor pendente mudou" ao confirmar | Entrou atendimento novo depois que o admin abriu a tela | Esperado; reabrir e conferir |
 | Rotina semanal não roda | Rotina sem o cabeçalho do segredo | `cron.job_run_details` do `weekly-payment-sync` (ficha 21) |

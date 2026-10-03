@@ -1,7 +1,7 @@
 # 02. SOS: atendimento de emergência
 
 > **Status:** Pronto, com pendência externa (TURN para redes restritivas; push depende do Firebase).
-> **Última verificação:** 2026-10-04 (varredura completa, com fluxos alternativos e segurança).
+> **Última verificação:** 2026-10-04 (SOS sem chamada conectada devolve a cota e não entra no repasse).
 > **Quem usa:** paciente com plano (Plus, Premium ou empresa) e psicólogo aprovado.
 
 ## Resumo
@@ -59,6 +59,7 @@ Vídeo, reconexão automática, cronômetro compartilhado e painel de contexto d
 | Duração máxima da chamada | Plus 25 min, Premium 50 min, sem plano ativo 20 min (gravada no pedido) |
 | Os dois sem sinal | 10 min → `abandoned` (cota devolvida) |
 | Psicólogo ausente | 90 s → o paciente pode chamar outro (cota devolvida) |
+| Encerrado sem a chamada conectar os dois lados | Cota devolvida; não entra no repasse do psicólogo (ficha 09) |
 | Limite de pedidos | 5 a cada 10 min por paciente |
 | Quem vê a fila | Só psicólogo aprovado, não bloqueado e online |
 | Sair da fila antes do aceite | Cancela o pedido (ao fechar a aba, via `emergency-cleanup`, só com o login do próprio paciente) |
@@ -123,6 +124,6 @@ from subscribers where user_id = '<id do paciente>';
 |---|---|---|
 | Paciente vê "0 disponíveis" com psicólogo online | Psicólogo não aprovado, bloqueado ou sem presença recente (mais de 7 min) | `select * from psychologist_presence`; `psychologist_can_attend('<id>')` |
 | Pedido não aparece para o psicólogo | Psicólogo offline ou pedido já expirado | Status do pedido; o painel consulta a cada 10 s mesmo sem tempo real |
-| "Você já usou o SOS deste mês" sem ter usado | Cota marcada e não devolvida | `subscribers.sos_used_this_month`; a cota volta em `abandoned`/`psychologist_unavailable` |
+| "Você já usou o SOS deste mês" sem ter usado | Cota marcada e não devolvida | `subscribers.sos_used_this_month`; a cota volta em `abandoned`/`psychologist_unavailable` e em SOS concluído sem conexão (`webrtc_sessions.connected_at` vazio) |
 | Chamada não conecta (fica em "Conectando") | Rede bloqueia conexão direta, sem TURN | Ficha 03; painel de diagnóstico (`?debug=1`) |
 | Avaliação pede de novo a cada abertura | Avaliação não gravada | `session_feedback` do `session_id` |

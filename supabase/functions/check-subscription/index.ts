@@ -145,7 +145,9 @@ serve(async (req) => {
         await supabaseClient
           .from("subscribers")
           .update({ sos_used_this_month: false, sos_last_used: null, updated_at: new Date().toISOString() })
-          .eq(rowFilter.column, rowFilter.value);
+          .eq(rowFilter.column, rowFilter.value)
+          // Só zera se ninguém usou o SOS do mês novo enquanto esta checagem rodava.
+          .eq("sos_last_used", sosLastUsed);
         sosUsedThisMonth = false;
         sosLastUsed = null;
       }
@@ -158,7 +160,9 @@ serve(async (req) => {
         await supabaseClient
           .from("subscribers")
           .update({ sos_used_this_month: false, sos_last_used: null, updated_at: new Date().toISOString() })
-          .eq(rowFilter.column, rowFilter.value);
+          .eq(rowFilter.column, rowFilter.value)
+          // Só zera se ninguém usou o SOS do mês novo enquanto esta checagem rodava.
+          .eq("sos_last_used", sosLastUsed);
         sosUsedThisMonth = false;
         sosLastUsed = null;
       }
@@ -187,7 +191,9 @@ serve(async (req) => {
         await supabaseClient
           .from("subscribers")
           .update({ appointments_used_this_month: false, appointments_last_used: null, updated_at: new Date().toISOString() })
-          .eq(rowFilter.column, rowFilter.value);
+          .eq(rowFilter.column, rowFilter.value)
+          // Só zera se a consulta do mês novo não foi reservada enquanto esta checagem rodava.
+          .eq("appointments_last_used", appointmentsLastUsed);
         appointmentsUsedThisMonth = false;
         appointmentsLastUsed = null;
       }
@@ -210,16 +216,22 @@ serve(async (req) => {
       subscription_end: stripeEnd,
       plan_limits: PLAN_LIMITS[stripeTier ?? "none"],
       entitlement_source: "stripe",
-      current_usage: currentUsage,
-      sos_used_this_month: sosUsedThisMonth,
-      sos_last_used: sosLastUsed,
-      appointments_used_this_month: appointmentsUsedThisMonth,
-      appointments_last_used: appointmentsLastUsed,
       updated_at: new Date().toISOString(),
     };
+    // O uso do mês (SOS e consulta) não é regravado numa linha existente:
+    // ele muda por outros caminhos (início do SOS, agendamento, devoluções) e
+    // regravar o valor lido no começo desta checagem apagava um uso feito no
+    // meio dela (SOS ou consulta extra de graça).
     const { error: writeError } = existingSubscriberRow
       ? await supabaseClient.from("subscribers").update(stripeRow).eq("id", existingSubscriberRow.id)
-      : await supabaseClient.from("subscribers").upsert(stripeRow, { onConflict: "email" });
+      : await supabaseClient.from("subscribers").upsert({
+          ...stripeRow,
+          current_usage: currentUsage,
+          sos_used_this_month: sosUsedThisMonth,
+          sos_last_used: sosLastUsed,
+          appointments_used_this_month: appointmentsUsedThisMonth,
+          appointments_last_used: appointmentsLastUsed,
+        }, { onConflict: "email" });
     if (writeError) logStep("Could not write subscriber row", { message: writeError.message });
 
     logStep("Updated database with subscription info", { subscribed: hasActiveSub, subscriptionTier, planLimits });

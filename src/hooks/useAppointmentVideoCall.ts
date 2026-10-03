@@ -55,7 +55,16 @@ export const useAppointmentVideoCall = () => {
 
       if (error) throw error;
 
-      toast({ title: 'Consulta finalizada' });
+      // Sem a chamada conectar os dois lados, o banco mantém a consulta em
+      // andamento: a outra pessoa ainda pode entrar até o fim do horário.
+      if (data?.status === 'completed') {
+        toast({ title: 'Consulta finalizada' });
+      } else {
+        toast({
+          title: 'Você saiu da sala',
+          description: 'A outra pessoa não chegou a entrar. A consulta continua aberta até o fim do horário; se ninguém entrar, ela é encerrada como não realizada e a consulta do mês volta para o paciente.',
+        });
+      }
 
       return data;
     } catch (error: any) {

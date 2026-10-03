@@ -68,20 +68,13 @@ serve(async (req) => {
       // These requests expired unanswered — nobody ever confirmed them, so
       // the patient's monthly Premium appointment slot (marked used at
       // booking time) must come back, same as an explicit decline.
-      const patientIdsToRelease = [
-        ...new Set(
-          expiredAppointments
-            .filter((a) => a.appointment_type === 'regular')
-            .map((a) => a.patient_id)
-        ),
-      ];
-      if (patientIdsToRelease.length > 0) {
-        const { error: quotaError } = await supabase
-          .from('subscribers')
-          .update({ appointments_used_this_month: false })
-          .in('user_id', patientIdsToRelease);
+      // Devolve a cota de cada pedido vencido (só se a cota marcada for a dele).
+      for (const expired of expiredAppointments.filter((a) => a.appointment_type === 'regular')) {
+        const { error: quotaError } = await supabase.rpc('release_appointment_quota', {
+          p_appointment_id: expired.id,
+        });
         if (quotaError) {
-          console.error('Error releasing appointment quota for expired appointments:', quotaError);
+          console.error('Error releasing appointment quota for expired appointment:', quotaError);
         }
       }
 

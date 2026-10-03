@@ -1,7 +1,7 @@
 # 08. Assinaturas e pagamentos (Stripe)
 
 > **Status:** Pronto, com pendência externa (confirmar que o webhook do Stripe está cadastrado).
-> **Última verificação:** 2026-10-02 (revisão de ponta a ponta comparada com Calm, Headspace e Spotify). Em 2026-10-04, o gatilho de proteção de `subscribers` impede o paciente de gravar o próprio plano.
+> **Última verificação:** 2026-10-02 (revisão de ponta a ponta comparada com Calm, Headspace e Spotify). Em 2026-10-04, o gatilho de proteção de `subscribers` impede o paciente de gravar o próprio plano, e o `check-subscription` deixou de regravar o uso do mês (corrida que devolvia SOS ou consulta já usados).
 > **Quem usa:** paciente.
 
 ## Resumo
@@ -38,8 +38,9 @@ O pagamento é pelo **Stripe Checkout**. O estado da assinatura fica em `subscri
 
 - **O usuário não grava o próprio plano.** `subscribers` só muda por edge function (service role) ou gatilho do banco; o gatilho `a_guard_subscriber_client_write` ignora qualquer tentativa vinda do app.
 - Cotas do mês contam no horário de Brasília e voltam no 1º dia do mês.
-- **SOS**: marcado como usado quando a chamada começa e devolvido se a chamada cair ou o psicólogo sumir.
-- **Consulta**: conta quando confirmada e volta se for recusada, expirada, cancelada com antecedência ou não realizada.
+- **SOS**: marcado como usado quando a chamada começa e devolvido se a chamada cair, o psicólogo sumir ou o atendimento terminar sem a chamada conectar.
+- **Consulta**: reservada no pedido (numa operação só, sem brecha para dois pedidos ao mesmo tempo) e devolvida se for recusada, expirada, cancelada com antecedência, interrompida ou não realizada. Só devolve a cota do mês em que a consulta foi pedida (`release_appointment_quota`).
+- O `check-subscription` atualiza o plano, mas **não regrava** o uso do mês numa linha existente: ele muda só pelo início do SOS, pelo agendamento e pelas devoluções. A virada do mês só zera o uso se ninguém usou no mês novo enquanto a checagem rodava.
 - O cliente do Stripe é ligado ao `user_id`, não ao e-mail; trocar o e-mail não perde a assinatura.
 - Excluir a conta cancela a assinatura no Stripe **antes** de apagar os dados (ficha 18).
 

@@ -22,7 +22,7 @@ Para regras de negócio em texto corrido e o histórico de cada mudança, veja `
 | 5 | Agenda do psicólogo | [05-agenda-do-psicologo.md](05-agenda-do-psicologo.md) | Pronto | 2026-09-24 |
 | 6 | Chat paciente e psicólogo | [06-chat.md](06-chat.md) | Pronto | 2026-10-04 |
 | 7 | Notificações e push | [07-notificacoes-e-push.md](07-notificacoes-e-push.md) | Pronto, com pendência externa | 2026-10-04 |
-| 8 | Assinaturas e pagamentos (Stripe) | [08-assinaturas-e-pagamentos.md](08-assinaturas-e-pagamentos.md) | Pronto, com pendência externa | 2026-10-02 |
+| 8 | Assinaturas e pagamentos (Stripe) | [08-assinaturas-e-pagamentos.md](08-assinaturas-e-pagamentos.md) | Pronto, com pendência externa | 2026-10-04 |
 | 9 | Repasses aos psicólogos | [09-repasses.md](09-repasses.md) | Pronto, com decisão pendente | 2026-10-04 |
 | 10 | Empresas (B2B) | [10-empresas-b2b.md](10-empresas-b2b.md) | Pronto | 2026-10-04 |
 | 11 | Meus hábitos | [11-meus-habitos.md](11-meus-habitos.md) | Pronto | 2026-10-03 |

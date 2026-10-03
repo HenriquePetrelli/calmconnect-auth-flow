@@ -14,6 +14,12 @@ const brazilYearMonth = (date: Date) => {
   const brazil = new Date(date.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
   return { year: brazil.getFullYear(), month: brazil.getMonth() };
 };
+/** Início do mês corrente no horário de Brasília (UTC-3, sem horário de verão). */
+const brazilMonthStartIso = (now: Date): string => {
+  const { year, month } = brazilYearMonth(now);
+  return `${year}-${String(month + 1).padStart(2, '0')}-01T00:00:00-03:00`;
+};
+
 const isSameBrazilMonth = (a: Date, b: Date) => {
   const ym1 = brazilYearMonth(a);
   const ym2 = brazilYearMonth(b);
@@ -295,9 +301,13 @@ serve(async (req) => {
         throw new Error('Psicólogo indisponível para agendamento.');
       }
 
-      // Validate appointment_type
-      const validTypes = ['regular', 'emergency'];
-      const finalAppointmentType = appointment_type && validTypes.includes(appointment_type) ? appointment_type : 'regular';
+      // Sempre 'regular'. Antes o tipo vinha do app e 'emergency' pulava a
+      // checagem de plano Premium e da cota: qualquer paciente agendava
+      // consultas sem limite chamando a API (e cada uma entrava no repasse).
+      // Atendimento de emergência é o SOS, que tem fluxo próprio.
+      void appointment_type;
+      const finalAppointmentType = 'regular';
+      const safeNotes = typeof notes === 'string' ? notes.slice(0, 1000) : null;
 
       // Enforce the Premium-only, 1x/month scheduling quota server-side —
       // the client-side gate (subscriptionTier === 'Premium') can be
@@ -404,6 +414,20 @@ serve(async (req) => {
         throw new Error('Esse horário não está disponível na agenda do psicólogo selecionado.');
       }
 
+      // Reserva a consulta do mês de forma atômica ANTES de criar o pedido:
+      // dois pedidos ao mesmo tempo passavam pela checagem acima antes de
+      // qualquer um marcar a cota, e o paciente ficava com duas no mês.
+      const { data: reserved, error: reserveError } = await supabase
+        .from('subscribers')
+        .update({ appointments_used_this_month: true, appointments_last_used: new Date().toISOString() })
+        .eq('user_id', user.id)
+        .or(`appointments_used_this_month.eq.false,appointments_last_used.is.null,appointments_last_used.lt.${brazilMonthStartIso(new Date())}`)
+        .select('id');
+      if (reserveError) throw reserveError;
+      if (!reserved || reserved.length === 0) {
+        throw new Error('Limite mensal de consultas agendadas já utilizado (PREMIUM: 1x/mês).');
+      }
+
       const { data: appointment, error } = await supabase
         .from('appointments')
         .insert({
@@ -412,7 +436,7 @@ serve(async (req) => {
           scheduled_at,
           duration: 50, // Fixed 50-minute duration
           appointment_type: finalAppointmentType,
-          notes,
+          notes: safeNotes,
           status: 'pending' // Start as pending, waiting for psychologist confirmation
         })
         .select(`
@@ -424,13 +448,13 @@ serve(async (req) => {
         `)
         .single();
 
-      if (error) throw error;
-
-      if (finalAppointmentType === 'regular') {
+      if (error) {
+        // O pedido não foi criado: devolve a cota reservada.
         await supabase
           .from('subscribers')
-          .update({ appointments_used_this_month: true, appointments_last_used: new Date().toISOString() })
+          .update({ appointments_used_this_month: false })
           .eq('user_id', user.id);
+        throw error;
       }
 
       // Transform appointment to ensure psychologist is properly structured

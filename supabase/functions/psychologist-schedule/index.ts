@@ -502,13 +502,14 @@ serve(async (req) => {
         throw new HttpError('Só dá para concluir a consulta depois do horário de início.', 409);
       }
       // Concluir conta para o repasse: só consultas em que a chamada conectou
-      // os dois lados (a sessão de vídeo tem `answer`). Antes dava para marcar
-      // como concluída uma consulta em que ninguém entrou.
-      if (status === 'completed' && appointment.status !== 'in_progress') {
+      // os dois lados (a sessão de vídeo tem `connected_at`). Vale também para
+      // consulta "em andamento": ela fica assim assim que UM lado entra na
+      // sala, então o psicólogo sozinho conseguia concluir e receber.
+      if (status === 'completed') {
         const { data: session } = appointment.video_room_id
-          ? await supabase.from('webrtc_sessions').select('answer').eq('id', appointment.video_room_id).maybeSingle()
+          ? await supabase.from('webrtc_sessions').select('answer, connected_at').eq('id', appointment.video_room_id).maybeSingle()
           : { data: null };
-        if (!session?.answer) {
+        if (!session?.connected_at && !session?.answer) {
           throw new HttpError('Esta consulta não chegou a acontecer pela chamada do app, então não pode ser concluída.', 409);
         }
       }
@@ -559,10 +560,12 @@ serve(async (req) => {
     // decline (by either side, direct or after a reschedule proposal)
     // must not permanently burn that slot.
     if (status === 'declined' && appointment.appointment_type === 'regular') {
-      const { error: quotaError } = await supabase
-        .from('subscribers')
-        .update({ appointments_used_this_month: false })
-        .eq('user_id', appointment.patient_id);
+      // Só devolve se a cota marcada for a desta consulta (pedida no mesmo
+      // mês). Uma consulta pedida no fim do mês anterior e recusada agora não
+      // pode liberar a consulta do mês atual.
+      const { error: quotaError } = await supabase.rpc('release_appointment_quota', {
+        p_appointment_id: appointment.id,
+      });
       if (quotaError) {
         console.error('Error releasing appointment quota:', quotaError);
         // Don't fail the request over this — the decline itself already succeeded.

@@ -239,15 +239,12 @@ const ConsultationHistory = () => {
 
     setSavingSummary(true);
     try {
-      await updateAppointment(selected.id, {
-        sessionSummary,
-        status: 'completed',
-      });
+      // Só o resumo: concluir a consulta é outra ação (e exige que a chamada
+      // tenha acontecido). Antes salvar o resumo também tentava concluir.
+      await updateAppointment(selected.id, { sessionSummary });
 
       setRows((prev) =>
-        prev.map((row) =>
-          row.id === selected.id ? { ...row, session_summary: sessionSummary, status: 'completed' } : row
-        )
+        prev.map((row) => (row.id === selected.id ? { ...row, session_summary: sessionSummary } : row))
       );
 
       setSelected(null);
