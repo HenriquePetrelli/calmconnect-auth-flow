@@ -56,7 +56,7 @@ from group_testimonials order by criado_em desc limit 20;
 
 ## Pendências
 
-Nenhuma. As duas pendências de privacidade foram corrigidas em 2026-10-04 (migration `20261004230000_privacy_fixes.sql`), junto com a troca de reação, que falhava em silêncio.
+Nenhuma. As duas pendências de privacidade foram corrigidas em 2026-10-04 (migration `20261003232116_d6f3adac-0952-4317-8e77-a3a5ec8ff312.sql`), junto com a troca de reação, que falhava em silêncio.
 
 ## Problemas comuns
 

@@ -67,7 +67,7 @@ from mental_health_screenings where user_id = '<id>' order by created_at desc;
 
 ## Pendências
 
-Nenhuma. A pontuação editável pela API foi corrigida em 2026-10-04 (migration `20261004230000_privacy_fixes.sql`).
+Nenhuma. A pontuação editável pela API foi corrigida em 2026-10-04 (migration `20261003232116_d6f3adac-0952-4317-8e77-a3a5ec8ff312.sql`).
 
 ## Problemas comuns
 

@@ -60,7 +60,7 @@ select
 
 - **Edge functions**: `supabase/functions/_shared/guards.ts` (`isTrustedCaller`, `withinRateLimit`, `escapeHtml`, `isValidEmail`, `isBoundedText`, `safeEqual`).
 - **App**: `src/lib/requestDedupe.ts`, `installRequestDedupe.ts`, `contentSecurityPolicy.ts` (CSP aplicada pelo `vite.config.ts` só no build), `frameGuard.ts`, `password.ts`, `src/contexts/AuthContext.tsx`.
-- **Banco**: migrações de segurança `20261003210511_25be134c-….sql`, `20261004220000_storage_upload_limits.sql` e `20261004230000_privacy_fixes.sql`.
+- **Banco**: migrações de segurança `20261003210511_25be134c-….sql`, `20261004220000_storage_upload_limits.sql` e `20261003232116_d6f3adac-0952-4317-8e77-a3a5ec8ff312.sql`.
 - **Mensagens de erro**: `src/utils/errorMessage.ts` mostra as mensagens de regra do banco e esconde o texto técnico.
 
 ## Pendências

@@ -64,7 +64,7 @@ select conversa_id, count(*), max(created_at) from mensagens group by conversa_i
 
 ## Pendências
 
-Nenhuma. "Excluir conversa" passou a ocultar só para quem excluiu em 2026-10-04 (migration `20261004230000_privacy_fixes.sql`).
+Nenhuma. "Excluir conversa" passou a ocultar só para quem excluiu em 2026-10-04 (migration `20261003232116_d6f3adac-0952-4317-8e77-a3a5ec8ff312.sql`).
 
 ## Problemas comuns
 
