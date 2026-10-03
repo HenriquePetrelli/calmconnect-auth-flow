@@ -74,44 +74,6 @@ export type Database = {
         }
         Relationships: []
       }
-      appointment_problem_reports: {
-        Row: {
-          appointment_id: string
-          created_at: string
-          details: string | null
-          id: string
-          refunded: boolean
-          reported_by: string
-          reporter_type: string
-        }
-        Insert: {
-          appointment_id: string
-          created_at?: string
-          details?: string | null
-          id?: string
-          refunded?: boolean
-          reported_by: string
-          reporter_type: string
-        }
-        Update: {
-          appointment_id?: string
-          created_at?: string
-          details?: string | null
-          id?: string
-          refunded?: boolean
-          reported_by?: string
-          reporter_type?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "appointment_problem_reports_appointment_id_fkey"
-            columns: ["appointment_id"]
-            isOneToOne: false
-            referencedRelation: "appointments"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       appointment_reminders_sent: {
         Row: {
           appointment_id: string
@@ -2809,10 +2771,6 @@ export type Database = {
         Args: { target_user_email: string }
         Returns: boolean
       }
-      notify_consultation_waiting: {
-        Args: { p_appointment_id: string }
-        Returns: Json
-      }
       prune_stale_psychologist_presence: { Args: never; Returns: number }
       psychologist_can_attend: {
         Args: { p_user_id?: string }
@@ -2835,10 +2793,6 @@ export type Database = {
       }
       remove_organization_member_by_email: {
         Args: { p_email: string; p_org: string }
-        Returns: Json
-      }
-      report_consultation_problem: {
-        Args: { p_appointment_id: string; p_details?: string }
         Returns: Json
       }
       report_group_testimonial: {
@@ -2867,10 +2821,6 @@ export type Database = {
       set_psychologist_availability: {
         Args: { p_blocks: Json }
         Returns: undefined
-      }
-      sos_request_other_psychologist: {
-        Args: { p_request_id: string }
-        Returns: Json
       }
       sync_consultation_counts: { Args: never; Returns: undefined }
       sync_psychologist_payments: { Args: never; Returns: undefined }
