@@ -1839,6 +1839,7 @@ export type Database = {
       }
       session_feedback: {
         Row: {
+          appointment_id: string | null
           clinical_notes: string | null
           comment: string | null
           complaint_categories: string[]
@@ -1860,6 +1861,7 @@ export type Database = {
           user_type: string
         }
         Insert: {
+          appointment_id?: string | null
           clinical_notes?: string | null
           comment?: string | null
           complaint_categories?: string[]
@@ -1881,6 +1883,7 @@ export type Database = {
           user_type: string
         }
         Update: {
+          appointment_id?: string | null
           clinical_notes?: string | null
           comment?: string | null
           complaint_categories?: string[]
@@ -1901,7 +1904,15 @@ export type Database = {
           user_id?: string
           user_type?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "session_feedback_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sos_trace_events: {
         Row: {
