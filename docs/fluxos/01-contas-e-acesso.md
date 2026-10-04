@@ -1,6 +1,6 @@
 # 01. Cadastro, login, senha e perfis
 
-> **Status:** Pronto, com pendência externa (ajustes de senha no painel do Supabase).
+> **Status:** Pronto, com pendência externa (SMTP e modelos de e-mail; ajustes de senha no painel do Supabase).
 > **Última verificação:** 2026-10-04.
 > **Quem usa:** todos.
 
@@ -41,6 +41,8 @@ Existem três perfis: **paciente**, **psicólogo** e **admin**. O paciente se ca
 
 ### Recuperar senha
 "Esqueci a senha" manda um e-mail com link para `/reset-password`. Ali a pessoa define a nova senha. Link vencido ou já usado mostra o aviso e permite pedir outro.
+
+O e-mail (e os outros e-mails de login: confirmar cadastro, trocar e-mail, convite, link e código) é do Supabase, com os modelos em português e a logo do Soliv de `supabase/templates/`. A configuração no painel está em `docs/emails-de-autenticacao.md`.
 
 ### Sair
 Desativa o push daquele aparelho e encerra a sessão em todos os aparelhos. Se o servidor falhar, encerra pelo menos no aparelho atual e sempre volta para o login. O psicólogo fica **offline** na hora, saindo da fila do SOS.
@@ -95,6 +97,7 @@ where user_id = (select id from auth.users where email = 'pessoa@exemplo.com');
 
 - **No painel do Supabase** (Authentication), item 6 de `docs/pendencias-antes-do-lancamento.md`: senha mínima 8, "Leaked password protection", "Confirm email" ligado e verificação em duas etapas para admin. Enquanto isso não for feito, alguém que chame a API direto, sem passar pelo app, consegue criar conta com senha de 6 caracteres.
 - **Senha do admin exposta** numa migração antiga (pendência crítica 1). É preciso trocar a senha.
+- **E-mails de login** (pendência crítica 2): sem o SMTP próprio, o e-mail de redefinir senha só chega para a equipe do projeto e vem em inglês. Passo a passo em `docs/emails-de-autenticacao.md`.
 
 ## Problemas comuns
 

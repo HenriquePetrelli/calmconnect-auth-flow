@@ -66,7 +66,7 @@ select
 ## Pendências
 
 - **Senha do admin exposta** numa migração antiga (pendência 1).
-- **Painel do Supabase** (pendência 5): senha mínima 8, "Leaked password protection", "Confirm email" e verificação em duas etapas para admin.
+- **Painel do Supabase** (pendência 6): senha mínima 8, "Leaked password protection", "Confirm email" e verificação em duas etapas para admin.
 - **Sem cabeçalhos de hospedagem** como `X-Frame-Options` (a Lovable não permite configurar). A proteção contra clickjacking é feita pelo próprio app (`frameGuard`), e cobre Chrome, Edge e Safari; no Firefox, que não informa o site de fora, o app abre normalmente.
 
 ## Como reagir a um incidente

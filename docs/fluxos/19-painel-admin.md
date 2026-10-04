@@ -66,7 +66,7 @@ select created_at, action, target_type, target_name from admin_audit_log order b
 ## Pendências
 
 - **Crítica — senha do admin exposta** (pendência 1): uma migração antiga contém a senha. Troque a senha, ative a verificação em duas etapas e, se quiser, limpe o histórico do Git.
-- **Verificação em duas etapas** para admin no painel do Supabase (pendência 5).
+- **Verificação em duas etapas** para admin no painel do Supabase (pendência 6).
 
 ## Problemas comuns
 

@@ -14,23 +14,31 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
   3. Opcional: limpar o histórico do Git (por exemplo, com `git filter-repo`) e forçar o push; avisar quem tem clones. Apagar só o arquivo não basta, porque a senha continua no histórico.
 - **Registrado em:** 2026-10-03.
 
+### 2. E-mails de login (redefinir senha, confirmar e-mail) só chegam para a equipe
+
+- **Onde:** Supabase → Authentication → SMTP Settings e Email Templates.
+- **Problema:** sem um servidor de e-mail próprio, o Supabase usa o servidor padrão dele, que só entrega para os e-mails da equipe do projeto, no máximo 30 por hora, com remetente "Supabase Auth", texto em inglês e rodapé "powered by Supabase". Um paciente que esquecer a senha não recebe o e-mail.
+- **O que fazer:** seguir `docs/emails-de-autenticacao.md`: (1) configurar o SMTP do Resend com remetente do domínio do Soliv; (2) colar os 6 modelos em português de `supabase/templates/` com os assuntos indicados; (3) conferir que o Site URL é o endereço publicado do app (a logo do e-mail vem de lá).
+- **Como conferir:** pedir "Esqueci minha senha" com um e-mail que não é da equipe; o e-mail chega em português, com a logo, remetente "Soliv".
+- **Registrado em:** 2026-10-05.
+
 ## Importantes
 
-### 2. Conferir a configuração do Firebase para o push no celular
+### 3. Conferir a configuração do Firebase para o push no celular
 
 - **Onde:** variáveis `VITE_FIREBASE_*` do app (API key, auth domain, project ID, storage bucket, messaging sender ID, app ID e VAPID key) e a conta de serviço do Firebase nos secrets das edge functions.
 - **Por quê:** sem elas, nenhum push chega com o app fechado (lembretes de consulta e de hábitos, mensagens do chat, mudanças na consulta). As notificações dentro do app continuam funcionando.
 - **O que fazer:** confirmar que as variáveis estão configuradas com os valores do projeto no Firebase e testar num celular: ativar as notificações no perfil, fechar o app e mandar uma mensagem no chat a partir de outra conta.
 - **Registrado em:** 2026-10-04.
 
-### 3. Decidir sobre SOS atendidos antes da correção do repasse
+### 4. Decidir sobre SOS atendidos antes da correção do repasse
 
 - **Situação:** até 2026-10-04 o repasse nunca contava os atendimentos de SOS (contava pela tabela de consultas, onde o SOS não aparece), então nenhum psicólogo recebeu por SOS. A correção passa a contar os SOS concluídos daqui para frente; os anteriores foram registrados em `payout_items` (`source_type = 'sos'`, `backfilled = true`) sem somar ao valor a pagar.
 - **O que fazer:** decidir se paga os atendimentos antigos. Para ver quanto é por psicólogo:
   `select p.full_name, count(*), sum(i.amount) from payout_items i join psychologists p on p.user_id = i.psychologist_user_id where i.source_type = 'sos' and i.backfilled group by p.full_name;`
 - **Registrado em:** 2026-10-04.
 
-### 4. Configurar o TURN das chamadas de vídeo
+### 5. Configurar o TURN das chamadas de vídeo
 
 - **Onde:** secrets das edge functions (função `ice-servers`).
 - **Por quê:** sem TURN, a chamada de vídeo (SOS e consulta) não conecta quando um dos lados está em rede que bloqueia conexão direta: muitas redes 4G/5G (NAT da operadora) e redes corporativas. Estimativa comum: 10% a 20% das chamadas. O app já está pronto; falta a conta.
@@ -40,7 +48,7 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 - **Como testar:** fazer uma chamada com um lado no 4G e o outro numa rede corporativa ou de outra operadora e confirmar que o vídeo conecta.
 - **Registrado em:** 2026-10-04.
 
-### 5. Ajustes de segurança no painel do Supabase (Authentication)
+### 6. Ajustes de segurança no painel do Supabase (Authentication)
 
 - **Onde:** Supabase → Authentication → Policies/Settings (não dá para configurar pelo código).
 - **O que fazer:**
@@ -52,17 +60,17 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 
 ## Melhorias sugeridas
 
-### 6. SOS por mensagem de texto
+### 7. SOS por mensagem de texto
 
 - Apps como Crisis Text Line e o chat do CVV atendem por texto: muita gente em crise não consegue falar (está em casa com outras pessoas, no trabalho, sem voz). Hoje o SOS do Soliv é só por vídeo (dá para desligar a câmera, mas não para falar sem voz).
 - **Registrado em:** 2026-10-04.
 
-### 7. Triagem rápida de risco no SOS
+### 8. Triagem rápida de risco no SOS
 
 - Antes de entrar na fila, 1 ou 2 perguntas (ex.: "Você está pensando em se machucar agora?"). Se sim: mostrar CVV 188 e SAMU 192 em destaque e marcar o pedido como prioritário para o psicólogo. É o que fazem serviços como o 988 e o Wysa.
 - **Registrado em:** 2026-10-04.
 
-### 8. Plano pós-crise para o paciente
+### 9. Plano pós-crise para o paciente
 
 - Ao fim do SOS, o psicólogo registra notas só para ele. Serviços de crise costumam deixar com a pessoa um resumo curto e combinados ("o que fazer nas próximas 24h", "procure atendimento se..."), que poderiam virar parte do plano de segurança.
 - **Registrado em:** 2026-10-04.

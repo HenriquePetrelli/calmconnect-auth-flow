@@ -71,7 +71,7 @@ where action = 'sos_safety_plan_viewed' order by created_at desc limit 20;
 
 ## Pendências
 
-- **Sugestão de produto** (pendência 8): plano pós-crise que o psicólogo deixa com o paciente ao fim do SOS.
+- **Sugestão de produto** (pendência 9): plano pós-crise que o psicólogo deixa com o paciente ao fim do SOS.
 
 ## Problemas comuns
 

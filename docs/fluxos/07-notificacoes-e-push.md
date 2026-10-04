@@ -79,7 +79,7 @@ order by start_time desc limit 5;
 
 ## Pendências
 
-- **Conferir a configuração do Firebase** (pendência 2): variáveis `VITE_FIREBASE_*` do app e a conta de serviço nos secrets (`FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`). Sem isso, o botão de push some e tudo continua só no app. Passo a passo em `docs/push-notifications-setup.md`.
+- **Conferir a configuração do Firebase** (pendência 3): variáveis `VITE_FIREBASE_*` do app e a conta de serviço nos secrets (`FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`). Sem isso, o botão de push some e tudo continua só no app. Passo a passo em `docs/push-notifications-setup.md`.
 - Ainda não foi testado num celular real com o app fechado.
 
 ## Problemas comuns
