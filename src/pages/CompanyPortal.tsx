@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Skeleton } from '@/components/ui/skeleton';
+import { CompanyPortalBodySkeleton } from '@/components/skeletons/PageSkeletons';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -119,7 +119,7 @@ const CompanyPortal = () => {
 
         <main className="w-full min-w-0 p-4 space-y-5 max-w-2xl mx-auto">
           {loading || membershipLoading ? (
-            <Skeleton className="h-64 w-full rounded-2xl" />
+            <CompanyPortalBodySkeleton />
           ) : !orgId || !data ? (
             <div className="space-y-3">
               <p className="text-foreground">Você não é gestor de nenhuma empresa no Soliv.</p>

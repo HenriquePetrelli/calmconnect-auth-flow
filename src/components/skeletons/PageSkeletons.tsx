@@ -129,6 +129,427 @@ export const HomeSkeleton = () => (
   </div>
 );
 
+/** Cartão de abertura com ícone, título, texto e campo de busca (Respiração, Sons). */
+const SearchHeroSkeleton = () => (
+  <Card className="border-border/60">
+    <CardContent className="p-4 space-y-4">
+      <div className="flex items-start gap-3">
+        <Skeleton className="h-10 w-10 rounded-xl shrink-0" />
+        <div className="flex-1 space-y-2">
+          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="h-3 w-full" />
+          <Skeleton className="h-3 w-2/3" />
+        </div>
+      </div>
+      <Skeleton className="h-10 w-full rounded-lg" />
+    </CardContent>
+  </Card>
+);
+
+/** Título de seção com subtítulo (ex.: "Técnicas de respiração"). */
+const SectionTitleSkeleton = ({ trailing = false }: { trailing?: boolean }) => (
+  <div className="flex items-end justify-between gap-4">
+    <div className="space-y-1.5">
+      <Skeleton className="h-4 w-40" />
+      <Skeleton className="h-3 w-48" />
+    </div>
+    {trailing && <Skeleton className="h-3 w-16" />}
+  </div>
+);
+
+/** Respiração guiada: abertura com busca, filtros e cartões de técnica. */
+export const BreathingBodySkeleton = () => (
+  <>
+    <SearchHeroSkeleton />
+    <div className="flex flex-wrap gap-2">
+      {[14, 16, 20, 24].map((w, i) => (
+        <Skeleton key={i} className="h-8 rounded-full" style={{ width: `${w * 4}px` }} />
+      ))}
+    </div>
+    <SectionTitleSkeleton trailing />
+    <div className="space-y-3">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <Card key={i} className="border-border/60">
+          <CardContent className="flex items-start gap-3 p-4">
+            <Skeleton className="h-11 w-11 rounded-xl shrink-0" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-4 w-1/2" />
+              <Skeleton className="h-3 w-full" />
+              <Skeleton className="h-4 w-28 rounded-full" />
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  </>
+);
+
+/** Sons terapêuticos: abertura com busca e cartões grandes de categoria. */
+export const SoundsBodySkeleton = () => (
+  <>
+    <SearchHeroSkeleton />
+    <SectionTitleSkeleton />
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <Card key={i} className="border-border/60">
+          <CardContent className="space-y-3 p-5">
+            <Skeleton className="h-10 w-10 rounded-xl" />
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-3 w-48" />
+            <Skeleton className="h-3 w-12" />
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  </>
+);
+
+/** Comer com atenção: um cartão centralizado com ícone, texto e botão. */
+export const MindfulEatingBodySkeleton = () => (
+  <Card className="border-border/60">
+    <CardContent className="flex flex-col items-center gap-3 p-6">
+      <Skeleton className="h-8 w-8 rounded-full" />
+      <Skeleton className="h-5 w-48" />
+      <div className="w-full space-y-2">
+        <Skeleton className="mx-auto h-3 w-full" />
+        <Skeleton className="mx-auto h-3 w-5/6" />
+        <Skeleton className="mx-auto h-3 w-2/3" />
+      </div>
+      <Skeleton className="h-10 w-full rounded-lg" />
+    </CardContent>
+  </Card>
+);
+
+/** Adicionar hábito: grupos com título e cartões de tipo de hábito. */
+export const HabitCatalogSkeleton = () => (
+  <>
+    {[4, 2].map((rows, g) => (
+      <section key={g} className="space-y-2">
+        <Skeleton className="h-3 w-24" />
+        {Array.from({ length: rows }).map((_, i) => (
+          <div key={i} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm">
+            <Skeleton className="h-11 w-11 rounded-xl shrink-0" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-3 w-full" />
+            </div>
+            <Skeleton className="h-4 w-4 rounded shrink-0" />
+          </div>
+        ))}
+      </section>
+    ))}
+  </>
+);
+
+/** Formulário de um hábito: cartão do tipo, campos, lembretes e botão. */
+export const HabitFormSkeleton = () => (
+  <>
+    <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4">
+      <Skeleton className="h-11 w-11 rounded-xl shrink-0" />
+      <div className="flex-1 space-y-2">
+        <Skeleton className="h-4 w-28" />
+        <Skeleton className="h-3 w-full" />
+      </div>
+    </div>
+    {Array.from({ length: 3 }).map((_, i) => (
+      <div key={i} className="space-y-2">
+        <Skeleton className="h-3 w-24" />
+        <Skeleton className="h-10 w-full rounded-lg" />
+      </div>
+    ))}
+    <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-6 w-11 rounded-full" />
+      </div>
+      <Skeleton className="h-3 w-full" />
+      <Skeleton className="h-10 w-full rounded-lg" />
+    </div>
+    <Skeleton className="h-11 w-full rounded-lg" />
+  </>
+);
+
+/** Detalhe de um hábito: anel do dia com registros rápidos, histórico e lembrete. */
+export const HabitDetailSkeleton = () => (
+  <>
+    <div className="flex flex-col items-center gap-4 rounded-2xl border border-border bg-card p-5">
+      <Skeleton className="h-36 w-36 rounded-full" />
+      <Skeleton className="h-4 w-40" />
+      <div className="grid w-full grid-cols-3 gap-2">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={i} className="h-11 rounded-xl" />
+        ))}
+      </div>
+    </div>
+    <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
+      <Skeleton className="h-4 w-32" />
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className="flex items-center justify-between">
+          <Skeleton className="h-3 w-1/3" />
+          <Skeleton className="h-3 w-12" />
+        </div>
+      ))}
+    </div>
+    <Skeleton className="h-12 w-full rounded-xl" />
+  </>
+);
+
+/** Portal da empresa: empresa e vagas, convite, uso do mês e desligamento. */
+export const CompanyPortalBodySkeleton = () => (
+  <>
+    {[3, 3, 3, 2].map((lines, i) => (
+      <div key={i} className="space-y-3 rounded-2xl border border-border bg-card p-5">
+        <Skeleton className="h-5 w-40" />
+        {Array.from({ length: lines }).map((_, j) => (
+          <Skeleton key={j} className={j === lines - 1 ? "h-10 w-full rounded-lg" : "h-3 w-3/4"} />
+        ))}
+      </div>
+    ))}
+  </>
+);
+
+/** Editor do plano de segurança: texto de abertura, partes do plano e CVV. */
+export const SafetyPlanEditorSkeleton = () => (
+  <>
+    <div className="space-y-2">
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-5/6" />
+      <Skeleton className="h-3 w-full" />
+      <Skeleton className="h-3 w-2/3" />
+    </div>
+    <div className="space-y-3">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <Skeleton key={i} className="h-14 w-full" />
+      ))}
+    </div>
+    <Skeleton className="h-20 w-full rounded-xl" />
+  </>
+);
+
+/** Plano de segurança aberto para leitura. */
+export const SafetyPlanViewSkeleton = () => (
+  <div className="space-y-4">
+    <Skeleton className="h-24 w-full rounded-2xl" />
+    <Skeleton className="h-40 w-full rounded-2xl" />
+  </div>
+);
+
+/** Grupo de apoio: botão de sintomas, filtro e depoimentos. */
+export const SupportGroupDetailSkeleton = () => (
+  <>
+    <Skeleton className="mx-auto h-8 w-32 rounded-lg" />
+    <Skeleton className="h-10 w-full rounded-lg" />
+    <div className="space-y-4">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <Card key={i} className="border-border/60">
+          <CardContent className="space-y-3 p-5">
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-10 w-10 rounded-full" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-3 w-24" />
+              </div>
+            </div>
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  </>
+);
+
+/** Volta do checkout: cartão centralizado com ícone, título, lista e botão. */
+export const SubscriptionResultSkeleton = () => (
+  <div className="flex min-h-screen items-center justify-center bg-background p-4" aria-busy="true" aria-label="Carregando">
+    <Card className="w-full max-w-md border-border/60">
+      <CardContent className="flex flex-col items-center gap-3 p-6">
+        <Skeleton className="h-12 w-12 rounded-full" />
+        <Skeleton className="h-5 w-48" />
+        <Skeleton className="h-3 w-56" />
+        <div className="w-full space-y-2 rounded-lg bg-muted/40 p-4">
+          <Skeleton className="h-4 w-40" />
+          <Skeleton className="h-3 w-full" />
+          <Skeleton className="h-3 w-5/6" />
+          <Skeleton className="h-3 w-4/6" />
+        </div>
+        <Skeleton className="h-10 w-full rounded-lg" />
+      </CardContent>
+    </Card>
+  </div>
+);
+
+/** Categoria ou playlist de sons: descrição, total com "Reproduzir todos" e a lista. */
+export const SoundListSkeleton = ({ withDescription = true }: { withDescription?: boolean }) => (
+  <>
+    {withDescription && <IntroLinesSkeleton lines={2} />}
+    <div className="flex items-center justify-between">
+      <div className="space-y-1.5">
+        <Skeleton className="h-5 w-8" />
+        <Skeleton className="h-3 w-24" />
+      </div>
+      <Skeleton className="h-9 w-40 rounded-full" />
+    </div>
+    <div className="space-y-3">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <Card key={i} className="border-border/60">
+          <CardContent className="flex items-center gap-3 p-3">
+            <Skeleton className="h-10 w-10 rounded-lg shrink-0" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-3 w-40" />
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  </>
+);
+
+/** Player de som: visual redondo, nome, barra de tempo, play e ambientes. */
+export const SoundPlayerSkeleton = () => (
+  <div className="flex flex-col items-center gap-4">
+    <Skeleton className="aspect-square w-full max-w-[280px] rounded-full" />
+    <Skeleton className="h-5 w-32" />
+    <Skeleton className="h-3 w-24" />
+    <Skeleton className="h-2 w-full rounded-full" />
+    <Skeleton className="h-12 w-12 rounded-full" />
+    <div className="grid w-full grid-cols-2 gap-2">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <Skeleton key={i} className="h-8 rounded-lg" />
+      ))}
+    </div>
+    <Skeleton className="h-9 w-full rounded-lg" />
+  </div>
+);
+
+/** Fim de um som: cartão centralizado com ícone, pergunta e dois botões. */
+export const SoundFeedbackSkeleton = () => (
+  <div className="flex min-h-screen items-center justify-center bg-background p-6 pb-24" aria-busy="true" aria-label="Carregando">
+    <Card className="w-full max-w-md border-border/60">
+      <CardContent className="flex flex-col items-center gap-3 p-6">
+        <Skeleton className="h-14 w-14 rounded-full" />
+        <Skeleton className="h-5 w-44" />
+        <Skeleton className="h-3 w-48" />
+        <Skeleton className="mt-2 h-10 w-full rounded-lg" />
+        <Skeleton className="h-10 w-full rounded-lg" />
+      </CardContent>
+    </Card>
+  </div>
+);
+
+/** Meu Diário: cartão de filtros por humor e as anotações. */
+export const JournalBodySkeleton = () => (
+  <>
+    <Card className="border-border/60">
+      <CardContent className="space-y-3 p-3">
+        <Skeleton className="h-9 w-full rounded-lg" />
+        <div className="flex gap-2">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-8 w-10 rounded-lg" />
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+    {Array.from({ length: 3 }).map((_, i) => (
+      <div key={i} className="space-y-3">
+        <Skeleton className="h-4 w-1/3" />
+        <Skeleton className="h-20 w-full" />
+        <Skeleton className="h-4 w-1/4" />
+      </div>
+    ))}
+  </>
+);
+
+/** Suporte: formulário e o cartão "Informações importantes". */
+export const SupportBodySkeleton = () => (
+  <>
+    <FormCardSkeleton fields={3} />
+    <Card className="border-border/60">
+      <CardContent className="space-y-2 p-4">
+        <Skeleton className="h-4 w-44" />
+        <Skeleton className="h-3 w-3/4" />
+        <Skeleton className="h-3 w-2/3" />
+        <Skeleton className="h-3 w-4/5" />
+      </CardContent>
+    </Card>
+  </>
+);
+
+/** Questionário (GAD-7/PHQ-9): introdução e perguntas com 4 opções. */
+export const QuestionnaireFormSkeleton = () => (
+  <>
+    <IntroLinesSkeleton lines={3} />
+    <Skeleton className="h-4 w-3/4" />
+    {Array.from({ length: 3 }).map((_, i) => (
+      <Card key={i} className="border-border/60">
+        <CardContent className="space-y-3 p-4">
+          <Skeleton className="h-4 w-4/5" />
+          <div className="grid grid-cols-2 gap-2">
+            {Array.from({ length: 4 }).map((_, j) => (
+              <Skeleton key={j} className="h-10 rounded-lg" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    ))}
+  </>
+);
+
+/** Planos de assinatura: título, plano atual e os cartões de plano com preço. */
+export const SubscriptionPlansBodySkeleton = () => (
+  <>
+    <div className="flex flex-col items-center gap-2">
+      <Skeleton className="h-6 w-44" />
+      <Skeleton className="h-3 w-64" />
+      <Skeleton className="h-3 w-48" />
+    </div>
+    <Card className="border-border/60">
+      <CardContent className="flex flex-col items-center gap-3 p-5">
+        <Skeleton className="h-9 w-44 rounded-lg" />
+        <Skeleton className="h-3 w-32" />
+        <Skeleton className="h-9 w-full rounded-lg" />
+      </CardContent>
+    </Card>
+    {Array.from({ length: 2 }).map((_, i) => (
+      <Card key={i} className="border-border/60">
+        <CardContent className="flex flex-col items-center gap-3 p-5">
+          <Skeleton className="h-5 w-24" />
+          <Skeleton className="h-7 w-36" />
+          <div className="w-full space-y-2 pt-1">
+            {Array.from({ length: 4 }).map((_, j) => (
+              <div key={j} className="flex items-center gap-2">
+                <Skeleton className="h-4 w-4 rounded-full shrink-0" />
+                <Skeleton className="h-3 w-3/5" />
+              </div>
+            ))}
+          </div>
+          <Skeleton className="h-10 w-full rounded-lg" />
+        </CardContent>
+      </Card>
+    ))}
+  </>
+);
+
+/** Grupos de apoio: frase de abertura e cartões de grupo. */
+export const SupportGroupsBodySkeleton = () => (
+  <div className="space-y-6">
+    <Skeleton className="mx-auto h-4 w-3/4" />
+    <div className="space-y-4">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <Card key={i} className="border-border/60">
+          <CardContent className="space-y-3 p-6">
+            <Skeleton className="h-6 w-3/4" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  </div>
+);
+
 /** Perfil do paciente: identidade, Meu plano e as seções de opções. */
 const ProfileRowsSkeleton = ({ rows }: { rows: number }) => (
   <div className="space-y-2">

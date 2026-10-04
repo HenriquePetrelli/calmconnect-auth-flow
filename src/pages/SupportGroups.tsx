@@ -6,6 +6,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Heart, Info, ChevronDown, ChevronRight, Users } from 'lucide-react';
 import { useSupportGroups, useGroupSymptoms } from '@/hooks/useSupportGroups';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SupportGroupsBodySkeleton } from '@/components/skeletons/PageSkeletons';
 import { Badge } from '@/components/ui/badge';
 import PatientBottomNav from '@/components/PatientBottomNav';
 import PageHeader from '@/components/PageHeader';
@@ -140,22 +141,7 @@ const SupportGroups = () => {
         <div className="screen">
           <PageHeader title="Grupos de Apoio" backTo="/home" />
           <main className="container mx-auto px-4 py-6">
-            <div className="space-y-6">
-              <div className="text-center space-y-2">
-                <Skeleton className="h-4 w-96 mx-auto" />
-              </div>
-              <div className="space-y-4">
-                {[...Array(6)].map((_, i) => (
-                  <Card key={i}>
-                    <CardHeader>
-                      <Skeleton className="h-6 w-3/4" />
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-10 w-full" />
-                    </CardHeader>
-                  </Card>
-                ))}
-              </div>
-            </div>
+            <SupportGroupsBodySkeleton />
           </main>
         </div>
         <PatientBottomNav />

@@ -35,3 +35,27 @@ describe('skeleton de cada tela', () => {
     expect(screen.getByText('Questionários do mês')).toBeInTheDocument();
   });
 });
+
+describe('skeleton das telas internas do paciente', () => {
+  it.each([
+    ['/habitos/novo', 'Adicionar hábito'],
+    ['/habitos/novo/water', 'Beber água'],
+    ['/habitos/abc/editar', 'Editar hábito'],
+    ['/questionarios/gad7', 'Ansiedade (GAD-7)'],
+    ['/questionarios/phq9', 'Humor (PHQ-9)'],
+    ['/safety-plan/novo', 'Novo plano de segurança'],
+    ['/safety-plan/abc', 'Editar plano de segurança'],
+    ['/safety-plan/abc/ver', 'Plano de segurança'],
+    ['/sounds/category/sleep', 'Para Dormir'],
+    ['/sounds/subcategory/nature', 'Sons da Natureza'],
+    ['/sounds/player/sleep-1', '432 Hz'],
+    ['/support-group/x', 'Grupo de Apoio'],
+  ])('%s mostra o título da tela (%s)', (path, title) => {
+    render(
+      <MemoryRouter initialEntries={[path]}>
+        <RouteSkeleton />
+      </MemoryRouter>,
+    );
+    expect(screen.getByText(title)).toBeInTheDocument();
+  });
+});

@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
-import { Skeleton } from '@/components/ui/skeleton';
+import { HabitDetailSkeleton } from '@/components/skeletons/PageSkeletons';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -577,9 +577,9 @@ const HabitDetail = () => {
           />
         </div>
 
-        <main className="p-4 space-y-4 max-w-2xl mx-auto">
+        <main className="w-full p-4 space-y-4 max-w-2xl mx-auto">
           {loading ? (
-            <Skeleton className="h-64 w-full rounded-2xl" />
+            <HabitDetailSkeleton />
           ) : !habit ? (
             <div className="space-y-3">
               <p className="text-foreground">Este hábito não está mais na sua lista.</p>

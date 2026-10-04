@@ -36,7 +36,7 @@ const Habits = () => {
           <PageHeader title="Meus hábitos" backTo="/home" />
         </div>
 
-        <main className="p-4 space-y-6 max-w-2xl mx-auto">
+        <main className="w-full p-4 space-y-6 max-w-2xl mx-auto">
           <p className="text-sm text-muted-foreground">
             Pequenos passos todos os dias. Só você vê os seus hábitos.
           </p>

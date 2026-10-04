@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
-import { Skeleton } from '@/components/ui/skeleton';
+import { HabitCatalogSkeleton, HabitFormSkeleton } from '@/components/skeletons/PageSkeletons';
 import PageHeader from '@/components/PageHeader';
 import PatientBottomNav from '@/components/PatientBottomNav';
 import HabitForm from '@/components/habits/HabitForm';
@@ -88,9 +88,9 @@ const HabitSetup = () => {
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm">
           <PageHeader title={title} backTo={editing ? `/habitos/${editing.id}` : kind ? '/habitos/novo' : '/habitos'} />
         </div>
-        <main className="p-4 space-y-6 max-w-2xl mx-auto">
+        <main className="w-full p-4 space-y-6 max-w-2xl mx-auto">
           {loading ? (
-            <Skeleton className="h-64 w-full rounded-2xl" />
+            kind || habitId ? <HabitFormSkeleton /> : <HabitCatalogSkeleton />
           ) : habitId && !editing ? (
             <p className="text-foreground">Este hábito não está mais na sua lista.</p>
           ) : kind ? (
