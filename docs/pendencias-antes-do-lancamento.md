@@ -69,7 +69,7 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 - **O que fazer:**
   1. Tamanho mínimo de senha: 8 (o app já exige 8 com letras e números nas contas novas; o servidor ainda aceita 6 de quem chamar a API direto).
   2. Ativar "Leaked password protection" (recusa senhas que já vazaram na internet).
-  3. Confirmar que "Confirm email" está ligado.
+  3. "Confirm email": **não ligar ainda.** O cadastro do psicólogo precisa estar logado logo depois de criar a conta (para enviar o documento e criar o perfil); com "Confirm email" ligado não há login nesse momento e o cadastro falha. Antes de ligar, mudar o cadastro do psicólogo para enviar o documento por uma edge function (pedir ao Claude). Ligar também depende do domínio (pendência 2), porque o e-mail de confirmação precisa chegar.
   4. Ativar a verificação em duas etapas (MFA) para as contas de admin.
 - **Registrado em:** 2026-10-04.
 

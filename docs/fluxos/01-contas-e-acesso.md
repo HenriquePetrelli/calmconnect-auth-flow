@@ -15,7 +15,7 @@ Existem três perfis: **paciente**, **psicólogo** e **admin**. O paciente se ca
 | `/` | Login |
 | `/signup-type` | Escolha entre paciente e psicólogo |
 | `/patient-signup` | Cadastro do paciente |
-| `/psychologist-signup` | Cadastro do psicólogo (com envio de documento) |
+| `/psychologist-signup` | Cadastro do psicólogo (com envio de documento: a conta é criada primeiro e o documento vai para a pasta da pessoa no bucket `documents`) |
 | `/reset-password` | Nova senha (link enviado por e-mail) |
 | `/profile`, `/account-settings` | Perfil e "Alterar dados da conta" do paciente |
 | `/psychologist-profile` | Perfil do psicólogo |
@@ -73,8 +73,9 @@ Desativa o push daquele aparelho e encerra a sessão em todos os aparelhos. Se o
 3. **Recuperar senha**: pedir o link, abrir, definir a nova senha, entrar com ela.
 4. **Sair** → volta para o login; voltar no navegador não reabre a área logada.
 5. **Cadastro de psicólogo** → tentar entrar → "em análise". Aprovar no admin → entrar → painel do psicólogo.
-6. **Bloqueio**: o admin bloqueia um paciente por 1 dia → o paciente vê o motivo ao entrar. Desbloquear → entra normalmente.
-7. **Rotas**: logado como paciente, abrir `/admin-dashboard` → é redirecionado.
+6. **Documento do psicólogo**: cadastrar com um PNG ou PDF → cadastro concluído e o admin abre o documento. Escolher um arquivo `.docx` ou de 6 MB → o campo fica vermelho com o motivo e o cadastro não é enviado.
+7. **Bloqueio**: o admin bloqueia um paciente por 1 dia → o paciente vê o motivo ao entrar. Desbloquear → entra normalmente.
+8. **Rotas**: logado como paciente, abrir `/admin-dashboard` → é redirecionado.
 
 ### Testes automáticos
 `loginForm`, `signOut`, `resetPassword`, `password`, `legal`, `sintomas`, `psychologistOfflineOnSignOut`, `adminNav`. Rodar com `npx vitest run src/test/loginForm.test.tsx` (e os demais).

@@ -16,13 +16,15 @@ export interface PsychologistFormData {
   address?: string;
 }
 
+/** Falha ao enviar o documento (a tela marca o campo do arquivo). */
+class DocumentUploadError extends Error {}
+
 export class PsychologistService {
   static async signUpPsychologist(
     formData: PsychologistFormData,
     documentFile?: File
-  ): Promise<{ success: boolean; error?: string }> {
+  ): Promise<{ success: boolean; error?: string; documentError?: boolean }> {
     let userId: string | null = null;
-    let documentUrl = '';
     
     try {
       // 1. Validar dados antes de qualquer operação
@@ -41,15 +43,9 @@ export class PsychologistService {
         return { success: false, error: documentValidation.error };
       }
 
-      // 3. Upload do documento ANTES de criar usuário para evitar dados órfãos
-      const tempUserId = uuidv4(); // Usar ID temporário para upload
-      const uploadResult = await this.uploadDocument(documentFile, tempUserId);
-      if (!uploadResult.success) {
-        return { success: false, error: uploadResult.error };
-      }
-      documentUrl = uploadResult.url || '';
-
-      // 4. Criar usuário no Auth somente após validações
+      // 3. Criar a conta primeiro. O documento só pode ir para a pasta da
+      //    própria pessoa logada (regra do armazenamento); antes ele era
+      //    enviado sem login, numa pasta temporária, e todo envio falhava.
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -68,15 +64,24 @@ export class PsychologistService {
       });
 
       if (authError || !authData.user) {
-        // Limpar documento se falhou na criação do usuário
-        await this.cleanupTempDocument(tempUserId);
         throw new Error(authError?.message || 'Falha ao criar usuário');
       }
 
       userId = authData.user.id;
 
-      // 5. Mover documento para pasta do usuário real
-      const finalDocumentUrl = await this.moveDocumentToUserFolder(documentUrl, tempUserId, userId);
+      // O envio do documento e o perfil precisam da pessoa logada. Se o
+      // Supabase exigir confirmação de e-mail antes do primeiro acesso, não
+      // há sessão aqui (ver docs/pendencias-antes-do-lancamento.md).
+      if (!authData.session) {
+        throw new Error('Não foi possível concluir o cadastro agora. Tente de novo em alguns minutos.');
+      }
+
+      // 4. Enviar o documento para a pasta da pessoa.
+      const uploadResult = await this.uploadDocument(documentFile, userId);
+      if (!uploadResult.success) {
+        throw new DocumentUploadError(uploadResult.error || 'Falha no upload do documento. Tente novamente.');
+      }
+      const finalDocumentUrl = uploadResult.url || '';
 
       // 6. Criar perfil completo em transação
       const { data: profileResult, error: dbError } = await supabase.rpc('create_psychologist_profile', {
@@ -115,6 +120,9 @@ export class PsychologistService {
         await this.cleanupFailedSignup(userId);
       }
 
+      if (error instanceof DocumentUploadError) {
+        return { success: false, error: error.message, documentError: true };
+      }
       return {
         success: false,
         error: this.getUserFriendlyError(error),
@@ -127,7 +135,7 @@ export class PsychologistService {
     userId: string
   ): Promise<{ success: boolean; url?: string; error?: string }> {
     try {
-      const fileExt = file.name.split('.').pop();
+      const fileExt = (file.name.split('.').pop() || 'pdf').toLowerCase();
       const fileName = `${uuidv4()}.${fileExt}`;
       const filePath = `${userId}/${fileName}`;
 
@@ -147,9 +155,10 @@ export class PsychologistService {
 
       return { success: true, url: publicUrl };
     } catch (error) {
+      console.error('Erro ao enviar documento:', error);
       return {
         success: false,
-        error: 'Falha no upload do documento. Tente novamente.',
+        error: 'Não foi possível enviar o documento. Confira se é PDF, JPG ou PNG de até 5 MB e tente de novo.',
       };
     }
   }
@@ -202,72 +211,11 @@ export class PsychologistService {
         console.warn('Erro ao chamar função de cleanup:', authError);
       }
 
+      // A conta foi apagada: sai da sessão criada no cadastro.
+      await supabase.auth.signOut({ scope: 'local' });
       console.log('Cleanup concluído para usuário:', userId);
     } catch (cleanupError) {
       console.error('Erro no cleanup:', cleanupError);
-    }
-  }
-
-  private static async cleanupTempDocument(tempUserId: string): Promise<void> {
-    try {
-      const { data: files } = await supabase.storage
-        .from('documents')
-        .list(tempUserId);
-      
-      if (files && files.length > 0) {
-        const filesToRemove = files.map(f => `${tempUserId}/${f.name}`);
-        await supabase.storage
-          .from('documents')
-          .remove(filesToRemove);
-      }
-    } catch (error) {
-      console.error('Erro ao limpar documento temporário:', error);
-    }
-  }
-
-  private static async moveDocumentToUserFolder(
-    documentUrl: string, 
-    tempUserId: string, 
-    realUserId: string
-  ): Promise<string> {
-    try {
-      // Extrair o nome do arquivo da URL
-      const urlParts = documentUrl.split('/');
-      const fileName = urlParts[urlParts.length - 1];
-      const tempPath = `${tempUserId}/${fileName}`;
-      const newPath = `${realUserId}/${fileName}`;
-
-      // Baixar o arquivo da pasta temporária
-      const { data: fileData, error: downloadError } = await supabase.storage
-        .from('documents')
-        .download(tempPath);
-
-      if (downloadError) throw downloadError;
-
-      // Upload para a pasta do usuário real
-      const { error: uploadError } = await supabase.storage
-        .from('documents')
-        .upload(newPath, fileData, {
-          cacheControl: '3600',
-          upsert: false,
-        });
-
-      if (uploadError) throw uploadError;
-
-      // Remover arquivo temporário
-      await supabase.storage
-        .from('documents')
-        .remove([tempPath]);
-
-      // Retornar nova URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('documents')
-        .getPublicUrl(newPath);
-
-      return publicUrl;
-    } catch (error) {
-      console.error('Erro ao mover documento:', error);
-      return documentUrl; // Retornar URL original em caso de erro
     }
   }
 

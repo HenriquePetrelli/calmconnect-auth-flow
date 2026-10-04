@@ -87,6 +87,8 @@ const PsychologistSignUpPublic = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [documentFile, setDocumentFile] = useState<File | null>(null);
+  // Erro do arquivo (inválido ou envio recusado): o campo fica vermelho.
+  const [documentError, setDocumentError] = useState<string | null>(null);
   const [isAreasModalOpen, setIsAreasModalOpen] = useState(false);
   const [consents, setConsents] = useState(EMPTY_CONSENTS);
   const [showConsentErrors, setShowConsentErrors] = useState(false);
@@ -144,9 +146,11 @@ const PsychologistSignUpPublic = () => {
       );
 
       if (result.success) {
+        setDocumentError(null);
         setIsSuccess(true);
         toast.success("Cadastro enviado! Verifique seu email para confirmar a conta.");
       } else {
+        if (result.documentError) setDocumentError(result.error || "Não foi possível enviar o documento.");
         toast.error(result.error || "Erro ao criar conta. Tente novamente.");
       }
     } catch (error) {
@@ -164,11 +168,15 @@ const PsychologistSignUpPublic = () => {
       // Validar arquivo
       const validation = PsychologistService.validateFile(file);
       if (!validation.valid) {
+        setDocumentFile(null);
+        setDocumentError(validation.error || "Arquivo inválido");
+        e.target.value = "";
         toast.error(validation.error || "Arquivo inválido");
         return;
       }
-      
+
       setDocumentFile(file);
+      setDocumentError(null);
     }
   };
 
@@ -382,16 +390,21 @@ const PsychologistSignUpPublic = () => {
                     accept=".pdf,.jpg,.jpeg,.png"
                     onChange={handleFileChange}
                     required
-                    className="w-full"
+                    aria-invalid={Boolean(documentError)}
+                    className={`w-full ${documentError ? "border-destructive" : ""}`}
                   />
                   <FormDescription>
                     Envie documento de identidade, CNH ou CRP (PDF, JPG ou PNG - máx. 5MB)
                   </FormDescription>
-                  {documentFile && (
-                    <p className="text-sm text-success">
-                      Arquivo selecionado: {documentFile.name}
+                  {documentError ? (
+                    <p role="alert" className="text-sm text-destructive">
+                      {documentFile ? `${documentFile.name}: ` : ""}{documentError}
                     </p>
-                  )}
+                  ) : documentFile ? (
+                    <p className="text-sm text-muted-foreground">
+                      Arquivo escolhido: {documentFile.name}. Ele é enviado ao tocar em Cadastrar.
+                    </p>
+                  ) : null}
                 </div>
 
                 <FormField
