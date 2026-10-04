@@ -2087,7 +2087,6 @@ export type Database = {
         Row: {
           appointments_last_used: string | null
           appointments_used_this_month: boolean
-          cancel_at_period_end: boolean
           created_at: string
           current_usage: Json | null
           email: string
@@ -2107,7 +2106,6 @@ export type Database = {
         Insert: {
           appointments_last_used?: string | null
           appointments_used_this_month?: boolean
-          cancel_at_period_end?: boolean
           created_at?: string
           current_usage?: Json | null
           email: string
@@ -2127,7 +2125,6 @@ export type Database = {
         Update: {
           appointments_last_used?: string | null
           appointments_used_this_month?: boolean
-          cancel_at_period_end?: boolean
           created_at?: string
           current_usage?: Json | null
           email?: string
@@ -2677,7 +2674,6 @@ export type Database = {
         }
         Returns: Json
       }
-      expire_cancelled_subscriptions: { Args: never; Returns: number }
       expire_organization_entitlements: { Args: never; Returns: number }
       finalize_stale_appointments: { Args: never; Returns: number }
       finalize_stale_emergency_sessions: {
