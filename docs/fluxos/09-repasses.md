@@ -44,7 +44,7 @@ O admin paga por PIX fora do app e registra no painel com o **código E2E do PIX
 - **Telas e componentes**: `src/pages/PsychologistPayments.tsx`; em `src/components/payments/`: `PaymentsPanel`, `ConfirmPayoutDialog`, `PaymentDetailsModal`, `PayoutHistory`.
 - **Hooks**: `usePayments`.
 - **Edge functions**: `payment-sync` (admin ou rotina agendada), `confirm-payment`.
-- **Banco**: `payout_items`, `psychologist_payments`, `payment_logs`; bucket `payment-receipts`. Funções: `sync_psychologist_payments`, `appointment_call_connected`, `sos_call_connected`; gatilho `sync_payment_pix_key`. Migração: `20261004240000_consultas_repasses_fixes.sql`.
+- **Banco**: `payout_items`, `psychologist_payments`, `payment_logs`; bucket `payment-receipts`. Funções: `sync_psychologist_payments`, `appointment_call_connected`, `sos_call_connected`; gatilho `sync_payment_pix_key`. Migração: `20261004000247_cf325ceb-bcdc-471c-9aa3-6bdeea596c98.sql`.
 
 ## Como validar
 
