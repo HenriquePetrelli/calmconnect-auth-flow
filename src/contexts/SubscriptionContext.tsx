@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -78,7 +78,13 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [extraSubscriptions, setExtraSubscriptions] = useState(0);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, userType } = useAuth();
+  // Assinatura é só de paciente. Psicólogo, admin e conta em análise (que a
+  // tela de login desconecta logo em seguida) não consultam o Stripe.
+  const patientId = user && userType === 'patient' ? user.id : null;
+  const isPatient = patientId !== null;
+  const activeUserId = useRef<string | null>(null);
+  activeUserId.current = patientId;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const applySubscriptionData = (raw: any) => {
@@ -104,15 +110,22 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const checkSubscription = async () => {
     try {
-      if (!user) {
+      const userId = activeUserId.current;
+      if (!user || !userId) {
         setLoading(false);
         return;
       }
 
       const { data, error } = await supabase.functions.invoke('check-subscription');
-      
+
+      // Saiu da conta (ou trocou de conta) enquanto a conferência rodava: a
+      // resposta não vale mais e a falha esperada não é mostrada como erro.
+      if (activeUserId.current !== userId) return;
+
       if (error) {
-        console.error('Error checking subscription:', error);
+        const { data: current } = await supabase.auth.getSession();
+        if (current.session?.user.id !== userId || activeUserId.current !== userId) return;
+        console.warn('Error checking subscription:', error);
         toast({
           title: "Erro",
           description: "Erro ao verificar assinatura",
@@ -122,16 +135,16 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       }
 
       applySubscriptionData(data);
-      writeCachedSubscription(user.id, data);
+      writeCachedSubscription(userId, data);
     } catch (error) {
-      console.error('Error checking subscription:', error);
+      console.warn('Error checking subscription:', error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (!user) {
+    if (!patientId) {
       setSubscribed(false);
       setSubscriptionTier(null);
       setSubscriptionEnd(null);
@@ -154,36 +167,38 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     // Mostra na hora o último plano conhecido nesta sessão; a conferência no
     // Stripe (1-2s) roda em seguida e corrige se algo mudou. Só exibição: o
     // servidor confere o plano de novo em cada uso (SOS, agendamento).
-    const cached = readCachedSubscription(user.id);
+    const cached = readCachedSubscription(patientId);
     if (cached) {
       applySubscriptionData(cached);
       setLoading(false);
     }
 
     const scheduleCheck = () => checkSubscription();
-    const requestIdleCallback = (globalThis as typeof globalThis & {
-      requestIdleCallback?: (callback: () => void, options?: { timeout?: number }) => void;
-    }).requestIdleCallback;
+    const idle = globalThis as typeof globalThis & {
+      requestIdleCallback?: (callback: () => void, options?: { timeout?: number }) => number;
+      cancelIdleCallback?: (handle: number) => void;
+    };
 
-    if (requestIdleCallback) {
-      requestIdleCallback(scheduleCheck, { timeout: 1500 });
-      return;
+    if (idle.requestIdleCallback) {
+      const handle = idle.requestIdleCallback(scheduleCheck, { timeout: 1500 });
+      return () => idle.cancelIdleCallback?.(handle);
     }
 
     const timeout = globalThis.setTimeout(scheduleCheck, 500);
     return () => globalThis.clearTimeout(timeout);
-  }, [user?.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [patientId]);
 
   // Com o app aberto na hora em que o plano cancelado acaba, confere de novo
   // para trocar para o plano grátis sem precisar recarregar.
   useEffect(() => {
-    if (!user || !cancelAtPeriodEnd || !subscriptionEnd) return;
+    if (!isPatient || !cancelAtPeriodEnd || !subscriptionEnd) return;
     const ms = new Date(subscriptionEnd).getTime() - Date.now();
     if (ms < 0 || ms > 24 * 60 * 60 * 1000) return;
     const timeout = globalThis.setTimeout(() => checkSubscription(), ms + 1000);
     return () => globalThis.clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, cancelAtPeriodEnd, subscriptionEnd]);
+  }, [patientId, cancelAtPeriodEnd, subscriptionEnd]);
 
   return (
     <SubscriptionContext.Provider
