@@ -2346,6 +2346,7 @@ export type Database = {
       webrtc_sessions: {
         Row: {
           answer: Json | null
+          connected_at: string | null
           created_at: string
           emergency_request_id: string | null
           end_reason: string | null
@@ -2370,6 +2371,7 @@ export type Database = {
         }
         Insert: {
           answer?: Json | null
+          connected_at?: string | null
           created_at?: string
           emergency_request_id?: string | null
           end_reason?: string | null
@@ -2394,6 +2396,7 @@ export type Database = {
         }
         Update: {
           answer?: Json | null
+          connected_at?: string | null
           created_at?: string
           emergency_request_id?: string | null
           end_reason?: string | null
@@ -2529,6 +2532,10 @@ export type Database = {
       admin_update_testimonial: {
         Args: { p_testimonial_id: string; p_texto: string }
         Returns: undefined
+      }
+      appointment_call_connected: {
+        Args: { p_video_room_id: string }
+        Returns: boolean
       }
       archive_patient_care_records: {
         Args: { p_patient_id: string }
@@ -2934,6 +2941,10 @@ export type Database = {
         Args: { p_device_info?: Json; p_token: string }
         Returns: undefined
       }
+      release_appointment_quota: {
+        Args: { p_appointment_id: string }
+        Returns: boolean
+      }
       remove_organization_member_by_email: {
         Args: { p_email: string; p_org: string }
         Returns: Json
@@ -2969,6 +2980,7 @@ export type Database = {
         Args: { p_blocks: Json }
         Returns: undefined
       }
+      sos_call_connected: { Args: { p_request_id: string }; Returns: boolean }
       sos_request_other_psychologist: {
         Args: { p_request_id: string }
         Returns: Json
