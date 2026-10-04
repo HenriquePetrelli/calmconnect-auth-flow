@@ -35,7 +35,7 @@ Existem três perfis: **paciente**, **psicólogo** e **admin**. O paciente se ca
 4. Se aprovado, o psicólogo passa a entrar no painel. Se recusado, recebe o motivo por e-mail e o cadastro é apagado depois de alguns dias pela rotina `psychologist-cleanup-daily`.
 
 ### Login
-1. E-mail e senha. O app descobre o tipo de conta **no banco** (admin, psicólogo aprovado ou paciente) e leva à área certa: `/admin-dashboard`, `/psychologist-dashboard` ou `/home`.
+1. E-mail e senha. O app descobre o tipo de conta **no banco** (admin, psicólogo aprovado ou paciente) e leva à área certa: `/admin-dashboard`, `/psychologist-dashboard` ou `/home`. Tudo o que o login precisa (admin, tipo de conta, nome, bloqueio, situação do cadastro do psicólogo) vem numa consulta só, `get_login_state`, compartilhada entre a tela de login e o controle de acesso (`src/lib/loginState.ts`).
 2. Conta bloqueada pelo admin vê o motivo e até quando vale o bloqueio.
 3. Psicólogo em análise vê "Seu cadastro ainda está sendo analisado"; recusado vê o aviso de recusa.
 

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import SplashScreen from '@/components/SplashScreen';
 import { nextPaint, withTimeout } from '@/lib/async';
+import { clearLoginState, fetchLoginState, userTypeFromLoginState } from '@/lib/loginState';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { deactivateStoredPushToken } from '@/lib/pushToken';
@@ -61,70 +62,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return 'patient';
       }
 
-      // As consultas não dependem umas das outras: em paralelo (login mais rápido).
-      const [adminResult, rejectionResult, profileResult, registrationResult, psychologistResult] = await Promise.all([
-        supabase.rpc('is_super_admin', { user_id_param: userId }),
-        supabase.rpc('get_psychologist_rejection_status', { p_user_id: userId }),
-        supabase.from('profiles').select('user_type').eq('user_id', userId).maybeSingle(),
-        supabase.from('psychologist_registrations').select('status, rejected_at').eq('user_id', userId).maybeSingle(),
-        supabase.from('psychologists').select('approved, approval_status').eq('user_id', userId).maybeSingle(),
-      ]);
-
-      if (!adminResult.error && adminResult.data === true) {
-        console.log('[AuthContext] getUserType -> admin (admin_users)', { userId });
-        return 'admin';
+      // Uma consulta só (get_login_state), compartilhada com a tela de login.
+      const state = await fetchLoginState(userId);
+      if (state.rejection?.is_rejected && state.rejection.should_show_rejection_message) {
+        toast.error("Seu cadastro foi recusado. O motivo foi enviado para o seu e-mail.");
       }
-
-      // Check if psychologist is rejected and show specific message
-      const { data: rejectionStatus, error: rejectionError } = rejectionResult;
-
-      if (!rejectionError && rejectionStatus?.[0]?.is_rejected) {
-        const rejectionData = rejectionStatus[0];
-        
-        if (rejectionData.should_show_rejection_message) {
-          // Show rejection message for 3 days
-          toast.error("Seu cadastro foi recusado. O motivo foi enviado para o seu e-mail.");
-          return 'unknown';
-        }
-        
-        if (rejectionData.should_cleanup) {
-          // User should have been cleaned up by now, but just in case
-          return 'unknown';
-        }
-      }
-
-      // Check profile for psychologist/patient
-      const profileData = profileResult.data;
-
-      if (profileData?.user_type === 'psychologist') {
-        // For psychologists, check if approved (no banco, não no metadata)
-        const registrationData = registrationResult.data;
-        const psychologistRow = psychologistResult.data;
-
-        if (
-          registrationData?.status === 'approved' ||
-          (psychologistRow?.approved === true && psychologistRow.approval_status === 'approved')
-        ) {
-          return 'psychologist';
-        }
-        
-        // Check if rejected and still within 3 days
-        if (registrationData?.status === 'rejected' && registrationData?.rejected_at) {
-          const rejectedDate = new Date(registrationData.rejected_at);
-          const daysSinceRejection = Math.floor((Date.now() - rejectedDate.getTime()) / (1000 * 60 * 60 * 24));
-          
-          if (daysSinceRejection <= 3) {
-            // Still within 3 days, show rejection message
-            return 'unknown';
-          }
-        }
-        
-        return 'unknown'; // Not approved yet or rejected beyond 3 days
-      }
-
-      if (profileData?.user_type === 'patient') return 'patient';
-
-      return 'unknown';
+      const type = userTypeFromLoginState(state);
+      console.log('[AuthContext] getUserType ->', type, { userId });
+      return type;
     } catch (error) {
       console.error('Error determining user type:', error);
       return 'unknown';
@@ -188,18 +133,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setSigningOut(true);
     await nextPaint();
 
-    // Enquanto a sessão existe, em paralelo e com tempo máximo: este aparelho
-    // para de receber os pushes da conta e o psicólogo sai do SOS.
-    await withTimeout(
-      Promise.allSettled([
-        deactivateStoredPushToken(),
-        userType === 'psychologist' && user?.id ? goOfflineOnSignOut(user.id) : Promise.resolve(),
-      ]),
-      SIGN_OUT_STEP_MS,
-    );
+    clearLoginState();
+    // Enquanto a sessão existe: este aparelho para de receber os pushes da
+    // conta e o psicólogo sai do SOS. Essas chamadas pegam o token da sessão
+    // na hora em que começam; um instante depois a saída no servidor começa
+    // junto com elas (antes uma esperava a outra terminar).
+    const cleanup = Promise.allSettled([
+      deactivateStoredPushToken(),
+      userType === 'psychologist' && user?.id ? goOfflineOnSignOut(user.id) : Promise.resolve(),
+    ]);
+    await new Promise((resolve) => setTimeout(resolve, 50));
     // "global" encerra a sessão em todos os aparelhos; "local" sempre apaga a
     // sessão deste (se o servidor falhar ou demorar, a pessoa sai mesmo assim).
-    const global = await withTimeout(supabase.auth.signOut({ scope: 'global' }), SIGN_OUT_STEP_MS);
+    const [, global] = await Promise.all([
+      withTimeout(cleanup, SIGN_OUT_STEP_MS),
+      withTimeout(supabase.auth.signOut({ scope: 'global' }), SIGN_OUT_STEP_MS),
+    ]);
     if (!global || global.error) {
       // Servidor falhou ou demorou: apaga a sessão deste aparelho. Com o
       // servidor fora do ar a saída local também pode não voltar; a limpeza

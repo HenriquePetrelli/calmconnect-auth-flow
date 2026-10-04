@@ -338,20 +338,8 @@ const [formData, setFormData] = useState({
           return;
         }
 
-        // Also create profile
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            user_id: data.user.id,
-            user_type: 'patient',
-            full_name: formData.name,
-            cpf: formData.cpf.replace(/\D/g, ''),
-          });
-
-        if (profileError) {
-          console.error('Error creating profile:', profileError);
-          // Don't fail if profile creation fails - it may already exist
-        }
+        // O perfil (profiles) é criado pelo banco junto com a conta
+        // (gatilho handle_new_user); a gravação extra aqui sempre falhava.
       } else {
         // For psychologists, create a registration record
         try {
@@ -387,15 +375,15 @@ const { error: profileError } = await supabase
       }
 
       if (isPatient) {
-        toast.success(`Bem-vindo, ${formData.name}! Verifique seu email para confirmar a conta.`);
+        toast.success(`Bem-vindo, ${formData.name}!`);
       } else {
         toast.success(`Cadastro enviado para análise, Dr.(a) ${formData.name}. Você receberá um email quando for aprovado.`);
       }
-      
-      // Redirecionar para login após cadastro
-      setTimeout(() => {
-        navigate("/");
-      }, 2000);
+
+      // Com a conta já logada, vai direto para o app (antes esperava 2 s e
+      // voltava para a tela de login). Sem sessão (confirmação de e-mail
+      // ligada), volta para a tela de entrada.
+      navigate(isPatient && data.session ? "/home" : "/", { replace: true });
 
     } catch (error) {
       toast.error("Erro ao criar conta. Tente novamente.");

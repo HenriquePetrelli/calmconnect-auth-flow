@@ -8,6 +8,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { isCurrentlyBlocked, notifyBlockedAccess } from "@/utils/psychologistBlock";
+import { fetchLoginState } from '@/lib/loginState';
 
 
 interface LoginFormProps {
@@ -61,10 +62,12 @@ const LoginForm = ({ onForgotPassword, onSignUp }: LoginFormProps) => {
         return;
       }
 
-      // Admin não tem linha em `profiles` (fica em admin_users): resolve antes,
-      // senão o login mostrava "Erro ao carregar perfil" e só depois entrava.
-      const { data: isAdmin } = await supabase.rpc('is_super_admin', { user_id_param: data.user.id });
-      if (isAdmin === true || data.user.user_metadata?.is_super_admin === true) {
+      // Tudo o que o login precisa saber numa consulta só (antes eram de 3 a 5
+      // em sequência). O controle de acesso do app reaproveita o resultado.
+      const state = await fetchLoginState(data.user.id);
+
+      // Admin não tem linha em `profiles` (fica em admin_users): resolve antes.
+      if (state.is_admin || data.user.user_metadata?.is_super_admin === true) {
         toast.success('Bem-vindo ao painel administrativo!');
         navigate('/admin-dashboard');
         setEmail("");
@@ -72,60 +75,31 @@ const LoginForm = ({ onForgotPassword, onSignUp }: LoginFormProps) => {
         return;
       }
 
-      // Verificar o perfil do usuário
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('user_type, full_name')
-        .eq('user_id', data.user.id)
-        .maybeSingle();
-
-      if (profileError || !profile) {
+      const profile = state.profile;
+      if (!profile?.user_type) {
         toast.error("Erro ao carregar perfil do usuário. Fale com o suporte.");
-        console.error("Profile error:", profileError);
         // Sem perfil não há para onde ir: não deixa a sessão aberta pela metade.
         await supabase.auth.signOut();
         return;
       }
 
       // Pacientes: verificar bloqueio administrativo
-      if (profile.user_type === 'patient') {
-        const { data: patientRow } = await supabase
-          .from('patients')
-          .select('is_blocked, blocked_until, blocked_reason')
-          .eq('user_id', data.user.id)
-          .maybeSingle();
-
-        if (patientRow && isCurrentlyBlocked(patientRow as any)) {
-          await notifyBlockedAccess(patientRow as any);
-          await supabase.auth.signOut();
-          return;
-        }
+      if (profile.user_type === 'patient' && state.patient && isCurrentlyBlocked(state.patient as any)) {
+        await notifyBlockedAccess(state.patient as any);
+        await supabase.auth.signOut();
+        return;
       }
 
-      // Para psicólogos, verificar se o cadastro foi aprovado ou rejeitado
+      // Para psicólogos, verificar bloqueio e se o cadastro foi aprovado ou rejeitado
       if (profile.user_type === 'psychologist') {
-        // Verificar bloqueio administrativo
-        const { data: psychRow } = await supabase
-          .from('psychologists')
-          .select('is_blocked, blocked_until, blocked_reason')
-          .eq('user_id', data.user.id)
-          .maybeSingle();
-
-        if (psychRow && isCurrentlyBlocked(psychRow as any)) {
-          await notifyBlockedAccess(psychRow as any);
+        if (state.psychologist && isCurrentlyBlocked(state.psychologist as any)) {
+          await notifyBlockedAccess(state.psychologist as any);
           await supabase.auth.signOut();
           return;
         }
 
-
-        // Check user metadata first
         if (data.user.user_metadata?.account_status !== 'approved') {
-          // Check registration table for status and rejection details
-          const { data: registrationData } = await supabase
-            .from('psychologist_registrations')
-            .select('status, rejected_at, rejection_reason')
-            .eq('user_id', data.user.id)
-            .single();
+          const registrationData = state.registration;
 
           if (!registrationData) {
             toast.error("Cadastro não encontrado. Entre em contato com o suporte.");
@@ -138,9 +112,8 @@ const LoginForm = ({ onForgotPassword, onSignUp }: LoginFormProps) => {
             if (registrationData.rejected_at) {
               const rejectedDate = new Date(registrationData.rejected_at);
               const daysSinceRejection = Math.floor((Date.now() - rejectedDate.getTime()) / (1000 * 60 * 60 * 24));
-              
+
               if (daysSinceRejection <= 3) {
-                // Within 3 days - show rejection message
                 toast.error("Seu cadastro foi recusado. O motivo foi enviado para o seu e-mail.", {
                   duration: 5000,
                 });
@@ -148,7 +121,7 @@ const LoginForm = ({ onForgotPassword, onSignUp }: LoginFormProps) => {
                 return;
               }
             }
-            
+
             // After 3 days - show generic message (data should be cleaned up)
             toast.error("Login ou senha incorretos.");
             await supabase.auth.signOut();
@@ -163,7 +136,7 @@ const LoginForm = ({ onForgotPassword, onSignUp }: LoginFormProps) => {
         }
       }
 
-      toast.success(`Bem-vindo${profile.user_type === 'psychologist' ? ' Dr.(a)' : ''}, ${profile.full_name}!`);
+      toast.success(`Bem-vindo${profile.user_type === 'psychologist' ? ' Dr.(a)' : ''}, ${profile.full_name ?? ''}!`);
       
       // Redirecionar para a página apropriada baseado no userType
       if (profile.user_type === 'psychologist') {
