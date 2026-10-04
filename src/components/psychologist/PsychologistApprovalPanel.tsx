@@ -291,7 +291,7 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
                   <TableHead className="min-w-[120px]">CRP</TableHead>
                   <TableHead className="min-w-[160px]">Especialização</TableHead>
                   <TableHead className="min-w-[110px]">Status</TableHead>
-                  <TableHead className="w-[70px] text-right">Ações</TableHead>
+                  {filter !== 'pending' && <TableHead className="w-[70px] text-right">Ações</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -308,7 +308,10 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
                       {psychologist.specialization || '—'}
                     </TableCell>
                     <TableCell>{getStatusBadge(psychologist.approval_status, psychologist)}</TableCell>
+                    {filter !== 'pending' && (
                     <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                      {/* Cadastro pendente: só aprovar ou rejeitar, pelo detalhe (toque na linha). */}
+                      {psychologist.approval_status !== 'pending' && (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -345,7 +348,9 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
+                      )}
                     </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
@@ -410,12 +415,14 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
                     </DialogHeader>
                     {selectedPsychologist && (
                       <div className="space-y-6">
+                        {selectedPsychologist.approval_status !== 'pending' && (
                         <div className="flex justify-end">
                           <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
                             <Pencil className="h-4 w-4 mr-2" />
                             Editar informações
                           </Button>
                         </div>
+                        )}
 
                         {/* Seção de Status da Aprovação */}
                         <div className="border rounded-lg p-4 bg-muted/20">
@@ -622,6 +629,7 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
                           )}
                         </div>
 
+                        {selectedPsychologist.approval_status !== 'pending' && (
                         <div className="flex flex-col sm:flex-row gap-2 pt-4 border-t">
                           {isCurrentlyBlocked(selectedPsychologist as any) ? (
                             <Button
@@ -640,6 +648,7 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
                             </Button>
                           )}
                         </div>
+                        )}
 
                         {selectedPsychologist.approval_status === 'pending' && (
                           <div className="flex flex-col sm:flex-row gap-2 pt-4 border-t">
