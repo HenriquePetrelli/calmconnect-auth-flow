@@ -172,8 +172,11 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
         redirectTarget = redirectTo || '/';
       }
     } else if (userType === 'unknown') {
-      // Aguarda resolução do tipo
-      accessState = 'loading';
+      // Telas públicas continuam abertas para quem está logado sem um tipo
+      // liberado (ex.: psicólogo no meio do cadastro ou em análise). Antes a
+      // tela de cadastro virava a de carregamento para sempre logo depois de
+      // criar a conta. Nas outras telas, aguarda a resolução do tipo.
+      accessState = isPublicRoute ? 'allowed' : 'loading';
     } else if (!allowedUserTypes.includes(userType as any)) {
       accessState = 'denied';
       redirectTarget = redirectTo || getDefaultRouteForUserType(userType);

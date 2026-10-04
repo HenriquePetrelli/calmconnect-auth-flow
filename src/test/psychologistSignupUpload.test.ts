@@ -53,7 +53,7 @@ describe('cadastro do psicólogo: envio do documento', () => {
     uploadMock.mockResolvedValue({ error: null });
     const result = await PsychologistService.signUpPsychologist(form, file);
     expect(result.success).toBe(true);
-    expect(calls).toEqual(['signUp', `upload:${USER}`, 'rpc']);
+    expect(calls).toEqual(['signUp', `upload:${USER}`, 'rpc', 'signOut']);
     expect(rpcMock.mock.calls[0][1].p_document_url).toContain(`/documents/${USER}/`);
   });
 

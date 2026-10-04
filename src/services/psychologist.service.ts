@@ -111,6 +111,9 @@ export class PsychologistService {
         throw new Error(result?.error || 'Falha ao criar perfil de psicólogo');
       }
 
+      // O psicólogo só usa o app depois da aprovação: sai da sessão criada no
+      // cadastro (o login avisa "em análise" enquanto não for aprovado).
+      await supabase.auth.signOut({ scope: 'local' });
       return { success: true };
     } catch (error) {
       console.error('Erro no cadastro:', error);
