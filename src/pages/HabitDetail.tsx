@@ -161,7 +161,7 @@ const DailyDetail = ({
         : `Ainda cabem ${formatHabitAmount(habit.kind, goal - total)} no limite de hoje`;
     }
     const remaining = Math.max(0, goal - total);
-    if (remaining === 0) return 'Meta de hoje batida! 🎉';
+    if (remaining === 0) return 'Meta de hoje batida!';
     return `${remaining === 1 ? 'Falta' : 'Faltam'} ${formatHabitAmount(habit.kind, remaining)} para a meta de hoje`;
   })();
 

@@ -61,7 +61,7 @@ export const useHabitLogger = (logIntake: LogIntake, deleteEvent: DeleteEvent) =
             message += ` Depois das ${cutoff}, a cafeína pode atrapalhar o sono.`;
           }
         } else if (before < goal && after >= goal) {
-          message = `Meta do dia batida! ${habitTitle(habit)} 🎉`;
+          message = `Meta do dia batida! ${habitTitle(habit)}`;
         } else if (habit.kind === 'medication') {
           message = `Dose das ${item.label} marcada`;
         } else if (habit.kind === 'meals' || habit.kind === 'joy') {

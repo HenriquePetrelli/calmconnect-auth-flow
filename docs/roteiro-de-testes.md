@@ -17,6 +17,14 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Paciente → Perfil → Sair ⇒ volta ao login; botão voltar não reabre o app
 - [ ] Visitante → Cadastro psicólogo → entrar ⇒ "em análise"
 - [ ] Paciente → abrir `/admin-dashboard` na barra ⇒ redirecionado
+- [ ] Visitante → Cadastro psicólogo → enviar documentos + aceitar termos do psicólogo ⇒ cadastro enviado
+- [ ] Psicólogo bloqueado → Login ⇒ vê o motivo e não entra
+- [ ] Paciente → Perfil → Editar meus sintomas → salvar ⇒ sintomas atualizados
+- [ ] Paciente → Perfil → Tema do aplicativo → escuro ⇒ app inteiro muda de tema
+- [ ] Paciente → Perfil → Humor diário → desligar ⇒ Home não pede mais o humor
+- [ ] Psicólogo → Perfil → Alterar senha (senha atual errada) ⇒ recusa; certa ⇒ troca
+- [ ] Psicólogo → Perfil → editar bio e cidade → salvar ⇒ paciente vê os dados novos ao agendar
+- [ ] Qualquer → abrir endereço inexistente (`/xyz`) ⇒ "Não encontramos esta página"
 
 ## 2. SOS (fichas 02 e 03)
 
@@ -36,6 +44,12 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Paciente B → SOS na fila → abrir Respirar / Meu plano ⇒ pedido continua na fila
 - [ ] Paciente C (sem plano) → SOS ⇒ não consegue pedir; convite para assinar
 - [ ] Psicólogo (app fechado, push ativo) → paciente pede SOS ⇒ push imediato
+- [ ] Psicólogo → Painel → Status de disponibilidade → Offline ⇒ paciente vê "Nenhum profissional online"
+- [ ] Psicólogo online → Sair da conta ⇒ fica Offline automaticamente
+- [ ] Psicólogo → SOS aceito → Contexto do paciente ⇒ identificação, sintomas relatados e histórico de pedidos
+- [ ] Na chamada → Configurações → trocar microfone/câmera ⇒ troca sem derrubar a chamada
+- [ ] Paciente → encerrar SOS e fechar o app antes de avaliar → reabrir ⇒ pede a avaliação
+- [ ] Admin → Atendimento → SOS ⇒ solicitações, atendidas, tempo até aceite e duração média
 
 ## 3. Consultas agendadas (fichas 04 e 05)
 
@@ -62,6 +76,10 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Psicólogo → Histórico → Consulta interrompida ⇒ consulta do mês volta ao paciente
 - [ ] Psicólogo → Histórico → Salvar resumo da sessão ⇒ salva sem mudar o status
 - [ ] Lembretes: consulta marcada para daqui a 1 h ⇒ lembrete no app e push
+- [ ] Psicólogo → Painel → consulta → Histórico do paciente ⇒ consultas anteriores e resumos
+- [ ] Paciente → encerrar consulta e fechar o app antes de avaliar → reabrir ⇒ convite para avaliar (pode pular)
+- [ ] Psicólogo → Agenda → antecedência mínima 2 h ⇒ paciente não marca para daqui a 1 h
+- [ ] Psicólogo → Notificações ⇒ pedidos, confirmações e lembretes listados
 
 ## 4. Chat (ficha 06)
 
@@ -72,6 +90,7 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Psicólogo sem Wi-Fi → paciente manda 2 mensagens → religar ⇒ aparecem sem recarregar
 - [ ] Psicólogo (app fechado) → paciente manda mensagem ⇒ push "Nova mensagem"
 - [ ] Paciente A → Chat → excluir conversa ⇒ some só para ele; volta se o psicólogo escrever
+- [ ] Conversa com mais de 1 mês sem nova consulta ⇒ "Somente leitura" (conferir no banco, ficha 06)
 
 ## 5. Notificações e push (ficha 07)
 
@@ -88,6 +107,8 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Paciente → Planos → Cancelar (após 7 dias) ⇒ "Seu plano vai até dd/mm" → "Manter" desfaz
 - [ ] Paciente → Planos → Cancelar (até 7 dias) ⇒ acaba na hora, reembolso no Stripe
 - [ ] Cartão `4000 0000 0000 0341` na renovação ⇒ aviso para atualizar o cartão
+- [ ] Paciente → Planos → assinar → fechar o checkout sem pagar ⇒ "Pagamento não concluído", plano não muda
+- [ ] Paciente → Planos → Gerenciar pagamento ⇒ abre o portal do Stripe
 
 ## 7. Repasses (ficha 09)
 
@@ -108,6 +129,8 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] RH → Portal da empresa → desligar colaborador ⇒ vaga volta; plano vale até o fim do mês
 - [ ] Admin → Empresas → pausar contrato ⇒ colaboradores perdem o plano
 - [ ] 21 códigos errados seguidos ⇒ "Muitas tentativas de código"
+- [ ] Paciente já cadastrado → Perfil → Benefício da empresa → digitar código ⇒ vira Premium
+- [ ] Paciente → Benefício da empresa → Sair do benefício ⇒ perde o plano da empresa na hora e libera a vaga
 
 ## 9. Meus hábitos (ficha 11)
 
@@ -117,6 +140,8 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Parar de fumar → Recaída ⇒ contagem recomeça, recorde mantido
 - [ ] Remédio com horário daqui a 20 min (push ativo) ⇒ lembrete chega; marcar dose ⇒ não repete
 - [ ] Cafeína acima de 400 mg ⇒ anel vermelho e aviso
+- [ ] Criar um hábito de cada tipo (sono, movimento, refeições, telas, algo que me faz bem) ⇒ cada um registra
+- [ ] Hábito → Editar → mudar meta ⇒ salva; Excluir ⇒ some da lista
 
 ## 10. Meu progresso (ficha 12)
 
@@ -125,6 +150,9 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Progresso → Metas → "Respiração 3x" → fazer respiração ⇒ barra sobe 1
 - [ ] Primeira respiração concluída ⇒ conquista "Primeiro Passo" com aviso
 - [ ] Progresso → Histórico completo ⇒ respiração, humor e hábitos do dia
+- [ ] Progresso → Metas da semana → escolher um desafio de 7 dias → "Fiz o passo de hoje" ⇒ avança 1 passo
+- [ ] Progresso → Seus padrões (após alguns dias de registros) ⇒ mostra o que anda junto com os dias melhores
+- [ ] Progresso → Conquistas ⇒ lista com progresso de cada conquista
 
 ## 11. Questionários (ficha 13)
 
@@ -145,6 +173,7 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Paciente → Home → Respiração 4-7-8 até o fim ⇒ conclusão; tempo sobe em Progresso
 - [ ] Paciente → Sons → tocar um de cada categoria ⇒ áudio toca
 - [ ] Sons → terminar um som ⇒ "Como você se sente?"
+- [ ] Sons → tocar uma playlist ⇒ passa para o próximo som sozinho
 - [ ] Paciente → Comer com atenção → até o fim ⇒ tela de conclusão
 - [ ] Paciente → Diário → 2 anotações → 3ª no mesmo dia ⇒ recusa, texto fica na janela
 - [ ] Psicólogo ⇒ não tem acesso ao diário do paciente
@@ -184,6 +213,13 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Admin → Moderação → Chat ⇒ números e participantes, nenhum texto de mensagem
 - [ ] Admin → Atendimento → SOS ⇒ métricas carregam
 - [ ] Admin → recarregar numa seção ⇒ continua na mesma seção
+- [ ] Admin → Psicólogos → abrir documentos de um pendente ⇒ documentos abrem
+- [ ] Admin → Psicólogos → Rejeitar com motivo ⇒ psicólogo vê o motivo ao entrar
+- [ ] Admin → Psicólogos → bloquear / editar ⇒ mudanças valem na hora; Auditoria registra
+- [ ] Admin → Pacientes → Editar paciente → salvar ⇒ dados atualizados
+- [ ] Admin → Pacientes / Psicólogos → excluir conta de teste ⇒ some e não entra mais
+- [ ] Admin → Auditoria ⇒ ações de aprovação, bloqueio e edição listadas
+- [ ] Admin → Notificações ⇒ avisos do admin listados
 
 ## 18. Segurança (ficha 20)
 

@@ -135,7 +135,7 @@ export const useWeeklyGoals = () => {
 
       if (isCompleted && !goal.completed) {
         setNewlyCompleted({ ...goal, progress: newProgress, completed: true });
-        toast.success(`Meta da semana concluída: ${goal.weekly_goals.title} 🎉`);
+        toast.success(`Meta da semana concluída: ${goal.weekly_goals.title}`);
       }
 
       await fetchGoals();

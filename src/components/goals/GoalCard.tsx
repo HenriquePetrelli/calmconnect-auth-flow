@@ -86,7 +86,7 @@ const ChallengeBody = ({ goal, onStepDone }: GoalCardProps) => {
           </div>
         )
       ) : (
-        <p className="rounded-lg bg-success/10 p-3 text-sm font-medium text-foreground">Desafio concluído! 🎉 Você fez os 7 passos.</p>
+        <p className="rounded-lg bg-success/10 p-3 text-sm font-medium text-foreground">Desafio concluído! Você fez os 7 passos.</p>
       )}
     </CardContent>
   );
