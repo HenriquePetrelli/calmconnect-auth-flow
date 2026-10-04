@@ -9,7 +9,7 @@ Uma ficha por funcionalidade. Cada ficha responde, sempre na mesma ordem:
 5. **Como validar**: teste manual com o resultado esperado, testes automáticos e SQL de conferência.
 6. **Problemas comuns**: sintoma, causa provável e o que olhar.
 
-Para regras de negócio em texto corrido e o histórico de cada mudança, veja `docs/visao-geral-do-produto.md`. Pendências antes do lançamento ficam em `docs/pendencias-antes-do-lancamento.md`.
+Para regras de negócio em texto corrido e o histórico de cada mudança, veja `docs/visao-geral-do-produto.md`. Pendências antes do lançamento ficam em `docs/pendencias-antes-do-lancamento.md`. Para validar o app inteiro com uma lista curta de passos, use `docs/roteiro-de-testes.md`.
 
 ## Índice
 
