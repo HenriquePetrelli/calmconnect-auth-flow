@@ -2767,6 +2767,7 @@ export type Database = {
           user_like: string
         }[]
       }
+      get_login_state: { Args: never; Returns: Json }
       get_my_psychologist_private: {
         Args: never
         Returns: {
