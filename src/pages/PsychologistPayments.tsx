@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { SkeletonFullPage } from '@/components/skeletons/Skeletons';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 import PageHeader from '@/components/PageHeader';
 import PayoutHistory from '@/components/payments/PayoutHistory';
+import RouteSkeleton from "@/components/skeletons/RouteSkeleton";
 import {
   CreditCard,
   Wallet,
@@ -109,7 +109,7 @@ const PsychologistPayments = () => {
   };
 
   if (loading) {
-    return <SkeletonFullPage />;
+    return <RouteSkeleton />;
   }
 
   const totalPending = payment?.total_pending_amount ?? 0;

@@ -3,8 +3,8 @@ import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import EmergencyVideoCall, { type EndCallInfo } from "@/components/EmergencyVideoCall";
-import { SkeletonFullPage } from "@/components/skeletons/Skeletons";
 import { useEmergencySession } from "@/hooks/useEmergencySession";
+import RouteSkeleton from "@/components/skeletons/RouteSkeleton";
 
 /**
  * Emergency (SOS) call route.
@@ -107,7 +107,7 @@ const EmergencyCall = () => {
   });
 
   if (loading || (sessionId && timeLimit === null)) {
-    return <SkeletonFullPage />;
+    return <RouteSkeleton />;
   }
 
   if (!sessionId) {

@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Skeleton } from '@/components/ui/skeleton';
+import { CompanyBenefitBodySkeleton } from '@/components/skeletons/PageSkeletons';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -64,7 +64,7 @@ const CompanyBenefit = () => {
 
         <main className="w-full min-w-0 p-4 space-y-5 max-w-2xl mx-auto">
           {loading ? (
-            <Skeleton className="h-40 w-full rounded-2xl" />
+            <CompanyBenefitBodySkeleton />
           ) : benefit ? (
             <section className="space-y-4 rounded-2xl border border-primary/30 bg-primary/5 p-5">
               <div className="flex items-start gap-3">

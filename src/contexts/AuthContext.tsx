@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import SplashScreen from '@/components/SplashScreen';
+import { nextPaint, withTimeout } from '@/lib/async';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { deactivateStoredPushToken } from '@/lib/pushToken';
@@ -34,11 +36,16 @@ const cleanupAuthState = () => {
   });
 };
 
+// Tempo máximo de cada etapa da saída que depende do servidor.
+const SIGN_OUT_STEP_MS = 2500;
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [userType, setUserType] = useState<UserType>('unknown');
   const [loading, setLoading] = useState(true);
+  const signingOutRef = useRef(false);
+  const authEventSeq = useRef(0);
 
   const getUserType = async (authUser: User): Promise<UserType> => {
     const userId = authUser.id;
@@ -131,60 +138,73 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const handleAuthStateChange = async (event: string, session: Session | null) => {
+  const handleAuthStateChange = (event: string, session: Session | null) => {
     console.log('[AuthContext] event:', event);
     setSession(session);
     setUser(session?.user ?? null);
+    const seq = ++authEventSeq.current;
 
-    if (session?.user) {
-      const meta = session.user.user_metadata ?? {};
+    if (!session?.user) {
+      setUserType('unknown');
+      setLoading(false);
+      return;
+    }
 
-      // Paciente via metadata
-      if (meta.user_type === 'patient' && meta.is_super_admin !== true) {
-        console.log('[AuthContext] -> patient (fast path)');
-        setUserType('patient');
-        setLoading(false);
-        return;
-      }
+    const authUser = session.user;
+    const meta = authUser.user_metadata ?? {};
 
+    // Paciente via metadata
+    if (meta.user_type === 'patient' && meta.is_super_admin !== true) {
+      console.log('[AuthContext] -> patient (fast path)');
+      setUserType('patient');
+      setLoading(false);
+      return;
+    }
+
+    // Não consultar o Supabase dentro deste aviso: o auth-js espera o aviso
+    // terminar para liberar a sessão, e as consultas esperam a sessão. Com o
+    // app aberto já logado, psicólogo e admin ficavam presos na abertura.
+    setTimeout(async () => {
+      let type: UserType = 'unknown';
       try {
-        const type = await getUserType(session.user);
+        type = await getUserType(authUser);
         console.log('[AuthContext] -> resolved via DB:', type);
-        setUserType(type);
       } catch (error) {
         console.error('Error getting user type:', error);
-        setUserType('unknown');
       }
-    } else {
-      setUserType('unknown');
-    }
-
-    setLoading(false);
+      // Um aviso mais novo (outro login, saída) vale mais que este.
+      if (seq !== authEventSeq.current) return;
+      setUserType(type);
+      setLoading(false);
+    }, 0);
   };
 
+  const [signingOut, setSigningOut] = useState(false);
   const signOut = async () => {
-    // While the session still exists: stop this device from receiving the
-    // outgoing user's pushes (shared phones, handing the device over).
-    try {
-      await deactivateStoredPushToken();
-    } catch {
-      // segue saindo mesmo assim
-    }
-    // Psicólogo sai do SOS na hora (não fica "online" depois de sair).
-    if (userType === 'psychologist' && user?.id) await goOfflineOnSignOut(user.id);
-    try {
-      // "global" encerra a sessão em todos os aparelhos. Se o servidor falhar
-      // (rede, 5xx), o Supabase NÃO apaga a sessão local; aí a tela de login
-      // via a pessoa ainda logada e voltava para o painel. "local" sempre apaga.
-      const { error } = await supabase.auth.signOut({ scope: 'global' });
-      if (error) await supabase.auth.signOut({ scope: 'local' });
-    } catch (error) {
-      console.error('Sign out error:', error);
-      try {
-        await supabase.auth.signOut({ scope: 'local' });
-      } catch {
-        // segue saindo mesmo assim
-      }
+    if (signingOutRef.current) return;
+    signingOutRef.current = true;
+    // A tela de saída aparece já no toque; antes ela só vinha depois de todas
+    // as chamadas ao servidor (alguns segundos sem resposta visível).
+    setSigningOut(true);
+    await nextPaint();
+
+    // Enquanto a sessão existe, em paralelo e com tempo máximo: este aparelho
+    // para de receber os pushes da conta e o psicólogo sai do SOS.
+    await withTimeout(
+      Promise.allSettled([
+        deactivateStoredPushToken(),
+        userType === 'psychologist' && user?.id ? goOfflineOnSignOut(user.id) : Promise.resolve(),
+      ]),
+      SIGN_OUT_STEP_MS,
+    );
+    // "global" encerra a sessão em todos os aparelhos; "local" sempre apaga a
+    // sessão deste (se o servidor falhar ou demorar, a pessoa sai mesmo assim).
+    const global = await withTimeout(supabase.auth.signOut({ scope: 'global' }), SIGN_OUT_STEP_MS);
+    if (!global || global.error) {
+      // Servidor falhou ou demorou: apaga a sessão deste aparelho. Com o
+      // servidor fora do ar a saída local também pode não voltar; a limpeza
+      // abaixo apaga a sessão de qualquer jeito.
+      await withTimeout(supabase.auth.signOut({ scope: 'local' }), 1000);
     }
     cleanupAuthState();
     // Always reset to light mode on logout; dark mode is per-logged-in-user
@@ -227,7 +247,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     refreshUserType,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+      {signingOut && <SplashScreen message="Saindo da conta..." />}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {

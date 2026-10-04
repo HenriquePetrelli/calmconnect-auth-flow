@@ -17,9 +17,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useWeeklyGoals } from "@/hooks/useWeeklyGoals";
 import { useCompanyBenefit } from "@/hooks/useCompanyBenefit";
 
-import ProfileSkeleton from "@/components/ProfileSkeleton";
 import EditSymptomsModal from "@/components/EditSymptomsModal";
 import { cancelledPlanLabel } from "@/lib/subscriptionStatus";
+import { ProfileSkeleton } from "@/components/skeletons/PageSkeletons";
 
 const Profile = () => {
   const navigate = useNavigate();

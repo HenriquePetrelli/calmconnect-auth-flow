@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ListaConversas } from '@/components/chat/ListaConversas';
 import { ChatInterface } from '@/components/chat/ChatInterface';
-import PageSkeleton from '@/components/PageSkeleton';
+import { ChatListSkeleton } from '@/components/skeletons/PageSkeletons';
 
 const ChatContent: React.FC = () => {
   const [conversaSelecionada, setConversaSelecionada] = useState<string | null>(null);
@@ -16,7 +16,7 @@ const ChatContent: React.FC = () => {
   };
 
   if (isLoading) {
-    return <PageSkeleton type="chat" />;
+    return <ChatListSkeleton />;
   }
 
   return (

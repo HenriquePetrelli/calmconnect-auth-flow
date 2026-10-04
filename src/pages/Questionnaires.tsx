@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { ChevronRight, ClipboardList, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
+import { QuestionnairesBodySkeleton } from '@/components/skeletons/PageSkeletons';
 import { Switch } from '@/components/ui/switch';
 import PageHeader from '@/components/PageHeader';
 import PatientBottomNav from '@/components/PatientBottomNav';
@@ -55,7 +55,7 @@ const Questionnaires = () => {
           </p>
 
           {loading ? (
-            <Skeleton className="h-48 w-full rounded-2xl" />
+            <QuestionnairesBodySkeleton />
           ) : error ? (
             <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm">
               Não foi possível carregar agora. Verifique a conexão e tente de novo.

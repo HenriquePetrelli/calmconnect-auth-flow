@@ -9,8 +9,7 @@ import { lazy, Suspense } from "react";
 import RouteGuard from "@/components/RouteGuard";
 import MainLayout from "@/components/MainLayout";
 import BackgroundWrapper from "@/components/BackgroundWrapper";
-import PageSkeleton from "@/components/PageSkeleton";
-import SplashScreen from "@/components/SplashScreen";
+import RouteSkeleton from "@/components/skeletons/RouteSkeleton";
 import PendingFeedbackGate from "@/components/sos/PendingFeedbackGate";
 import AppErrorBoundary from "@/components/AppErrorBoundary";
 import LegalAcceptanceGate from "@/components/legal/LegalAcceptanceGate";
@@ -20,7 +19,7 @@ import LegalAcceptanceGate from "@/components/legal/LegalAcceptanceGate";
 // Suspense is inside the layout so lazy page swaps don't unmount the nav.
 const MainLayoutOutlet = () => (
   <MainLayout>
-    <Suspense fallback={<PageSkeleton />}>
+    <Suspense fallback={<RouteSkeleton />}>
       <Outlet />
     </Suspense>
   </MainLayout>
@@ -103,7 +102,7 @@ const App = () => {
               <Sonner />
               <BrowserRouter>
                 <BackgroundWrapper>
-                  <Suspense fallback={<SplashScreen />}>
+                  <Suspense fallback={<RouteSkeleton />}>
 
                     <Routes>
                   {/* Rotas Públicas */}

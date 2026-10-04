@@ -11,10 +11,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { getFriendlyErrorMessage } from "@/utils/errorMessage";
 import DeleteAccountCard from "@/components/DeleteAccountCard";
+import { Skeleton } from "@/components/ui/skeleton";
 const AccountSettings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  // Enquanto nome e e-mail chegam, os campos aparecem como skeleton (antes
+  // apareciam vazios e se preenchiam depois).
+  const [loadingUser, setLoadingUser] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [formData, setFormData] = useState({
     fullName: "",
@@ -45,6 +49,8 @@ const AccountSettings = () => {
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
+    } finally {
+      setLoadingUser(false);
     }
   };
 
@@ -169,23 +175,23 @@ const AccountSettings = () => {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="fullName">Nome Completo</Label>
-              <Input
+              {loadingUser ? <Skeleton className="h-10 w-full rounded-md" /> : <Input
                 id="fullName"
                 value={formData.fullName}
                 onChange={(e) => setFormData((prev) => ({ ...prev, fullName: e.target.value }))}
                 placeholder="Digite seu nome completo"
-              />
+              />}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input
+              {loadingUser ? <Skeleton className="h-10 w-full rounded-md" /> : <Input
                 id="email"
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
                 placeholder="Digite seu email"
-              />
+              />}
             </div>
 
             <Button onClick={handleUpdateProfile} disabled={loading} className="w-full">
@@ -246,7 +252,11 @@ const AccountSettings = () => {
           </CardContent>
         </Card>
 
-        {user?.profile?.user_type === "patient" && user?.email && <DeleteAccountCard email={user.email} />}
+        {loadingUser ? (
+          <Skeleton className="h-72 w-full rounded-xl" />
+        ) : (
+          user?.profile?.user_type === "patient" && user?.email && <DeleteAccountCard email={user.email} />
+        )}
       </div>
     </div>
   );

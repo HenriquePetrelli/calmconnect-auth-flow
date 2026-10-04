@@ -8,10 +8,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import BookingRulesCard from '@/components/psychologist/BookingRulesCard';
 import PageHeader from '@/components/PageHeader';
-import { SkeletonFullPage } from '@/components/skeletons/Skeletons';
 import { usePsychologistAvailability, type AvailabilityBlock } from '@/hooks/usePsychologistAvailability';
 import { usePsychologistVacation, toISODate } from '@/hooks/usePsychologistVacation';
 import { DAY_LABELS, DAYS_DISPLAY_ORDER, validateDayBlocks, type EditableBlock } from '@/lib/psychologistAvailability';
+import RouteSkeleton from "@/components/skeletons/RouteSkeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const formatBR = (isoDate: string): string => {
   const [y, m, d] = isoDate.split('-');
@@ -132,7 +133,7 @@ const PsychologistAvailability = () => {
   };
 
   if (loading) {
-    return <SkeletonFullPage />;
+    return <RouteSkeleton />;
   }
 
   return (
@@ -160,7 +161,7 @@ const PsychologistAvailability = () => {
           </CardHeader>
           <CardContent className="space-y-3">
             {loadingVacation ? (
-              <p className="text-sm text-muted-foreground">Carregando...</p>
+              <div className="space-y-2"><Skeleton className="h-3 w-full" /><Skeleton className="h-10 w-full rounded-lg" /></div>
             ) : currentVacation ? (
               <div className="space-y-3">
                 <p className="text-sm text-foreground">

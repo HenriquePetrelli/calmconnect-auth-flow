@@ -1,6 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useRef, useState } from 'react';
-import { SkeletonFullPage } from '@/components/skeletons/Skeletons';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -16,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { SPECIALIZATIONS } from '@/data/specializations';
 import { PasswordChangeModal } from '@/components/psychologist/PasswordChangeModal';
 import { useNavigate } from 'react-router-dom';
+import RouteSkeleton from "@/components/skeletons/RouteSkeleton";
 
 const PsychologistProfile = () => {
   const { toast } = useToast();
@@ -165,7 +165,7 @@ const PsychologistProfile = () => {
   const handleLogout = () => signOut();
 
   if (loading) {
-    return <SkeletonFullPage />;
+    return <RouteSkeleton />;
   }
 
   return (

@@ -1,6 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from 'react';
-import { SkeletonFullPage } from '@/components/skeletons/Skeletons';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,6 +24,7 @@ import { FirstTimeAvailabilityModal } from '@/components/psychologist/FirstTimeA
 import logoImg from '@/assets/soliv-logo.svg';
 import ActiveCallBanner from '@/components/sos/ActiveCallBanner';
 import { getWeekStartISO } from '@/lib/psychologistAvailability';
+import RouteSkeleton from "@/components/skeletons/RouteSkeleton";
 
 const weeklyConfirmStorageKey = (userId: string) => `soliv:availability-week-confirmed:${userId}`;
 
@@ -152,7 +152,7 @@ const PsychologistDashboard = () => {
   const handleLogout = () => signOut();
 
   if (loading) {
-    return <SkeletonFullPage />;
+    return <RouteSkeleton />;
   }
 
   const pendingEmergencies = emergencyRequests.filter(req => req.status === 'pending').length;

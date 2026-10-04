@@ -52,3 +52,25 @@ describe('sair da conta', () => {
     expect(signOutMock).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('sair da conta sem resposta do servidor', () => {
+  beforeEach(() => {
+    signOutMock.mockReset();
+    Object.defineProperty(window, 'location', { value: { href: '/profile' }, writable: true });
+  });
+
+  it('mostra "Saindo da conta..." na hora e sai mesmo se o servidor não responder', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    signOutMock.mockReturnValue(new Promise(() => {}));
+    render(
+      <AuthProvider>
+        <LogoutButton />
+      </AuthProvider>,
+    );
+    fireEvent.click(screen.getByText('Sair'));
+    expect(await screen.findByText('Saindo da conta...')).toBeInTheDocument();
+    await vi.advanceTimersByTimeAsync(4000);
+    await waitFor(() => expect(window.location.href).toBe('/'));
+    vi.useRealTimers();
+  });
+});

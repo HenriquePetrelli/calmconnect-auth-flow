@@ -5,7 +5,7 @@ import { useAppointmentVideoCall } from '@/hooks/useAppointmentVideoCall';
 import { useAuth } from '@/contexts/AuthContext';
 import ConsultationVideoCall from '@/components/appointments/ConsultationVideoCall';
 import { Appointment } from '@/hooks/useAppointments';
-import { SkeletonFullPage } from '@/components/skeletons/Skeletons';
+import RouteSkeleton from "@/components/skeletons/RouteSkeleton";
 
 const ConsultationCall = () => {
   const { appointmentId } = useParams<{ appointmentId: string }>();
@@ -87,7 +87,7 @@ const ConsultationCall = () => {
   };
 
   if (loading) {
-    return <SkeletonFullPage />;
+    return <RouteSkeleton />;
   }
 
   if (!appointment) {

@@ -24,6 +24,7 @@ import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useAuth } from '@/contexts/AuthContext';
 import PageHeader from '@/components/PageHeader';
+import { NotificationsBodySkeleton } from '@/components/skeletons/PageSkeletons';
 
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -122,26 +123,10 @@ const Notifications = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-calm">
+      <div className={isStandalone ? 'min-h-screen bg-background' : undefined}>
         {standaloneHeader}
-        {/* Loading Content */}
-        <div className="container mx-auto px-4 py-6 max-w-2xl">
-          <div className="space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <Card key={i} className="animate-pulse border-border/50">
-                <CardContent className="p-4">
-                  <div className="flex gap-4">
-                    <div className="w-10 h-10 bg-muted rounded-full" />
-                    <div className="flex-1 space-y-2">
-                      <div className="h-4 bg-muted rounded w-3/4" />
-                      <div className="h-3 bg-muted rounded w-1/2" />
-                      <div className="h-3 bg-muted rounded w-1/4" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+        <div className={isStandalone ? 'px-4 py-6' : undefined}>
+          <NotificationsBodySkeleton />
         </div>
       </div>
     );

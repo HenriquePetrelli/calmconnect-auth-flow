@@ -1,6 +1,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import React, { useState, useEffect } from 'react';
-import { SkeletonFullPage, SkeletonStatsGrid } from '@/components/skeletons/Skeletons';
+import { SkeletonStatsGrid } from '@/components/skeletons/Skeletons';
+import { AdminDashboardSkeleton } from '@/components/skeletons/PageSkeletons';
 import { ContentTransition } from '@/components/skeletons/ContentTransition';
 
 import { ErrorState } from '@/components/ErrorState';
@@ -143,7 +144,7 @@ const AdminDashboard = () => {
   const handleLogout = () => signOut();
 
   if (!isAdmin) {
-    return <SkeletonFullPage />;
+    return <AdminDashboardSkeleton />;
   }
 
   const metricCards = metrics

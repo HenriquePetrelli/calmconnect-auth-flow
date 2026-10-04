@@ -22,9 +22,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from 'sonner';
 import React from "react";
-import PageSkeleton from "@/components/PageSkeleton";
 import { useTheme } from "next-themes";
 import ActiveCallBanner from "@/components/sos/ActiveCallBanner";
+import { HomeSkeleton } from "@/components/skeletons/PageSkeletons";
 
 
 
@@ -223,7 +223,7 @@ const HomeContent = () => {
 
 
   if (isLoading) {
-    return <PageSkeleton type="home" />;
+    return <HomeSkeleton />;
   }
 
   return (
