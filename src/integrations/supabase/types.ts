@@ -2802,14 +2802,6 @@ export type Database = {
         Args: { document_path: string }
         Returns: string
       }
-      get_psychologists_public_stats: {
-        Args: { p_user_ids: string[] }
-        Returns: {
-          consultation_count: number
-          sos_count: number
-          user_id: string
-        }[]
-      }
       get_psychologist_rejection_status: {
         Args: { p_user_id: string }
         Returns: {
