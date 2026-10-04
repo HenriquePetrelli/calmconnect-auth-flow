@@ -14,15 +14,25 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Visitante → Cadastro paciente → senha `calma2024` ⇒ entra na Home
 - [ ] Visitante → Login → senha errada ⇒ "Email ou senha incorretos"
 - [ ] Visitante → Login → Esqueci a senha → link do e-mail → nova senha ⇒ entra com ela
-- [ ] Paciente → Perfil → Sair ⇒ volta ao login; botão voltar não reabre o app
-- [ ] Visitante → Cadastro psicólogo → entrar ⇒ "em análise"
+- [ ] E-mail de redefinir senha ⇒ em português, com a logo do Soliv (sem domínio próprio só chega a quem é da equipe do Supabase)
+- [ ] Visitante → Cadastro paciente → preenchimento automático do navegador (endereço) ⇒ estado **e** cidade preenchidos
+- [ ] Paciente → Perfil → Sair ⇒ "Saindo da conta..." aparece na hora; volta ao login; botão voltar não reabre o app
+- [ ] Sair sem internet ⇒ sai mesmo assim em poucos segundos
+- [ ] Psicólogo em análise → Login ⇒ só o aviso "Seu cadastro ainda está sendo analisado" (sem "Erro ao verificar assinatura" nem tela de erro)
 - [ ] Paciente → abrir `/admin-dashboard` na barra ⇒ redirecionado
-- [ ] Visitante → Cadastro psicólogo → enviar documentos + aceitar termos do psicólogo ⇒ cadastro enviado
+- [ ] Visitante → Cadastro psicólogo → enviar documentos + aceitar termos do psicólogo ⇒ cadastro enviado, volta ao login (sem carregamento infinito)
+- [ ] Cadastro psicólogo → anexar arquivo inválido (ex.: `.exe` ou grande demais) ⇒ aviso em vermelho e campo limpo
+- [ ] Cadastro psicólogo → anexar documento válido ⇒ "Arquivo escolhido: nome"; documento aparece para o admin
+- [ ] Cadastro psicólogo → preenchimento automático do navegador ⇒ estado e cidade preenchidos
 - [ ] Psicólogo bloqueado → Login ⇒ vê o motivo e não entra
 - [ ] Paciente → Perfil → Editar meus sintomas → salvar ⇒ sintomas atualizados
 - [ ] Paciente → Perfil → Tema do aplicativo → escuro ⇒ app inteiro muda de tema
 - [ ] Paciente → Perfil → Humor diário → desligar ⇒ Home não pede mais o humor
 - [ ] Psicólogo → Perfil → Alterar senha (senha atual errada) ⇒ recusa; certa ⇒ troca
+- [ ] Paciente → Configurações da conta → Alterar senha com `abc123` ⇒ recusa (mínimo 8)
+- [ ] Paciente → Configurações da conta → editar nome → salvar ⇒ Perfil mostra o nome novo
+- [ ] Conta que ainda não aceitou a versão atual dos termos → entrar ⇒ pede o aceite antes de usar o app
+- [ ] Abrir qualquer tela pela primeira vez ⇒ esqueleto de carregamento com o formato da própria tela
 - [ ] Psicólogo → Perfil → editar bio e cidade → salvar ⇒ paciente vê os dados novos ao agendar
 - [ ] Qualquer → abrir endereço inexistente (`/xyz`) ⇒ "Não encontramos esta página"
 
@@ -38,6 +48,7 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Psicólogo → Encerrar ⇒ Paciente A vê a avaliação obrigatória
 - [ ] Paciente A → SOS de novo no mesmo mês ⇒ aviso de cota usada
 - [ ] Paciente B → SOS → fechar o app antes do aceite ⇒ pedido some do painel do psicólogo
+- [ ] Paciente B → SOS → Cancelar pedido ⇒ some do painel do psicólogo na hora (sem recarregar)
 - [ ] Paciente B → SOS → esperar 10 min sem aceite ⇒ "Ninguém atendeu" + CVV + "Tentar de novo"
 - [ ] Paciente B → SOS aceito → psicólogo fecha o app → 90 s ⇒ "Chamar outro psicólogo" (cota não é gasta)
 - [ ] Paciente B → SOS → psicólogo aceita e encerra sem o paciente entrar ⇒ SOS do mês volta
@@ -110,6 +121,7 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Cartão `4000 0000 0000 0341` na renovação ⇒ aviso para atualizar o cartão
 - [ ] Paciente → Planos → assinar → fechar o checkout sem pagar ⇒ "Pagamento não concluído", plano não muda
 - [ ] Paciente → Planos → Gerenciar pagamento ⇒ abre o portal do Stripe
+- [ ] Psicólogo e admin → entrar ⇒ nenhum aviso de assinatura
 
 ## 7. Repasses (ficha 09)
 
@@ -215,6 +227,10 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Admin → Atendimento → SOS ⇒ métricas carregam
 - [ ] Admin → recarregar numa seção ⇒ continua na mesma seção
 - [ ] Admin → Psicólogos → abrir documentos de um pendente ⇒ documentos abrem
+- [ ] Admin → Psicólogos → Pendentes ⇒ sem menu de ações na linha; detalhe só com Aprovar e Rejeitar
+- [ ] Admin → Psicólogos / Pacientes → menu de ações → Bloquear → fechar sem escolher ⇒ a página continua respondendo aos cliques
+- [ ] Admin → menu de ações → Excluir → Cancelar ⇒ a página continua respondendo aos cliques
+- [ ] Admin → Psicólogos → Exportar CSV ⇒ baixa a planilha da aba atual
 - [ ] Admin → Psicólogos → Rejeitar com motivo ⇒ psicólogo vê o motivo ao entrar
 - [ ] Admin → Psicólogos → bloquear / editar ⇒ mudanças valem na hora; Auditoria registra
 - [ ] Admin → Pacientes → Editar paciente → salvar ⇒ dados atualizados
