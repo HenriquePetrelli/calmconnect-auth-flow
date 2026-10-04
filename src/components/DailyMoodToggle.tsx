@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Heart } from "lucide-react";
+import { Smile } from "lucide-react";
+import { SettingsRow } from "@/components/settings/SettingsList";
 
 interface DailyMoodToggleProps {
   initialEnabled?: boolean;
@@ -95,18 +96,18 @@ export const DailyMoodToggle: React.FC<DailyMoodToggleProps> = ({ initialEnabled
   };
 
   return (
-    <div className="flex items-center justify-between">
-      <div className="space-y-0.5 pr-4">
-        <div className="text-sm font-medium">Humor diário</div>
-        <div className="text-xs text-muted-foreground">
-          Mostrar registro de humor na tela inicial
-        </div>
-      </div>
-      <Switch
-        checked={isEnabled}
-        onCheckedChange={handleToggle}
-        disabled={isLoading}
-      />
-    </div>
+    <SettingsRow
+      icon={<Smile />}
+      title="Humor diário"
+      description="Mostrar o registro de humor na tela inicial"
+      trailing={
+        <Switch
+          checked={isEnabled}
+          onCheckedChange={handleToggle}
+          disabled={isLoading}
+          aria-label="Alternar humor diário"
+        />
+      }
+    />
   );
 };

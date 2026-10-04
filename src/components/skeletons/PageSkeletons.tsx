@@ -129,51 +129,63 @@ export const HomeSkeleton = () => (
   </div>
 );
 
-/** Perfil do paciente: identidade + Plano + Configurações + lista de opções. */
-export const ProfileSkeleton = () => (
-  <div className="mx-auto w-full max-w-3xl space-y-5" aria-busy="true" aria-label="Carregando">
-    <Card className="overflow-hidden border-border/60">
-      <div className="p-6 sm:p-7">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-5">
-          <Skeleton className="w-20 h-20 rounded-2xl" />
-          <div className="flex-1 min-w-0 space-y-3">
-            <Skeleton className="h-6 w-40" />
-            <Skeleton className="h-4 w-48" />
-            <Skeleton className="h-6 w-32 rounded-full" />
-          </div>
-          <div className="hidden sm:block">
-            <Skeleton className="h-9 w-32 rounded-md" />
-          </div>
-        </div>
-      </div>
-    </Card>
-
-    {/* Plano e Configurações: título + subtítulo + seta, sem ícone. */}
-    {Array.from({ length: 2 }).map((_, i) => (
-      <Card key={i} className="overflow-hidden border-border/60">
-        <div className="flex items-center justify-between gap-4 px-4 py-3.5">
-          <div className="space-y-2 min-w-0 flex-1">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-3 w-44" />
-          </div>
-          <Skeleton className="h-4 w-4 rounded shrink-0" />
-        </div>
-      </Card>
-    ))}
-
-    {/* Conta, suporte, termos, privacidade e sair: um cartão com a lista. */}
+/** Perfil do paciente: identidade, Meu plano e as seções de opções. */
+const ProfileRowsSkeleton = ({ rows }: { rows: number }) => (
+  <div className="space-y-2">
+    <Skeleton className="ml-1 h-3 w-24" />
     <Card className="overflow-hidden border-border/60 divide-y divide-border/60">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="flex items-center gap-4 px-4 py-4">
+      {Array.from({ length: rows }).map((_, i) => (
+        <div key={i} className="flex min-h-[68px] items-center gap-4 px-4 py-3">
           <Skeleton className="w-10 h-10 rounded-xl shrink-0" />
           <div className="space-y-2 min-w-0 flex-1">
-            <Skeleton className="h-4 w-40" />
-            <Skeleton className="h-3 w-32" />
+            <Skeleton className="h-4 w-36" />
+            <Skeleton className="h-3 w-44" />
           </div>
           <Skeleton className="h-4 w-4 rounded shrink-0" />
         </div>
       ))}
     </Card>
+  </div>
+);
+
+export const ProfileSkeleton = () => (
+  <div className="mx-auto w-full max-w-3xl space-y-6 pb-4" aria-busy="true" aria-label="Carregando">
+    <Card className="border-border/60">
+      <div className="flex items-center gap-4 p-5">
+        <Skeleton className="w-16 h-16 rounded-2xl shrink-0" />
+        <div className="flex-1 min-w-0 space-y-2">
+          <Skeleton className="h-5 w-40" />
+          <Skeleton className="h-4 w-48" />
+          <Skeleton className="h-5 w-28 rounded-full" />
+        </div>
+      </div>
+    </Card>
+
+    {/* Meu plano: cabeçalho, benefícios e botão. */}
+    <div className="space-y-2">
+      <Skeleton className="ml-1 h-3 w-20" />
+      <Card className="border-border/60">
+        <div className="space-y-4 p-4">
+          <div className="flex items-center gap-4">
+            <Skeleton className="w-10 h-10 rounded-xl shrink-0" />
+            <div className="space-y-2 flex-1">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-3 w-24" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-4 w-52" />
+            ))}
+          </div>
+          <Skeleton className="h-11 w-full rounded-md" />
+        </div>
+      </Card>
+    </div>
+
+    <ProfileRowsSkeleton rows={2} />
+    <ProfileRowsSkeleton rows={4} />
+    <ProfileRowsSkeleton rows={3} />
   </div>
 );
 

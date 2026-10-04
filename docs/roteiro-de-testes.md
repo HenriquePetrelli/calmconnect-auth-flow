@@ -25,9 +25,9 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Cadastro psicólogo → anexar documento válido ⇒ "Arquivo escolhido: nome"; documento aparece para o admin
 - [ ] Cadastro psicólogo → preenchimento automático do navegador ⇒ estado e cidade preenchidos
 - [ ] Psicólogo bloqueado → Login ⇒ vê o motivo e não entra
-- [ ] Paciente → Perfil → Editar meus sintomas → salvar ⇒ sintomas atualizados
-- [ ] Paciente → Perfil → Tema do aplicativo → escuro ⇒ app inteiro muda de tema
-- [ ] Paciente → Perfil → Humor diário → desligar ⇒ Home não pede mais o humor
+- [ ] Paciente → Perfil → Conta → Meus sintomas → Confirmar ⇒ a janela fecha e aparece "Sintomas atualizados" no perfil
+- [ ] Paciente → Perfil → Preferências → Tema → escuro ⇒ app inteiro muda de tema
+- [ ] Paciente → Perfil → Preferências → Humor diário → desligar ⇒ Home não pede mais o humor
 - [ ] Psicólogo → Perfil → Alterar senha (senha atual errada) ⇒ recusa; certa ⇒ troca
 - [ ] Paciente → Configurações da conta → Alterar senha com `abc123` ⇒ recusa (mínimo 8)
 - [ ] Paciente → Configurações da conta → editar nome → salvar ⇒ Perfil mostra o nome novo

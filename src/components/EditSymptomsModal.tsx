@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { toast as notify } from 'sonner';
 import { Loader2 } from 'lucide-react';
 
 interface EditSymptomsModalProps {
@@ -111,8 +112,14 @@ export const EditSymptomsModal: React.FC<EditSymptomsModalProps> = ({
 
       if (error) throw error;
 
-      toast({ title: 'Sintomas atualizados' });
+      // Fecha a janela primeiro e avisa na tela de trás, depois da animação de
+      // saída: o aviso disparado com a janela aberta sumia junto com ela.
       onOpenChange(false);
+      window.setTimeout(() => {
+        notify.success('Sintomas atualizados', {
+          description: 'Vamos usar suas respostas para indicar o cuidado certo para você.',
+        });
+      }, 250);
     } catch (error) {
       console.error('Error saving symptoms:', error);
       toast({
@@ -133,7 +140,7 @@ export const EditSymptomsModal: React.FC<EditSymptomsModalProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[80vh]">
         <DialogHeader>
-          <DialogTitle>Editar meus sintomas</DialogTitle>
+          <DialogTitle>Meus sintomas</DialogTitle>
           <DialogDescription>
             Selecione os sintomas que você está sentindo. Você pode marcar ou desmarcar conforme necessário.
           </DialogDescription>

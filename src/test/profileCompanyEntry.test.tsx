@@ -59,3 +59,18 @@ describe('Perfil: benefício da empresa', () => {
     expect(screen.getByText('Portal da empresa')).toBeInTheDocument();
   });
 });
+
+describe('Perfil: seções', () => {
+  it('separa plano, conta, preferências, ajuda e sair', async () => {
+    renderProfile();
+    expect(await screen.findByRole('region', { name: 'Meu plano' })).toBeInTheDocument();
+    for (const name of ['Conta', 'Preferências', 'Ajuda e privacidade']) {
+      expect(screen.getByRole('region', { name })).toBeInTheDocument();
+    }
+    expect(screen.getByText('Alterar dados da conta')).toBeInTheDocument();
+    expect(screen.getByText('Meus sintomas')).toBeInTheDocument();
+    expect(screen.getByText('Sair da conta')).toBeInTheDocument();
+    // Plano grátis: a ação principal fica à vista, sem abrir nada.
+    expect(screen.getByRole('button', { name: /Conhecer os planos/ })).toBeInTheDocument();
+  });
+});
