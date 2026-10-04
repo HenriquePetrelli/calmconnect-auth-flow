@@ -68,7 +68,6 @@ const LoginForm = ({ onForgotPassword, onSignUp }: LoginFormProps) => {
 
       // Admin não tem linha em `profiles` (fica em admin_users): resolve antes.
       if (state.is_admin || data.user.user_metadata?.is_super_admin === true) {
-        toast.success('Bem-vindo ao painel administrativo!');
         navigate('/admin-dashboard');
         setEmail("");
         setPassword("");
@@ -136,8 +135,6 @@ const LoginForm = ({ onForgotPassword, onSignUp }: LoginFormProps) => {
         }
       }
 
-      toast.success(`Bem-vindo${profile.user_type === 'psychologist' ? ' Dr.(a)' : ''}, ${profile.full_name ?? ''}!`);
-      
       // Redirecionar para a página apropriada baseado no userType
       if (profile.user_type === 'psychologist') {
         navigate('/psychologist-dashboard');
