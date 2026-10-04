@@ -2822,6 +2822,14 @@ export type Database = {
           should_show_rejection_message: boolean
         }[]
       }
+      get_psychologists_public_stats: {
+        Args: { p_user_ids: string[] }
+        Returns: {
+          consultation_count: number
+          sos_count: number
+          user_id: string
+        }[]
+      }
       get_sos_metrics: { Args: { p_days?: number }; Returns: Json }
       get_sos_patient_context: { Args: { p_request_id: string }; Returns: Json }
       get_sos_safety_plan: { Args: { p_request_id: string }; Returns: Json }
