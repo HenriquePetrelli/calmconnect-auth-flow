@@ -216,6 +216,7 @@ serve(async (req) => {
       subscription_end: stripeEnd,
       plan_limits: PLAN_LIMITS[stripeTier ?? "none"],
       entitlement_source: "stripe",
+      cancel_at_period_end: stripeTier !== null && stripeSub.cancelAtPeriodEnd,
       updated_at: new Date().toISOString(),
     };
     // O uso do mês (SOS e consulta) não é regravado numa linha existente:

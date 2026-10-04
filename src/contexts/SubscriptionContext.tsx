@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { withExpiredCancellation } from '@/lib/subscriptionStatus';
 
 interface SubscriptionContextType {
   subscribed: boolean;
@@ -80,7 +81,10 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const { user } = useAuth();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const applySubscriptionData = (data: any) => {
+  const applySubscriptionData = (raw: any) => {
+    // Plano cancelado cujo período pago acabou: já mostra o plano grátis, sem
+    // esperar o Stripe e o banco encerrarem (alguns minutos depois).
+    const data = withExpiredCancellation(raw ?? {});
     setSubscribed(data.subscribed || false);
     setSubscriptionTier(data.subscription_tier);
     setSubscriptionEnd(data.subscription_end);
@@ -169,6 +173,17 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const timeout = globalThis.setTimeout(scheduleCheck, 500);
     return () => globalThis.clearTimeout(timeout);
   }, [user?.id]);
+
+  // Com o app aberto na hora em que o plano cancelado acaba, confere de novo
+  // para trocar para o plano grátis sem precisar recarregar.
+  useEffect(() => {
+    if (!user || !cancelAtPeriodEnd || !subscriptionEnd) return;
+    const ms = new Date(subscriptionEnd).getTime() - Date.now();
+    if (ms < 0 || ms > 24 * 60 * 60 * 1000) return;
+    const timeout = globalThis.setTimeout(() => checkSubscription(), ms + 1000);
+    return () => globalThis.clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, cancelAtPeriodEnd, subscriptionEnd]);
 
   return (
     <SubscriptionContext.Provider

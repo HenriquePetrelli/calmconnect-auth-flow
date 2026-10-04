@@ -144,8 +144,17 @@ serve(async (req) => {
         subscription_end: null,
         plan_limits: { appointments: 0, sos_uses: 0 },
         entitlement_source: "stripe",
+        cancel_at_period_end: false,
         updated_at: new Date().toISOString(),
       }).eq("user_id", user.id);
+    } else if (accessUntil) {
+      // O plano continua até o fim do período pago; o app mostra o aviso na
+      // hora (sem esperar o webhook) e o banco encerra o plano nessa data.
+      await supabaseClient.from("subscribers").update({
+        cancel_at_period_end: true,
+        subscription_end: accessUntil,
+        updated_at: new Date().toISOString(),
+      }).eq("user_id", user.id).eq("entitlement_source", "stripe");
     }
 
     logStep("Updated database with cancellation", { cancelledSubscriptions });

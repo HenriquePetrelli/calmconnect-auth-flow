@@ -13,6 +13,7 @@ import { useSubscription } from "@/contexts/SubscriptionContext";
 
 const formatBRL = (cents: number) =>
   (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+import { cancelledPlanLabel, formatBrazilDate } from "@/lib/subscriptionStatus";
 const formatDay = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString("pt-BR") : "");
 
 /**
@@ -333,7 +334,7 @@ const SubscriptionPlans = () => {
                   className="text-lg px-6 py-3 bg-primary/10 text-primary border border-primary/20"
                 >
                   <Crown className="w-5 h-5 mr-2" />
-                  Plano Atual: {subscriptionTier}
+                  {cancelledPlanLabel(subscriptionTier, cancelAtPeriodEnd, subscriptionEnd) ?? `Plano Atual: ${subscriptionTier}`}
                 </Badge>
 
                 {paymentIssue ? (
@@ -342,7 +343,7 @@ const SubscriptionPlans = () => {
                   </div>
                 ) : cancelAtPeriodEnd ? (
                   <div role="note" className="w-full max-w-md rounded-lg border border-warning/40 bg-warning/10 p-3 text-left text-sm text-foreground">
-                    Assinatura cancelada. Seu plano continua até {formatDay(subscriptionEnd)} e não será renovado.
+                    Você não será cobrado de novo. Até {formatBrazilDate(subscriptionEnd ?? "")}, tudo do {subscriptionTier} continua liberado; depois, sua conta passa para o plano grátis.
                     <Button
                       variant="outline"
                       size="sm"

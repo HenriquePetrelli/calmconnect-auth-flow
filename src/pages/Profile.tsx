@@ -19,6 +19,7 @@ import { useCompanyBenefit } from "@/hooks/useCompanyBenefit";
 
 import ProfileSkeleton from "@/components/ProfileSkeleton";
 import EditSymptomsModal from "@/components/EditSymptomsModal";
+import { cancelledPlanLabel } from "@/lib/subscriptionStatus";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -94,6 +95,8 @@ const Profile = () => {
   }
 
   const planInfo = getPlanInfo();
+  // "Plano cancelado - Plus disponível até 15/04/2026" (só assinatura própria).
+  const cancelledLabel = entitlementSource === 'stripe' ? cancelledPlanLabel(subscriptionTier, cancelAtPeriodEnd, subscriptionEnd) : null;
 
   const initials = (user?.profile?.full_name || user?.email || 'U')
     .split(' ')
@@ -124,7 +127,7 @@ const Profile = () => {
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     <Badge variant="secondary" className="gap-1.5 font-medium">
                       <Crown size={12} className="text-premium-primary" />
-                      {subscribed ? `Plano ${subscriptionTier}` : 'Plano Grátis'}
+                      {cancelledLabel ?? (subscribed ? `Plano ${subscriptionTier}` : 'Plano Grátis')}
                     </Badge>
                   </div>
                 </div>
@@ -152,8 +155,8 @@ const Profile = () => {
                 ? `Oferecido pela ${organizationName}`
                 : paymentIssue
                   ? 'Pagamento recusado: atualize o cartão'
-                  : cancelAtPeriodEnd && subscriptionEnd
-                    ? `Cancelado, ativo até ${new Date(subscriptionEnd).toLocaleDateString('pt-BR')}`
+                  : cancelledLabel
+                    ? cancelledLabel
                     : `${planInfo.price}/mês`
             }
             contentClassName="px-0 pb-0"

@@ -137,7 +137,7 @@ describe('planos e pagamento', () => {
     subscribedTo('Plus', { cancelAtPeriodEnd: true });
     handlers['manage-subscription'] = () => ({ data: { ok: true }, error: null });
     renderPage();
-    expect(screen.getByRole('note')).toHaveTextContent('continua até 20/10/2026 e não será renovado');
+    expect(screen.getByRole('note')).toHaveTextContent('Até 20/10/2026, tudo do Plus continua liberado; depois, sua conta passa para o plano grátis.');
     expect(screen.queryByRole('button', { name: 'Cancelar assinatura' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Manter minha assinatura' }));
     await waitFor(() => expect(calls('manage-subscription')).toEqual([{ action: 'resume' }]));

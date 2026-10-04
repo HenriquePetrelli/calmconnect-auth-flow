@@ -65,8 +65,15 @@ Deno.serve(async (req) => {
     const currentPrice = subscription.items.data[0]?.price.id;
     const currentTier = tierForPrice(PLAN_PRICES, currentPrice);
 
+    // Desistiu do cancelamento (manter, subir ou descer de plano): tira a marca
+    // na hora, senão a rotina expire-cancelled-subscriptions encerraria o
+    // plano de quem continua pagando caso o webhook do Stripe não chegue.
+    const clearCancelFlag = () =>
+      supabase.from("subscribers").update({ cancel_at_period_end: false }).eq("user_id", user.id);
+
     if (action === "resume") {
       await stripe.subscriptions.update(subscription.id, { cancel_at_period_end: false });
+      await clearCancelFlag();
       log("Cancellation undone", { subscription: subscription.id });
       return json({ ok: true });
     }
@@ -114,6 +121,7 @@ Deno.serve(async (req) => {
         log("Upgrade payment failed", { message: error instanceof Error ? error.message : String(error) });
         return json({ error_code: "payment_failed" });
       }
+      await clearCancelFlag();
       log("Upgraded", { subscription: subscription.id, from: currentTier, to: target });
       return json({ ok: true, direction });
     }
@@ -126,6 +134,7 @@ Deno.serve(async (req) => {
       // Uma assinatura com cancelamento agendado não aceita agenda de troca;
       // escolher outro plano é desistir do cancelamento.
       await stripe.subscriptions.update(subscription.id, { cancel_at_period_end: false });
+      await clearCancelFlag();
     }
     const scheduleRef = subscription.schedule;
     const scheduleId =

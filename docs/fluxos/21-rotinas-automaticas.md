@@ -12,6 +12,7 @@
 | `notification-push` | A cada minuto | Envia os pushes pendentes | 07 |
 | `prune-stale-psychologist-presence` | A cada 2 min | Tira do "online" o psicólogo sem sinal recente | 02 |
 | `appointment-reminders` | A cada 10 min | Lembretes de consulta (24 h e 1 h) | 04 |
+| `expire-cancelled-subscriptions` | De hora em hora (minuto 7) | Plano do Stripe cancelado cujo período pago acabou vira plano grátis, mesmo sem o aviso do Stripe | 08 |
 | `finalize-stale-appointments` | A cada 10 min | Fecha consultas vencidas: concluída se conectou, "não realizada" e devolução da cota se não | 04 |
 | `habit-reminders` | A cada 15 min | Lembretes de hábitos por push | 11 |
 | `auto-decline-expired-appointments` | De hora em hora | Expira pedidos de consulta sem resposta | 04 |

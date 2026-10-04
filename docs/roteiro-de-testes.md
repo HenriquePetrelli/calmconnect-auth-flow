@@ -104,7 +104,8 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Paciente C → Planos → Plus → pagar ⇒ tela de sucesso; Perfil mostra Plus
 - [ ] Paciente → Planos → subir para Premium ⇒ prévia do valor proporcional → Premium na hora
 - [ ] Paciente → Planos → descer para Plus ⇒ "vale na renovação"
-- [ ] Paciente → Planos → Cancelar (após 7 dias) ⇒ "Seu plano vai até dd/mm" → "Manter" desfaz
+- [ ] Paciente → Planos → Cancelar (após 7 dias) ⇒ Perfil e Planos mostram "Plano cancelado - Plus disponível até dd/mm/aaaa" → "Manter" desfaz
+- [ ] Plano cancelado → passar a data de fim (relógio de teste do Stripe) ⇒ Perfil mostra "Plano Grátis"; SOS pede plano
 - [ ] Paciente → Planos → Cancelar (até 7 dias) ⇒ acaba na hora, reembolso no Stripe
 - [ ] Cartão `4000 0000 0000 0341` na renovação ⇒ aviso para atualizar o cartão
 - [ ] Paciente → Planos → assinar → fechar o checkout sem pagar ⇒ "Pagamento não concluído", plano não muda

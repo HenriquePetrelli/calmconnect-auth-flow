@@ -63,6 +63,9 @@ const syncCustomer = async (customerId: string, userIdHint?: string | null) => {
     subscribed: state.tier !== null,
     subscription_tier: state.tier,
     subscription_end: state.periodEnd,
+    // Cancelada e sem renovação: o banco encerra o plano em subscription_end
+    // (rotina expire-cancelled-subscriptions), mesmo sem novo aviso do Stripe.
+    cancel_at_period_end: state.tier !== null && state.cancelAtPeriodEnd,
     plan_limits: PLAN_LIMITS[state.tier ?? "none"],
     // Estado do Stripe; o trigger do banco soma o plano da empresa (B2B), se houver.
     entitlement_source: "stripe",
