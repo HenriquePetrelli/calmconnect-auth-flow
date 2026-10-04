@@ -77,7 +77,18 @@ export const PsychologistSelection: React.FC<PsychologistSelectionProps> = ({
         total_appointments: psych.total_appointments || 0
       })) || [];
   
-      setPsychologists(formattedData);
+      // Consultas e SOS concluídos de cada um. Sem a função no banco (antes da
+      // migração), a lista segue com o total de consultas do cadastro.
+      const { data: stats } = await supabase.rpc('get_psychologists_public_stats', {
+        p_user_ids: formattedData.map((p) => p.user_id),
+      });
+      const statsByUser = new Map((stats ?? []).map((row) => [row.user_id, row]));
+      const withStats = formattedData.map((p) => {
+        const row = statsByUser.get(p.user_id);
+        return row ? { ...p, consultation_count: row.consultation_count, sos_count: row.sos_count } : p;
+      });
+
+      setPsychologists(withStats);
       
       // Extrair especialidades únicas para filtro
       const uniqueSpecialties = Array.from(

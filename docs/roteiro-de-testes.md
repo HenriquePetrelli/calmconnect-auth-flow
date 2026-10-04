@@ -68,6 +68,7 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Psicólogo → Agenda → Personalizar horários → bloquear 14h de amanhã ⇒ paciente não vê 14h amanhã
 - [ ] Psicólogo → Agenda → marcar férias ⇒ nenhum horário nesses dias
 - [ ] Paciente A → Consultas → Agendar → psicólogo → horário ⇒ "Aguardando confirmação"
+- [ ] Paciente A → Consultas → Agendar → lista de psicólogos ⇒ mostra consultas e SOS atendidos; não mostra cidade nem estado
 - [ ] Paciente A → Consultas → Agendar (toque duplo rápido) ⇒ só uma consulta criada
 - [ ] Paciente A → Consultas → Agendar outra no mês ⇒ aviso de cota usada
 - [ ] Paciente B (Plus) → Consultas → Agendar ⇒ "disponível apenas no Premium"

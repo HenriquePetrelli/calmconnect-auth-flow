@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { ChevronRight, MapPin, User, CheckCircle, Star } from 'lucide-react';
+import { CalendarCheck, ChevronRight, User, CheckCircle, LifeBuoy, Star } from 'lucide-react';
 
 export interface PsychologistData {
   id: string;
@@ -16,6 +16,9 @@ export interface PsychologistData {
   approved: boolean;
   document_url?: string;
   total_appointments?: number;
+  /** Consultas e SOS concluídos (get_psychologists_public_stats). */
+  consultation_count?: number;
+  sos_count?: number;
 }
 
 interface PsychologistListProps {
@@ -24,6 +27,8 @@ interface PsychologistListProps {
   loading?: boolean;
   onlineOnly?: boolean;
 }
+
+const countLabel = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 export const PsychologistList: React.FC<PsychologistListProps> = ({
   psychologists,
@@ -93,23 +98,19 @@ export const PsychologistList: React.FC<PsychologistListProps> = ({
                         CRP: {psychologist.crp_number}
                       </p>
                     )}
-                    {!onlineOnly && (
-                      <>
-                        {psychologist.city && (
-                          <div className="flex items-center gap-1 mt-1">
-                            <MapPin size={12} className="text-muted-foreground" />
-                            <span className="text-xs text-muted-foreground truncate">
-                              {psychologist.city}{psychologist.state && `, ${psychologist.state}`}
-                            </span>
-                          </div>
-                        )}
-                        {psychologist.address && (
-                          <p className="text-xs text-muted-foreground mt-1 truncate">
-                            Endereço: {psychologist.address}
-                          </p>
-                        )}
-                      </>
-                    )}
+                    {/* Quanto já atendeu pelo app: consultas e SOS concluídos. */}
+                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <CalendarCheck className="h-3 w-3" aria-hidden="true" />
+                        {countLabel(psychologist.consultation_count ?? psychologist.total_appointments ?? 0, 'consulta', 'consultas')}
+                      </span>
+                      {psychologist.sos_count !== undefined && (
+                        <span className="flex items-center gap-1">
+                          <LifeBuoy className="h-3 w-3" aria-hidden="true" />
+                          {countLabel(psychologist.sos_count, 'SOS atendido', 'SOS atendidos')}
+                        </span>
+                      )}
+                    </div>
                     {/* Rating display - placeholder for future implementation */}
                     <div className="flex items-center gap-0.5 mt-1">
                       {[...Array(5)].map((_, i) => (
