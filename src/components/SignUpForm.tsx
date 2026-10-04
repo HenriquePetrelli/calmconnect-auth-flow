@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +16,8 @@ import LegalConsents, { EMPTY_CONSENTS, allConsentsGiven, consentKeysFor } from 
 import { signupAcceptanceMetadata } from "@/lib/legal";
 import { joinErrorMessage, normalizeInviteCode, type JoinErrorCode } from "@/lib/organizations";
 import { passwordProblem, PASSWORD_HINT } from '@/lib/password';
+import { findCity, findStateAbbreviation } from '@/lib/placeMatch';
+import AddressAutofillInputs from '@/components/AddressAutofillInputs';
 
 interface SignUpFormProps {
   userType: "patient" | "psychologist";
@@ -100,6 +102,12 @@ const [formData, setFormData] = useState({
         
         if (error) throw error;
         setStates(data || []);
+        // Estado vindo do preenchimento automático antes da lista chegar.
+        const autofilled = findStateAbbreviation(data || [], pendingState.current);
+        if (autofilled) {
+          pendingState.current = null;
+          setFormData(prev => (prev.state ? prev : { ...prev, state: autofilled }));
+        }
       } catch (error) {
         console.error('Error fetching states:', error);
         toast.error('Erro ao carregar estados');
@@ -113,6 +121,7 @@ const [formData, setFormData] = useState({
 
   // Fetch cities when state changes
   useEffect(() => {
+    let cancelled = false;
     const fetchCities = async () => {
       if (!formData.state) {
         setCities([]);
@@ -127,7 +136,17 @@ const [formData, setFormData] = useState({
           .order('name');
         
         if (error) throw error;
-        setCities(data || []);
+        if (cancelled) return; // o estado mudou enquanto a lista baixava
+        const list = data || [];
+        setCities(list);
+        // Mantém a cidade se ela existe no estado; senão usa a do
+        // preenchimento automático (que chega antes da lista); senão limpa.
+        const autofilled = findCity(list, pendingCity.current);
+        pendingCity.current = null;
+        setFormData(prev => {
+          const city = findCity(list, prev.city) ?? autofilled ?? '';
+          return city === prev.city ? prev : { ...prev, city };
+        });
       } catch (error) {
         console.error('Error fetching cities:', error);
         toast.error('Erro ao carregar cidades');
@@ -137,7 +156,24 @@ const [formData, setFormData] = useState({
     if (isPatient && formData.state) {
       fetchCities();
     }
+    return () => {
+      cancelled = true;
+    };
   }, [formData.state, isPatient]);
+
+  // Preenchimento automático do navegador (endereço salvo).
+  const pendingState = useRef<string | null>(null);
+  const pendingCity = useRef<string | null>(null);
+  const handleAutofillState = (value: string) => {
+    const abbreviation = findStateAbbreviation(states, value);
+    if (abbreviation) handleInputChange('state', abbreviation);
+    else pendingState.current = value;
+  };
+  const handleAutofillCity = (value: string) => {
+    const city = findCity(cities, value);
+    if (city) handleInputChange('city', city);
+    else pendingCity.current = value;
+  };
 
   // Função para aplicar máscara no CPF
   const formatCPF = (value: string) => {
@@ -169,11 +205,8 @@ const [formData, setFormData] = useState({
     }
     
     setFormData(prev => ({ ...prev, [field]: value }));
-    
-    // Reset city when state changes
-    if (field === 'state') {
-      setFormData(prev => ({ ...prev, city: '' }));
-    }
+    // Trocar o estado não apaga a cidade na hora: quando a lista do novo
+    // estado chega, a cidade some só se não existir nele (ver fetchCities).
     
     // Limpar erro do campo quando o usuário começar a digitar
     if (errors[field]) {
@@ -442,6 +475,7 @@ const { error: profileError } = await supabase
 
             {isPatient && (
               <>
+                <AddressAutofillInputs onState={handleAutofillState} onCity={handleAutofillCity} />
                 <div className="space-y-2">
                   <Label htmlFor="state" className="text-foreground font-medium">
                     Estado

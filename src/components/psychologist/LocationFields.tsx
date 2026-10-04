@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { findCity, findStateAbbreviation } from '@/lib/placeMatch';
+import AddressAutofillInputs from '@/components/AddressAutofillInputs';
 
 interface State {
   abbreviation: string;
@@ -21,6 +23,9 @@ export const LocationFields = ({ form }: LocationFieldsProps) => {
   const [states, setStates] = useState<State[]>([]);
   const [cities, setCities] = useState<City[]>([]);
   const selectedState = form.watch('state');
+  // Preenchimento automático do navegador: guardado até as listas chegarem.
+  const pendingState = useRef<string | null>(null);
+  const pendingCity = useRef<string | null>(null);
 
   // Fetch Brazilian states on component mount
   useEffect(() => {
@@ -33,6 +38,11 @@ export const LocationFields = ({ form }: LocationFieldsProps) => {
         
         if (error) throw error;
         setStates(data || []);
+        const autofilled = findStateAbbreviation(data || [], pendingState.current);
+        if (autofilled && !form.getValues('state')) {
+          pendingState.current = null;
+          form.setValue('state', autofilled, { shouldValidate: true });
+        }
       } catch (error) {
         console.error('Error fetching states:', error);
         toast.error('Erro ao carregar estados');
@@ -40,10 +50,11 @@ export const LocationFields = ({ form }: LocationFieldsProps) => {
     };
 
     fetchStates();
-  }, []);
+  }, [form]);
 
   // Fetch cities when state changes
   useEffect(() => {
+    let cancelled = false;
     const fetchCities = async () => {
       if (!selectedState) {
         setCities([]);
@@ -58,7 +69,17 @@ export const LocationFields = ({ form }: LocationFieldsProps) => {
           .order('name');
         
         if (error) throw error;
-        setCities(data || []);
+        if (cancelled) return; // o estado mudou enquanto a lista baixava
+        const list = data || [];
+        setCities(list);
+        // Mantém a cidade se ela existe no estado; senão usa a do
+        // preenchimento automático; senão limpa (antes limpava sempre, e a
+        // cidade do preenchimento automático se perdia).
+        const kept = findCity(list, form.getValues('city'));
+        const autofilled = kept ? null : findCity(list, pendingCity.current);
+        if (autofilled) pendingCity.current = null;
+        const city = kept ?? autofilled ?? '';
+        if (city !== form.getValues('city')) form.setValue('city', city, { shouldValidate: Boolean(city) });
       } catch (error) {
         console.error('Error fetching cities:', error);
         toast.error('Erro ao carregar cidades');
@@ -67,20 +88,33 @@ export const LocationFields = ({ form }: LocationFieldsProps) => {
 
     if (selectedState) {
       fetchCities();
-      // Clear city when state changes
-      form.setValue('city', '');
     }
+    return () => {
+      cancelled = true;
+    };
   }, [selectedState, form]);
+
+  const handleAutofillState = (value: string) => {
+    const abbreviation = findStateAbbreviation(states, value);
+    if (abbreviation) form.setValue('state', abbreviation, { shouldValidate: true });
+    else pendingState.current = value;
+  };
+  const handleAutofillCity = (value: string) => {
+    const city = findCity(cities, value);
+    if (city) form.setValue('city', city, { shouldValidate: true });
+    else pendingCity.current = value;
+  };
 
   return (
     <>
+      <AddressAutofillInputs onState={handleAutofillState} onCity={handleAutofillCity} />
       <FormField
         control={form.control}
         name="state"
         render={({ field }) => (
           <FormItem>
             <FormLabel>Estado *</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <Select onValueChange={field.onChange} value={field.value}>
               <FormControl>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione seu estado" />
@@ -106,8 +140,8 @@ export const LocationFields = ({ form }: LocationFieldsProps) => {
           <FormItem>
             <FormLabel>Cidade *</FormLabel>
             <Select 
-              onValueChange={field.onChange} 
-              defaultValue={field.value}
+              onValueChange={field.onChange}
+              value={field.value}
               disabled={!selectedState}
             >
               <FormControl>

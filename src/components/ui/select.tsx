@@ -4,7 +4,13 @@ import { Check, ChevronDown, ChevronUp } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
-const Select = SelectPrimitive.Root
+// O Radix avisa onValueChange("") quando as opções mudam depois de haver um
+// valor escolhido (ex.: a lista de cidades chega do servidor) e isso apagava
+// a escolha. Nenhuma opção pode ter valor "" no Radix, então "" é sempre esse
+// aviso indevido e é ignorado.
+const Select = ({ onValueChange, ...props }: React.ComponentPropsWithoutRef<typeof SelectPrimitive.Root>) => (
+  <SelectPrimitive.Root {...props} onValueChange={onValueChange ? (value) => value !== "" && onValueChange(value) : undefined} />
+)
 
 const SelectGroup = SelectPrimitive.Group
 
