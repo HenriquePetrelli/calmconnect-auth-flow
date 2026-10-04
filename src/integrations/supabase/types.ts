@@ -2346,7 +2346,6 @@ export type Database = {
       webrtc_sessions: {
         Row: {
           answer: Json | null
-          connected_at: string | null
           created_at: string
           emergency_request_id: string | null
           end_reason: string | null
@@ -2371,7 +2370,6 @@ export type Database = {
         }
         Insert: {
           answer?: Json | null
-          connected_at?: string | null
           created_at?: string
           emergency_request_id?: string | null
           end_reason?: string | null
@@ -2396,7 +2394,6 @@ export type Database = {
         }
         Update: {
           answer?: Json | null
-          connected_at?: string | null
           created_at?: string
           emergency_request_id?: string | null
           end_reason?: string | null
@@ -2940,10 +2937,6 @@ export type Database = {
       remove_organization_member_by_email: {
         Args: { p_email: string; p_org: string }
         Returns: Json
-      }
-      release_appointment_quota: {
-        Args: { p_appointment_id: string }
-        Returns: boolean
       }
       report_consultation_problem: {
         Args: { p_appointment_id: string; p_details?: string }
