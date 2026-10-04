@@ -73,19 +73,30 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
   4. Ativar a verificação em duas etapas (MFA) para as contas de admin.
 - **Registrado em:** 2026-10-04.
 
+### 7. Renomear o repositório para `soliv`
+
+- **Situação:** o código já usa Soliv em todo lugar (app, Android, pacote, telas e e-mails). Falta o nome do repositório no GitHub (`calmconnect-auth-flow`).
+- **Cuidado:** renomear com a Lovable conectada quebra a sincronização ([FAQ da Lovable](https://lovable.dev/faq/github/github-rename-delete)).
+- **O que fazer, nesta ordem:**
+  1. Lovable → desconectar o GitHub do projeto.
+  2. GitHub → Settings → General → Repository name → `soliv`.
+  3. Lovable → conectar o GitHub de novo e escolher o repositório renomeado. Se ela só oferecer criar um repositório novo, não siga e peça ajuda ao Claude.
+- **Opcional:** trocar o nome do projeto no painel da Lovable e o e-mail da conta admin (`admin@calmconnect.com`) junto com a pendência 1.
+- **Registrado em:** 2026-10-04.
+
 ## Melhorias sugeridas
 
-### 7. SOS por mensagem de texto
+### 8. SOS por mensagem de texto
 
 - Apps como Crisis Text Line e o chat do CVV atendem por texto: muita gente em crise não consegue falar (está em casa com outras pessoas, no trabalho, sem voz). Hoje o SOS do Soliv é só por vídeo (dá para desligar a câmera, mas não para falar sem voz).
 - **Registrado em:** 2026-10-04.
 
-### 8. Triagem rápida de risco no SOS
+### 9. Triagem rápida de risco no SOS
 
 - Antes de entrar na fila, 1 ou 2 perguntas (ex.: "Você está pensando em se machucar agora?"). Se sim: mostrar CVV 188 e SAMU 192 em destaque e marcar o pedido como prioritário para o psicólogo. É o que fazem serviços como o 988 e o Wysa.
 - **Registrado em:** 2026-10-04.
 
-### 9. Plano pós-crise para o paciente
+### 10. Plano pós-crise para o paciente
 
 - Ao fim do SOS, o psicólogo registra notas só para ele. Serviços de crise costumam deixar com a pessoa um resumo curto e combinados ("o que fazer nas próximas 24h", "procure atendimento se..."), que poderiam virar parte do plano de segurança.
 - **Registrado em:** 2026-10-04.
