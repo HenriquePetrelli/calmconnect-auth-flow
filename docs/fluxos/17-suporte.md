@@ -1,6 +1,6 @@
 # 17. Suporte (paciente e psicólogo)
 
-> **Status:** Pronto.
+> **Status:** Pronto, com pendência externa (domínio do Soliv para o e-mail sair).
 > **Última verificação:** 2026-10-04 (proteção contra HTML injetado no e-mail, validação de campos, limite de envios).
 > **Quem usa:** paciente e psicólogo.
 
@@ -47,7 +47,7 @@ select id, email_retorno, created_at from suporte_psicologo order by created_at 
 
 ## Pendências
 
-Nenhuma. Não há tela de atendimento dos chamados no app: a equipe responde pelo e-mail.
+- **Domínio do Soliv** (pendência crítica 2): o e-mail do pedido sai de `noreply@soliv.app`, e o Resend só envia de domínio verificado. Até o domínio existir e ser verificado, o pedido não chega à equipe.
 
 ## Problemas comuns
 

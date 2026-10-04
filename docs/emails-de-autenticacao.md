@@ -27,6 +27,8 @@ A logo vem de `{{ .SiteURL }}/email/soliv-logo.png` (arquivo `public/email/soliv
 
 ## Passo a passo no painel do Supabase
 
+> **Depende do domínio do Soliv**, que ainda não existe (pendência crítica 2 em `docs/pendencias-antes-do-lancamento.md`). Até lá, só o passo 2 (modelos) pode ser feito, e os e-mails chegam apenas para a equipe do projeto.
+
 ### 1. Servidor de e-mail próprio (Resend)
 
 O app já usa o Resend para os e-mails de suporte e de consultas.

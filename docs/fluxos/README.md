@@ -31,7 +31,7 @@ Para regras de negócio em texto corrido e o histórico de cada mudança, veja `
 | 14 | Plano de segurança | [14-plano-de-seguranca.md](14-plano-de-seguranca.md) | Pronto | 2026-10-04 |
 | 15 | Autocuidado (respiração, sons, comer com atenção, diário) | [15-autocuidado.md](15-autocuidado.md) | Pronto | 2026-10-04 |
 | 16 | Grupos de apoio | [16-grupos-de-apoio.md](16-grupos-de-apoio.md) | Pronto | 2026-10-04 |
-| 17 | Suporte (paciente e psicólogo) | [17-suporte.md](17-suporte.md) | Pronto | 2026-10-04 |
+| 17 | Suporte (paciente e psicólogo) | [17-suporte.md](17-suporte.md) | Pronto, com pendência externa | 2026-10-05 |
 | 18 | Privacidade e LGPD (termos, exportar, excluir conta) | [18-privacidade-e-lgpd.md](18-privacidade-e-lgpd.md) | Pronto, documentos em revisão | 2026-09-28 |
 | 19 | Painel do admin | [19-painel-admin.md](19-painel-admin.md) | Pronto, com pendência crítica | 2026-10-02 |
 | 20 | Segurança (proteções transversais) | [20-seguranca.md](20-seguranca.md) | Pronto, com pendência externa | 2026-10-04 |

@@ -14,12 +14,27 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
   3. Opcional: limpar o histórico do Git (por exemplo, com `git filter-repo`) e forçar o push; avisar quem tem clones. Apagar só o arquivo não basta, porque a senha continua no histórico.
 - **Registrado em:** 2026-10-03.
 
-### 2. E-mails de login (redefinir senha, confirmar e-mail) só chegam para a equipe
+### 2. Domínio do Soliv e envio de e-mails
 
-- **Onde:** Supabase → Authentication → SMTP Settings e Email Templates.
-- **Problema:** sem um servidor de e-mail próprio, o Supabase usa o servidor padrão dele, que só entrega para os e-mails da equipe do projeto, no máximo 30 por hora, com remetente "Supabase Auth", texto em inglês e rodapé "powered by Supabase". Um paciente que esquecer a senha não recebe o e-mail.
-- **O que fazer:** seguir `docs/emails-de-autenticacao.md`: (1) configurar o SMTP do Resend com remetente do domínio do Soliv; (2) colar os 6 modelos em português de `supabase/templates/` com os assuntos indicados; (3) conferir que o Site URL é o endereço publicado do app (a logo do e-mail vem de lá).
-- **Como conferir:** pedir "Esqueci minha senha" com um e-mail que não é da equipe; o e-mail chega em português, com a logo, remetente "Soliv".
+- **Situação:** o Soliv ainda não tem domínio próprio. Sem ele, não dá para enviar e-mail com remetente do Soliv para os usuários.
+- **O que depende do domínio:**
+
+  | E-mail | Onde é enviado | Remetente hoje | O que acontece sem domínio |
+  |---|---|---|---|
+  | Redefinir senha, confirmar cadastro, trocar e-mail, convite, link e código | Supabase (Authentication) | "Supabase Auth" | Só chega para os e-mails da equipe do projeto (no máximo 30 por hora), em inglês e com "powered by Supabase". **Paciente que esquece a senha não consegue entrar.** |
+  | Pedido de suporte (paciente e psicólogo) | `send-support-request`, `send-psychologist-support-request` | `noreply@soliv.app` | O Resend recusa remetente de domínio não verificado: o e-mail não sai |
+  | Aviso de consulta por e-mail | `send-appointment-notification` | `notifications@soliv.app` | Idem (o aviso no app e o push continuam funcionando) |
+  | Aprovação, recusa e bloqueio de psicólogo | `psychologist-management`, `admin-psychologist-management` | `onboarding@resend.dev` | O endereço de teste do Resend só entrega para o dono da conta do Resend |
+
+- **Já pronto no código:** 6 modelos de e-mail de login em português, com a logo do Soliv (`supabase/templates/`), e o passo a passo em `docs/emails-de-autenticacao.md`.
+- **O que fazer quando houver domínio:**
+  1. Registrar o domínio (ex.: `soliv.com.br` ou `soliv.app`).
+  2. No [Resend](https://resend.com/domains), adicionar o domínio e criar os registros DNS que ele pedir (SPF e DKIM) até aparecer "Verified".
+  3. Supabase → Authentication → SMTP Settings: SMTP do Resend com remetente do domínio (passo a passo em `docs/emails-de-autenticacao.md`).
+  4. Trocar os remetentes das 5 edge functions da tabela pelo domínio novo (pedir ao Claude; é uma troca de texto) e publicar as funções.
+  5. Ligar o domínio ao app publicado na Lovable e usar esse endereço como Site URL no Supabase (a logo do e-mail e os links vêm dele).
+- **Enquanto isso:** dá para colar os modelos em português no Supabase (Authentication → Email Templates) para testar com os e-mails da equipe; para usuários de fora, nenhum e-mail chega.
+- **Como conferir:** pedir "Esqueci minha senha" com um e-mail que não é da equipe; o e-mail chega em português, com a logo e remetente "Soliv". Enviar um pedido de suporte e conferir que ele chega na caixa da equipe.
 - **Registrado em:** 2026-10-05.
 
 ## Importantes
