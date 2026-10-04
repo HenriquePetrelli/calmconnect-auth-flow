@@ -7,23 +7,40 @@ import { supabase } from '@/integrations/supabase/client';
  * psychologist can no longer read the row, so the UPDATE never reaches him and
  * the card would stay on screen forever. A broadcast channel is RLS-free and
  * lets both sides refresh their view instantly.
+ *
+ * Um broadcast só chega a quem está no canal com o MESMO nome. Antes, cada tela
+ * ouvia um canal próprio (`sos-queue-listener-<aleatório>`) e o aviso, enviado
+ * em `sos-queue`, nunca chegava: a fila só se atualizava pela checagem
+ * periódica. Agora há um canal só (o Supabase devolve o mesmo objeto para o
+ * mesmo nome) e as telas se inscrevem numa lista interna.
  */
 const CHANNEL = 'sos-queue';
 
-let notifier: ReturnType<typeof supabase.channel> | null = null;
+const listeners = new Set<() => void>();
+let shared: ReturnType<typeof supabase.channel> | null = null;
 
-const getNotifier = () => {
-  if (!notifier) {
-    notifier = supabase.channel(CHANNEL, { config: { broadcast: { self: true } } });
-    notifier.subscribe();
+const getChannel = () => {
+  if (!shared) {
+    shared = supabase
+      .channel(CHANNEL, { config: { broadcast: { self: true } } })
+      .on('broadcast', { event: 'queue-changed' }, () => {
+        listeners.forEach((listener) => {
+          try {
+            listener();
+          } catch (error) {
+            console.error('[SOS] queue listener failed', error);
+          }
+        });
+      })
+      .subscribe();
   }
-  return notifier;
+  return shared;
 };
 
 /** Tells every listener (patients + psychologists) that the queue changed. */
 export const notifySosQueueChanged = (payload: Record<string, unknown> = {}) => {
   try {
-    getNotifier().send({ type: 'broadcast', event: 'queue-changed', payload });
+    getChannel().send({ type: 'broadcast', event: 'queue-changed', payload });
   } catch (error) {
     console.error('[SOS] failed to broadcast queue change', error);
   }
@@ -31,12 +48,9 @@ export const notifySosQueueChanged = (payload: Record<string, unknown> = {}) => 
 
 /** Subscribes to queue changes. Returns an unsubscribe function. */
 export const subscribeSosQueue = (onChange: () => void) => {
-  const channel = supabase
-    .channel(`${CHANNEL}-listener-${Math.random().toString(36).slice(2)}`)
-    .on('broadcast', { event: 'queue-changed' }, () => onChange())
-    .subscribe();
-
+  listeners.add(onChange);
+  getChannel();
   return () => {
-    supabase.removeChannel(channel);
+    listeners.delete(onChange);
   };
 };

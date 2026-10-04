@@ -85,6 +85,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const handleAuthStateChange = (event: string, session: Session | null) => {
     console.log('[AuthContext] event:', event);
+    // Entrou, saiu ou mudou a conta: o estado do login guardado pode estar
+    // velho (ex.: psicólogo que acabou de se cadastrar e entra em seguida).
+    if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') clearLoginState();
     setSession(session);
     setUser(session?.user ?? null);
     const seq = ++authEventSeq.current;

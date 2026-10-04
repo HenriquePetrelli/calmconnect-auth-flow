@@ -82,7 +82,7 @@ Status do pedido: `pending` → `accepted` → `in_progress` → `completed`. Ta
 
 ### Teste manual (dois aparelhos)
 1. **Sem psicólogo online**: o paciente abre o SOS → "Nenhum profissional online agora", com CVV/SAMU em destaque.
-2. **Fluxo feliz**: o psicólogo fica Online → o paciente aperta SOS → o pedido aparece em até 10 s → aceitar → os dois na sala, com vídeo → o psicólogo encerra (resolvida: sim) → o paciente avalia → os dois voltam para o início.
+2. **Fluxo feliz**: o psicólogo fica Online → o paciente aperta SOS → o pedido aparece na hora (aviso em tempo real; a checagem a cada 10 s é só a garantia) → aceitar → os dois na sala, com vídeo → o psicólogo encerra (resolvida: sim) → o paciente avalia → os dois voltam para o início.
 3. **Cota**: com o mesmo paciente, tentar um 2º SOS no mesmo mês → aviso de cota usada.
 4. **Desistência**: o paciente aperta SOS e fecha o app antes do aceite → o pedido some da lista do psicólogo.
 5. **Expiração**: deixar o pedido 10 min sem aceite → "Ninguém atendeu", com CVV em destaque.

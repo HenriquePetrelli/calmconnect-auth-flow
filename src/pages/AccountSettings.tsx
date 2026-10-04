@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { getFriendlyErrorMessage } from "@/utils/errorMessage";
 import DeleteAccountCard from "@/components/DeleteAccountCard";
+import { passwordProblem } from "@/lib/password";
 import { Skeleton } from "@/components/ui/skeleton";
 const AccountSettings = () => {
   const navigate = useNavigate();
@@ -106,10 +107,12 @@ const AccountSettings = () => {
       return;
     }
 
-    if (formData.newPassword.length < 6) {
+    // Mesma regra do cadastro e da recuperação de senha (8+ com letras e números).
+    const weakPassword = passwordProblem(formData.newPassword);
+    if (weakPassword) {
       toast({
         title: "Erro",
-        description: "A senha deve ter pelo menos 6 caracteres",
+        description: weakPassword,
         variant: "destructive",
       });
       return;
