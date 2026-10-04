@@ -2,9 +2,25 @@ import * as React from "react"
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
 
 import { cn } from "@/lib/utils"
+import { releaseStuckPointerLock } from "@/lib/pointerLock"
 import { buttonVariants } from "@/components/ui/button"
 
-const AlertDialog = AlertDialogPrimitive.Root
+const AlertDialog = ({ open, onOpenChange, ...props }: React.ComponentProps<typeof AlertDialogPrimitive.Root>) => {
+  // Janela fechada: garante que a página volta a aceitar cliques.
+  React.useEffect(() => {
+    if (open === false) releaseStuckPointerLock()
+  }, [open])
+  return (
+    <AlertDialogPrimitive.Root
+      {...props}
+      open={open}
+      onOpenChange={(next) => {
+        onOpenChange?.(next)
+        if (!next) releaseStuckPointerLock()
+      }}
+    />
+  )
+}
 
 const AlertDialogTrigger = AlertDialogPrimitive.Trigger
 

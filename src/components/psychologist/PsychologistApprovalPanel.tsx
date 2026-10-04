@@ -338,7 +338,7 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
                           )}
                           <DropdownMenuItem
                             className="text-destructive focus:text-destructive"
-                            onSelect={(e) => { e.preventDefault(); setDeleteTarget(psychologist); }}
+                            onClick={() => setDeleteTarget(psychologist)}
                           >
                             <Trash2 className="h-4 w-4 mr-2" />
                             Excluir

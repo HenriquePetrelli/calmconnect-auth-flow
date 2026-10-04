@@ -3,8 +3,24 @@ import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { releaseStuckPointerLock } from "@/lib/pointerLock"
 
-const Dialog = DialogPrimitive.Root
+const Dialog = ({ open, onOpenChange, ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) => {
+  // Janela fechada: garante que a página volta a aceitar cliques.
+  React.useEffect(() => {
+    if (open === false) releaseStuckPointerLock()
+  }, [open])
+  return (
+    <DialogPrimitive.Root
+      {...props}
+      open={open}
+      onOpenChange={(next) => {
+        onOpenChange?.(next)
+        if (!next) releaseStuckPointerLock()
+      }}
+    />
+  )
+}
 
 const DialogTrigger = DialogPrimitive.Trigger
 

@@ -4,8 +4,24 @@ import { X } from "lucide-react"
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
+import { releaseStuckPointerLock } from "@/lib/pointerLock"
 
-const Sheet = SheetPrimitive.Root
+const Sheet = ({ open, onOpenChange, ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) => {
+  // Janela fechada: garante que a página volta a aceitar cliques.
+  React.useEffect(() => {
+    if (open === false) releaseStuckPointerLock()
+  }, [open])
+  return (
+    <SheetPrimitive.Root
+      {...props}
+      open={open}
+      onOpenChange={(next) => {
+        onOpenChange?.(next)
+        if (!next) releaseStuckPointerLock()
+      }}
+    />
+  )
+}
 
 const SheetTrigger = SheetPrimitive.Trigger
 

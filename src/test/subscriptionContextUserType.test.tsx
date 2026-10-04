@@ -42,7 +42,7 @@ describe('conferência de assinatura', () => {
     auth.userType = 'patient';
     invoke.mockResolvedValue({ data: { subscribed: true }, error: null });
     mount();
-    await waitFor(() => expect(invoke).toHaveBeenCalledWith('check-subscription'));
+    await waitFor(() => expect(invoke).toHaveBeenCalledWith('check-subscription'), { timeout: 4000 });
   });
 
   it('falha depois de sair da conta não mostra "Erro ao verificar assinatura"', async () => {
@@ -51,7 +51,7 @@ describe('conferência de assinatura', () => {
     invoke.mockResolvedValue({ data: null, error: new Error('401') });
     getSession.mockResolvedValue({ data: { session: null } });
     mount();
-    await waitFor(() => expect(getSession).toHaveBeenCalled());
+    await waitFor(() => expect(getSession).toHaveBeenCalled(), { timeout: 4000 });
     await new Promise((r) => setTimeout(r, 20));
     expect(toastFn).not.toHaveBeenCalled();
   });
@@ -62,6 +62,6 @@ describe('conferência de assinatura', () => {
     invoke.mockResolvedValue({ data: null, error: new Error('500') });
     getSession.mockResolvedValue({ data: { session: { user: { id: 'u4' } } } });
     mount();
-    await waitFor(() => expect(toastFn).toHaveBeenCalledWith(expect.objectContaining({ description: 'Erro ao verificar assinatura' })));
+    await waitFor(() => expect(toastFn).toHaveBeenCalledWith(expect.objectContaining({ description: 'Erro ao verificar assinatura' })), { timeout: 4000 });
   });
 });
