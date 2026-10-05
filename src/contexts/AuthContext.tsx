@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useRef, useState } from 'r
 import SplashScreen from '@/components/SplashScreen';
 import { nextPaint, withTimeout } from '@/lib/async';
 import { clearLoginState, fetchLoginState, userTypeFromLoginState } from '@/lib/loginState';
+import { preloadCoreRoutesFor } from '@/lib/routePreload';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { deactivateStoredPushToken } from '@/lib/pushToken';
@@ -184,11 +185,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  // Route protection effect
+  // Sabendo quem entrou, baixa em segundo plano as abas desse tipo de conta.
   useEffect(() => {
-    // Route protection is now handled by RouteGuard component
-    // This effect is no longer needed to prevent conflicts
-  }, [user, userType, loading]);
+    if (user && userType !== 'unknown') preloadCoreRoutesFor(userType);
+  }, [user, userType]);
 
   const value: AuthContextType = {
     user,
