@@ -42,6 +42,7 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
     isSlotAvailable,
     hasAnyAvailability,
     isDayAvailable,
+    refetch: refetchSlots,
   } = useAvailableTimeSlots({
     psychologistId: psychologist.user_id,
     selectedDate
@@ -91,12 +92,12 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
 
       onSuccess();
     } catch (error) {
+      // createAppointment já mostra o motivo que o servidor deu (horário
+      // ocupado, cota do mês etc.). Atualiza os horários: se outro paciente
+      // pegou este, ele aparece ocupado.
       console.error('Erro ao agendar consulta:', error);
-      toast({
-        title: 'Erro ao agendar',
-        description: 'Não foi possível agendar a consulta. Tente novamente.',
-        variant: 'destructive',
-      });
+      setSelectedTime('');
+      refetchSlots();
     } finally {
       setIsSubmitting(false);
     }
@@ -173,7 +174,8 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
                 onSelect={setSelectedDate}
                 disabled={(date) => {
                   const now = new Date();
-                  return date < startOfDay(now) || date > addDays(new Date(), 30) || !isDayAvailable(date);
+                  // Até quantos dias à frente é regra de cada psicólogo (isDayAvailable).
+                  return date < startOfDay(now) || !isDayAvailable(date);
                 }}
                 locale={ptBR}
                 className="rounded-md border"

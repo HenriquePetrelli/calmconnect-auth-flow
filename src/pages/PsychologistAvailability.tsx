@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Plus, Trash2, CalendarCheck, CalendarClock, Palmtree, Copy } from 'lucide-react';
+import VacationModal from '@/components/psychologist/VacationModal';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import BookingRulesCard from '@/components/psychologist/BookingRulesCard';
@@ -11,15 +12,9 @@ import PageTitle from '@/components/PageTitle';
 import { WeeklyScheduleModal } from '@/components/psychologist/WeeklyScheduleModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePsychologistAvailability, type AvailabilityBlock } from '@/hooks/usePsychologistAvailability';
-import { usePsychologistVacation, toISODate } from '@/hooks/usePsychologistVacation';
+import { formatBR, usePsychologistVacation } from '@/hooks/usePsychologistVacation';
 import { DAY_LABELS, DAYS_DISPLAY_ORDER, validateDayBlocks, type EditableBlock } from '@/lib/psychologistAvailability';
 import RouteSkeleton from "@/components/skeletons/RouteSkeleton";
-import { Skeleton } from "@/components/ui/skeleton";
-
-const formatBR = (isoDate: string): string => {
-  const [y, m, d] = isoDate.split('-');
-  return `${d}/${m}/${y}`;
-};
 
 type DraftByDay = Record<number, EditableBlock[]>;
 
@@ -48,28 +43,8 @@ const PsychologistAvailability = () => {
     setVacation,
     cancelVacation,
   } = usePsychologistVacation();
-  const [vacationStart, setVacationStart] = useState('');
-  const [vacationEnd, setVacationEnd] = useState('');
-  const [vacationError, setVacationError] = useState<string | null>(null);
+  const [vacationOpen, setVacationOpen] = useState(false);
   const currentVacation = activeVacation ?? upcomingVacation;
-  const today = toISODate(new Date());
-
-  const handleScheduleVacation = async () => {
-    setVacationError(null);
-    if (!vacationStart || !vacationEnd) {
-      setVacationError('Preencha as duas datas');
-      return;
-    }
-    if (vacationStart > vacationEnd) {
-      setVacationError('A data de início deve ser antes ou igual à de término');
-      return;
-    }
-    const ok = await setVacation(vacationStart, vacationEnd);
-    if (ok) {
-      setVacationStart('');
-      setVacationEnd('');
-    }
-  };
 
   useEffect(() => {
     document.title = 'Minha Agenda | Soliv';
@@ -146,11 +121,16 @@ const PsychologistAvailability = () => {
           title="Agenda"
           description="Horário-padrão, férias e regras de agendamento"
           action={
-            <Button variant="outline" size="sm" className="h-10 gap-2" onClick={() => setWeekOpen(true)}>
-              <CalendarCheck className="h-4 w-4" />
-              <span className="hidden sm:inline">Confirmar semana</span>
-              <span className="sm:hidden">Semana</span>
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" className="h-10 gap-2" onClick={() => setVacationOpen(true)}>
+                <Palmtree className="h-4 w-4" />
+                Férias
+              </Button>
+              <Button variant="outline" size="sm" className="h-10 gap-2" onClick={() => setWeekOpen(true)}>
+                <CalendarCheck className="h-4 w-4" />
+                Agenda semanal
+              </Button>
+            </div>
           }
         />
         <Card className="border-border/60">
@@ -162,73 +142,28 @@ const PsychologistAvailability = () => {
               Este é o seu horário-padrão, que se repete toda semana. Pacientes só vão conseguir marcar horários
               dentro dos blocos que você configurar aqui. Dias sem nenhum horário ficam indisponíveis para
               agendamento. Para bloquear um horário pontual ou abrir um horário extra só numa semana específica,
-              use "Confirmar semana" — não é preciso mexer no padrão para isso.
+              use "Agenda semanal" — não é preciso mexer no padrão para isso.
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Palmtree className="w-4 h-4 text-primary" />
-              Férias
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {loadingVacation ? (
-              <div className="space-y-2"><Skeleton className="h-3 w-full" /><Skeleton className="h-10 w-full rounded-lg" /></div>
-            ) : currentVacation ? (
-              <div className="space-y-3">
-                <p className="text-sm text-foreground">
-                  {activeVacation ? 'Você está de férias' : 'Férias agendadas'} de{' '}
-                  <strong>{formatBR(currentVacation.start_date)}</strong> até{' '}
-                  <strong>{formatBR(currentVacation.end_date)}</strong>.
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Sua agenda fica indisponível para pacientes nesse período. Seus dias e horários padrão continuam
-                  salvos e a confirmação semanal volta a perguntar sua disponibilidade automaticamente assim que as
-                  férias terminarem.
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => void cancelVacation()}
-                  disabled={savingVacation}
-                >
-                  {savingVacation ? 'Cancelando...' : 'Cancelar férias'}
-                </Button>
+        {!loadingVacation && currentVacation && (
+          <Card className="border-border/60">
+            <CardContent className="flex items-center gap-3 p-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary" aria-hidden="true">
+                <Palmtree className="h-5 w-5" />
               </div>
-            ) : (
-              <div className="space-y-3">
-                <p className="text-xs text-muted-foreground">
-                  Escolha de que dia até que dia você vai ficar indisponível. Seus dias e horários padrão continuam
-                  salvos e voltam a valer normalmente assim que as férias terminarem.
-                </p>
-                <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
-                  <Input
-                    type="date"
-                    value={vacationStart}
-                    min={today}
-                    onChange={(e) => setVacationStart(e.target.value)}
-                    className="w-full"
-                  />
-                  <span className="text-muted-foreground text-sm shrink-0">até</span>
-                  <Input
-                    type="date"
-                    value={vacationEnd}
-                    min={vacationStart || today}
-                    onChange={(e) => setVacationEnd(e.target.value)}
-                    className="w-full"
-                  />
-                </div>
-                {vacationError && <p className="text-xs text-destructive">{vacationError}</p>}
-                <Button variant="outline" size="sm" onClick={handleScheduleVacation} disabled={savingVacation}>
-                  {savingVacation ? 'Salvando...' : 'Agendar férias'}
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              <p className="flex-1 text-sm text-foreground">
+                {activeVacation ? 'Você está de férias' : 'Férias agendadas'} de{' '}
+                <strong>{formatBR(currentVacation.start_date)}</strong> até{' '}
+                <strong>{formatBR(currentVacation.end_date)}</strong>.
+              </p>
+              <Button variant="ghost" size="sm" onClick={() => setVacationOpen(true)}>
+                Ver
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {DAYS_DISPLAY_ORDER.map((day) => {
           const dayBlocks = draft[day] ?? [];
@@ -334,6 +269,16 @@ const PsychologistAvailability = () => {
             {saving ? 'Salvando...' : 'Salvar agenda'}
           </Button>
         </div>
+
+        <VacationModal
+          open={vacationOpen}
+          onClose={() => setVacationOpen(false)}
+          activeVacation={activeVacation}
+          upcomingVacation={upcomingVacation}
+          saving={savingVacation}
+          setVacation={setVacation}
+          cancelVacation={cancelVacation}
+        />
 
         <WeeklyScheduleModal
           open={weekOpen}

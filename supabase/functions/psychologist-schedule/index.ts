@@ -57,7 +57,9 @@ const isWithinPsychologistAvailability = async (
       .eq('psychologist_id', psychologistId)
       .lte('start_date', dateISO)
       .gte('end_date', dateISO)
-      .maybeSingle(),
+      // limit(1), não maybeSingle(): com dois períodos sobrepostos o
+      // maybeSingle() dava erro, voltava vazio e o dia contava como livre.
+      .limit(1),
     supabase
       .from('psychologist_availability')
       .select('start_time, end_time')
@@ -71,7 +73,7 @@ const isWithinPsychologistAvailability = async (
       .eq('date', dateISO),
   ]);
 
-  if (vacation) return false;
+  if ((vacation ?? []).length > 0) return false;
 
   let ranges: Block[] = (baseRows ?? []).map((r: any) => ({ start_time: r.start_time.slice(0, 5), end_time: r.end_time.slice(0, 5) }));
   const overrides = (overrideRows ?? []).map((r: any) => ({ start_time: r.start_time.slice(0, 5), end_time: r.end_time.slice(0, 5), type: r.type as string }));
@@ -94,7 +96,13 @@ class HttpError extends Error {
 
 const SLOT_MS = 50 * 60 * 1000;
 
-/** Garante que o horário não bate com outra consulta já confirmada do psicólogo. */
+/**
+ * Garante que o horário não bate com outra consulta que segura a agenda do
+ * psicólogo: pedidos pendentes, confirmadas, em andamento e horários já
+ * propostos a outro paciente, mantendo o intervalo entre consultas que o
+ * psicólogo configurou. O banco recusa sobreposição de novo
+ * (prevent_appointment_overlap), mesmo com dois pedidos ao mesmo tempo.
+ */
 const assertNoConflict = async (
   // deno-lint-ignore no-explicit-any
   supabase: any,
@@ -103,20 +111,46 @@ const assertNoConflict = async (
   excludeId: string,
 ) => {
   const start = new Date(startISO).getTime();
-  const { data, error } = await supabase
-    .from('appointments')
-    .select('id, scheduled_at, duration')
-    .eq('psychologist_id', psychologistId)
-    .in('status', ['scheduled', 'confirmed', 'in_progress'])
-    .neq('id', excludeId)
-    .gte('scheduled_at', new Date(start - 4 * 60 * 60 * 1000).toISOString())
-    .lte('scheduled_at', new Date(start + 4 * 60 * 60 * 1000).toISOString());
+  const from = new Date(start - 4 * 60 * 60 * 1000).toISOString();
+  const to = new Date(start + 4 * 60 * 60 * 1000).toISOString();
+  const [{ data, error }, { data: proposed, error: proposedError }, { data: rules }] = await Promise.all([
+    supabase
+      .from('appointments')
+      .select('id, scheduled_at, duration')
+      .eq('psychologist_id', psychologistId)
+      .in('status', ['pending', 'scheduled', 'confirmed', 'in_progress'])
+      .neq('id', excludeId)
+      .gte('scheduled_at', from)
+      .lte('scheduled_at', to),
+    supabase
+      .from('appointments')
+      .select('id, proposed_scheduled_at, duration')
+      .eq('psychologist_id', psychologistId)
+      .eq('status', 'reschedule_proposed')
+      .neq('id', excludeId)
+      .gte('proposed_scheduled_at', from)
+      .lte('proposed_scheduled_at', to),
+    supabase
+      .from('psychologist_booking_rules')
+      .select('buffer_minutes')
+      .eq('psychologist_id', psychologistId)
+      .maybeSingle(),
+  ]);
   if (error) throw error;
-  for (const other of (data ?? []) as { scheduled_at: string; duration: number | null }[]) {
+  if (proposedError) throw proposedError;
+  const bufferMs = (rules?.buffer_minutes ?? 0) * 60 * 1000;
+  const others = [
+    ...((data ?? []) as { scheduled_at: string; duration: number | null }[]),
+    ...((proposed ?? []) as { proposed_scheduled_at: string; duration: number | null }[]).map((r) => ({
+      scheduled_at: r.proposed_scheduled_at,
+      duration: r.duration,
+    })),
+  ];
+  for (const other of others) {
     const otherStart = new Date(other.scheduled_at).getTime();
     const otherEnd = otherStart + (other.duration || 50) * 60 * 1000;
-    if (start < otherEnd && otherStart < start + SLOT_MS) {
-      throw new HttpError('Esse horário já está ocupado por outra consulta confirmada.', 409);
+    if (start < otherEnd + bufferMs && otherStart < start + SLOT_MS + bufferMs) {
+      throw new HttpError('Esse horário já está ocupado por outra consulta.', 409);
     }
   }
 };
@@ -475,6 +509,10 @@ serve(async (req) => {
           throw new HttpError('O horário proposto já passou. Agende um novo horário.', 409);
         }
         await assertNoConflict(supabase, appointment.psychologist_id, proposed, appointment.id);
+        // O psicólogo pode ter mudado a agenda (férias, bloqueio) depois de propor.
+        if (!(await isWithinPsychologistAvailability(supabase, appointment.psychologist_id, proposed))) {
+          throw new HttpError('O psicólogo não está mais disponível nesse horário. Recuse a proposta e agende outro horário.', 409);
+        }
       }
     } else if (status && status !== appointment.status) {
       if (!(PSYCHOLOGIST_TRANSITIONS[appointment.status] ?? []).includes(status)) {
@@ -648,7 +686,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ error: error.message }),
       {
-        status: error instanceof HttpError ? error.status : 500,
+        // 23P01: o banco recusou horário sobreposto (prevent_appointment_overlap).
+        status: error instanceof HttpError ? error.status : error?.code === '23P01' ? 409 : 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );

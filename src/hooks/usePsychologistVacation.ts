@@ -15,6 +15,12 @@ export interface VacationPeriod {
 export const toISODate = (date: Date): string =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 
+/** "YYYY-MM-DD" → "DD/MM/YYYY". */
+export const formatBR = (isoDate: string): string => {
+  const [y, m, d] = isoDate.split('-');
+  return `${d}/${m}/${y}`;
+};
+
 /**
  * Períodos de férias (intervalo de datas totalmente indisponível) do
  * psicólogo logado. O horário-padrão e as exceções pontuais continuam

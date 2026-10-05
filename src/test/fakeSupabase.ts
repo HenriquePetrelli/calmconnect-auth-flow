@@ -241,6 +241,30 @@ export type RpcHandler = (db: FakeDB, params: Record<string, any>) => { data: an
  * hooks que dependem delas. Qualquer RPC sem handler aqui (ou em
  * `FakeDB.rpcHandlers`, registrável por teste) resolve como no-op. */
 const DEFAULT_RPC_HANDLERS: Record<string, RpcHandler> = {
+  // Mesmo filtro da função do banco: horários que seguram a agenda, de todos
+  // os pacientes, incluindo o horário proposto ainda sem resposta.
+  get_psychologist_busy_times: (db, params) => {
+    const from = new Date(params.p_from).getTime();
+    const to = new Date(params.p_to).getTime();
+    const inRange = (iso: string | null | undefined) => {
+      if (!iso) return false;
+      const t = new Date(iso).getTime();
+      return t >= from && t <= to;
+    };
+    const data = db
+      .rows('appointments')
+      .filter((a) => a.psychologist_id === params.p_psychologist_id)
+      .flatMap((a) => {
+        if (['pending', 'scheduled', 'confirmed', 'in_progress'].includes(a.status) && inRange(a.scheduled_at)) {
+          return [{ starts_at: a.scheduled_at, duration_minutes: a.duration ?? 50 }];
+        }
+        if (a.status === 'reschedule_proposed' && inRange(a.proposed_scheduled_at)) {
+          return [{ starts_at: a.proposed_scheduled_at, duration_minutes: a.duration ?? 50 }];
+        }
+        return [];
+      });
+    return { data, error: null };
+  },
   add_patient_activity: (db, params) => {
     const patientId = params.p_patient_id;
     const rows = db.rows('patient_statistics');

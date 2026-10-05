@@ -65,8 +65,17 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 ## 3. Consultas agendadas (fichas 04 e 05)
 
 - [ ] Psicólogo → Agenda → definir horário-padrão → salvar
-- [ ] Psicólogo → Agenda → Confirmar semana → bloquear 14h de amanhã ⇒ paciente não vê 14h amanhã
-- [ ] Psicólogo → Agenda → marcar férias ⇒ nenhum horário nesses dias
+- [ ] Psicólogo → Agenda → Agenda semanal → bloquear 14h de amanhã ⇒ paciente não vê 14h amanhã
+- [ ] Psicólogo → Agenda → Agenda semanal ⇒ sem os botões "Editar horário padrão" e "Tirar férias"
+- [ ] Psicólogo → Agenda → Férias → escolher de-até → Agendar férias ⇒ nenhum horário nesses dias; cartão "Férias agendadas" na Agenda
+- [ ] Psicólogo → Agenda → Férias → Cancelar férias ⇒ horários voltam
+- [ ] Psicólogo → Agenda → Férias com início depois do fim ⇒ recusado
+- [ ] Paciente A pede 10h → Paciente B abre o mesmo psicólogo e dia ⇒ 10h aparece ocupado
+- [ ] Psicólogo propõe 15h ao Paciente A → Paciente B abre o mesmo dia ⇒ 15h aparece ocupado
+- [ ] Paciente com o aparelho no fuso de Manaus ⇒ horários iguais aos do psicólogo (Brasília)
+- [ ] Psicólogo com "até 60 dias à frente" ⇒ paciente consegue escolher dia depois de 30 dias
+- [ ] Paciente → horário que outro paciente acabou de pegar → Agendar ⇒ "Este horário já está ocupado" e a lista atualiza
+- [ ] Paciente → pedido com novo horário proposto, depois do horário original → Cancelar ⇒ cancela e a consulta do mês volta
 - [ ] Paciente A → Consultas → Agendar → psicólogo → horário ⇒ "Aguardando confirmação"
 - [ ] Paciente A → Consultas → Agendar → lista de psicólogos ⇒ mostra consultas, SOS atendidos e a nota real (ou "Sem avaliações ainda"); não mostra cidade nem estado
 - [ ] Paciente A → Consultas → Agendar (toque duplo rápido) ⇒ só uma consulta criada

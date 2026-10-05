@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
+import { fromZonedTime } from 'date-fns-tz';
 import { fakeDb, fakeSupabase } from './fakeSupabase';
 
 vi.mock('@/integrations/supabase/client', () => ({ supabase: fakeSupabase }));
@@ -19,6 +20,10 @@ const nextMonday = (): Date => {
   return d;
 };
 const MONDAY = nextMonday();
+/** Instante de um horário de Brasília nesse dia (a agenda é sempre em Brasília;
+ * os testes rodam em UTC, então isso também confere a conversão de fuso). */
+const brasilia = (day: Date, h: number, m: number): string =>
+  fromZonedTime(new Date(day.getFullYear(), day.getMonth(), day.getDate(), h, m), 'America/Sao_Paulo').toISOString();
 const SUNDAY = new Date(MONDAY.getFullYear(), MONDAY.getMonth(), MONDAY.getDate() - 1); // day before, a Sunday
 
 beforeEach(() => {
@@ -108,7 +113,7 @@ describe('useAvailableTimeSlots — respeita a agenda semanal do psicólogo', ()
       psychologist_id: PSYCHOLOGIST,
       status: 'scheduled',
       duration: 50,
-      scheduled_at: new Date(MONDAY.getFullYear(), MONDAY.getMonth(), MONDAY.getDate(), 8, 0).toISOString(),
+      scheduled_at: brasilia(MONDAY, 8, 0),
     });
 
     const { result } = renderHook(() =>
@@ -207,7 +212,7 @@ describe('useAvailableTimeSlots — respeita a agenda semanal do psicólogo', ()
       psychologist_id: PSYCHOLOGIST,
       status: 'confirmed',
       duration: 50,
-      scheduled_at: new Date(MONDAY.getFullYear(), MONDAY.getMonth(), MONDAY.getDate(), 8, 0).toISOString(),
+      scheduled_at: brasilia(MONDAY, 8, 0),
     });
 
     const { result } = renderHook(() => useAvailableTimeSlots({ psychologistId: PSYCHOLOGIST, selectedDate: MONDAY }));
@@ -229,7 +234,7 @@ describe('useAvailableTimeSlots — respeita a agenda semanal do psicólogo', ()
       psychologist_id: PSYCHOLOGIST,
       status: 'scheduled',
       duration: 50,
-      scheduled_at: new Date(MONDAY.getFullYear(), MONDAY.getMonth(), MONDAY.getDate(), 8, 0).toISOString(),
+      scheduled_at: brasilia(MONDAY, 8, 0),
     });
 
     const { result } = renderHook(() => useAvailableTimeSlots({ psychologistId: PSYCHOLOGIST, selectedDate: MONDAY }));
@@ -254,5 +259,36 @@ describe('useAvailableTimeSlots — respeita a agenda semanal do psicólogo', ()
 
     // MONDAY fica pelo menos 7 dias à frente.
     expect(result.current.isDayAvailable(MONDAY)).toBe(false);
+  });
+});
+
+describe('useAvailableTimeSlots — horários ocupados de outros pacientes', () => {
+  const OTHER_PATIENT = '99999999-9999-9999-9999-999999999999';
+
+  it('marca como ocupado o horário pedido por outro paciente e o proposto pelo psicólogo', async () => {
+    fakeDb.rows('psychologist_availability').push({
+      psychologist_id: PSYCHOLOGIST, day_of_week: 1, start_time: '08:00:00', end_time: '12:00:00', is_available: true,
+    });
+    fakeDb.rows('psychologist_booking_rules').push({
+      psychologist_id: PSYCHOLOGIST, buffer_minutes: 0, min_notice_hours: 0, max_advance_days: 30,
+    });
+    fakeDb.rows('appointments').push(
+      { patient_id: OTHER_PATIENT, psychologist_id: PSYCHOLOGIST, status: 'pending', duration: 50, scheduled_at: brasilia(MONDAY, 9, 0) },
+      {
+        patient_id: OTHER_PATIENT, psychologist_id: PSYCHOLOGIST, status: 'reschedule_proposed', duration: 50,
+        scheduled_at: brasilia(SUNDAY, 9, 0), proposed_scheduled_at: brasilia(MONDAY, 11, 0),
+      },
+      { patient_id: OTHER_PATIENT, psychologist_id: PSYCHOLOGIST, status: 'declined', duration: 50, scheduled_at: brasilia(MONDAY, 8, 0) },
+    );
+
+    const { result } = renderHook(() =>
+      useAvailableTimeSlots({ psychologistId: PSYCHOLOGIST, selectedDate: MONDAY })
+    );
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(result.current.isSlotAvailable('08:00')).toBe(true); // recusada não segura
+    expect(result.current.isSlotAvailable('09:00')).toBe(false); // pendente de outro paciente
+    expect(result.current.isSlotAvailable('09:50')).toBe(true);
+    expect(result.current.isSlotAvailable('11:00')).toBe(false); // horário proposto
   });
 });

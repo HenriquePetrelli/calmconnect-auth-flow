@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { addDays, startOfDay, endOfDay } from 'date-fns';
+import { addDays } from 'date-fns';
+import { fromZonedTime, toZonedTime } from 'date-fns-tz';
 import {
   applyOverridesToDayBlocks,
   timeToMinutes,
@@ -9,7 +10,6 @@ import {
   type EditableBlock,
 } from '@/lib/psychologistAvailability';
 import {
-  BLOCKING_STATUSES,
   DEFAULT_BOOKING_RULES,
   isSlotFree,
   lastBookableDay,
@@ -29,8 +29,21 @@ const SLOT_STEP_MIN = 10;
 /** Upper bound for what's fetched; each psychologist's own max_advance_days narrows it. */
 const BOOKING_WINDOW_DAYS = 90;
 
+/** A agenda do psicólogo e o horário gravado na consulta são de Brasília
+ * (AppointmentForm e as edge functions usam o mesmo fuso). */
+const BOOKING_TIME_ZONE = 'America/Sao_Paulo';
+
 const toISODate = (date: Date): string =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
+/** "Agora" com os campos (dia, hora) de Brasília, qualquer que seja o fuso do aparelho. */
+const brazilNow = (): Date => toZonedTime(new Date(), BOOKING_TIME_ZONE);
+
+/** Instante real de um dia do calendário + "HH:MM" no horário de Brasília. */
+const brazilInstantMs = (day: Date, time = '00:00'): number => {
+  const [h, m] = time.split(':').map(Number);
+  return fromZonedTime(new Date(day.getFullYear(), day.getMonth(), day.getDate(), h, m), BOOKING_TIME_ZONE).getTime();
+};
 
 /** Every slot start, at SLOT_STEP_MIN granularity, that leaves enough room
  * for a full APPOINTMENT_DURATION_MIN session inside the block. */
@@ -59,8 +72,8 @@ export const useAvailableTimeSlots = ({ psychologistId, selectedDate }: UseAvail
     if (!psychId) return;
     setLoadingAvailability(true);
     try {
-      const today = toISODate(new Date());
-      const windowEnd = toISODate(addDays(new Date(), BOOKING_WINDOW_DAYS));
+      const today = toISODate(brazilNow());
+      const windowEnd = toISODate(addDays(brazilNow(), BOOKING_WINDOW_DAYS));
 
       const [
         { data: baseRows, error: baseError },
@@ -136,29 +149,35 @@ export const useAvailableTimeSlots = ({ psychologistId, selectedDate }: UseAvail
     }
   }, [psychologistId, fetchAvailability]);
 
-  // Consultas que já ocupam a agenda do psicólogo nesse dia (com uma folga
-  // de 2h para os lados, para o intervalo obrigatório entre consultas).
+  // Horários que já ocupam a agenda do psicólogo nesse dia, de todos os
+  // pacientes (com uma folga de 2h para os lados, para o intervalo entre
+  // consultas). O paciente só lê as próprias consultas, então a lista vem da
+  // função get_psychologist_busy_times, que devolve só início e duração.
   const fetchDayAppointments = async (date: Date, psychId: string) => {
     if (!date || !psychId) return;
 
     try {
       setLoading(true);
-      const from = new Date(startOfDay(date).getTime() - 2 * 60 * 60_000);
-      const to = new Date(endOfDay(date).getTime() + 2 * 60 * 60_000);
+      const dayStart = brazilInstantMs(date);
+      const from = new Date(dayStart - 2 * 60 * 60_000);
+      const to = new Date(dayStart + 26 * 60 * 60_000);
 
-      const { data: appointments, error } = await supabase
-        .from('appointments')
-        .select('scheduled_at, duration')
-        .eq('psychologist_id', psychId)
-        .in('status', BLOCKING_STATUSES)
-        .gte('scheduled_at', from.toISOString())
-        .lte('scheduled_at', to.toISOString());
+      const { data, error } = await supabase.rpc('get_psychologist_busy_times', {
+        p_psychologist_id: psychId,
+        p_from: from.toISOString(),
+        p_to: to.toISOString(),
+      });
 
       if (error) {
         console.error('Error fetching occupied slots:', error);
         return;
       }
-      setDayAppointments(appointments ?? []);
+      setDayAppointments(
+        ((data ?? []) as { starts_at: string; duration_minutes: number }[]).map((row) => ({
+          scheduled_at: row.starts_at,
+          duration: row.duration_minutes,
+        }))
+      );
     } catch (error) {
       console.error('Error fetching occupied slots:', error);
       setDayAppointments([]);
@@ -167,10 +186,7 @@ export const useAvailableTimeSlots = ({ psychologistId, selectedDate }: UseAvail
     }
   };
 
-  const slotStartMs = (date: Date, time: string): number => {
-    const [h, m] = time.split(':').map(Number);
-    return new Date(date.getFullYear(), date.getMonth(), date.getDate(), h, m).getTime();
-  };
+  const slotStartMs = (date: Date, time: string): number => brazilInstantMs(date, time);
 
   // Um horário está disponível se não encosta em nenhuma consulta existente
   // (respeitando o intervalo definido pelo psicólogo) e se respeita a
@@ -187,7 +203,7 @@ export const useAvailableTimeSlots = ({ psychologistId, selectedDate }: UseAvail
   /** Horário-padrão do dia da semana, já combinado com bloqueios/aberturas daquela data específica. */
   const effectiveBlocksForDate = (date: Date): EditableBlock[] => {
     const iso = toISODate(date);
-    if (iso < toISODate(new Date()) || date.getTime() > lastBookableDay(rules).getTime()) return [];
+    if (iso < toISODate(brazilNow()) || date.getTime() > lastBookableDay(rules, brazilNow()).getTime()) return [];
     if (vacationRanges.some((v) => v.start_date <= iso && iso <= v.end_date)) return [];
     const dayBlocks = availabilityByDay[date.getDay()] ?? [];
     const overrides = overridesByDate[iso] ?? [];

@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { BLOCKING_STATUSES } from '@/lib/bookingRules';
-import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
   DialogContent,
@@ -13,7 +12,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { CalendarCheck, X, Plus, ChevronDown, Lock, Info, Palmtree, Plane } from 'lucide-react';
+import { CalendarCheck, X, Plus, ChevronDown, Lock, Info, Palmtree } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePsychologistAvailability, type AvailabilityBlock } from '@/hooks/usePsychologistAvailability';
@@ -83,7 +82,6 @@ const derivePatternByDay = (blocks: AvailabilityBlock[]): Record<number, DayPatt
  * semana, via exceções por data. Nunca grava no horário-padrão recorrente.
  */
 export const WeeklyScheduleModal: React.FC<WeeklyScheduleModalProps> = ({ open, onClose, onConfirmed }) => {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const weekStart = useMemo(() => getWeekStartISO(new Date()), []);
   const dates = useMemo(() => weekDatesFrom(weekStart), [weekStart]);
@@ -102,7 +100,13 @@ export const WeeklyScheduleModal: React.FC<WeeklyScheduleModalProps> = ({ open, 
     loading: loadingVacation,
     saving: savingVacation,
     cancelVacation,
+    refetch: refetchVacation,
   } = usePsychologistVacation();
+
+  // As férias podem ter mudado na tela de Agenda com o modal fechado.
+  useEffect(() => {
+    if (open) void refetchVacation();
+  }, [open, refetchVacation]);
 
   const [blockedByDate, setBlockedByDate] = useState<Record<string, Set<string>>>({});
   const [occupiedByDate, setOccupiedByDate] = useState<Record<string, Set<string>>>({});
@@ -246,8 +250,7 @@ export const WeeklyScheduleModal: React.FC<WeeklyScheduleModalProps> = ({ open, 
           </DialogTitle>
           <DialogDescription>
             Este é o seu horário-padrão para os próximos 7 dias. Para bloquear ou liberar um horário só nesta
-            semana, abra "Personalizar horários" no dia — horários em verde estão disponíveis. Para mudar o
-            horário-padrão em definitivo, use "Editar horário padrão" abaixo.
+            semana, abra "Personalizar horários" no dia — horários em verde estão disponíveis.
           </DialogDescription>
         </DialogHeader>
 
@@ -375,22 +378,13 @@ export const WeeklyScheduleModal: React.FC<WeeklyScheduleModalProps> = ({ open, 
           </div>
         )}
 
-        <DialogFooter className="flex-col sm:flex-row gap-2 sm:justify-between">
-          <div className="flex flex-col sm:flex-row gap-2">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/psychologist-availability')}>
-              Editar horário padrão
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/psychologist-availability')}>
-              <Plane className="w-3.5 h-3.5 mr-1" />
-              {activeVacation ? 'Gerenciar férias' : 'Tirar férias'}
-            </Button>
-          </div>
-          {!activeVacation && (
-            <Button onClick={handleConfirm} disabled={saving || loading}>
+        {!activeVacation && (
+          <DialogFooter>
+            <Button onClick={handleConfirm} disabled={saving || loading} className="w-full sm:w-auto">
               {saving ? 'Salvando...' : 'Confirmar horários livres da semana'}
             </Button>
-          )}
-        </DialogFooter>
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );

@@ -1,7 +1,7 @@
 # 04. Consultas agendadas
 
 > **Status:** Pronto.
-> **Última verificação:** 2026-10-04 (nova varredura: cota reservada sem brecha, conclusão só com chamada conectada, devolução da cota do mês certo).
+> **Última verificação:** 2026-10-05 (varredura das regras para paciente e psicólogo: horários de outros pacientes aparecem ocupados, fuso de Brasília, dois pedidos simultâneos, horário proposto reservado, cancelar com novo horário proposto, calendário até o limite do psicólogo).
 > **Quem usa:** paciente Premium (1 consulta por mês, incluindo o plano da empresa) e psicólogo aprovado.
 
 ## Resumo
@@ -28,7 +28,7 @@ O paciente escolhe psicólogo, dia e horário dentro da agenda real dele. O psic
 ### 2. Resposta do psicólogo (`psychologist-schedule`)
 - **Aceitar** → `scheduled`; o paciente é avisado. A cota do mês já foi reservada no pedido.
 - **Recusar** → `declined`; a cota volta.
-- **Propor outro horário** → `reschedule_proposed`. O paciente aceita (o horário muda) ou recusa (a cota volta).
+- **Propor outro horário** → `reschedule_proposed`. Só horários livres da agenda dele (mesma lista que o paciente vê). O horário proposto fica reservado até o paciente responder. O paciente aceita (o horário muda; o servidor confere de novo conflito e agenda, ex.: férias marcadas depois) ou recusa (a cota volta).
 - **Sem resposta**: o pedido expira em 24 h ou quando o horário chega (`auto-decline-appointments`, de hora em hora); a cota volta.
 
 ### 3. Lembretes
@@ -56,9 +56,11 @@ O paciente escolhe psicólogo, dia e horário dentro da agenda real dele. O psic
 
 | Quem cancela | Quando | A consulta do mês volta? |
 |---|---|---|
-| Paciente | Pedido ainda não confirmado, ou com 24 h ou mais de antecedência | Sim |
+| Paciente | Pedido ainda não confirmado (inclusive com novo horário proposto), ou com 24 h ou mais de antecedência | Sim |
 | Paciente | Com menos de 24 h | Não, conta como usada (o app avisa antes) |
 | Psicólogo | Qualquer momento antes do início | Sim, e o paciente é avisado |
+
+Com novo horário proposto, o limite "já começou" vale para o horário proposto (antes, passado o horário original, não dava mais para cancelar).
 
 Toda devolução da consulta do mês (cancelar, recusar, expirar, não realizada, interrompida) passa por `release_appointment_quota`: só devolve se a cota marcada é do mesmo mês em que a consulta foi pedida. Assim, recusar em outubro um pedido feito em setembro não libera uma segunda consulta em outubro.
 

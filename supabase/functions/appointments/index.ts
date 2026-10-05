@@ -76,7 +76,9 @@ const isWithinPsychologistAvailability = async (
       .eq('psychologist_id', psychologistId)
       .lte('start_date', dateISO)
       .gte('end_date', dateISO)
-      .maybeSingle(),
+      // limit(1), não maybeSingle(): com dois períodos sobrepostos o
+      // maybeSingle() dava erro, voltava vazio e o dia contava como livre.
+      .limit(1),
     supabase
       .from('psychologist_availability')
       .select('start_time, end_time')
@@ -90,7 +92,7 @@ const isWithinPsychologistAvailability = async (
       .eq('date', dateISO),
   ]);
 
-  if (vacation) return false;
+  if ((vacation ?? []).length > 0) return false;
 
   let ranges: Block[] = (baseRows ?? []).map((r: any) => ({ start_time: r.start_time.slice(0, 5), end_time: r.end_time.slice(0, 5) }));
   const overrides = (overrideRows ?? []).map((r: any) => ({ start_time: r.start_time.slice(0, 5), end_time: r.end_time.slice(0, 5), type: r.type as string }));
@@ -380,8 +382,26 @@ serve(async (req) => {
         throw new Error('Erro ao verificar conflitos de horário');
       }
 
+      // Horários que o psicólogo propôs a outro paciente e ainda esperam
+      // resposta também ficam reservados.
+      const { data: proposedRows, error: proposedError } = await supabase
+        .from('appointments')
+        .select('proposed_scheduled_at, duration')
+        .eq('psychologist_id', psychologist_id)
+        .eq('status', 'reschedule_proposed')
+        .gte('proposed_scheduled_at', new Date(appointmentStart.getTime() - windowMs).toISOString())
+        .lte('proposed_scheduled_at', new Date(appointmentEnd.getTime() + windowMs).toISOString());
+      if (proposedError) {
+        console.error('Error checking proposed slots:', proposedError);
+        throw new Error('Erro ao verificar conflitos de horário');
+      }
+      const holding = [
+        ...(conflictingAppointments ?? []),
+        ...(proposedRows ?? []).map((r: any) => ({ scheduled_at: r.proposed_scheduled_at, duration: r.duration })),
+      ];
+
       const bufferMs = bufferMin * 60 * 1000;
-      for (const existing of conflictingAppointments ?? []) {
+      for (const existing of holding) {
         const existingStart = new Date(existing.scheduled_at).getTime();
         const existingEnd = existingStart + (existing.duration || 50) * 60 * 1000;
         const free =

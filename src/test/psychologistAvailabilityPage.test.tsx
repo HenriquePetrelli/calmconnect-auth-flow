@@ -16,16 +16,18 @@ vi.mock('@/hooks/usePsychologistAvailability', () => ({
   }),
 }));
 
+const setVacationMock = vi.fn().mockResolvedValue(true);
 vi.mock('@/hooks/usePsychologistVacation', () => ({
   usePsychologistVacation: () => ({
     activeVacation: null,
     upcomingVacation: null,
     loading: false,
     saving: false,
-    setVacation: vi.fn().mockResolvedValue(true),
+    setVacation: setVacationMock,
     cancelVacation: vi.fn().mockResolvedValue(true),
   }),
   toISODate: () => '2026-01-01',
+  formatBR: (d: string) => d,
 }));
 
 vi.mock('@/components/PageHeader', () => ({ default: () => <div /> }));
@@ -95,5 +97,30 @@ describe('PsychologistAvailability page', () => {
     const saved = saveMock.mock.calls[0][0] as { day_of_week: number; start_time: string; end_time: string }[];
     expect(saved).toContainEqual({ day_of_week: 3, start_time: '08:00', end_time: '12:00' });
     expect(saved).toContainEqual({ day_of_week: 1, start_time: '08:00', end_time: '12:00' });
+  });
+
+  it('tem os botões Férias e Agenda semanal; Férias abre o modal e agenda o período', () => {
+    render(<PsychologistAvailability />);
+    expect(screen.getByRole('button', { name: /agenda semanal/i })).toBeTruthy();
+    expect(screen.queryByText(/confirmar semana/i)).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: /^férias$/i }));
+    fireEvent.change(screen.getByLabelText('De'), { target: { value: '2026-02-01' } });
+    fireEvent.change(screen.getByLabelText('Até'), { target: { value: '2026-02-10' } });
+    fireEvent.click(screen.getByRole('button', { name: /agendar férias/i }));
+
+    // Chamado de forma síncrona no clique; sem waitFor (o foco do Radix não assenta no jsdom).
+    expect(setVacationMock).toHaveBeenCalledWith('2026-02-01', '2026-02-10');
+  });
+
+  it('recusa férias com início depois do fim', () => {
+    setVacationMock.mockClear();
+    render(<PsychologistAvailability />);
+    fireEvent.click(screen.getByRole('button', { name: /^férias$/i }));
+    fireEvent.change(screen.getByLabelText('De'), { target: { value: '2026-02-10' } });
+    fireEvent.change(screen.getByLabelText('Até'), { target: { value: '2026-02-01' } });
+    fireEvent.click(screen.getByRole('button', { name: /agendar férias/i }));
+    expect(screen.getByText(/antes ou igual/)).toBeTruthy();
+    expect(setVacationMock).not.toHaveBeenCalled();
   });
 });

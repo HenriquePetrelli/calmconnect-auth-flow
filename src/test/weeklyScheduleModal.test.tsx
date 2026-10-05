@@ -3,8 +3,6 @@ import { render, screen, fireEvent, waitFor, within } from '@testing-library/rea
 import { WeeklyScheduleModal } from '@/components/psychologist/WeeklyScheduleModal';
 import { getWeekStartISO, weekDatesFrom } from '@/lib/psychologistAvailability';
 
-const navigateMock = vi.fn();
-vi.mock('react-router-dom', () => ({ useNavigate: () => navigateMock }));
 // Referência estável — um objeto novo a cada render faria o efeito que busca
 // consultas ocupadas (dependente de `user`) entrar em loop.
 const mockUser = { id: 'psi-1' };
@@ -26,6 +24,7 @@ const addOverrideMock = vi.fn().mockResolvedValue(true);
 const removeOverrideMock = vi.fn().mockResolvedValue(true);
 const applyChangesMock = vi.fn().mockResolvedValue(true);
 const cancelVacationMock = vi.fn().mockResolvedValue(true);
+const refetchVacationMock = vi.fn().mockResolvedValue(undefined);
 
 // Referência estável — null por padrão (sem férias ativa); testes de férias
 // reatribuem antes do render.
@@ -53,6 +52,7 @@ vi.mock('@/hooks/usePsychologistVacation', () => ({
     saving: false,
     setVacation: vi.fn().mockResolvedValue(true),
     cancelVacation: cancelVacationMock,
+    refetch: refetchVacationMock,
   }),
 }));
 
@@ -215,10 +215,16 @@ describe('WeeklyScheduleModal — novo fluxo (padrão + grade de bloqueio)', () 
     await waitFor(() => expect(removeOverrideMock).toHaveBeenCalledWith('ov-extra'));
   });
 
-  it('leva para o editor de horário padrão', async () => {
+  it('não tem atalhos para editar o horário-padrão nem para férias (ficam na tela de Agenda)', async () => {
     await renderAndWait();
-    fireEvent.click(screen.getByRole('button', { name: /editar horário padrão/i }));
-    expect(navigateMock).toHaveBeenCalledWith('/psychologist-availability');
+    expect(screen.queryByRole('button', { name: /editar horário padrão/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /tirar férias|gerenciar férias/i })).toBeNull();
+  });
+
+  it('busca as férias de novo ao abrir', async () => {
+    refetchVacationMock.mockClear();
+    await renderAndWait();
+    expect(refetchVacationMock).toHaveBeenCalled();
   });
 
   it('em férias ativa, mostra o aviso em vez dos dias e esconde o botão de confirmar', async () => {

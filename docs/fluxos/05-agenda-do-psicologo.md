@@ -1,7 +1,7 @@
 # 05. Agenda do psicólogo
 
 > **Status:** Pronto.
-> **Última verificação:** 2026-09-24 (regras de agendamento e conflitos); a conferência de conflito no servidor foi revista em 2026-10-04.
+> **Última verificação:** 2026-10-05 (varredura das regras de agendamento: horários ocupados visíveis ao paciente, fuso de Brasília, trava contra dois pedidos simultâneos, horário proposto reservado; Férias em modal próprio).
 > **Quem usa:** psicólogo aprovado.
 
 ## Resumo
@@ -13,14 +13,14 @@ O psicólogo define um **horário-padrão** semanal e o ajusta por data com **ex
 | Rota | Tela |
 |---|---|
 | `/psychologist-dashboard` (Início) | Modal da 1ª configuração e confirmação semanal |
-| `/psychologist-availability` (Agenda) | Horário-padrão, férias, regras e o botão "Confirmar semana" |
+| `/psychologist-availability` (Agenda) | Horário-padrão e regras; botões **Férias** (modal com as datas) e **Agenda semanal** (confirmação da semana) |
 
 ## Como funciona
 
 1. **Primeiro acesso**: se não há horário-padrão, abre a configuração inicial, com segunda a sexta das 8h às 18h pré-marcado e ajustável. Salva por `set_psychologist_availability`.
 2. **Horário-padrão**: dias da semana com um ou mais blocos (ex.: manhã e tarde). Tem "Copiar para outros dias".
-3. **Confirmação semanal**: uma vez por semana mostra os próximos 7 dias, **só para leitura do padrão**. Em "Personalizar horários", cada meia hora pode ser bloqueada só naquela data; "Adicionar horário extra" abre fora do padrão. Grava **só exceções** (`psychologist_availability_overrides`), nunca mexe no padrão.
-4. **Férias**: intervalo de datas totalmente indisponível, sem apagar padrão nem exceções. Durante as férias, a confirmação semanal não aparece.
+3. **Confirmação semanal**: uma vez por semana mostra os próximos 7 dias, **só para leitura do padrão**. Em "Personalizar horários", cada meia hora pode ser bloqueada só naquela data; "Adicionar horário extra" abre fora do padrão. Grava **só exceções** (`psychologist_availability_overrides`), nunca mexe no padrão. Abre sozinha uma vez por semana no Início e pelo botão "Agenda semanal" na Agenda; não tem atalhos para editar o padrão nem para férias (ficam na própria Agenda).
+4. **Férias** (botão "Férias" na Agenda, abre um modal): de-até, totalmente indisponível, sem apagar padrão nem exceções. Só um período ativo ou futuro por vez; para mudar, cancela e agenda de novo. Consultas já confirmadas no período **não** são canceladas sozinhas (o modal avisa). Durante as férias, a confirmação semanal mostra só o aviso e "Encerrar férias agora".
 5. **Regras de agendamento** (`psychologist_booking_rules`):
    - intervalo entre consultas: 0 a 30 min;
    - antecedência mínima: padrão de 2 h;
@@ -32,12 +32,17 @@ O psicólogo define um **horário-padrão** semanal e o ajusta por data com **ex
 - Horário com consulta marcada aparece travado e não pode ser bloqueado.
 - O conflito é calculado com sobreposição dos dois lados e com o intervalo: um horário que começa antes e termina no meio de outra consulta também é recusado.
 - As mesmas regras valem no app (`src/lib/bookingRules.ts`, `src/lib/psychologistAvailability.ts`) e no servidor (edge function `appointments`).
+- Seguram o horário: pedidos pendentes, consultas confirmadas e em andamento, e o **novo horário proposto** a um paciente enquanto ele não responde.
+- O paciente só lê as próprias consultas; os horários ocupados de outros pacientes chegam pela função `get_psychologist_busy_times` (só início e duração, janela de até 3 dias).
+- Tudo em horário de Brasília, inclusive para paciente com o aparelho em outro fuso (Manaus, Acre).
+- O banco recusa duas consultas sobrepostas do mesmo psicólogo (gatilho `prevent_appointment_overlap`, com trava por psicólogo): dois pedidos ao mesmo tempo para o mesmo horário não passam os dois.
+- O calendário do paciente vai até o "até quantos dias à frente" de cada psicólogo (antes parava em 30 dias mesmo com 60 ou 90 configurado).
 
 ## Onde está no código
 
-- **Telas e componentes**: `src/pages/PsychologistAvailability.tsx`; em `src/components/psychologist/`: `FirstTimeAvailabilityModal`, `WeeklyScheduleModal` e a grade de disponibilidade.
+- **Telas e componentes**: `src/pages/PsychologistAvailability.tsx`; em `src/components/psychologist/`: `FirstTimeAvailabilityModal`, `WeeklyScheduleModal`, `VacationModal` e a grade de disponibilidade.
 - **Hooks**: `usePsychologistAvailability`, `usePsychologistAvailabilityOverrides`, `usePsychologistVacation`, `usePsychologistBookingRules`, `useAvailableTimeSlots`.
-- **Banco**: `psychologist_availability`, `psychologist_availability_overrides`, `psychologist_vacations`, `psychologist_booking_rules`. Função `set_psychologist_availability`.
+- **Banco**: `psychologist_availability`, `psychologist_availability_overrides`, `psychologist_vacations`, `psychologist_booking_rules`. Funções `set_psychologist_availability`, `get_psychologist_busy_times`; gatilho `prevent_appointment_overlap`.
 
 ## Como validar
 
