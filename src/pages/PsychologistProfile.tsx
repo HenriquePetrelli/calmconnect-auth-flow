@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 import { supabase } from '@/integrations/supabase/client';
 import { getSessionUser } from '@/lib/currentUser';
-import { KeyRound, LogOut, Lock, Pencil, Check, MessageCircle, Wallet, CalendarClock, Bell, BellRing, Palette, ScrollText, LockKeyhole } from 'lucide-react';
+import { KeyRound, LogOut, Lock, Pencil, Check, MessageCircle, Wallet, BellRing, Palette, ScrollText, LockKeyhole } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { SettingsRow, SettingsSection } from '@/components/settings/SettingsList';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -279,12 +279,6 @@ const PsychologistProfile = () => {
 
       <SettingsSection title="Trabalho">
         <SettingsRow
-          icon={<CalendarClock />}
-          title="Agenda"
-          description="Dias e horários em que você atende"
-          onClick={() => navigate('/psychologist-availability')}
-        />
-        <SettingsRow
           icon={<KeyRound />}
           title="Chave Pix"
           description="Onde você recebe os repasses"
@@ -295,12 +289,6 @@ const PsychologistProfile = () => {
           title="Pagamentos"
           description="Repasses recebidos e valores a receber"
           onClick={() => navigate('/psychologist-payments')}
-        />
-        <SettingsRow
-          icon={<Bell />}
-          title="Notificações"
-          description="Pedidos, confirmações e lembretes"
-          onClick={() => navigate('/psychologist-notifications')}
         />
       </SettingsSection>
 

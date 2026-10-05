@@ -787,7 +787,7 @@ export const PsychologistProfileBodySkeleton = () => (
       <FormCardSkeleton fields={3} title={false} />
     </div>
     <ProfileRowsSkeleton rows={2} />
-    <ProfileRowsSkeleton rows={3} />
+    <ProfileRowsSkeleton rows={2} />
     <ProfileRowsSkeleton rows={2} />
     <ProfileRowsSkeleton rows={3} />
   </div>
