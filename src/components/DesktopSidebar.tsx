@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import LifeRingIcon from '@/components/icons/LifeRingIcon';
-import logoImg from '@/assets/soliv-logo.svg';
+import logoImg from '@/assets/soliv-logo.webp';
 import { useAuth } from '@/contexts/AuthContext';
 
 const sidebarItems = [

@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Bell, MoreHorizontal, Shield } from 'lucide-react';
-import logoImg from '@/assets/soliv-logo.svg';
+import logoImg from '@/assets/soliv-logo.webp';
 import Wordmark from '@/components/Wordmark';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useAuth } from '@/contexts/AuthContext';

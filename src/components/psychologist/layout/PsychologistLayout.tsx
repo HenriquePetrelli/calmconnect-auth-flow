@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Bell } from 'lucide-react';
-import logoImg from '@/assets/soliv-logo.svg';
+import logoImg from '@/assets/soliv-logo.webp';
 import Wordmark from '@/components/Wordmark';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications } from '@/hooks/useNotifications';

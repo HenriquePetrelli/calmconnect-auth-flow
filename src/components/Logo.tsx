@@ -1,4 +1,4 @@
-import logoImg from '@/assets/soliv-logo.svg';
+import logoImg from '@/assets/soliv-logo.webp';
 import { cn } from '@/lib/utils';
 
 type LogoVariant = 'full' | 'icon' | 'compact';

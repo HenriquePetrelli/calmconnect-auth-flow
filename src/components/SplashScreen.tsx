@@ -1,4 +1,4 @@
-import logoImg from '@/assets/soliv-logo.svg';
+import logoImg from '@/assets/soliv-logo.webp';
 import Wordmark from '@/components/Wordmark';
 
 /** Tela de abertura; `message` (ex.: "Saindo da conta...") aparece abaixo da marca. */

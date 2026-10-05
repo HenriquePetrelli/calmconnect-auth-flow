@@ -2,7 +2,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import logoImg from '@/assets/soliv-logo.svg';
+import logoImg from '@/assets/soliv-logo.webp';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePsychologistPresence } from '@/hooks/usePsychologistPresence';
 import { cn } from '@/lib/utils';

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Bell, User } from "lucide-react";
-import logoImg from '@/assets/soliv-logo.svg';
+import logoImg from '@/assets/soliv-logo.webp';
 import Wordmark from '@/components/Wordmark';
 import { Button } from "@/components/ui/button";
 import { NotificationButton } from "@/components/notifications/NotificationButton";
