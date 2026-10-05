@@ -719,38 +719,34 @@ export const CompanyBenefitBodySkeleton = () => (
 export const PsychologistDashboardSkeleton = () => (
   <div className="min-h-screen bg-background" aria-busy="true" aria-label="Carregando">
     <div className="bg-primary">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3 md:py-4 flex items-center justify-between gap-3">
-        <div className="space-y-2 min-w-0 flex-1">
-          <Skeleton className="h-3 w-24 bg-white/25" />
-          <Skeleton className="h-5 w-32 bg-white/25" />
-        </div>
-        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-          <Skeleton className="h-7 w-12 rounded-full bg-white/25" />
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-white/20" />
-          ))}
+      <div className="max-w-7xl mx-auto flex h-14 items-center justify-between gap-3 px-3 sm:h-16 sm:px-4">
+        <Skeleton className="h-6 w-20 bg-white/25" />
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <Skeleton className="h-10 w-28 rounded-full bg-white/20" />
+          <Skeleton className="h-10 w-10 rounded-full bg-white/20" />
+          <Skeleton className="h-10 w-10 rounded-full bg-white/25" />
         </div>
       </div>
     </div>
-    <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-4 md:py-6 space-y-4 sm:space-y-5">
+    <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-4 md:py-6 space-y-4 sm:space-y-5 md:space-y-6">
+      <div className="space-y-2">
+        <Skeleton className="h-7 w-48" />
+        <Skeleton className="h-4 w-40" />
+      </div>
       <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4">
         {Array.from({ length: 3 }).map((_, i) => (
           <Card key={i} className="border-border/60">
             <CardContent className="p-3 sm:p-5 flex items-start justify-between gap-2">
               <div className="space-y-2">
-                <Skeleton className="h-3 w-14" />
-                <Skeleton className="h-6 w-8" />
+                <Skeleton className="h-3 w-16" />
+                <Skeleton className="h-7 w-8" />
               </div>
-              <Skeleton className="h-7 w-7 rounded-lg" />
+              <Skeleton className="hidden h-10 w-10 rounded-xl sm:block" />
             </CardContent>
           </Card>
         ))}
       </div>
-      <div className="flex gap-2">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <Skeleton key={i} className="h-9 flex-1 rounded-full" />
-        ))}
-      </div>
+      <Skeleton className="h-11 w-full rounded-lg" />
       <SkeletonSectionCard rows={3} accent="primary" />
     </div>
   </div>

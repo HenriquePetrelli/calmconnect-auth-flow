@@ -16,7 +16,7 @@ export const OnlineStatusToggle = ({ compact = true, className }: OnlineStatusTo
       <div
         className={cn(
           'flex items-center gap-2 rounded-full bg-white/10 hover:bg-white/15 transition-colors',
-          'px-2.5 py-1 sm:px-3 sm:py-1.5 border border-white/15',
+          'h-10 px-3 border border-white/15',
           className,
         )}
       >
@@ -29,7 +29,7 @@ export const OnlineStatusToggle = ({ compact = true, className }: OnlineStatusTo
           )}
           aria-hidden
         />
-        <span className="hidden sm:inline text-xs font-medium text-white/90">
+        <span className="text-xs font-medium text-white/90">
           {loading ? '...' : isOnline ? 'Online' : 'Offline'}
         </span>
         <Switch
@@ -37,7 +37,7 @@ export const OnlineStatusToggle = ({ compact = true, className }: OnlineStatusTo
           onCheckedChange={toggle}
           disabled={loading}
           aria-label="Alternar disponibilidade"
-          className="scale-75 sm:scale-90 data-[state=checked]:bg-emerald-500 data-[state=unchecked]:bg-white/25"
+          className="scale-90 data-[state=checked]:bg-emerald-500 data-[state=unchecked]:bg-white/25"
         />
       </div>
     );

@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Bell, Calendar, CalendarCheck, User, History, AlertTriangle, Clock, Users, CheckCircle, LogOut } from 'lucide-react';
+import { Bell, Calendar, History, AlertTriangle, Clock, Users } from 'lucide-react';
+import PsychologistAccountMenu from '@/components/psychologist/PsychologistAccountMenu';
 import Wordmark from '@/components/Wordmark';
 import { supabase } from '@/integrations/supabase/client';
 import { getSessionUser } from '@/lib/currentUser';
@@ -158,6 +159,7 @@ const PsychologistDashboard = () => {
 
   const pendingEmergencies = emergencyRequests.filter(req => req.status === 'pending').length;
   const todayConsultations = todayAppointments.length;
+  const todayLabel = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
   const upcomingConsultations = upcomingAppointments.length;
 
   const tabTriggerClass =
@@ -166,132 +168,71 @@ const PsychologistDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
+      {/* Cabeçalho: marca, disponibilidade, avisos e o menu da conta. */}
       <header className="sticky top-0 z-30 bg-primary text-primary-foreground border-b border-primary/40 shadow-sm">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3 md:py-4">
-          <div className="relative flex items-center justify-between gap-2 sm:gap-4">
-            {/* Lado esquerdo - saudação */}
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-medium uppercase tracking-wider text-primary-foreground/70">
-                Área do Psicólogo
-              </p>
-              <h1 className="text-base sm:text-lg md:text-xl font-semibold text-white truncate">
-                Olá, Dr.(a) {profile?.full_name?.split(' ')[0]}
-              </h1>
-            </div>
+        <div className="max-w-7xl mx-auto flex h-14 items-center justify-between gap-3 px-3 sm:h-16 sm:px-4">
+          <Wordmark className="h-[26px] sm:h-[30px] text-white shrink-0" />
 
-            {/* SOLIV centralizado */}
-            <div className="hidden sm:flex absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 items-center gap-2">
-              <Wordmark className="h-[34px] text-white" />
-            </div>
-
-            <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-              <OnlineStatusToggle />
-              <div className="hidden sm:block w-px h-6 bg-white/20" aria-hidden />
-              <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-full text-white hover:bg-white/15 hover:text-white h-9 w-9"
-                onClick={() => setShowWeeklyScheduleModal(true)}
-                title="Agenda da semana"
-                aria-label="Agenda da semana"
-              >
-                <CalendarCheck className="w-[18px] h-[18px]" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="relative rounded-full text-white hover:bg-white/15 hover:text-white h-9 w-9"
-                onMouseEnter={() => import('./Notifications')}
-                onClick={() => navigate('/psychologist-notifications')}
-                title="Notificações"
-                aria-label="Notificações"
-              >
-                <Bell className="w-[18px] h-[18px]" />
-                {unreadCount > 0 && (
-                  <Badge
-                    variant="destructive"
-                    className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 flex items-center justify-center text-xs leading-none"
-                  >
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </Badge>
-                )}
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-full text-white hover:bg-white/15 hover:text-white h-9 w-9"
-                onMouseEnter={() => import('./PsychologistProfile')}
-                onClick={() => navigate('/psychologist-profile')}
-                title="Perfil"
-                aria-label="Perfil"
-              >
-                <User className="w-[18px] h-[18px]" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-full text-white hover:bg-destructive/40 hover:text-white h-9 w-9"
-                onClick={handleLogout}
-                title="Sair"
-                aria-label="Sair"
-              >
-                <LogOut className="w-[18px] h-[18px]" />
-              </Button>
-            </div>
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <OnlineStatusToggle />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative h-10 w-10 rounded-full text-white hover:bg-white/15 hover:text-white"
+              onMouseEnter={() => import('./Notifications')}
+              onClick={() => navigate('/psychologist-notifications')}
+              aria-label={unreadCount > 0 ? `Notificações, ${unreadCount} não lidas` : 'Notificações'}
+            >
+              <Bell className="h-5 w-5" />
+              {unreadCount > 0 && (
+                <Badge
+                  variant="destructive"
+                  className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center px-1 text-xs leading-none"
+                >
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </Badge>
+              )}
+            </Button>
+            <PsychologistAccountMenu
+              name={profile?.full_name}
+              onWeeklySchedule={() => setShowWeeklyScheduleModal(true)}
+              onSignOut={handleLogout}
+            />
           </div>
         </div>
       </header>
 
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-4 md:py-6 space-y-4 sm:space-y-5 md:space-y-6">
+        {/* Saudação: saiu do cabeçalho para não apertar os botões no celular. */}
+        <div>
+          <h1 className="text-xl font-semibold text-foreground sm:text-2xl">
+            Olá, Dr.(a) {profile?.full_name?.split(' ')[0]}
+          </h1>
+          <p className="text-sm text-muted-foreground first-letter:uppercase">{todayLabel}</p>
+        </div>
+
         <ActiveCallBanner />
 
-        {/* Stats Cards */}
+        {/* Resumo do dia */}
         <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4">
-          <Card className="border-destructive/20 bg-gradient-to-br from-destructive/5 to-transparent">
-            <CardContent className="p-3 sm:p-5">
-              <div className="flex items-start justify-between gap-2 sm:gap-3">
+          {[
+            { label: 'Emergências', hint: 'pendentes', value: pendingEmergencies, icon: AlertTriangle, tone: 'text-destructive', box: 'bg-destructive/10' },
+            { label: 'Hoje', hint: 'consultas', value: todayConsultations, icon: Calendar, tone: 'text-primary', box: 'bg-primary/10' },
+            { label: 'Próximas', hint: 'agendadas', value: upcomingConsultations, icon: Clock, tone: 'text-foreground', box: 'bg-muted' },
+          ].map(({ label, hint, value, icon: Icon, tone, box }) => (
+            <Card key={label} className="border-border/60">
+              <CardContent className="flex items-start justify-between gap-2 p-3 sm:p-5">
                 <div className="min-w-0">
-                  <p className="text-xs font-medium text-muted-foreground truncate">Emergências</p>
-                  <p className="text-xl sm:text-3xl font-bold text-destructive mt-1 sm:mt-1.5">{pendingEmergencies}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5 sm:mt-1 hidden sm:block">pendentes</p>
+                  <p className="text-xs font-medium text-muted-foreground sm:text-sm">{label}</p>
+                  <p className={`mt-1 text-2xl font-bold sm:text-3xl ${tone}`}>{value}</p>
+                  <p className="mt-0.5 hidden text-xs text-muted-foreground sm:block">{hint}</p>
                 </div>
-                <div className="rounded-lg bg-destructive/10 p-1.5 sm:p-2.5 shrink-0">
-                  <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-destructive" />
+                <div className={`hidden shrink-0 rounded-xl p-2.5 sm:block ${box}`} aria-hidden="true">
+                  <Icon className={`h-5 w-5 ${tone}`} />
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-            <CardContent className="p-3 sm:p-5">
-              <div className="flex items-start justify-between gap-2 sm:gap-3">
-                <div className="min-w-0">
-                  <p className="text-xs font-medium text-muted-foreground truncate">Hoje</p>
-                  <p className="text-xl sm:text-3xl font-bold text-primary mt-1 sm:mt-1.5">{todayConsultations}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5 sm:mt-1 hidden sm:block">consultas</p>
-                </div>
-                <div className="rounded-lg bg-primary/10 p-1.5 sm:p-2.5 shrink-0">
-                  <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-secondary/30 bg-gradient-to-br from-secondary/10 to-transparent">
-            <CardContent className="p-3 sm:p-5">
-              <div className="flex items-start justify-between gap-2 sm:gap-3">
-                <div className="min-w-0">
-                  <p className="text-xs font-medium text-muted-foreground truncate">Próximas</p>
-                  <p className="text-xl sm:text-3xl font-bold text-secondary-foreground mt-1 sm:mt-1.5">{upcomingConsultations}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5 sm:mt-1 hidden sm:block">agendadas</p>
-                </div>
-                <div className="rounded-lg bg-secondary/20 p-1.5 sm:p-2.5 shrink-0">
-                  <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-secondary-foreground" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
         {/* Main Content */}
