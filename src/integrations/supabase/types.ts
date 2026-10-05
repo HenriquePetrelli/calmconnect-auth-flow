@@ -2825,7 +2825,9 @@ export type Database = {
       get_psychologists_public_stats: {
         Args: { p_user_ids: string[] }
         Returns: {
+          average_rating: number
           consultation_count: number
+          ratings_count: number
           sos_count: number
           user_id: string
         }[]
