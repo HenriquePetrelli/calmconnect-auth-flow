@@ -12,7 +12,7 @@ describe('código das telas baixado antes da hora', () => {
   });
 
   it('cada rota baixa o mesmo arquivo de tela que o App usa', () => {
-    // Nome da tela de cada rota no App (<RouteGuard ...><Tela />) e o import dela.
+    // Nome da tela de cada rota no App (<RouteGuard ...>[<AdminLayout ...>]<Tela />) e o import dela.
     const lazies = Object.fromEntries(
       [...app.matchAll(/const (\w+) = lazy\(\(\) => import\("\.\/pages\/([^"]+)"\)\);/g)].map((m) => [m[1], m[2]]),
     );
@@ -23,7 +23,7 @@ describe('código das telas baixado antes da hora', () => {
     const tableEntries = Object.fromEntries(
       [...source.matchAll(/\["([^"]+)", page\.(\w+)\]/g)].map((m) => [m[1], pageImports[m[2]]]),
     );
-    const mismatches = [...app.matchAll(/<Route path="([^"]+)" element=\{\s*(?:<RouteGuard[^>]*>\s*)?<(\w+)/g)]
+    const mismatches = [...app.matchAll(/<Route path="([^"]+)" element=\{\s*(?:<RouteGuard[^>]*>\s*)?(?:<AdminLayout[^>]*>\s*)?<(\w+)/g)]
       .filter(([, path]) => path !== '*')
       .filter(([, path, component]) => tableEntries[path] !== lazies[component])
       .map(([, path]) => path);

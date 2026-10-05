@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
-/** Título das telas do psicólogo dentro do layout (sem cabeçalho roxo). */
-const PsychologistPageTitle = ({
+/** Título das telas dentro dos layouts do psicólogo e do admin (sem cabeçalho roxo). */
+const PageTitle = ({
   title,
   description,
   action,
@@ -19,4 +19,4 @@ const PsychologistPageTitle = ({
   </div>
 );
 
-export default PsychologistPageTitle;
+export default PageTitle;

@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { PushNotificationToggle } from '@/components/PushNotificationToggle';
+import { SettingsRow, SettingsSection } from '@/components/settings/SettingsList';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Separator } from '@/components/ui/separator';
-import { LogOut, Mail, Key, Save, Loader2 } from 'lucide-react';
+import { BellRing, Loader2, LogOut, Palette, Shield } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { getFriendlyErrorMessage } from '@/utils/errorMessage';
@@ -99,96 +102,92 @@ const AdminProfile = () => {
     }
   };
 
+  const email = user?.email ?? '';
+
   return (
-    <div className="max-w-2xl space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Key className="h-5 w-5" />
-            Alterar Senha
-          </CardTitle>
-          <CardDescription>
-            Altere sua senha de acesso ao painel administrativo
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleUpdateProfile} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="currentPassword">Senha Atual</Label>
-              <Input
-                id="currentPassword"
-                type="password"
-                value={formData.currentPassword}
-                onChange={(e) => setFormData(prev => ({ ...prev, currentPassword: e.target.value }))}
-                placeholder="••••••••"
-                disabled={isUpdating}
-              />
-            </div>
+    <div className="mx-auto w-full max-w-3xl space-y-6">
+      {/* Quem é */}
+      <Card className="border-border/60">
+        <div className="flex items-center gap-4 p-5">
+          <div
+            className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-xl font-semibold text-primary"
+            aria-hidden="true"
+          >
+            {(email || 'A').charAt(0).toUpperCase()}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-lg font-semibold text-foreground">{email}</p>
+            <Badge variant="secondary" className="mt-2 gap-1.5 font-medium">
+              <Shield className="h-3 w-3 text-primary" aria-hidden="true" /> Administrador
+            </Badge>
+          </div>
+        </div>
+      </Card>
 
-            <div className="space-y-2">
-              <Label htmlFor="newPassword">Nova Senha</Label>
-              <Input
-                id="newPassword"
-                type="password"
-                value={formData.newPassword}
-                onChange={(e) => setFormData(prev => ({ ...prev, newPassword: e.target.value }))}
-                placeholder="••••••••"
-                disabled={isUpdating}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirmar Nova Senha</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={formData.confirmPassword}
-                onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                placeholder="••••••••"
-                disabled={isUpdating}
-              />
-            </div>
-
-            <div className="flex gap-3 pt-4">
-              <Button 
-                type="submit" 
-                disabled={isUpdating}
-                className="flex-1"
-              >
+      <section className="space-y-2" aria-label="Senha">
+        <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Senha</h2>
+        <Card className="border-border/60">
+          <CardContent className="p-4">
+            <p className="mb-4 text-xs text-muted-foreground">Para trocar, confirme a senha atual.</p>
+            <form onSubmit={handleUpdateProfile} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="currentPassword">Senha atual</Label>
+                <Input
+                  id="currentPassword"
+                  type="password"
+                  autoComplete="current-password"
+                  value={formData.currentPassword}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, currentPassword: e.target.value }))}
+                  placeholder="••••••••"
+                  disabled={isUpdating}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="newPassword">Nova senha</Label>
+                <Input
+                  id="newPassword"
+                  type="password"
+                  autoComplete="new-password"
+                  value={formData.newPassword}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, newPassword: e.target.value }))}
+                  placeholder="••••••••"
+                  disabled={isUpdating}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="confirmPassword">Confirmar nova senha</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  autoComplete="new-password"
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, confirmPassword: e.target.value }))}
+                  placeholder="••••••••"
+                  disabled={isUpdating}
+                />
+              </div>
+              <Button type="submit" disabled={isUpdating} className="h-11 w-full">
                 {isUpdating ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Salvando...
                   </>
                 ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Salvar Alterações
-                  </>
+                  'Trocar senha'
                 )}
               </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+            </form>
+          </CardContent>
+        </Card>
+      </section>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-destructive">Sair do Painel</CardTitle>
-          <CardDescription>
-            Fazer logout do painel administrativo
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button 
-            variant="destructive" 
-            onClick={handleLogout}
-            className="w-full"
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            Sair da Conta
-          </Button>
-        </CardContent>
+      <SettingsSection title="Preferências">
+        <SettingsRow icon={<Palette />} title="Tema" description="Claro, escuro ou do sistema" trailing={<ThemeToggle />} />
+        <PushNotificationToggle icon={<BellRing />} />
+      </SettingsSection>
+
+      <Card className="overflow-hidden border-border/60">
+        <SettingsRow icon={<LogOut />} title="Sair da conta" description="Encerrar a sessão neste aparelho" onClick={handleLogout} tone="destructive" />
       </Card>
     </div>
   );

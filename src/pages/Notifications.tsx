@@ -23,8 +23,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useAuth } from '@/contexts/AuthContext';
-import PageHeader from '@/components/PageHeader';
-import PsychologistPageTitle from '@/components/psychologist/layout/PsychologistPageTitle';
+import PageTitle from '@/components/PageTitle';
 import { NotificationsBodySkeleton } from '@/components/skeletons/PageSkeletons';
 
 import { format } from 'date-fns';
@@ -110,17 +109,13 @@ const Notifications = () => {
     toast.success('Todas as notificações foram excluídas');
   };
 
-  // Paciente e psicólogo veem esta tela dentro do layout deles (cabeçalho e
-  // barra de navegação). Só o admin chega por uma rota solta, com cabeçalho
-  // próprio.
-  const isStandalone = userType === 'admin';
-  const standaloneHeader = isStandalone && <PageHeader title="Notificações" backTo="/admin-dashboard" />;
+  // Paciente, psicólogo e admin veem esta tela dentro do layout deles
+  // (cabeçalho e barra de navegação); psicólogo e admin com o título da tela.
 
   if (loading) {
     return (
-      <div className={isStandalone ? 'min-h-screen bg-background' : undefined}>
-        {standaloneHeader}
-        <div className={isStandalone ? 'px-4 py-6' : undefined}>
+      <div>
+        <div>
           <NotificationsBodySkeleton />
         </div>
       </div>
@@ -129,11 +124,13 @@ const Notifications = () => {
 
 
   return (
-    <div className={isStandalone ? 'min-h-screen bg-background' : undefined}>
-      {standaloneHeader}
-      {userType === 'psychologist' && (
+    <div>
+      {(userType === 'psychologist' || userType === 'admin') && (
         <div className="mb-2">
-          <PsychologistPageTitle title="Notificações" description="Pedidos, confirmações e lembretes" />
+          <PageTitle
+            title="Notificações"
+            description={userType === 'admin' ? 'Novos cadastros e avisos do painel' : 'Pedidos, confirmações e lembretes'}
+          />
         </div>
       )}
       <div>
@@ -180,7 +177,9 @@ const Notifications = () => {
                 Nenhuma notificação
               </h3>
               <p className="text-muted-foreground text-sm max-w-sm leading-relaxed">
-                Você receberá notificações sobre consultas, lembretes e atualizações importantes aqui.
+                {userType === 'admin'
+                  ? 'Novos cadastros de psicólogos e outros avisos do painel aparecem aqui.'
+                  : 'Você receberá notificações sobre consultas, lembretes e atualizações importantes aqui.'}
               </p>
             </div>
           ) : (

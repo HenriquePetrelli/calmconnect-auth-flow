@@ -918,18 +918,39 @@ export const CallSkeleton = () => (
 );
 
 /** Painel do admin: barra superior, números e seções. */
+/** Conteúdo da visão geral do admin: título, números e os dois cartões. */
+export const AdminDashboardBodySkeleton = () => (
+  <div className="space-y-5" aria-busy="true" aria-label="Carregando">
+    <div className="space-y-2">
+      <Skeleton className="h-7 w-40" />
+      <Skeleton className="h-4 w-64" />
+    </div>
+    <SkeletonStatsGrid count={6} columns="grid-cols-2 md:grid-cols-3" compact />
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <SkeletonSectionCard rows={3} />
+      <SkeletonSectionCard rows={2} />
+    </div>
+  </div>
+);
+
+/** Painel do admin enquanto o código da tela baixa: o layout inteiro, sem dados. */
 export const AdminDashboardSkeleton = () => (
   <div className="min-h-screen bg-background" aria-busy="true" aria-label="Carregando">
-    <div className="border-b border-border bg-card px-4 h-14 flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        <Skeleton className="h-5 w-5 rounded" />
-        <Skeleton className="h-4 w-28" />
-      </div>
-      <Skeleton className="h-5 w-5 rounded" />
+    <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col lg:gap-3 lg:border-r lg:border-sidebar-border lg:bg-sidebar lg:p-5">
+      <Skeleton className="mx-auto h-16 w-16 rounded-full" />
+      {Array.from({ length: 8 }).map((_, i) => (
+        <Skeleton key={i} className="h-9 w-full rounded-lg" />
+      ))}
     </div>
-    <div className="max-w-7xl mx-auto p-4 space-y-4">
-      <SkeletonStatsGrid count={6} />
-      <SkeletonSectionCard rows={3} />
+    <div className="lg:pl-64">
+      <div className="flex h-16 items-center justify-between border-b border-border bg-card/80 px-4">
+        <Skeleton className="h-8 w-8 rounded-full lg:w-40 lg:rounded-md" />
+        <Skeleton className="h-7 w-28" />
+        <Skeleton className="h-8 w-8 rounded-full" />
+      </div>
+      <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 md:py-6 lg:px-8">
+        <AdminDashboardBodySkeleton />
+      </div>
     </div>
   </div>
 );

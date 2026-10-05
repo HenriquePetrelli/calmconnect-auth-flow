@@ -218,13 +218,7 @@ export const PsychologistApprovalPanel = ({ adminUserId, onDataChange }: Psychol
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 gap-3">
-        <div>
-          <h2 className="text-lg font-semibold text-foreground">Gestão de Psicólogos</h2>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-            Analise e gerencie os cadastros de psicólogos na plataforma
-          </p>
-        </div>
+      <div className="flex sm:justify-end">
         <div className="flex gap-2 w-full sm:w-auto">
           <Button
             variant="outline"

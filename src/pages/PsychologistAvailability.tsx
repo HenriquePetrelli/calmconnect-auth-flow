@@ -7,7 +7,7 @@ import { Plus, Trash2, CalendarCheck, CalendarClock, Palmtree, Copy } from 'luci
 import { Checkbox } from '@/components/ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import BookingRulesCard from '@/components/psychologist/BookingRulesCard';
-import PsychologistPageTitle from '@/components/psychologist/layout/PsychologistPageTitle';
+import PageTitle from '@/components/PageTitle';
 import { WeeklyScheduleModal } from '@/components/psychologist/WeeklyScheduleModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePsychologistAvailability, type AvailabilityBlock } from '@/hooks/usePsychologistAvailability';
@@ -142,7 +142,7 @@ const PsychologistAvailability = () => {
 
   return (
     <div className="max-w-3xl space-y-4">
-        <PsychologistPageTitle
+        <PageTitle
           title="Agenda"
           description="Horário-padrão, férias e regras de agendamento"
           action={

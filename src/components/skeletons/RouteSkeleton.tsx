@@ -146,7 +146,7 @@ const ROUTES: { match: RegExp; render: (pathname: string) => ReactNode }[] = [
   { match: /^\/psychologist-availability/, render: () => <PsychologistAvailabilitySkeleton /> },
   { match: /^\/psychologist-payments/, render: () => <PsychologistPaymentsSkeleton /> },
   { match: /^\/psychologist-notifications/, render: () => <PsychologistNotificationsSkeleton /> },
-  { match: /^\/admin-notifications/, render: () => <div className="min-h-screen bg-background"><PageHeader title="Notificações" /><div className="px-4 py-6"><NotificationsBodySkeleton /></div></div> },
+  { match: /^\/admin-notifications/, render: () => <AdminDashboardSkeleton /> },
 
   // Admin.
   { match: /^\/admin-dashboard/, render: () => <AdminDashboardSkeleton /> },

@@ -126,13 +126,7 @@ export const PatientsPanel = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-semibold text-foreground">Gestão de Pacientes</h2>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-            Consulte, edite, bloqueie ou remova os pacientes da plataforma
-          </p>
-        </div>
+      <div className="flex sm:justify-end">
         <div className="flex gap-2 w-full sm:w-auto">
           <Button variant="outline" size="sm" onClick={handleExportCsv} disabled={filtered.length === 0} className="flex-1 sm:flex-none">
             <Download className="h-4 w-4 mr-2" />

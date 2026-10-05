@@ -211,10 +211,7 @@ export const OrganizationsPanel = () => {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-semibold text-foreground">Empresas (B2B)</h2>
-          <p className="text-sm text-muted-foreground">Contratos, vagas e códigos de convite. A cobrança é feita fora do app.</p>
-        </div>
+        <p className="text-sm text-muted-foreground">A cobrança das empresas é feita fora do app.</p>
         <Button onClick={() => openForm('new')} className="gap-2">
           <Plus className="h-4 w-4" />
           Nova empresa

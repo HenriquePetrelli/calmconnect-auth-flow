@@ -79,13 +79,10 @@ export const GroupTestimonialModerationPanel = () => {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h2 className="text-lg font-semibold text-foreground">Grupos de Apoio — Depoimentos</h2>
-        <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+      <p className="text-sm text-muted-foreground">
           Depoimentos denunciados por usuários ou com 10 ou mais "não gostei" ficam sinalizados aqui para revisão —
           nada é excluído automaticamente. Edite, exclua ou arquive as denúncias quando necessário.
-        </p>
-      </div>
+      </p>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
         <Metric label="Depoimentos totais" value={String(testimonials.length)} />

@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Calendar, ChevronRight, Clock, Inbox, Video } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import LifeRingIcon from '@/components/icons/LifeRingIcon';
-import PsychologistPageTitle from '@/components/psychologist/layout/PsychologistPageTitle';
+import PageTitle from '@/components/PageTitle';
 import { supabase } from '@/integrations/supabase/client';
 import { getSessionUser } from '@/lib/currentUser';
 import { usePsychologistSchedule } from '@/hooks/usePsychologistSchedule';
@@ -162,7 +162,7 @@ const PsychologistDashboard = () => {
 
   return (
     <div className="space-y-5 md:space-y-6">
-      <PsychologistPageTitle
+      <PageTitle
         title={`Olá, Dr.(a) ${profile?.full_name?.split(' ')[0] ?? ''}`}
         description={<span className="first-letter:uppercase">{todayLabel}</span>}
       />

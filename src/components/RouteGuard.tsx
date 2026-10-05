@@ -75,7 +75,8 @@ export const ROUTE_PERMISSIONS = {
     '/psicologo/suporte' // suporte para psicólogos
   ],
   admin: [
-    '/admin-dashboard'
+    '/admin-dashboard',
+    '/admin-notifications' // sino de avisos do painel
   ]
 };
 

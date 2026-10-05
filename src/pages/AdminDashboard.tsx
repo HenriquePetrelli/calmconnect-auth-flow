@@ -1,7 +1,6 @@
-import { useAuth } from "@/contexts/AuthContext";
 import React, { useState, useEffect } from 'react';
 import { SkeletonStatsGrid } from '@/components/skeletons/Skeletons';
-import { AdminDashboardSkeleton } from '@/components/skeletons/PageSkeletons';
+import { AdminDashboardBodySkeleton } from '@/components/skeletons/PageSkeletons';
 import { ContentTransition } from '@/components/skeletons/ContentTransition';
 
 import { ErrorState } from '@/components/ErrorState';
@@ -12,7 +11,6 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import {
   UserCheck,
-  Shield,
   Users,
   Calendar,
   AlertTriangle,
@@ -20,8 +18,6 @@ import {
   TrendingUp,
   Activity,
   Check,
-  Menu,
-  Bell,
 } from 'lucide-react';
 import AdminProfile from '@/components/AdminProfile';
 import { PsychologistApprovalPanel } from '@/components/psychologist/PsychologistApprovalPanel';
@@ -32,13 +28,10 @@ import { ChatModerationPanel } from '@/components/admin/ChatModerationPanel';
 import { GroupTestimonialModerationPanel } from '@/components/admin/GroupTestimonialModerationPanel';
 import { AuditLogPanel } from '@/components/admin/AuditLogPanel';
 import { OrganizationsPanel } from '@/components/admin/OrganizationsPanel';
-import { AdminNav } from '@/components/admin/AdminNav';
-import { ADMIN_NAV_ITEMS, adminNavGroupOf, isAdminSection, type AdminSection } from '@/components/admin/adminNavConfig';
-import logoImg from '@/assets/soliv-logo.svg';
+import AdminLayout from '@/components/admin/AdminLayout';
+import PageTitle from '@/components/PageTitle';
+import { ADMIN_NAV_ITEMS, isAdminSection, type AdminSection } from '@/components/admin/adminNavConfig';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { useNotifications } from '@/hooks/useNotifications';
 import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 
 interface AdminMetrics {
@@ -65,10 +58,8 @@ const AdminDashboard = () => {
     setSearchParams(section === 'overview' ? {} : { secao: section });
     window.scrollTo({ top: 0 });
   };
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { unreadCount } = useNotifications();
 
   const activeNav = ADMIN_NAV_ITEMS.find((n) => n.value === activeTab) ?? ADMIN_NAV_ITEMS[0];
 
@@ -139,12 +130,13 @@ const AdminDashboard = () => {
   };
 
 
-  // Sair: sempre pelo signOut central (garante voltar para a tela de login).
-  const { signOut } = useAuth();
-  const handleLogout = () => signOut();
 
   if (!isAdmin) {
-    return <AdminDashboardSkeleton />;
+    return (
+      <AdminLayout active={activeTab}>
+        <AdminDashboardBodySkeleton />
+      </AdminLayout>
+    );
   }
 
   const metricCards = metrics
@@ -233,79 +225,10 @@ const AdminDashboard = () => {
   };
 
   const badges = { psychologists: metrics?.pending_psychologists ?? 0 };
-  const selectFromMenu = (section: AdminSection) => {
-    setActiveTab(section);
-    setMobileNavOpen(false);
-  };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Desktop: menu lateral fixo */}
-      <aside className="hidden lg:fixed lg:inset-y-0 lg:z-30 lg:flex lg:w-64 lg:flex-col lg:border-r lg:border-sidebar-border lg:bg-sidebar">
-        <div className="flex items-center gap-3 border-b border-sidebar-border px-5 py-4">
-          <img src={logoImg} alt="" className="h-9 w-9 shrink-0 object-contain" draggable={false} />
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-sidebar-foreground">Soliv</p>
-            <p className="flex items-center gap-1 text-xs text-sidebar-foreground/70">
-              <Shield className="h-3 w-3" aria-hidden="true" /> Painel administrativo
-            </p>
-          </div>
-        </div>
-        <AdminNav active={activeTab} onSelect={setActiveTab} onLogout={handleLogout} badges={badges} />
-      </aside>
-
-      <div className="lg:pl-64">
-        {/* Barra do topo: no celular abre o menu; no desktop mostra onde você está */}
-        <header className="sticky top-0 z-20 border-b border-border bg-card/95 backdrop-blur-sm">
-          <div className="mx-auto flex h-14 max-w-7xl items-center gap-2 px-3 sm:px-4 lg:h-16 lg:px-8">
-            <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0 lg:hidden" aria-label="Abrir menu">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="flex w-[85vw] max-w-xs flex-col gap-0 border-sidebar-border bg-sidebar p-0">
-                <SheetHeader className="border-b border-sidebar-border p-4 text-left">
-                  <SheetTitle className="flex items-center gap-2 text-sm text-sidebar-foreground">
-                    <Shield className="h-4 w-4" aria-hidden="true" /> Painel administrativo
-                  </SheetTitle>
-                  <p className="truncate text-xs text-sidebar-foreground/70">{user?.email}</p>
-                </SheetHeader>
-                <AdminNav active={activeTab} onSelect={selectFromMenu} onLogout={handleLogout} badges={badges} />
-              </SheetContent>
-            </Sheet>
-
-            <div className="min-w-0 flex-1">
-              <p className="hidden text-xs text-muted-foreground sm:block">{adminNavGroupOf(activeTab)}</p>
-              <h1 className="flex items-center gap-2 truncate text-base font-semibold text-foreground lg:text-lg">
-                <activeNav.icon className="h-4 w-4 shrink-0 text-primary sm:hidden" aria-hidden="true" />
-                {activeNav.label}
-              </h1>
-            </div>
-
-            <span className="hidden max-w-56 truncate text-sm text-muted-foreground md:block">{user?.email}</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative h-10 w-10 shrink-0 rounded-full"
-              onMouseEnter={() => import('./Notifications')}
-              onClick={() => navigate('/admin-notifications')}
-              aria-label={unreadCount > 0 ? `Notificações: ${unreadCount} não lidas` : 'Notificações'}
-            >
-              <Bell className="h-5 w-5" />
-              {unreadCount > 0 && (
-                <Badge
-                  variant="destructive"
-                  className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center px-1 text-xs leading-none"
-                >
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </Badge>
-              )}
-            </Button>
-          </div>
-        </header>
-
-        <main className="mx-auto max-w-7xl px-3 py-4 sm:px-4 md:py-6 lg:px-8">
+    <AdminLayout active={activeTab} badges={badges}>
+        <PageTitle title={activeNav.label} description={activeNav.description} />
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as AdminSection)} className="space-y-4 sm:space-y-6">
 
 
@@ -471,13 +394,7 @@ const AdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="sos" className="mt-0">
-            <div className="space-y-4">
-              <div>
-                <h2 className="text-lg font-semibold text-foreground">Atendimentos SOS</h2>
-                <p className="text-sm text-muted-foreground">Pedidos de emergência, quem atendeu e como terminaram.</p>
-              </div>
-              <SosHistoryPanel withMetrics title="Todas as solicitações SOS" />
-            </div>
+            <SosHistoryPanel withMetrics title="Todas as solicitações SOS" />
           </TabsContent>
 
           <TabsContent value="chat" className="mt-0">
@@ -504,9 +421,7 @@ const AdminDashboard = () => {
             <AdminProfile />
           </TabsContent>
         </Tabs>
-        </main>
-      </div>
-    </div>
+    </AdminLayout>
   );
 };
 

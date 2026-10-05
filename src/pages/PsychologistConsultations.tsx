@@ -1,7 +1,7 @@
 import { useSearchParams } from 'react-router-dom';
 import { CalendarClock, History } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import PsychologistPageTitle from '@/components/psychologist/layout/PsychologistPageTitle';
+import PageTitle from '@/components/PageTitle';
 import UpcomingConsultations from '@/components/psychologist/UpcomingConsultations';
 import ConsultationHistory from '@/components/psychologist/ConsultationHistory';
 
@@ -24,7 +24,7 @@ const PsychologistConsultations = () => {
 
   return (
     <div className="space-y-5">
-      <PsychologistPageTitle title="Consultas" description="Pedidos, próximas consultas e histórico de atendimentos" />
+      <PageTitle title="Consultas" description="Pedidos, próximas consultas e histórico de atendimentos" />
 
       <Tabs
         value={tab}

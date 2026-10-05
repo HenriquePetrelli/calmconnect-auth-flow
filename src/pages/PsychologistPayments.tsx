@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/utils/errorMessage';
-import PsychologistPageTitle from '@/components/psychologist/layout/PsychologistPageTitle';
+import PageTitle from '@/components/PageTitle';
 import PayoutHistory from '@/components/payments/PayoutHistory';
 import RouteSkeleton from "@/components/skeletons/RouteSkeleton";
 import {
@@ -121,7 +121,7 @@ const PsychologistPayments = () => {
 
   return (
     <div className="w-full space-y-6">
-        <PsychologistPageTitle
+        <PageTitle
           title="Pagamentos"
           description="Repasses recebidos e valores a receber"
           action={

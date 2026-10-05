@@ -134,15 +134,7 @@ export const PaymentsPanel = () => {
     <div className="space-y-4 sm:space-y-6">
 
       {/* Header with actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-semibold text-foreground">
-            Gerenciamento de Pagamentos
-          </h2>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-            Controle os pagamentos semanais dos psicólogos
-          </p>
-        </div>
+      <div className="flex sm:justify-end">
         <Button onClick={handleSyncPayments} disabled={loading} size="sm" className="w-full sm:w-auto">
           <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
           Sincronizar

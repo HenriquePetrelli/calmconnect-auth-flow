@@ -9,6 +9,7 @@ import { lazy, Suspense } from "react";
 import RouteGuard from "@/components/RouteGuard";
 import MainLayout from "@/components/MainLayout";
 import PsychologistLayout from "@/components/psychologist/layout/PsychologistLayout";
+import AdminLayout from "@/components/admin/AdminLayout";
 import BackgroundWrapper from "@/components/BackgroundWrapper";
 import RouteSkeleton from "@/components/skeletons/RouteSkeleton";
 import PendingFeedbackGate from "@/components/sos/PendingFeedbackGate";
@@ -419,7 +420,9 @@ const App = () => {
                   } />
                   <Route path="/admin-notifications" element={
                     <RouteGuard allowedUserTypes={['admin']}>
-                      <Notifications />
+                      <AdminLayout active="notifications">
+                        <Notifications />
+                      </AdminLayout>
                     </RouteGuard>
                   } />
 

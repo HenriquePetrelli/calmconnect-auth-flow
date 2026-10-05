@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import { ADMIN_NAV_GROUPS, type AdminSection } from './adminNavConfig';
 
 interface AdminNavProps {
-  active: AdminSection;
+  active: AdminSection | null;
   onSelect: (section: AdminSection) => void;
   onLogout: () => void;
   /** Números ao lado do item (ex.: psicólogos aguardando aprovação). */

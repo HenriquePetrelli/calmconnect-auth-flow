@@ -241,6 +241,12 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Admin → Pacientes / Psicólogos → excluir conta de teste ⇒ some e não entra mais
 - [ ] Admin → Auditoria ⇒ ações de aprovação, bloqueio e edição listadas
 - [ ] Admin → Notificações ⇒ avisos do admin listados
+- [ ] Admin → sino (celular e computador) ⇒ abre Notificações dentro do painel, sem voltar para a Visão geral
+- [ ] Admin no celular ⇒ barra inferior com Início, Psicólogos, Pacientes, Repasses e Mais; a aba aberta fica destacada
+- [ ] Admin no celular → Mais ⇒ abre todas as seções (Empresas, SOS, Chat, Grupos, Auditoria, Meu perfil, Sair)
+- [ ] Admin → Psicólogos com cadastro pendente ⇒ número aparece na aba Psicólogos da barra e do menu
+- [ ] Admin → Meu perfil → Trocar senha com a senha atual errada ⇒ recusado; com a certa ⇒ "Senha atualizada"
+- [ ] Admin no computador ⇒ menu lateral fixo; cada seção com título e descrição no topo, sem título repetido
 
 ## 18. Segurança (ficha 20)
 

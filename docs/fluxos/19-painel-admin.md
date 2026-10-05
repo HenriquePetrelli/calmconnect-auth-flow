@@ -6,7 +6,7 @@
 
 ## Resumo
 
-Painel único em `/admin-dashboard`, com a seção na URL (`?secao=...`), para recarregar e voltar sem perder o lugar. No computador, o menu fica na lateral; no celular, numa gaveta.
+Painel único em `/admin-dashboard`, com a seção na URL (`?secao=...`), para recarregar e voltar sem perder o lugar. Mesmo padrão do paciente e do psicólogo (`AdminLayout`): no computador, menu lateral com todas as seções; no celular e no tablet, cabeçalho (perfil, marca, sino de avisos) e barra inferior com Início, Psicólogos (com o número de pendentes), Pacientes, Repasses e "Mais", que abre todas as seções. Cada seção tem título e descrição no topo. Os avisos ficam em `/admin-notifications`, dentro do mesmo layout.
 
 | Grupo | Seção | O que faz |
 |---|---|---|
@@ -19,7 +19,7 @@ Painel único em `/admin-dashboard`, com a seção na URL (`?secao=...`), para r
 | Moderação | Grupos de apoio | Depoimentos, curtidas e denúncias; editar e excluir |
 | Moderação | Auditoria | Histórico das ações dos admins |
 | Financeiro | Repasses | Sincronizar e confirmar pagamentos (ficha 09) |
-| Conta | Meu perfil | Dados e senha do admin |
+| Conta | Meu perfil | E-mail, troca de senha (com a senha atual), tema, notificações no aparelho e sair |
 
 ## Como funciona
 
@@ -39,7 +39,7 @@ Painel único em `/admin-dashboard`, com a seção na URL (`?secao=...`), para r
 
 ## Onde está no código
 
-- **Tela e navegação**: `src/pages/AdminDashboard.tsx`, `src/components/admin/` (`AdminNav`, `adminNavConfig`, `PatientsPanel`, `OrganizationsPanel`, `ChatModerationPanel`, `GroupTestimonialModerationPanel`, `AuditLogPanel`, `BlockPatientModal`, `EditPatientModal`), `src/components/psychologist/PsychologistApprovalPanel.tsx`, `src/components/payments/PaymentsPanel.tsx`.
+- **Tela e navegação**: `src/pages/AdminDashboard.tsx`, `src/components/admin/` (`AdminLayout`, `AdminNav`, `adminNavConfig`, `PatientsPanel`, `OrganizationsPanel`, `ChatModerationPanel`, `GroupTestimonialModerationPanel`, `AuditLogPanel`, `BlockPatientModal`, `EditPatientModal`), `src/components/psychologist/PsychologistApprovalPanel.tsx`, `src/components/payments/PaymentsPanel.tsx`.
 - **Hooks**: `usePsychologistManagement`, `usePatientManagement`, `useChatModeration`, `useGroupTestimonialModeration`, `useAdminAuditLog`.
 - **Edge functions**: `psychologist-management`, `admin-psychologist-management`, `admin-block-patient`, `admin-block-psychologist`, `admin-update-patient`, `admin-update-psychologist`, `admin-delete-patient`, `admin-delete-psychologist`, `payment-sync`, `confirm-payment`.
 - **Banco**: `admin_users`, `admin_audit_log`. Funções: `get_admin_metrics`, `get_sos_metrics`, `get_chat_usage_metrics`, `get_admin_conversas_overview`, `get_admin_group_testimonials`, `get_admin_audit_log`.
@@ -53,9 +53,11 @@ Painel único em `/admin-dashboard`, com a seção na URL (`?secao=...`), para r
 4. Bloquear um paciente por 1 dia → ele vê o aviso ao entrar → Auditoria registra o motivo e a duração.
 5. Chat → vê números e participantes, sem nenhum texto de mensagem.
 6. Recarregar a página numa seção → continua na mesma seção.
+7. Celular → barra inferior com Início, Psicólogos, Pacientes, Repasses e Mais; "Mais" abre todas as seções.
+8. Sino → abre as notificações dentro do painel, com a barra e o menu.
 
 ### Testes automáticos
-`adminNav`, `chatModerationPanel.render`, `useGroupTestimonialModeration`, `confirmPayoutDialog`.
+`adminNav`, `adminLayout`, `chatModerationPanel.render`, `useGroupTestimonialModeration`, `confirmPayoutDialog`.
 
 ### Conferência no banco
 ```sql
