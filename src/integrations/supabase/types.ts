@@ -2798,6 +2798,13 @@ export type Database = {
           sos_count: number
         }[]
       }
+      get_psychologist_busy_times: {
+        Args: { p_from: string; p_psychologist_id: string; p_to: string }
+        Returns: {
+          duration_minutes: number
+          starts_at: string
+        }[]
+      }
       get_psychologist_document_url: {
         Args: { document_path: string }
         Returns: string
