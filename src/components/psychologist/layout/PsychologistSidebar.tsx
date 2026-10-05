@@ -47,7 +47,7 @@ const PsychologistSidebar = () => {
   const profileActive = pathname === PSYCHOLOGIST_PROFILE_NAV.path || pathname.startsWith('/psicologo/suporte');
 
   return (
-    <aside className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col lg:border-r lg:border-sidebar-border lg:bg-sidebar lg:text-sidebar-foreground">
+    <aside className="hidden md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col md:border-r md:border-sidebar-border md:bg-sidebar md:text-sidebar-foreground">
       <div className="flex items-center justify-center border-b border-secondary-foreground/15 p-6">
         <div className="flex items-center justify-center rounded-full border-2 border-primary/15 bg-card p-3 shadow-md">
           <img src={logoImg} alt="Soliv" style={{ width: '64px', height: '64px' }} className="select-none object-contain" draggable={false} />

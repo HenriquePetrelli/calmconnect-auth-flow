@@ -31,7 +31,7 @@ const SoundFeedback = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/5 flex items-center justify-center p-6 pb-24 lg:pb-6">
+    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/5 flex items-center justify-center p-6 pb-24 md:pb-6">
       <PatientBottomNav />
       <Card className="w-full max-w-md mx-auto">
         <CardContent className="p-8 text-center space-y-6">

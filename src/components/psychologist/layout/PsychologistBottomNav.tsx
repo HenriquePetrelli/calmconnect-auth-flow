@@ -14,7 +14,7 @@ const PsychologistBottomNav = () => {
   const items = [...PSYCHOLOGIST_MAIN_NAV, PSYCHOLOGIST_PROFILE_NAV];
 
   return (
-    <div className="lg:hidden">
+    <div className="md:hidden">
       <nav className="tabs" aria-label="Área do psicólogo">
         {items.map((item) => {
           const active = isNavActive(item, pathname);

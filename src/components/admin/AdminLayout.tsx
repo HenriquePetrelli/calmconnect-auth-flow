@@ -64,7 +64,7 @@ const AdminLayout = ({ active, badges = {}, children }: AdminLayoutProps) => {
   return (
     <div className="min-h-screen bg-background">
       {/* Computador: menu lateral */}
-      <aside className="hidden lg:fixed lg:inset-y-0 lg:z-30 lg:flex lg:w-64 lg:flex-col lg:border-r lg:border-sidebar-border lg:bg-sidebar">
+      <aside className="hidden md:fixed md:inset-y-0 md:z-30 md:flex md:w-64 md:flex-col md:border-r md:border-sidebar-border md:bg-sidebar">
         <div className="flex flex-col items-center gap-2 border-b border-sidebar-border p-5">
           <div className="flex items-center justify-center rounded-full border-2 border-primary/15 bg-card p-2.5 shadow-md">
             <img src={logoImg} alt="Soliv" className="h-12 w-12 select-none object-contain" draggable={false} />
@@ -76,9 +76,9 @@ const AdminLayout = ({ active, badges = {}, children }: AdminLayoutProps) => {
         <AdminNav active={navActive} onSelect={go} onLogout={signOut} badges={badges} />
       </aside>
 
-      <div className="lg:pl-64">
+      <div className="md:pl-64">
         {/* Celular e tablet */}
-        <header className="fixed left-0 right-0 top-0 z-50 border-b border-border bg-card/80 shadow-sm backdrop-blur-md lg:hidden">
+        <header className="fixed left-0 right-0 top-0 z-50 border-b border-border bg-card/80 shadow-sm backdrop-blur-md md:hidden">
           <div className="relative mx-auto flex h-16 items-center justify-between px-4">
             <button type="button" className="flex h-10 w-10 items-center justify-center" onClick={() => go('profile')} aria-label="Meu perfil">
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
@@ -94,7 +94,7 @@ const AdminLayout = ({ active, badges = {}, children }: AdminLayoutProps) => {
         </header>
 
         {/* Computador */}
-        <header className="hidden border-b border-border bg-card/80 px-6 backdrop-blur-md lg:block">
+        <header className="hidden border-b border-border bg-card/80 px-6 backdrop-blur-md md:block">
           <div className="mx-auto flex h-16 max-w-7xl items-center justify-between">
             <span className="max-w-64 truncate text-sm text-muted-foreground">{email}</span>
             <Wordmark className="h-[30px] text-primary" />
@@ -102,13 +102,13 @@ const AdminLayout = ({ active, badges = {}, children }: AdminLayoutProps) => {
           </div>
         </header>
 
-        <main className="pb-24 pt-16 lg:pb-10 lg:pt-0">
+        <main className="pb-24 pt-16 md:pb-10 md:pt-0">
           <div className="mx-auto w-full max-w-7xl space-y-5 px-4 py-4 sm:px-6 md:py-6 lg:px-8">{children}</div>
         </main>
       </div>
 
       {/* Celular e tablet: barra inferior */}
-      <div className="lg:hidden">
+      <div className="md:hidden">
         <nav className="tabs" aria-label="Painel administrativo">
           {ADMIN_BOTTOM_NAV.map((section) => {
             const item = ADMIN_NAV_ITEMS.find((i) => i.value === section)!;

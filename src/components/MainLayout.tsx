@@ -93,9 +93,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       <div className="min-h-screen">
         <DesktopSidebar />
         
-        <div className="lg:pl-64">
+        <div className="md:pl-64">
           {/* Mobile/Tablet Header */}
-          <header className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-md shadow-sm border-b border-border">
+          <header className="md:hidden fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-md shadow-sm border-b border-border">
             <div className="container mx-auto px-4 h-16 flex items-center justify-between">
               
               {/* PERFIL À ESQUERDA */}
@@ -135,7 +135,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           </header>
 
           {/* Desktop Header */}
-          <header className="hidden lg:block bg-card/80 backdrop-blur-md border-b border-border px-6 py-3 relative">
+          <header className="hidden md:block bg-card/80 backdrop-blur-md border-b border-border px-6 py-3 relative">
             <div className="max-w-6xl mx-auto flex items-center justify-between relative h-16">
               {/* SPACER ESQUERDO */}
               <div className="flex items-center gap-3 opacity-0 pointer-events-none select-none">
@@ -155,7 +155,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           </header>
 
           {/* Main Content */}
-          <main className="pt-16 lg:pt-0 pb-24 lg:pb-10">
+          <main className="pt-16 md:pt-0 pb-24 md:pb-10">
             <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-4 md:py-6">
               {children}
             </div>
@@ -163,7 +163,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         </div>
 
         {/* Bottom Navigation - Only on Mobile/Tablet */}
-        <div className="lg:hidden">
+        <div className="md:hidden">
           <BottomNavigation onSOSClick={() => setShowSOSModal(true)} />
         </div>
 

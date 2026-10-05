@@ -413,7 +413,7 @@ const SafetyPlanEditor = () => {
         {showSaveBar && (
           // Barra fixa com fundo, colada no menu inferior (no desktop, no rodapé),
           // para o botão não ficar solto por cima dos campos.
-          <div className="fixed inset-x-0 bottom-[var(--tab-height)] lg:bottom-0 z-20 border-t border-border bg-background/95 backdrop-blur-sm px-4 py-3">
+          <div className="fixed inset-x-0 bottom-[var(--tab-height)] md:bottom-0 z-20 border-t border-border bg-background/95 backdrop-blur-sm px-4 py-3">
             <div className="mx-auto max-w-2xl">
               <Button className="w-full min-h-12" onClick={handleSave} disabled={saving || limitReached}>
                 {saving ? 'Salvando...' : 'Salvar plano'}

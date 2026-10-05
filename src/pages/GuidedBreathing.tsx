@@ -224,7 +224,7 @@ const GuidedBreathing = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-24 lg:pb-0">
+    <div className="min-h-screen bg-background pb-24 md:pb-0">
       <PatientBottomNav />
 
       <PageHeader title="Respiração Guiada" backTo="/home" />

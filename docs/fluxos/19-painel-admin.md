@@ -6,7 +6,7 @@
 
 ## Resumo
 
-Painel único em `/admin-dashboard`, com a seção na URL (`?secao=...`), para recarregar e voltar sem perder o lugar. Mesmo padrão do paciente e do psicólogo (`AdminLayout`): no computador, menu lateral com todas as seções; no celular e no tablet, cabeçalho (perfil, marca, sino de avisos) e barra inferior com Início, Psicólogos (com o número de pendentes), Pacientes, Repasses e "Mais", que abre todas as seções. Cada seção tem título e descrição no topo. Os avisos ficam em `/admin-notifications`, dentro do mesmo layout.
+Painel único em `/admin-dashboard`, com a seção na URL (`?secao=...`), para recarregar e voltar sem perder o lugar. Mesmo padrão do paciente e do psicólogo (`AdminLayout`): a partir de 768 px (tablet deitado e computador), menu lateral com todas as seções; abaixo disso (celular e tablet em pé), cabeçalho (perfil, marca, sino de avisos) e barra inferior com Início, Psicólogos (com o número de pendentes), Pacientes, Repasses e "Mais", que abre todas as seções. Cada seção tem título e descrição no topo. Os avisos ficam em `/admin-notifications`, dentro do mesmo layout.
 
 | Grupo | Seção | O que faz |
 |---|---|---|

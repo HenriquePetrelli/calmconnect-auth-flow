@@ -34,7 +34,7 @@ const SoundCategory = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-24 lg:pb-12">
+    <div className="min-h-screen bg-background pb-24 md:pb-12">
       <PatientBottomNav />
       <PageHeader title={category.title} backTo="/sounds" />
 

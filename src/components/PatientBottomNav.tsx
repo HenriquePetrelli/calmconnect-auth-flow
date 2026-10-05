@@ -13,7 +13,7 @@ const PatientBottomNav: React.FC = () => {
 
   return (
     <>
-      <div className="lg:hidden">
+      <div className="md:hidden">
         <BottomNavigation onSOSClick={() => setShowSOSModal(true)} />
       </div>
       <ConfirmationModal

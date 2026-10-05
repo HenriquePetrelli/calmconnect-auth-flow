@@ -57,9 +57,9 @@ const PsychologistLayout = ({ children }: { children: ReactNode }) => {
     <div className="min-h-screen">
       <PsychologistSidebar />
 
-      <div className="lg:pl-64">
+      <div className="md:pl-64">
         {/* Celular e tablet */}
-        <header className="fixed left-0 right-0 top-0 z-50 border-b border-border bg-card/80 shadow-sm backdrop-blur-md lg:hidden">
+        <header className="fixed left-0 right-0 top-0 z-50 border-b border-border bg-card/80 shadow-sm backdrop-blur-md md:hidden">
           <div className="relative mx-auto flex h-16 items-center justify-between px-4">
             <button
               type="button"
@@ -85,7 +85,7 @@ const PsychologistLayout = ({ children }: { children: ReactNode }) => {
         </header>
 
         {/* Computador */}
-        <header className="hidden border-b border-border bg-card/80 px-6 backdrop-blur-md lg:block">
+        <header className="hidden border-b border-border bg-card/80 px-6 backdrop-blur-md md:block">
           <div className="mx-auto flex h-16 max-w-6xl items-center justify-between">
             <span
               className={cn(
@@ -101,7 +101,7 @@ const PsychologistLayout = ({ children }: { children: ReactNode }) => {
           </div>
         </header>
 
-        <main className="pb-24 pt-16 lg:pb-10 lg:pt-0">
+        <main className="pb-24 pt-16 md:pb-10 md:pt-0">
           <div className="mx-auto w-full max-w-6xl space-y-4 px-4 py-4 sm:px-6 md:py-6 lg:px-8">
             {isOnline && pathname !== PSYCHOLOGIST_HOME && <EmergencyAlertBanner />}
             {children}

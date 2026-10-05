@@ -936,15 +936,15 @@ export const AdminDashboardBodySkeleton = () => (
 /** Painel do admin enquanto o código da tela baixa: o layout inteiro, sem dados. */
 export const AdminDashboardSkeleton = () => (
   <div className="min-h-screen bg-background" aria-busy="true" aria-label="Carregando">
-    <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col lg:gap-3 lg:border-r lg:border-sidebar-border lg:bg-sidebar lg:p-5">
+    <div className="hidden md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col md:gap-3 md:border-r md:border-sidebar-border md:bg-sidebar md:p-5">
       <Skeleton className="mx-auto h-16 w-16 rounded-full" />
       {Array.from({ length: 8 }).map((_, i) => (
         <Skeleton key={i} className="h-9 w-full rounded-lg" />
       ))}
     </div>
-    <div className="lg:pl-64">
+    <div className="md:pl-64">
       <div className="flex h-16 items-center justify-between border-b border-border bg-card/80 px-4">
-        <Skeleton className="h-8 w-8 rounded-full lg:w-40 lg:rounded-md" />
+        <Skeleton className="h-8 w-8 rounded-full md:w-40 md:rounded-md" />
         <Skeleton className="h-7 w-28" />
         <Skeleton className="h-8 w-8 rounded-full" />
       </div>

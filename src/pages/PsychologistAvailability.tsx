@@ -329,7 +329,7 @@ const PsychologistAvailability = () => {
         <BookingRulesCard />
 
         {/* No celular fica acima da barra inferior. */}
-        <div className="sticky bottom-[calc(var(--tab-height)+12px)] pt-2 lg:bottom-4">
+        <div className="sticky bottom-[calc(var(--tab-height)+12px)] pt-2 md:bottom-4">
           <Button onClick={handleSave} disabled={saving || hasErrors} className="h-11 w-full shadow-lg">
             {saving ? 'Salvando...' : 'Salvar agenda'}
           </Button>
