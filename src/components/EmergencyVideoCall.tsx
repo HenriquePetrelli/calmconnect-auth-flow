@@ -645,7 +645,8 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
           
           // Check if call was terminated (ignore stale terminations from
           // previous sessions/reconnections)
-          if (newData.status === 'completed' && newData.end_reason === 'psychologist_unavailable') {
+          // "Chamar outro psicólogo" grava status 'cancelled' (sos_request_other_psychologist).
+          if (newData.end_reason === 'psychologist_unavailable') {
             setRedirected(true);
             enhancedCleanup();
             return;

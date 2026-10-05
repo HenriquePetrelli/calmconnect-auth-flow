@@ -101,11 +101,24 @@ serve(async (req) => {
     if (req.method === 'GET' || req.method === 'POST') {
       console.log('📋 Psychologist requesting emergency list');
       
-      // Get pending emergency requests (aligned with frontend filter)
+      // A fila (com nome e sintomas do paciente) é só para psicólogo aprovado
+      // e não bloqueado — a mesma regra da policy do banco, que esta função
+      // pula por usar a chave de serviço.
+      const { data: canSeeQueue } = await supabase.rpc('psychologist_can_attend', {
+        p_user_id: user.id,
+      });
+      if (!canSeeQueue) {
+        return new Response(JSON.stringify([]), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Pedidos pendentes ainda dentro dos 10 minutos de espera.
       const { data: emergencyRequests, error } = await supabase
         .from('emergency_requests')
         .select('*')
         .eq('status', 'pending')
+        .gt('created_at', new Date(Date.now() - 10 * 60 * 1000).toISOString())
         .order('created_at', { ascending: true });
 
       if (error) {
@@ -287,6 +300,15 @@ serve(async (req) => {
           console.error('Error accepting emergency request:', error);
           
           // Handle specific database errors
+          // Regras do banco (guard_sos_concurrency): pedido expirado ou
+          // psicólogo já em outro atendimento.
+          if (error.code === 'P0001') {
+            return new Response(
+              JSON.stringify({ success: false, error: error.message, code: 'REQUEST_NOT_AVAILABLE' }),
+              { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+
           if (error.code === 'PGRST116') {
             return new Response(
               JSON.stringify({

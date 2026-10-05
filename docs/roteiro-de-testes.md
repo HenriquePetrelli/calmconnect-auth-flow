@@ -61,6 +61,11 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Na chamada → Configurações → trocar microfone/câmera ⇒ troca sem derrubar a chamada
 - [ ] Paciente → encerrar SOS e fechar o app antes de avaliar → reabrir ⇒ pede a avaliação
 - [ ] Admin → Atendimento → SOS ⇒ solicitações, atendidas, tempo até aceite e duração média
+- [ ] Paciente → SOS em duas abas ao mesmo tempo ⇒ um pedido só na fila do psicólogo
+- [ ] Psicólogo em um SOS → aceitar outro pedido (outra aba) ⇒ "Você já está em um atendimento de emergência"
+- [ ] Psicólogo em análise ou bloqueado ⇒ não vê a fila do SOS
+- [ ] Paciente → SOS aceito → cancelar antes de a chamada conectar ⇒ SOS do mês volta
+- [ ] Paciente → Chamar outro psicólogo ⇒ o psicólogo que sumiu vê "Atendimento encaminhado" ao voltar para a sala
 
 ## 3. Consultas agendadas (fichas 04 e 05)
 

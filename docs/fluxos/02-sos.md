@@ -1,7 +1,7 @@
 # 02. SOS: atendimento de emergência
 
 > **Status:** Pronto, com pendência externa (TURN para redes restritivas; push depende do Firebase).
-> **Última verificação:** 2026-10-04 (SOS sem chamada conectada devolve a cota e não entra no repasse).
+> **Última verificação:** 2026-10-06 (varredura das regras: um SOS aberto por paciente e por psicólogo, fila só para psicólogo habilitado, aceite só nos 10 min, cota devolvida em todo fim sem conexão, aviso de "Atendimento encaminhado" ao vivo).
 > **Quem usa:** paciente com plano (Plus, Premium ou empresa) e psicólogo aprovado.
 
 ## Resumo
@@ -20,14 +20,14 @@ O paciente aperta SOS, entra numa fila e o primeiro psicólogo online que aceita
 
 ### 1. Pedido
 1. O paciente toca em SOS. A edge function `emergency-sos` confere o login, o plano e a cota do mês (`can_use_sos`), aplica um limite de 5 tentativas em 10 minutos e cria o pedido em `emergency_requests` com status `pending`.
-2. Se já existe um pedido aberto do paciente, ele volta para esse pedido em vez de criar outro.
+2. Se já existe um pedido aberto do paciente, ele volta para esse pedido em vez de criar outro. O banco garante isso mesmo com dois toques ao mesmo tempo ou duas abas (`guard_sos_concurrency`). Só conta de paciente pede SOS.
 3. Os psicólogos online veem o pedido na lista na hora (tempo real e canal `sos-queue`, com consulta a cada 10 s). Todos os psicólogos aprovados, não bloqueados e que não estão em outro SOS recebem um **push**, mesmo com o app fechado.
 4. Na fila, o paciente vê quantos profissionais estão disponíveis, o tempo de espera (até 10 min), CVV 188 e SAMU 192. Também pode abrir **Meu plano** (plano de segurança) e **Respirar** sem sair da fila.
 5. A fila confere o pedido a cada 5 s e quando a internet ou a tela voltam. Assim o aceite chega mesmo se o tempo real cair.
 
 ### 2. Aceite
 1. O psicólogo toca em aceitar. O aceite é atômico: só um consegue, e os outros recebem "já foi aceito".
-2. O banco só deixa aceitar quem é **psicólogo aprovado e não bloqueado** (`psychologist_can_attend`).
+2. O banco só deixa aceitar quem é **psicólogo aprovado e não bloqueado** (`psychologist_can_attend`), que **não esteja em outro SOS** e com o pedido ainda dentro dos 10 min de espera (`guard_sos_concurrency`, também para dois aceites ao mesmo tempo).
 3. Os dois vão para a sala. A cota do SOS do mês é marcada como usada **quando a chamada começa** (`mark_sos_used_on_start`), não no pedido.
 
 ### 3. Atendimento
@@ -59,13 +59,14 @@ Vídeo, reconexão automática, cronômetro compartilhado e painel de contexto d
 | Duração máxima da chamada | Plus 25 min, Premium 50 min, sem plano ativo 20 min (gravada no pedido) |
 | Os dois sem sinal | 10 min → `abandoned` (cota devolvida) |
 | Psicólogo ausente | 90 s → o paciente pode chamar outro (cota devolvida) |
-| Encerrado sem a chamada conectar os dois lados | Cota devolvida; não entra no repasse do psicólogo (ficha 09) |
+| Encerrado sem a chamada conectar os dois lados | Cota devolvida, qualquer que seja o motivo do fim (ex.: paciente cancelou depois do aceite); não entra no repasse do psicólogo (ficha 09) |
 | Limite de pedidos | 5 a cada 10 min por paciente |
-| Quem vê a fila | Só psicólogo aprovado, não bloqueado e online |
+| Quem vê a fila | Só psicólogo aprovado, não bloqueado e online (vale também para a lista da edge function, com nome e sintomas) |
+| SOS ao mesmo tempo | Um aberto por paciente e um por psicólogo |
 | Sair da fila antes do aceite | Cancela o pedido (ao fechar a aba, via `emergency-cleanup`, só com o login do próprio paciente) |
 | Sala de SOS encerrado | Não reabre |
 
-Status do pedido: `pending` → `accepted` → `in_progress` → `completed`. Também pode terminar como `cancelled`, `expired` ou `abandoned`. Pedidos nunca são apagados.
+Status do pedido: `pending` → `accepted` → `in_progress` → `completed`, ou `cancelled`. O motivo fica em `end_reason` (`expired`, `abandoned`, `psychologist_unavailable`, `cancelled_by_patient` etc.). Pedidos nunca são apagados.
 
 ## Onde está no código
 
@@ -75,7 +76,7 @@ Status do pedido: `pending` → `accepted` → `in_progress` → `completed`. Ta
 - **Regras puras**: `src/lib/emergencyEndReasons.ts`, `callTermination.ts`, `endEmergencySession.ts`, `emergencyCallGuard.ts`, `sosQueueChannel.ts`, `sosTrace.ts`, `remoteAbsence.ts`.
 - **Edge functions**: `emergency-sos`, `psychologist-emergency`, `emergency-cleanup`, `mark-sos-used`, `firebase-notifications`.
 - **Banco**: `emergency_requests`, `webrtc_sessions`, `participant_presence`, `psychologist_presence`, `session_feedback`, `sos_trace_events`, `subscribers` (cota), `payout_items`.
-- **Funções e gatilhos**: `can_use_sos`, `count_available_psychologists`, `psychologist_can_attend`, `mark_sos_used_on_start`, `refund_sos_on_failed_call`, `sos_request_other_psychologist`, `get_sos_patient_context`, `get_sos_safety_plan`, `protect_emergency_request_columns`, `prevent_reopen_finished_call`.
+- **Funções e gatilhos**: `can_use_sos`, `count_available_psychologists`, `psychologist_can_attend`, `guard_sos_concurrency`, `mark_sos_used_on_start`, `refund_sos_on_failed_call`, `sos_request_other_psychologist`, `get_sos_patient_context`, `get_sos_safety_plan`, `protect_emergency_request_columns`, `prevent_reopen_finished_call`.
 - **Rotinas**: `finalize-stale-emergency-sessions` (a cada minuto), `prune-stale-psychologist-presence` (2 min), `sos-followups` (de hora em hora).
 
 ## Como validar

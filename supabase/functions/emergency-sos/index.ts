@@ -69,6 +69,11 @@ serve(async (req) => {
     if (req.method === 'POST') {
       console.log('🆘 POST request - Creating emergency request for patient:', user.id);
 
+      // Só paciente pede SOS (o psicólogo atende).
+      if (profile.user_type !== 'patient') {
+        throw new Error('Access denied. Only patients can request SOS.');
+      }
+
       // Cap rapid-fire create/cancel cycles from flooding the psychologist
       // queue — a real crisis doesn't need more than a handful of attempts
       // in a short window.
@@ -171,6 +176,31 @@ serve(async (req) => {
         .single();
 
       if (insertError) {
+        // Dois toques ao mesmo tempo: o banco recusa o segundo pedido
+        // (guard_sos_concurrency). Devolve o pedido que já está aberto.
+        if (insertError.code === '23505' || /SOS_ALREADY_OPEN/.test(insertError.message ?? '')) {
+          const { data: openRequest } = await supabase
+            .from('emergency_requests')
+            .select('id, status, video_room_id')
+            .eq('patient_id', user.id)
+            .in('status', ['pending', 'accepted', 'in_progress'])
+            .is('ended_at', null)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (openRequest) {
+            return new Response(
+              JSON.stringify({
+                success: true,
+                emergency_request_id: openRequest.id,
+                status: openRequest.status,
+                session_id: openRequest.video_room_id,
+                message: 'Você já tem uma solicitação de emergência ativa. Aguardando resposta dos psicólogos.'
+              }),
+              { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+        }
         console.error('❌ Error creating emergency request:', insertError);
         throw new Error(`Erro ao criar solicitação: ${insertError.message}`);
       }
