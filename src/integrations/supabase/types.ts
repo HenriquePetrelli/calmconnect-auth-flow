@@ -2822,17 +2822,6 @@ export type Database = {
           should_show_rejection_message: boolean
         }[]
       }
-      get_psychologist_busy_times: {
-        Args: {
-          p_from: string
-          p_psychologist_id: string
-          p_to: string
-        }
-        Returns: {
-          duration_minutes: number
-          starts_at: string
-        }[]
-      }
       get_psychologists_public_stats: {
         Args: { p_user_ids: string[] }
         Returns: {
