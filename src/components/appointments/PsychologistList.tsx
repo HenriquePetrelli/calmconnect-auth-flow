@@ -19,6 +19,9 @@ export interface PsychologistData {
   /** Consultas e SOS concluídos (get_psychologists_public_stats). */
   consultation_count?: number;
   sos_count?: number;
+  /** Média das avaliações dos pacientes (1 a 5) e quantas avaliações há. */
+  average_rating?: number | null;
+  ratings_count?: number;
 }
 
 interface PsychologistListProps {
@@ -27,6 +30,26 @@ interface PsychologistListProps {
   loading?: boolean;
   onlineOnly?: boolean;
 }
+
+/** Estrelas da nota real (média das avaliações); sem avaliação, diz isso. */
+const RatingLine = ({ rating, count }: { rating?: number | null; count?: number }) => {
+  if (!rating || count === 0) {
+    return <p className="mt-1 text-xs text-muted-foreground">Sem avaliações ainda</p>;
+  }
+  const rounded = Math.round(rating);
+  const label = `Nota ${rating.toFixed(1)} de 5` + (count ? `, ${count} ${count === 1 ? 'avaliação' : 'avaliações'}` : '');
+  return (
+    <div className="mt-1 flex items-center gap-0.5" aria-label={label}>
+      {Array.from({ length: 5 }).map((_, i) => (
+        <Star key={i} className={`h-3 w-3 text-warning ${i < rounded ? 'fill-warning' : ''}`} aria-hidden="true" />
+      ))}
+      <span className="ml-1 text-xs text-muted-foreground">
+        {rating.toFixed(1).replace('.', ',')}
+        {count ? ` (${count})` : ''}
+      </span>
+    </div>
+  );
+};
 
 const countLabel = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
@@ -111,16 +134,7 @@ export const PsychologistList: React.FC<PsychologistListProps> = ({
                         </span>
                       )}
                     </div>
-                    {/* Rating display - placeholder for future implementation */}
-                    <div className="flex items-center gap-0.5 mt-1">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`w-3 h-3 ${i < 4 ? 'fill-warning text-warning' : 'text-warning'}`}
-                        />
-                      ))}
-                      <span className="text-xs text-muted-foreground ml-1">(4.0)</span>
-                    </div>
+                    <RatingLine rating={psychologist.average_rating} count={psychologist.ratings_count} />
                   </div>
                 </div>
                 <ChevronRight size={20} className="text-muted-foreground flex-shrink-0" />

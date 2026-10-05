@@ -34,7 +34,7 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Conta que ainda não aceitou a versão atual dos termos → entrar ⇒ pede o aceite antes de usar o app
 - [ ] Abrir qualquer tela pela primeira vez ⇒ esqueleto de carregamento com o formato da própria tela
 - [ ] Psicólogo → Perfil → editar bio e cidade → salvar ⇒ paciente vê os dados novos ao agendar
-- [ ] Qualquer → abrir endereço inexistente (`/xyz`) ⇒ "Não encontramos esta página"
+- [ ] Qualquer → abrir endereço inexistente (`/xyz`) ⇒ "Não encontramos esta página"; "Voltar para o início" leva à Home, ao painel ou ao login
 
 ## 2. SOS (fichas 02 e 03)
 
@@ -68,7 +68,7 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Psicólogo → Agenda → Personalizar horários → bloquear 14h de amanhã ⇒ paciente não vê 14h amanhã
 - [ ] Psicólogo → Agenda → marcar férias ⇒ nenhum horário nesses dias
 - [ ] Paciente A → Consultas → Agendar → psicólogo → horário ⇒ "Aguardando confirmação"
-- [ ] Paciente A → Consultas → Agendar → lista de psicólogos ⇒ mostra consultas e SOS atendidos; não mostra cidade nem estado
+- [ ] Paciente A → Consultas → Agendar → lista de psicólogos ⇒ mostra consultas, SOS atendidos e a nota real (ou "Sem avaliações ainda"); não mostra cidade nem estado
 - [ ] Paciente A → Consultas → Agendar (toque duplo rápido) ⇒ só uma consulta criada
 - [ ] Paciente A → Consultas → Agendar outra no mês ⇒ aviso de cota usada
 - [ ] Paciente B (Plus) → Consultas → Agendar ⇒ "disponível apenas no Premium"

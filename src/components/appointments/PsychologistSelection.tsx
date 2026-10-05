@@ -54,7 +54,7 @@ export const PsychologistSelection: React.FC<PsychologistSelectionProps> = ({
       // Buscar diretamente da tabela psychologists com approved = true
       const { data, error } = await supabase
         .from('psychologists')
-        .select('id, user_id, full_name, specialization, bio, crp_number, city, state, address, approved, total_appointments')
+        .select('id, user_id, full_name, specialization, bio, crp_number, city, state, address, approved, total_appointments, average_rating, ratings_count')
         .eq('approved', true)
         .order('full_name', { ascending: true });
   
@@ -74,7 +74,10 @@ export const PsychologistSelection: React.FC<PsychologistSelectionProps> = ({
         approved: psych.approved,
         // Adicionar outros campos necessários
         state: psych.state,
-        total_appointments: psych.total_appointments || 0
+        total_appointments: psych.total_appointments || 0,
+        average_rating: psych.average_rating ?? null,
+        // ratings_count do cadastro nunca é atualizado: a contagem vem da função.
+        ratings_count: undefined,
       })) || [];
   
       // Consultas e SOS concluídos de cada um. Sem a função no banco (antes da
@@ -85,7 +88,12 @@ export const PsychologistSelection: React.FC<PsychologistSelectionProps> = ({
       const statsByUser = new Map((stats ?? []).map((row) => [row.user_id, row]));
       const withStats = formattedData.map((p) => {
         const row = statsByUser.get(p.user_id);
-        return row ? { ...p, consultation_count: row.consultation_count, sos_count: row.sos_count } : p;
+        if (!row) return p;
+        const withCounts = { ...p, consultation_count: row.consultation_count, sos_count: row.sos_count };
+        // Nota real das avaliações (função atualizada); sem ela, fica a média do cadastro.
+        return row.ratings_count === undefined
+          ? withCounts
+          : { ...withCounts, average_rating: row.average_rating, ratings_count: row.ratings_count };
       });
 
       setPsychologists(withStats);

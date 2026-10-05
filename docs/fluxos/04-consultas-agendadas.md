@@ -20,7 +20,7 @@ O paciente escolhe psicólogo, dia e horário dentro da agenda real dele. O psic
 ## Como funciona
 
 ### 1. Agendar
-1. O paciente escolhe o psicólogo numa lista com nome, especialidade, CRP e quantas consultas e SOS ele já concluiu no app (função `get_psychologists_public_stats`, que devolve só os totais de psicólogos aprovados). Cidade, estado e endereço do psicólogo não aparecem. Depois vê só os horários livres: horário-padrão combinado com exceções do dia, sem férias, sem conflito com outras consultas, respeitando antecedência mínima, intervalo entre consultas e até quantos dias à frente (ficha 05).
+1. O paciente escolhe o psicólogo numa lista com nome, especialidade, CRP e quantas consultas e SOS ele já concluiu no app e a nota real dos pacientes, com o número de avaliações (função `get_psychologists_public_stats`, que devolve só os totais de psicólogos aprovados). Sem avaliação, aparece "Sem avaliações ainda". Cidade, estado e endereço do psicólogo não aparecem. Depois vê só os horários livres: horário-padrão combinado com exceções do dia, sem férias, sem conflito com outras consultas, respeitando antecedência mínima, intervalo entre consultas e até quantos dias à frente (ficha 05).
 2. Confirma. A edge function `appointments` confere de novo, no servidor, a agenda, os conflitos e o plano Premium, e **reserva a cota do mês numa única operação** (dois pedidos ao mesmo tempo não passam os dois). Se a consulta não for criada, a reserva é desfeita. Também limita a 10 tentativas por hora. Toda consulta criada pelo app é do tipo `regular` (o servidor ignora outro tipo enviado) e a observação é cortada em 1.000 caracteres.
 3. A consulta nasce como `pending` e o psicólogo é notificado (app e push).
 

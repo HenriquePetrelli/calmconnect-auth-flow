@@ -71,7 +71,8 @@ const ConsultationCall = lazy(() => import("./pages/ConsultationCall"));
 const SupportGroups = lazy(() => import("./pages/SupportGroups"));
 const SupportGroupDetail = lazy(() => import("./pages/SupportGroupDetail"));
 const PrivateJournal = lazy(() => import("./pages/PrivateJournal"));
-const NotFound = lazy(() => import("./pages/NotFound"));
+// Sem carregamento separado: endereço errado mostra o aviso na hora.
+import NotFound from "./pages/NotFound";
 const LegalDocument = lazy(() => import("./pages/LegalDocument"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 

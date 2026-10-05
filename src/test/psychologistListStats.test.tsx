@@ -33,4 +33,16 @@ describe('Agendar: lista de psicólogos', () => {
     expect(screen.getByText('1 consulta')).toBeInTheDocument();
     expect(screen.queryByText(/SOS/)).not.toBeInTheDocument();
   });
+
+  it('mostra a nota real e quantas avaliações tem', () => {
+    render(<PsychologistList psychologists={[{ ...base, average_rating: 4.5, ratings_count: 2 }]} onSelect={vi.fn()} />);
+    expect(screen.getByText('4,5 (2)')).toBeInTheDocument();
+    expect(screen.getByLabelText('Nota 4.5 de 5, 2 avaliações')).toBeInTheDocument();
+    expect(screen.queryByText('(4.0)')).not.toBeInTheDocument();
+  });
+
+  it('sem avaliação diz isso, em vez de 4 estrelas fixas', () => {
+    render(<PsychologistList psychologists={[{ ...base, average_rating: null, ratings_count: 0 }]} onSelect={vi.fn()} />);
+    expect(screen.getByText('Sem avaliações ainda')).toBeInTheDocument();
+  });
 });

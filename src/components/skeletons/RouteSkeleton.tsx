@@ -82,9 +82,9 @@ const screen = (title: string, body: ReactNode, maxWidth?: string) => (
 );
 
 /**
- * Skeleton de cada endereço, na ordem: o primeiro que casa vale. Endereços
- * novos sem entrada aqui caem no último item (cabeçalho + lista), nunca no
- * skeleton de outra tela.
+ * Skeleton de cada endereço, na ordem: o primeiro que casa vale. Endereço sem
+ * entrada (inexistente) mostra só o fundo, nunca o skeleton de outra tela; o
+ * teste de rotas garante que toda tela do app tem a sua.
  */
 const ROUTES: { match: RegExp; render: (pathname: string) => ReactNode }[] = [
   // Públicas: só o fundo (a tela de entrada aparece em seguida).
@@ -152,7 +152,7 @@ const ROUTES: { match: RegExp; render: (pathname: string) => ReactNode }[] = [
 export const hasRouteSkeleton = (pathname: string): boolean => ROUTES.some((route) => route.match.test(pathname));
 
 export const routeSkeletonFor = (pathname: string): ReactNode =>
-  (ROUTES.find((route) => route.match.test(pathname))?.render ?? (() => screen("", <CardListSkeleton count={3} />)))(pathname);
+  (ROUTES.find((route) => route.match.test(pathname))?.render ?? (() => <PublicPageSkeleton />))(pathname);
 
 /** Fallback do carregamento das páginas: o skeleton da própria tela. */
 const RouteSkeleton = () => {
