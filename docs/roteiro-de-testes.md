@@ -33,13 +33,13 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Paciente → Configurações da conta → editar nome → salvar ⇒ Perfil mostra o nome novo
 - [ ] Conta que ainda não aceitou a versão atual dos termos → entrar ⇒ pede o aceite antes de usar o app
 - [ ] Abrir qualquer tela pela primeira vez ⇒ esqueleto de carregamento com o formato da própria tela
-- [ ] Psicólogo → Perfil → editar bio e cidade → salvar ⇒ paciente vê os dados novos ao agendar
+- [ ] Psicólogo → Perfil → editar especialização e biografia → salvar ⇒ paciente vê os dados novos ao agendar
 - [ ] Qualquer → abrir endereço inexistente (`/xyz`) ⇒ "Não encontramos esta página"; "Voltar para o início" leva à Home, ao painel ou ao login
 
 ## 2. SOS (fichas 02 e 03)
 
 - [ ] Paciente A → SOS (sem psicólogo online) ⇒ "Nenhum profissional online", CVV/SAMU em destaque
-- [ ] Psicólogo → Painel → ficar Online ⇒ Paciente A vê "1 profissional disponível"
+- [ ] Psicólogo → Início → ficar Online ⇒ Paciente A vê "1 profissional disponível"
 - [ ] Paciente A → SOS → pedir ajuda ⇒ pedido aparece no painel do psicólogo em até 10 s
 - [ ] Psicólogo → Aceitar ⇒ os dois na sala, com vídeo e áudio
 - [ ] Na chamada → mutar / desligar câmera ⇒ aparece do outro lado
@@ -55,7 +55,7 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Paciente B → SOS na fila → abrir Respirar / Meu plano ⇒ pedido continua na fila
 - [ ] Paciente C (sem plano) → SOS ⇒ não consegue pedir; convite para assinar
 - [ ] Psicólogo (app fechado, push ativo) → paciente pede SOS ⇒ push imediato
-- [ ] Psicólogo → Painel → Status de disponibilidade → Offline ⇒ paciente vê "Nenhum profissional online"
+- [ ] Psicólogo → Início → desligar o status do SOS (Offline) ⇒ paciente vê "Nenhum profissional online"
 - [ ] Psicólogo online → Sair da conta ⇒ fica Offline automaticamente
 - [ ] Psicólogo → SOS aceito → Contexto do paciente ⇒ identificação, sintomas relatados e histórico de pedidos
 - [ ] Na chamada → Configurações → trocar microfone/câmera ⇒ troca sem derrubar a chamada
@@ -64,20 +64,20 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 
 ## 3. Consultas agendadas (fichas 04 e 05)
 
-- [ ] Psicólogo → Painel → Agenda → definir horário-padrão → salvar
-- [ ] Psicólogo → Agenda → Personalizar horários → bloquear 14h de amanhã ⇒ paciente não vê 14h amanhã
+- [ ] Psicólogo → Agenda → definir horário-padrão → salvar
+- [ ] Psicólogo → Agenda → Confirmar semana → bloquear 14h de amanhã ⇒ paciente não vê 14h amanhã
 - [ ] Psicólogo → Agenda → marcar férias ⇒ nenhum horário nesses dias
 - [ ] Paciente A → Consultas → Agendar → psicólogo → horário ⇒ "Aguardando confirmação"
 - [ ] Paciente A → Consultas → Agendar → lista de psicólogos ⇒ mostra consultas, SOS atendidos e a nota real (ou "Sem avaliações ainda"); não mostra cidade nem estado
 - [ ] Paciente A → Consultas → Agendar (toque duplo rápido) ⇒ só uma consulta criada
 - [ ] Paciente A → Consultas → Agendar outra no mês ⇒ aviso de cota usada
 - [ ] Paciente B (Plus) → Consultas → Agendar ⇒ "disponível apenas no Premium"
-- [ ] Psicólogo → Painel → Pedidos → Aceitar ⇒ paciente recebe "Consulta confirmada"
-- [ ] Psicólogo → Pedidos → Propor outro horário → Paciente aceita ⇒ horário muda nos dois
-- [ ] Psicólogo → Pedidos → Recusar ⇒ consulta do mês volta para o paciente
+- [ ] Psicólogo → Consultas → Próximas → pedido → Aceitar ⇒ paciente recebe "Consulta confirmada"
+- [ ] Psicólogo → Consultas → pedido → Propor outro horário → Paciente aceita ⇒ horário muda nos dois
+- [ ] Psicólogo → Consultas → pedido → Recusar ⇒ consulta do mês volta para o paciente
 - [ ] Paciente A → Consultas → Cancelar (mais de 24 h antes) ⇒ aviso "a consulta do mês volta"
 - [ ] Paciente A → Consultas → Cancelar (menos de 24 h antes) ⇒ aviso "conta como usada"
-- [ ] Psicólogo → Painel → Cancelar consulta confirmada ⇒ paciente avisado, consulta do mês volta
+- [ ] Psicólogo → Consultas → Cancelar consulta confirmada ⇒ paciente avisado, consulta do mês volta
 - [ ] Os dois → 10 min antes → Entrar ⇒ chamada conecta
 - [ ] Psicólogo → Encerrar ⇒ paciente avalia (nota + comentário)
 - [ ] Um lado sozinho na sala → 2 min → Avisar ⇒ o outro recebe push
@@ -85,13 +85,16 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Ninguém conecta → 30 min após o fim ⇒ "Não realizada", consulta do mês volta
 - [ ] Paciente A → Consultas → Histórico → Avaliar ⇒ nota entra na média do psicólogo
 - [ ] Paciente A → Consultas → Histórico → Relatar problema ⇒ psicólogo é avisado
-- [ ] Psicólogo → Histórico → Consulta interrompida ⇒ consulta do mês volta ao paciente
-- [ ] Psicólogo → Histórico → Salvar resumo da sessão ⇒ salva sem mudar o status
+- [ ] Psicólogo → Consultas → Histórico → Consulta interrompida ⇒ consulta do mês volta ao paciente
+- [ ] Psicólogo → Consultas → Histórico → Salvar resumo da sessão ⇒ salva sem mudar o status
 - [ ] Lembretes: consulta marcada para daqui a 1 h ⇒ lembrete no app e push
-- [ ] Psicólogo → Painel → consulta → Histórico do paciente ⇒ consultas anteriores e resumos
+- [ ] Psicólogo → Consultas → consulta → Histórico do paciente ⇒ consultas anteriores e resumos
 - [ ] Paciente → encerrar consulta e fechar o app antes de avaliar → reabrir ⇒ convite para avaliar (pode pular)
 - [ ] Psicólogo → Agenda → antecedência mínima 2 h ⇒ paciente não marca para daqui a 1 h
 - [ ] Psicólogo → Notificações ⇒ pedidos, confirmações e lembretes listados
+- [ ] Psicólogo (celular) → barra inferior ⇒ Início, Consultas, Agenda, Chat e Perfil; no computador, menu lateral com Pagamentos e o status do SOS
+- [ ] Psicólogo online → abrir Agenda ou Chat → paciente pede SOS ⇒ aviso "pedido de SOS esperando" leva ao Início
+- [ ] Psicólogo → Chat ⇒ abre com a navegação do psicólogo (sem a barra e o SOS do paciente)
 
 ## 4. Chat (ficha 06)
 
@@ -132,7 +135,7 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Admin → Repasses → Confirmar com o mesmo E2E ⇒ recusado
 - [ ] Psicólogo → Pagamentos ⇒ vê "Repasses recebidos" com E2E e comprovante
 - [ ] Consulta/SOS em que o psicólogo ficou sozinho ⇒ não entra no repasse
-- [ ] Psicólogo → Perfil → trocar chave Pix ⇒ Admin vê a chave nova em Repasses
+- [ ] Psicólogo → Perfil → Chave Pix → trocar ⇒ Admin vê a chave nova em Repasses
 
 ## 8. Empresas / B2B (ficha 10)
 
@@ -207,7 +210,7 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Paciente → Perfil → Suporte → e-mail `abc` ⇒ recusa
 - [ ] Suporte → descrição com `<a href="http://x.com">clique</a>` ⇒ e-mail mostra texto, sem link
 - [ ] Suporte → enviar 4 vezes seguidas ⇒ a 4ª é recusada
-- [ ] Psicólogo → Painel → Suporte → enviar ⇒ e-mail chega
+- [ ] Psicólogo → Perfil → Suporte → enviar ⇒ e-mail chega
 
 ## 16. Privacidade e LGPD (ficha 18)
 

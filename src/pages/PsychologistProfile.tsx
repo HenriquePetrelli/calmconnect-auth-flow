@@ -1,6 +1,6 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useRef, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -8,13 +8,15 @@ import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 import { supabase } from '@/integrations/supabase/client';
 import { getSessionUser } from '@/lib/currentUser';
-import { LogOut, Mail, Lock, User, FileText, Pencil, Check, MessageCircle, Settings, Wallet, ChevronRight, CalendarClock, Bell, ScrollText, LockKeyhole } from 'lucide-react';
-import PageHeader from '@/components/PageHeader';
+import { KeyRound, LogOut, Lock, Pencil, Check, MessageCircle, Wallet, CalendarClock, Bell, BellRing, Palette, ScrollText, LockKeyhole } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { SettingsRow, SettingsSection } from '@/components/settings/SettingsList';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { PushNotificationToggle } from '@/components/PushNotificationToggle';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SPECIALIZATIONS } from '@/data/specializations';
 import { PasswordChangeModal } from '@/components/psychologist/PasswordChangeModal';
+import { PixModal } from '@/components/psychologist/PixModal';
 import { useNavigate } from 'react-router-dom';
 import RouteSkeleton from "@/components/skeletons/RouteSkeleton";
 
@@ -32,6 +34,7 @@ const PsychologistProfile = () => {
 
   // Password modal
   const [pwdOpen, setPwdOpen] = useState(false);
+  const [pixOpen, setPixOpen] = useState(false);
 
   // Professional profile
   const [fullName, setFullName] = useState('');
@@ -169,224 +172,160 @@ const PsychologistProfile = () => {
     return <RouteSkeleton />;
   }
 
-  return (
-    <div className="min-h-screen bg-background">
-      <PageHeader title="Perfil do Psicólogo" backTo="/psychologist-dashboard" />
-      <div className="max-w-3xl mx-auto p-4 space-y-6">
+  const initials = (fullName || email || 'P')
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase();
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2"><User className="w-4 h-4" /> Informações da Conta</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Email */}
-          <div>
-            <label className="text-sm text-muted-foreground">Email</label>
-            <div className="flex gap-2 mt-1 items-center">
-              <Mail className="w-4 h-4 text-muted-foreground" />
-              <Input type="email" value={tempEmail} onChange={(e) => setTempEmail(e.target.value)} disabled={!editEmail} />
-              {editEmail ? (
-                <Button size="sm" onClick={handleEmailSave} className="shrink-0"><Check className="w-4 h-4 mr-1" />Salvar</Button>
-              ) : (
-                <Button size="sm" variant="ghost" onClick={() => setEditEmail(true)} className="shrink-0"><Pencil className="w-4 h-4" /></Button>
-              )}
-            </div>
-            {pendingEmail && (
-              <p className="text-xs text-muted-foreground mt-1">Confirmação pendente. Verifique sua caixa de entrada.</p>
+  // Edição em linha: rótulo, campo e o lápis/salvar ao lado (mesmo padrão nos três campos).
+  const editButton = (editing: boolean, onEdit: () => void, onSave: () => void, label: string) =>
+    editing ? (
+      <Button size="sm" onClick={onSave} className="h-10 shrink-0">
+        <Check className="mr-1 h-4 w-4" />
+        Salvar
+      </Button>
+    ) : (
+      <Button size="icon" variant="ghost" onClick={onEdit} className="h-10 w-10 shrink-0" aria-label={`Editar ${label}`}>
+        <Pencil className="h-4 w-4" />
+      </Button>
+    );
+
+  return (
+    <div className="mx-auto w-full max-w-3xl space-y-6">
+      {/* Quem é */}
+      <Card className="border-border/60">
+        <div className="flex items-center gap-4 p-5">
+          <div
+            className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-xl font-semibold tracking-wide text-primary"
+            aria-hidden="true"
+          >
+            {initials}
+          </div>
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate text-lg font-semibold text-foreground">Dr.(a) {fullName || 'Psicólogo'}</h1>
+            <p className="truncate text-sm text-muted-foreground">{email}</p>
+            {specialization && (
+              <Badge variant="secondary" className="mt-2 font-medium">
+                {specialization}
+              </Badge>
             )}
           </div>
+        </div>
+      </Card>
 
-          {/* Password */}
-          <div className="flex items-end justify-between gap-4">
-            <div className="flex-1">
-              <label className="text-sm text-muted-foreground">Senha</label>
-              <div className="flex gap-2 mt-1 items-center">
-                <Lock className="w-4 h-4 text-muted-foreground" />
-                <Input type="password" value="********" disabled className="select-none" />
+      {/* Perfil profissional: o que o paciente vê ao escolher com quem agendar. */}
+      <section className="space-y-2" aria-label="Perfil profissional">
+        <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Perfil profissional</h2>
+        <Card className="border-border/60">
+          <CardContent className="space-y-4 p-4">
+            <p className="text-xs text-muted-foreground">É o que o paciente vê ao escolher com quem agendar.</p>
+            <div className="space-y-1.5">
+              <label htmlFor="psy-name" className="text-sm font-medium text-foreground">Nome completo</label>
+              <div className="flex items-center gap-2">
+                <Input id="psy-name" value={tempName} onChange={(e) => setTempName(e.target.value)} disabled={!editName} />
+                {editButton(editName, () => setEditName(true), handleSaveName, 'nome')}
               </div>
             </div>
-            <Button onClick={() => setPwdOpen(true)} className="shrink-0">Alterar Senha</Button>
+
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground">Especialização</label>
+              <div className="flex items-center gap-2">
+                {editSpec ? (
+                  <Select value={tempSpec} onValueChange={setTempSpec}>
+                    <SelectTrigger className="min-w-0 flex-1"><SelectValue placeholder="Selecione sua especialização" /></SelectTrigger>
+                    <SelectContent>
+                      {SPECIALIZATIONS.map((spec) => (
+                        <SelectItem key={spec} value={spec}>{spec}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input value={specialization || ''} disabled aria-label="Especialização" />
+                )}
+                {editButton(editSpec, () => setEditSpec(true), handleSaveSpec, 'especialização')}
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label htmlFor="psy-bio" className="text-sm font-medium text-foreground">Biografia</label>
+              <div className="flex items-start gap-2">
+                <Textarea id="psy-bio" className="min-h-[120px]" value={tempBio} onChange={(e) => setTempBio(e.target.value)} disabled={!editBio} />
+                {editButton(editBio, () => setEditBio(true), handleSaveBio, 'biografia')}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="space-y-2" aria-label="Conta">
+        <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Conta</h2>
+        <Card className="overflow-hidden border-border/60 divide-y divide-border/60">
+          <div className="space-y-1.5 p-4">
+            <label htmlFor="psy-email" className="text-sm font-medium text-foreground">E-mail</label>
+            <div className="flex items-center gap-2">
+              <Input id="psy-email" type="email" value={tempEmail} onChange={(e) => setTempEmail(e.target.value)} disabled={!editEmail} />
+              {editButton(editEmail, () => setEditEmail(true), handleEmailSave, 'e-mail')}
+            </div>
+            {pendingEmail && (
+              <p className="text-xs text-muted-foreground">Confirmação pendente. Verifique sua caixa de entrada.</p>
+            )}
           </div>
-        </CardContent>
-      </Card>
+          <SettingsRow icon={<Lock />} title="Senha" description="Trocar a senha de acesso" onClick={() => setPwdOpen(true)} />
+        </Card>
+      </section>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2"><FileText className="w-4 h-4" /> Perfil Profissional</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Nome completo */}
-          <div>
-            <label className="text-sm text-muted-foreground">Nome completo</label>
-            <div className="flex gap-2 mt-1 items-center">
-              <Input value={tempName} onChange={(e) => setTempName(e.target.value)} disabled={!editName} />
-              {editName ? (
-                <Button size="sm" onClick={handleSaveName} className="shrink-0"><Check className="w-4 h-4 mr-1" />Salvar</Button>
-              ) : (
-                <Button size="sm" variant="ghost" onClick={() => setEditName(true)} className="shrink-0"><Pencil className="w-4 h-4" /></Button>
-              )}
-            </div>
-          </div>
+      <SettingsSection title="Trabalho">
+        <SettingsRow
+          icon={<CalendarClock />}
+          title="Agenda"
+          description="Dias e horários em que você atende"
+          onClick={() => navigate('/psychologist-availability')}
+        />
+        <SettingsRow
+          icon={<KeyRound />}
+          title="Chave Pix"
+          description="Onde você recebe os repasses"
+          onClick={() => setPixOpen(true)}
+        />
+        <SettingsRow
+          icon={<Wallet />}
+          title="Pagamentos"
+          description="Repasses recebidos e valores a receber"
+          onClick={() => navigate('/psychologist-payments')}
+        />
+        <SettingsRow
+          icon={<Bell />}
+          title="Notificações"
+          description="Pedidos, confirmações e lembretes"
+          onClick={() => navigate('/psychologist-notifications')}
+        />
+      </SettingsSection>
 
-          {/* Especialização */}
-          <div>
-            <label className="text-sm text-muted-foreground">Especialização</label>
-            <div className="flex gap-2 mt-1 items-center">
-              {editSpec ? (
-                <Select value={tempSpec} onValueChange={setTempSpec}>
-                  <SelectTrigger className="min-w-[260px]"><SelectValue placeholder="Selecione sua especialização" /></SelectTrigger>
-                  <SelectContent>
-                    {SPECIALIZATIONS.map((spec) => (
-                      <SelectItem key={spec} value={spec}>{spec}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <Input value={specialization || ''} disabled />
-              )}
-              {editSpec ? (
-                <Button size="sm" onClick={handleSaveSpec} className="shrink-0"><Check className="w-4 h-4 mr-1" />Salvar</Button>
-              ) : (
-                <Button size="sm" variant="ghost" onClick={() => setEditSpec(true)} className="shrink-0"><Pencil className="w-4 h-4" /></Button>
-              )}
-            </div>
-          </div>
+      <SettingsSection title="Preferências">
+        <SettingsRow icon={<Palette />} title="Tema" description="Claro, escuro ou do sistema" trailing={<ThemeToggle />} />
+        <PushNotificationToggle icon={<BellRing />} />
+      </SettingsSection>
 
-          {/* Biografia */}
-          <div>
-            <label className="text-sm text-muted-foreground">Biografia</label>
-            <div className="flex gap-2 mt-1 items-start">
-              <Textarea className="min-h-[120px]" value={tempBio} onChange={(e) => setTempBio(e.target.value)} disabled={!editBio} />
-              {editBio ? (
-                <Button size="sm" onClick={handleSaveBio} className="shrink-0 mt-1"><Check className="w-4 h-4 mr-1" />Salvar</Button>
-              ) : (
-                <Button size="sm" variant="ghost" onClick={() => setEditBio(true)} className="shrink-0 mt-1"><Pencil className="w-4 h-4" /></Button>
-              )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <SettingsSection title="Ajuda e privacidade">
+        <SettingsRow icon={<MessageCircle />} title="Suporte" description="Fale com a equipe Soliv" onClick={() => navigate('/psicologo/suporte')} />
+        <SettingsRow
+          icon={<ScrollText />}
+          title="Termos de Uso"
+          description="Regras para psicólogos, repasses e registros"
+          onClick={() => navigate('/termos-psicologo')}
+        />
+        <SettingsRow icon={<LockKeyhole />} title="Política de Privacidade" description="Como tratamos os dados" onClick={() => navigate('/privacidade')} />
+      </SettingsSection>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Settings className="w-4 h-4" /> Configurações</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4 divide-y divide-border">
-          <div className="flex items-center justify-between pb-4">
-            <div>
-              <p className="text-sm font-medium">Tema do aplicativo</p>
-              <p className="text-xs text-muted-foreground">Claro, escuro ou seguir o sistema</p>
-            </div>
-            <ThemeToggle />
-          </div>
-          <PushNotificationToggle />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="p-4 space-y-2">
-          <button
-            onClick={() => navigate('/psychologist-availability')}
-            className="w-full flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-left hover:bg-accent hover:border-primary/30 transition-colors group"
-          >
-            <div className="rounded-md bg-secondary/20 p-2 group-hover:bg-secondary/30 transition-colors">
-              <CalendarClock className="w-4 h-4 text-secondary-foreground" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium">Minha agenda</p>
-              <p className="text-xs text-muted-foreground">Defina os dias e horários em que você atende</p>
-            </div>
-            <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-          </button>
-
-          <button
-            onClick={() => navigate('/psychologist-notifications')}
-            className="w-full flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-left hover:bg-accent hover:border-primary/30 transition-colors group"
-          >
-            <div className="rounded-md bg-primary/10 p-2 group-hover:bg-primary/15 transition-colors">
-              <Bell className="w-4 h-4 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium">Notificações</p>
-              <p className="text-xs text-muted-foreground">Veja suas notificações recentes</p>
-            </div>
-            <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-          </button>
-
-          <button
-            onClick={() => navigate('/psychologist-payments')}
-            className="w-full flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-left hover:bg-accent hover:border-primary/30 transition-colors group"
-          >
-            <div className="rounded-md bg-primary/10 p-2 group-hover:bg-primary/15 transition-colors">
-              <Wallet className="w-4 h-4 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium">Meus pagamentos</p>
-              <p className="text-xs text-muted-foreground">Acompanhe repasses e valores a receber</p>
-            </div>
-            <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-          </button>
-
-          <button
-            onClick={() => navigate('/psicologo/suporte')}
-            className="w-full flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-left hover:bg-accent hover:border-primary/30 transition-colors group"
-          >
-            <div className="rounded-md bg-secondary/20 p-2 group-hover:bg-secondary/30 transition-colors">
-              <MessageCircle className="w-4 h-4 text-secondary-foreground" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium">Suporte</p>
-              <p className="text-xs text-muted-foreground">Fale com a equipe Soliv</p>
-            </div>
-            <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-          </button>
-
-          <button
-            onClick={() => navigate('/termos-psicologo')}
-            className="w-full flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-left hover:bg-accent hover:border-primary/30 transition-colors group"
-          >
-            <div className="rounded-md bg-secondary/20 p-2 group-hover:bg-secondary/30 transition-colors">
-              <ScrollText className="w-4 h-4 text-secondary-foreground" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium">Termos de Uso</p>
-              <p className="text-xs text-muted-foreground">Regras para psicólogos, repasses e registros</p>
-            </div>
-            <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-          </button>
-
-          <button
-            onClick={() => navigate('/privacidade')}
-            className="w-full flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-left hover:bg-accent hover:border-primary/30 transition-colors group"
-          >
-            <div className="rounded-md bg-secondary/20 p-2 group-hover:bg-secondary/30 transition-colors">
-              <LockKeyhole className="w-4 h-4 text-secondary-foreground" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium">Política de Privacidade</p>
-              <p className="text-xs text-muted-foreground">Como tratamos os dados</p>
-            </div>
-            <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-          </button>
-
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3 text-left hover:bg-destructive/10 hover:border-destructive/40 transition-colors group"
-          >
-            <div className="rounded-md bg-destructive/10 p-2 group-hover:bg-destructive/15 transition-colors">
-              <LogOut className="w-4 h-4 text-destructive" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-destructive">Sair da conta</p>
-              <p className="text-xs text-muted-foreground">Encerrar sessão neste dispositivo</p>
-            </div>
-            <ChevronRight className="w-4 h-4 text-destructive/60 group-hover:text-destructive transition-colors" />
-          </button>
-        </CardContent>
+      <Card className="overflow-hidden border-border/60">
+        <SettingsRow icon={<LogOut />} title="Sair da conta" description="Encerrar a sessão neste aparelho" onClick={handleLogout} tone="destructive" />
       </Card>
 
       <PasswordChangeModal open={pwdOpen} onOpenChange={setPwdOpen} currentEmail={email} />
-      </div>
+      {userId && <PixModal isOpen={pixOpen} onClose={() => setPixOpen(false)} userId={userId} mode="edit" />}
     </div>
   );
 };

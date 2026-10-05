@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Send } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
+import PsychologistBottomNav from "@/components/psychologist/layout/PsychologistBottomNav";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -148,6 +149,7 @@ const PsychologistSupport = () => {
           </CardContent>
         </Card>
       </div>
+      <PsychologistBottomNav />
     </div>
   );
 };

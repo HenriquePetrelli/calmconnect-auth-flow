@@ -24,6 +24,7 @@ import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useAuth } from '@/contexts/AuthContext';
 import PageHeader from '@/components/PageHeader';
+import PsychologistPageTitle from '@/components/psychologist/layout/PsychologistPageTitle';
 import { NotificationsBodySkeleton } from '@/components/skeletons/PageSkeletons';
 
 import { format } from 'date-fns';
@@ -79,7 +80,7 @@ const Notifications = () => {
     // If notification is related to an appointment, navigate to the
     // appointments view for whichever side is looking at it.
     if (notification.appointment_id) {
-      navigate(userType === 'psychologist' ? '/psychologist-dashboard' : '/appointments');
+      navigate(userType === 'psychologist' ? '/psicologo/consultas' : '/appointments');
       return;
     }
 
@@ -109,17 +110,11 @@ const Notifications = () => {
     toast.success('Todas as notificações foram excluídas');
   };
 
-  // Reused verbatim from the patient side (this page normally sits inside
-  // the patient's MainLayout, which supplies the header/back nav) —
-  // psychologists and admins reach it via a standalone route, so it needs
-  // its own header there.
-  const isStandalone = userType === 'psychologist' || userType === 'admin';
-  const standaloneHeader = isStandalone && (
-    <PageHeader
-      title="Notificações"
-      backTo={userType === 'psychologist' ? '/psychologist-dashboard' : '/admin-dashboard'}
-    />
-  );
+  // Paciente e psicólogo veem esta tela dentro do layout deles (cabeçalho e
+  // barra de navegação). Só o admin chega por uma rota solta, com cabeçalho
+  // próprio.
+  const isStandalone = userType === 'admin';
+  const standaloneHeader = isStandalone && <PageHeader title="Notificações" backTo="/admin-dashboard" />;
 
   if (loading) {
     return (
@@ -136,6 +131,11 @@ const Notifications = () => {
   return (
     <div className={isStandalone ? 'min-h-screen bg-background' : undefined}>
       {standaloneHeader}
+      {userType === 'psychologist' && (
+        <div className="mb-2">
+          <PsychologistPageTitle title="Notificações" description="Pedidos, confirmações e lembretes" />
+        </div>
+      )}
       <div>
         {/* Actions bar (no title/back) */}
         {(unreadCount > 0 || notifications.length > 0) && (

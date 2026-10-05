@@ -13,7 +13,8 @@ O paciente escolhe psicólogo, dia e horário dentro da agenda real dele. O psic
 | Rota | Quem | Tela |
 |---|---|---|
 | `/appointments` | Paciente | Agendar, próximas consultas, histórico (com "Avaliar" e "Relatar problema") |
-| `/psychologist-dashboard` | Psicólogo | Pedidos, consultas de hoje e próximas, histórico ("Consulta interrompida") |
+| `/psychologist-dashboard` (Início) | Psicólogo | Resumo: consultas de hoje, próximos dias, pedidos para responder e a próxima consulta do dia |
+| `/psicologo/consultas` | Psicólogo | Aba Próximas (pedidos, hoje, próximos dias) e aba Histórico ("Consulta interrompida", resumo da sessão) |
 | `/consultation-call/:appointmentId` | Os dois | Sala da consulta |
 | `/notifications`, `/psychologist-notifications` | Os dois | Avisos de pedido, confirmação, mudança e lembrete |
 

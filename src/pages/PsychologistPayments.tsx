@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/utils/errorMessage';
-import PageHeader from '@/components/PageHeader';
+import PsychologistPageTitle from '@/components/psychologist/layout/PsychologistPageTitle';
 import PayoutHistory from '@/components/payments/PayoutHistory';
 import RouteSkeleton from "@/components/skeletons/RouteSkeleton";
 import {
@@ -120,21 +120,20 @@ const PsychologistPayments = () => {
   const emergencyPaid = payment?.emergency_paid_count ?? 0;
 
   return (
-    <div className="min-h-screen bg-background">
-      <PageHeader
-        title="Meus Pagamentos"
-        backTo="/psychologist-profile"
-        rightAction={
-          <Button variant="ghost" size="icon" onClick={handleRefresh} disabled={refreshing} className="rounded-full bg-white/15 text-white hover:bg-white/25 hover:text-white h-10 w-10" aria-label="Atualizar">
-            <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
-          </Button>
-        }
-      />
+    <div className="w-full space-y-6">
+        <PsychologistPageTitle
+          title="Pagamentos"
+          description="Repasses recebidos e valores a receber"
+          action={
+            <Button variant="outline" size="icon" onClick={handleRefresh} disabled={refreshing} className="h-10 w-10" aria-label="Atualizar">
+              <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+            </Button>
+          }
+        />
 
-      <div className="max-w-5xl mx-auto p-4 md:p-6 space-y-6">
         {/* Summary */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+          <Card className="border-border/60">
             <CardContent className="p-5">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
@@ -155,7 +154,7 @@ const PsychologistPayments = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-success/30 bg-gradient-to-br from-success/5 to-transparent">
+          <Card className="border-border/60">
             <CardContent className="p-5">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
@@ -272,7 +271,7 @@ const PsychologistPayments = () => {
             ) : (
               <div className="rounded-lg border border-dashed border-border p-6 text-center">
                 <p className="text-sm text-muted-foreground">
-                  Nenhuma chave PIX cadastrada. Cadastre uma chave no seu perfil para
+                  Nenhuma chave PIX cadastrada. Cadastre em Perfil → Chave Pix para
                   receber pagamentos.
                 </p>
               </div>
@@ -286,7 +285,6 @@ const PsychologistPayments = () => {
             os valores aparecerão aqui.
           </div>
         )}
-      </div>
     </div>
   );
 };

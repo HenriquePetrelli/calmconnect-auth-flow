@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { lazy, Suspense } from "react";
 import RouteGuard from "@/components/RouteGuard";
 import MainLayout from "@/components/MainLayout";
+import PsychologistLayout from "@/components/psychologist/layout/PsychologistLayout";
 import BackgroundWrapper from "@/components/BackgroundWrapper";
 import RouteSkeleton from "@/components/skeletons/RouteSkeleton";
 import PendingFeedbackGate from "@/components/sos/PendingFeedbackGate";
@@ -23,6 +24,15 @@ const MainLayoutOutlet = () => (
       <Outlet />
     </Suspense>
   </MainLayout>
+);
+
+// Mesmo padrão para o psicólogo: menu lateral/barra inferior não remontam.
+const PsychologistLayoutOutlet = () => (
+  <PsychologistLayout>
+    <Suspense fallback={<RouteSkeleton />}>
+      <Outlet />
+    </Suspense>
+  </PsychologistLayout>
 );
 
 // Lazy load all pages for better performance
@@ -55,6 +65,7 @@ const SubscriptionCancel = lazy(() => import("./pages/SubscriptionCancel"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const PsychologistDashboard = lazy(() => import("./pages/PsychologistDashboard"));
 const PsychologistProfile = lazy(() => import("./pages/PsychologistProfile"));
+const PsychologistConsultations = lazy(() => import("./pages/PsychologistConsultations"));
 const PsychologistAvailability = lazy(() => import("./pages/PsychologistAvailability"));
 const SafetyPlans = lazy(() => import("./pages/SafetyPlans"));
 const SafetyPlanEditor = lazy(() => import("./pages/SafetyPlanEditor"));
@@ -360,35 +371,43 @@ const App = () => {
                     </RouteGuard>
                   } />
 
-                  {/* Rotas do Psicólogo */}
-                  <Route path="/psychologist-dashboard" element={
-                    <RouteGuard allowedUserTypes={['psychologist']}>
-                      <PsychologistDashboard />
-                    </RouteGuard>
-                  } />
-                  <Route path="/psychologist-profile" element={
-                    <RouteGuard allowedUserTypes={['psychologist']}>
-                      <PsychologistProfile />
-                    </RouteGuard>
-                  } />
-                  <Route path="/psychologist-availability" element={
-                    <RouteGuard allowedUserTypes={['psychologist']}>
-                      <PsychologistAvailability />
-                    </RouteGuard>
-                  } />
+                  {/* Rotas do Psicólogo: as principais no layout persistente (menu
+                      lateral e barra inferior); suporte é tela interna. */}
+                  <Route element={<PsychologistLayoutOutlet />}>
+                    <Route path="/psychologist-dashboard" element={
+                      <RouteGuard allowedUserTypes={['psychologist']}>
+                        <PsychologistDashboard />
+                      </RouteGuard>
+                    } />
+                    <Route path="/psicologo/consultas" element={
+                      <RouteGuard allowedUserTypes={['psychologist']}>
+                        <PsychologistConsultations />
+                      </RouteGuard>
+                    } />
+                    <Route path="/psychologist-availability" element={
+                      <RouteGuard allowedUserTypes={['psychologist']}>
+                        <PsychologistAvailability />
+                      </RouteGuard>
+                    } />
+                    <Route path="/psychologist-payments" element={
+                      <RouteGuard allowedUserTypes={['psychologist']}>
+                        <PsychologistPayments />
+                      </RouteGuard>
+                    } />
+                    <Route path="/psychologist-profile" element={
+                      <RouteGuard allowedUserTypes={['psychologist']}>
+                        <PsychologistProfile />
+                      </RouteGuard>
+                    } />
+                    <Route path="/psychologist-notifications" element={
+                      <RouteGuard allowedUserTypes={['psychologist']}>
+                        <Notifications />
+                      </RouteGuard>
+                    } />
+                  </Route>
                   <Route path="/psicologo/suporte" element={
                     <RouteGuard allowedUserTypes={['psychologist']}>
                       <PsychologistSupport />
-                    </RouteGuard>
-                  } />
-                  <Route path="/psychologist-payments" element={
-                    <RouteGuard allowedUserTypes={['psychologist']}>
-                      <PsychologistPayments />
-                    </RouteGuard>
-                  } />
-                  <Route path="/psychologist-notifications" element={
-                    <RouteGuard allowedUserTypes={['psychologist']}>
-                      <Notifications />
                     </RouteGuard>
                   } />
 

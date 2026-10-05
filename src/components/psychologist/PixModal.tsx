@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,8 @@ interface PixModalProps {
   isOpen: boolean;
   onClose: () => void;
   userId: string;
+  /** "required": primeiro cadastro, não fecha sem a chave. "edit": troca pelo Perfil. */
+  mode?: 'required' | 'edit';
 }
 
 const PIX_TYPES = [
@@ -21,11 +23,27 @@ const PIX_TYPES = [
   { value: 'aleatoria', label: 'Chave aleatória' }
 ];
 
-export const PixModal: React.FC<PixModalProps> = ({ isOpen, onClose, userId }) => {
+export const PixModal: React.FC<PixModalProps> = ({ isOpen, onClose, userId, mode = 'required' }) => {
   const [pixType, setPixType] = useState<string>('');
   const [pixKey, setPixKey] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const editing = mode === 'edit';
+
+  // Na troca, já abre com a chave atual.
+  useEffect(() => {
+    if (!isOpen || !editing) return;
+    let cancelled = false;
+    void supabase.rpc('get_my_psychologist_private').then(({ data }) => {
+      const row = data?.[0];
+      if (cancelled || !row?.pix_key) return;
+      setPixType(row.pix_type ?? '');
+      setPixKey(row.pix_key);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, editing]);
 
   const formatPixKey = (type: string, value: string): string => {
     const numbers = value.replace(/\D/g, '');
@@ -162,7 +180,7 @@ export const PixModal: React.FC<PixModalProps> = ({ isOpen, onClose, userId }) =
 
       if (error) throw error;
 
-      toast({ title: "Chave PIX cadastrada" });
+      toast({ title: editing ? "Chave PIX atualizada" : "Chave PIX cadastrada" });
 
       onClose();
     } catch (error: any) {
@@ -195,18 +213,20 @@ export const PixModal: React.FC<PixModalProps> = ({ isOpen, onClose, userId }) =
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={() => {}}>
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open && editing) onClose(); }}>
       <DialogContent className="sm:max-w-md"
-        onInteractOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={(e) => e.preventDefault()}
+        onInteractOutside={(e) => { if (!editing) e.preventDefault(); }}
+        onEscapeKeyDown={(e) => { if (!editing) e.preventDefault(); }}
       >
         <DialogHeader>
-          <DialogTitle>Cadastro de Chave PIX</DialogTitle>
+          <DialogTitle>{editing ? 'Chave PIX' : 'Cadastro de Chave PIX'}</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4 py-4">
           <p className="text-sm text-muted-foreground">
-            Para continuar, é necessário cadastrar uma chave PIX para recebimento de pagamentos.
+            {editing
+              ? 'Os repasses das suas consultas e SOS são feitos para esta chave.'
+              : 'Para continuar, é necessário cadastrar uma chave PIX para recebimento de pagamentos.'}
           </p>
           
           <div className="space-y-2">

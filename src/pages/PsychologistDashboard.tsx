@@ -1,29 +1,21 @@
-import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Bell, Calendar, History, AlertTriangle, Clock, Users } from 'lucide-react';
-import PsychologistAccountMenu from '@/components/psychologist/PsychologistAccountMenu';
-import Wordmark from '@/components/Wordmark';
+import { Card, CardContent } from '@/components/ui/card';
+import { Calendar, ChevronRight, Clock, Inbox, Video } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import LifeRingIcon from '@/components/icons/LifeRingIcon';
+import PsychologistPageTitle from '@/components/psychologist/layout/PsychologistPageTitle';
 import { supabase } from '@/integrations/supabase/client';
 import { getSessionUser } from '@/lib/currentUser';
-import { usePsychologistEmergency } from '@/hooks/usePsychologistEmergency';
 import { usePsychologistSchedule } from '@/hooks/usePsychologistSchedule';
 import { usePsychologistPresence } from '@/hooks/usePsychologistPresence';
 import { usePsychologistVacation } from '@/hooks/usePsychologistVacation';
 import { usePsychologistAvailability } from '@/hooks/usePsychologistAvailability';
-import { useNotifications } from '@/hooks/useNotifications';
 import EmergencyNotifications from '@/components/psychologist/EmergencyNotifications';
-import UpcomingConsultations from '@/components/psychologist/UpcomingConsultations';
-import ConsultationHistory from '@/components/psychologist/ConsultationHistory';
-import OnlineStatusToggle from '@/components/psychologist/OnlineStatusToggle';
 import { PixModal } from '@/components/psychologist/PixModal';
 import { WeeklyScheduleModal } from '@/components/psychologist/WeeklyScheduleModal';
 import { FirstTimeAvailabilityModal } from '@/components/psychologist/FirstTimeAvailabilityModal';
-import logoImg from '@/assets/soliv-logo.svg';
 import ActiveCallBanner from '@/components/sos/ActiveCallBanner';
 import { getWeekStartISO } from '@/lib/psychologistAvailability';
 import RouteSkeleton from "@/components/skeletons/RouteSkeleton";
@@ -40,15 +32,17 @@ const PsychologistDashboard = () => {
   const [showFirstTimeModal, setShowFirstTimeModal] = useState(false);
   const [psychologistData, setPsychologistData] = useState<any>(null);
 
-  const { emergencyRequests } = usePsychologistEmergency();
-  const { todayAppointments, upcomingAppointments } = usePsychologistSchedule();
-  const { isOnline } = usePsychologistPresence();
+  const { todayAppointments, upcomingAppointments, fetchPendingAppointments } = usePsychologistSchedule();
+  const { isOnline, loading: presenceLoading, toggle: togglePresence } = usePsychologistPresence();
+  const [pendingRequests, setPendingRequests] = useState(0);
   const { activeVacation, loading: loadingVacation } = usePsychologistVacation();
   const { blocks: baseBlocks, loading: loadingBase, refetch: refetchBase } = usePsychologistAvailability();
-  const { unreadCount } = useNotifications();
 
   useEffect(() => {
     checkUserProfile();
+    // Pedidos de consulta esperando resposta (o detalhe fica em Consultas).
+    void fetchPendingAppointments().then((list) => setPendingRequests(list.length));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Só depois que o cadastro básico (PIX) está completo: primeiro pede o
@@ -149,127 +143,110 @@ const PsychologistDashboard = () => {
     }
   };
 
-  // Sair: sempre pelo signOut central (garante voltar para a tela de login).
-  const { signOut } = useAuth();
-  const handleLogout = () => signOut();
-
   if (loading) {
     return <RouteSkeleton />;
   }
 
-  const pendingEmergencies = emergencyRequests.filter(req => req.status === 'pending').length;
   const todayConsultations = todayAppointments.length;
-  const todayLabel = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
   const upcomingConsultations = upcomingAppointments.length;
+  const todayLabel = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+  const nextToday = todayAppointments
+    .filter((a) => new Date(a.scheduled_at).getTime() > Date.now() - 60 * 60 * 1000)
+    .sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at))[0];
 
-  const tabTriggerClass =
-    'flex items-center justify-center gap-1.5 sm:gap-2 py-2 sm:py-2.5 px-2 text-xs sm:text-sm font-medium rounded-md ' +
-    'data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-sm transition-colors';
+  const summary = [
+    { label: 'Hoje', hint: 'consultas', value: todayConsultations, icon: Calendar },
+    { label: 'Próximos dias', hint: 'agendadas', value: upcomingConsultations, icon: Clock },
+    { label: 'Pedidos', hint: 'para responder', value: pendingRequests, icon: Inbox },
+  ];
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Cabeçalho: marca, disponibilidade, avisos e o menu da conta. */}
-      <header className="sticky top-0 z-30 bg-primary text-primary-foreground border-b border-primary/40 shadow-sm">
-        <div className="max-w-7xl mx-auto flex h-14 items-center justify-between gap-3 px-3 sm:h-16 sm:px-4">
-          <Wordmark className="h-[26px] sm:h-[30px] text-white shrink-0" />
+    <div className="space-y-5 md:space-y-6">
+      <PsychologistPageTitle
+        title={`Olá, Dr.(a) ${profile?.full_name?.split(' ')[0] ?? ''}`}
+        description={<span className="first-letter:uppercase">{todayLabel}</span>}
+      />
 
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <OnlineStatusToggle />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative h-10 w-10 rounded-full text-white hover:bg-white/15 hover:text-white"
-              onMouseEnter={() => import('./Notifications')}
-              onClick={() => navigate('/psychologist-notifications')}
-              aria-label={unreadCount > 0 ? `Notificações, ${unreadCount} não lidas` : 'Notificações'}
-            >
-              <Bell className="h-5 w-5" />
-              {unreadCount > 0 && (
-                <Badge
-                  variant="destructive"
-                  className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center px-1 text-xs leading-none"
-                >
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </Badge>
-              )}
-            </Button>
-            <PsychologistAccountMenu
-              name={profile?.full_name}
-              onWeeklySchedule={() => setShowWeeklyScheduleModal(true)}
-              onSignOut={handleLogout}
-            />
+      <ActiveCallBanner />
+
+      {/* Disponibilidade para o SOS: a decisão mais importante do dia. */}
+      <Card className={isOnline ? 'border-emerald-500/40' : 'border-border/60'}>
+        <CardContent className="flex items-center gap-4 p-4 sm:p-5">
+          <div
+            className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${isOnline ? 'bg-emerald-500/10' : 'bg-muted'}`}
+            aria-hidden="true"
+          >
+            <LifeRingIcon className="h-8 w-8" />
           </div>
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold text-foreground">{isOnline ? 'Você está online para o SOS' : 'Você está offline para o SOS'}</p>
+            <p className="text-sm text-muted-foreground">
+              {isOnline
+                ? 'Pedidos de ajuda emergencial chegam aqui e no seu celular.'
+                : 'Fique online quando puder atender uma chamada de ajuda emergencial.'}
+            </p>
+          </div>
+          <Switch
+            checked={isOnline}
+            onCheckedChange={togglePresence}
+            disabled={presenceLoading}
+            aria-label="Alternar disponibilidade para o SOS"
+          />
+        </CardContent>
+      </Card>
+
+      {/* Fila do SOS só com o psicólogo online (offline, o cartão acima já diz). */}
+      {isOnline && <EmergencyNotifications />}
+
+      {/* Resumo das consultas: leva para Consultas. */}
+      <section className="space-y-2" aria-label="Consultas">
+        <div className="flex items-center justify-between px-1">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Consultas</h2>
+          <Button variant="link" className="h-auto p-0 text-sm" onClick={() => navigate('/psicologo/consultas')}>
+            Ver todas
+          </Button>
         </div>
-      </header>
-
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-4 md:py-6 space-y-4 sm:space-y-5 md:space-y-6">
-        {/* Saudação: saiu do cabeçalho para não apertar os botões no celular. */}
-        <div>
-          <h1 className="text-xl font-semibold text-foreground sm:text-2xl">
-            Olá, Dr.(a) {profile?.full_name?.split(' ')[0]}
-          </h1>
-          <p className="text-sm text-muted-foreground first-letter:uppercase">{todayLabel}</p>
-        </div>
-
-        <ActiveCallBanner />
-
-        {/* Resumo do dia */}
         <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4">
-          {[
-            { label: 'Emergências', hint: 'pendentes', value: pendingEmergencies, icon: AlertTriangle, tone: 'text-destructive', box: 'bg-destructive/10' },
-            { label: 'Hoje', hint: 'consultas', value: todayConsultations, icon: Calendar, tone: 'text-primary', box: 'bg-primary/10' },
-            { label: 'Próximas', hint: 'agendadas', value: upcomingConsultations, icon: Clock, tone: 'text-foreground', box: 'bg-muted' },
-          ].map(({ label, hint, value, icon: Icon, tone, box }) => (
-            <Card key={label} className="border-border/60">
-              <CardContent className="flex items-start justify-between gap-2 p-3 sm:p-5">
+          {summary.map(({ label, hint, value, icon: Icon }) => (
+            <button
+              key={label}
+              type="button"
+              onClick={() => navigate('/psicologo/consultas')}
+              className="rounded-lg border border-border/60 bg-card p-3 text-left shadow-sm transition-colors hover:bg-muted/40 sm:p-5"
+            >
+              <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <p className="text-xs font-medium text-muted-foreground sm:text-sm">{label}</p>
-                  <p className={`mt-1 text-2xl font-bold sm:text-3xl ${tone}`}>{value}</p>
+                  <p className={`mt-1 text-2xl font-bold sm:text-3xl ${label === 'Pedidos' && value > 0 ? 'text-primary' : 'text-foreground'}`}>{value}</p>
                   <p className="mt-0.5 hidden text-xs text-muted-foreground sm:block">{hint}</p>
                 </div>
-                <div className={`hidden shrink-0 rounded-xl p-2.5 sm:block ${box}`} aria-hidden="true">
-                  <Icon className={`h-5 w-5 ${tone}`} />
+                <div className="hidden shrink-0 rounded-xl bg-primary/10 p-2.5 sm:block" aria-hidden="true">
+                  <Icon className="h-5 w-5 text-primary" />
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </button>
           ))}
         </div>
 
-        {/* Main Content */}
-        <Tabs defaultValue="emergency" className="space-y-4">
-          <TabsList className="w-full h-auto p-1 bg-muted/60 grid grid-cols-3 gap-1 rounded-lg">
-            <TabsTrigger value="emergency" className={tabTriggerClass}>
-              <Bell className="w-4 h-4 shrink-0" />
-              <span>Emergências</span>
-              {pendingEmergencies > 0 && (
-                <Badge variant="destructive" className="ml-0.5 h-4 sm:h-5 px-1 sm:px-1.5 text-xs">
-                  {pendingEmergencies}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="consultations" className={tabTriggerClass}>
-              <Users className="w-4 h-4 shrink-0" />
-              <span>Consultas</span>
-            </TabsTrigger>
-            <TabsTrigger value="history" className={tabTriggerClass}>
-              <History className="w-4 h-4 shrink-0" />
-              <span>Histórico</span>
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="emergency" className="mt-4">
-            <EmergencyNotifications />
-          </TabsContent>
-
-          <TabsContent value="consultations" className="mt-4">
-            <UpcomingConsultations />
-          </TabsContent>
-
-          <TabsContent value="history" className="mt-4">
-            <ConsultationHistory />
-          </TabsContent>
-        </Tabs>
-      </div>
+        {nextToday && (
+          <button
+            type="button"
+            onClick={() => navigate('/psicologo/consultas')}
+            className="flex w-full items-center gap-4 rounded-lg border border-border/60 bg-card p-4 text-left shadow-sm transition-colors hover:bg-muted/40"
+          >
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary" aria-hidden="true">
+              <Video className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-foreground">
+                Próxima hoje às {new Date(nextToday.scheduled_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+              </p>
+              <p className="truncate text-xs text-muted-foreground">{nextToday.patient?.full_name ?? 'Paciente'}</p>
+            </div>
+            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+          </button>
+        )}
+      </section>
 
       {/* PIX Modal */}
       {profile && (

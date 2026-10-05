@@ -29,6 +29,8 @@ vi.mock('@/hooks/usePsychologistVacation', () => ({
 }));
 
 vi.mock('@/components/PageHeader', () => ({ default: () => <div /> }));
+vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => ({ user: { id: 'psi-1' } }) }));
+vi.mock('@/components/psychologist/WeeklyScheduleModal', () => ({ WeeklyScheduleModal: () => null }));
 
 const rules = { buffer_minutes: 0, min_notice_hours: 2, max_advance_days: 30 };
 vi.mock('@/hooks/usePsychologistBookingRules', () => ({

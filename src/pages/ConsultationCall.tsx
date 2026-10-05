@@ -12,7 +12,7 @@ const ConsultationCall = () => {
   const navigate = useNavigate();
   const { userType } = useAuth();
   const { endConsultation } = useAppointmentVideoCall();
-  const homeRoute = userType === 'psychologist' ? '/psychologist-dashboard' : '/appointments';
+  const homeRoute = userType === 'psychologist' ? '/psicologo/consultas' : '/appointments';
   const [appointment, setAppointment] = useState<Appointment | null>(null);
   const [loading, setLoading] = useState(true);
 

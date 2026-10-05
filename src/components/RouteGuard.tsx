@@ -64,6 +64,8 @@ export const ROUTE_PERMISSIONS = {
     '/psychologist-profile',
     '/psychologist-availability',
     '/psychologist-payments',
+    '/psychologist-notifications',
+    '/psicologo/consultas',
     '/consultation-call/', // rotas com parâmetro (id da consulta)
     '/chat', // chat disponível para psicólogos
     '/emergency-call', // psicólogo pode atender chamada

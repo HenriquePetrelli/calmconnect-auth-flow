@@ -12,8 +12,8 @@ O psicólogo define um **horário-padrão** semanal e o ajusta por data com **ex
 
 | Rota | Tela |
 |---|---|
-| `/psychologist-availability` | Minha agenda: horário-padrão, regras de agendamento, férias |
-| `/psychologist-dashboard` | Modal da 1ª configuração e confirmação semanal |
+| `/psychologist-dashboard` (Início) | Modal da 1ª configuração e confirmação semanal |
+| `/psychologist-availability` (Agenda) | Horário-padrão, férias, regras e o botão "Confirmar semana" |
 
 ## Como funciona
 

@@ -716,27 +716,37 @@ export const CompanyBenefitBodySkeleton = () => (
 /* ------------------------------------------------------------------ */
 
 /** Painel do psicólogo: cabeçalho roxo, 3 números, abas e lista. */
-export const PsychologistDashboardSkeleton = () => (
-  <div className="min-h-screen bg-background" aria-busy="true" aria-label="Carregando">
-    <div className="bg-primary">
-      <div className="max-w-7xl mx-auto flex h-14 items-center justify-between gap-3 px-3 sm:h-16 sm:px-4">
-        <Skeleton className="h-6 w-20 bg-white/25" />
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          <Skeleton className="h-10 w-28 rounded-full bg-white/20" />
-          <Skeleton className="h-10 w-10 rounded-full bg-white/20" />
-          <Skeleton className="h-10 w-10 rounded-full bg-white/25" />
-        </div>
-      </div>
+/** Título das telas do psicólogo (dentro do layout), com ação opcional à direita. */
+const PsychologistTitleSkeleton = ({ action = false }: { action?: boolean }) => (
+  <div className="flex items-start justify-between gap-3">
+    <div className="space-y-2">
+      <Skeleton className="h-7 w-44" />
+      <Skeleton className="h-4 w-56" />
     </div>
-    <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-4 md:py-6 space-y-4 sm:space-y-5 md:space-y-6">
-      <div className="space-y-2">
-        <Skeleton className="h-7 w-48" />
-        <Skeleton className="h-4 w-40" />
-      </div>
+    {action && <Skeleton className="h-10 w-28 rounded-md" />}
+  </div>
+);
+
+/** Início do psicólogo: saudação, status do SOS e resumo das consultas. */
+export const PsychologistDashboardSkeleton = () => (
+  <div className="space-y-5 md:space-y-6" aria-busy="true" aria-label="Carregando">
+    <PsychologistTitleSkeleton />
+    <Card className="border-border/60">
+      <CardContent className="flex items-center gap-4 p-4 sm:p-5">
+        <Skeleton className="h-12 w-12 shrink-0 rounded-xl" />
+        <div className="flex-1 space-y-2">
+          <Skeleton className="h-4 w-52" />
+          <Skeleton className="h-3 w-64" />
+        </div>
+        <Skeleton className="h-6 w-11 rounded-full" />
+      </CardContent>
+    </Card>
+    <div className="space-y-2">
+      <Skeleton className="ml-1 h-3 w-20" />
       <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4">
         {Array.from({ length: 3 }).map((_, i) => (
           <Card key={i} className="border-border/60">
-            <CardContent className="p-3 sm:p-5 flex items-start justify-between gap-2">
+            <CardContent className="flex items-start justify-between gap-2 p-3 sm:p-5">
               <div className="space-y-2">
                 <Skeleton className="h-3 w-16" />
                 <Skeleton className="h-7 w-8" />
@@ -746,31 +756,65 @@ export const PsychologistDashboardSkeleton = () => (
           </Card>
         ))}
       </div>
-      <Skeleton className="h-11 w-full rounded-lg" />
-      <SkeletonSectionCard rows={3} accent="primary" />
     </div>
   </div>
 );
 
-/** Perfil do psicólogo: conta, perfil profissional, configurações e opções. */
+/** Consultas do psicólogo: título, abas e a lista. */
+export const PsychologistConsultationsSkeleton = () => (
+  <div className="space-y-5" aria-busy="true" aria-label="Carregando">
+    <PsychologistTitleSkeleton />
+    <Skeleton className="h-11 w-full rounded-lg" />
+    <SkeletonSectionCard rows={3} accent="primary" />
+  </div>
+);
+
+/** Perfil do psicólogo: identidade, perfil profissional e as seções de opções. */
 export const PsychologistProfileBodySkeleton = () => (
-  <>
-    <FormCardSkeleton fields={2} />
-    <FormCardSkeleton fields={3} />
+  <div className="mx-auto w-full max-w-3xl space-y-6" aria-busy="true" aria-label="Carregando">
     <Card className="border-border/60">
-      <CardContent className="p-4 space-y-3">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="flex items-center gap-3 rounded-xl border border-border/60 p-3">
-            <Skeleton className="h-9 w-9 rounded-lg shrink-0" />
-            <div className="flex-1 space-y-2">
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-3 w-48" />
-            </div>
-          </div>
-        ))}
-      </CardContent>
+      <div className="flex items-center gap-4 p-5">
+        <Skeleton className="h-16 w-16 shrink-0 rounded-2xl" />
+        <div className="min-w-0 flex-1 space-y-2">
+          <Skeleton className="h-5 w-44" />
+          <Skeleton className="h-4 w-48" />
+          <Skeleton className="h-5 w-32 rounded-full" />
+        </div>
+      </div>
     </Card>
-  </>
+    <div className="space-y-2">
+      <Skeleton className="ml-1 h-3 w-32" />
+      <FormCardSkeleton fields={3} title={false} />
+    </div>
+    <ProfileRowsSkeleton rows={2} />
+    <ProfileRowsSkeleton rows={3} />
+    <ProfileRowsSkeleton rows={2} />
+    <ProfileRowsSkeleton rows={3} />
+  </div>
+);
+
+/** Agenda com o título da tela (o corpo está logo abaixo). */
+export const PsychologistAvailabilitySkeleton = () => (
+  <div className="max-w-3xl space-y-4" aria-busy="true" aria-label="Carregando">
+    <PsychologistTitleSkeleton action />
+    <PsychologistAvailabilityBodySkeleton />
+  </div>
+);
+
+/** Pagamentos com o título da tela. */
+export const PsychologistPaymentsSkeleton = () => (
+  <div className="w-full space-y-6" aria-busy="true" aria-label="Carregando">
+    <PsychologistTitleSkeleton action />
+    <PsychologistPaymentsBodySkeleton />
+  </div>
+);
+
+/** Notificações do psicólogo com o título da tela. */
+export const PsychologistNotificationsSkeleton = () => (
+  <div className="space-y-4" aria-busy="true" aria-label="Carregando">
+    <PsychologistTitleSkeleton />
+    <NotificationsBodySkeleton />
+  </div>
 );
 
 /** Minha Agenda: aviso, férias, os 7 dias e as regras. */

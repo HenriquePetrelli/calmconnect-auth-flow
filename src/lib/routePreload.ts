@@ -59,6 +59,7 @@ const page = {
   EmergencyCall: () => import("@/pages/EmergencyCall"),
   PsychologistDashboard: () => import("@/pages/PsychologistDashboard"),
   PsychologistProfile: () => import("@/pages/PsychologistProfile"),
+  PsychologistConsultations: () => import("@/pages/PsychologistConsultations"),
   PsychologistAvailability: () => import("@/pages/PsychologistAvailability"),
   PsychologistSupport: () => import("@/pages/PsychologistSupport"),
   PsychologistPayments: () => import("@/pages/PsychologistPayments"),
@@ -119,6 +120,7 @@ export const ROUTE_LOADERS: [string, Loader][] = [
   ["/emergency/call/:requestId", page.EmergencyCall],
   ["/psychologist-dashboard", page.PsychologistDashboard],
   ["/psychologist-profile", page.PsychologistProfile],
+  ["/psicologo/consultas", page.PsychologistConsultations],
   ["/psychologist-availability", page.PsychologistAvailability],
   ["/psicologo/suporte", page.PsychologistSupport],
   ["/psychologist-payments", page.PsychologistPayments],
@@ -148,7 +150,7 @@ export const preloadRoute = (pathname: string) => {
 /** Abas principais de cada tipo de conta. */
 const CORE_ROUTES: Record<string, string[]> = {
   patient: ["/home", "/appointments", "/sos", "/chat", "/statistics", "/profile"],
-  psychologist: ["/psychologist-dashboard", "/psychologist-availability", "/psychologist-profile", "/chat"],
+  psychologist: ["/psychologist-dashboard", "/psicologo/consultas", "/psychologist-availability", "/chat", "/psychologist-profile"],
   admin: ["/admin-dashboard"],
 };
 

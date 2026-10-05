@@ -14,7 +14,7 @@ O paciente aperta SOS, entra numa fila e o primeiro psicólogo online que aceita
 |---|---|---|
 | `/sos` | Paciente | Fila de espera: contador, profissionais disponíveis, CVV/SAMU, "Meu plano", "Respirar" |
 | `/emergency-call/:sessionId` | Os dois | Sala de vídeo do SOS |
-| `/psychologist-dashboard` | Psicólogo | Botão Online/Offline e lista de pedidos de SOS |
+| `/psychologist-dashboard` (Início) | Psicólogo | Status Online/Offline do SOS e a fila de pedidos. Em qualquer outra tela do psicólogo, com ele online, um aviso mostra os pedidos esperando e leva ao Início |
 
 ## Como funciona
 

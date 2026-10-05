@@ -3,11 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { Plus, Trash2, CalendarClock, Palmtree, Copy } from 'lucide-react';
+import { Plus, Trash2, CalendarCheck, CalendarClock, Palmtree, Copy } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import BookingRulesCard from '@/components/psychologist/BookingRulesCard';
-import PageHeader from '@/components/PageHeader';
+import PsychologistPageTitle from '@/components/psychologist/layout/PsychologistPageTitle';
+import { WeeklyScheduleModal } from '@/components/psychologist/WeeklyScheduleModal';
+import { useAuth } from '@/contexts/AuthContext';
 import { usePsychologistAvailability, type AvailabilityBlock } from '@/hooks/usePsychologistAvailability';
 import { usePsychologistVacation, toISODate } from '@/hooks/usePsychologistVacation';
 import { DAY_LABELS, DAYS_DISPLAY_ORDER, validateDayBlocks, type EditableBlock } from '@/lib/psychologistAvailability';
@@ -34,6 +36,8 @@ const blocksToDraft = (blocks: AvailabilityBlock[]): DraftByDay => {
 
 const PsychologistAvailability = () => {
   const { blocks, loading, saving, save } = usePsychologistAvailability();
+  const { user } = useAuth();
+  const [weekOpen, setWeekOpen] = useState(false);
   const [draft, setDraft] = useState<DraftByDay>(emptyDraft());
 
   const {
@@ -137,17 +141,28 @@ const PsychologistAvailability = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <PageHeader title="Minha Agenda" backTo="/psychologist-profile" />
-      <div className="max-w-3xl mx-auto p-4 space-y-4">
-        <Card className="border-secondary/20 bg-secondary/5">
+    <div className="max-w-3xl space-y-4">
+        <PsychologistPageTitle
+          title="Agenda"
+          description="Horário-padrão, férias e regras de agendamento"
+          action={
+            <Button variant="outline" size="sm" className="h-10 gap-2" onClick={() => setWeekOpen(true)}>
+              <CalendarCheck className="h-4 w-4" />
+              <span className="hidden sm:inline">Confirmar semana</span>
+              <span className="sm:hidden">Semana</span>
+            </Button>
+          }
+        />
+        <Card className="border-border/60">
           <CardContent className="p-4 flex items-start gap-3">
-            <CalendarClock className="w-5 h-5 text-secondary shrink-0 mt-0.5" />
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary" aria-hidden="true">
+              <CalendarClock className="h-5 w-5" />
+            </div>
             <p className="text-sm text-muted-foreground">
               Este é o seu horário-padrão, que se repete toda semana. Pacientes só vão conseguir marcar horários
               dentro dos blocos que você configurar aqui. Dias sem nenhum horário ficam indisponíveis para
               agendamento. Para bloquear um horário pontual ou abrir um horário extra só numa semana específica,
-              use a confirmação semanal no seu painel — não é preciso mexer no padrão para isso.
+              use "Confirmar semana" — não é preciso mexer no padrão para isso.
             </p>
           </CardContent>
         </Card>
@@ -155,7 +170,7 @@ const PsychologistAvailability = () => {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
-              <Palmtree className="w-4 h-4 text-secondary" />
+              <Palmtree className="w-4 h-4 text-primary" />
               Férias
             </CardTitle>
           </CardHeader>
@@ -189,7 +204,7 @@ const PsychologistAvailability = () => {
                   Escolha de que dia até que dia você vai ficar indisponível. Seus dias e horários padrão continuam
                   salvos e voltam a valer normalmente assim que as férias terminarem.
                 </p>
-                <div className="flex items-center gap-2">
+                <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
                   <Input
                     type="date"
                     value={vacationStart}
@@ -313,12 +328,25 @@ const PsychologistAvailability = () => {
 
         <BookingRulesCard />
 
-        <div className="sticky bottom-4 pt-2">
-          <Button onClick={handleSave} disabled={saving || hasErrors} className="w-full shadow-lg">
+        {/* No celular fica acima da barra inferior. */}
+        <div className="sticky bottom-[calc(var(--tab-height)+12px)] pt-2 lg:bottom-4">
+          <Button onClick={handleSave} disabled={saving || hasErrors} className="h-11 w-full shadow-lg">
             {saving ? 'Salvando...' : 'Salvar agenda'}
           </Button>
         </div>
-      </div>
+
+        <WeeklyScheduleModal
+          open={weekOpen}
+          onClose={() => setWeekOpen(false)}
+          onConfirmed={(weekStartISO) => {
+            try {
+              if (user?.id) localStorage.setItem(`soliv:availability-week-confirmed:${user.id}`, weekStartISO);
+            } catch {
+              // localStorage indisponível: fecha mesmo assim
+            }
+            setWeekOpen(false);
+          }}
+        />
     </div>
   );
 };

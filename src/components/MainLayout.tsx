@@ -11,6 +11,7 @@ import { DesktopSidebar } from "@/components/DesktopSidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNotifications } from "@/hooks/useNotifications";
+import PsychologistLayout from "@/components/psychologist/layout/PsychologistLayout";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -19,7 +20,8 @@ interface MainLayoutProps {
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, userType } = useAuth();
+  const isPatient = userType === 'patient';
   const [showSOSModal, setShowSOSModal] = useState(false);
   const [moodEnabled, setMoodEnabled] = useState(true);
   const { unreadCount } = useNotifications();
@@ -28,7 +30,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   useEffect(() => {
     let cancelled = false;
     const loadMoodEnabled = async () => {
-      if (!user?.id) return;
+      if (!user?.id || !isPatient) return;
       const { data } = await supabase
         .from('patients')
         .select('daily_mood_enabled')
@@ -46,13 +48,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       cancelled = true;
       window.removeEventListener('moodToggleChanged', handleMoodToggleChange as EventListener);
     };
-  }, [user?.id]);
+  }, [user?.id, isPatient]);
 
   // "Dias seguidos": conta o dia sempre que o paciente abre o app, não só em Meu progresso.
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id || !isPatient) return;
     void supabase.rpc('update_patient_streak', { p_patient_id: user.id });
-  }, [user?.id]);
+  }, [user?.id, isPatient]);
 
   const handleSOSConfirm = () => {
     setShowSOSModal(false);
@@ -75,6 +77,16 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         return 'Soliv';
     }
   };
+
+  // O Chat é das duas contas: o psicólogo vê o layout dele, nunca a barra do
+  // paciente (com o SOS do paciente). Enquanto o tipo de conta não chegou, não
+  // mostra barra nenhuma, para não piscar a errada.
+  if (userType === 'psychologist') {
+    return <PsychologistLayout>{children}</PsychologistLayout>;
+  }
+  if (user && userType === 'unknown' && location.pathname === '/chat') {
+    return <>{children}</>;
+  }
 
   return (
     <div className="min-h-screen">

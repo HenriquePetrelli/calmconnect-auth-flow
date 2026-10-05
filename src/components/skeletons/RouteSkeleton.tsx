@@ -26,9 +26,11 @@ import {
   MindfulEatingBodySkeleton,
   NotificationsBodySkeleton,
   ProfileSkeleton,
-  PsychologistAvailabilityBodySkeleton,
+  PsychologistAvailabilitySkeleton,
+  PsychologistConsultationsSkeleton,
   PsychologistDashboardSkeleton,
-  PsychologistPaymentsBodySkeleton,
+  PsychologistNotificationsSkeleton,
+  PsychologistPaymentsSkeleton,
   PsychologistProfileBodySkeleton,
   PublicPageSkeleton,
   QuestionnaireFormSkeleton,
@@ -139,10 +141,12 @@ const ROUTES: { match: RegExp; render: (pathname: string) => ReactNode }[] = [
 
   // Psicólogo.
   { match: /^\/psychologist-dashboard/, render: () => <PsychologistDashboardSkeleton /> },
-  { match: /^\/psychologist-profile/, render: () => screen("Perfil do Psicólogo", <PsychologistProfileBodySkeleton />, "max-w-3xl") },
-  { match: /^\/psychologist-availability/, render: () => screen("Minha Agenda", <PsychologistAvailabilityBodySkeleton />, "max-w-3xl") },
-  { match: /^\/psychologist-payments/, render: () => screen("Meus Pagamentos", <PsychologistPaymentsBodySkeleton />, "max-w-5xl") },
-  { match: /^\/(psychologist|admin)-notifications/, render: () => <div className="min-h-screen bg-background"><PageHeader title="Notificações" /><div className="px-4 py-6"><NotificationsBodySkeleton /></div></div> },
+  { match: /^\/psicologo\/consultas/, render: () => <PsychologistConsultationsSkeleton /> },
+  { match: /^\/psychologist-profile/, render: () => <PsychologistProfileBodySkeleton /> },
+  { match: /^\/psychologist-availability/, render: () => <PsychologistAvailabilitySkeleton /> },
+  { match: /^\/psychologist-payments/, render: () => <PsychologistPaymentsSkeleton /> },
+  { match: /^\/psychologist-notifications/, render: () => <PsychologistNotificationsSkeleton /> },
+  { match: /^\/admin-notifications/, render: () => <div className="min-h-screen bg-background"><PageHeader title="Notificações" /><div className="px-4 py-6"><NotificationsBodySkeleton /></div></div> },
 
   // Admin.
   { match: /^\/admin-dashboard/, render: () => <AdminDashboardSkeleton /> },
