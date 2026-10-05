@@ -172,7 +172,8 @@ const PsychologistAvailability = () => {
 
           return (
             <Card key={day}>
-              <CardHeader className="pb-3">
+              {/* Mesmo espaço em cima e embaixo; com horários, eles ocupam a parte de baixo. */}
+              <CardHeader className={enabled ? 'px-5 pb-3 pt-5' : 'p-5'}>
                 <CardTitle className="flex items-center justify-between text-base">
                   <span>{DAY_LABELS[day]}</span>
                   <div className="flex items-center gap-2">
@@ -184,7 +185,7 @@ const PsychologistAvailability = () => {
                 </CardTitle>
               </CardHeader>
               {enabled && (
-                <CardContent className="space-y-3">
+                <CardContent className="space-y-3 px-5 pb-5 pt-0">
                   {dayBlocks.map((block, index) => (
                     <div key={index} className="flex items-center gap-2">
                       <Input

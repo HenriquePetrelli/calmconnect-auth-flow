@@ -261,6 +261,8 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Admin → Psicólogos com cadastro pendente ⇒ número aparece na aba Psicólogos da barra e do menu
 - [ ] Admin → Meu perfil → Trocar senha com a senha atual errada ⇒ recusado; com a certa ⇒ "Senha atualizada"
 - [ ] Paciente, psicólogo e admin com a tela a partir de 768 px ⇒ menu lateral no lugar da barra inferior
+- [ ] Computador → rolar qualquer tela (paciente, psicólogo, admin) ⇒ cabeçalho com "soliv" e o sino fica fixo no topo
+- [ ] Janela com rolagem (ex.: Agenda semanal) → rolar ⇒ título e X de fechar fixos em cima; botão de confirmar fixo embaixo
 - [ ] Admin no computador ⇒ menu lateral fixo; cada seção com título e descrição no topo, sem título repetido
 
 ## 18. Segurança (ficha 20)

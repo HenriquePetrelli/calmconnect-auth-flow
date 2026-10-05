@@ -95,7 +95,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         
         <div className="md:pl-64">
           {/* Mobile/Tablet Header */}
-          <header className="md:hidden fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-md shadow-sm border-b border-border">
+          <header className="md:hidden fixed top-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md shadow-sm border-b border-border">
             <div className="container mx-auto px-4 h-16 flex items-center justify-between">
               
               {/* PERFIL À ESQUERDA */}
@@ -135,7 +135,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           </header>
 
           {/* Desktop Header */}
-          <header className="hidden md:block bg-card/80 backdrop-blur-md border-b border-border px-6 py-3 relative">
+          {/* Fixo no topo ao rolar, como no celular. */}
+          <header className="hidden md:block md:sticky md:top-0 md:z-40 bg-card/95 backdrop-blur-md border-b border-border px-6">
             <div className="max-w-6xl mx-auto flex items-center justify-between relative h-16">
               {/* SPACER ESQUERDO */}
               <div className="flex items-center gap-3 opacity-0 pointer-events-none select-none">

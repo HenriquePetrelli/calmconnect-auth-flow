@@ -136,7 +136,7 @@ const Notifications = () => {
       <div>
         {/* Actions bar (no title/back) */}
         {(unreadCount > 0 || notifications.length > 0) && (
-          <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border">
+          <div className="sticky top-16 z-10 bg-background/95 backdrop-blur-sm border-b border-border">
             <div className="flex items-center justify-end gap-2 px-4 py-3">
               {unreadCount > 0 && (
                 <Button

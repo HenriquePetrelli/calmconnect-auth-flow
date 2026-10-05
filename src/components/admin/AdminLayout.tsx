@@ -78,7 +78,7 @@ const AdminLayout = ({ active, badges = {}, children }: AdminLayoutProps) => {
 
       <div className="md:pl-64">
         {/* Celular e tablet */}
-        <header className="fixed left-0 right-0 top-0 z-50 border-b border-border bg-card/80 shadow-sm backdrop-blur-md md:hidden">
+        <header className="fixed left-0 right-0 top-0 z-50 border-b border-border bg-card/95 shadow-sm backdrop-blur-md md:hidden">
           <div className="relative mx-auto flex h-16 items-center justify-between px-4">
             <button type="button" className="flex h-10 w-10 items-center justify-center" onClick={() => go('profile')} aria-label="Meu perfil">
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
@@ -94,7 +94,7 @@ const AdminLayout = ({ active, badges = {}, children }: AdminLayoutProps) => {
         </header>
 
         {/* Computador */}
-        <header className="hidden border-b border-border bg-card/80 px-6 backdrop-blur-md md:block">
+        <header className="hidden border-b border-border bg-card/95 px-6 backdrop-blur-md md:sticky md:top-0 md:z-40 md:block">
           <div className="mx-auto flex h-16 max-w-7xl items-center justify-between">
             <span className="max-w-64 truncate text-sm text-muted-foreground">{email}</span>
             <Wordmark className="h-[30px] text-primary" />
