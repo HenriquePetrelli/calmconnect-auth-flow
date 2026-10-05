@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Smile, Heart, Meh, Frown, CloudRain, Check } from 'lucide-react';
 import ExpandableCard from '@/components/ExpandableCard';
 import { supabase } from '@/integrations/supabase/client';
+import { getSessionUser } from '@/lib/currentUser';
 import { useToast } from '@/hooks/use-toast';
 import { useMoodLog } from '@/hooks/useMoodLog';
 import { cn } from '@/lib/utils';
@@ -53,7 +54,7 @@ export const MoodAccordion: React.FC<MoodAccordionProps> = ({ currentValue, onMo
     window.dispatchEvent(new CustomEvent('moodToggleChanged', { detail: { enabled: false } }));
     setIsHiding(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await getSessionUser();
       if (!user) return;
       const { error } = await supabase
         .from('patients')

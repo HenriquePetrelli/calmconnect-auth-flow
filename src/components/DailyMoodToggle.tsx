@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
+import { getSessionUser } from '@/lib/currentUser';
 import { useToast } from "@/hooks/use-toast";
 import { Smile } from "lucide-react";
 import { SettingsRow } from "@/components/settings/SettingsList";
@@ -21,7 +22,7 @@ export const DailyMoodToggle: React.FC<DailyMoodToggleProps> = ({ initialEnabled
 
   const fetchMoodSetting = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await getSessionUser();
       if (!user) return;
 
       const { data: patientData } = await supabase
@@ -49,7 +50,7 @@ export const DailyMoodToggle: React.FC<DailyMoodToggleProps> = ({ initialEnabled
 
     setIsLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await getSessionUser();
       if (!user) return;
 
       const { error } = await supabase

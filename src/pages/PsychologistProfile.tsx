@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 import { supabase } from '@/integrations/supabase/client';
+import { getSessionUser } from '@/lib/currentUser';
 import { LogOut, Mail, Lock, User, FileText, Pencil, Check, MessageCircle, Settings, Wallet, ChevronRight, CalendarClock, Bell, ScrollText, LockKeyhole } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -145,7 +146,7 @@ const PsychologistProfile = () => {
 
       if (pollRef.current) window.clearInterval(pollRef.current);
       pollRef.current = window.setInterval(async () => {
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user } } = await getSessionUser();
         if (user?.email === tempEmail) {
           try {
             await updatePsych({ email: tempEmail });

@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/select';
 import { Calendar, Eye, Filter, Download, FileText, Star, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { getSessionUser } from '@/lib/currentUser';
 import { FeedbackModal } from '@/components/sos/FeedbackModal';
 import { canRateAppointment } from '@/lib/appointmentRating';
 import { canReportConsultationProblem } from '@/lib/consultationProblem';
@@ -50,7 +51,7 @@ export const AppointmentHistory = () => {
   const loadRatings = useCallback(async (list: Appointment[]) => {
     const sessionIds = list.map((a) => a.video_room_id).filter((id): id is string => !!id);
     if (sessionIds.length === 0) return;
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await getSessionUser();
     if (!user) return;
     const { data } = await supabase
       .from('session_feedback')

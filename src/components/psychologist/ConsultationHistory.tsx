@@ -29,6 +29,7 @@ import { canReportConsultationProblem } from '@/lib/consultationProblem';
 import ReportConsultationProblemDialog from '@/components/appointments/ReportConsultationProblemDialog';
 import { usePsychologistSchedule } from '@/hooks/usePsychologistSchedule';
 import { supabase } from '@/integrations/supabase/client';
+import { getSessionUser } from '@/lib/currentUser';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -103,7 +104,7 @@ const ConsultationHistory = () => {
 
   /** SOS calls attended by the logged psychologist, with the clinical record. */
   const loadEmergencyHistory = async (): Promise<ConsultationRow[]> => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await getSessionUser();
     if (!user) return [];
 
     const { data: requests, error } = await supabase

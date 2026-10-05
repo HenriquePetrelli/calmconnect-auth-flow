@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getSessionUser } from '@/lib/currentUser';
 import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 import { findPsychologistOngoingCall } from '@/lib/emergencyCallGuard';
@@ -55,7 +56,7 @@ export const usePsychologistEmergency = () => {
       console.log('🔄 Accepting emergency request:', requestId);
 
       // Guard: a psychologist can only attend one emergency call at a time.
-      const { data: authCheck } = await supabase.auth.getUser();
+      const { data: authCheck } = await getSessionUser();
       const myId = authCheck.user?.id;
       if (myId) {
         const ongoing = await findPsychologistOngoingCall(myId);
@@ -124,7 +125,7 @@ export const usePsychologistEmergency = () => {
       }
 
       // Increment accepted counter for current psychologist
-      const { data: authUser } = await supabase.auth.getUser();
+      const { data: authUser } = await getSessionUser();
       const currentUserId = authUser.user?.id;
       if (currentUserId) {
         await supabase.rpc('increment_emergency_accepted', { p_psychologist_id: currentUserId });
@@ -180,7 +181,7 @@ export const usePsychologistEmergency = () => {
       });
 
       // Increment rejected counter for current psychologist
-      const { data: authUser } = await supabase.auth.getUser();
+      const { data: authUser } = await getSessionUser();
       const currentUserId = authUser.user?.id;
       if (currentUserId) {
         await supabase.rpc('increment_emergency_rejected', { p_psychologist_id: currentUserId });

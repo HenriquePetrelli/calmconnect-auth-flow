@@ -21,6 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 import VoiceMeter from '@/components/sos/VoiceMeter';
 import { ConnectionQuality } from '@/components/sos/ConnectionQuality';
 import { supabase } from '@/integrations/supabase/client';
+import { getSessionUser } from '@/lib/currentUser';
 import { trackSosEvent, SOS_EVENTS } from '@/lib/sosTrace';
 import { FeedbackModal } from '@/components/sos/FeedbackModal';
 import { VideoCallSettingsModal } from '@/components/sos/VideoCallSettingsModal';
@@ -306,7 +307,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   useEffect(() => {
     const getCurrentUserName = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user } } = await getSessionUser();
         if (!user) return;
 
         // Check if user is psychologist
@@ -361,7 +362,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
         const session = await validateWebRTCSession(sessionId);
         
         // Get current user
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        const { data: { user }, error: userError } = await getSessionUser();
         if (userError || !user) {
           throw new SessionValidationError('Usuário não autenticado', 'NOT_AUTHENTICATED');
         }
@@ -472,7 +473,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
       if (appliedPrefsRef.current) return;
 
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user } } = await getSessionUser();
         if (!user) return;
 
         const { data: prefs } = await supabase
@@ -940,7 +941,7 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     endInfoRef.current = endInfo;
 
     // Single termination flow: signal → persist → trace → hardware/WebRTC cleanup.
-    const { data: auth } = await supabase.auth.getUser();
+    const { data: auth } = await getSessionUser();
     await endEmergencySession({
       requestId: emergencyRequestIdRef.current,
       sessionId,

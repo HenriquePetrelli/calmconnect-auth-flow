@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Bell, Calendar, CalendarCheck, User, History, AlertTriangle, Clock, Users, CheckCircle, LogOut } from 'lucide-react';
 import Wordmark from '@/components/Wordmark';
 import { supabase } from '@/integrations/supabase/client';
+import { getSessionUser } from '@/lib/currentUser';
 import { usePsychologistEmergency } from '@/hooks/usePsychologistEmergency';
 import { usePsychologistSchedule } from '@/hooks/usePsychologistSchedule';
 import { usePsychologistPresence } from '@/hooks/usePsychologistPresence';
@@ -73,7 +74,7 @@ const PsychologistDashboard = () => {
 
   const checkUserProfile = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await getSessionUser();
       
       if (!user) {
         navigate('/');

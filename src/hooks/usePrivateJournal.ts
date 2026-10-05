@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getSessionUser } from '@/lib/currentUser';
 import { useToast } from '@/hooks/use-toast';
 import { fromZonedTime } from 'date-fns-tz';
 import { getFriendlyErrorMessage } from '@/utils/errorMessage';
@@ -54,7 +55,7 @@ export const usePrivateJournal = () => {
 
   const createEntry = useCallback(async (texto: string, humor: number) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await getSessionUser();
       if (!user) throw new Error('Usuário não autenticado');
 
       // Check daily limit (2 entries per day) — using the patient's local

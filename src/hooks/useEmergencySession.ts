@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { getSessionUser } from '@/lib/currentUser';
 import { useToast } from '@/hooks/use-toast';
 import { acquireCallLock } from '@/lib/callLock';
 import { findOngoingCallForUser, sessionIdOf } from '@/lib/emergencyCallGuard';
@@ -76,7 +77,7 @@ export const useEmergencySession = ({
     let cancelled = false;
 
     (async () => {
-      const { data: auth } = await supabase.auth.getUser();
+      const { data: auth } = await getSessionUser();
       const userId = auth.user?.id;
       if (!userId || cancelled) return;
 
@@ -174,7 +175,7 @@ export const useEmergencySession = ({
   // 4. Single termination entry point.
   const endSession = useCallback(
     async (info?: EndCallInfo) => {
-      const { data: auth } = await supabase.auth.getUser();
+      const { data: auth } = await getSessionUser();
       await endEmergencySession({
         requestId,
         sessionId,

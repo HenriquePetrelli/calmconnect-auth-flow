@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useSyncExternalStore } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getSessionUser } from '@/lib/currentUser';
 import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 
@@ -77,7 +78,7 @@ const bootstrap = async () => {
   if (bootstrapped) return;
   bootstrapped = true;
 
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await getSessionUser();
   const userId = auth.user?.id ?? null;
   if (!userId) {
     setState({ initialized: true, userId: null, isOnline: false });
@@ -130,7 +131,7 @@ export const usePsychologistPresence = () => {
     async (nextStatus: boolean) => {
       setLoading(true);
       try {
-        const { data: auth } = await supabase.auth.getUser();
+        const { data: auth } = await getSessionUser();
         const userId = auth.user?.id;
         if (!userId) throw new Error('Usuário não autenticado');
 

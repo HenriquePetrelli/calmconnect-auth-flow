@@ -11,6 +11,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Star, Search, ArrowLeft, ShieldCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { getSessionUser } from '@/lib/currentUser';
 import { usePatientStatistics } from '@/hooks/usePatientStatistics';
 import { sosLog } from '@/lib/sosLogger';
 import { SINTOMAS } from '@/data/sintomas';
@@ -80,7 +81,7 @@ export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerNam
     let cancelled = false;
 
     const checkExisting = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await getSessionUser();
       if (!user || cancelled) return;
 
       const { data } = await supabase
@@ -128,7 +129,7 @@ export const FeedbackModal = ({ isOpen, onClose, userType, sessionId, partnerNam
 
     setIsSubmitting(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await getSessionUser();
       if (!user) throw new Error('User not authenticated');
 
       // Resolve the related emergency request (if any) so the feedback stays

@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getSessionUser } from '@/lib/currentUser';
 import { END_REASONS } from '@/lib/emergencyEndReasons';
 import { useToast } from '@/hooks/use-toast';
 import { findPatientOpenRequest } from '@/lib/emergencyCallGuard';
@@ -29,7 +30,7 @@ export const useEmergencySOS = () => {
     try {
       setLoading(true);
       
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await getSessionUser();
       if (!user) {
         const errorMsg = 'Usuário não autenticado. Faça login novamente.';
         toast({
@@ -326,7 +327,7 @@ export const useEmergencySOS = () => {
         setStopPolling(null);
       }
 
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await getSessionUser();
 
       // Keep the request in history: mark it as cancelled instead of deleting it.
       const { error } = await supabase

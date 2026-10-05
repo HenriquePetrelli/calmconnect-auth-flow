@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getSessionUser } from '@/lib/currentUser';
 import { useToast } from '@/hooks/use-toast';
 import { getFunctionErrorMessage } from '@/utils/errorMessage';
 
@@ -43,7 +44,7 @@ export const usePsychologistSchedule = () => {
 
       if (error) throw error;
 
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await getSessionUser();
       const filtered = (data || []).filter((a: any) => a.psychologist_id === user?.id);
       setTodayAppointments(filtered);
     } catch (error: any) {
@@ -86,7 +87,7 @@ export const usePsychologistSchedule = () => {
 
       if (error) throw error;
 
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await getSessionUser();
       const filtered = (data || []).filter((a: any) => a.psychologist_id === user?.id);
       setUpcomingAppointments(filtered);
     } catch (error: any) {

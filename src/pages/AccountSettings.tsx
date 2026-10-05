@@ -8,6 +8,7 @@ import { Save } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { getSessionUser } from '@/lib/currentUser';
 import { useToast } from "@/hooks/use-toast";
 import { getFriendlyErrorMessage } from "@/utils/errorMessage";
 import DeleteAccountCard from "@/components/DeleteAccountCard";
@@ -37,7 +38,7 @@ const AccountSettings = () => {
     try {
       const {
         data: { user },
-      } = await supabase.auth.getUser();
+      } = await getSessionUser();
       if (user) {
         const { data: profile } = await supabase.from("profiles").select("*").eq("user_id", user.id).single();
 

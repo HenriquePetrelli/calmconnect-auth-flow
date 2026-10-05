@@ -12,6 +12,7 @@ import { getConnectionBannerState, isRemoteDropInvoluntary } from "@/lib/callBan
 import { consultationDurationMinutes, consultationEndedMessage } from "@/lib/consultationWindow";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { getSessionUser } from '@/lib/currentUser';
 import { VideoCallSettingsModal } from "@/components/sos/VideoCallSettingsModal";
 import { FeedbackModal } from "@/components/sos/FeedbackModal";
 import { getFriendlyErrorMessage } from "@/utils/errorMessage";
@@ -260,7 +261,7 @@ const ConsultationVideoCall = ({ appointment, onEndCall }: ConsultationVideoCall
       // Fast path: tell the peer right away over the data channel.
       sendCallEndedSignal?.({ endedByType: userType, reason: 'ended_by_participant' });
       if (sessionId) {
-        const user = await supabase.auth.getUser();
+        const user = await getSessionUser();
         await supabase
           .from('webrtc_sessions')
           .update({

@@ -10,3 +10,14 @@ export const getSessionUserId = async (): Promise<string | null> => {
   const { data } = await supabase.auth.getSession();
   return data.session?.user?.id ?? null;
 };
+
+/**
+ * Mesmo formato de `supabase.auth.getUser()`, mas lido da sessão local, sem ida
+ * ao servidor. `getUser()` segura o login do app enquanto espera a resposta, e
+ * as outras buscas da tela ficavam paradas atrás dele. Ficam de fora só os
+ * pontos que precisam confirmar no servidor (excluir conta, validar sessão).
+ */
+export const getSessionUser = async () => {
+  const { data } = await supabase.auth.getSession();
+  return { data: { user: data.session?.user ?? null }, error: null };
+};

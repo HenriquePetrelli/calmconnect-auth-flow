@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getSessionUser } from '@/lib/currentUser';
 import { useToast } from '@/hooks/use-toast';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { getFriendlyErrorMessage } from '@/utils/errorMessage';
@@ -61,7 +62,7 @@ export const useSupportGroups = () => {
       const { data: favoritesData } = await supabase
         .from('group_favorites')
         .select('group_id')
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+        .eq('user_id', (await getSessionUser()).data.user?.id);
 
       const favoriteIds = favoritesData?.map(fav => fav.group_id) || [];
 
@@ -92,7 +93,7 @@ export const useSupportGroups = () => {
 
   const toggleFavorite = async (groupId: string) => {
     try {
-      const user = (await supabase.auth.getUser()).data.user;
+      const user = (await getSessionUser()).data.user;
       if (!user) return;
 
       const group = groups.find(g => g.id === groupId);
@@ -219,7 +220,7 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
         return false;
       }
 
-      const user = (await supabase.auth.getUser()).data.user;
+      const user = (await getSessionUser()).data.user;
       if (!user) throw new Error('Usuário não autenticado');
 
       const { error } = await supabase
@@ -343,7 +344,7 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
         return false;
       }
 
-      const { data: user } = await supabase.auth.getUser();
+      const { data: user } = await getSessionUser();
       if (!user.user) return false;
 
       // Optimistic update - update UI immediately for better UX

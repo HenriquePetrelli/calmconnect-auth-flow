@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getSessionUser } from '@/lib/currentUser';
 
 interface UseParticipantHeartbeatProps {
   sessionId?: string;
@@ -39,7 +40,7 @@ export const useParticipantHeartbeat = ({
 
     const beat = async () => {
       if (!userIdRef.current) {
-        const { data } = await supabase.auth.getUser();
+        const { data } = await getSessionUser();
         userIdRef.current = data.user?.id ?? null;
       }
       const userId = userIdRef.current;

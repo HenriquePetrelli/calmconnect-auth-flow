@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getSessionUser } from '@/lib/currentUser';
 import { useToast } from '@/hooks/use-toast';
 
 export interface PatientSessionSummary {
@@ -23,7 +24,7 @@ export const usePatientSessionHistory = () => {
   const fetchHistory = useCallback(async (patientId: string) => {
     setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await getSessionUser();
       if (!user) return;
 
       const { data, error } = await supabase

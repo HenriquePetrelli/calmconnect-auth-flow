@@ -28,6 +28,7 @@ import { fromZonedTime } from 'date-fns-tz';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { getSessionUser } from '@/lib/currentUser';
 import { useAvailableTimeSlots } from '@/hooks/useAvailableTimeSlots';
 
 interface RescheduleModalProps {
@@ -52,7 +53,7 @@ export const RescheduleModal: React.FC<RescheduleModalProps> = ({
 
   useEffect(() => {
     if (!isOpen) return;
-    supabase.auth.getUser().then(({ data }) => setPsychologistId(data.user?.id ?? ''));
+    getSessionUser().then(({ data }) => setPsychologistId(data.user?.id ?? ''));
   }, [isOpen]);
 
   // Only offer times that fall inside the psychologist's own configured

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getSessionUser } from '@/lib/currentUser';
 import { isRealTermination } from '@/lib/callTermination';
 import { attachCallSignalChannel, type CallSignalChannel, type MediaStateSignal } from '@/lib/callSignals';
 import { trackSosEvent, SOS_EVENTS } from '@/lib/sosTrace';
@@ -403,7 +404,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
         .update({ 
           offer: offer as any,
           answer: null,
-          psychologist_id: userType === 'psychologist' ? (await supabase.auth.getUser()).data.user?.id : undefined
+          psychologist_id: userType === 'psychologist' ? (await getSessionUser()).data.user?.id : undefined
         })
         .eq('id', sessionId);
 
@@ -545,7 +546,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
         .from('webrtc_sessions')
         .update({ 
           answer: answer as any,
-          patient_id: userType === 'patient' ? (await supabase.auth.getUser()).data.user?.id : undefined
+          patient_id: userType === 'patient' ? (await getSessionUser()).data.user?.id : undefined
         })
         .eq('id', sessionId);
 

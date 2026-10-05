@@ -9,6 +9,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import CancelConfirmationModal from "@/components/sos/CancelConfirmationModal";
 import SupportiveMessages from "@/components/sos/SupportiveMessages";
 import { supabase } from "@/integrations/supabase/client";
+import { getSessionUser } from '@/lib/currentUser';
 import { useEmergencySOS } from "@/hooks/useEmergencySOS";
 import { notifySosQueueChanged, subscribeSosQueue } from "@/lib/sosQueueChannel";
 import HomeCrisisAccess from '@/components/HomeCrisisAccess';
@@ -121,7 +122,7 @@ const SOS = () => {
     window.addEventListener('emergencyAccepted', handleEmergencyAccepted as EventListener);
     
     const init = async () => {
-      const { data: auth } = await supabase.auth.getUser();
+      const { data: auth } = await getSessionUser();
       const currentUserId = auth.user?.id;
       if (!currentUserId) {
         navigate('/home');

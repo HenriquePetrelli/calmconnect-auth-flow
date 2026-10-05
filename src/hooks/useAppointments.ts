@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getSessionUser } from '@/lib/currentUser';
 import { useToast } from '@/hooks/use-toast';
 import { getFunctionErrorMessage } from '@/utils/errorMessage';
 
@@ -157,7 +158,7 @@ export const useAppointments = () => {
             specialization
           )
         `)
-        .eq('patient_id', (await supabase.auth.getUser()).data.user?.id)
+        .eq('patient_id', (await getSessionUser()).data.user?.id)
         .order('scheduled_at', { ascending: false })
         .range((page - 1) * limit, page * limit - 1);
       

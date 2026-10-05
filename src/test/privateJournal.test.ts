@@ -24,7 +24,10 @@ const chain = () => {
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    auth: { getUser: () => Promise.resolve({ data: { user: { id: 'u1' } } }) },
+    auth: {
+      getUser: () => Promise.resolve({ data: { user: { id: 'u1' } } }),
+      getSession: () => Promise.resolve({ data: { session: { user: { id: 'u1' } } } }),
+    },
     from: () => chain(),
   },
 }));

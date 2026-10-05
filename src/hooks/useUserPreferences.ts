@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getSessionUser } from '@/lib/currentUser';
 import { useToast } from '@/hooks/use-toast';
 
 export interface UserPreferences {
@@ -25,7 +26,7 @@ export const useUserPreferences = () => {
 
   const loadPreferences = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await getSessionUser();
       if (!user) return;
 
       const { data, error } = await supabase
@@ -55,7 +56,7 @@ export const useUserPreferences = () => {
 
   const savePreferences = async (newPreferences: Partial<UserPreferences>) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await getSessionUser();
       if (!user) {
         throw new Error('User not authenticated');
       }

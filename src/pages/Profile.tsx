@@ -12,6 +12,7 @@ import { PushNotificationToggle } from "@/components/PushNotificationToggle";
 import { Switch } from "@/components/ui/switch";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { getSessionUser } from '@/lib/currentUser';
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useToast } from "@/hooks/use-toast";
 import { useWeeklyGoals } from "@/hooks/useWeeklyGoals";
@@ -31,8 +32,13 @@ const Profile = () => {
   const linkedToCompany = Boolean(companyBenefit) || managedOrganizationIds.length > 0;
   const { toast } = useToast();
   const { getShowGoalModalPreference, setShowGoalModal } = useWeeklyGoals();
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  // Nome e e-mail já estão na sessão: a tela aparece na hora e o nome do
+  // cadastro (profiles) chega em seguida, sem esqueleto de espera.
+  const { user: authUser, signOut } = useAuth();
+  const [user, setUser] = useState<any>(() =>
+    authUser ? { ...authUser, profile: { full_name: authUser.user_metadata?.full_name ?? null } } : null,
+  );
+  const [loading, setLoading] = useState(!authUser);
   const [editSymptomsOpen, setEditSymptomsOpen] = useState(false);
   const [showWeeklyGoalModal, setShowWeeklyGoalModal] = useState(true);
 
@@ -53,17 +59,17 @@ const Profile = () => {
 
   const fetchUserData = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await getSessionUser();
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('*')
+          .select('full_name')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
 
         setUser({
           ...user,
-          profile
+          profile: { full_name: profile?.full_name ?? user.user_metadata?.full_name ?? null },
         });
       }
     } catch (error) {
@@ -75,7 +81,6 @@ const Profile = () => {
 
 
   // Sair: sempre pelo signOut central (garante voltar para a tela de login).
-  const { signOut } = useAuth();
   const handleLogout = () => signOut();
 
   const handleManageSubscription = () => {
