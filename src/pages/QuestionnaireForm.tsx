@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { CalendarPlus, Check, ClipboardList, LifeBuoy } from 'lucide-react';
+import { CalendarPlus, Check, ClipboardList } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -21,6 +21,7 @@ import {
   type Instrument,
   type Screening,
 } from '@/lib/screenings';
+import LifeRingIcon from '@/components/icons/LifeRingIcon';
 
 /** /questionarios/:instrument — responder o GAD-7 ou o PHQ-9 e ver o resultado. */
 const QuestionnaireForm = () => {
@@ -98,7 +99,7 @@ const QuestionnaireForm = () => {
                   </p>
                   <HomeCrisisAccess />
                   <Button className="w-full min-h-11 gap-2" variant="destructive" onClick={() => navigate('/sos')}>
-                    <LifeBuoy className="h-4 w-4" aria-hidden="true" />
+                    <LifeRingIcon className="h-4 w-4" aria-hidden="true" />
                     Abrir o SOS
                   </Button>
                 </section>

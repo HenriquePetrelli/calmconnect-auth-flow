@@ -24,7 +24,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
-import { History, Search, Download, Eye, FileText, User, LifeBuoy, CalendarDays, AlertTriangle } from 'lucide-react';
+import { History, Search, Download, Eye, FileText, User, CalendarDays, AlertTriangle } from 'lucide-react';
 import { canReportConsultationProblem } from '@/lib/consultationProblem';
 import ReportConsultationProblemDialog from '@/components/appointments/ReportConsultationProblemDialog';
 import { usePsychologistSchedule } from '@/hooks/usePsychologistSchedule';
@@ -32,6 +32,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { getSessionUser } from '@/lib/currentUser';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import LifeRingIcon from '@/components/icons/LifeRingIcon';
 
 type ConsultationKind = 'scheduled' | 'emergency';
 
@@ -205,11 +206,11 @@ const ConsultationHistory = () => {
   const getTypeBadge = (kind: ConsultationKind) =>
     kind === 'emergency' ? (
       <Badge variant="outline" className="gap-1 rounded-full border-destructive/30 bg-destructive/10 text-destructive">
-        <LifeBuoy className="h-3 w-3" />
+        <LifeRingIcon className="h-3 w-3" />
         Emergencial
       </Badge>
     ) : (
-      <Badge variant="outline" className="gap-1 rounded-full border-secondary/30 bg-secondary/10 text-secondary">
+      <Badge variant="outline" className="gap-1 rounded-full border-primary/30 bg-primary/10 text-primary">
         <CalendarDays className="h-3 w-3" />
         Agendada
       </Badge>

@@ -43,13 +43,13 @@ export const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = (
       case 'completed':
         return 'bg-success/15 text-success border-success/20';
       case 'scheduled':
-        return 'bg-secondary/15 text-secondary border-secondary/20';
+        return 'bg-secondary/15 text-secondary-foreground border-secondary/20';
       case 'pending':
         return 'bg-warning/15 text-warning border-warning/20';
       case 'declined':
         return 'bg-destructive/15 text-destructive border-destructive/20';
       case 'reschedule_proposed':
-        return 'bg-secondary/15 text-secondary-active border-secondary/20';
+        return 'bg-secondary/15 text-secondary-foreground border-secondary/20';
       case 'cancelled':
         return 'bg-muted text-muted-foreground border-border';
       case 'in_progress':
@@ -202,20 +202,20 @@ export const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = (
           {/* Proposed Reschedule */}
           {appointment.status === 'reschedule_proposed' && appointment.proposed_scheduled_at && (
             <div className="space-y-3 border border-secondary/20 bg-secondary/10 p-4 rounded-lg">
-              <div className="flex items-center gap-2 text-sm font-medium text-secondary-active">
+              <div className="flex items-center gap-2 text-sm font-medium text-secondary-foreground">
                 <Calendar className="h-4 w-4" />
                 Novo horário proposto
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm font-medium">Nova Data</p>
-                  <p className="text-sm text-secondary-active">
+                  <p className="text-sm text-secondary-foreground">
                     {format(new Date(appointment.proposed_scheduled_at), 'PPP', { locale: ptBR })}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm font-medium">Novo Horário</p>
-                  <p className="text-sm text-secondary-active">
+                  <p className="text-sm text-secondary-foreground">
                     {format(new Date(appointment.proposed_scheduled_at), 'HH:mm')}
                   </p>
                 </div>

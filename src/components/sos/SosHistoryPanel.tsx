@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, LifeBuoy } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { EmptyState } from '@/components/EmptyState';
 import { SkeletonList } from '@/components/skeletons/Skeletons';
 import { useSosHistory } from '@/hooks/useSosHistory';
@@ -18,6 +18,7 @@ import {
   sosStatusTone,
   waitSeconds,
 } from '@/lib/sosHistory';
+import LifeRingIcon from '@/components/icons/LifeRingIcon';
 
 interface SosHistoryPanelProps {
   /** When set, only this patient's requests are listed. */
@@ -80,7 +81,7 @@ export const SosHistoryPanel: React.FC<SosHistoryPanelProps> = ({
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-base">
-            <LifeBuoy className="h-4 w-4 text-primary" aria-hidden="true" />
+            <LifeRingIcon className="h-4 w-4 text-primary" aria-hidden="true" />
             {title}
           </CardTitle>
         </CardHeader>
@@ -89,7 +90,7 @@ export const SosHistoryPanel: React.FC<SosHistoryPanelProps> = ({
             <SkeletonList count={4} />
           ) : rows.length === 0 ? (
             <EmptyState
-              icon={LifeBuoy}
+              icon={LifeRingIcon}
               title="Nenhuma solicitação registrada"
               description="As solicitações de atendimento emergencial aparecerão aqui."
             />

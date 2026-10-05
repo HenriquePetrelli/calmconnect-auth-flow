@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { CalendarCheck, ChevronRight, User, CheckCircle, LifeBuoy, Star } from 'lucide-react';
+import { CalendarCheck, ChevronRight, User, CheckCircle, Star } from 'lucide-react';
+import LifeRingIcon from '@/components/icons/LifeRingIcon';
 
 export interface PsychologistData {
   id: string;
@@ -129,7 +130,7 @@ export const PsychologistList: React.FC<PsychologistListProps> = ({
                       </span>
                       {psychologist.sos_count !== undefined && (
                         <span className="flex items-center gap-1">
-                          <LifeBuoy className="h-3 w-3" aria-hidden="true" />
+                          <LifeRingIcon className="h-3 w-3" aria-hidden="true" />
                           {countLabel(psychologist.sos_count, 'SOS atendido', 'SOS atendidos')}
                         </span>
                       )}

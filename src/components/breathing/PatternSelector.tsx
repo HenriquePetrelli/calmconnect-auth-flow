@@ -80,7 +80,7 @@ const PatternSelector = ({ onSelect, currentPattern }: PatternSelectorProps) => 
                       Segurar {pattern.hold}s
                     </span>
                   )}
-                  <span className="px-2 py-1 rounded-full bg-secondary/15 text-secondary font-medium">
+                  <span className="px-2 py-1 rounded-full bg-secondary/15 text-secondary-foreground font-medium">
                     Expirar {pattern.exhale}s
                   </span>
                   {pattern.pause > 0 && (

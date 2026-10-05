@@ -5,7 +5,6 @@ import {
   ClipboardList,
   Flag,
   Leaf,
-  LifeBuoy,
   Music,
   RotateCcw,
   Smile,
@@ -15,6 +14,7 @@ import {
 } from 'lucide-react';
 import { HABIT_VISUALS } from '@/components/habits/habitVisuals';
 import type { FeedIcon } from '@/lib/activityFeed';
+import LifeRingIcon from '@/components/icons/LifeRingIcon';
 
 const PRIMARY = { color: 'hsl(var(--primary))', soft: 'hsl(var(--primary) / 0.1)' };
 
@@ -24,7 +24,7 @@ const ACTIVITY_VISUALS: Record<string, { icon: LucideIcon; color: string; soft: 
   journal: { icon: BookOpen, ...PRIMARY },
   group: { icon: Users, ...PRIMARY },
   appointment: { icon: CalendarCheck, ...PRIMARY },
-  sos: { icon: LifeBuoy, color: 'hsl(var(--destructive))', soft: 'hsl(var(--destructive) / 0.1)' },
+  sos: { icon: LifeRingIcon, color: 'hsl(var(--destructive))', soft: 'hsl(var(--destructive) / 0.1)' },
   mood: { icon: Smile, ...PRIMARY },
   mindful: { icon: Leaf, ...PRIMARY },
   challenge: { icon: Flag, ...PRIMARY },

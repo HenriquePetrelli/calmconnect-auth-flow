@@ -24,7 +24,7 @@ const buttonVariants = cva(
         
         /* Soft variants for better accessibility */
         "primary-soft": "bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 hover:border-primary/30 active:scale-[0.98]",
-        "secondary-soft": "bg-secondary/10 text-secondary border border-secondary/20 hover:bg-secondary/20 hover:border-secondary/30 active:scale-[0.98]",
+        "secondary-soft": "bg-secondary/10 text-secondary-foreground border border-secondary/20 hover:bg-secondary/20 hover:border-secondary/30 active:scale-[0.98]",
         "success-soft": "bg-success/10 text-success border border-success/20 hover:bg-success/20 hover:border-success/30 active:scale-[0.98]",
       },
       size: {

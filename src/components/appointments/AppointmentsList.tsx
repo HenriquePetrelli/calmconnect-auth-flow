@@ -32,7 +32,7 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
       case 'declined':
         return 'bg-destructive/15 text-destructive border-destructive/20';
       case 'reschedule_proposed':
-        return 'bg-secondary/15 text-secondary-active border-secondary/20';
+        return 'bg-secondary/15 text-secondary-foreground border-secondary/20';
       case 'in_progress':
         return 'bg-primary/15 text-primary-active border-primary/20';
       default:

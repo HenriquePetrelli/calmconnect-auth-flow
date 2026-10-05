@@ -90,7 +90,7 @@ const UpcomingConsultations = () => {
     if (minutesUntilAppointment > 0) {
       return {
         badge: `Em ${formatTimeUntil(minutesUntilAppointment)}`,
-        style: 'bg-secondary/15 text-secondary-active border-secondary/20',
+        style: 'bg-secondary/15 text-secondary-foreground border-secondary/20',
       };
     }
     return { badge: 'Encerrada', style: 'bg-muted text-foreground border-border' };
@@ -238,7 +238,7 @@ const UpcomingConsultations = () => {
           <CardHeader className="bg-gradient-to-r from-secondary/5 to-transparent">
             <CardTitle className="flex items-center gap-3">
               <div className="w-10 h-10 bg-secondary/20 rounded-full flex items-center justify-center">
-                <Clock className="text-secondary" size={18} />
+                <Clock className="text-secondary-foreground" size={18} />
               </div>
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-foreground">Próximas Consultas</h3>

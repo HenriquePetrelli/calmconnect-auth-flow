@@ -255,7 +255,7 @@ export const WeeklyScheduleModal: React.FC<WeeklyScheduleModalProps> = ({ open, 
           <div className="py-8 text-center text-sm text-muted-foreground">Carregando...</div>
         ) : activeVacation ? (
           <div className="py-6 text-center space-y-3">
-            <Palmtree className="w-8 h-8 text-secondary mx-auto" />
+            <Palmtree className="w-8 h-8 text-secondary-foreground mx-auto" />
             <p className="text-sm font-medium text-foreground">
               Você está de férias até {formatDayDate(activeVacation.end_date)}
             </p>

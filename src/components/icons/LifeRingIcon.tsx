@@ -1,14 +1,22 @@
-interface LifeRingIconProps {
-  className?: string;
-}
+import { forwardRef } from 'react';
+import type { LucideIcon, LucideProps } from 'lucide-react';
 
 /**
- * Hand-drawn nautical ring-buoy (alternating bands + rope grips), used
- * instead of lucide's abstract LifeBuoy where the SOS icon needs to read
- * clearly as a lifebuoy at a glance.
+ * Boia do SOS (faixas laranja e branca + cordas), a mesma do botão da barra do
+ * paciente. É o ícone do SOS em todo o app, no lugar do LifeBuoy do lucide.
+ * Aceita as mesmas props de um ícone do lucide para servir onde ele é esperado
+ * (menus, listas); as cores são fixas, então `color` é ignorado.
  */
-const LifeRingIcon = ({ className }: LifeRingIconProps) => (
-  <svg viewBox="0 0 48 48" className={className} role="img" aria-hidden="true">
+const LifeRing = forwardRef<SVGSVGElement, LucideProps>(({ className, style, ...rest }, ref) => (
+  <svg
+    ref={ref}
+    viewBox="0 0 48 48"
+    className={className}
+    style={{ ...style, color: undefined }}
+    role="img"
+    aria-hidden={rest['aria-hidden'] ?? true}
+    aria-label={rest['aria-label']}
+  >
     {/* 4 alternating bands forming the ring */}
     <circle
       cx="24" cy="24" r="16"
@@ -40,6 +48,9 @@ const LifeRingIcon = ({ className }: LifeRingIconProps) => (
       <rect x="41.5" y="22.5" width="5" height="3" rx="1.2" />
     </g>
   </svg>
-);
+));
+LifeRing.displayName = 'LifeRingIcon';
+
+const LifeRingIcon = LifeRing as unknown as LucideIcon;
 
 export default LifeRingIcon;

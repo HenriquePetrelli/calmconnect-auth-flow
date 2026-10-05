@@ -3,7 +3,6 @@ import {
   CreditCard,
   History,
   LayoutDashboard,
-  LifeBuoy,
   MessageSquare,
   MessageSquareWarning,
   UserCheck,
@@ -11,6 +10,7 @@ import {
   Users,
   type LucideIcon,
 } from 'lucide-react';
+import LifeRingIcon from '@/components/icons/LifeRingIcon';
 
 export type AdminSection =
   | 'overview'
@@ -44,7 +44,7 @@ export const ADMIN_NAV_GROUPS: { title: string; items: AdminNavItem[] }[] = [
   {
     title: 'Atendimento',
     items: [
-      { value: 'sos', label: 'SOS', icon: LifeBuoy },
+      { value: 'sos', label: 'SOS', icon: LifeRingIcon },
       { value: 'chat', label: 'Chat', icon: MessageSquare },
     ],
   },

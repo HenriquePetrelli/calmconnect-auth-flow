@@ -25,8 +25,8 @@ const categoryIcons: Record<string, typeof Target> = {
 };
 
 const categoryColors: Record<string, string> = {
-  breathing: 'bg-secondary/10 text-secondary border-blue-500/20',
-  journal: 'bg-secondary/10 text-secondary border-secondary/20',
+  breathing: 'bg-secondary/10 text-secondary-foreground border-blue-500/20',
+  journal: 'bg-secondary/10 text-secondary-foreground border-secondary/20',
   sound: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20',
   mood: 'bg-pink-500/10 text-pink-600 border-pink-500/20',
   appointment: 'bg-success/10 text-success border-success/20',
