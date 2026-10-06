@@ -20,7 +20,12 @@ const sidebarItems = [
 ];
 
 
-export const DesktopSidebar: React.FC = () => {
+interface DesktopSidebarProps {
+  /** Abre a confirmação do SOS (a mesma do botão da barra inferior). */
+  onSOSClick?: () => void;
+}
+
+export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({ onSOSClick }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
@@ -73,7 +78,7 @@ export const DesktopSidebar: React.FC = () => {
         <Button
           variant="ghost"
           className="w-full h-16 justify-start gap-3 px-3 text-left rounded-xl bg-sos-secondary text-white transition-colors duration-200 hover:bg-sos-secondary-hover hover:text-white whitespace-normal [&_svg]:!size-8"
-          onClick={() => navigate('/sos')}
+          onClick={() => (onSOSClick ? onSOSClick() : navigate('/sos'))}
         >
           <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-card shadow-sm">
             <LifeRingIcon className="h-8 w-8" />

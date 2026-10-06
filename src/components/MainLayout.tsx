@@ -91,7 +91,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen">
       <div className="min-h-screen">
-        <DesktopSidebar />
+        <DesktopSidebar onSOSClick={() => setShowSOSModal(true)} />
         
         <div className="md:pl-64">
           {/* Mobile/Tablet Header */}
