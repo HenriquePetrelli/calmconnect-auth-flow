@@ -47,7 +47,7 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Na chamada → desligar Wi-Fi de um lado por 20 s ⇒ "Tentando reconectar" e volta sozinha
 - [ ] Na chamada → recarregar a página (F5) ⇒ volta à mesma sala, cronômetro continua
 - [ ] Psicólogo → Encerrar ⇒ Paciente A vê a avaliação obrigatória
-- [ ] Paciente A → SOS de novo no mesmo mês ⇒ aviso de cota usada
+- [ ] Paciente A → SOS de novo no mesmo mês ⇒ tela "Você já usou o SOS deste mês" (sem busca), com CVV, respirar, plano de segurança e agendar consulta
 - [ ] Paciente B → SOS → fechar o app antes do aceite ⇒ pedido some do painel do psicólogo
 - [ ] Paciente B → SOS → Cancelar pedido ⇒ some do painel do psicólogo na hora (sem recarregar)
 - [ ] Paciente B → SOS → esperar 10 min sem aceite ⇒ "Ninguém atendeu" + CVV + "Tentar de novo"

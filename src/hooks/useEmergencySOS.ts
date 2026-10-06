@@ -18,13 +18,21 @@ export interface EmergencyRequest {
   created_at: string;
 }
 
+/** Por que o SOS foi recusado (plano, cota do mês, conta bloqueada). */
+export interface SosDenial {
+  code: 'SOS_NOT_ALLOWED' | 'PATIENT_BLOCKED';
+  message: string;
+  planType: string | null;
+}
+
 export const useEmergencySOS = () => {
   const [currentRequest, setCurrentRequest] = useState<EmergencyRequest | null>(null);
   const [loading, setLoading] = useState(false);
   const [stopPolling, setStopPolling] = useState<(() => void) | null>(null);
   const { toast } = useToast();
 
-  const createEmergencyRequest = async () => {
+  /** `onDenied`: a tela mostra a recusa do jeito dela (sem o aviso flutuante). */
+  const createEmergencyRequest = async (options?: { onDenied?: (denial: SosDenial) => void }) => {
     if (loading) return; // Prevent multiple simultaneous requests
     
     try {
@@ -75,6 +83,14 @@ export const useEmergencySOS = () => {
         }
 
         if (payload?.code) {
+          if (options?.onDenied) {
+            options.onDenied({
+              code: payload.code,
+              message: payload.error || 'Seu plano não permite o uso do SOS neste momento.',
+              planType: payload.plan_type ?? null,
+            });
+            return null;
+          }
           toast({
             title: payload.code === 'PATIENT_BLOCKED' ? 'Conta bloqueada' : 'SOS indisponível',
             description: payload.error || 'Seu plano não permite o uso do SOS neste momento.',
@@ -95,6 +111,10 @@ export const useEmergencySOS = () => {
         const isBusinessDenial = data?.code === 'SOS_NOT_ALLOWED' || data?.code === 'PATIENT_BLOCKED';
 
         if (isBusinessDenial) {
+          if (options?.onDenied) {
+            options.onDenied({ code: data.code, message: errorMsg, planType: data.plan_type ?? null });
+            return null;
+          }
           toast({
             title: data.code === 'PATIENT_BLOCKED' ? 'Conta bloqueada' : 'SOS indisponível',
             description: errorMsg,

@@ -10,7 +10,8 @@ import CancelConfirmationModal from "@/components/sos/CancelConfirmationModal";
 import SupportiveMessages from "@/components/sos/SupportiveMessages";
 import { supabase } from "@/integrations/supabase/client";
 import { getSessionUser } from '@/lib/currentUser';
-import { useEmergencySOS } from "@/hooks/useEmergencySOS";
+import { useEmergencySOS, type SosDenial } from "@/hooks/useEmergencySOS";
+import SosUnavailable from "@/components/sos/SosUnavailable";
 import { notifySosQueueChanged, subscribeSosQueue } from "@/lib/sosQueueChannel";
 
 
@@ -36,6 +37,8 @@ const SOS = () => {
   const [createdAt, setCreatedAt] = useState<string | null>(null);
   const [secondsLeft, setSecondsLeft] = useState<number>(QUEUE_TTL_MS / 1000);
   const [expired, setExpired] = useState(false);
+  // SOS recusado (cota do mês, sem plano, conta bloqueada): tela própria, sem busca.
+  const [denial, setDenial] = useState<SosDenial | null>(null);
   const { cancelRequest, createEmergencyRequest } = useEmergencySOS();
 
   
@@ -160,7 +163,17 @@ const SOS = () => {
       if (!data) {
         try {
           console.log('🆘 No existing request found, creating one from SOS page...');
-          const newId = await createEmergencyRequest();
+          let denied = false;
+          const newId = await createEmergencyRequest({
+            onDenied: (info) => {
+              denied = true;
+              setDenial(info);
+            },
+          });
+          if (denied) {
+            setLoading(false);
+            return;
+          }
           if (newId) {
             const { data: created } = await supabase
               .from('emergency_requests')
@@ -334,6 +347,22 @@ const SOS = () => {
   }
 
   const someoneOnline = availableProfessionals > 0;
+
+  if (denial) {
+    return (
+      <div className="min-h-screen bg-calm flex flex-col">
+        <PageHeader title="Solicitar ajuda" onBack={() => navigate('/home')} />
+        <SosUnavailable
+          denial={denial}
+          onBreathe={() => setBreathingOpen(true)}
+          onSafetyPlan={() => setSafetyPlanOpen(true)}
+          onNavigate={navigate}
+        />
+        <SosBreathingDialog open={breathingOpen} onOpenChange={setBreathingOpen} inQueue={false} />
+        <SosSafetyPlanDialog open={safetyPlanOpen} onOpenChange={setSafetyPlanOpen} inQueue={false} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-calm flex flex-col">

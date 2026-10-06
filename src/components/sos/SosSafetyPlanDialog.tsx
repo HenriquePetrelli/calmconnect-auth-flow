@@ -113,7 +113,16 @@ const PlanPicker = () => {
  * pedido). Apps de crise como Stay Alive, MY3 e o SOS do Wysa colocam o plano
  * e os contatos de confiança a um toque durante a crise.
  */
-const SosSafetyPlanDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) => (
+const SosSafetyPlanDialog = ({
+  open,
+  onOpenChange,
+  inQueue = true,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  /** Há um pedido na fila (o texto avisa que ele continua lá). */
+  inQueue?: boolean;
+}) => (
   <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogContent className="max-h-[85vh] max-w-md overflow-y-auto">
       <DialogHeader>
@@ -122,7 +131,7 @@ const SosSafetyPlanDialog = ({ open, onOpenChange }: { open: boolean; onOpenChan
           Meu plano de segurança
         </DialogTitle>
         <DialogDescription className="text-center">
-          Seu pedido continua na fila enquanto você olha o seu plano.
+          {inQueue ? 'Seu pedido continua na fila enquanto você olha o seu plano.' : 'O que ajuda você e quem chamar.'}
         </DialogDescription>
       </DialogHeader>
       {open && <PlanPicker />}

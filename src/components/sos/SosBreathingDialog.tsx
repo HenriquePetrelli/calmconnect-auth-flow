@@ -10,7 +10,16 @@ import { useBreathingPhase } from '@/hooks/useBreathingPhase';
  * sair da tela de SOS cancela o pedido: quem tocava em "Respiração guiada"
  * enquanto esperava perdia o lugar na fila sem saber.
  */
-const SosBreathingDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) => {
+const SosBreathingDialog = ({
+  open,
+  onOpenChange,
+  inQueue = true,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  /** Há um pedido na fila (mostra o aviso e "Voltar para a espera"). */
+  inQueue?: boolean;
+}) => {
   const pattern = breathingPatterns.emergency ?? breathingPatterns.box;
   const state = useBreathingPhase(pattern, open);
 
@@ -30,14 +39,16 @@ const SosBreathingDialog = ({ open, onOpenChange }: { open: boolean; onOpenChang
           <BreathingOrb state={state} isPlaying={open} />
         </div>
 
-        <p className="flex items-start gap-2 rounded-xl bg-muted/60 p-3 text-xs text-muted-foreground">
-          <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-          Seu pedido continua na fila. Quando um psicólogo aceitar, a chamada abre sozinha.
-        </p>
+        {inQueue && (
+          <p className="flex items-start gap-2 rounded-xl bg-muted/60 p-3 text-xs text-muted-foreground">
+            <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            Seu pedido continua na fila. Quando um psicólogo aceitar, a chamada abre sozinha.
+          </p>
+        )}
 
         <DialogClose asChild>
           <Button variant="outline" className="h-11 w-full">
-            Voltar para a espera
+            {inQueue ? 'Voltar para a espera' : 'Fechar'}
           </Button>
         </DialogClose>
       </DialogContent>
