@@ -95,7 +95,13 @@ Deno.serve(async (req) => {
     const targetPrice = PLAN_PRICES[target];
 
     if (direction === "upgrade") {
-      const prorationDate = Number.isInteger(body?.proration_date) ? Number(body.proration_date) : Math.floor(Date.now() / 1000);
+      // A data da prévia volta do app para cobrar o mesmo valor mostrado. Só
+      // vale se for dos últimos minutos: uma data no fim do período deixaria a
+      // diferença quase zero (Premium quase de graça até a renovação).
+      const nowSeconds = Math.floor(Date.now() / 1000);
+      const sent = Number(body?.proration_date);
+      const prorationDate =
+        Number.isInteger(sent) && sent <= nowSeconds && sent >= nowSeconds - 15 * 60 ? sent : nowSeconds;
       if (action === "preview_change") {
         return json({
           direction,

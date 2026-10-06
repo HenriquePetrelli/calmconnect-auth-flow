@@ -118,7 +118,10 @@ serve(async (req) => {
     let existingSubscriberRow = byUser?.[0] ?? null;
     if (!existingSubscriberRow) {
       const { data: byEmail } = await supabaseClient.from("subscribers").select(subscriberColumns).eq("email", user.email).maybeSingle();
-      existingSubscriberRow = byEmail ?? null;
+      // Linha pelo e-mail só se não for de outra conta (o e-mail pode ter sido
+      // de outra pessoa, que trocou de e-mail): senão a pessoa nova herdaria
+      // o plano e os contadores do mês de outra conta.
+      existingSubscriberRow = byEmail && (!byEmail.user_id || byEmail.user_id === user.id) ? byEmail : null;
     }
     const rowFilter = existingSubscriberRow ? { column: "id", value: existingSubscriberRow.id } : { column: "email", value: user.email };
 

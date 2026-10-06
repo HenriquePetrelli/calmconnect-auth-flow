@@ -38,6 +38,7 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 
 ## 2. SOS (fichas 02 e 03)
 
+- [ ] Paciente → botão de SOS (celular e computador) ⇒ abre a confirmação "Precisa de ajuda agora?"; "Agora não" fecha sem pedir SOS
 - [ ] Paciente A → SOS (sem psicólogo online) ⇒ "Nenhum psicólogo online agora", pedido continua na fila e o CVV 188 em destaque
 - [ ] Psicólogo → Início → ficar Online ⇒ Paciente A vê "1 profissional disponível"
 - [ ] Paciente A → SOS → pedir ajuda ⇒ pedido aparece no painel do psicólogo em até 10 s
@@ -142,6 +143,8 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Cartão `4000 0000 0000 0341` na renovação ⇒ aviso para atualizar o cartão
 - [ ] Paciente → Planos → assinar → fechar o checkout sem pagar ⇒ "Pagamento não concluído", plano não muda
 - [ ] Paciente → Planos → Gerenciar pagamento ⇒ abre o portal do Stripe
+- [ ] Paciente → Planos → Assinar (toque duplo rápido) ⇒ um checkout só; no Stripe, uma assinatura
+- [ ] Conta A com assinatura troca de e-mail → conta B se cadastra com o e-mail antigo ⇒ B fica sem plano (não herda o de A)
 - [ ] Psicólogo e admin → entrar ⇒ nenhum aviso de assinatura
 
 ## 7. Repasses (ficha 09)

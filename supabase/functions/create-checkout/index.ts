@@ -76,6 +76,10 @@ serve(async (req) => {
       success_url: `${origin}/subscription-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/subscription-plans`,
       metadata: { user_id: user.id, plan },
+    }, {
+      // Dois toques seguidos em "Assinar" abrem o mesmo checkout (e não duas
+      // assinaturas pagas).
+      idempotencyKey: `checkout-${user.id}-${plan}-${Math.floor(Date.now() / 60000)}`,
     });
 
     logStep("Checkout session created", { sessionId: session.id });

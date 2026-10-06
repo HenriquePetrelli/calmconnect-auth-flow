@@ -1,7 +1,7 @@
 # 08. Assinaturas e pagamentos (Stripe)
 
 > **Status:** Pronto, com pendência externa (confirmar que o webhook do Stripe está cadastrado).
-> **Última verificação:** 2026-10-02 (revisão de ponta a ponta comparada com Calm, Headspace e Spotify). Em 2026-10-04, o gatilho de proteção de `subscribers` impede o paciente de gravar o próprio plano, e o `check-subscription` deixou de regravar o uso do mês (corrida que devolvia SOS ou consulta já usados).
+> **Última verificação:** 2026-10-06 (varredura: cliente do Stripe nunca de outra conta pelo e-mail, prévia da troca de plano sem data manipulada, checkout sem duplicar). Antes: 2026-10-02 (revisão de ponta a ponta comparada com Calm, Headspace e Spotify). Em 2026-10-04, o gatilho de proteção de `subscribers` impede o paciente de gravar o próprio plano, e o `check-subscription` deixou de regravar o uso do mês (corrida que devolvia SOS ou consulta já usados).
 > **Quem usa:** paciente.
 
 ## Resumo
@@ -28,7 +28,7 @@ O pagamento é pelo **Stripe Checkout**. O estado da assinatura fica em `subscri
 2. **Checkout** em português, com campo de cupom e na mesma aba. A tela de sucesso **espera a confirmação do servidor** antes de dizer "ativada".
 3. **Webhook** (`stripe-webhook`, assinatura conferida com `STRIPE_WEBHOOK_SECRET`): a cada evento, sincroniza o cliente inteiro direto do Stripe, então eventos fora de ordem não deixam estado errado.
 4. **Trocar de plano** (`manage-subscription`, na mesma assinatura):
-   - **subir** cobra só a diferença proporcional na hora, com prévia do valor; se o cartão recusar, nada muda;
+   - **subir** cobra só a diferença proporcional na hora, com prévia do valor; se o cartão recusar, nada muda. A data da prévia só vale se for dos últimos 15 minutos (senão o servidor usa a hora atual), para ninguém mandar uma data no fim do período e pagar quase nada;
    - **descer** vale na renovação, sem cobrança agora, e pode ser desfeito.
 5. **Cancelar** (`cancel-subscription`): o plano continua até o fim do período pago (o ciclo mensal do Stripe: pago em 15/03, vale até 15/04) e não renova, com "Manter minha assinatura" para desfazer. Enquanto isso, Perfil e Planos mostram **"Plano cancelado - Plus disponível até 15/04/2026"**. No fim do período, o plano vira **Plano Grátis**: o Stripe avisa pelo webhook, e a rotina `expire-cancelled-subscriptions` (de hora em hora) encerra o plano mesmo se o aviso não chegar; com o app aberto, a tela troca sozinha na hora certa. A marca fica em `subscribers.cancel_at_period_end`, que "Manter minha assinatura" ou trocar de plano apagam na hora (migration `20261004011237_e99053e5-8384-4774-a0dc-dcb73255c4ab.sql`). **Em até 7 dias da primeira assinatura** (direito de arrependimento), acaba na hora e o valor é devolvido automaticamente.
 6. **Cartão recusado na renovação** (`past_due`): o plano continua enquanto o Stripe tenta de novo, e o app pede para atualizar o cartão (portal do Stripe, `customer-portal`).
@@ -41,7 +41,8 @@ O pagamento é pelo **Stripe Checkout**. O estado da assinatura fica em `subscri
 - **SOS**: marcado como usado quando a chamada começa e devolvido se a chamada cair, o psicólogo sumir ou o atendimento terminar sem a chamada conectar.
 - **Consulta**: reservada no pedido (numa operação só, sem brecha para dois pedidos ao mesmo tempo) e devolvida se for recusada, expirada, cancelada com antecedência, interrompida ou não realizada. Só devolve a cota do mês em que a consulta foi pedida (`release_appointment_quota`).
 - O `check-subscription` atualiza o plano, mas **não regrava** o uso do mês numa linha existente: ele muda só pelo início do SOS, pelo agendamento e pelas devoluções. A virada do mês só zera o uso se ninguém usou no mês novo enquanto a checagem rodava.
-- O cliente do Stripe é ligado ao `user_id`, não ao e-mail; trocar o e-mail não perde a assinatura.
+- O cliente do Stripe é ligado ao `user_id`, não ao e-mail; trocar o e-mail não perde a assinatura. Pelo e-mail, só vale um cliente antigo sem `user_id` que nenhuma outra conta usa: quem se cadastra com o e-mail antigo de outra pessoa não herda a assinatura dela (vale também no webhook e no `check-subscription`).
+- Dois toques seguidos em "Assinar" abrem o mesmo checkout (chave de idempotência por pessoa, plano e minuto).
 - Excluir a conta cancela a assinatura no Stripe **antes** de apagar os dados (ficha 18).
 
 ## Onde está no código

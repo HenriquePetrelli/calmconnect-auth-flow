@@ -42,8 +42,17 @@ const findSubscriberRow = async (customerId: string, userId: string | null, emai
     if (byUser.data?.[0]) return byUser.data[0].id as string;
   }
   if (email) {
-    const byEmail = await supabase.from("subscribers").select("id").eq("email", email).maybeSingle();
-    if (byEmail.data) return byEmail.data.id as string;
+    // Só uma linha sem dono ou do próprio usuário, ainda sem outro cliente do
+    // Stripe: o e-mail pode ter sido de outra pessoa antes.
+    const byEmail = await supabase.from("subscribers").select("id, user_id, stripe_customer_id").eq("email", email).maybeSingle();
+    const row = byEmail.data;
+    if (
+      row &&
+      (!row.user_id || row.user_id === userId) &&
+      (!row.stripe_customer_id || row.stripe_customer_id === customerId)
+    ) {
+      return row.id as string;
+    }
   }
   return null;
 };

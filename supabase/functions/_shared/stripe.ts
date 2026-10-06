@@ -49,7 +49,22 @@ export const findCustomerId = async (
   if (!user.email) return null;
   const byEmail = await stripe.customers.list({ email: user.email, limit: 10 });
   const mine = byEmail.data.find((customer: Stripe.Customer) => customer.metadata?.user_id === user.id);
-  return (mine ?? byEmail.data[0])?.id ?? null;
+  if (mine) return mine.id;
+  // Cliente antigo, sem user_id, com o mesmo e-mail: só se ninguém mais o usa.
+  // Antes valia qualquer cliente com o e-mail, inclusive o de OUTRA conta
+  // (ex.: alguém que trocou de e-mail e outra pessoa se cadastrou com o
+  // antigo), e a pessoa nova passava a usar e cancelar a assinatura alheia.
+  for (const customer of byEmail.data as Stripe.Customer[]) {
+    if (customer.metadata?.user_id) continue;
+    const { data: claimed } = await supabase
+      .from("subscribers")
+      .select("user_id")
+      .eq("stripe_customer_id", customer.id)
+      .neq("user_id", user.id)
+      .limit(1);
+    if (!claimed || claimed.length === 0) return customer.id;
+  }
+  return null;
 };
 
 /** Mantém o e-mail do cliente no Stripe igual ao da conta (recibos e faturas). */
