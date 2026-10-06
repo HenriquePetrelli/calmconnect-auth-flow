@@ -53,7 +53,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   // "Dias seguidos": conta o dia sempre que o paciente abre o app, não só em Meu progresso.
   useEffect(() => {
     if (!user?.id || !isPatient) return;
-    void supabase.rpc('update_patient_streak', { p_patient_id: user.id });
+    // A consulta do Supabase só é enviada quando alguém espera por ela (.then).
+    void supabase.rpc('update_patient_streak', { p_patient_id: user.id }).then(() => undefined);
   }, [user?.id, isPatient]);
 
   const handleSOSConfirm = () => {

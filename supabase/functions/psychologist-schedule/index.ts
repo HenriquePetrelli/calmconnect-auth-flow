@@ -546,9 +546,11 @@ serve(async (req) => {
       // sala, então o psicólogo sozinho conseguia concluir e receber.
       if (status === 'completed') {
         const { data: session } = appointment.video_room_id
-          ? await supabase.from('webrtc_sessions').select('answer, connected_at').eq('id', appointment.video_room_id).maybeSingle()
+          ? await supabase.from('webrtc_sessions').select('connected_at').eq('id', appointment.video_room_id).maybeSingle()
           : { data: null };
-        if (!session?.connected_at && !session?.answer) {
+        // `connected_at` só é gravado quando os dois lados confirmam áudio/vídeo
+        // passando (report_call_media); a resposta da oferta sozinha não basta.
+        if (!session?.connected_at) {
           throw new HttpError('Esta consulta não chegou a acontecer pela chamada do app, então não pode ser concluída.', 409);
         }
       }

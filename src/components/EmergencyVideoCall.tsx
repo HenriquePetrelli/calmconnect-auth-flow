@@ -9,6 +9,9 @@ import { useWebRTC } from '@/hooks/useWebRTC';
 import { useCallPresence } from '@/hooks/useCallPresence';
 import { useRemoteAbsence } from '@/hooks/useRemoteAbsence';
 import { SOS_ABSENCE_THRESHOLD_SECONDS } from '@/lib/remoteAbsence';
+
+/** Quanto tempo sem áudio/vídeo (com os dois na sala) até oferecer saídas. */
+const MEDIA_FAILURE_THRESHOLD_SECONDS = 45;
 import RemoteAbsentPanel from '@/components/calls/RemoteAbsentPanel';
 import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 import { useParticipantHeartbeat } from '@/hooks/useParticipantHeartbeat';
@@ -171,8 +174,8 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
     sendCallEndedSignal,
     remoteMediaState,
     isRemoteMediaStale,
-    sendMediaState
-
+    sendMediaState,
+    notConnectedSince,
   } = useWebRTC({
     sessionId: sessionId || '',
     userType,
@@ -223,6 +226,33 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
   });
   const showAbsencePanel =
     absenceSeconds >= SOS_ABSENCE_THRESHOLD_SECONDS && Date.now() >= absenceSnoozedUntil && !isNetworkOffline;
+
+  // Os dois estão na sala, mas áudio/vídeo não passa (rede bloqueada, queda
+  // que não volta): depois de 45 s oferece saídas em vez de deixar a pessoa
+  // presa em "reconectando". Nenhuma delas gasta o SOS do paciente.
+  const [nowTick, setNowTick] = useState(() => Date.now());
+  const [mediaSnoozedUntil, setMediaSnoozedUntil] = useState(0);
+  useEffect(() => {
+    if (!notConnectedSince) return;
+    const timer = setInterval(() => setNowTick(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [notConnectedSince]);
+  const mediaDownSeconds = notConnectedSince ? Math.max(0, Math.floor((nowTick - notConnectedSince) / 1000)) : 0;
+  const showMediaFailurePanel =
+    sessionValid &&
+    remotePresent &&
+    !showAbsencePanel &&
+    !isNetworkOffline &&
+    !callTerminatedMessage &&
+    !callEndedBy &&
+    !redirected &&
+    mediaDownSeconds >= MEDIA_FAILURE_THRESHOLD_SECONDS &&
+    nowTick >= mediaSnoozedUntil;
+
+  const retryMedia = () => {
+    forceReconnect();
+    setMediaSnoozedUntil(Date.now() + 30 * 1000);
+  };
 
   const remoteDroppedInvoluntarily = isRemoteDropInvoluntary(
     remotePresent,
@@ -1468,6 +1498,35 @@ const EmergencyVideoCall: React.FC<EmergencyVideoCallProps> = ({
               actions={[
                 { label: 'Continuar aguardando', variant: 'default', onClick: () => setAbsenceSnoozedUntil(Date.now() + 3 * 60 * 1000) },
                 { label: 'Encerrar atendimento', icon: PhoneOff, onClick: () => setShowEndConfirm(true) },
+              ]}
+            />
+          )
+        )}
+
+        {showMediaFailurePanel && (
+          userType === 'patient' ? (
+            <RemoteAbsentPanel
+              icon={WifiOff}
+              title="A chamada não está conectando"
+              description="Vocês dois estão na sala, mas o áudio e o vídeo não chegam. Tente de novo ou chame outro psicólogo agora, sem gastar outro SOS. Se precisar de ajuda imediata, ligue para o CVV (188) ou o SAMU (192)."
+              actions={[
+                { label: 'Tentar de novo', icon: RefreshCw, variant: 'default', onClick: retryMedia },
+                { label: 'Chamar outro psicólogo', icon: UserRound, loading: requestingOther, onClick: handleRequestOtherPsychologist },
+                { label: 'Ligar para o CVV (188)', icon: Phone, variant: 'ghost', href: 'tel:188' },
+              ]}
+            />
+          ) : (
+            <RemoteAbsentPanel
+              icon={WifiOff}
+              title="A chamada não está conectando"
+              description="Vocês dois estão na sala, mas o áudio e o vídeo não chegam. Tente de novo; se não resolver, encerre por falha de conexão e o SOS volta para o paciente."
+              actions={[
+                { label: 'Tentar de novo', icon: RefreshCw, variant: 'default', onClick: retryMedia },
+                {
+                  label: 'Encerrar por falha de conexão',
+                  icon: PhoneOff,
+                  onClick: () => handleEndCall({ reason: END_REASONS.CONNECTION_FAILURE, crisisResolved: false, notes: 'A chamada não conectou' }),
+                },
               ]}
             />
           )

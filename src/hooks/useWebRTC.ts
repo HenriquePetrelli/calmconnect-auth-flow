@@ -4,17 +4,25 @@ import { getSessionUser } from '@/lib/currentUser';
 import { isRealTermination } from '@/lib/callTermination';
 import { attachCallSignalChannel, type CallSignalChannel, type MediaStateSignal } from '@/lib/callSignals';
 import { trackSosEvent, SOS_EVENTS } from '@/lib/sosTrace';
+import {
+  answerMatchesOffer,
+  classifyNetworkQuality,
+  isNewRemotePeer,
+  isPendingRenegotiation,
+  patientShouldRequestRenegotiation,
+  reconnectStepFor,
+  sdpTag,
+  type NetworkQuality,
+  type StoredAnswer,
+} from '@/lib/callNegotiation';
 
 import { useToast } from '@/hooks/use-toast';
-import { getWebRTCConnectionManager } from '@/utils/webrtc-manager';
-import { flowLock } from '@/utils/flow-lock';
-import { stateMachineRegistry, type WebRTCState } from '@/utils/state-machine';
-import { loopDetector } from '@/utils/loop-detector';
 import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { useMediaDeviceManager } from '@/hooks/useMediaDeviceManager';
-import { getReconnectDelay, MAX_RECONNECT_ATTEMPTS as RECONNECT_MAX_ATTEMPTS } from '@/lib/reconnect';
+import { getReconnectDelay, MAX_RECONNECT_ATTEMPTS } from '@/lib/reconnect';
 import { getIceServers } from '@/lib/iceServers';
+import type { WebRTCState } from '@/utils/state-machine';
 
 interface WebRTCSession {
   id: string;
@@ -23,10 +31,11 @@ interface WebRTCSession {
   patient_id?: string;
   status: string;
   offer?: RTCSessionDescriptionInit;
-  answer?: RTCSessionDescriptionInit;
+  answer?: StoredAnswer;
   ice_candidates?: RTCIceCandidateInit[];
   ended_by?: string;
   ended_by_type?: string;
+  renegotiate_requested_at?: string | null;
 }
 
 /** Extracts the ICE ufrags declared in an SDP (one per m-line, usually equal). */
@@ -43,12 +52,31 @@ const getUfrags = (sdp?: string): string[] => {
 const candidateKey = (c: RTCIceCandidateInit) =>
   `${(c as any).usernameFragment ?? ''}|${c.sdpMid ?? ''}|${c.sdpMLineIndex ?? ''}|${c.candidate ?? ''}`;
 
+/** Postgres "function does not exist" through PostgREST (migration not applied yet). */
+const isMissingFunction = (error: any) =>
+  error?.code === 'PGRST202' || error?.code === '42883' || /could not find the function/i.test(error?.message ?? '');
+
+/** Video ceiling while the network is healthy, and the relief applied when it is poor. */
+const VIDEO_MAX_BITRATE = 1_500_000;
+const VIDEO_POOR_BITRATE = 350_000;
+
 interface UseWebRTCProps {
   sessionId: string;
   userType: 'psychologist' | 'patient';
   onConnectionStateChange?: (state: RTCPeerConnectionState) => void;
 }
 
+/**
+ * Conexão de vídeo de um atendimento (SOS ou consulta).
+ *
+ * Sinalização pelo banco (`webrtc_sessions`), com o realtime como caminho
+ * rápido e uma leitura a cada 3 s como garantia: se uma escrita ou um evento se
+ * perder, a próxima leitura corrige. O psicólogo oferece, o paciente responde.
+ *
+ * Quedas nunca encerram a chamada. A reconexão primeiro reinicia o caminho de
+ * rede (ICE restart) e, se não voltar, recria a conexão inteira; quando um lado
+ * recarrega a página, o outro percebe pela oferta/resposta nova e recria a sua.
+ */
 export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseWebRTCProps) => {
   const [peerConnection, setPeerConnection] = useState<RTCPeerConnection | null>(null);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
@@ -59,28 +87,56 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
   const [session, setSession] = useState<WebRTCSession | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
   const [webrtcState, setWebrtcState] = useState<WebRTCState>('idle');
-  const [callEndedBy, setCallEndedBy] = useState<{userId: string, userType: string} | null>(null);
+  const [callEndedBy, setCallEndedBy] = useState<{ userId: string; userType: string } | null>(null);
   const [isReconnecting, setIsReconnecting] = useState(false);
   const [reconnectAttempt, setReconnectAttempt] = useState(0);
   const [isNetworkOffline, setIsNetworkOffline] = useState(
     typeof navigator !== 'undefined' ? !navigator.onLine : false
   );
+  /** Since when the media is not flowing (join time until the first connection). */
+  const [notConnectedSince, setNotConnectedSince] = useState<number | null>(() => Date.now());
+  const [networkQuality, setNetworkQuality] = useState<NetworkQuality>('good');
 
-  
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
-  const initializationRef = useRef<boolean>(false);
-  const cleanupRef = useRef<boolean>(false);
-  const reconnectAttemptsRef = useRef<number>(0);
-  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const graceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastAppliedOfferRef = useRef<string | null>(null);
-  const lastAppliedAnswerRef = useRef<string | null>(null);
-  /** Remote candidates already applied to the current ICE generation. */
-  const appliedCandidatesRef = useRef<Set<string>>(new Set());
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
-  const callEndedByRef = useRef<{userId: string, userType: string} | null>(null);
+  const localStreamRef = useRef<MediaStream | null>(null);
+  const remoteStreamRef = useRef<MediaStream | null>(null);
+  const disposedRef = useRef(false);
+  const joinedAtRef = useRef(Date.now());
+  const iceServersRef = useRef<RTCIceServer[] | null>(null);
+
+  // Negotiation bookkeeping (always about the CURRENT peer connection).
+  const lastAppliedOfferRef = useRef<string | null>(null);
+  const lastAppliedAnswerRef = useRef<string | null>(null);
+  const appliedCandidatesRef = useRef<Set<string>>(new Set());
+  const lastRenegotiationHandledRef = useRef(0);
+  /**
+   * Exact text of the offer/answer we wrote to the row. The local description
+   * itself can't be compared: the browser keeps appending candidates to it.
+   */
+  const publishedOfferRef = useRef<string | null>(null);
+  const publishedAnswerRef = useRef<string | null>(null);
+  const opQueueRef = useRef<Promise<unknown>>(Promise.resolve());
+
+  // Outgoing ICE candidates are batched and appended atomically in the database.
+  const candidateBufferRef = useRef<RTCIceCandidateInit[]>([]);
+  const candidateFlushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const legacyIceWriteRef = useRef(false);
+
+  // Reconnection.
+  const reconnectAttemptsRef = useRef(0);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const settleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const graceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wasConnectedRef = useRef(false);
+
+  // Media reporting (the server only counts a call when BOTH sides report).
+  const mediaReportedRef = useRef<boolean | null>(null);
+  const mediaReportTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const callEndedByRef = useRef<{ userId: string; userType: string } | null>(null);
   const signalChannelRef = useRef<CallSignalChannel | null>(null);
   /** Last media state announced by the peer over the data channel (instant). */
   const [remoteMediaState, setRemoteMediaState] = useState<MediaStateSignal | null>(null);
@@ -93,420 +149,629 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
   const isNetworkOfflineRef = useRef(false);
   const isReconnectingRef = useRef(false);
 
-  const attemptReconnectRef = useRef<((pc: RTCPeerConnection) => void) | null>(null);
   const { toast } = useToast();
-  const connectionManager = getWebRTCConnectionManager();
-  const stateMachine = useRef(stateMachineRegistry.getOrCreate(sessionId));
+  const toastRef = useRef(toast);
+  toastRef.current = toast;
+  const onStateChangeRef = useRef(onConnectionStateChange);
+  onStateChangeRef.current = onConnectionStateChange;
   const { preferences, isLoading: prefsLoading } = useUserPreferences();
+  const preferencesRef = useRef(preferences);
+  preferencesRef.current = preferences;
   const mediaManager = useMediaDeviceManager();
-
-  // Reconnection is intentionally generous: an involuntary drop must never be
-  // treated as the end of the call.
-  const MAX_RECONNECT_ATTEMPTS = RECONNECT_MAX_ATTEMPTS;
+  const mediaManagerRef = useRef(mediaManager);
+  mediaManagerRef.current = mediaManager;
 
   useEffect(() => {
     callEndedByRef.current = callEndedBy;
   }, [callEndedBy]);
 
+  /** Runs signalling steps one at a time (rebuild, offer, answer never interleave). */
+  const enqueue = useCallback(<T,>(task: () => Promise<T>): Promise<T | undefined> => {
+    const next = opQueueRef.current.then(async () => {
+      if (disposedRef.current) return undefined;
+      try {
+        return await task();
+      } catch (err) {
+        console.warn('[WebRTC] signalling step failed', err);
+        return undefined;
+      }
+    });
+    opQueueRef.current = next.catch(() => undefined);
+    return next;
+  }, []);
 
   const clearReconnectTimers = useCallback(() => {
-    if (reconnectTimerRef.current) {
-      clearTimeout(reconnectTimerRef.current);
-      reconnectTimerRef.current = null;
-    }
-    if (graceTimerRef.current) {
-      clearTimeout(graceTimerRef.current);
-      graceTimerRef.current = null;
+    for (const ref of [reconnectTimerRef, settleTimerRef, graceTimerRef]) {
+      if (ref.current) {
+        clearTimeout(ref.current);
+        ref.current = null;
+      }
     }
   }, []);
 
+  const isLive = () => !disposedRef.current && !callEndedByRef.current;
+
+  // ---------------------------------------------------------------- media
 
   const initializeMedia = useCallback(async () => {
-    try {
-      console.log('🎥 Initializing media devices with preferences...');
-      
-      const result = await mediaManager.getMediaStream(
-        preferences?.mic_device_id || undefined,
-        preferences?.camera_device_id || undefined
-      );
+    const prefs = preferencesRef.current;
+    const manager = mediaManagerRef.current;
+    const result = await manager.getMediaStream(
+      prefs?.mic_device_id || undefined,
+      prefs?.camera_device_id || undefined
+    );
 
-      if (result.error) {
-        // Show specific error message
-        const errorMessage = result.error.message + (result.error.details ? ` - ${result.error.details}` : '');
-        console.error('❌ Media device error:', result.error);
-
-        // If we have a stream but with warnings (ex.: só áudio), proceed anyway:
-        // it's a notice, not an error that blocks the call.
-        if (result.stream.getTracks().length > 0) {
-          console.log('⚠️ Proceeding with available stream despite warnings');
-          toast({ title: result.error.message, description: result.error.details });
-        } else {
-          setError(errorMessage);
-          toast({
-            title: `Erro de ${result.error.type === 'permission' ? 'Permissão' : 'Dispositivo'}`,
-            description: errorMessage,
-            variant: 'destructive',
-          });
-          throw new Error(errorMessage);
-        }
-      }
-
-      const stream = result.stream;
-      setLocalStream(stream);
-      
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = stream;
-      }
-
-      // Apply preferred audio output device if supported
-      if (preferences?.speaker_device_id) {
-        try {
-          await mediaManager.setAudioOutputDevice(preferences.speaker_device_id);
-        } catch (error) {
-          console.warn('⚠️ Failed to apply audio output preference:', error);
-        }
-      }
-
-      console.log('✅ Media devices initialized successfully');
-      return stream;
-    } catch (err) {
-      console.error('❌ Media initialization failed completely:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido ao inicializar mídia';
-      setError(errorMessage);
-      toast({
-        title: 'Erro de Mídia',
-        description: errorMessage,
-        variant: 'destructive',
-      });
-      throw err;
-    }
-  }, [toast, preferences, mediaManager, localVideoRef]);
-
-  const createPeerConnection = useCallback(async (stream: MediaStream) => {
-    console.log('🔗 Creating managed peer connection...');
-    
-    try {
-      // Use the singleton connection manager
-      // STUN + TURN (quando configurado): sem TURN a chamada não conecta em
-      // redes com NAT restritivo (comum no 4G/5G e em redes corporativas).
-      const iceServers = await getIceServers();
-      const pc = await connectionManager.getConnection(sessionId, {
-        iceServers,
-        iceCandidatePoolSize: 10
-      });
-
-      // Add local stream tracks
-      stream.getTracks().forEach(track => {
-        console.log(`📡 Adding ${track.kind} track to peer connection`);
-        pc.addTrack(track, stream);
-      });
-
-      pcRef.current = pc;
-
-      // In-call control channel: delivers CALL_ENDED instantly to the peer.
-      signalChannelRef.current = attachCallSignalChannel(pc as any, (signal) => {
-        if (signal.type === 'MEDIA_STATE') {
-          // Ignore our own echo and out-of-order updates.
-          if (signal.userType === userType) return;
-          // A fresh update means the remote view is up to date again.
-          remoteMediaReceivedAtRef.current = Date.now();
-          setIsRemoteMediaStale(false);
-          // Last-write-wins by sequence (falls back to timestamp for old peers).
-          setRemoteMediaState((prev) => {
-            if (!prev) return signal;
-            if (signal.seq !== prev.seq) return signal.seq > prev.seq ? signal : prev;
-            return signal.at >= prev.at ? signal : prev;
-          });
-          return;
-        }
-        if (signal.type === 'MEDIA_STATE_REQUEST') {
-          // The peer recovered its channel and wants our current media state.
-          if (signal.from === userType) return;
-          const payload = localMediaStateRef.current;
-          if (payload) signalChannelRef.current?.sendMediaState(payload);
-          return;
-        }
-        if (signal.type !== 'CALL_ENDED') return;
-        setCallEndedBy({ userId: '', userType: signal.endedByType });
-        trackSosEvent({
-          eventType: SOS_EVENTS.CALL_ENDED_SIGNAL_RECEIVED,
-          sessionId,
-          actorType: userType,
-          message: 'CALL_ENDED recebido do peer',
-          metadata: { endedByType: signal.endedByType, reason: signal.reason, at: signal.at },
+    if (result.error) {
+      const errorMessage = result.error.message + (result.error.details ? ` - ${result.error.details}` : '');
+      // Only a warning when part of the media is available (ex.: só áudio).
+      if (result.stream.getTracks().length > 0) {
+        toastRef.current({ title: result.error.message, description: result.error.details });
+      } else {
+        setError(errorMessage);
+        toastRef.current({
+          title: `Erro de ${result.error.type === 'permission' ? 'Permissão' : 'Dispositivo'}`,
+          description: errorMessage,
+          variant: 'destructive',
         });
-      });
-
-
-      // Handle connection state changes
-      pc.onconnectionstatechange = () => {
-        const state = pc.connectionState;
-        const endedBy = callEndedByRef.current;
-        console.log(`🔄 Connection state changed: ${state}`);
-        setConnectionState(state);
-        setIsConnected(state === 'connected');
-        onConnectionStateChange?.(state);
-
-        if (state === 'failed') {
-          // A hard ICE failure is NOT a call termination. Only a signalled,
-          // deliberate end (persisted in the database) ends the call.
-          if (endedBy) {
-            const endedByName = endedBy.userType === 'psychologist' ? 'O psicólogo' : 'O paciente';
-            setError(`${endedByName} finalizou a chamada.`);
-          } else {
-            attemptReconnectRef.current?.(pc);
-          }
-        } else if (state === 'disconnected') {
-          // Transient — give it a short grace period before forcing a reconnect
-          console.log('⏳ Connection transient disconnect, awaiting recovery...');
-          if (!endedBy) {
-            setIsReconnecting(true);
-            if (!graceTimerRef.current) {
-              graceTimerRef.current = setTimeout(() => {
-                graceTimerRef.current = null;
-                if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
-                  attemptReconnectRef.current?.(pc);
-                }
-              }, 3000);
-            }
-          }
-        } else if (state === 'connected') {
-          clearReconnectTimers();
-          reconnectAttemptsRef.current = 0;
-          setReconnectAttempt(0);
-          setIsReconnecting(false);
-          setError(null);
-          setCallEndedBy(null);
-          toast({ title: 'Conectado!' });
-        }
-      };
-
-      // ICE-level watchdog: some browsers keep `connectionState` optimistic
-      // while ICE has already dropped.
-      pc.oniceconnectionstatechange = () => {
-        const iceState = pc.iceConnectionState;
-        console.log(`🧊 ICE connection state: ${iceState}`);
-        if (callEndedByRef.current) return;
-
-        if (iceState === 'failed') {
-          attemptReconnectRef.current?.(pc);
-        } else if (iceState === 'disconnected') {
-          setIsReconnecting(true);
-          if (!graceTimerRef.current) {
-            graceTimerRef.current = setTimeout(() => {
-              graceTimerRef.current = null;
-              if (['disconnected', 'failed'].includes(pc.iceConnectionState)) {
-                attemptReconnectRef.current?.(pc);
-              }
-            }, 3000);
-          }
-        }
-      };
-
-
-
-      // Handle ICE candidates
-      pc.onicecandidate = (event) => {
-        if (event.candidate) {
-          console.log('🧊 New ICE candidate:', event.candidate);
-          handleIceCandidate(event.candidate);
-        }
-      };
-
-      // Handle remote stream
-      pc.ontrack = (event) => {
-        console.log('📺 Received remote stream');
-        const remoteStream = event.streams[0];
-        setRemoteStream(remoteStream);
-        
-        if (remoteVideoRef.current) {
-          remoteVideoRef.current.srcObject = remoteStream;
-        }
-      };
-
-      setPeerConnection(pc);
-      console.log('✅ Managed peer connection created successfully');
-      return pc;
-    } catch (error) {
-      console.error('❌ Failed to create managed peer connection:', error);
-      
-      if (error instanceof Error) {
-        if (error.message.includes('WEBRTC_TOO_MANY_CONNECTIONS')) {
-          setError('Muitas conexões ativas. Recarregue a página e tente novamente.');
-          toast({
-            title: 'Erro de Conexão',
-            description: 'Muitas conexões WebRTC ativas. Recarregue a página.',
-            variant: 'destructive',
-          });
-        } else if (error.message.includes('Cannot create so many PeerConnections')) {
-          setError('Limite de conexões atingido. Aguarde alguns segundos e tente novamente.');
-          toast({
-            title: 'Limite de Conexões',
-            description: 'Muitas conexões simultâneas. Aguarde e tente novamente.',
-            variant: 'destructive',
-          });
-        } else {
-          setError('Erro ao criar conexão WebRTC');
-        }
+        throw new Error(errorMessage);
       }
-      throw error;
     }
-  }, [sessionId, connectionManager, onConnectionStateChange, toast]);
 
-  const handleIceCandidate = async (candidate: RTCIceCandidate) => {
-    try {
-      console.log('📤 Sending ICE candidate to database');
-      
-      // Get current candidates
-      const { data: currentSession, error: fetchError } = await supabase
-        .from('webrtc_sessions')
-        .select('ice_candidates')
-        .eq('id', sessionId)
-        .single();
+    const stream = result.stream;
+    // Hints help the encoder: speech for the voice, motion for a face on camera.
+    stream.getAudioTracks().forEach((t) => { try { (t as any).contentHint = 'speech'; } catch { /* noop */ } });
+    stream.getVideoTracks().forEach((t) => { try { (t as any).contentHint = 'motion'; } catch { /* noop */ } });
+    localStreamRef.current = stream;
+    setLocalStream(stream);
+    if (localVideoRef.current) localVideoRef.current.srcObject = stream;
 
-      if (fetchError) throw fetchError;
-
-      const currentCandidates = currentSession?.ice_candidates || [];
-      const newCandidates = [...currentCandidates, candidate.toJSON() as any];
-
-      const { error: updateError } = await supabase
-        .from('webrtc_sessions')
-        .update({ ice_candidates: newCandidates as any })
-        .eq('id', sessionId);
-
-      if (updateError) throw updateError;
-      
-      console.log('✅ ICE candidate sent successfully');
-    } catch (error) {
-      console.error('❌ Error sending ICE candidate:', error);
+    if (prefs?.speaker_device_id) {
+      try {
+        await manager.setAudioOutputDevice(prefs.speaker_device_id);
+      } catch (err) {
+        console.warn('⚠️ Failed to apply audio output preference:', err);
+      }
     }
-  };
+    return stream;
+  }, []);
 
-  const createOffer = async (pc: RTCPeerConnection, iceRestart = false) => {
-    try {
-      console.log('📝 Creating offer...', { iceRestart });
-      const offer = await pc.createOffer({
-        offerToReceiveAudio: true,
-        offerToReceiveVideo: true,
-        iceRestart
+  /** Voice first, and a sane video ceiling (the browser adapts below it). */
+  const tuneSenders = useCallback(async (pc: RTCPeerConnection, poor = false) => {
+    for (const sender of pc.getSenders()) {
+      if (!sender.track || typeof sender.getParameters !== 'function') continue;
+      try {
+        const params = sender.getParameters();
+        if (!params.encodings || params.encodings.length === 0) params.encodings = [{}];
+        if (sender.track.kind === 'audio') {
+          params.encodings[0].priority = 'high';
+          (params.encodings[0] as any).networkPriority = 'high';
+        } else {
+          params.encodings[0].maxBitrate = poor ? VIDEO_POOR_BITRATE : VIDEO_MAX_BITRATE;
+          params.encodings[0].scaleResolutionDownBy = poor ? 2 : 1;
+          params.encodings[0].priority = 'medium';
+          (params as any).degradationPreference = 'balanced';
+        }
+        await sender.setParameters(params);
+      } catch {
+        // Some browsers reject parts of this; the call works without it.
+      }
+    }
+  }, []);
+
+  // ------------------------------------------------------ database writes
+
+  const flushCandidates = useCallback(async () => {
+    candidateFlushTimerRef.current = null;
+    const batch = candidateBufferRef.current.splice(0, 50);
+    if (batch.length === 0 || disposedRef.current) return;
+
+    if (!legacyIceWriteRef.current) {
+      const { error: rpcError } = await supabase.rpc('append_webrtc_ice_candidates' as any, {
+        p_session_id: sessionId,
+        p_candidates: batch as any,
       });
-      
-      await pc.setLocalDescription(offer);
-      
-      // A new offer starts a new ICE generation: drop the previous answer and
-      // forget the candidates we already applied, otherwise the peer could
-      // re-apply a stale answer and the reconnection never converges.
-      lastAppliedAnswerRef.current = null;
-      appliedCandidatesRef.current = new Set();
-
-      const { error } = await supabase
-        .from('webrtc_sessions')
-        .update({ 
-          offer: offer as any,
-          answer: null,
-          psychologist_id: userType === 'psychologist' ? (await getSessionUser()).data.user?.id : undefined
-        })
-        .eq('id', sessionId);
-
-      if (error) throw error;
-      console.log('✅ Offer created and sent');
-
-    } catch (error) {
-      console.error('❌ Error creating offer:', error);
-      setError('Erro ao criar oferta de conexão');
+      if (!rpcError) {
+        if (candidateBufferRef.current.length > 0) void flushCandidates();
+        return;
+      }
+      if (isMissingFunction(rpcError)) {
+        legacyIceWriteRef.current = true;
+      } else {
+        // Transient failure: put them back and retry shortly.
+        candidateBufferRef.current.unshift(...batch);
+        candidateFlushTimerRef.current = setTimeout(() => void flushCandidates(), 1000);
+        return;
+      }
     }
-  };
 
-  // Automatic reconnection with exponential backoff + ICE restart
-  const attemptReconnect = (pc: RTCPeerConnection) => {
-    if (cleanupRef.current || callEndedByRef.current) return;
-    if (reconnectTimerRef.current) return; // already scheduled
-    if (pc.connectionState === 'closed') return;
+    // Legacy path (before the migration): read, append and write back.
+    const { data } = await supabase.from('webrtc_sessions').select('ice_candidates').eq('id', sessionId).maybeSingle();
+    const current = ((data as any)?.ice_candidates ?? []) as RTCIceCandidateInit[];
+    await supabase
+      .from('webrtc_sessions')
+      .update({ ice_candidates: [...current, ...batch] as any })
+      .eq('id', sessionId);
+    if (candidateBufferRef.current.length > 0) void flushCandidates();
+  }, [sessionId]);
 
-    if (reconnectAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) {
-      // Still NOT an ended call — the room stays open and the user can retry.
+  const queueLocalCandidate = useCallback((candidate: RTCIceCandidate) => {
+    candidateBufferRef.current.push(candidate.toJSON());
+    if (!candidateFlushTimerRef.current) {
+      candidateFlushTimerRef.current = setTimeout(() => void flushCandidates(), 120);
+    }
+  }, [flushCandidates]);
+
+  /** Tells the server whether audio/video is flowing on this side. */
+  const mediaQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const mediaWantedRef = useRef<boolean | null>(null);
+  const reportMedia = useCallback((connected: boolean) => {
+    if (mediaReportTimerRef.current) {
+      clearTimeout(mediaReportTimerRef.current);
+      mediaReportTimerRef.current = null;
+    }
+    if (mediaWantedRef.current === connected) return;
+    mediaWantedRef.current = connected;
+    // One report at a time, in order: "no media" sent at join can never land
+    // after the "connected" that follows it.
+    mediaQueueRef.current = mediaQueueRef.current.then(async () => {
+      for (let attempt = 0; attempt < 6; attempt++) {
+        if (disposedRef.current || mediaWantedRef.current !== connected) return;
+        const { error: rpcError } = await supabase.rpc('report_call_media' as any, {
+          p_session_id: sessionId,
+          p_connected: connected,
+        });
+        if (!rpcError || isMissingFunction(rpcError)) {
+          mediaReportedRef.current = connected;
+          return;
+        }
+        await new Promise((resolve) => setTimeout(resolve, Math.min(1000 * 2 ** attempt, 8000)));
+      }
+    });
+  }, [sessionId]);
+
+  // ------------------------------------------------------- peer connection
+
+  const handleConnectionState = useCallback((pc: RTCPeerConnection) => {
+    if (pc !== pcRef.current || disposedRef.current) return;
+    const state = pc.connectionState;
+    setConnectionState(state);
+    setIsConnected(state === 'connected');
+    onStateChangeRef.current?.(state);
+
+    if (state === 'connected') {
+      clearReconnectTimers();
+      const recovered = wasConnectedRef.current && (reconnectAttemptsRef.current > 0 || isReconnectingRef.current);
+      wasConnectedRef.current = true;
+      reconnectAttemptsRef.current = 0;
+      setReconnectAttempt(0);
       setIsReconnecting(false);
-      setError('Não foi possível restabelecer a conexão automaticamente. A chamada continua aberta — verifique sua internet e toque em "Tentar reconectar".');
+      setError(null);
+      setNotConnectedSince(null);
+      reportMedia(true);
+      void tuneSenders(pc);
+      if (recovered) toastRef.current({ title: 'Conexão restabelecida' });
       return;
     }
+
+    // A connection closed without anyone ending the call is a failure too.
+    if (state === 'disconnected' || state === 'failed' || state === 'closed') {
+      if (callEndedByRef.current) return;
+      setNotConnectedSince((prev) => prev ?? Date.now());
+      setIsReconnecting(true);
+      // Short drops recover by themselves; only report "no media" if it lasts.
+      if (!mediaReportTimerRef.current) {
+        mediaReportTimerRef.current = setTimeout(() => {
+          mediaReportTimerRef.current = null;
+          if (pcRef.current?.connectionState !== 'connected') reportMedia(false);
+        }, 4000);
+      }
+      if (state === 'failed' || state === 'closed') {
+        attemptReconnectRef.current();
+      } else if (!graceTimerRef.current) {
+        graceTimerRef.current = setTimeout(() => {
+          graceTimerRef.current = null;
+          const current = pcRef.current;
+          if (current && ['disconnected', 'failed'].includes(current.connectionState)) {
+            attemptReconnectRef.current();
+          }
+        }, 3000);
+      }
+    }
+  }, [clearReconnectTimers, reportMedia, tuneSenders]);
+
+  const attachRemoteStream = useCallback((stream: MediaStream) => {
+    remoteStreamRef.current = stream;
+    setRemoteStream(stream);
+    const el = remoteVideoRef.current;
+    if (el && el.srcObject !== stream) {
+      el.srcObject = stream;
+      el.play?.().catch(() => undefined);
+    }
+  }, []);
+
+  /** Creates a peer connection carrying our local tracks and the control channel. */
+  const buildPeerConnection = useCallback(async (stream: MediaStream) => {
+    if (!iceServersRef.current) iceServersRef.current = await getIceServers();
+    const pc = new RTCPeerConnection({
+      iceServers: iceServersRef.current,
+      iceCandidatePoolSize: 4,
+      bundlePolicy: 'max-bundle',
+      rtcpMuxPolicy: 'require',
+    });
+
+    stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+
+    // In-call control channel: CALL_ENDED and camera/mic state, instantly.
+    signalChannelRef.current?.close();
+    signalChannelRef.current = attachCallSignalChannel(pc as any, (signal) => {
+      if (pc !== pcRef.current) return;
+      if (signal.type === 'MEDIA_STATE') {
+        if (signal.userType === userType) return;
+        remoteMediaReceivedAtRef.current = Date.now();
+        setIsRemoteMediaStale(false);
+        setRemoteMediaState((prev) => {
+          if (!prev) return signal;
+          if (signal.seq !== prev.seq) return signal.seq > prev.seq ? signal : prev;
+          return signal.at >= prev.at ? signal : prev;
+        });
+        return;
+      }
+      if (signal.type === 'MEDIA_STATE_REQUEST') {
+        if (signal.from === userType) return;
+        const payload = localMediaStateRef.current;
+        if (payload) signalChannelRef.current?.sendMediaState(payload);
+        return;
+      }
+      if (signal.type !== 'CALL_ENDED') return;
+      setCallEndedBy({ userId: '', userType: signal.endedByType });
+      trackSosEvent({
+        eventType: SOS_EVENTS.CALL_ENDED_SIGNAL_RECEIVED,
+        sessionId,
+        actorType: userType,
+        message: 'CALL_ENDED recebido do peer',
+        metadata: { endedByType: signal.endedByType, reason: signal.reason, at: signal.at },
+      });
+    });
+
+    pc.onconnectionstatechange = () => handleConnectionState(pc);
+    // Some browsers keep `connectionState` optimistic while ICE already dropped.
+    pc.oniceconnectionstatechange = () => {
+      if (pc !== pcRef.current || !isLive()) return;
+      if (pc.iceConnectionState === 'failed') {
+        setIsReconnecting(true);
+        attemptReconnectRef.current();
+      } else if (pc.iceConnectionState === 'disconnected' && !graceTimerRef.current) {
+        setIsReconnecting(true);
+        graceTimerRef.current = setTimeout(() => {
+          graceTimerRef.current = null;
+          if (pcRef.current === pc && ['disconnected', 'failed'].includes(pc.iceConnectionState)) {
+            attemptReconnectRef.current();
+          }
+        }, 3000);
+      }
+    };
+    pc.onicecandidate = (event) => {
+      if (pc !== pcRef.current || !event.candidate) return;
+      queueLocalCandidate(event.candidate);
+    };
+    pc.ontrack = (event) => {
+      if (pc !== pcRef.current) return;
+      const incoming = event.streams[0] ?? new MediaStream([event.track]);
+      attachRemoteStream(incoming);
+    };
+
+    await tuneSenders(pc);
+    return pc;
+  }, [sessionId, userType, handleConnectionState, queueLocalCandidate, attachRemoteStream, tuneSenders]);
+
+  /** Swaps in a brand-new peer connection (keeps camera/mic running). */
+  const installPeerConnection = useCallback((pc: RTCPeerConnection) => {
+    const old = pcRef.current;
+    pcRef.current = pc;
+    lastAppliedOfferRef.current = null;
+    lastAppliedAnswerRef.current = null;
+    publishedOfferRef.current = null;
+    publishedAnswerRef.current = null;
+    appliedCandidatesRef.current = new Set();
+    candidateBufferRef.current = [];
+    if (old && old !== pc) {
+      old.onconnectionstatechange = null;
+      old.oniceconnectionstatechange = null;
+      old.onicecandidate = null;
+      old.ontrack = null;
+      try {
+        old.close();
+      } catch {
+        /* noop */
+      }
+    }
+    setPeerConnection(pc);
+    setConnectionState(pc.connectionState);
+    setIsConnected(pc.connectionState === 'connected');
+  }, []);
+
+  const rebuildPeerConnection = useCallback(async (reason: string) => {
+    const stream = localStreamRef.current;
+    if (!stream || disposedRef.current) return null;
+    console.log(`🔁 Recreating the peer connection (${reason})`);
+    trackSosEvent({
+      eventType: SOS_EVENTS.CALL_ENDED_SIGNAL_SENT,
+      sessionId,
+      actorType: userType,
+      message: `Conexão recriada: ${reason}`,
+    });
+    const pc = await buildPeerConnection(stream);
+    if (disposedRef.current) {
+      pc.close();
+      return null;
+    }
+    installPeerConnection(pc);
+    return pc;
+  }, [sessionId, userType, buildPeerConnection, installPeerConnection]);
+
+  // ------------------------------------------------------- offer / answer
+
+  const writeOffer = useCallback(async (sdp: string) => {
+    const { data: auth } = await getSessionUser();
+    const { error: writeError } = await supabase
+      .from('webrtc_sessions')
+      .update({ offer: { type: 'offer', sdp } as any, answer: null, psychologist_id: auth.user?.id } as any)
+      .eq('id', sessionId);
+    if (writeError) throw writeError;
+  }, [sessionId]);
+
+  const publishOffer = useCallback(async (pc: RTCPeerConnection, iceRestart: boolean) => {
+    if (pc !== pcRef.current || pc.signalingState === 'closed') return;
+    // A pending offer that never got an answer is replaced by a fresh one.
+    if (pc.signalingState === 'have-local-offer') {
+      await pc.setLocalDescription({ type: 'rollback' } as RTCSessionDescriptionInit).catch(() => undefined);
+    }
+    const offer = await pc.createOffer({ iceRestart });
+    await pc.setLocalDescription(offer);
+    lastAppliedAnswerRef.current = null;
+    appliedCandidatesRef.current = new Set();
+    publishedOfferRef.current = offer.sdp ?? null;
+    await writeOffer(offer.sdp ?? '');
+  }, [writeOffer]);
+
+  const publishAnswer = useCallback(async (answerSdp: string, offerSdp: string) => {
+    publishedAnswerRef.current = answerSdp;
+    const { data: auth } = await getSessionUser();
+    const { error: writeError } = await supabase
+      .from('webrtc_sessions')
+      .update({
+        answer: { type: 'answer', sdp: answerSdp, forOffer: sdpTag(offerSdp) } as any,
+        patient_id: auth.user?.id,
+      } as any)
+      .eq('id', sessionId);
+    if (writeError) throw writeError;
+  }, [sessionId]);
+
+  const applyCandidates = useCallback(async (pc: RTCPeerConnection, candidates?: RTCIceCandidateInit[]) => {
+    if (!Array.isArray(candidates) || pc !== pcRef.current) return;
+    if (pc.signalingState === 'closed' || !pc.remoteDescription?.type) return;
+    // Only candidates of the CURRENT remote ICE credentials: the row keeps
+    // candidates of previous generations, and adding them poisons the checks.
+    const remoteUfrags = getUfrags(pc.remoteDescription.sdp);
+    for (const candidateData of candidates) {
+      if (!candidateData || typeof candidateData !== 'object') continue;
+      const ufrag = (candidateData as any).usernameFragment;
+      if (ufrag && remoteUfrags.length > 0 && !remoteUfrags.includes(ufrag)) continue;
+      const key = candidateKey(candidateData);
+      if (appliedCandidatesRef.current.has(key)) continue;
+      appliedCandidatesRef.current.add(key);
+      try {
+        await pc.addIceCandidate(new RTCIceCandidate(candidateData));
+      } catch (err) {
+        console.warn('⚠️ Error adding ICE candidate:', err);
+      }
+    }
+  }, []);
+
+  /**
+   * Brings this side in line with the row. Idempotent: called on every
+   * realtime event and on every poll, so a lost write or event heals itself.
+   */
+  const reconcile = useCallback(async (row: WebRTCSession) => {
+    let pc = pcRef.current;
+    if (!pc || !isLive()) return;
+
+    if (userType === 'patient') {
+      if (pc.signalingState === 'closed') {
+        // Our side died: a fresh connection, and ask the psychologist for a new offer.
+        pc = (await rebuildPeerConnection('conexão local fechada')) ?? pc;
+        await supabase
+          .from('webrtc_sessions')
+          .update({ renegotiate_requested_at: new Date().toISOString() } as any)
+          .eq('id', sessionId);
+        return;
+      }
+      const offer = row.offer;
+      if (offer?.sdp) {
+        if (offer.sdp !== lastAppliedOfferRef.current) {
+          // The psychologist is on a new connection (reload or rebuild).
+          if (pc.remoteDescription && isNewRemotePeer(pc.remoteDescription.sdp, offer.sdp)) {
+            pc = (await rebuildPeerConnection('o psicólogo reconectou')) ?? pc;
+          }
+          if (pc.signalingState === 'have-local-offer') {
+            await pc.setLocalDescription({ type: 'rollback' } as RTCSessionDescriptionInit).catch(() => undefined);
+          }
+          await pc.setRemoteDescription({ type: 'offer', sdp: offer.sdp });
+          lastAppliedOfferRef.current = offer.sdp;
+          appliedCandidatesRef.current = new Set();
+          const answer = await pc.createAnswer();
+          await pc.setLocalDescription(answer);
+          await publishAnswer(answer.sdp ?? '', offer.sdp);
+        } else if (
+          pc.signalingState === 'stable' &&
+          publishedAnswerRef.current &&
+          row.answer?.sdp !== publishedAnswerRef.current
+        ) {
+          // Our answer never made it (or was wiped by a write race): publish again.
+          await publishAnswer(publishedAnswerRef.current, offer.sdp);
+        }
+      }
+    } else {
+      // Psychologist: make sure there is a live offer of ours in the row.
+      if (!pc.localDescription || pc.signalingState === 'stable' && !pc.remoteDescription) {
+        await publishOffer(pc, false);
+        return;
+      }
+
+      if (isPendingRenegotiation(row.renegotiate_requested_at, lastRenegotiationHandledRef.current, joinedAtRef.current)) {
+        lastRenegotiationHandledRef.current = new Date(row.renegotiate_requested_at!).getTime();
+        // Always honoured: the patient may see a dead call while our side still
+        // looks "connected" (one-way failure).
+        const fresh = await rebuildPeerConnection('o paciente pediu uma conexão nova');
+        if (fresh) await publishOffer(fresh, false);
+        return;
+      }
+
+      const answer = row.answer;
+      if (pc.signalingState === 'have-local-offer') {
+        if (publishedOfferRef.current && row.offer?.sdp !== publishedOfferRef.current) {
+          // Our offer write was lost or overwritten: publish it again.
+          await writeOffer(publishedOfferRef.current);
+          return;
+        }
+        if (answer?.sdp && answer.sdp !== lastAppliedAnswerRef.current && answerMatchesOffer(answer, pc.localDescription?.sdp)) {
+          await pc.setRemoteDescription({ type: 'answer', sdp: answer.sdp });
+          lastAppliedAnswerRef.current = answer.sdp;
+          appliedCandidatesRef.current = new Set();
+        }
+      } else if (
+        pc.signalingState === 'stable' &&
+        answer?.sdp &&
+        answer.sdp !== lastAppliedAnswerRef.current &&
+        isNewRemotePeer(pc.remoteDescription?.sdp, answer.sdp)
+      ) {
+        // The patient came back on a new connection: start over with a fresh one.
+        const fresh = await rebuildPeerConnection('o paciente reconectou');
+        if (fresh) await publishOffer(fresh, false);
+        return;
+      }
+    }
+
+    await applyCandidates(pcRef.current!, row.ice_candidates);
+  }, [userType, sessionId, rebuildPeerConnection, publishAnswer, publishOffer, writeOffer, applyCandidates]);
+
+  // ------------------------------------------------------------ reconnect
+
+  const attemptReconnect = useCallback(() => {
+    if (!isLive()) return;
+    if (reconnectTimerRef.current || settleTimerRef.current) return; // already in progress
+    const pc = pcRef.current;
+    if (!pc || pc.connectionState === 'connected') return;
 
     const attempt = reconnectAttemptsRef.current + 1;
     reconnectAttemptsRef.current = attempt;
     setReconnectAttempt(attempt);
     setIsReconnecting(true);
-    setError(null);
-
-    const delay = getReconnectDelay(attempt);
-    console.log(`🔁 Scheduling reconnect attempt ${attempt} in ${delay}ms`);
+    if (attempt > MAX_RECONNECT_ATTEMPTS) {
+      // Never gives up: keeps trying at the slowest pace, and the screen offers
+      // the alternatives (try again, call another psychologist, end with refund).
+      setError(null);
+    }
 
     reconnectTimerRef.current = setTimeout(async () => {
       reconnectTimerRef.current = null;
-      if (cleanupRef.current || callEndedByRef.current) return;
-      if (pc.connectionState === 'connected' || pc.connectionState === 'closed') return;
+      if (!isLive()) return;
+      const current = pcRef.current;
+      if (!current || current.connectionState === 'connected') return;
 
-      // No point burning attempts while the device has no network at all.
+      // No point in burning attempts while the device has no network at all.
       if (typeof navigator !== 'undefined' && !navigator.onLine) {
         reconnectAttemptsRef.current = Math.max(0, reconnectAttemptsRef.current - 1);
-        setTimeout(() => attemptReconnectRef.current?.(pc), 2000);
+        settleTimerRef.current = setTimeout(() => {
+          settleTimerRef.current = null;
+          attemptReconnectRef.current();
+        }, 2000);
         return;
       }
 
-      try {
-        pc.restartIce?.();
-        // The offerer (psychologist) renegotiates; the answerer waits for the new offer
-        if (userType === 'psychologist') {
-          await createOffer(pc, true);
-        }
-      } catch (e) {
-        console.warn('Reconnect attempt failed:', e);
+      if (userType === 'psychologist') {
+        await enqueue(async () => {
+          const live = pcRef.current;
+          if (!live || live.connectionState === 'connected') return;
+          if (reconnectStepFor(attempt) === 'ice-restart' && live.signalingState !== 'closed' && live.remoteDescription) {
+            live.restartIce?.();
+            await publishOffer(live, true);
+          } else {
+            const fresh = await rebuildPeerConnection(`reconexão (tentativa ${attempt})`);
+            if (fresh) await publishOffer(fresh, false);
+          }
+        });
+      } else if (current.signalingState === 'closed') {
+        await enqueue(async () => {
+          await rebuildPeerConnection('conexão local fechada');
+          await supabase
+            .from('webrtc_sessions')
+            .update({ renegotiate_requested_at: new Date().toISOString() } as any)
+            .eq('id', sessionId);
+        });
+      } else if (patientShouldRequestRenegotiation(attempt)) {
+        await supabase
+          .from('webrtc_sessions')
+          .update({ renegotiate_requested_at: new Date().toISOString() } as any)
+          .eq('id', sessionId);
       }
 
-      // Re-evaluate after giving the attempt time to settle
-      setTimeout(() => {
-        if (cleanupRef.current || callEndedByRef.current) return;
-        if (pc.connectionState !== 'connected' && pc.connectionState !== 'closed') {
-          attemptReconnect(pc);
-        }
-      }, 5000);
-    }, delay);
-  };
+      // Give the attempt time to settle before trying the next step.
+      settleTimerRef.current = setTimeout(() => {
+        settleTimerRef.current = null;
+        const live = pcRef.current;
+        if (isLive() && live && live.connectionState !== 'connected') attemptReconnectRef.current();
+      }, 6000);
+    }, getReconnectDelay(Math.min(attempt, 4)));
+  }, [userType, sessionId, enqueue, publishOffer, rebuildPeerConnection]);
 
+  const attemptReconnectRef = useRef(attemptReconnect);
   attemptReconnectRef.current = attemptReconnect;
 
-  /** Manual retry used by the UI after automatic attempts are exhausted. */
+  /** Manual retry ("Tentar de novo"): skips straight to a fresh connection. */
   const forceReconnect = useCallback(() => {
-    const pc = pcRef.current;
-    if (!pc || cleanupRef.current || callEndedByRef.current) return;
+    if (!isLive()) return;
     clearReconnectTimers();
-    reconnectAttemptsRef.current = 0;
-    setReconnectAttempt(0);
+    reconnectAttemptsRef.current = 2; // next step = full rebuild
+    setReconnectAttempt(2);
     setError(null);
-    attemptReconnectRef.current?.(pc);
-  }, [clearReconnectTimers]);
+    setIsReconnecting(true);
+    if (userType === 'psychologist') {
+      void enqueue(async () => {
+        const fresh = await rebuildPeerConnection('pedido de quem está na chamada');
+        if (fresh) await publishOffer(fresh, false);
+      });
+    } else {
+      // Supabase queries only run when awaited/then'd.
+      void (async () => {
+        await supabase
+          .from('webrtc_sessions')
+          .update({ renegotiate_requested_at: new Date().toISOString() } as any)
+          .eq('id', sessionId);
+      })();
+    }
+    settleTimerRef.current = setTimeout(() => {
+      settleTimerRef.current = null;
+      if (pcRef.current?.connectionState !== 'connected') attemptReconnectRef.current();
+    }, 6000);
+  }, [userType, sessionId, enqueue, clearReconnectTimers, rebuildPeerConnection, publishOffer]);
 
-  // Detect the device going offline/online. Losing the network is an
-  // involuntary drop: keep the call alive and resume as soon as we are back.
+  // Network lost/back. Losing the network is an involuntary drop: the call
+  // stays open and resumes as soon as we are back.
   useEffect(() => {
     const handleOffline = () => {
-      console.log('🌐 Device went offline');
       setIsNetworkOffline(true);
-      if (!callEndedByRef.current && !cleanupRef.current) {
-        setIsReconnecting(true);
-      }
+      if (isLive()) setIsReconnecting(true);
     };
-
     const handleOnline = () => {
-      console.log('🌐 Device is back online');
       setIsNetworkOffline(false);
       const pc = pcRef.current;
-      if (!pc || cleanupRef.current || callEndedByRef.current) return;
-      if (pc.connectionState === 'connected') return;
+      if (!pc || !isLive() || pc.connectionState === 'connected') return;
       clearReconnectTimers();
       reconnectAttemptsRef.current = 0;
       setReconnectAttempt(0);
-      attemptReconnectRef.current?.(pc);
+      attemptReconnectRef.current();
     };
-
     window.addEventListener('offline', handleOffline);
     window.addEventListener('online', handleOnline);
     return () => {
@@ -520,118 +785,99 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     const handleVisibility = () => {
       if (document.visibilityState !== 'visible') return;
       const pc = pcRef.current;
-      if (!pc || cleanupRef.current || callEndedByRef.current) return;
-      if (['disconnected', 'failed'].includes(pc.connectionState)) {
-        attemptReconnectRef.current?.(pc);
-      }
+      if (!pc || !isLive()) return;
+      if (['disconnected', 'failed'].includes(pc.connectionState)) attemptReconnectRef.current();
+      const el = remoteVideoRef.current;
+      if (el?.paused && el.srcObject) el.play().catch(() => undefined);
     };
-
     document.addEventListener('visibilitychange', handleVisibility);
     return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, []);
 
-
-
-  const handleOffer = async (offer: RTCSessionDescriptionInit, pc: RTCPeerConnection) => {
-    try {
-      console.log('📝 Handling incoming offer...');
-      // New remote generation: previously applied candidates are obsolete.
-      appliedCandidatesRef.current = new Set();
-      await pc.setRemoteDescription(new RTCSessionDescription(offer));
-      
-      const answer = await pc.createAnswer();
-      await pc.setLocalDescription(answer);
-
-      const { error } = await supabase
-        .from('webrtc_sessions')
-        .update({ 
-          answer: answer as any,
-          patient_id: userType === 'patient' ? (await getSessionUser()).data.user?.id : undefined
-        })
-        .eq('id', sessionId);
-
-      if (error) throw error;
-      console.log('✅ Answer created and sent');
-    } catch (error) {
-      console.error('❌ Error handling offer:', error);
-      setError('Erro ao processar oferta de conexão');
-    }
-  };
-
-  const handleAnswer = async (answer: RTCSessionDescriptionInit, pc: RTCPeerConnection) => {
-    try {
-      console.log('📝 Handling incoming answer...');
-      appliedCandidatesRef.current = new Set();
-      await pc.setRemoteDescription(new RTCSessionDescription(answer));
-      console.log('✅ Answer processed successfully');
-    } catch (error) {
-      console.error('❌ Error handling answer:', error);
-      setError('Erro ao processar resposta de conexão');
-    }
-  };
-
-
-  const processIceCandidates = async (candidates: RTCIceCandidateInit[], pc: RTCPeerConnection) => {
-    if (!candidates || !Array.isArray(candidates)) return;
-    // A closed/renegotiating connection must never receive candidates.
-    if (pc.signalingState === 'closed') return;
-    if (!pc.remoteDescription || !pc.remoteDescription.type) return;
-
-    // Only candidates belonging to the CURRENT remote ICE credentials are valid.
-    // After a peer rejoins/ICE-restarts, the row still carries candidates from
-    // previous generations — adding them poisons the checklist and the call
-    // never reconnects.
-    const remoteUfrags = getUfrags(pc.remoteDescription.sdp);
-
-    for (const candidateData of candidates) {
+  // Network quality (like Meet's "sua conexão está instável"): when the link is
+  // poor, the video gives way so the voice keeps flowing.
+  useEffect(() => {
+    if (!isConnected) return;
+    let lastLost = 0;
+    let lastReceived = 0;
+    let poorStreak = 0;
+    let goodStreak = 0;
+    let relieved = false;
+    const timer = setInterval(async () => {
+      const pc = pcRef.current;
+      if (!pc || pc.connectionState !== 'connected') return;
       try {
-        if (!candidateData || typeof candidateData !== 'object') continue;
-        const ufrag = (candidateData as any).usernameFragment;
-        if (ufrag && remoteUfrags.length > 0 && !remoteUfrags.includes(ufrag)) continue;
-        if (appliedCandidatesRef.current.has(candidateKey(candidateData))) continue;
-        appliedCandidatesRef.current.add(candidateKey(candidateData));
+        const stats = await pc.getStats();
+        let rttMs: number | null = null;
+        let lost = 0;
+        let received = 0;
+        stats.forEach((report: any) => {
+          if (report.type === 'candidate-pair' && report.nominated && report.state === 'succeeded' && typeof report.currentRoundTripTime === 'number') {
+            rttMs = report.currentRoundTripTime * 1000;
+          }
+          if (report.type === 'inbound-rtp' && !report.isRemote) {
+            lost += report.packetsLost ?? 0;
+            received += report.packetsReceived ?? 0;
+          }
+        });
+        const dLost = Math.max(0, lost - lastLost);
+        const dReceived = Math.max(0, received - lastReceived);
+        lastLost = lost;
+        lastReceived = received;
+        const lossRatio = dLost + dReceived > 0 ? dLost / (dLost + dReceived) : 0;
+        const quality = classifyNetworkQuality({ rttMs, lossRatio });
+        setNetworkQuality(quality);
 
-        const candidate = new RTCIceCandidate(candidateData);
-        if ((pc.signalingState as string) === 'closed') return;
-
-        await pc.addIceCandidate(candidate);
-        console.log('✅ ICE candidate added');
-      } catch (error) {
-        console.warn('⚠️ Error adding ICE candidate:', error);
+        if (quality === 'poor') {
+          poorStreak += 1;
+          goodStreak = 0;
+        } else {
+          goodStreak += 1;
+          poorStreak = 0;
+        }
+        if (!relieved && poorStreak >= 3) {
+          relieved = true;
+          await tuneSenders(pc, true);
+        } else if (relieved && goodStreak >= 5) {
+          relieved = false;
+          await tuneSenders(pc, false);
+        }
+      } catch {
+        /* stats are best effort */
       }
-    }
+    }, 2000);
+    return () => {
+      clearInterval(timer);
+      setNetworkQuality('good');
+    };
+  }, [isConnected, tuneSenders]);
 
-  };
+  // ------------------------------------------------------- media controls
 
   const toggleAudio = useCallback(() => {
-    if (localStream) {
-      const audioTrack = localStream.getAudioTracks()[0];
-      if (audioTrack) {
-        audioTrack.enabled = !audioTrack.enabled;
-        return !audioTrack.enabled;
-      }
+    const audioTrack = localStreamRef.current?.getAudioTracks()[0];
+    if (audioTrack) {
+      audioTrack.enabled = !audioTrack.enabled;
+      return !audioTrack.enabled;
     }
     return false;
-  }, [localStream]);
+  }, []);
 
   const toggleVideo = useCallback(() => {
-    if (localStream) {
-      const videoTrack = localStream.getVideoTracks()[0];
-      if (videoTrack) {
-        videoTrack.enabled = !videoTrack.enabled;
-        return !videoTrack.enabled;
-      }
+    const videoTrack = localStreamRef.current?.getVideoTracks()[0];
+    if (videoTrack) {
+      videoTrack.enabled = !videoTrack.enabled;
+      return !videoTrack.enabled;
     }
     return false;
-  }, [localStream]);
+  }, []);
 
   const sendMediaState = useCallback((payload: Omit<MediaStateSignal, 'type' | 'at' | 'seq'>) => {
     localMediaStateRef.current = payload;
     return signalChannelRef.current?.sendMediaState(payload) ?? false;
   }, []);
 
-  // Re-announce our media state whenever the peer connection comes up, so the
-  // remote side never renders a stale camera/avatar after a (re)connection.
+  // Re-announce our media state whenever the connection comes up.
   useEffect(() => {
     if (!isConnected) return;
     let attempts = 0;
@@ -644,7 +890,6 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     return () => clearInterval(timer);
   }, [isConnected]);
 
-  // Mirrors used by the staleness watchdog interval (avoids stale closures).
   useEffect(() => {
     isNetworkOfflineRef.current = isNetworkOffline;
   }, [isNetworkOffline]);
@@ -652,474 +897,254 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     isReconnectingRef.current = isReconnecting;
   }, [isReconnecting]);
 
-  // Staleness watchdog for the remote media indicators.
-  //
-  // While the control channel is down (reconnection, network loss) the remote
-  // camera/mic state we render can no longer be trusted. We flag it so the UI
-  // can warn the user, and the moment the channel recovers we ask the peer to
-  // re-announce — no database round-trip, no waiting for the next toggle.
+  // Staleness watchdog for the remote camera/mic indicators.
   useEffect(() => {
     let wasOpen = false;
     const evaluate = () => {
       const open = signalChannelRef.current?.isOpen() ?? false;
-
       if (open && !wasOpen) {
-        // Recovered: pull the peer's current state and push ours.
         signalChannelRef.current?.requestMediaState(userType);
         const payload = localMediaStateRef.current;
         if (payload) signalChannelRef.current?.sendMediaState(payload);
       }
       wasOpen = open;
-
       const knowsRemote = remoteMediaReceivedAtRef.current > 0;
       const degraded = !open || isNetworkOfflineRef.current || isReconnectingRef.current;
       setIsRemoteMediaStale(knowsRemote && degraded);
     };
-
     evaluate();
     const timer = setInterval(evaluate, 1000);
     return () => clearInterval(timer);
   }, [userType]);
 
+  // The remote <video> may mount after the track arrived (or be re-mounted).
+  useEffect(() => {
+    const el = remoteVideoRef.current;
+    if (!el || !remoteStream) return;
+    if (el.srcObject !== remoteStream) el.srcObject = remoteStream;
+    el.play?.().catch(() => undefined);
+  });
+
+  // ------------------------------------------------------------- teardown
+
   const cleanup = useCallback(() => {
-    // Prevent multiple cleanup calls
-    if (cleanupRef.current) {
-      loopDetector.trace(sessionId, 'cleanup_skip_already_running');
-      return;
-    }
-    
-    cleanupRef.current = true;
+    if (disposedRef.current && !pcRef.current && !localStreamRef.current) return;
+    disposedRef.current = true;
+    clearReconnectTimers();
+    if (candidateFlushTimerRef.current) clearTimeout(candidateFlushTimerRef.current);
+    if (mediaReportTimerRef.current) clearTimeout(mediaReportTimerRef.current);
+    candidateFlushTimerRef.current = null;
+    mediaReportTimerRef.current = null;
+
     signalChannelRef.current?.close();
     signalChannelRef.current = null;
+
+    localStreamRef.current?.getTracks().forEach((track) => {
+      if (track.readyState !== 'ended') track.stop();
+    });
+    remoteStreamRef.current?.getTracks().forEach((track) => {
+      if (track.readyState !== 'ended') track.stop();
+    });
+    if (localVideoRef.current) localVideoRef.current.srcObject = null;
+    if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+
+    const pc = pcRef.current;
     pcRef.current = null;
-
-    clearReconnectTimers();
-    setIsReconnecting(false);
-    setReconnectAttempt(0);
-    reconnectAttemptsRef.current = 0;
-
-    loopDetector.trace(sessionId, 'cleanup_start');
-
-    
-    // Transition to cleaning state
-    if (stateMachine.current.canTransitionTo('cleaning')) {
-      stateMachine.current.transitionTo('cleaning');
-      setWebrtcState('cleaning');
-    }
-    
-    console.log('🧹 Cleaning up WebRTC resources...');
-    
-    // Stop all media tracks properly and completely
-    if (localStream) {
-      console.log('🛑 Stopping local stream tracks...');
-      localStream.getTracks().forEach(track => {
-        if (track.readyState !== 'ended') {
-          track.stop();
-          console.log(`🛑 Stopped ${track.kind} track - readyState: ${track.readyState}`);
-        }
-      });
-      
-      // Clear video elements to remove any lingering streams
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = null;
-        console.log('🧹 Cleared local video element');
-      }
-    }
-    
-    // Stop remote stream tracks if any
-    if (remoteStream) {
-      console.log('🛑 Stopping remote stream tracks...');
-      remoteStream.getTracks().forEach(track => {
-        if (track.readyState !== 'ended') {
-          track.stop();
-          console.log(`🛑 Stopped remote ${track.kind} track`);
-        }
-      });
-      
-      if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = null;
-        console.log('🧹 Cleared remote video element');
-      }
-    }
-    
-    // Close peer connection properly
-    if (peerConnection) {
+    if (pc) {
+      pc.onconnectionstatechange = null;
+      pc.oniceconnectionstatechange = null;
+      pc.onicecandidate = null;
+      pc.ontrack = null;
       try {
-        // Stop all transceivers first
-        peerConnection.getTransceivers().forEach(transceiver => {
-          if (transceiver.stop) {
-            transceiver.stop();
-            console.log(`🛑 Stopped ${transceiver.direction} transceiver`);
-          }
-        });
-        
-        // Remove all tracks from connection
-        peerConnection.getSenders().forEach(sender => {
-          if (sender.track) {
-            peerConnection.removeTrack(sender);
-            console.log(`🗑️ Removed ${sender.track.kind} sender`);
-          }
-        });
-        
-        // Close the connection
-        if (peerConnection.connectionState !== 'closed') {
-          peerConnection.close();
-          console.log('🔌 Peer connection closed');
-        }
-      } catch (error) {
-        console.warn('⚠️ Error closing peer connection:', error);
+        pc.getTransceivers().forEach((t) => t.stop?.());
+      } catch {
+        /* noop */
+      }
+      try {
+        if (pc.signalingState !== 'closed') pc.close();
+      } catch {
+        /* noop */
       }
     }
-    
-    // Use connection manager for proper cleanup
-    if (sessionId) {
-      connectionManager.cleanupConnection(sessionId);
-    }
-    
-    // Release flow lock
-    flowLock.releaseLock(sessionId);
-    
+
+    localStreamRef.current = null;
+    remoteStreamRef.current = null;
     setLocalStream(null);
     setRemoteStream(null);
     setPeerConnection(null);
     setIsConnected(false);
     setConnectionState('closed');
     setIsInitializing(false);
-    setCallEndedBy(null);
-    
-    // Transition back to idle
-    stateMachine.current.transitionTo('idle');
+    setIsReconnecting(false);
+    setReconnectAttempt(0);
+    reconnectAttemptsRef.current = 0;
     setWebrtcState('idle');
-    
-    cleanupRef.current = false;
-    loopDetector.trace(sessionId, 'cleanup_complete');
-    
-    console.log('✅ Complete WebRTC cleanup finished');
-  }, [localStream, remoteStream, peerConnection, sessionId, connectionManager, localVideoRef, remoteVideoRef]);
-  
+  }, [clearReconnectTimers]);
+
+  /** Camera/microphone switched in the settings: swap tracks without renegotiating. */
   const updateDeviceStream = useCallback(async (newStream: MediaStream) => {
-    if (!peerConnection || !localStream) return;
-    
+    const pc = pcRef.current;
+    const oldStream = localStreamRef.current;
+    if (!pc || !oldStream) return;
     try {
-      console.log('🔄 Updating device stream for remote peer...');
-      
-      // Replace video track in peer connection
       const videoTrack = newStream.getVideoTracks()[0];
       const audioTrack = newStream.getAudioTracks()[0];
-      
-      const senders = peerConnection.getSenders();
-      
-      for (const sender of senders) {
-        if (sender.track) {
-          if (sender.track.kind === 'video' && videoTrack) {
-            await sender.replaceTrack(videoTrack);
-            console.log('✅ Video track replaced in peer connection');
-          } else if (sender.track.kind === 'audio' && audioTrack) {
-            await sender.replaceTrack(audioTrack);
-            console.log('✅ Audio track replaced in peer connection');
-          }
-        }
+      for (const sender of pc.getSenders()) {
+        if (!sender.track) continue;
+        if (sender.track.kind === 'video' && videoTrack) await sender.replaceTrack(videoTrack);
+        else if (sender.track.kind === 'audio' && audioTrack) await sender.replaceTrack(audioTrack);
       }
-      
-      // Stop OLD stream tracks to release devices
-      const oldStream = localStream;
-      oldStream.getTracks().forEach(track => {
+      // Keep the enabled/disabled state the person had chosen.
+      const wasVideoOn = oldStream.getVideoTracks()[0]?.enabled ?? true;
+      const wasAudioOn = oldStream.getAudioTracks()[0]?.enabled ?? true;
+      if (videoTrack) videoTrack.enabled = wasVideoOn;
+      if (audioTrack) audioTrack.enabled = wasAudioOn;
+      oldStream.getTracks().forEach((track) => {
         try {
           track.stop();
-          console.log(`🛑 Stopped old ${track.kind} track after device change`);
-        } catch (e) {
-          console.warn('Failed stopping old track:', e);
+        } catch {
+          /* noop */
         }
       });
-      
-      // Update local stream
+      localStreamRef.current = newStream;
       setLocalStream(newStream);
-      
-      // Update local video element
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = newStream;
-      }
-      
-      console.log('✅ Device stream updated successfully');
-    } catch (error) {
-      console.error('❌ Error updating device stream:', error);
-      toast({
+      if (localVideoRef.current) localVideoRef.current.srcObject = newStream;
+    } catch (err) {
+      console.error('❌ Error updating device stream:', err);
+      toastRef.current({
         title: 'Erro',
         description: 'Erro ao atualizar dispositivos na chamada',
         variant: 'destructive',
       });
     }
-  }, [peerConnection, localStream, localVideoRef, toast]);
+  }, []);
 
-  // Initialize WebRTC with loop protection
+  // --------------------------------------------------------------- start
+
   useEffect(() => {
+    if (!sessionId || prefsLoading) return;
     let isMounted = true;
-    let unsubscribe: (() => void) | undefined;
-    
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    let pollTimer: ReturnType<typeof setInterval> | null = null;
+
+    disposedRef.current = false;
+    joinedAtRef.current = Date.now();
+    lastRenegotiationHandledRef.current = Date.now();
+    mediaReportedRef.current = null;
+    mediaWantedRef.current = null;
+    wasConnectedRef.current = false;
+    setNotConnectedSince(Date.now());
+
     const initialize = async () => {
-      // Only initialize if in idle state
-      if (webrtcState !== 'idle') {
-        loopDetector.trace(sessionId, `initialize_skip_wrong_state_${webrtcState}`);
-        return;
-      }
-
-      // Prevent multiple initializations with flow lock
-      if (!flowLock.acquireLock(sessionId, 'webrtc_initialization')) {
-        loopDetector.trace(sessionId, 'initialize_skip_lock_exists');
-        return;
-      }
-
-      // Prevent duplicate initialization
-      if (isInitializing || initializationRef.current) {
-        flowLock.releaseLock(sessionId);
-        loopDetector.trace(sessionId, 'initialize_skip_already_running');
-        return;
-      }
-
-      if (!sessionId) {
-        flowLock.releaseLock(sessionId);
-        throw new Error('Session ID is required');
-      }
-
-      // Wait for preferences to load before initializing
-      if (prefsLoading) {
-        flowLock.releaseLock(sessionId);
-        loopDetector.trace(sessionId, 'initialize_skip_preferences_loading');
-        return;
-      }
-
+      setWebrtcState('initializing');
+      setIsInitializing(true);
       try {
-        loopDetector.trace(sessionId, 'initialize_start');
-        
-        // Transition to initializing state
-        stateMachine.current.transitionTo('initializing');
-        setWebrtcState('initializing');
-        
-        console.log(`🚀 Initializing managed WebRTC for session: ${sessionId}`);
-        setIsInitializing(true);
-        initializationRef.current = true;
-        
         const stream = await initializeMedia();
         if (!isMounted) {
-          flowLock.releaseLock(sessionId);
+          stream.getTracks().forEach((t) => t.stop());
           return;
         }
-        
-        loopDetector.trace(sessionId, 'media_initialized');
-        
-        const pc = await createPeerConnection(stream);
-        if (!isMounted) {
-          flowLock.releaseLock(sessionId);
-          return;
-        }
-        
-        loopDetector.trace(sessionId, 'peer_connection_created');
 
         // Reopen the session if it carries a stale "completed" state from a
-        // previous call/reconnection — otherwise both peers would immediately
-        // think the other one hung up.
-        const joinedAt = Date.now();
+        // previous call/reconnection — otherwise both peers would think the
+        // other one hung up. The database refuses it for a finished call.
         try {
-          const { data: existingSession } = await supabase
+          const { data: existing } = await supabase
             .from('webrtc_sessions')
             .select('status, ended_at, ended_by, ended_by_type')
             .eq('id', sessionId)
             .maybeSingle();
-
-          if (existingSession?.status === 'completed') {
-            console.log('♻️ Reopening stale completed session');
+          if (existing?.status === 'completed') {
             const { error: reopenError } = await supabase
               .from('webrtc_sessions')
-              .update({
-                status: 'active',
-                ended_at: null,
-                ended_by: null,
-                ended_by_type: null,
-                updated_at: new Date().toISOString(),
-              })
+              .update({ status: 'active', ended_at: null, ended_by: null, ended_by_type: null, updated_at: new Date().toISOString() })
               .eq('id', sessionId);
-
-            // O banco recusa reabrir a sala de um SOS/consulta que já terminou
-            // (ex.: o paciente chamou outro psicólogo): mostra como encerrada
-            // em vez de deixar a pessoa esperando alguém que não vem.
             if (reopenError) {
-              console.log('🚫 Session belongs to a finished call, not reopening');
-              setCallEndedBy({
-                userId: existingSession.ended_by ?? '',
-                userType: existingSession.ended_by_type ?? 'system',
-              });
+              setCallEndedBy({ userId: existing.ended_by ?? '', userType: existing.ended_by_type ?? 'system' });
               stream.getTracks().forEach((track) => track.stop());
-              pc.close();
               setIsInitializing(false);
               return;
             }
           }
-        } catch (e) {
-          console.warn('Could not verify session state:', e);
+        } catch (err) {
+          console.warn('Could not verify session state:', err);
         }
 
-        // Shared handler: applied both from realtime events and from the
-        // polling fallback (realtime sockets can stay dead after a drop).
-        const applySessionUpdate = async (sessionData: WebRTCSession) => {
-          if (!isMounted || !sessionData) return;
+        const pc = await buildPeerConnection(stream);
+        if (!isMounted) {
+          pc.close();
+          stream.getTracks().forEach((t) => t.stop());
+          return;
+        }
+        installPeerConnection(pc);
+        // Fresh start (or page reload): no media yet on this side. Clears a
+        // stale "connected" left by a previous tab, so the server's fallbacks
+        // (call another psychologist, refunds) see the real state.
+        reportMedia(false);
 
-          setSession(sessionData);
-
-          window.dispatchEvent(new CustomEvent('webrtc-session-update', {
-            detail: sessionData
-          }));
-
-          if (isRealTermination(sessionData as any, joinedAt)) {
-            setCallEndedBy({
-              userId: sessionData.ended_by!,
-              userType: sessionData.ended_by_type!
-            });
+        const applyRow = (row: WebRTCSession) => {
+          if (!isMounted || !row) return;
+          setSession(row);
+          window.dispatchEvent(new CustomEvent('webrtc-session-update', { detail: row }));
+          if (isRealTermination(row as any, joinedAtRef.current)) {
+            setCallEndedBy({ userId: row.ended_by!, userType: row.ended_by_type! });
             return;
           }
-
-          // Handle offer/answer exchange (also supports renegotiation / ICE restart)
-          if (userType === 'patient') {
-            const sdp = (sessionData.offer as any)?.sdp;
-            if (sdp && sdp !== lastAppliedOfferRef.current) {
-              if (pc.signalingState === 'stable' || pc.signalingState === 'have-remote-offer') {
-                lastAppliedOfferRef.current = sdp;
-                await handleOffer(sessionData.offer!, pc);
-              }
-            }
-          } else {
-            const sdp = (sessionData.answer as any)?.sdp;
-            if (sdp && sdp !== lastAppliedAnswerRef.current) {
-              if (pc.signalingState === 'have-local-offer') {
-                lastAppliedAnswerRef.current = sdp;
-                await handleAnswer(sessionData.answer!, pc);
-              } else if (pc.signalingState === 'stable' && pc.connectionState !== 'connected') {
-                // The peer re-joined with a brand new PeerConnection while ours
-                // is stale: renegotiate so a fresh offer/answer pair is created.
-                lastAppliedAnswerRef.current = sdp;
-                await createOffer(pc, true);
-              }
-            }
-          }
-
-          if (sessionData.ice_candidates) {
-            await processIceCandidates(sessionData.ice_candidates, pc);
-          }
+          void enqueue(() => reconcile(row));
         };
 
-        // Set up realtime subscription for session updates
-        const channel = supabase
-          .channel(`webrtc_session_${sessionId}`)
+        const readRow = async () => {
+          const { data, error: readError } = await supabase.from('webrtc_sessions').select('*').eq('id', sessionId).maybeSingle();
+          if (!readError && data) applyRow(data as unknown as WebRTCSession);
+        };
+
+        channel = supabase
+          .channel(`webrtc_session_${sessionId}_${joinedAtRef.current}`)
           .on(
             'postgres_changes',
-            {
-              event: 'UPDATE',
-              schema: 'public',
-              table: 'webrtc_sessions',
-              filter: `id=eq.${sessionId}`
-            },
-            async (payload) => {
-              if (!isMounted) return;
-              console.log('📡 Session update received:', payload);
-              await applySessionUpdate(payload.new as WebRTCSession);
-            }
+            { event: 'UPDATE', schema: 'public', table: 'webrtc_sessions', filter: `id=eq.${sessionId}` },
+            (payload) => applyRow(payload.new as WebRTCSession)
           )
-          .subscribe();
+          .subscribe((status) => {
+            // Back from a dropped socket: catch up on whatever was missed.
+            if (status === 'SUBSCRIBED') void readRow();
+          });
 
-        // Polling fallback: while the call is not connected, re-read the row so
-        // signaling still converges even if the realtime socket died.
-        const pollTimer = setInterval(async () => {
-          if (!isMounted || cleanupRef.current || callEndedByRef.current) return;
-          if (pc.connectionState === 'connected' || pc.connectionState === 'closed') return;
-
-          const { data, error } = await supabase
-            .from('webrtc_sessions')
-            .select('*')
-            .eq('id', sessionId)
-            .maybeSingle();
-
-          if (error || !data) return;
-          await applySessionUpdate(data as unknown as WebRTCSession);
+        // Safety net: realtime can silently die after a drop. While the media is
+        // not flowing, re-read the row every 3 s; once connected, every 6 s
+        // (cheap) so a new peer or a renegotiation request is never missed.
+        let tick = 0;
+        pollTimer = setInterval(() => {
+          tick += 1;
+          if (!isMounted || !isLive()) return;
+          const connected = pcRef.current?.connectionState === 'connected';
+          if (connected && tick % 2 !== 0) return;
+          void readRow();
         }, 3000);
 
-        unsubscribe = () => {
-          console.log('🔌 Unsubscribing from realtime channel');
-          clearInterval(pollTimer);
-          supabase.removeChannel(channel);
-        };
-
-        // If psychologist, create initial offer
-        if (userType === 'psychologist') {
-          setTimeout(() => {
-            if (isMounted) {
-              createOffer(pc);
-            }
-          }, 1000);
-        }
-
-
-        // Transition to connected state
-        stateMachine.current.transitionTo('connected');
+        await readRow();
+        setIsInitializing(false);
         setWebrtcState('connected');
-        
-        loopDetector.trace(sessionId, 'initialize_complete');
-        
-      } catch (error) {
-        console.error('❌ WebRTC initialization failed:', error);
-        
+      } catch (err) {
+        console.error('❌ WebRTC initialization failed:', err);
         if (isMounted) {
-          // Transition to error state
-          stateMachine.current.transitionTo('error');
           setWebrtcState('error');
-          
-          setError(getFriendlyErrorMessage(error, 'Erro ao inicializar videochamada.'));
+          setError(getFriendlyErrorMessage(err, 'Erro ao inicializar videochamada.'));
           setIsInitializing(false);
-          initializationRef.current = false;
-          
-          loopDetector.trace(sessionId, `initialize_error_${error instanceof Error ? error.message : 'unknown'}`);
         }
-      } finally {
-        flowLock.releaseLock(sessionId);
       }
     };
 
-    // Only initialize once per sessionId
-    initialize();
+    void initialize();
 
     return () => {
       isMounted = false;
-      initializationRef.current = false;
-      setIsInitializing(false);
-      
-      if (unsubscribe) {
-        unsubscribe();
-      }
-      
-      // Only cleanup if not in a valid connected state
-      if (webrtcState !== 'connected') {
-        cleanup();
-      }
+      if (pollTimer) clearInterval(pollTimer);
+      if (channel) supabase.removeChannel(channel);
+      cleanup();
     };
-
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId, userType, prefsLoading]);
-
-  // Hard guarantee: leaving the call screen (navigation, back button, tab
-  // teardown) always releases camera/microphone, even while connected.
-  const unmountCleanupRef = useRef<(() => void) | undefined>(undefined);
-  unmountCleanupRef.current = cleanup;
-
-  useEffect(() => {
-    return () => {
-      try {
-        unmountCleanupRef.current?.();
-      } catch (error) {
-        console.warn('[WebRTC] unmount cleanup failed', error);
-      }
-    };
-  }, []);
-
-  // (Removed duplicate delayed-initialize effect that caused duplicate realtime
-  //  channel subscriptions and orphan media streams.)
-
 
   return {
     localVideoRef,
@@ -1137,9 +1162,12 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     isReconnecting,
     reconnectAttempt,
     isNetworkOffline,
+    /** Since when audio/video is not flowing (null while connected). */
+    notConnectedSince,
+    /** Link quality while connected (shown as "conexão instável"). */
+    networkQuality,
     forceReconnect,
     toggleAudio,
-
     toggleVideo,
     remoteMediaState,
     /** True when the remote camera/mic indicators may be outdated. */
@@ -1151,6 +1179,5 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     /** Signals CALL_ENDED to the peer over the data channel (best effort). */
     sendCallEndedSignal: (payload: { endedByType: 'patient' | 'psychologist' | 'system'; reason: string }) =>
       signalChannelRef.current?.sendCallEnded({ ...payload, sessionId }) ?? false,
-
   };
 };
