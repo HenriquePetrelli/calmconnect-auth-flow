@@ -400,7 +400,7 @@ const SupportGroupDetail = () => {
 
             {/* Add Testimonial Dialog (triggered from header button) */}
             <Dialog open={showAddTestimonial} onOpenChange={setShowAddTestimonial}>
-              <DialogContent className="p-0 gap-0 max-w-full w-screen h-[100dvh] sm:h-auto sm:max-h-[90vh] sm:max-w-lg sm:rounded-lg rounded-none flex flex-col">
+              <DialogContent className="p-0 gap-0 max-w-full w-screen h-[100dvh] sm:h-auto sm:max-h-[90vh] sm:max-w-lg sm:rounded-2xl rounded-none flex flex-col">
                 <DialogHeader className="sticky top-0 z-10 bg-background border-b px-6 py-4 text-left">
                   <DialogTitle>Adicionar Depoimento</DialogTitle>
                   <DialogDescription>
@@ -420,7 +420,7 @@ const SupportGroupDetail = () => {
 
             {/* Edit Testimonial Dialog */}
             <Dialog open={showEditTestimonial} onOpenChange={setShowEditTestimonial}>
-              <DialogContent className="p-0 gap-0 max-w-full w-screen h-[100dvh] sm:h-auto sm:max-h-[90vh] sm:max-w-lg sm:rounded-lg rounded-none flex flex-col">
+              <DialogContent className="p-0 gap-0 max-w-full w-screen h-[100dvh] sm:h-auto sm:max-h-[90vh] sm:max-w-lg sm:rounded-2xl rounded-none flex flex-col">
                 <DialogHeader className="sticky top-0 z-10 bg-background border-b px-6 py-4 text-left">
                   <DialogTitle>Editar Depoimento</DialogTitle>
                   <DialogDescription>

@@ -65,10 +65,12 @@ const BreathingOrb = ({ state, isPlaying }: BreathingOrbProps) => {
     if (!ctx) return;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
+    // Tamanho do layout (offsetWidth), não getBoundingClientRect: dentro de
+    // uma janela que abre com animação de escala, o retângulo vinha 95% do
+    // tamanho e o círculo ficava cortado.
     const resize = () => {
-      const rect = canvas.getBoundingClientRect();
-      canvas.width = Math.max(1, Math.floor(rect.width * dpr));
-      canvas.height = Math.max(1, Math.floor(rect.height * dpr));
+      canvas.width = Math.max(1, Math.floor(canvas.offsetWidth * dpr));
+      canvas.height = Math.max(1, Math.floor(canvas.offsetHeight * dpr));
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
     resize();
@@ -82,9 +84,8 @@ const BreathingOrb = ({ state, isPlaying }: BreathingOrbProps) => {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
 
-      const rect = canvas.getBoundingClientRect();
-      const w = rect.width;
-      const h = rect.height;
+      const w = canvas.offsetWidth;
+      const h = canvas.offsetHeight;
       const cx = w / 2;
       const cy = h / 2;
       const maxR = Math.min(w, h) / 2 - 8;
