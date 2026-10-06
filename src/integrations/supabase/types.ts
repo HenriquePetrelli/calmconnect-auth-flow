@@ -932,6 +932,7 @@ export type Database = {
           joined_at: string
           organization_id: string
           removed_at: string | null
+          removed_by: string | null
           role: string
           status: string
           user_id: string
@@ -942,6 +943,7 @@ export type Database = {
           joined_at?: string
           organization_id: string
           removed_at?: string | null
+          removed_by?: string | null
           role?: string
           status?: string
           user_id: string
@@ -952,6 +954,7 @@ export type Database = {
           joined_at?: string
           organization_id?: string
           removed_at?: string | null
+          removed_by?: string | null
           role?: string
           status?: string
           user_id?: string
