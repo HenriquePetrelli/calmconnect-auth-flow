@@ -50,7 +50,8 @@ Desativa o push daquele aparelho e encerra a sessão em todos os aparelhos. Se o
 ## Regras
 
 - **Senha nova** (cadastro, troca e recuperação): mínimo de 8 caracteres, com letras e números (`src/lib/password.ts`). Quem já tem conta com senha de 6 caracteres continua entrando.
-- **O tipo de conta vem só do banco**, nunca de dados que o próprio usuário edita (`user_metadata`).
+- **O tipo de conta vem só do banco**, nunca de dados que o próprio usuário edita (`user_metadata`). No cadastro, o banco só aceita paciente ou psicólogo (quem tenta criar a conta como admin vira paciente).
+- **A inscrição do psicólogo nasce sempre pendente**, mesmo que o app envie outro status; só o admin aprova.
 - **Rotas protegidas**: `RouteGuard` deixa cada tipo de conta ver só as suas telas e manda para o login quem não está logado.
 - **Psicólogo não aprovado** não acessa o painel nem a fila do SOS. A fila é bloqueada também no banco (ficha 20).
 - **Ninguém muda a própria aprovação, bloqueio ou nota.** O banco ignora essas colunas quando a alteração vem do próprio usuário.
@@ -63,7 +64,7 @@ Desativa o push daquele aparelho e encerra a sessão em todos os aparelhos. Se o
 - **Sessão e tipo de conta**: `src/contexts/AuthContext.tsx` (`getUserType`, `signOut`).
 - **Cadastro do psicólogo**: `src/services/psychologist.service.ts`.
 - **Banco**: `profiles`, `patients`, `psychologists`, `psychologist_registrations`, `legal_acceptances`, `admin_users`. Funções: `is_super_admin`, `get_psychologist_rejection_status`, `create_psychologist_profile`, `psychologist_can_attend`.
-- **Gatilhos de proteção**: `a_guard_psychologist_client_write`, `a_guard_patient_client_write`, `prevent_user_type_change`.
+- **Gatilhos de proteção**: `a_guard_psychologist_client_write`, `a_guard_patient_client_write`, `a_guard_registration_client_insert`, `prevent_user_type_change`.
 
 ## Como validar
 

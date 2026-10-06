@@ -39,6 +39,11 @@
 | Burlar o limite do diário | Gatilho `enforce_journal_daily_limit` | Ficha 15 |
 | Webhook falso do Stripe | Assinatura conferida com `STRIPE_WEBHOOK_SECRET` | Ficha 08 |
 | TURN usado por estranhos (custo) | `ice-servers` só entrega TURN a usuário logado | Chamada sem login → resposta sem TURN |
+| Ler documentos de todos os psicólogos editando os próprios metadados | Removidas as regras antigas `admin_document_access` e `admin_upload_documents` (confiavam em `is_super_admin` dentro de `user_metadata`, que o usuário edita); admin só pela tabela `admin_users` | `select count(*) from pg_policy where polname in ('admin_document_access','admin_upload_documents')` = 0 |
+| Consultar plano e SOS de outra pessoa | `can_use_sos` só para o servidor; `validate_route_access`, `prune_stale_psychologist_presence`, `can_access_document` e `can_upload_document` fechadas para o app | `has_function_privilege('authenticated','public.can_use_sos(uuid)','execute')` = `false` |
+| Criar conta já como admin | `handle_new_user` só aceita paciente ou psicólogo vindo do cadastro | Cadastro com `user_type: "admin"` nos metadados → perfil de paciente |
+| Psicólogo se aprovar pela inscrição | Gatilho `a_guard_registration_client_insert`: inscrição feita pelo app nasce sempre "pendente" | Inserir em `psychologist_registrations` com `status: 'approved'` → fica `pending` |
+| Forjar chamada conectada, trocar participante ou o cronômetro da sala | Gatilho `a_guard_webrtc_client_update`: só o paciente grava a resposta (o que marca a conexão), só o psicólogo mexe no cronômetro (e não aumenta), ninguém troca o outro participante, o SOS da sala ou quem encerrou; o app não cria salas | Ficha 03 |
 
 ## Conferência rápida no banco (tudo deve dar `true`)
 
@@ -52,6 +57,10 @@ select
   exists(select 1 from pg_trigger where tgname = 'a_guard_patient_client_write') as bloqueio_protegido,
   not has_column_privilege('authenticated', 'public.psychologists', 'cpf', 'select') as cpf_oculto,
   exists(select 1 from pg_trigger where tgname = 'rate_limit_mensagens') as limite_chat,
+  not exists(select 1 from pg_policy where polname in ('admin_document_access', 'admin_upload_documents')) as documentos_sem_metadados,
+  not has_function_privilege('authenticated', 'public.can_use_sos(uuid)', 'execute') as cota_sos_so_servidor,
+  exists(select 1 from pg_trigger where tgname = 'a_guard_registration_client_insert') as inscricao_protegida,
+  exists(select 1 from pg_trigger where tgname = 'a_guard_webrtc_client_update') as sala_video_protegida,
   (select bool_and(file_size_limit = 10485760 and allowed_mime_types is not null) from storage.buckets
      where id in ('documents', 'psychologist-documents', 'payment-receipts')) as uploads_limitados;
 ```

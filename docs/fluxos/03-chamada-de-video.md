@@ -15,7 +15,7 @@ A chamada é de navegador para navegador (WebRTC). O Supabase só faz a "apresen
    - Na consulta, é criada ou reaproveitada por `get_or_create_appointment_webrtc_session` (`appointments.video_room_id`). Só abre de 10 min antes até 15 min depois do fim previsto.
 2. **Câmera e microfone**: o app pede permissão. Sem câmera (negada, ausente ou ocupada), **entra só com áudio** e avisa. Sem microfone, mostra o erro com "Tentar de novo".
 3. **Servidores de conexão**: antes de conectar, o app busca STUN e, se configurado, **TURN** na edge function `ice-servers`. Se ela falhar ou demorar mais de 4 s, segue só com STUN.
-4. **Conexão**: o psicólogo cria a oferta e o paciente responde. Quando os dois se conectam, `webrtc_sessions.answer` fica preenchido. Esse campo é a prova de que a chamada aconteceu e é usado para concluir a consulta e para o repasse.
+4. **Conexão**: o psicólogo cria a oferta e o paciente responde. Quando os dois se conectam, `webrtc_sessions.answer` fica preenchido. Esse campo é a prova de que a chamada aconteceu e é usado para concluir a consulta e para o repasse. Por isso só o paciente consegue gravá-lo (o psicólogo não consegue marcar sozinho uma chamada como conectada).
 5. **Canal de controle** (dentro da chamada): estado de câmera e microfone, nome e o aviso "encerrei a chamada", que chega na hora.
 6. **Presença**: cada lado avisa "estou na sala" em tempo real (`useCallPresence`) e grava um batimento a cada 15 s em `participant_presence`. O servidor usa esse batimento para saber se a sala foi abandonada.
 
@@ -41,7 +41,7 @@ O **cronômetro** é compartilhado e pausa quando alguém sai. No SOS, ao zerar,
 - **Apoio**: `useCallPresence`, `useParticipantHeartbeat`, `useSharedCallTimer`, `useRemoteAbsence`; em `src/lib`: `callBanner`, `reconnect`, `callSignals`, `callLock`, `callTermination`, `iceServers`, `remoteAbsence`, `consultationWindow`.
 - **Painéis**: `src/components/calls/RemoteAbsentPanel.tsx`, `src/components/sos/ConnectionQuality.tsx`, `CallDiagnosticsPanel.tsx`.
 - **Edge function**: `ice-servers` (TURN só para usuário logado).
-- **Banco**: `webrtc_sessions`, `participant_presence`. Gatilho `prevent_reopen_finished_call`.
+- **Banco**: `webrtc_sessions`, `participant_presence`. Gatilhos `prevent_reopen_finished_call` e `a_guard_webrtc_client_update` (pelo app: só o paciente grava a resposta, só o psicólogo mexe no cronômetro e não consegue aumentá-lo, ninguém troca o outro participante, o SOS ligado à sala ou quem encerrou). As salas são criadas só pelo servidor.
 
 ## Como validar
 
