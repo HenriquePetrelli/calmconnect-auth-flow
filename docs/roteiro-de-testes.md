@@ -164,6 +164,8 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Visitante → Cadastro com código + `joao@gmail.com` ⇒ recusa pelo domínio
 - [ ] Terceira pessoa com o código (2 vagas ocupadas) ⇒ "As vagas acabaram"
 - [ ] RH → Portal da empresa → desligar colaborador ⇒ vaga volta; plano vale até o fim do mês
+- [ ] Colaborador desligado pelo RH → usar o mesmo código de novo ⇒ "Seu acesso ao benefício desta empresa foi encerrado pelo RH"
+- [ ] Colaborador → Sair do benefício → usar o código de novo ⇒ volta a ter o plano
 - [ ] Admin → Empresas → pausar contrato ⇒ colaboradores perdem o plano
 - [ ] 21 códigos errados seguidos ⇒ "Muitas tentativas de código"
 - [ ] Paciente já cadastrado → Perfil → Benefício da empresa → digitar código ⇒ vira Premium

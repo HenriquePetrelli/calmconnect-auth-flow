@@ -1,7 +1,7 @@
 # 10. Empresas (B2B)
 
 > **Status:** Pronto.
-> **Última verificação:** 2026-10-02 (comparado com Calm Business, Headspace for Work e Zenklub; 36 checagens SQL). Em 2026-10-04 ganhou limite contra tentativa e erro de códigos.
+> **Última verificação:** 2026-10-06 (varredura: desligado pela empresa não volta sozinho com o código; domínio de e-mail não comprovado, ver Pendências). Antes: 2026-10-02 (comparado com Calm Business, Headspace for Work e Zenklub; 36 checagens SQL). Em 2026-10-04 ganhou limite contra tentativa e erro de códigos.
 > **Quem usa:** admin (cadastra), gestor do RH (portal) e colaborador (usa o benefício).
 
 ## Resumo
@@ -37,6 +37,7 @@ A empresa contrata vagas de um plano (Plus ou Premium). O colaborador entra com 
 - Código: 20 tentativas a cada 15 minutos por pessoa (ou por IP, antes do cadastro).
 - O RH nunca vê nomes, uso individual, conversas ou atendimentos.
 - Remoção pelo admin é imediata; pelo RH, vale até o fim do mês.
+- Quem foi desligado pelo RH ou pelo admin **não volta sozinho** com o mesmo código (`removed_by_company`); quem saiu por conta própria pode voltar. Quem desligou fica em `organization_members.removed_by`.
 
 ## Onde está no código
 
@@ -71,7 +72,8 @@ select subscription_tier, entitlement_source, organization_id from subscribers w
 
 ## Pendências
 
-Nenhuma no código. Cobrança da empresa é processo comercial fora do app.
+- **Domínio de e-mail não comprovado**: a confirmação de e-mail está desligada no Supabase, então quem se cadastra com `qualquer@empresa.com` (sem ser dono do e-mail) passa na regra de domínio. Para comprovar, é preciso enviar um código ou link ao e-mail da empresa, o que depende de SMTP/domínio próprio (o e-mail padrão do Supabase só chega a quem é da equipe). Mitigação atual: vagas limitadas, o RH vê quantas estão ocupadas, desliga e gera novo código.
+- Cobrança da empresa é processo comercial fora do app.
 
 ## Problemas comuns
 
