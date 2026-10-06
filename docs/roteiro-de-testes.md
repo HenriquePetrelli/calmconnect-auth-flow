@@ -55,7 +55,7 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Paciente B → SOS na fila → abrir Respirar / Meu plano ⇒ pedido continua na fila
 - [ ] Paciente C (sem plano) → SOS ⇒ não consegue pedir; convite para assinar
 - [ ] Psicólogo (app fechado, push ativo) → paciente pede SOS ⇒ push imediato
-- [ ] Psicólogo → Início → desligar o status do SOS (Offline) ⇒ paciente vê "Nenhum profissional online"
+- [ ] Psicólogo → Início → desligar o status do SOS (Offline) ⇒ paciente vê "Nenhum psicólogo online agora"
 - [ ] Psicólogo online → Sair da conta ⇒ fica Offline automaticamente
 - [ ] Psicólogo → SOS aceito → Contexto do paciente ⇒ identificação, sintomas relatados e histórico de pedidos
 - [ ] Na chamada → Configurações → trocar microfone/câmera ⇒ troca sem derrubar a chamada
