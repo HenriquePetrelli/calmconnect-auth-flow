@@ -39,7 +39,7 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 ## 2. SOS (fichas 02 e 03)
 
 - [ ] Paciente → botão de SOS (celular e computador) ⇒ abre a confirmação "Precisa de ajuda agora?"; "Agora não" fecha sem pedir SOS
-- [ ] Paciente A → SOS (sem psicólogo online) ⇒ "Nenhum psicólogo online agora", pedido continua na fila e o CVV 188 em destaque
+- [ ] Paciente A → SOS (sem psicólogo online) ⇒ "Nenhum psicólogo online agora" e o pedido continua na fila
 - [ ] Psicólogo → Início → ficar Online ⇒ Paciente A vê "1 profissional disponível"
 - [ ] Paciente A → SOS → pedir ajuda ⇒ pedido aparece no painel do psicólogo em até 10 s
 - [ ] Psicólogo → Aceitar ⇒ os dois na sala, com vídeo e áudio

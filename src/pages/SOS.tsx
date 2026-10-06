@@ -407,7 +407,7 @@ const SOS = () => {
           </div>
         )}
 
-        {/* Ligações sempre à mão; o CVV ganha destaque quando ninguém está online. */}
+        {/* Ligações sempre à mão, com o mesmo visual (com ou sem psicólogo online). */}
         {!expired && (
           <Card>
             <CardContent className="space-y-3 p-4">
@@ -418,7 +418,7 @@ const SOS = () => {
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <Button asChild variant={someoneOnline ? 'outline' : 'default'} className="min-h-11">
+                <Button asChild variant="outline" className="min-h-11">
                   <a href="tel:188">
                     <Phone className="h-4 w-4" />
                     CVV 188
