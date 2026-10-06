@@ -39,7 +39,8 @@ const subtractRange = (ranges: Block[], blocked: Block): Block[] => {
  * (or a direct API call) sent, with no check against their own agenda.
  */
 const isWithinPsychologistAvailability = async (
-  supabase: ReturnType<typeof createClient>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: any,
   psychologistId: string,
   scheduledAtISO: string
 ): Promise<boolean> => {
