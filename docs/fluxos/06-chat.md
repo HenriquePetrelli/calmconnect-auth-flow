@@ -1,7 +1,7 @@
 # 06. Chat entre paciente e psicólogo
 
 > **Status:** Pronto.
-> **Última verificação:** 2026-10-04 (ocultar conversa só para quem excluiu).
+> **Última verificação:** 2026-10-06 (varredura das regras: fotos só para os participantes, somente leitura pela data, ocultar só na própria lista).
 > **Quem usa:** paciente e psicólogo que tiveram consulta concluída nos últimos 30 dias.
 
 ## Resumo
@@ -17,19 +17,21 @@ O chat dá continuidade ao cuidado depois de uma consulta. Só nasce de uma cons
 ## Como funciona
 
 1. **Criar conversa**: o paciente inicia com um psicólogo com quem teve consulta **concluída nos últimos 30 dias** (`abrir_conversa`). O banco confere essa regra (`pode_criar_conversa`) e recusa qualquer outra tentativa. Se já existe conversa com esse psicólogo, ela é reaberta.
-2. **Mensagens**: texto (até 5.000 caracteres) ou foto (até 10 MB, imagem). A foto vai para o storage privado e é exibida por link temporário assinado.
+2. **Mensagens**: texto (até 5.000 caracteres) ou foto (até 10 MB, imagem). A foto vai para o storage privado, na pasta da conversa (`chat-images/{conversa}/{autor}-{hora}`), e é exibida por link temporário assinado. Só os dois participantes enviam e veem as fotos da conversa (`pode_enviar_imagem_chat`, `pode_ver_imagem_chat`); fotos antigas (sem a pasta da conversa) abrem só para quem participa da conversa onde o autor a mandou.
 3. **Tempo real**: a mensagem nova entra no fim da lista sem recarregar. Se o tempo real caiu (tela apagada, troca de rede), a conversa busca o que faltou quando a internet ou a tela voltam.
 4. **Leitura**: ao abrir a conversa, as mensagens do outro lado são marcadas como lidas (`marcar_mensagens_como_lidas`). Mensagens próprias mostram um check (enviada) ou dois (lida).
 5. **Notificação**: mensagem nova gera aviso no app e push, sem repetir um aviso por mensagem em sequência curta. Com a aba aberta em segundo plano, o navegador também avisa.
-6. **Expiração** (rotina diária `expire-old-conversas`): com 1 mês, a conversa vira **somente leitura**; com 3 meses, é apagada. Cada consulta concluída com o mesmo psicólogo reabre a conversa por mais 30 dias.
+6. **Expiração** (rotina diária `expire-old-conversas`): com 1 mês, a conversa vira **somente leitura**; com 3 meses, é apagada. Cada consulta concluída com o mesmo psicólogo reabre a conversa por mais 1 mês (`reopen_conversa_on_completed_appointment`). O banco confere a data a cada mensagem (`guard_mensagem_insert`) e a tela já mostra somente leitura pela data, sem esperar a rotina.
 7. **Excluir** (paciente): a conversa some **só da lista de quem excluiu** (`ocultar_conversa`). O psicólogo continua com o histórico. Ela volta para a lista se chegar mensagem nova, ou se o paciente reabrir com o mesmo psicólogo.
 8. **Falha ao enviar**: o texto digitado fica na caixa e a foto selecionada continua selecionada, para tentar de novo.
 
 ## Regras
 
-- O paciente não pode trocar o psicólogo nem o paciente de uma conversa, nem reabrir conversa somente leitura (`guard_conversa_client_update`).
+- O paciente não pode trocar o psicólogo nem o paciente de uma conversa, nem reabrir conversa somente leitura; cada um só oculta a conversa na própria lista (`guard_conversa_client_update`).
+- Mensagem com foto só aponta para a pasta da própria conversa e do próprio autor; "lida" só é marcada quando o outro abre (`guard_mensagem_insert`).
+- `pode_criar_conversa` só responde sobre a própria pessoa.
 - Limite de 30 mensagens por minuto por pessoa (gatilho `rate_limit_mensagens`).
-- Foto só por link assinado; o bucket é privado e aceita só imagem e PDF.
+- Foto só por link assinado; o bucket é privado e aceita só imagem e PDF. Antes de 2026-10-06 qualquer usuário logado conseguia ler e listar a pasta `chat-images`.
 - O admin vê só números e metadados (participantes, status, quantidade, última atividade) e pode arquivar. Nunca vê o texto.
 
 ## Onde está no código

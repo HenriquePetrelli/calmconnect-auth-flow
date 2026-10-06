@@ -120,6 +120,9 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Psicólogo (app fechado) → paciente manda mensagem ⇒ push "Nova mensagem"
 - [ ] Paciente A → Chat → excluir conversa ⇒ some só para ele; volta se o psicólogo escrever
 - [ ] Conversa com mais de 1 mês sem nova consulta ⇒ "Somente leitura" (conferir no banco, ficha 06)
+- [ ] Paciente A → Chat → enviar foto ⇒ abre para o psicólogo; outra conta (Paciente B) não consegue abrir o link da foto
+- [ ] Foto enviada antes desta versão ⇒ continua abrindo para os dois participantes
+- [ ] Conversa somente leitura → tentar enviar ⇒ caixa de texto bloqueada; se insistir pela API, "Esta conversa está somente leitura"
 
 ## 5. Notificações e push (ficha 07)
 

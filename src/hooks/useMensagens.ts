@@ -99,9 +99,13 @@ export const useMensagens = (conversaId?: string) => {
       return true;
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
+      // Regra do banco (conversa somente leitura, muitas mensagens seguidas): mostra o motivo.
+      const motivo = (error as { code?: string; message?: string })?.code === 'P0001'
+        ? (error as { message?: string }).message
+        : null;
       toast({
         title: 'Erro',
-        description: 'Erro ao enviar mensagem',
+        description: motivo || 'Erro ao enviar mensagem',
         variant: 'destructive',
       });
       return false;
@@ -118,7 +122,9 @@ export const useMensagens = (conversaId?: string) => {
   const uploadImagem = async (file: File): Promise<string | null> => {
     try {
       const fileExt = (file.type.split('/')[1] || file.name.split('.').pop() || 'jpg').replace(/[^a-z0-9]/gi, '').slice(0, 5);
-      const filePath = `chat-images/${user?.id}-${Date.now()}.${fileExt}`;
+      if (!user || !conversaId) return null;
+      // Pasta da conversa: só os dois participantes enviam e veem (policy no banco).
+      const filePath = `chat-images/${conversaId}/${user.id}-${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('documents')

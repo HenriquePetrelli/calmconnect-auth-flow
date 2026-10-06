@@ -1,3 +1,4 @@
+import { addMonths } from 'date-fns';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -58,7 +59,12 @@ export const useConversas = () => {
           paciente_id: row.paciente_id,
           psicologo_id: row.psicologo_id,
           data_inicio: row.data_inicio,
-          status: row.status as Conversa['status'],
+          // A rotina diária muda o status; até ela rodar, a data já vale
+          // (o banco recusa mensagem 1 mês depois de a conversa abrir).
+          status:
+            row.status === 'ativa' && addMonths(new Date(row.data_inicio), 1) <= new Date()
+              ? 'somente_leitura'
+              : (row.status as Conversa['status']),
           created_at: row.created_at,
           updated_at: row.updated_at,
           outro_usuario: row.outro_nome
