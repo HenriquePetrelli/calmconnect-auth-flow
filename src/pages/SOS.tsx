@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { AlertTriangle, Phone, ShieldCheck, Wind } from "lucide-react";
+import { Phone, ShieldCheck, Wind } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SosBreathingDialog from "@/components/sos/SosBreathingDialog";
 import SosSafetyPlanDialog from "@/components/sos/SosSafetyPlanDialog";
@@ -12,7 +12,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { getSessionUser } from '@/lib/currentUser';
 import { useEmergencySOS } from "@/hooks/useEmergencySOS";
 import { notifySosQueueChanged, subscribeSosQueue } from "@/lib/sosQueueChannel";
-import HomeCrisisAccess from '@/components/HomeCrisisAccess';
 
 
 /** Server-side TTL for pending SOS requests (finalize_stale_emergency_sessions). */
@@ -334,72 +333,69 @@ const SOS = () => {
     );
   }
 
+  const someoneOnline = availableProfessionals > 0;
+
   return (
     <div className="min-h-screen bg-calm flex flex-col">
       <PageHeader title="Solicitar ajuda" onBack={() => setShowCancelModal(true)} />
 
-      {/* Content */}
-      <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-8">
-        {/* Status da busca */}
-        <Card className="w-full max-w-md">
-          <CardContent className="p-8 text-center space-y-6">
-            {!expired && (
-              <div className="w-20 h-20 mx-auto">
-                <div className="relative w-full h-full">
-                  <div className="absolute inset-0 rounded-full border-4 border-primary/20"></div>
-                  <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
-                  <div className="absolute inset-2 rounded-full border-2 border-primary/40 border-b-transparent animate-spin" style={{ animationDuration: '2s', animationDirection: 'reverse' }}></div>
-                </div>
-              </div>
-            )}
-
+      <div className="mx-auto flex w-full max-w-md flex-1 flex-col gap-4 px-4 py-6">
+        {/* Situação do pedido: uma informação de cada vez. */}
+        <Card>
+          <CardContent className="space-y-5 p-6 text-center">
             {expired ? (
-              <div className="space-y-3">
-                <h2 className="text-xl font-semibold text-foreground">
-                  Ainda não encontramos um profissional livre
-                </h2>
-                <p className="text-muted-foreground text-sm">
-                  Você não está sozinho. O CVV atende agora, de graça, 24 horas — é a forma mais rápida de
-                  conversar com alguém neste momento.
-                </p>
-                {/* Ponte para o CVV como ação principal: quando ninguém aceita, a
-                    pessoa não pode ficar só com um "tente de novo". */}
-                <Button asChild className="w-full min-h-12">
-                  <a href="tel:188">
-                    <Phone className="h-4 w-4" />
-                    Ligar para o CVV (188)
-                  </a>
-                </Button>
-                <Button variant="outline" onClick={() => window.location.reload()} className="w-full min-h-12">
-                  Tentar de novo com um psicólogo
-                </Button>
+              <>
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary" aria-hidden="true">
+                  <Phone className="h-6 w-6" />
+                </div>
+                <div className="space-y-1.5">
+                  <h2 className="text-lg font-semibold text-foreground">Ainda não encontramos um psicólogo livre</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Você não está sozinho. O CVV atende agora, de graça, 24 horas.
+                  </p>
+                </div>
+                {/* Quando ninguém aceita, a pessoa não pode ficar só com "tente de novo". */}
+                <div className="grid gap-2">
+                  <Button asChild className="min-h-12 w-full">
+                    <a href="tel:188">
+                      <Phone className="h-4 w-4" />
+                      Ligar para o CVV (188)
+                    </a>
+                  </Button>
+                  <Button variant="outline" onClick={() => window.location.reload()} className="min-h-12 w-full">
+                    Tentar de novo com um psicólogo
+                  </Button>
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  Este pedido não conta na sua cota do mês — ela só é usada quando um atendimento começa.
+                  Este pedido não conta no seu SOS do mês: ele só é usado quando um atendimento começa.
                 </p>
-              </div>
+              </>
             ) : (
-              <div className="space-y-3">
-                <h2 className="text-xl font-semibold text-foreground">
-                  Buscando profissional...
-                </h2>
-                <p className="text-primary font-medium">
-                  Profissionais disponíveis: {availableProfessionals}
-                </p>
-                <p className="text-2xl font-mono font-semibold text-foreground tabular-nums">
-                  {formatCountdown(secondsLeft)}
-                </p>
-                <p className="text-muted-foreground text-sm">
-                  Assim que um psicólogo aceitar, abriremos a sala de vídeo automaticamente.
-                </p>
-              </div>
+              <>
+                <div className="relative mx-auto h-16 w-16" aria-hidden="true">
+                  <div className="absolute inset-0 rounded-full border-4 border-primary/15" />
+                  <div className="absolute inset-0 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+                </div>
+                <div className="space-y-1.5" aria-live="polite">
+                  <h2 className="text-lg font-semibold text-foreground">Buscando um psicólogo</h2>
+                  <p className="text-sm text-muted-foreground">
+                    {someoneOnline
+                      ? `${availableProfessionals} ${availableProfessionals === 1 ? 'psicólogo online' : 'psicólogos online'} agora. Quando alguém aceitar, a chamada abre sozinha.`
+                      : 'Nenhum psicólogo online agora. Avisamos todos eles e seu pedido continua na fila: quando alguém aceitar, a chamada abre sozinha.'}
+                  </p>
+                </div>
+                <div className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
+                  Tempo de espera
+                  <span className="font-semibold tabular-nums text-foreground">{formatCountdown(secondsLeft)}</span>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>
 
-        {/* Enquanto espera: plano de segurança e respiração sem sair da tela
-            (sair da tela de SOS cancela o pedido). */}
+        {/* Enquanto espera, sem sair da tela (sair cancela o pedido). */}
         {!expired && (
-          <div className="grid w-full max-w-md grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <Button variant="outline" className="min-h-12" onClick={() => setSafetyPlanOpen(true)}>
               <ShieldCheck className="h-4 w-4" />
               Meu plano
@@ -411,65 +407,42 @@ const SOS = () => {
           </div>
         )}
 
-        {/* CVV/SAMU sempre visíveis e tocáveis durante a espera, não só quando ninguém está online */}
-        <div className="w-full max-w-md">
-          <HomeCrisisAccess />
-        </div>
-
-        {/* Nenhum profissional online: orientar em vez de deixar esperando */}
-        {availableProfessionals === 0 && (
-          <Card className="w-full max-w-md border-destructive/30 bg-destructive/5">
-            <CardContent className="p-6 space-y-4">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" aria-hidden="true" />
-                <div className="space-y-1">
-                  <h3 className="text-base font-semibold text-foreground">
-                    Nenhum profissional online agora
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Sua solicitação continua na fila e será atendida assim que alguém ficar disponível.
-                    Enquanto isso, você pode usar estes recursos:
-                  </p>
-                </div>
+        {/* Ligações sempre à mão; o CVV ganha destaque quando ninguém está online. */}
+        {!expired && (
+          <Card>
+            <CardContent className="space-y-3 p-4">
+              <div>
+                <p className="text-sm font-medium text-foreground">Precisa conversar agora?</p>
+                <p className="text-xs text-muted-foreground">
+                  Ligações gratuitas, a qualquer hora. Em risco imediato de vida, ligue para o 192.
+                </p>
               </div>
-
-              <div className="grid gap-2">
-                <Button variant="secondary" onClick={() => setBreathingOpen(true)}>
-                  <Wind className="h-4 w-4" />
-                  Respiração guiada
-                </Button>
-                <Button variant="outline" asChild>
+              <div className="grid grid-cols-2 gap-2">
+                <Button asChild variant={someoneOnline ? 'outline' : 'default'} className="min-h-11">
                   <a href="tel:188">
                     <Phone className="h-4 w-4" />
-                    Ligar para o CVV (188)
+                    CVV 188
                   </a>
                 </Button>
-                <Button variant="outline" asChild>
+                <Button asChild variant="outline" className="min-h-11">
                   <a href="tel:192">
                     <Phone className="h-4 w-4" />
-                    Emergência médica (192)
+                    SAMU 192
                   </a>
                 </Button>
               </div>
-
-              <p className="text-xs text-muted-foreground">
-                Em risco imediato de vida, procure o serviço de emergência mais próximo.
-              </p>
             </CardContent>
           </Card>
         )}
 
+        {!expired && <SupportiveMessages />}
 
-        {/* Mensagens de apoio */}
-        <SupportiveMessages />
-
-        {/* Botão cancelar */}
         <Button
-          variant="outline"
-          onClick={() => setShowCancelModal(true)}
-          className="px-8"
+          variant="ghost"
+          onClick={() => (expired ? navigate('/home') : setShowCancelModal(true))}
+          className="mt-auto text-muted-foreground"
         >
-          Cancelar
+          {expired ? 'Voltar para o início' : 'Cancelar pedido'}
         </Button>
       </div>
 

@@ -22,7 +22,7 @@ O paciente aperta SOS, entra numa fila e o primeiro psicólogo online que aceita
 1. O paciente toca em SOS. A edge function `emergency-sos` confere o login, o plano e a cota do mês (`can_use_sos`), aplica um limite de 5 tentativas em 10 minutos e cria o pedido em `emergency_requests` com status `pending`.
 2. Se já existe um pedido aberto do paciente, ele volta para esse pedido em vez de criar outro. O banco garante isso mesmo com dois toques ao mesmo tempo ou duas abas (`guard_sos_concurrency`). Só conta de paciente pede SOS.
 3. Os psicólogos online veem o pedido na lista na hora (tempo real e canal `sos-queue`, com consulta a cada 10 s). Todos os psicólogos aprovados, não bloqueados e que não estão em outro SOS recebem um **push**, mesmo com o app fechado.
-4. Na fila, o paciente vê quantos profissionais estão disponíveis, o tempo de espera (até 10 min), CVV 188 e SAMU 192. Também pode abrir **Meu plano** (plano de segurança) e **Respirar** sem sair da fila.
+4. Na fila, o paciente vê quantos psicólogos estão online, o tempo de espera (até 10 min), **Meu plano** (plano de segurança), **Respirar** e as ligações para o CVV 188 e o SAMU 192 (uma vez só, sem repetir). Sem ninguém online, o pedido continua na fila (todos os psicólogos recebem push e podem ficar online) e o CVV ganha destaque.
 5. A fila confere o pedido a cada 5 s e quando a internet ou a tela voltam. Assim o aceite chega mesmo se o tempo real cair.
 
 ### 2. Aceite
@@ -82,7 +82,7 @@ Status do pedido: `pending` → `accepted` → `in_progress` → `completed`, ou
 ## Como validar
 
 ### Teste manual (dois aparelhos)
-1. **Sem psicólogo online**: o paciente abre o SOS → "Nenhum profissional online agora", com CVV/SAMU em destaque.
+1. **Sem psicólogo online**: o paciente abre o SOS → "Nenhum psicólogo online agora", o pedido continua na fila e o CVV 188 fica em destaque.
 2. **Fluxo feliz**: o psicólogo fica Online → o paciente aperta SOS → o pedido aparece na hora (aviso em tempo real; a checagem a cada 10 s é só a garantia) → aceitar → os dois na sala, com vídeo → o psicólogo encerra (resolvida: sim) → o paciente avalia → os dois voltam para o início.
 3. **Cota**: com o mesmo paciente, tentar um 2º SOS no mesmo mês → aviso de cota usada.
 4. **Desistência**: o paciente aperta SOS e fecha o app antes do aceite → o pedido some da lista do psicólogo.

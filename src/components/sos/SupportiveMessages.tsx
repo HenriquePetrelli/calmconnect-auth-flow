@@ -35,10 +35,10 @@ const SupportiveMessages = () => {
   }, []);
 
   return (
-    <div className="text-center p-4">
-      <p 
+    <div className="px-4 py-2 text-center">
+      <p
         key={currentMessageIndex}
-        className="text-lg text-muted-foreground animate-fade-in font-medium italic"
+        className="animate-fade-in text-sm italic text-muted-foreground"
       >
         "{supportiveMessages[currentMessageIndex]}"
       </p>

@@ -38,7 +38,7 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 
 ## 2. SOS (fichas 02 e 03)
 
-- [ ] Paciente A → SOS (sem psicólogo online) ⇒ "Nenhum profissional online", CVV/SAMU em destaque
+- [ ] Paciente A → SOS (sem psicólogo online) ⇒ "Nenhum psicólogo online agora", pedido continua na fila e o CVV 188 em destaque
 - [ ] Psicólogo → Início → ficar Online ⇒ Paciente A vê "1 profissional disponível"
 - [ ] Paciente A → SOS → pedir ajuda ⇒ pedido aparece no painel do psicólogo em até 10 s
 - [ ] Psicólogo → Aceitar ⇒ os dois na sala, com vídeo e áudio
