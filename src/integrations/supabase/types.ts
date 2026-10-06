@@ -2939,6 +2939,8 @@ export type Database = {
         Args: { p_paciente_id: string; p_psicologo_id: string }
         Returns: boolean
       }
+      pode_enviar_imagem_chat: { Args: { p_name: string }; Returns: boolean }
+      pode_ver_imagem_chat: { Args: { p_name: string }; Returns: boolean }
       promote_to_admin: {
         Args: { target_user_email: string }
         Returns: boolean
