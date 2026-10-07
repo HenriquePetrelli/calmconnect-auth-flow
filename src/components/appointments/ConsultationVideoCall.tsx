@@ -264,7 +264,7 @@ const ConsultationVideoCall = ({ appointment, onEndCall }: ConsultationVideoCall
   // estas gravações nunca saíam do app.
   const persistMediaState = async (payload: Record<string, boolean>) => {
     if (!sessionId) return;
-    const { error } = await supabase.from('webrtc_sessions').update(payload).eq('id', sessionId);
+    const { error } = await supabase.from('webrtc_sessions').update(payload as any).eq('id', sessionId);
     if (error) console.error('Error persisting media state:', error);
   };
 

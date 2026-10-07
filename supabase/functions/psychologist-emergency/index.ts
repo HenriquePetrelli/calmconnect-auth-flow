@@ -19,7 +19,7 @@ const getCorsHeaders = (origin: string | null) => {
 };
 
 // Helper function to check if psychologist can help with patient symptoms
-async function canPsychologistHelp(supabase, psychologistId, patientSymptoms) {
+async function canPsychologistHelp(supabase: any, psychologistId: string, patientSymptoms: string[]) {
   try {
     // 1. Get psychologist's area of attention
     const { data: psychologist, error: psychError } = await supabase
@@ -47,7 +47,7 @@ async function canPsychologistHelp(supabase, psychologistId, patientSymptoms) {
 
     // 3. Check if there's intersection between patient symptoms and disorder symptoms
     const transtornoSintomas = transtornoData.sintomas;
-    const hasMatch = patientSymptoms.some(symptom => 
+    const hasMatch = patientSymptoms.some((symptom: string) => 
       transtornoSintomas.includes(symptom)
     );
 
@@ -189,7 +189,7 @@ serve(async (req) => {
         requestBody = JSON.parse(rawBody);
       } catch (parseError) {
         console.error('JSON parsing failed:', parseError);
-        throw new Error(`Invalid request body: ${parseError.message}`);
+        throw new Error(`Invalid request body: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
       }
 
       const { requestId, action } = requestBody;
@@ -478,7 +478,7 @@ serve(async (req) => {
               success: true,
               message: 'Emergência aceita, mas houve erro ao criar sessão de vídeo',
               emergency_request: updatedRequest,
-              session_error: sessionError.message,
+              session_error: sessionError instanceof Error ? sessionError.message : String(sessionError),
               // Return null session_id so frontend can handle it appropriately
               session_id: null,
               webrtc_data: null

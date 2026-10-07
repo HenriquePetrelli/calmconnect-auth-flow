@@ -2368,6 +2368,9 @@ export type Database = {
           expires_at: string | null
           ice_candidates: Json[] | null
           id: string
+          media_seconds: number
+          media_tick_at: string | null
+          media_tracked: boolean
           offer: Json | null
           patient_camera_off: boolean | null
           patient_id: string | null
@@ -2396,6 +2399,9 @@ export type Database = {
           expires_at?: string | null
           ice_candidates?: Json[] | null
           id?: string
+          media_seconds?: number
+          media_tick_at?: string | null
+          media_tracked?: boolean
           offer?: Json | null
           patient_camera_off?: boolean | null
           patient_id?: string | null
@@ -2424,6 +2430,9 @@ export type Database = {
           expires_at?: string | null
           ice_candidates?: Json[] | null
           id?: string
+          media_seconds?: number
+          media_tick_at?: string | null
+          media_tracked?: boolean
           offer?: Json | null
           patient_camera_off?: boolean | null
           patient_id?: string | null
