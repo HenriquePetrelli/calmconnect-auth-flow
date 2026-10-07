@@ -43,8 +43,12 @@ interface ConsultationVideoCallProps {
       specialization?: string;
     };
   };
-  onEndCall: () => void;
+  /** `skipComplete`: nada a concluir (marcada como interrompida ou a sala nem abriu). */
+  onEndCall: (options?: { skipComplete?: boolean }) => void;
 }
+
+/** Quanto tempo sem áudio/vídeo (com os dois na sala) até oferecer saídas. */
+const MEDIA_FAILURE_THRESHOLD_SECONDS = 45;
 
 /** Warns both participants once this much time is left. */
 const WARN_REMAINING_SECONDS = 5 * 60;
@@ -100,6 +104,7 @@ const ConsultationVideoCall = ({ appointment, onEndCall }: ConsultationVideoCall
     toggleVideo,
     cleanup: cleanupWebRTC,
     sendCallEndedSignal,
+    notConnectedSince,
   } = useWebRTC({
     sessionId: sessionId || '',
     userType,
@@ -134,6 +139,27 @@ const ConsultationVideoCall = ({ appointment, onEndCall }: ConsultationVideoCall
   });
   const showAbsencePanel =
     absenceSeconds >= CONSULTATION_ABSENCE_THRESHOLD_SECONDS && Date.now() >= absenceSnoozedUntil && !isNetworkOffline;
+  // Os dois na sala, mas áudio/vídeo não passa: depois de 45 s oferece saídas
+  // em vez de deixar os dois presos em "reconectando".
+  const [nowTick, setNowTick] = useState(() => Date.now());
+  const [mediaSnoozedUntil, setMediaSnoozedUntil] = useState(0);
+  const [interrupting, setInterrupting] = useState(false);
+  const interruptedRef = useRef(false);
+  useEffect(() => {
+    if (!notConnectedSince) return;
+    const timer = setInterval(() => setNowTick(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [notConnectedSince]);
+  const mediaDownSeconds = notConnectedSince ? Math.max(0, Math.floor((nowTick - notConnectedSince) / 1000)) : 0;
+  const showMediaFailurePanel =
+    Boolean(sessionId) &&
+    remotePresent &&
+    !showAbsencePanel &&
+    !isNetworkOffline &&
+    !callOver &&
+    mediaDownSeconds >= MEDIA_FAILURE_THRESHOLD_SECONDS &&
+    nowTick >= mediaSnoozedUntil;
+
   const banner = getConnectionBannerState({
     isReconnecting,
     isNetworkOffline,
@@ -234,23 +260,57 @@ const ConsultationVideoCall = ({ appointment, onEndCall }: ConsultationVideoCall
     }
   };
 
+  // A consulta do Supabase só é enviada quando alguém espera por ela: antes
+  // estas gravações nunca saíam do app.
+  const persistMediaState = async (payload: Record<string, boolean>) => {
+    if (!sessionId) return;
+    const { error } = await supabase.from('webrtc_sessions').update(payload).eq('id', sessionId);
+    if (error) console.error('Error persisting media state:', error);
+  };
+
   const handleToggleMute = () => {
     const muted = toggleAudio();
     setIsMuted(muted);
-    if (sessionId) {
-      const payload = userType === 'psychologist' ? { psychologist_muted: muted } : { patient_muted: muted };
-      supabase.from('webrtc_sessions').update(payload).eq('id', sessionId);
-    }
+    void persistMediaState(userType === 'psychologist' ? { psychologist_muted: muted } : { patient_muted: muted });
   };
 
   const handleToggleCamera = () => {
     const cameraOff = toggleVideo();
     setIsCameraOff(cameraOff);
-    if (sessionId) {
-      const payload = userType === 'psychologist'
-        ? { psychologist_camera_off: cameraOff }
-        : { patient_camera_off: cameraOff };
-      supabase.from('webrtc_sessions').update(payload).eq('id', sessionId);
+    void persistMediaState(
+      userType === 'psychologist' ? { psychologist_camera_off: cameraOff } : { patient_camera_off: cameraOff }
+    );
+  };
+
+  const retryMedia = () => {
+    forceReconnect();
+    setMediaSnoozedUntil(Date.now() + 30 * 1000);
+  };
+
+  // Psicólogo: a chamada não conecta. Marca como interrompida (a consulta do
+  // mês volta para o paciente e não entra no repasse) e encerra para os dois.
+  const handleMarkInterrupted = async () => {
+    setInterrupting(true);
+    try {
+      const { error } = await supabase.rpc('report_consultation_problem', {
+        p_appointment_id: appointment.id,
+        p_details: 'A chamada não conectou',
+      });
+      if (error) throw error;
+      interruptedRef.current = true;
+      toast({
+        title: 'Consulta marcada como interrompida',
+        description: 'A consulta do mês voltou para o paciente, que foi avisado para remarcar.',
+      });
+      await handleEndCall();
+    } catch (error) {
+      toast({
+        title: 'Não foi possível marcar agora',
+        description: getFriendlyErrorMessage(error, 'Tente de novo em instantes.'),
+        variant: 'destructive',
+      });
+    } finally {
+      setInterrupting(false);
     }
   };
 
@@ -284,7 +344,7 @@ const ConsultationVideoCall = ({ appointment, onEndCall }: ConsultationVideoCall
     // Avaliou ou pulou: não pergunta de novo dessa consulta ao reabrir o app.
     if (userType === 'patient' && sessionId) dismissAppointmentFeedback(sessionId);
     setShowFeedbackModal(false);
-    onEndCall();
+    onEndCall({ skipComplete: interruptedRef.current });
   };
 
   // What each side sees as "the other person" when there's no video.
@@ -436,6 +496,30 @@ const ConsultationVideoCall = ({ appointment, onEndCall }: ConsultationVideoCall
           />
         )}
 
+        {showMediaFailurePanel && (
+          userType === 'patient' ? (
+            <RemoteAbsentPanel
+              icon={WifiOff}
+              title="A chamada não está conectando"
+              description="Vocês dois estão na sala, mas o áudio e o vídeo não chegam. Tente de novo. Se a chamada não voltar e vocês não conversarem pelo menos 5 minutos, a consulta do mês volta para você automaticamente."
+              actions={[
+                { label: 'Tentar de novo', icon: RefreshCw, variant: 'default', onClick: retryMedia },
+                { label: 'Continuar esperando', onClick: () => setMediaSnoozedUntil(Date.now() + 2 * 60 * 1000) },
+              ]}
+            />
+          ) : (
+            <RemoteAbsentPanel
+              icon={WifiOff}
+              title="A chamada não está conectando"
+              description="Vocês dois estão na sala, mas o áudio e o vídeo não chegam. Tente de novo; se não resolver, marque como interrompida: a consulta do mês volta para o paciente, que é avisado para remarcar."
+              actions={[
+                { label: 'Tentar de novo', icon: RefreshCw, variant: 'default', onClick: retryMedia },
+                { label: 'Marcar como interrompida', icon: PhoneOff, loading: interrupting, onClick: handleMarkInterrupted },
+              ]}
+            />
+          )
+        )}
+
         {/* A sala não abriu */}
         {!sessionId && sessionError && (
           <div
@@ -450,7 +534,7 @@ const ConsultationVideoCall = ({ appointment, onEndCall }: ConsultationVideoCall
                 {openingRoom ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
                 Tentar de novo
               </Button>
-              <Button variant="outline" className="w-full" onClick={onEndCall}>
+              <Button variant="outline" className="w-full" onClick={() => onEndCall({ skipComplete: true })}>
                 Voltar
               </Button>
             </div>

@@ -46,23 +46,29 @@ export const useAppointmentVideoCall = () => {
       
       // Session summary is added later by the psychologist from ConsultationHistory,
       // not captured at end-of-call time.
+      // Só consultas ainda abertas: se o outro lado já marcou como interrompida
+      // (ou a rotina já fechou), não há o que concluir e não é erro.
       const { data, error } = await supabase
         .from('appointments')
         .update({ status: 'completed' })
         .eq('id', appointmentId)
+        .eq('status', 'in_progress')
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+      if (!data) return null;
 
-      // Sem a chamada conectar os dois lados, o banco mantém a consulta em
-      // andamento: a outra pessoa ainda pode entrar até o fim do horário.
+      // A consulta só conta com pelo menos 5 minutos de chamada com os dois
+      // conectados; antes disso o banco a mantém em andamento (dá para voltar
+      // até o fim do horário) e a rotina fecha como interrompida ou não
+      // realizada, devolvendo a consulta do mês ao paciente.
       if (data?.status === 'completed') {
         toast({ title: 'Consulta finalizada' });
       } else {
         toast({
           title: 'Você saiu da sala',
-          description: 'A outra pessoa não chegou a entrar. A consulta continua aberta até o fim do horário; se ninguém entrar, ela é encerrada como não realizada e a consulta do mês volta para o paciente.',
+          description: 'A consulta só conta depois de 5 minutos de chamada com os dois conectados. Ela continua aberta até o fim do horário; se não continuar, a consulta do mês volta para o paciente e ela não entra no repasse.',
         });
       }
 

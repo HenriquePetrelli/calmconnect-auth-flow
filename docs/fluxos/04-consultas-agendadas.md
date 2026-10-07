@@ -6,7 +6,7 @@
 
 ## Resumo
 
-O paciente escolhe psicólogo, dia e horário dentro da agenda real dele. O psicólogo aceita, recusa ou propõe outro horário. No dia, os dois entram na sala de vídeo (ficha 03). A consulta só conta como realizada se a chamada conectou. Se não aconteceu, a consulta do mês volta para o paciente.
+O paciente escolhe psicólogo, dia e horário dentro da agenda real dele. O psicólogo aceita, recusa ou propõe outro horário. No dia, os dois entram na sala de vídeo (ficha 03). A consulta só conta como realizada com pelo menos **5 minutos de chamada com os dois conectados**. Se não aconteceu ou foi interrompida antes disso, a consulta do mês volta para o paciente e ela não entra no repasse.
 
 ## Telas
 
@@ -40,12 +40,14 @@ O paciente escolhe psicólogo, dia e horário dentro da agenda real dele. O psic
 3. O cronômetro compartilhado avisa aos 5 min finais e ao zerar, mas não derruba a chamada.
 
 ### 5. Conclusão
-- Só conta como concluída se a chamada **conectou** os dois lados (`webrtc_sessions.connected_at`, gravado na primeira conexão e mantido mesmo se a chamada cair depois). Vale para o botão "Concluir" do psicólogo e para o "Encerrar" da sala.
+- Só conta como concluída com pelo menos **5 minutos de chamada com os dois conectados** (`webrtc_sessions.media_seconds`, somado pelo banco a partir do aviso que cada lado manda a cada 20 s enquanto a mídia passa; o app não consegue alterar). Vale para o botão "Concluir" do psicólogo, para o "Encerrar" da sala e para a rotina. Salas criadas antes desta regra seguem a anterior (bastava conectar).
 - Quem sai da sala sem a outra pessoa ter entrado não encerra a consulta: ela continua "em andamento" até o fim da janela (a outra pessoa ainda pode entrar), e o app avisa isso.
 - Salvar o resumo da sessão no histórico não muda o status da consulta.
 - A rotina `finalize-stale-appointments` (a cada 10 min) fecha o que ficou aberto 30 min após o fim previsto:
-  - **conectou** → `completed`, e entra no repasse do psicólogo (ficha 09);
+  - **5 min ou mais de chamada** → `completed`, e entra no repasse do psicólogo (ficha 09);
+  - **conectou mas não chegou a 5 min** (caiu e ninguém conseguiu voltar) → `cancelled` como "Interrompida", a consulta do mês volta para o paciente, não entra no repasse e os dois são avisados;
   - **não conectou** → `no_show`, a consulta do mês volta para o paciente e ele é avisado.
+- Na sala, se os dois estão presentes mas o áudio/vídeo não passa por 45 s, aparece "A chamada não está conectando": os dois podem "Tentar de novo" (conexão nova) e o psicólogo pode "Marcar como interrompida" na hora (devolve a consulta do mês).
 
 ### 6. Avaliação
 - Ao fim da chamada, o paciente avalia (nota e comentário).
@@ -81,7 +83,7 @@ Toda devolução da consulta do mês (cancelar, recusar, expirar, não realizada
 - **Hooks**: `useAppointments`, `useAvailableTimeSlots`, `usePsychologistSchedule`, `useAppointmentVideoCall`, `usePendingCallFeedback`.
 - **Regras puras**: `src/lib/appointmentCancellation.ts`, `appointmentRating.ts`, `consultationWindow.ts`, `consultationProblem.ts`, `bookingRules.ts`.
 - **Edge functions**: `appointments` (criar e listar), `psychologist-schedule` (aceitar, recusar, propor, concluir), `auto-decline-appointments`, `send-appointment-notification`, `notification-push`.
-- **Banco**: `appointments`, `appointment_reminders_sent`, `appointment_problem_reports`, `session_feedback`, `subscribers` (cota). Funções: `release_appointment_quota`, `appointment_call_connected`, `cancel_appointment`, `get_or_create_appointment_webrtc_session`, `notify_consultation_waiting`, `report_consultation_problem`, `finalize_stale_appointments`, `queue_appointment_reminders`. Gatilhos `guard_appointment_client_update` e `track_call_connected` (em `webrtc_sessions`). Migração mais recente: `20261004000247_cf325ceb-bcdc-471c-9aa3-6bdeea596c98.sql`.
+- **Banco**: `appointments`, `appointment_reminders_sent`, `appointment_problem_reports`, `session_feedback`, `subscribers` (cota). Funções: `release_appointment_quota`, `appointment_call_connected` (conectou e 5 min de chamada), `report_call_media`, `cancel_appointment`, `get_or_create_appointment_webrtc_session`, `notify_consultation_waiting`, `report_consultation_problem`, `finalize_stale_appointments`, `queue_appointment_reminders`. Gatilhos `guard_appointment_client_update` e `track_call_connected` (em `webrtc_sessions`). Migração mais recente: `20261004000247_cf325ceb-bcdc-471c-9aa3-6bdeea596c98.sql`.
 
 ## Como validar
 
@@ -106,8 +108,8 @@ Toda devolução da consulta do mês (cancelar, recusar, expirar, não realizada
 select id, status, scheduled_at, duration, video_room_id, cancellation_reason
 from appointments where patient_id = '<id>' order by scheduled_at desc;
 
--- A chamada conectou?
-select a.id, a.status, s.connected_at, (s.connected_at is not null) as conectou
+-- A chamada conectou? Quanto tempo os dois ficaram em chamada?
+select a.id, a.status, s.connected_at, s.media_seconds, s.media_tracked, (s.connected_at is not null) as conectou
 from appointments a left join webrtc_sessions s on s.id::text = a.video_room_id
 where a.id = '<id da consulta>';
 
@@ -131,5 +133,6 @@ Nenhuma no fluxo. O push dos lembretes depende do Firebase (pendência 3).
 | "Seu plano não inclui consultas" | Paciente não é Premium (ou plano vencido) | `subscribers` |
 | Botão "Entrar" não aparece | Fora da janela (10 min antes até 15 min depois do fim) ou consulta não confirmada | Status e horário da consulta |
 | Psicólogo não consegue concluir | A chamada nunca conectou | `webrtc_sessions.connected_at`; a rotina vai marcar `no_show` |
-| Encerrou e a consulta continuou "Em andamento" | A outra pessoa nunca entrou | Esperado; a rotina fecha como `no_show` |
+| Encerrou e a consulta continuou "Em andamento" | A outra pessoa nunca entrou, ou a chamada teve menos de 5 min | Esperado; a rotina fecha como `no_show` ou "Interrompida" (e devolve a consulta do mês) |
+| Psicólogo não consegue concluir: "menos de 5 minutos" | A chamada caiu antes de 5 min de conversa | Marcar como "Consulta interrompida" (devolve a consulta do mês) |
 | Consulta ficou "Em andamento" | Ninguém concluiu | A rotina fecha 30 min após o fim previsto; conferir `cron.job_run_details` (ficha 21) |

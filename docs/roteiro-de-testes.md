@@ -285,6 +285,11 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Mesmo caso → psicólogo "Encerrar por falha de conexão" ⇒ SOS do mês volta para o paciente
 - [ ] SOS → psicólogo entra e encerra sem o paciente ter aparecido no vídeo ⇒ SOS do mês volta; não entra no repasse
 - [ ] SOS com queda longa no meio (cronômetro pausado) ⇒ a chamada não é cortada pelo servidor enquanto ainda há tempo na tela
+- [ ] Consulta → os dois conversam 2 min, a internet de um cai e ninguém volta ⇒ 30 min após o fim: "Consulta interrompida" para os dois, consulta do mês devolvida, fora do repasse
+- [ ] Consulta → os dois conversam 10 min e encerram ⇒ "Consulta finalizada"; entra no repasse
+- [ ] Consulta → psicólogo tenta "Concluir" uma chamada de 2 min ⇒ recusado com orientação para marcar como interrompida
+- [ ] Consulta com os dois na sala e sem áudio/vídeo por 45 s ⇒ "A chamada não está conectando"; psicólogo "Marcar como interrompida" ⇒ paciente avisado e consulta do mês devolvida, sem erro ao sair da sala
+- [ ] Consulta → mutar/desligar a câmera ⇒ fica gravado na sala (`patient_muted`/`psychologist_camera_off`)
 - [ ] Psicólogo novo → cadastrar → sair e entrar de novo ⇒ continua em "cadastro em análise" (não entra no painel)
 - [ ] Consulta → psicólogo entra na sala sozinho e encerra ⇒ a consulta não vira "realizada"; com o paciente na chamada, vira
 

@@ -75,8 +75,9 @@ const ConsultationCall = () => {
     fetchAppointment();
   }, [appointmentId, navigate, homeRoute]);
 
-  const handleEndCall = async () => {
-    if (appointmentId) {
+  const handleEndCall = async (options?: { skipComplete?: boolean }) => {
+    // Marcada como interrompida ou a sala nem abriu: não há o que concluir.
+    if (appointmentId && !options?.skipComplete) {
       try {
         await endConsultation(appointmentId);
       } catch (error) {

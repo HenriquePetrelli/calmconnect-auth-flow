@@ -10,7 +10,7 @@ Cada atendimento realizado vira um item a pagar ao psicólogo:
 
 | Atendimento | Valor | Quando entra |
 |---|---|---|
-| Consulta agendada | R$ 90,00 | Status `completed` **e** a chamada conectou os dois lados |
+| Consulta agendada | R$ 90,00 | Status `completed` **e** pelo menos 5 min de chamada com os dois conectados |
 | SOS | R$ 50,00 | Status `completed` **e** a chamada conectou os dois lados |
 
 O admin paga por PIX fora do app e registra no painel com o **código E2E do PIX**. O psicólogo vê o pendente, o pago e os comprovantes.
@@ -55,6 +55,7 @@ O admin paga por PIX fora do app e registra no painel com o **código E2E do PIX
 4. "Confirmar" com E2E de 32 caracteres → o pendente zera; o psicólogo vê em "Repasses recebidos".
 5. Tentar confirmar de novo com o mesmo E2E → recusado.
 6. Psicólogo entra sozinho numa consulta e sai → ela não entra no repasse (fica "não realizada").
+7. Chamada que conecta e cai antes de 5 min sem voltar → "Interrompida", fora do repasse.
 7. Psicólogo troca a chave Pix no perfil → o admin vê a chave nova em Repasses.
 
 ### Testes automáticos

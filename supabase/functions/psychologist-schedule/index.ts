@@ -546,12 +546,17 @@ serve(async (req) => {
       // sala, então o psicólogo sozinho conseguia concluir e receber.
       if (status === 'completed') {
         const { data: session } = appointment.video_room_id
-          ? await supabase.from('webrtc_sessions').select('connected_at').eq('id', appointment.video_room_id).maybeSingle()
+          ? await supabase.from('webrtc_sessions').select('connected_at, media_seconds, media_tracked').eq('id', appointment.video_room_id).maybeSingle()
           : { data: null };
         // `connected_at` só é gravado quando os dois lados confirmam áudio/vídeo
         // passando (report_call_media); a resposta da oferta sozinha não basta.
         if (!session?.connected_at) {
           throw new HttpError('Esta consulta não chegou a acontecer pela chamada do app, então não pode ser concluída.', 409);
+        }
+        // E só conta com pelo menos 5 minutos de chamada com os dois conectados
+        // (salas antigas, sem essa contagem, seguem a regra de antes).
+        if (session.media_tracked && (session.media_seconds ?? 0) < 300) {
+          throw new HttpError('A chamada durou menos de 5 minutos com os dois conectados, então a consulta não conta. Se ela foi interrompida, marque como "Consulta interrompida" para devolver a consulta do mês ao paciente.', 409);
         }
       }
     }

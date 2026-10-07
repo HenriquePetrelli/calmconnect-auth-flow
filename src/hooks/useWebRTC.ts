@@ -877,6 +877,19 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     return signalChannelRef.current?.sendMediaState(payload) ?? false;
   }, []);
 
+  // While audio/video flows, a pulse every 20 s lets the server add up how long
+  // BOTH sides were really in the call (a consultation only counts after 5 min).
+  useEffect(() => {
+    if (!isConnected) return;
+    const timer = setInterval(() => {
+      if (disposedRef.current || pcRef.current?.connectionState !== 'connected') return;
+      mediaQueueRef.current = mediaQueueRef.current.then(async () => {
+        await supabase.rpc('report_call_media' as any, { p_session_id: sessionId, p_connected: true });
+      }).catch(() => undefined);
+    }, 20_000);
+    return () => clearInterval(timer);
+  }, [isConnected, sessionId]);
+
   // Re-announce our media state whenever the connection comes up.
   useEffect(() => {
     if (!isConnected) return;
