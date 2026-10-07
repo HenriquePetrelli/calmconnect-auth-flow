@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import EmergencyVideoCall, { type EndCallInfo } from "@/components/EmergencyVideoCall";
+import VideoCallRoom from "@/components/calls/VideoCallRoom";
+import { getSessionUser } from "@/lib/currentUser";
 import { useEmergencySession } from "@/hooks/useEmergencySession";
 import RouteSkeleton from "@/components/skeletons/RouteSkeleton";
 
@@ -10,11 +11,11 @@ import RouteSkeleton from "@/components/skeletons/RouteSkeleton";
  * Emergency (SOS) call route.
  *
  * This page is a thin UI shell: the whole request/session lifecycle lives in
- * `useEmergencySession` and the media/WebRTC layer lives in
- * `EmergencyVideoCall` + `useWebRTC`.
+ * `useEmergencySession` and the call itself is the shared room used by the
+ * scheduled consultation too (`VideoCallRoom` + `useWebRTC`).
  */
-/** Fallback when the request's own limit can't be read (20 min, the free tier). */
-const DEFAULT_SOS_TIME_LIMIT = 1200;
+/** Fallback when the request's own limit can't be read (SOS: 25 min). */
+const DEFAULT_SOS_TIME_LIMIT = 1500;
 
 const EmergencyCall = () => {
   const { requestId: requestIdParam, sessionId: sessionIdParam } = useParams();
@@ -23,8 +24,11 @@ const EmergencyCall = () => {
   const [loading, setLoading] = useState(true);
   const [sessionId, setSessionId] = useState<string | null>(null);
 
-  const userType =
+  const urlUserType =
     (searchParams.get("userType") as "psychologist" | "patient") || "patient";
+  // Quem é quem vem da própria sala (o endereço pode estar errado ou faltando).
+  const [roomUserType, setRoomUserType] = useState<"psychologist" | "patient" | null>(null);
+  const userType = roomUserType ?? urlUserType;
   const requestIdFromUrl = requestIdParam || searchParams.get("requestId") || null;
 
   useEffect(() => {
@@ -100,13 +104,32 @@ const EmergencyCall = () => {
     };
   }, [sessionId, requestIdFromUrl]);
 
-  const { endSession } = useEmergencySession({
+  useEffect(() => {
+    if (!sessionId) return;
+    let cancelled = false;
+    (async () => {
+      const [{ data: auth }, { data: room }] = await Promise.all([
+        getSessionUser(),
+        supabase.from("webrtc_sessions").select("patient_id, psychologist_id").eq("id", sessionId).maybeSingle(),
+      ]);
+      if (cancelled) return;
+      const uid = auth.user?.id;
+      setRoomUserType(
+        uid && room?.psychologist_id === uid ? "psychologist" : uid && room?.patient_id === uid ? "patient" : urlUserType
+      );
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [sessionId, urlUserType]);
+
+  const { requestId, endSession } = useEmergencySession({
     sessionId,
     requestIdFromUrl,
     userType,
   });
 
-  if (loading || (sessionId && timeLimit === null)) {
+  if (loading || (sessionId && (timeLimit === null || roomUserType === null))) {
     return <RouteSkeleton />;
   }
 
@@ -127,11 +150,13 @@ const EmergencyCall = () => {
   }
 
   return (
-    <EmergencyVideoCall
+    <VideoCallRoom
+      kind="sos"
       sessionId={sessionId}
       userType={userType}
-      timeLimit={timeLimit ?? DEFAULT_SOS_TIME_LIMIT}
-      onEndCall={(info?: EndCallInfo) => endSession(info)}
+      timeLimitSeconds={timeLimit ?? DEFAULT_SOS_TIME_LIMIT}
+      requestId={requestId ?? requestIdFromUrl}
+      onLeave={({ endInfo }) => endSession(endInfo)}
     />
   );
 };

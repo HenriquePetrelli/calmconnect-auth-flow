@@ -28,9 +28,8 @@ export const PLANS: Record<PlanTier, PlanInfo> = {
     price: 'R$ 120,00',
     period: '/mês',
     features: [
-      '1 chamada emergencial por mês',
-      '1 consulta agendada por mês',
-      'Duração: 50 minutos',
+      '1 chamada emergencial por mês, de 25 minutos',
+      '1 consulta agendada por mês, de 50 minutos',
       'Acesso à biblioteca de sons',
       'Exercícios de respiração',
       'Suporte prioritário',

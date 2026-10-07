@@ -38,7 +38,7 @@ Os recursos de autocuidado e os grupos de apoio **não são atendimento psicoló
 | Plano | Preço | Inclui |
 |---|---|---|
 | **Plus** | R$ 69,90 por mês | 1 atendimento SOS por mês, de até 25 minutos |
-| **Premium** | R$ 120,00 por mês | 1 atendimento SOS por mês, de até 50 minutos, e 1 consulta agendada por mês, de 50 minutos |
+| **Premium** | R$ 120,00 por mês | 1 atendimento SOS por mês, de até 25 minutos, e 1 consulta agendada por mês, de 50 minutos |
 
 - A cobrança é mensal, feita no cartão de crédito por meio da Stripe, e **renova automaticamente** até você cancelar. O recibo de cada cobrança vai para o seu e-mail, e as faturas ficam em **Planos → Gerenciar pagamento**.
 - **Troca de plano:** ao passar do Plus para o Premium, o Premium vale na hora e cobramos só a diferença proporcional até a sua próxima renovação. Ao passar do Premium para o Plus, você continua no Premium até o fim do período já pago, e o Plus vale a partir da renovação.
@@ -61,7 +61,7 @@ Se a sua empresa oferece o Soliv, você pode usar o código de convite do RH (no
 
 - Ao pedir ajuda pelo SOS, seu pedido é enviado aos psicólogos disponíveis naquele momento.
 - **Não há garantia de atendimento em um tempo determinado.** O atendimento depende de haver um psicólogo disponível. Se ninguém aceitar o pedido em **10 minutos**, ele é encerrado, não consome a sua cota, e o app indica o CVV (188) para você conversar com alguém imediatamente. ⚖️
-- A duração máxima do atendimento é a do seu plano (25 ou 50 minutos). O tempo pausa se alguém perder a conexão.
+- A duração máxima do atendimento é de 25 minutos. O tempo pausa se alguém perder a conexão.
 - Durante o atendimento, o psicólogo pode consultar os seus planos de segurança e contatos de emergência. Se ele avaliar que há risco à sua vida ou à de outra pessoa, pode acionar esses contatos ou os serviços de emergência, como preveem o Código de Ética Profissional do Psicólogo e a Resolução CFP nº 09/2024. ⚖️
 
 ## 7. Consultas agendadas

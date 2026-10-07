@@ -285,6 +285,11 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Mesmo caso → psicólogo "Encerrar por falha de conexão" ⇒ SOS do mês volta para o paciente
 - [ ] SOS → psicólogo entra e encerra sem o paciente ter aparecido no vídeo ⇒ SOS do mês volta; não entra no repasse
 - [ ] SOS com queda longa no meio (cronômetro pausado) ⇒ a chamada não é cortada pelo servidor enquanto ainda há tempo na tela
+- [ ] Chamada (SOS e consulta) → desligar e religar a câmera ⇒ a miniatura "Você" volta a mostrar o vídeo na hora
+- [ ] Chamada → o outro lado muta ⇒ ícone vermelho de microfone ao lado do nome dele (e barras quando fala)
+- [ ] Psicólogo → Contexto do paciente ⇒ a tela divide (contexto à esquerda, vídeo à direita; no celular, embaixo) e fecha pelo X
+- [ ] SOS ⇒ cronômetro começa em 25:00 (qualquer plano); consulta ⇒ 50:00
+- [ ] Chamada ⇒ sem botão de diagnóstico; Ctrl+D muta e Ctrl+E desliga a câmera
 - [ ] Consulta → os dois conversam 2 min, a internet de um cai e ninguém volta ⇒ 30 min após o fim: "Consulta interrompida" para os dois, consulta do mês devolvida, fora do repasse
 - [ ] Consulta → os dois conversam 10 min e encerram ⇒ "Consulta finalizada"; entra no repasse
 - [ ] Consulta → psicólogo tenta "Concluir" uma chamada de 2 min ⇒ recusado com orientação para marcar como interrompida

@@ -48,7 +48,7 @@ export const joinErrorMessage = (result: Pick<JoinResult, 'error' | 'domain'>): 
 export const PLAN_INCLUDES: Record<'Plus' | 'Premium', string[]> = {
   Plus: ['1 atendimento SOS por mês, de até 25 minutos', 'Respiração, sons, diário, hábitos e grupos'],
   Premium: [
-    '1 atendimento SOS por mês, de até 50 minutos',
+    '1 atendimento SOS por mês, de até 25 minutos',
     '1 consulta agendada por mês, de 50 minutos',
     'Respiração, sons, diário, hábitos e grupos',
   ],

@@ -10,7 +10,7 @@
 |---|---|---|---|---|
 | Sem plano | R$ 0 | 0 | 0 | — |
 | Plus | R$ 69,90 | 1 | 0 | 25 min |
-| Premium | R$ 120,00 | 1 | 1 | 50 min |
+| Premium | R$ 120,00 | 1 | 1 | 25 min |
 
 O pagamento é pelo **Stripe Checkout**. O estado da assinatura fica em `subscribers` e é atualizado pelo **webhook** do Stripe (na hora) e pelo `check-subscription` (quando o app abre). O plano da **empresa** (ficha 10) entra no mesmo lugar e vale o maior dos dois.
 

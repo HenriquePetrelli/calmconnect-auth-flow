@@ -1,83 +1,103 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { AlertTriangle, Loader2, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAppointmentVideoCall } from '@/hooks/useAppointmentVideoCall';
 import { useAuth } from '@/contexts/AuthContext';
-import ConsultationVideoCall from '@/components/appointments/ConsultationVideoCall';
-import { Appointment } from '@/hooks/useAppointments';
-import RouteSkeleton from "@/components/skeletons/RouteSkeleton";
+import { Button } from '@/components/ui/button';
+import VideoCallRoom from '@/components/calls/VideoCallRoom';
+import RouteSkeleton from '@/components/skeletons/RouteSkeleton';
+import { consultationDurationMinutes } from '@/lib/consultationWindow';
+import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 
+interface ConsultationData {
+  id: string;
+  scheduled_at: string;
+  duration: number | null;
+  patient_id: string;
+  psychologistName: string;
+}
+
+/**
+ * Sala da consulta agendada. A página carrega a consulta e abre a sala
+ * (`get_or_create_appointment_webrtc_session`, a mesma para os dois lados);
+ * a chamada em si é a mesma sala do SOS (`VideoCallRoom`).
+ */
 const ConsultationCall = () => {
   const { appointmentId } = useParams<{ appointmentId: string }>();
   const navigate = useNavigate();
-  const { userType } = useAuth();
+  const { userType: authUserType } = useAuth();
+  const userType: 'patient' | 'psychologist' = authUserType === 'psychologist' ? 'psychologist' : 'patient';
   const { endConsultation } = useAppointmentVideoCall();
   const homeRoute = userType === 'psychologist' ? '/psicologo/consultas' : '/appointments';
-  const [appointment, setAppointment] = useState<Appointment | null>(null);
+
+  const [appointment, setAppointment] = useState<ConsultationData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [roomError, setRoomError] = useState<string | null>(null);
+  const [openingRoom, setOpeningRoom] = useState(false);
 
   useEffect(() => {
-    const fetchAppointment = async () => {
-      if (!appointmentId) {
+    document.title = 'Consulta | Soliv';
+  }, []);
+
+  useEffect(() => {
+    if (!appointmentId) {
+      navigate(homeRoute);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from('appointments')
+        .select('id, scheduled_at, duration, patient_id, psychologists!psychologist_id(full_name)')
+        .eq('id', appointmentId)
+        .maybeSingle();
+      if (cancelled) return;
+      if (error || !data) {
         navigate(homeRoute);
         return;
       }
-
-      try {
-        const { data, error } = await supabase
-          .from('appointments')
-          .select(`
-            id,
-            scheduled_at,
-            duration,
-            status,
-            appointment_type,
-            notes,
-            psychologist_id,
-            psychologists!psychologist_id(
-              full_name,
-              specialization
-            )
-          `)
-          .eq('id', appointmentId)
-          .single();
-
-        if (error) throw error;
-
-        if (!data) {
-          navigate(homeRoute);
-          return;
-        }
-
-        // Transform data to match Appointment interface
-        const transformedAppointment: Appointment = {
-          id: data.id,
-          scheduled_at: data.scheduled_at,
-          duration: data.duration ?? undefined,
-          status: data.status,
-          appointment_type: data.appointment_type,
-          notes: data.notes,
-          psychologist: {
-            full_name: data.psychologists?.full_name || 'Psicólogo não identificado',
-            specialization: data.psychologists?.specialization,
-          }
-        };
-
-        setAppointment(transformedAppointment);
-      } catch (error) {
-        console.error('Error fetching appointment:', error);
-        navigate(homeRoute);
-      } finally {
-        setLoading(false);
-      }
+      const psychologist = data.psychologists as { full_name?: string } | null;
+      setAppointment({
+        id: data.id,
+        scheduled_at: data.scheduled_at,
+        duration: data.duration,
+        patient_id: data.patient_id,
+        psychologistName: psychologist?.full_name ?? 'Psicólogo',
+      });
+      setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
     };
-
-    fetchAppointment();
   }, [appointmentId, navigate, homeRoute]);
 
-  const handleEndCall = async (options?: { skipComplete?: boolean }) => {
+  // Os dois lados caem na mesma sala da consulta (não uma por aba).
+  const openRoom = useCallback(async () => {
+    if (!appointmentId) return;
+    setOpeningRoom(true);
+    setRoomError(null);
+    try {
+      const { data: roomId, error } = await supabase.rpc('get_or_create_appointment_webrtc_session', {
+        p_appointment_id: appointmentId,
+      });
+      if (error) throw error;
+      setSessionId(roomId as string);
+    } catch (error) {
+      setRoomError(getFriendlyErrorMessage(error, 'Verifique sua conexão e tente entrar de novo.'));
+    } finally {
+      setOpeningRoom(false);
+    }
+  }, [appointmentId]);
+
+  useEffect(() => {
+    if (appointment) void openRoom();
+  }, [appointment, openRoom]);
+
+  const handleLeave = async ({ skipComplete }: { skipComplete?: boolean }) => {
     // Marcada como interrompida ou a sala nem abriu: não há o que concluir.
-    if (appointmentId && !options?.skipComplete) {
+    if (appointmentId && !skipComplete) {
       try {
         await endConsultation(appointmentId);
       } catch (error) {
@@ -87,24 +107,43 @@ const ConsultationCall = () => {
     navigate(homeRoute);
   };
 
-  if (loading) {
-    return <RouteSkeleton />;
-  }
+  if (loading || !appointment) return <RouteSkeleton />;
 
-  if (!appointment) {
+  if (!sessionId) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-muted-foreground">Consulta não encontrada</p>
+      <div className="flex min-h-screen items-center justify-center bg-background p-6" data-testid="consultation-room-error">
+        <div className="w-full max-w-sm space-y-4 rounded-2xl border border-border bg-card p-6 text-center">
+          <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary" aria-hidden="true">
+            {roomError ? <AlertTriangle className="h-6 w-6" /> : <Loader2 className="h-6 w-6 animate-spin motion-reduce:animate-none" />}
+          </span>
+          <div className="space-y-1.5">
+            <h2 className="text-lg font-semibold text-foreground">{roomError ? 'Não foi possível abrir a sala' : 'Abrindo a sala...'}</h2>
+            {roomError && <p className="text-sm text-muted-foreground">{roomError}</p>}
+          </div>
+          {roomError && (
+            <div className="flex flex-col gap-2">
+              <Button className="w-full" onClick={() => void openRoom()} disabled={openingRoom}>
+                <RefreshCw className="h-4 w-4" /> Tentar de novo
+              </Button>
+              <Button variant="outline" className="w-full" onClick={() => navigate(homeRoute)}>
+                Voltar
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     );
   }
 
   return (
-    <ConsultationVideoCall
-      appointment={appointment}
-      onEndCall={handleEndCall}
+    <VideoCallRoom
+      kind="consultation"
+      sessionId={sessionId}
+      userType={userType}
+      timeLimitSeconds={consultationDurationMinutes(appointment) * 60}
+      remoteNameHint={userType === 'patient' ? appointment.psychologistName : null}
+      appointment={{ id: appointment.id, scheduledAt: appointment.scheduled_at, patientId: appointment.patient_id }}
+      onLeave={handleLeave}
     />
   );
 };

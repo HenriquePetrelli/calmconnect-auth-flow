@@ -57,7 +57,7 @@ Vídeo, reconexão automática, cronômetro compartilhado e painel de contexto d
 |---|---|
 | SOS por mês | 1 (Plus, Premium e empresa). Sem plano: sem SOS |
 | Espera máxima na fila | 10 min; depois vira `expired` e a tela oferece o CVV e "Tentar de novo" |
-| Duração máxima da chamada | Plus 25 min, Premium 50 min, sem plano ativo 20 min (gravada no pedido) |
+| Duração máxima da chamada | 25 min em todos os planos (gravada no pedido pelo gatilho `set_emergency_time_limit`). A consulta agendada continua com 50 min |
 | Os dois sem sinal | 10 min → `abandoned` (cota devolvida) |
 | Psicólogo ausente | 90 s → o paciente pode chamar outro (cota devolvida) |
 | Os dois na sala, mas a chamada não conecta | 45 s → painel com "Tentar de novo"; o paciente pode chamar outro psicólogo (o servidor aceita depois de 30 s sem mídia do lado dele) e o psicólogo pode encerrar por falha de conexão (`connection_failure`); nos dois casos a cota é devolvida |

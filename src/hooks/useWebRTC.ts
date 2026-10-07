@@ -385,7 +385,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     const el = remoteVideoRef.current;
     if (el && el.srcObject !== stream) {
       el.srcObject = stream;
-      el.play?.().catch(() => undefined);
+      void Promise.resolve(el.play?.()).catch(() => undefined);
     }
   }, []);
 
@@ -788,7 +788,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
       if (!pc || !isLive()) return;
       if (['disconnected', 'failed'].includes(pc.connectionState)) attemptReconnectRef.current();
       const el = remoteVideoRef.current;
-      if (el?.paused && el.srcObject) el.play().catch(() => undefined);
+      if (el?.paused && el.srcObject) void Promise.resolve(el.play?.()).catch(() => undefined);
     };
     document.addEventListener('visibilitychange', handleVisibility);
     return () => document.removeEventListener('visibilitychange', handleVisibility);
@@ -935,7 +935,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     const el = remoteVideoRef.current;
     if (!el || !remoteStream) return;
     if (el.srcObject !== remoteStream) el.srcObject = remoteStream;
-    el.play?.().catch(() => undefined);
+    void Promise.resolve(el.play?.()).catch(() => undefined);
   });
 
   // ------------------------------------------------------------- teardown

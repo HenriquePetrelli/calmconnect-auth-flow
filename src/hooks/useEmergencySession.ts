@@ -8,7 +8,7 @@ import { findOngoingCallForUser, sessionIdOf } from '@/lib/emergencyCallGuard';
 import { endEmergencySession } from '@/lib/endEmergencySession';
 import { sosLog } from '@/lib/sosLogger';
 import { trackSosEvent, SOS_EVENTS } from '@/lib/sosTrace';
-import type { EndCallInfo } from '@/components/EmergencyVideoCall';
+import type { EndCallInfo } from '@/components/calls/VideoCallRoom';
 
 interface UseEmergencySessionParams {
   sessionId?: string | null;

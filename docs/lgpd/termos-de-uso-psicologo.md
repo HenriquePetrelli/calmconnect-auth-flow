@@ -39,7 +39,7 @@ O Soliv é uma plataforma de tecnologia que conecta pacientes a psicólogos para
 ## 5. Atendimentos de emergência (SOS)
 
 - O psicólogo disponível recebe os pedidos de SOS e decide se aceita cada um.
-- Ao aceitar, compromete-se a conduzir o atendimento até o fim ou até o tempo máximo do plano do paciente (25 ou 50 minutos).
+- Ao aceitar, compromete-se a conduzir o atendimento até o fim ou até o tempo máximo do atendimento (25 minutos).
 - Ao encerrar, registra o desfecho (por exemplo, se a crise foi resolvida) e, quando couber, anotações clínicas.
 
 ## 6. Consultas agendadas

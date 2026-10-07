@@ -6,7 +6,16 @@
 
 ## Resumo
 
-A chamada é de navegador para navegador (WebRTC). O Supabase só faz a "apresentação" entre os dois (sinalização) e guarda o estado da sala. O mesmo motor (`useWebRTC`) serve o SOS e a consulta.
+A chamada é de navegador para navegador (WebRTC). O Supabase só faz a "apresentação" entre os dois (sinalização) e guarda o estado da sala. **SOS e consulta usam a mesma sala** (`VideoCallRoom`) e o mesmo motor (`useWebRTC`): um ajuste vale para os dois. A diferença visível é só a duração (SOS 25 min, consulta 50 min); por baixo mudam as regras de cada um (como encerra, as saídas quando o outro some ou a chamada não conecta).
+
+### Tela (padrão do Google Meet)
+- Palco escuro e neutro, sem gradientes; o outro participante ocupa o palco, com o **nome e o microfone juntos** no canto (vermelho quando mutado; barras quando está falando, e o quadro ganha borda).
+- Câmera desligada: avatar com as iniciais e "Fulano desligou a câmera".
+- Minha imagem numa miniatura no canto ("Você"), com o vídeo **sempre montado**: desligar e religar a câmera volta na hora.
+- Tempo restante no canto superior esquerdo ("pausado" quando alguém está fora); qualidade da rede no direito só quando cai ("Conexão lenta"/"Conexão instável").
+- Barra de controles: microfone (Ctrl+D), câmera (Ctrl+E), dispositivos, contexto do paciente (só psicólogo) e encerrar.
+- **Contexto do paciente** (psicólogo): divide a tela — contexto à esquerda, vídeo à direita (no celular, vídeo em cima e contexto embaixo), com X para fechar. No SOS mostra a triagem do pedido; na consulta, questionários compartilhados e resumos das consultas anteriores.
+- Não há mais painel de diagnóstico na chamada (`?debug=1` só liga os logs do navegador, para suporte).
 
 ## Como funciona
 
@@ -40,9 +49,9 @@ O **cronômetro** é compartilhado e pausa quando alguém sai. No SOS, ao zerar,
 ## Onde está no código
 
 - **Motor**: `src/hooks/useWebRTC.ts` (sessão, oferta/resposta, reconexão, qualidade, encerramento), `src/lib/callNegotiation.ts` (regras puras: conexão nova do outro lado, resposta da oferta certa, passos da reconexão), `src/hooks/useMediaDeviceManager.ts` (câmera, microfone, fallback só áudio). O antigo gerenciador global de conexões (`webrtc-manager`) foi removido: a cada 30 s ele fechava qualquer conexão "desconectada" e desligava câmera e microfone, e uma queda curta virava chamada morta.
-- **Telas**: `src/components/EmergencyVideoCall.tsx` (SOS), `src/components/appointments/ConsultationVideoCall.tsx` (consulta), `src/pages/ConsultationCall.tsx`.
+- **Tela**: `src/components/calls/VideoCallRoom.tsx` (a sala única), `src/components/calls/CallParts.tsx` (quadro do participante, microfone ao lado do nome, botões), `src/hooks/useAudioLevel.ts` (indicador de fala). Páginas: `src/pages/EmergencyCall.tsx` (SOS: resolve o pedido e quem é quem pela própria sala) e `src/pages/ConsultationCall.tsx` (consulta: abre a sala com "Tentar de novo" se falhar).
 - **Apoio**: `useCallPresence`, `useParticipantHeartbeat`, `useSharedCallTimer`, `useRemoteAbsence`; em `src/lib`: `callBanner`, `reconnect`, `callSignals`, `callLock`, `callTermination`, `iceServers`, `remoteAbsence`, `consultationWindow`.
-- **Painéis**: `src/components/calls/RemoteAbsentPanel.tsx`, `src/components/sos/ConnectionQuality.tsx`, `CallDiagnosticsPanel.tsx`.
+- **Painéis**: `src/components/calls/RemoteAbsentPanel.tsx`; contexto: `src/components/sos/PatientContextPanel.tsx` (SOS) e `src/components/psychologist/PatientSessionHistory.tsx` (consulta).
 - **Edge function**: `ice-servers` (TURN só para usuário logado).
 - **Banco**: `webrtc_sessions` (`patient_media_at`, `psychologist_media_at`, `connected_at`, `renegotiate_requested_at`), `participant_presence` (`media_connected`, `media_changed_at`). Funções `report_call_media`, `append_webrtc_ice_candidates`. Gatilhos `prevent_reopen_finished_call` e `a_guard_webrtc_client_update` (pelo app: só o paciente grava a resposta, só o psicólogo mexe no cronômetro e não consegue aumentá-lo, ninguém troca o outro participante, o SOS ligado à sala ou quem encerrou). As salas são criadas só pelo servidor.
 
@@ -54,13 +63,15 @@ O **cronômetro** é compartilhado e pausa quando alguém sai. No SOS, ao zerar,
 3. **Queda curta**: desligar o Wi-Fi de um lado por 20 s → faixa de reconexão → volta sozinha.
 4. **Recarregar**: dar F5 no meio da chamada → volta para a mesma sala e o cronômetro continua de onde parou.
 5. **Rede difícil** (só com TURN configurado): um lado no 4G e outro em rede de empresa → conecta.
-6. **Diagnóstico**: abrir com `?debug=1` → painel com estado da conexão, presença e cronômetro.
+6. **Miniatura**: desligar e religar a câmera → a miniatura volta a mostrar o vídeo na hora.
+7. **Microfone do outro lado**: o outro muta → ícone vermelho ao lado do nome dele; ao falar, barras animadas.
+8. **Contexto** (psicólogo): abre dividindo a tela e fecha pelo X.
 
 ### Teste no navegador (duas abas)
 Roteiro usado na varredura, com câmera falsa do Chromium e banco simulado: conectar; paciente recarregar; psicólogo recarregar; cada um fechar a aba e voltar; "Tentar de novo" de cada lado; conexão de cada lado morrer sem recarregar; realtime parado (só a releitura); resposta antiga gravada por atraso; três quedas seguidas. Todos voltaram sozinhos em 0,5 a 8 s.
 
 ### Testes automáticos
-`callNegotiation`, `iceServers`, `remoteAbsence`, `callMediaStateSignal`, `callPresenceBanner`, `callDiagnostics`, `webrtcSessionReuse.e2e`, `consultationVideoCallSession`, `consultationWindow`, `consultationCallRouteAccess`, `emergencyNetworkDrop`, `emergencyNetworkRecovery.e2e`, `emergencyRefreshRejoin.e2e`.
+`videoCallRoom`, `callNegotiation`, `iceServers`, `remoteAbsence`, `callMediaStateSignal`, `callPresenceBanner`, `callDiagnostics`, `webrtcSessionReuse.e2e`, `consultationVideoCallSession`, `consultationWindow`, `consultationCallRouteAccess`, `emergencyNetworkDrop`, `emergencyNetworkRecovery.e2e`, `emergencyRefreshRejoin.e2e`.
 
 ### Conferência no banco
 ```sql
