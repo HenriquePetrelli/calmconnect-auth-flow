@@ -1034,6 +1034,8 @@ export type Database = {
           created_at: string
           id: string
           last_seen: string
+          media_changed_at: string
+          media_connected: boolean
           session_id: string
           updated_at: string
           user_id: string
@@ -1043,6 +1045,8 @@ export type Database = {
           created_at?: string
           id?: string
           last_seen?: string
+          media_changed_at?: string
+          media_connected?: boolean
           session_id: string
           updated_at?: string
           user_id: string
@@ -1052,6 +1056,8 @@ export type Database = {
           created_at?: string
           id?: string
           last_seen?: string
+          media_changed_at?: string
+          media_connected?: boolean
           session_id?: string
           updated_at?: string
           user_id?: string
@@ -2365,10 +2371,13 @@ export type Database = {
           offer: Json | null
           patient_camera_off: boolean | null
           patient_id: string | null
+          patient_media_at: string | null
           patient_muted: boolean | null
           psychologist_camera_off: boolean | null
           psychologist_id: string | null
+          psychologist_media_at: string | null
           psychologist_muted: boolean | null
+          renegotiate_requested_at: string | null
           status: string | null
           time_left_seconds: number | null
           timer_paused: boolean
@@ -2390,10 +2399,13 @@ export type Database = {
           offer?: Json | null
           patient_camera_off?: boolean | null
           patient_id?: string | null
+          patient_media_at?: string | null
           patient_muted?: boolean | null
           psychologist_camera_off?: boolean | null
           psychologist_id?: string | null
+          psychologist_media_at?: string | null
           psychologist_muted?: boolean | null
+          renegotiate_requested_at?: string | null
           status?: string | null
           time_left_seconds?: number | null
           timer_paused?: boolean
@@ -2415,10 +2427,13 @@ export type Database = {
           offer?: Json | null
           patient_camera_off?: boolean | null
           patient_id?: string | null
+          patient_media_at?: string | null
           patient_muted?: boolean | null
           psychologist_camera_off?: boolean | null
           psychologist_id?: string | null
+          psychologist_media_at?: string | null
           psychologist_muted?: boolean | null
+          renegotiate_requested_at?: string | null
           status?: string | null
           time_left_seconds?: number | null
           timer_paused?: boolean
@@ -2537,6 +2552,10 @@ export type Database = {
       }
       admin_update_testimonial: {
         Args: { p_testimonial_id: string; p_texto: string }
+        Returns: undefined
+      }
+      append_webrtc_ice_candidates: {
+        Args: { p_candidates: Json; p_session_id: string }
         Returns: undefined
       }
       appointment_call_connected: {
@@ -2974,6 +2993,10 @@ export type Database = {
       }
       remove_organization_member_by_email: {
         Args: { p_email: string; p_org: string }
+        Returns: Json
+      }
+      report_call_media: {
+        Args: { p_connected: boolean; p_session_id: string }
         Returns: Json
       }
       report_consultation_problem: {
