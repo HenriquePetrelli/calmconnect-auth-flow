@@ -42,11 +42,16 @@ export const useConversas = () => {
   const { user, userType } = useAuth();
   const { toast } = useToast();
 
-  const fetchConversas = async () => {
+  /**
+   * `silencioso`: atualização em segundo plano (tempo real). Não mostra o
+   * carregando nem o aviso de erro — a lista atual continua na tela e a
+   * próxima atualização corrige.
+   */
+  const fetchConversas = async (silencioso = false) => {
     if (!user) return;
 
     try {
-      setLoading(true);
+      if (!silencioso) setLoading(true);
 
       // Uma consulta só: conversa, nome do outro participante, última
       // mensagem e quantas não lidas (antes eram 2 consultas por conversa).
@@ -78,6 +83,7 @@ export const useConversas = () => {
       );
     } catch (error) {
       console.error('Erro ao buscar conversas:', error);
+      if (silencioso) return;
       toast({
         title: 'Erro',
         description: 'Erro ao carregar conversas',
@@ -216,11 +222,11 @@ export const useConversas = () => {
             : `psicologo_id=eq.${user.id}`
         },
         () => {
-          fetchConversas();
+          fetchConversas(true);
         }
       )
       .on('postgres_changes', { event: '*', schema: 'public', table: 'mensagens' }, () => {
-        fetchConversas();
+        fetchConversas(true);
       })
       .subscribe();
 
@@ -236,6 +242,6 @@ export const useConversas = () => {
     loading,
     criarConversa,
     excluirConversa,
-    refetch: fetchConversas
+    refetch: () => fetchConversas()
   };
 };

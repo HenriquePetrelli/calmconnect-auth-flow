@@ -90,11 +90,11 @@ export const ListaConversas: React.FC<ListaConversasProps> = ({ onSelectConversa
   };
 
   return (
-    <Card className="border-l-4 border-l-primary">
-      <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">
+    <Card className="rounded-2xl">
+      <CardHeader className="border-b border-border">
         <CardTitle className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
               <MessageCircle className="text-primary" size={18} />
             </div>
             <div className="min-w-0">

@@ -37,9 +37,10 @@ vi.mock('@/lib/browserNotifications', () => ({
 
 const baseHookReturn = {
   loading: false,
-  enviando: false,
-  enviarMensagem: vi.fn(),
-  uploadImagem: vi.fn(),
+  enviarTexto: vi.fn(() => true),
+  enviarImagem: vi.fn(() => true),
+  reenviar: vi.fn(),
+  descartar: vi.fn(),
   refetch: vi.fn(),
 };
 

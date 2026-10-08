@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -7,153 +7,287 @@ export interface Mensagem {
   id: string;
   conversa_id: string;
   autor_id: string;
-  conteudo?: string;
+  conteudo?: string | null;
   tipo: 'texto' | 'imagem';
-  imagem_url?: string;
+  imagem_url?: string | null;
   lida_em: string | null;
   created_at: string;
   updated_at: string;
-  // Dados do autor
-  autor?: {
-    full_name: string;
-    user_type: string;
-  };
+  /** Só nas mensagens ainda não confirmadas pelo servidor. */
+  envio?: 'enviando' | 'erro';
+  /** Motivo de uma recusa do banco (conversa somente leitura, muitas seguidas). */
+  erro?: string | null;
+  /** Foto ainda não enviada: prévia local (só nesta aba). */
+  previa?: string | null;
 }
 
+/** Mensagem pendente como fica guardada no aparelho (sem a foto em si). */
+type Pendente = Mensagem & { arquivo?: File | null };
+
+const chavePendentes = (conversaId: string) => `chat:pendentes:${conversaId}`;
+
+const lerPendentes = (conversaId: string): Pendente[] => {
+  try {
+    const salvo = JSON.parse(localStorage.getItem(chavePendentes(conversaId)) ?? '[]') as Pendente[];
+    // Ao reabrir, nada está "enviando": vira "não enviada" e reenvia sozinho.
+    return salvo.map((p) => ({ ...p, envio: 'erro' as const, previa: null }));
+  } catch {
+    return [];
+  }
+};
+
+const salvarPendentes = (conversaId: string, pendentes: Pendente[]) => {
+  try {
+    // Foto que ainda nem subiu não sobrevive a recarregar (o arquivo fica só na memória).
+    const guardaveis = pendentes
+      .filter((p) => p.tipo === 'texto' || p.imagem_url)
+      .map(({ arquivo: _arquivo, previa: _previa, ...resto }) => resto);
+    if (guardaveis.length) localStorage.setItem(chavePendentes(conversaId), JSON.stringify(guardaveis));
+    else localStorage.removeItem(chavePendentes(conversaId));
+  } catch {
+    /* armazenamento indisponível (modo privado): segue só na memória */
+  }
+};
+
+const novoId = () =>
+  typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = (Math.random() * 16) | 0;
+        return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+      });
+
+const telaVisivel = () => typeof document === 'undefined' || document.visibilityState === 'visible';
+
+/**
+ * Mensagens de uma conversa, no padrão dos apps de mensagem:
+ * - a mensagem aparece na hora ("enviando") e vira enviada quando o banco confirma;
+ * - o id é gerado no aparelho, então reenviar (rede caiu no meio) nunca duplica;
+ * - sem internet, fica "não enviada", guardada no aparelho, e sai sozinha quando a rede volta;
+ * - só marca como lida o que a pessoa pode estar vendo (tela visível).
+ */
 export const useMensagens = (conversaId?: string) => {
-  const [mensagens, setMensagens] = useState<Mensagem[]>([]);
+  const [confirmadas, setConfirmadas] = useState<Mensagem[]>([]);
+  const [pendentes, setPendentes] = useState<Pendente[]>([]);
   const [loading, setLoading] = useState(false);
-  const [enviando, setEnviando] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
+  const pendentesRef = useRef<Pendente[]>([]);
+  const emEnvioRef = useRef<Set<string>>(new Set());
+  /** Envios um de cada vez, na ordem em que foram escritos (como nos apps de mensagem). */
+  const filaRef = useRef<Promise<unknown>>(Promise.resolve());
 
-  const fetchMensagens = async () => {
-    if (!conversaId) return;
-
-    try {
-      setLoading(true);
-
-      const { data, error } = await supabase
-        .from('mensagens')
-        .select('*')
-        .eq('conversa_id', conversaId)
-        .order('created_at', { ascending: true });
-
-      if (error) throw error;
-
-      setMensagens((data ?? []) as Mensagem[]);
-    } catch (error) {
-      console.error('Erro ao buscar mensagens:', error);
-      toast({
-        title: 'Erro',
-        description: 'Erro ao carregar mensagens',
-        variant: 'destructive',
+  const atualizarPendentes = useCallback(
+    (mudar: (atual: Pendente[]) => Pendente[]) => {
+      setPendentes((atual) => {
+        const proximo = mudar(atual);
+        pendentesRef.current = proximo;
+        if (conversaId) salvarPendentes(conversaId, proximo);
+        return proximo;
       });
-    } finally {
-      setLoading(false);
+    },
+    [conversaId],
+  );
+
+  const juntarConfirmadas = useCallback((novas: Mensagem[]) => {
+    setConfirmadas((atual) => {
+      const porId = new Map(atual.map((m) => [m.id, m]));
+      for (const m of novas) porId.set(m.id, { ...porId.get(m.id), ...m });
+      return [...porId.values()].sort((a, b) => a.created_at.localeCompare(b.created_at));
+    });
+    // O que o servidor já tem deixa de ser pendente.
+    const ids = new Set(novas.map((m) => m.id));
+    if (pendentesRef.current.some((p) => ids.has(p.id))) {
+      atualizarPendentes((atual) => atual.filter((p) => !ids.has(p.id)));
     }
-  };
+  }, [atualizarPendentes]);
 
-  /** Marks every message from the other participant as read by the current user. */
-  const marcarComoLidas = async () => {
-    if (!conversaId || !user) return;
+  const marcarComoLidas = useCallback(async () => {
+    if (!conversaId || !user || !telaVisivel()) return;
+    const { error } = await supabase.rpc('marcar_mensagens_como_lidas', { p_conversa_id: conversaId });
+    if (error) console.error('Erro ao marcar mensagens como lidas:', error);
+  }, [conversaId, user]);
 
-    try {
-      const { error } = await supabase.rpc('marcar_mensagens_como_lidas', { p_conversa_id: conversaId });
-      if (error) throw error;
-    } catch (error) {
-      console.error('Erro ao marcar mensagens como lidas:', error);
-    }
-  };
+  const buscar = useCallback(async () => {
+    if (!conversaId) return false;
+    const { data, error } = await supabase
+      .from('mensagens')
+      .select('*')
+      .eq('conversa_id', conversaId)
+      .order('created_at', { ascending: true });
+    if (error || !data) return false;
+    juntarConfirmadas(data as Mensagem[]);
+    return true;
+  }, [conversaId, juntarConfirmadas]);
 
-  const enviarMensagem = async (conteudo: string, tipo: 'texto' | 'imagem' = 'texto', imagemUrl?: string) => {
-    if (!user || !conversaId) return false;
+  /** Envia (ou reenvia) uma pendente. Seguro para chamar várias vezes. */
+  const enviarAgora = useCallback(
+    async (id: string) => {
+      if (!conversaId || !user || emEnvioRef.current.has(id)) return;
+      const pendente = pendentesRef.current.find((p) => p.id === id);
+      if (!pendente) return;
+      emEnvioRef.current.add(id);
+      atualizarPendentes((atual) => atual.map((p) => (p.id === id ? { ...p, envio: 'enviando', erro: null } : p)));
 
-    try {
-      setEnviando(true);
+      try {
+        let caminho = pendente.imagem_url ?? null;
+        if (pendente.tipo === 'imagem' && !caminho) {
+          if (!pendente.arquivo) throw new Error('A foto não está mais disponível. Escolha de novo.');
+          const ext = (pendente.arquivo.type.split('/')[1] || 'jpg').replace(/[^a-z0-9]/gi, '').slice(0, 5);
+          // Pasta da conversa: só os dois participantes enviam e veem (policy no banco).
+          caminho = `chat-images/${conversaId}/${user.id}-${id}.${ext}`;
+          const { error: uploadError } = await supabase.storage
+            .from('documents')
+            .upload(caminho, pendente.arquivo, { contentType: pendente.arquivo.type });
+          // "Já existe" = subiu numa tentativa anterior cuja resposta se perdeu.
+          const jaExiste = /already exists|duplicate/i.test(uploadError?.message ?? '') || (uploadError as { statusCode?: string } | null)?.statusCode === '409';
+          if (uploadError && !jaExiste) throw uploadError;
+          // A foto já subiu: um reenvio não sobe de novo.
+          atualizarPendentes((atual) => atual.map((p) => (p.id === id ? { ...p, imagem_url: caminho } : p)));
+        }
 
-      const { data: inserida, error } = await supabase
-        .from('mensagens')
-        .insert({
-          conversa_id: conversaId,
-          autor_id: user.id,
-          conteudo: tipo === 'texto' ? conteudo : null,
-          tipo,
-          imagem_url: imagemUrl
-        })
-        .select()
-        .single();
+        const { data, error } = await supabase
+          .from('mensagens')
+          .insert({
+            id,
+            conversa_id: conversaId,
+            autor_id: user.id,
+            conteudo: pendente.tipo === 'texto' ? pendente.conteudo : null,
+            tipo: pendente.tipo,
+            imagem_url: caminho,
+          })
+          .select()
+          .single();
 
-      if (error) throw error;
-      // Aparece na hora (sem esperar o tempo real).
-      if (inserida) {
-        setMensagens((prev) => (prev.some((m) => m.id === inserida.id) ? prev : [...prev, inserida as Mensagem]));
+        if (error) {
+          // Já tinha chegado (a resposta se perdeu no caminho): não duplica.
+          if ((error as { code?: string }).code === '23505') {
+            await buscar();
+            atualizarPendentes((atual) => atual.filter((p) => p.id !== id));
+            return;
+          }
+          throw error;
+        }
+        juntarConfirmadas([data as Mensagem]);
+      } catch (error) {
+        const codigo = (error as { code?: string })?.code;
+        // Regra do banco (somente leitura, muitas mensagens seguidas): mostra o motivo.
+        const motivo =
+          codigo === 'P0001' || codigo === '42501'
+            ? (error as { message?: string }).message ?? 'Mensagem recusada'
+            : error instanceof Error && error.message.startsWith('A foto')
+              ? error.message
+              : null;
+        atualizarPendentes((atual) => atual.map((p) => (p.id === id ? { ...p, envio: 'erro', erro: motivo } : p)));
+        if (motivo) toast({ title: 'Mensagem não enviada', description: motivo, variant: 'destructive' });
+      } finally {
+        emEnvioRef.current.delete(id);
       }
+    },
+    [conversaId, user, atualizarPendentes, juntarConfirmadas, buscar, toast],
+  );
 
-      // Atualizar updated_at da conversa
-      await supabase
-        .from('conversas')
-        .update({ updated_at: new Date().toISOString() })
-        .eq('id', conversaId);
+  const tentarEnviar = useCallback(
+    (id: string) => {
+      const proximo = filaRef.current.then(() => enviarAgora(id)).catch(() => undefined);
+      filaRef.current = proximo;
+      return proximo;
+    },
+    [enviarAgora],
+  );
 
-      return true;
-    } catch (error) {
-      console.error('Erro ao enviar mensagem:', error);
-      // Regra do banco (conversa somente leitura, muitas mensagens seguidas): mostra o motivo.
-      const motivo = (error as { code?: string; message?: string })?.code === 'P0001'
-        ? (error as { message?: string }).message
-        : null;
-      toast({
-        title: 'Erro',
-        description: motivo || 'Erro ao enviar mensagem',
-        variant: 'destructive',
-      });
-      return false;
-    } finally {
-      setEnviando(false);
+  const criarPendente = useCallback(
+    (parcial: Partial<Pendente> & Pick<Pendente, 'tipo'>) => {
+      if (!conversaId || !user) return null;
+      const agora = new Date().toISOString();
+      const pendente: Pendente = {
+        id: novoId(),
+        conversa_id: conversaId,
+        autor_id: user.id,
+        conteudo: null,
+        imagem_url: null,
+        lida_em: null,
+        created_at: agora,
+        updated_at: agora,
+        envio: 'enviando',
+        ...parcial,
+      };
+      atualizarPendentes((atual) => [...atual, pendente]);
+      pendentesRef.current = [...pendentesRef.current.filter((p) => p.id !== pendente.id), pendente];
+      void tentarEnviar(pendente.id);
+      return pendente.id;
+    },
+    [conversaId, user, atualizarPendentes, tentarEnviar],
+  );
+
+  const enviarTexto = useCallback(
+    (texto: string) => {
+      const conteudo = texto.trim();
+      if (!conteudo) return false;
+      return Boolean(criarPendente({ tipo: 'texto', conteudo }));
+    },
+    [criarPendente],
+  );
+
+  const enviarImagem = useCallback(
+    (arquivo: File) => Boolean(criarPendente({ tipo: 'imagem', arquivo, previa: URL.createObjectURL(arquivo) })),
+    [criarPendente],
+  );
+
+  const reenviar = useCallback((id: string) => void tentarEnviar(id), [tentarEnviar]);
+
+  const descartar = useCallback(
+    (id: string) => {
+      const p = pendentesRef.current.find((x) => x.id === id);
+      if (p?.previa) URL.revokeObjectURL(p.previa);
+      atualizarPendentes((atual) => atual.filter((x) => x.id !== id));
+    },
+    [atualizarPendentes],
+  );
+
+  /** Reenvia tudo o que ficou para trás (rede voltou, tela voltou). */
+  const reenviarPendentes = useCallback(() => {
+    for (const p of pendentesRef.current) {
+      // Recusa do banco (ex.: somente leitura) não adianta repetir sozinho.
+      if (p.envio === 'erro' && !p.erro) void tentarEnviar(p.id);
     }
-  };
+  }, [tentarEnviar]);
 
-  /**
-   * Envia a imagem para o bucket privado e devolve o caminho (não um link
-   * público: o bucket é privado, e o link público não abria — a imagem
-   * aparecia quebrada para os dois lados). A tela gera um link temporário.
-   */
-  const uploadImagem = async (file: File): Promise<string | null> => {
-    try {
-      const fileExt = (file.type.split('/')[1] || file.name.split('.').pop() || 'jpg').replace(/[^a-z0-9]/gi, '').slice(0, 5);
-      if (!user || !conversaId) return null;
-      // Pasta da conversa: só os dois participantes enviam e veem (policy no banco).
-      const filePath = `chat-images/${conversaId}/${user.id}-${Date.now()}.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('documents')
-        .upload(filePath, file, { contentType: file.type });
-
-      if (uploadError) throw uploadError;
-
-      return filePath;
-    } catch (error) {
-      console.error('Erro ao fazer upload da imagem:', error);
-      toast({
-        title: 'Erro',
-        description: 'Erro ao fazer upload da imagem',
-        variant: 'destructive',
-      });
-      return null;
-    }
-  };
-
+  // Carrega a conversa e o que ficou pendente no aparelho.
   useEffect(() => {
-    if (conversaId) {
-      fetchMensagens().then(marcarComoLidas);
-    }
+    if (!conversaId) return;
+    setConfirmadas([]);
+    const salvas = lerPendentes(conversaId);
+    pendentesRef.current = salvas;
+    setPendentes(salvas);
+    let cancelado = false;
+    setLoading(true);
+    void (async () => {
+      const ok = await buscar();
+      if (cancelado) return;
+      setLoading(false);
+      if (!ok) {
+        toast({ title: 'Erro', description: 'Erro ao carregar mensagens', variant: 'destructive' });
+        return;
+      }
+      void marcarComoLidas();
+      reenviarPendentes();
+    })();
+    return () => {
+      cancelado = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversaId]);
 
-  // Tempo real: nova mensagem entra no fim da lista; leitura (lida_em) só
-  // atualiza a mensagem. Antes cada evento recarregava a conversa inteira.
+  // Tempo real + recuperação do que se perdeu com o socket caído.
   useEffect(() => {
     if (!conversaId) return;
+
+    const sincronizar = async () => {
+      await buscar();
+      void marcarComoLidas();
+      reenviarPendentes();
+    };
 
     const channel = supabase
       .channel(`mensagens-${conversaId}-${Math.random().toString(36).slice(2)}`)
@@ -162,55 +296,48 @@ export const useMensagens = (conversaId?: string) => {
         { event: 'INSERT', schema: 'public', table: 'mensagens', filter: `conversa_id=eq.${conversaId}` },
         (payload) => {
           const nova = payload.new as Mensagem;
-          setMensagens((prev) => (prev.some((m) => m.id === nova.id) ? prev : [...prev, nova]));
-          if (nova.autor_id !== user?.id) marcarComoLidas();
-        }
+          juntarConfirmadas([nova]);
+          if (nova.autor_id !== user?.id) void marcarComoLidas();
+        },
       )
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'mensagens', filter: `conversa_id=eq.${conversaId}` },
-        (payload) => {
-          const atualizada = payload.new as Mensagem;
-          setMensagens((prev) => prev.map((m) => (m.id === atualizada.id ? { ...m, ...atualizada } : m)));
-        }
+        (payload) => juntarConfirmadas([payload.new as Mensagem]),
       )
-      .subscribe();
-
-    // O realtime não reenvia o que chegou com o socket caído (tela apagada,
-    // troca de rede): ao voltar, busca o que faltou sem recarregar a tela.
-    const sincronizar = async () => {
-      if (document.visibilityState !== 'visible') return;
-      const { data } = await supabase
-        .from('mensagens')
-        .select('*')
-        .eq('conversa_id', conversaId)
-        .order('created_at', { ascending: true });
-      if (!data) return;
-      setMensagens((prev) => {
-        const novas = (data as Mensagem[]).filter((m) => !prev.some((p) => p.id === m.id));
-        const porId = new Map((data as Mensagem[]).map((m) => [m.id, m]));
-        const atualizadas = prev.map((m) => porId.get(m.id) ?? m);
-        return novas.length ? [...atualizadas, ...novas] : atualizadas;
+      .subscribe((status) => {
+        // Reconectou: busca o que chegou enquanto o socket estava caído.
+        if (status === 'SUBSCRIBED') void sincronizar();
       });
-      marcarComoLidas();
+
+    const aoVoltar = () => {
+      if (telaVisivel()) void sincronizar();
     };
-    window.addEventListener('online', sincronizar);
-    document.addEventListener('visibilitychange', sincronizar);
+    window.addEventListener('online', aoVoltar);
+    document.addEventListener('visibilitychange', aoVoltar);
+    window.addEventListener('focus', aoVoltar);
 
     return () => {
-      window.removeEventListener('online', sincronizar);
-      document.removeEventListener('visibilitychange', sincronizar);
+      window.removeEventListener('online', aoVoltar);
+      document.removeEventListener('visibilitychange', aoVoltar);
+      window.removeEventListener('focus', aoVoltar);
       supabase.removeChannel(channel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversaId, user?.id]);
 
+  const mensagens = useMemo(
+    () => [...confirmadas, ...pendentes.filter((p) => !confirmadas.some((c) => c.id === p.id))],
+    [confirmadas, pendentes],
+  );
+
   return {
     mensagens,
     loading,
-    enviando,
-    enviarMensagem,
-    uploadImagem,
-    refetch: fetchMensagens
+    enviarTexto,
+    enviarImagem,
+    reenviar,
+    descartar,
+    refetch: buscar,
   };
 };

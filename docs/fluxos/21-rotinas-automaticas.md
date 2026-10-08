@@ -1,7 +1,7 @@
 # 21. Rotinas automáticas (pg_cron)
 
 > **Status:** Pronto.
-> **Última verificação:** 2026-10-04 (rotinas que chamam edge functions passaram a mandar o segredo `x-cron-secret`).
+> **Última verificação:** 2026-10-08 (nova rotina `chat-photos-cleanup`; antes, 2026-10-04: rotinas que chamam edge functions passaram a mandar o segredo `x-cron-secret`).
 > **Quem usa:** ninguém diretamente; rodam sozinhas no banco.
 
 ## Lista
@@ -21,6 +21,7 @@
 | `expire-organization-entitlements` | Todo dia, 3h05 | Tira o acesso de contratos de empresa vencidos | 10 |
 | `expire-old-conversas` | Todo dia, 3h30 | Chat: somente leitura com 1 mês, apaga com 3 meses | 06 |
 | `purge-expired-care-records` | Todo dia, 3h30 | Apaga do arquivo legal o que passou de 5 anos | 18 |
+| `chat-photos-cleanup` | Todo dia, 4h40 | Chat: apaga do storage as fotos de conversas que já foram apagadas (função `chat-cleanup`) | 06 |
 | `reset-weekly-goals-monday` | Segunda, 4h | Reinicia as metas da semana | 12 |
 | `weekly-payment-sync` | Segunda, 9h | Atualiza os valores de repasse | 09 |
 | `cleanup-quarterly-activities-weekly` | Domingo, 3h15 | Apaga atividades com mais de 3 meses do histórico | 12 |

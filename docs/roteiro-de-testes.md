@@ -124,11 +124,17 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Paciente A → Chat → enviar foto ⇒ abre para o psicólogo; outra conta (Paciente B) não consegue abrir o link da foto
 - [ ] Foto enviada antes desta versão ⇒ continua abrindo para os dois participantes
 - [ ] Conversa somente leitura → tentar enviar ⇒ caixa de texto bloqueada; se insistir pela API, "Esta conversa está somente leitura"
+- [ ] Paciente sem internet → mandar "um" e "dois" ⇒ "Não enviada"; religar ⇒ saem sozinhas, uma vez cada, na ordem
+- [ ] Sem internet → mandar mensagem → recarregar a página ⇒ continua como "Não enviada" e sai quando a internet volta
+- [ ] Conversa aberta em aba de fundo → chega mensagem ⇒ do outro lado fica um check; voltar à aba ⇒ dois checks
+- [ ] Lendo mensagens antigas → chega mensagem ⇒ a tela não pula; aparece "1 nova mensagem"
+- [ ] Abrir conversa → voltar do celular ⇒ volta para a lista; recarregar com a conversa aberta ⇒ continua nela
+- [ ] Enter envia; Shift+Enter quebra a linha
 
 ## 5. Notificações e push (ficha 07)
 
 - [ ] Paciente → Perfil → Notificações push → ativar ⇒ navegador pede permissão
-- [ ] App fechado → mensagem de outra conta ⇒ push em até 1 min; tocar abre o chat
+- [ ] App fechado → mensagem de outra conta ⇒ push em até 1 min; tocar abre a própria conversa
 - [ ] Paciente → Sair → nova mensagem ⇒ **não** chega push nesse aparelho
 - [ ] Paciente → Notificações ⇒ lista com não lidas; tocar leva à tela certa
 
