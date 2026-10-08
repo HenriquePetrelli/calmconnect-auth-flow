@@ -2580,6 +2580,11 @@ export type Database = {
         Args: { psychologist_user_id: string }
         Returns: number
       }
+      call_clock: { Args: { p_session_id: string }; Returns: Json }
+      call_time_limit_seconds: {
+        Args: { p_session_id: string }
+        Returns: number
+      }
       can_access_document: {
         Args: { bucket_name: string; object_name: string }
         Returns: boolean
