@@ -3,135 +3,118 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface UseSharedCallTimerProps {
   sessionId?: string;
-  userType: 'psychologist' | 'patient';
-  /** Total session duration in seconds. */
+  /** Duração da chamada em segundos (vale até o banco responder). */
   timeLimit: number;
-  /** Timer only runs while both participants are actually in the room. */
-  running: boolean;
+  /**
+   * Muda quando algo da chamada muda (aviso de mídia na sala, conexão local,
+   * presença do outro lado): o cronômetro confere o banco na hora.
+   */
+  syncKey?: string;
   onExpire: () => void;
 }
 
+interface ClockAnchor {
+  /** Segundos de chamada com os dois conectados, no instante `at`. */
+  elapsed: number;
+  running: boolean;
+  started: boolean;
+  limit: number;
+  /** performance.now() de quando a resposta chegou. */
+  at: number;
+}
+
+/** O banco soma no máximo 60 s entre avisos; a tela também não passa disso. */
+const MAX_LIVE_SECONDS = 60;
+const RESYNC_MS = 5000;
+
 /**
- * Session timer shared between patient and psychologist.
+ * Cronômetro da chamada (SOS e consulta), igual para paciente e psicólogo.
  *
- * - The remaining time lives in `webrtc_sessions.time_left_seconds`, so a
- *   reconnection resumes EXACTLY from where it stopped.
- * - The countdown is paused whenever one of the participants drops.
- * - The psychologist is the authoritative writer (the timer is paused when he
- *   is absent, so no other writer is needed); the patient mirrors the value.
+ * A única fonte é o banco (`call_clock`): o tempo com os DOIS conectados, que
+ * ele mesmo soma a cada aviso de mídia. Começa quando o segundo lado confirma
+ * áudio/vídeo, pausa quando um cai e volta de onde parou. Cada aparelho só
+ * mostra esse valor e anda o segundo localmente entre uma conferência e outra
+ * (a cada 5 s e a cada mudança na sala), então os dois relógios ficam iguais.
  */
-export const useSharedCallTimer = ({
-  sessionId,
-  userType,
-  timeLimit,
-  running,
-  onExpire,
-}: UseSharedCallTimerProps) => {
-  const [timeLeft, setTimeLeft] = useState<number>(timeLimit);
-  const [loaded, setLoaded] = useState(false);
-  const timeLeftRef = useRef(timeLimit);
+export const useSharedCallTimer = ({ sessionId, timeLimit, syncKey, onExpire }: UseSharedCallTimerProps) => {
+  const [anchor, setAnchor] = useState<ClockAnchor | null>(null);
+  const [now, setNow] = useState(() => performance.now());
   const expiredRef = useRef(false);
-  const isWriter = userType === 'psychologist';
+  const onExpireRef = useRef(onExpire);
+  onExpireRef.current = onExpire;
+  const requestSeqRef = useRef(0);
 
-  timeLeftRef.current = timeLeft;
-
-  const persist = useCallback(
-    async (value: number, paused: boolean) => {
-      if (!sessionId || !isWriter) return;
-      await supabase
-        .from('webrtc_sessions')
-        .update({
-          time_left_seconds: Math.max(0, Math.round(value)),
-          timer_paused: paused,
-          timer_updated_at: new Date().toISOString(),
-        } as any)
-        .eq('id', sessionId);
-    },
-    [sessionId, isWriter]
-  );
-
-  // Restore the persisted remaining time when (re)entering the room.
-  useEffect(() => {
-    let cancelled = false;
+  const sync = useCallback(async () => {
     if (!sessionId) return;
-
-    const load = async () => {
-      const { data } = await supabase
-        .from('webrtc_sessions')
-        .select('time_left_seconds')
-        .eq('id', sessionId)
-        .maybeSingle();
-
-      if (cancelled) return;
-      const stored = (data as any)?.time_left_seconds;
-      setTimeLeft(typeof stored === 'number' ? Math.max(0, stored) : timeLimit);
-      setLoaded(true);
+    const seq = ++requestSeqRef.current;
+    const sentAt = performance.now();
+    const { data, error } = await supabase.rpc('call_clock' as never, { p_session_id: sessionId } as never);
+    const receivedAt = performance.now();
+    // Uma resposta mais antiga que chegou depois não desfaz a mais nova.
+    if (seq !== requestSeqRef.current || error || !data) return;
+    const clock = data as unknown as {
+      elapsed_seconds: number | string;
+      running: boolean;
+      started: boolean;
+      limit_seconds: number | null;
     };
-
-    load();
-    return () => {
-      cancelled = true;
-    };
+    const running = Boolean(clock.running);
+    // Metade da ida e volta: o instante em que o banco mediu.
+    const elapsed = Number(clock.elapsed_seconds) + (running ? (receivedAt - sentAt) / 2000 : 0);
+    setAnchor({
+      elapsed: Number.isFinite(elapsed) ? elapsed : 0,
+      running,
+      started: Boolean(clock.started),
+      limit: clock.limit_seconds && clock.limit_seconds > 0 ? clock.limit_seconds : timeLimit,
+      at: receivedAt,
+    });
+    setNow(receivedAt);
   }, [sessionId, timeLimit]);
 
-  // Mirror the authoritative value for the non-writer side.
+  // Confere ao entrar, a cada mudança na sala e de tempos em tempos.
   useEffect(() => {
-    if (!sessionId || isWriter) return;
+    void sync();
+  }, [sync, syncKey]);
 
-    const channel = supabase
-      .channel(`call-timer:${sessionId}`)
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'webrtc_sessions', filter: `id=eq.${sessionId}` },
-        (payload) => {
-          const value = (payload.new as any)?.time_left_seconds;
-          if (typeof value !== 'number') return;
-          // Only correct meaningful drift so the local countdown stays smooth.
-          if (Math.abs(value - timeLeftRef.current) >= 2) {
-            setTimeLeft(Math.max(0, value));
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
+  useEffect(() => {
+    const timer = setInterval(() => void sync(), RESYNC_MS);
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') void sync();
     };
-  }, [sessionId, isWriter]);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [sync]);
 
-  // Countdown — only while both participants are present/connected.
+  // Entre as conferências, o segundo anda na tela (só enquanto corre).
+  const running = Boolean(anchor?.running);
   useEffect(() => {
-    if (!loaded || !running) return;
+    if (!running) return;
+    const timer = setInterval(() => setNow(performance.now()), 250);
+    return () => clearInterval(timer);
+  }, [running]);
 
-    const interval = setInterval(() => {
-      setTimeLeft((prev) => Math.max(0, prev - 1));
-    }, 1000);
+  const limit = anchor?.limit ?? timeLimit;
+  const live = anchor && anchor.running ? Math.min(MAX_LIVE_SECONDS, Math.max(0, (now - anchor.at) / 1000)) : 0;
+  const elapsed = Math.floor((anchor?.elapsed ?? 0) + live);
+  const timeLeft = Math.max(0, limit - elapsed);
+  const started = Boolean(anchor?.started);
 
-    return () => clearInterval(interval);
-  }, [loaded, running]);
-
-  // Persist progress periodically while running, and immediately when paused.
   useEffect(() => {
-    if (!loaded || !isWriter) return;
-
-    if (!running) {
-      persist(timeLeftRef.current, true);
-      return;
-    }
-
-    persist(timeLeftRef.current, false);
-    const interval = setInterval(() => persist(timeLeftRef.current, false), 5000);
-    return () => clearInterval(interval);
-  }, [loaded, running, isWriter, persist]);
-
-  // Expiration
-  useEffect(() => {
-    if (!loaded || expiredRef.current) return;
-    if (timeLeft > 0) return;
+    if (!anchor || !started || expiredRef.current || timeLeft > 0) return;
     expiredRef.current = true;
-    persist(0, true);
-    onExpire();
-  }, [timeLeft, loaded, persist, onExpire]);
+    onExpireRef.current();
+  }, [anchor, started, timeLeft]);
 
-  return { timeLeft, isPaused: !running, loaded };
+  return {
+    timeLeft,
+    elapsed,
+    /** Parado: ainda não conectou ou alguém caiu. */
+    isPaused: !running,
+    /** Os dois já se conectaram alguma vez nesta chamada. */
+    started,
+    loaded: anchor !== null,
+  };
 };

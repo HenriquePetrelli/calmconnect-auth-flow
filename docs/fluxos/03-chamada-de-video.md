@@ -1,7 +1,7 @@
 # 03. Chamada de vídeo (SOS e consulta)
 
 > **Status:** Pronto, com pendência externa (TURN).
-> **Última verificação:** 2026-10-04.
+> **Última verificação:** 2026-10-08 (câmera e microfone mantidos ao recarregar, câmera desligada solta o aparelho, cronômetro único do banco, redimensionar a janela não derruba a chamada).
 > **Quem usa:** paciente e psicólogo, no SOS (ficha 02) e na consulta agendada (ficha 04).
 
 ## Resumo
@@ -44,7 +44,9 @@ A chamada é de navegador para navegador (WebRTC). O Supabase só faz a "apresen
 | Atendimento já encerrado | A sala não reabre; aparece como encerrado |
 | Abri em duas abas | A segunda é bloqueada (`callLock`) |
 
-O **cronômetro** é compartilhado e pausa quando alguém sai. No SOS, ao zerar, a chamada termina. Na consulta, ao zerar, só avisa.
+O **cronômetro** é um só para os dois lados e vem do banco (`call_clock`): é o tempo com os **dois conectados** que o banco soma a cada aviso de mídia (`report_call_media`, a mesma conta que decide se a consulta aconteceu). Antes de os dois se conectarem mostra o tempo cheio com "aguardando"; começa quando o segundo lado confirma áudio/vídeo; pausa quando um cai ("pausado") e volta de onde parou. Cada aparelho confere o banco a cada 5 s e a cada mudança na sala e só anda o segundo na tela entre uma conferência e outra, então os dois relógios mostram o mesmo valor. Pelo app ninguém grava o cronômetro (antes o psicólogo gravava e cada lado contava por conta própria). No SOS, ao zerar, a chamada termina. Na consulta, ao zerar, só avisa.
+
+**Câmera e microfone escolhidos** ficam guardados (no aparelho e na sala): recarregar a página volta com o que a pessoa tinha deixado, e o outro lado continua vendo certo. Como no Meet, a **câmera desligada solta o aparelho** (a luz da câmera apaga); no lugar dela vai um quadro preto, então religar não precisa renegociar a conexão. Microfone desligado não envia áudio.
 
 ## Onde está no código
 
@@ -53,7 +55,7 @@ O **cronômetro** é compartilhado e pausa quando alguém sai. No SOS, ao zerar,
 - **Apoio**: `useCallPresence`, `useParticipantHeartbeat`, `useSharedCallTimer`, `useRemoteAbsence`; em `src/lib`: `callBanner`, `reconnect`, `callSignals`, `callLock`, `callTermination`, `iceServers`, `remoteAbsence`, `consultationWindow`.
 - **Painéis**: `src/components/calls/RemoteAbsentPanel.tsx`; contexto: `src/components/sos/PatientContextPanel.tsx` (SOS) e `src/components/psychologist/PatientSessionHistory.tsx` (consulta).
 - **Edge function**: `ice-servers` (TURN só para usuário logado).
-- **Banco**: `webrtc_sessions` (`patient_media_at`, `psychologist_media_at`, `connected_at`, `renegotiate_requested_at`), `participant_presence` (`media_connected`, `media_changed_at`). Funções `report_call_media`, `append_webrtc_ice_candidates`. Gatilhos `prevent_reopen_finished_call` e `a_guard_webrtc_client_update` (pelo app: só o paciente grava a resposta, só o psicólogo mexe no cronômetro e não consegue aumentá-lo, ninguém troca o outro participante, o SOS ligado à sala ou quem encerrou). As salas são criadas só pelo servidor.
+- **Banco**: `webrtc_sessions` (`patient_media_at`, `psychologist_media_at`, `connected_at`, `renegotiate_requested_at`), `participant_presence` (`media_connected`, `media_changed_at`). Funções `report_call_media` (também atualiza o tempo restante), `call_clock` (o cronômetro dos dois lados), `append_webrtc_ice_candidates`. Gatilhos `prevent_reopen_finished_call` e `a_guard_webrtc_client_update` (pelo app: só o paciente grava a resposta, ninguém mexe no cronômetro (só o banco), ninguém troca o outro participante, o SOS ligado à sala ou quem encerrou). As salas são criadas só pelo servidor.
 
 ## Como validar
 
@@ -62,6 +64,9 @@ O **cronômetro** é compartilhado e pausa quando alguém sai. No SOS, ao zerar,
 2. **Sem câmera**: negar a câmera no navegador → entra só com áudio, com o aviso "Câmera indisponível".
 3. **Queda curta**: desligar o Wi-Fi de um lado por 20 s → faixa de reconexão → volta sozinha.
 4. **Recarregar**: dar F5 no meio da chamada → volta para a mesma sala e o cronômetro continua de onde parou.
+4a. **Recarregar mutado**: desligar câmera e microfone e dar F5 → volta com os dois desligados de verdade (luz da câmera apagada, o outro lado não ouve) e com os botões certos.
+4b. **Cronômetro**: comparar os dois aparelhos lado a lado → mostram o mesmo tempo; antes de o segundo entrar, "aguardando".
+4c. **Janela**: redimensionar, maximizar, minimizar e voltar → a chamada continua.
 5. **Rede difícil** (só com TURN configurado): um lado no 4G e outro em rede de empresa → conecta.
 6. **Miniatura**: desligar e religar a câmera → a miniatura volta a mostrar o vídeo na hora.
 7. **Microfone do outro lado**: o outro muta → ícone vermelho ao lado do nome dele; ao falar, barras animadas.

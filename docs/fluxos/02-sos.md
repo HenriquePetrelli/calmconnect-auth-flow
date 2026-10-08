@@ -62,7 +62,7 @@ Vídeo, reconexão automática, cronômetro compartilhado e painel de contexto d
 | Psicólogo ausente | 90 s → o paciente pode chamar outro (cota devolvida) |
 | Os dois na sala, mas a chamada não conecta | 45 s → painel com "Tentar de novo"; o paciente pode chamar outro psicólogo (o servidor aceita depois de 30 s sem mídia do lado dele) e o psicólogo pode encerrar por falha de conexão (`connection_failure`); nos dois casos a cota é devolvida |
 | "Conectou" | Só quando os dois lados confirmam áudio/vídeo passando (`connected_at`); a resposta à oferta sozinha não conta mais |
-| Limite de tempo pelo servidor | Pelo cronômetro da sala, que pausa nas quedas (antes era pelo relógio desde o início e cortava chamadas com tempo sobrando). Teto absoluto: limite + 30 min |
+| Limite de tempo pelo servidor | Pelo cronômetro da sala (um só para os dois, contado pelo banco com os dois conectados), que pausa nas quedas (antes era pelo relógio desde o início e cortava chamadas com tempo sobrando). Teto absoluto: limite + 30 min |
 | Encerrado sem a chamada conectar os dois lados | Cota devolvida, qualquer que seja o motivo do fim (ex.: paciente cancelou depois do aceite); não entra no repasse do psicólogo (ficha 09) |
 | Limite de pedidos | 5 a cada 10 min por paciente |
 | Quem vê a fila | Só psicólogo aprovado, não bloqueado e online (vale também para a lista da edge function, com nome e sintomas) |

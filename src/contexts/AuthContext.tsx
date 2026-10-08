@@ -48,6 +48,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const signingOutRef = useRef(false);
   const authEventSeq = useRef(0);
+  // Quem está logado e com que tipo, para os avisos repetidos do login.
+  const userIdRef = useRef<string | null>(null);
+  const userTypeRef = useRef<UserType>('unknown');
+  userTypeRef.current = userType;
 
   const getUserType = async (authUser: User): Promise<UserType> => {
     const userId = authUser.id;
@@ -88,9 +92,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('[AuthContext] event:', event);
     // Entrou, saiu ou mudou a conta: o estado do login guardado pode estar
     // velho (ex.: psicólogo que acabou de se cadastrar e entra em seguida).
+    const sameUser = Boolean(session?.user && session.user.id === userIdRef.current);
+    // O Supabase repete "entrou" (SIGNED_IN) a cada volta da aba, da janela
+    // minimizada ou redimensionada, e "renovou" (TOKEN_REFRESHED) de tempos em
+    // tempos. Com a mesma pessoa e o tipo já conhecido, só atualiza o token:
+    // antes o app consultava o tipo de novo e, se a consulta falhasse por um
+    // instante, trocava a tela pela de carregamento (a chamada caía).
+    if (sameUser && userTypeRef.current !== 'unknown' && event !== 'USER_UPDATED') {
+      setSession(session);
+      setLoading(false);
+      return;
+    }
+
     if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') clearLoginState();
     setSession(session);
     setUser(session?.user ?? null);
+    userIdRef.current = session?.user?.id ?? null;
     const seq = ++authEventSeq.current;
 
     if (!session?.user) {
@@ -123,6 +140,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       // Um aviso mais novo (outro login, saída) vale mais que este.
       if (seq !== authEventSeq.current) return;
+      // Falha momentânea na consulta não tira o acesso de quem já entrou.
+      if (type === 'unknown' && sameUser && userTypeRef.current !== 'unknown') type = userTypeRef.current;
       setUserType(type);
       setLoading(false);
     }, 0);

@@ -125,10 +125,6 @@ const VideoCallRoom = ({
   const [sessionProblem, setSessionProblem] = useState<string | null>(null);
   const [initTimedOut, setInitTimedOut] = useState(false);
 
-  const [isMuted, setIsMuted] = useState(false);
-  const [isCameraOff, setIsCameraOff] = useState(false);
-  const isMutedRef = useRef(false);
-  const isCameraOffRef = useRef(false);
   const [remoteMuted, setRemoteMuted] = useState(false);
   const [remoteCameraOff, setRemoteCameraOff] = useState(false);
   const lastMediaSignalAtRef = useRef(0);
@@ -171,6 +167,9 @@ const VideoCallRoom = ({
     forceReconnect,
     toggleAudio,
     toggleVideo,
+    isMuted,
+    isCameraOff,
+    mediaChoiceReady,
     remoteMediaState,
     sendMediaState,
     sendCallEndedSignal,
@@ -325,10 +324,12 @@ const VideoCallRoom = ({
     if (typeof row[`${remoteType}_camera_off`] === 'boolean') setRemoteCameraOff(row[`${remoteType}_camera_off`] as boolean);
   }, [session, isSos, userType, cleanup]);
 
-  // Anuncia meu estado (e reanuncia a cada conexão).
+  // Anuncia meu estado (e reanuncia a cada conexão). Só depois de reaplicar a
+  // escolha guardada: senão, ao recarregar, o outro lado via "ligado" à toa.
   useEffect(() => {
+    if (!mediaChoiceReady) return;
     sendMediaState({ userType, cameraOff: isCameraOff, muted: isMuted, displayName: localName || null, avatarUrl: null });
-  }, [sendMediaState, userType, isCameraOff, isMuted, localName, isConnected]);
+  }, [sendMediaState, userType, isCameraOff, isMuted, localName, isConnected, mediaChoiceReady]);
 
   // O outro lado encerrou.
   useEffect(() => {
@@ -351,21 +352,21 @@ const VideoCallRoom = ({
     [sessionId],
   );
 
+  // A sala no banco acompanha a escolha (vale para quem entra ou recarrega).
+  useEffect(() => {
+    if (!mediaChoiceReady) return;
+    void persistMediaState({ [`${userType}_muted`]: isMuted, [`${userType}_camera_off`]: isCameraOff });
+  }, [mediaChoiceReady, isMuted, isCameraOff, userType, persistMediaState]);
+
   const toggleMic = useCallback(() => {
-    const muted = toggleAudio();
-    isMutedRef.current = muted;
-    setIsMuted(muted);
+    toggleAudio();
     lastMediaSignalAtRef.current = Date.now();
-    void persistMediaState({ [`${userType}_muted`]: muted });
-  }, [toggleAudio, persistMediaState, userType]);
+  }, [toggleAudio]);
 
   const toggleCamera = useCallback(() => {
-    const cameraOff = toggleVideo();
-    isCameraOffRef.current = cameraOff;
-    setIsCameraOff(cameraOff);
+    void toggleVideo();
     lastMediaSignalAtRef.current = Date.now();
-    void persistMediaState({ [`${userType}_camera_off`]: cameraOff });
-  }, [toggleVideo, persistMediaState, userType]);
+  }, [toggleVideo]);
 
   // Atalhos do Meet: Ctrl/Cmd+D microfone, Ctrl/Cmd+E câmera.
   useEffect(() => {
@@ -463,11 +464,20 @@ const VideoCallRoom = ({
 
   // ------------------------------------------------------------- tempo
 
-  const { timeLeft, isPaused: isTimerPaused } = useSharedCallTimer({
+  // Uma fonte só para os dois lados: o tempo que o banco soma com os dois
+  // conectados. Qualquer mudança na sala (aviso de mídia, conexão, presença)
+  // faz o cronômetro conferir o banco na hora.
+  const sessionRow = session as unknown as Record<string, unknown> | null;
+  const { timeLeft, isPaused: isTimerPaused, started: timerStarted } = useSharedCallTimer({
     sessionId,
-    userType,
     timeLimit: timeLimitSeconds,
-    running: inCall && isConnected && remotePresent && !isReconnecting && !isNetworkOffline,
+    syncKey: [
+      sessionRow?.media_tick_at ?? '',
+      sessionRow?.media_seconds ?? '',
+      sessionRow?.status ?? '',
+      isConnected,
+      remotePresent,
+    ].join('|'),
     onExpire: useCallback(() => {
       if (isSos) {
         void endCallRef.current({ reason: END_REASONS.TIME_LIMIT });
@@ -713,11 +723,19 @@ const VideoCallRoom = ({
                 'absolute left-3 top-3 z-10 flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium tabular-nums',
                 timeLeft <= 60 && !isTimerPaused ? 'bg-destructive text-white' : 'bg-zinc-900/75 text-white',
               )}
-              title={isTimerPaused ? 'Tempo pausado enquanto alguém está fora da chamada' : 'Tempo restante'}
+              title={
+                !timerStarted
+                  ? 'O tempo começa quando vocês dois estiverem conectados'
+                  : isTimerPaused
+                    ? 'Tempo pausado enquanto alguém está fora da chamada'
+                    : 'Tempo restante'
+              }
             >
               <Clock className="h-3.5 w-3.5" aria-hidden="true" />
               {timeLeft > 0 ? formatClock(timeLeft) : 'Tempo esgotado'}
-              {isTimerPaused && timeLeft > 0 && <span className="text-zinc-300">· pausado</span>}
+              {timeLeft > 0 && isTimerPaused && (
+                <span className="text-zinc-300">· {timerStarted ? 'pausado' : 'aguardando'}</span>
+              )}
             </div>
 
             {banner.visible && (

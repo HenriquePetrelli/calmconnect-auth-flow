@@ -60,6 +60,58 @@ const isMissingFunction = (error: any) =>
 const VIDEO_MAX_BITRATE = 1_500_000;
 const VIDEO_POOR_BITRATE = 350_000;
 
+/** Câmera/microfone escolhidos nesta chamada (sobrevive a recarregar a página). */
+export interface LocalMediaChoice {
+  muted: boolean;
+  cameraOff: boolean;
+}
+
+const mediaChoiceKey = (sessionId: string, userType: string) => `soliv:call-media:${sessionId}:${userType}`;
+
+const readMediaChoice = (key: string): LocalMediaChoice | null => {
+  try {
+    const raw = sessionStorage.getItem(key);
+    if (!raw) return null;
+    const value = JSON.parse(raw);
+    if (typeof value?.muted === 'boolean' && typeof value?.cameraOff === 'boolean') return value;
+  } catch {
+    /* sem armazenamento: vale o que está na sala */
+  }
+  return null;
+};
+
+const writeMediaChoice = (key: string, value: LocalMediaChoice) => {
+  try {
+    sessionStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    /* noop */
+  }
+};
+
+/**
+ * Quadro preto no lugar da câmera desligada. Como no Meet, a câmera desligada
+ * é solta de verdade (a luz apaga); o lugar dela na conexão fica com este
+ * quadro, então religar não precisa renegociar e uma reconexão continua com
+ * espaço para o vídeo.
+ */
+const makePlaceholderVideoTrack = (): MediaStreamTrack | null => {
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = 320;
+    canvas.height = 180;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const capture = (canvas as HTMLCanvasElement & { captureStream?: (fps?: number) => MediaStream }).captureStream;
+    const track = capture?.call(canvas, 1)?.getVideoTracks()[0] ?? null;
+    if (track) track.enabled = false;
+    return track;
+  } catch {
+    return null;
+  }
+};
+
 interface UseWebRTCProps {
   sessionId: string;
   userType: 'psychologist' | 'patient';
@@ -96,6 +148,11 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
   /** Since when the media is not flowing (join time until the first connection). */
   const [notConnectedSince, setNotConnectedSince] = useState<number | null>(() => Date.now());
   const [networkQuality, setNetworkQuality] = useState<NetworkQuality>('good');
+  /** Meu microfone/câmera, já com a escolha guardada reaplicada ao entrar. */
+  const [isMuted, setIsMutedState] = useState(false);
+  const [isCameraOff, setIsCameraOffState] = useState(false);
+  /** True depois de reaplicar a escolha guardada (antes disso não anuncia nada). */
+  const [mediaChoiceReady, setMediaChoiceReady] = useState(false);
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -147,6 +204,11 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
   /** Local clock of the last MEDIA_STATE actually received from the peer. */
   const remoteMediaReceivedAtRef = useRef(0);
   const isNetworkOfflineRef = useRef(false);
+  const isMutedRef = useRef(false);
+  const cameraOffRef = useRef(false);
+  const placeholderTrackRef = useRef<MediaStreamTrack | null>(null);
+  const cameraDeviceRef = useRef<string | null>(null);
+  const cameraQueueRef = useRef<Promise<unknown>>(Promise.resolve());
   const isReconnectingRef = useRef(false);
 
   const { toast } = useToast();
@@ -854,23 +916,129 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
 
   // ------------------------------------------------------- media controls
 
-  const toggleAudio = useCallback(() => {
-    const audioTrack = localStreamRef.current?.getAudioTracks()[0];
-    if (audioTrack) {
-      audioTrack.enabled = !audioTrack.enabled;
-      return !audioTrack.enabled;
+  const choiceKey = mediaChoiceKey(sessionId, userType);
+  const rememberChoice = useCallback(() => {
+    writeMediaChoice(choiceKey, { muted: isMutedRef.current, cameraOff: cameraOffRef.current });
+  }, [choiceKey]);
+
+  /** Troca o vídeo local (na conexão e na miniatura) sem renegociar. */
+  const swapLocalVideoTrack = useCallback(async (oldTrack: MediaStreamTrack | null, newTrack: MediaStreamTrack | null) => {
+    const stream = localStreamRef.current;
+    if (!stream) return;
+    const pc = pcRef.current;
+    if (pc && oldTrack) {
+      for (const sender of pc.getSenders()) {
+        if (sender.track !== oldTrack) continue;
+        try {
+          await sender.replaceTrack(newTrack);
+        } catch (err) {
+          console.warn('[WebRTC] replaceTrack failed', err);
+        }
+      }
     }
-    return false;
+    const next = new MediaStream([...stream.getTracks().filter((t) => t !== oldTrack), ...(newTrack ? [newTrack] : [])]);
+    localStreamRef.current = next;
+    setLocalStream(next);
+    if (localVideoRef.current) localVideoRef.current.srcObject = next;
   }, []);
 
-  const toggleVideo = useCallback(() => {
-    const videoTrack = localStreamRef.current?.getVideoTracks()[0];
-    if (videoTrack) {
-      videoTrack.enabled = !videoTrack.enabled;
-      return !videoTrack.enabled;
+  /** Solta a câmera (luz apagada) e põe o quadro preto no lugar dela. */
+  const releaseCamera = useCallback(async () => {
+    const real = localStreamRef.current?.getVideoTracks().find((t) => t !== placeholderTrackRef.current) ?? null;
+    if (!real) return;
+    try {
+      cameraDeviceRef.current = real.getSettings?.().deviceId || cameraDeviceRef.current;
+    } catch {
+      /* noop */
     }
-    return false;
-  }, []);
+    const placeholder = makePlaceholderVideoTrack();
+    if (!placeholder) {
+      // Navegador sem quadro substituto: ao menos para de enviar a imagem.
+      real.enabled = false;
+      return;
+    }
+    placeholderTrackRef.current = placeholder;
+    await swapLocalVideoTrack(real, placeholder);
+    real.stop();
+  }, [swapLocalVideoTrack]);
+
+  /** Liga a câmera de novo (abre o aparelho e troca o quadro preto pela imagem). */
+  const reacquireCamera = useCallback(async (): Promise<boolean> => {
+    const current = localStreamRef.current?.getVideoTracks()[0] ?? null;
+    if (current && current !== placeholderTrackRef.current) {
+      current.enabled = true;
+      return true;
+    }
+    try {
+      const deviceId = cameraDeviceRef.current || preferencesRef.current?.camera_device_id || undefined;
+      const fresh = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          facingMode: 'user',
+          ...(deviceId ? { deviceId: { ideal: deviceId } } : {}),
+        },
+      });
+      const track = fresh.getVideoTracks()[0];
+      if (!track) throw new Error('Nenhuma câmera encontrada');
+      if (disposedRef.current) {
+        track.stop();
+        return false;
+      }
+      try {
+        (track as any).contentHint = 'motion';
+      } catch {
+        /* noop */
+      }
+      await swapLocalVideoTrack(current, track);
+      if (current) current.stop();
+      placeholderTrackRef.current = null;
+      return true;
+    } catch (err) {
+      console.warn('[WebRTC] could not turn the camera back on', err);
+      toastRef.current({
+        title: 'Não foi possível ligar a câmera',
+        description: 'Confira se outro aplicativo está usando a câmera e tente de novo.',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  }, [swapLocalVideoTrack]);
+
+  /** Liga/desliga o microfone (a escolha fica guardada para recarregar). */
+  const setMuted = useCallback((muted: boolean) => {
+    isMutedRef.current = muted;
+    localStreamRef.current?.getAudioTracks().forEach((track) => {
+      track.enabled = !muted;
+    });
+    setIsMutedState(muted);
+    rememberChoice();
+    return muted;
+  }, [rememberChoice]);
+
+  /** Liga/desliga a câmera; devolve como ficou (religar pode falhar). */
+  const setCameraOff = useCallback((off: boolean): Promise<boolean> => {
+    const run = async () => {
+      if (off) {
+        cameraOffRef.current = true;
+        setIsCameraOffState(true);
+        rememberChoice();
+        await releaseCamera();
+        return true;
+      }
+      const ok = await reacquireCamera();
+      cameraOffRef.current = !ok;
+      setIsCameraOffState(!ok);
+      rememberChoice();
+      return !ok;
+    };
+    const next = cameraQueueRef.current.then(run, run);
+    cameraQueueRef.current = next.catch(() => undefined);
+    return next;
+  }, [releaseCamera, reacquireCamera, rememberChoice]);
+
+  const toggleAudio = useCallback(() => setMuted(!isMutedRef.current), [setMuted]);
+  const toggleVideo = useCallback(() => setCameraOff(!cameraOffRef.current), [setCameraOff]);
 
   const sendMediaState = useCallback((payload: Omit<MediaStateSignal, 'type' | 'at' | 'seq'>) => {
     localMediaStateRef.current = payload;
@@ -981,6 +1149,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     }
 
     localStreamRef.current = null;
+    placeholderTrackRef.current = null;
     remoteStreamRef.current = null;
     setLocalStream(null);
     setRemoteStream(null);
@@ -1000,19 +1169,31 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     const oldStream = localStreamRef.current;
     if (!pc || !oldStream) return;
     try {
-      const videoTrack = newStream.getVideoTracks()[0];
+      const placeholder = placeholderTrackRef.current;
+      let videoTrack: MediaStreamTrack | undefined = newStream.getVideoTracks()[0];
       const audioTrack = newStream.getAudioTracks()[0];
+      // Câmera desligada: a nova câmera fica só lembrada; o quadro preto continua.
+      if (cameraOffRef.current && placeholder && videoTrack) {
+        try {
+          cameraDeviceRef.current = videoTrack.getSettings?.().deviceId || cameraDeviceRef.current;
+        } catch {
+          /* noop */
+        }
+        videoTrack.stop();
+        newStream.removeTrack(videoTrack);
+        newStream.addTrack(placeholder);
+        videoTrack = undefined;
+      }
       for (const sender of pc.getSenders()) {
         if (!sender.track) continue;
         if (sender.track.kind === 'video' && videoTrack) await sender.replaceTrack(videoTrack);
         else if (sender.track.kind === 'audio' && audioTrack) await sender.replaceTrack(audioTrack);
       }
       // Keep the enabled/disabled state the person had chosen.
-      const wasVideoOn = oldStream.getVideoTracks()[0]?.enabled ?? true;
-      const wasAudioOn = oldStream.getAudioTracks()[0]?.enabled ?? true;
-      if (videoTrack) videoTrack.enabled = wasVideoOn;
-      if (audioTrack) audioTrack.enabled = wasAudioOn;
+      if (videoTrack) videoTrack.enabled = !cameraOffRef.current;
+      if (audioTrack) audioTrack.enabled = !isMutedRef.current;
       oldStream.getTracks().forEach((track) => {
+        if (track === placeholder) return;
         try {
           track.stop();
         } catch {
@@ -1049,6 +1230,7 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     setNotConnectedSince(Date.now());
 
     const initialize = async () => {
+      setMediaChoiceReady(false);
       setWebrtcState('initializing');
       setIsInitializing(true);
       try {
@@ -1058,15 +1240,17 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
           return;
         }
 
+        let roomRow: Record<string, unknown> | null = null;
         // Reopen the session if it carries a stale "completed" state from a
         // previous call/reconnection — otherwise both peers would think the
         // other one hung up. The database refuses it for a finished call.
         try {
           const { data: existing } = await supabase
             .from('webrtc_sessions')
-            .select('status, ended_at, ended_by, ended_by_type')
+            .select('status, ended_at, ended_by, ended_by_type, patient_muted, patient_camera_off, psychologist_muted, psychologist_camera_off')
             .eq('id', sessionId)
             .maybeSingle();
+          roomRow = existing as Record<string, unknown> | null;
           if (existing?.status === 'completed') {
             const { error: reopenError } = await supabase
               .from('webrtc_sessions')
@@ -1083,10 +1267,21 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
           console.warn('Could not verify session state:', err);
         }
 
-        const pc = await buildPeerConnection(stream);
+        // Câmera/microfone como a pessoa deixou (recarregar a página não liga
+        // nada sozinho): primeiro o que este aparelho guardou, senão a sala.
+        const choice = readMediaChoice(choiceKey) ?? {
+          muted: roomRow?.[`${userType}_muted`] === true,
+          cameraOff: roomRow?.[`${userType}_camera_off`] === true,
+        };
+        setMuted(choice.muted);
+        if (choice.cameraOff) await setCameraOff(true);
+        if (!isMounted) return;
+        setMediaChoiceReady(true);
+
+        const pc = await buildPeerConnection(localStreamRef.current ?? stream);
         if (!isMounted) {
           pc.close();
-          stream.getTracks().forEach((t) => t.stop());
+          (localStreamRef.current ?? stream).getTracks().forEach((t) => t.stop());
           return;
         }
         installPeerConnection(pc);
@@ -1182,6 +1377,12 @@ export const useWebRTC = ({ sessionId, userType, onConnectionStateChange }: UseW
     forceReconnect,
     toggleAudio,
     toggleVideo,
+    setMuted,
+    setCameraOff,
+    isMuted,
+    isCameraOff,
+    /** A escolha guardada de câmera/microfone já foi aplicada. */
+    mediaChoiceReady,
     remoteMediaState,
     /** True when the remote camera/mic indicators may be outdated. */
     isRemoteMediaStale,

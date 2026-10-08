@@ -1,5 +1,5 @@
 import { goOfflineOnSignOut } from '@/hooks/usePsychologistPresence';
-import { useEffect, ReactNode } from 'react';
+import { useEffect, useRef, ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import SplashScreen from '@/components/SplashScreen';
@@ -189,6 +189,21 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
     } else {
       accessState = 'allowed';
     }
+  }
+
+  // Tela já liberada para esta pessoa não volta para o carregamento por uma
+  // reconferência momentânea do login (ex.: ao voltar para a janela): isso
+  // desmontava a tela e derrubava uma chamada em andamento.
+  const allowedRef = useRef<{ path: string; userId: string } | null>(null);
+  if (accessState === 'allowed' && user) {
+    allowedRef.current = { path: currentPath, userId: user.id };
+  } else if (
+    accessState === 'loading' &&
+    user &&
+    allowedRef.current?.path === currentPath &&
+    allowedRef.current.userId === user.id
+  ) {
+    accessState = 'allowed';
   }
 
   useEffect(() => {

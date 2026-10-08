@@ -37,7 +37,30 @@ const webrtcState = {
   updateDeviceStream: vi.fn(),
 };
 
-vi.mock('@/hooks/useWebRTC', () => ({ useWebRTC: vi.fn(() => webrtcState) }));
+// Microfone/câmera ficam no hook (com a escolha guardada); aqui, estado simples.
+vi.mock('@/hooks/useWebRTC', async () => {
+  const React = await import('react');
+  return {
+    useWebRTC: vi.fn(() => {
+      const [isMuted, setIsMuted] = React.useState(false);
+      const [isCameraOff, setIsCameraOff] = React.useState(false);
+      return {
+        ...webrtcState,
+        isMuted,
+        isCameraOff,
+        mediaChoiceReady: true,
+        toggleAudio: () => {
+          webrtcState.toggleAudio();
+          setIsMuted((v) => !v);
+        },
+        toggleVideo: async () => {
+          webrtcState.toggleVideo();
+          setIsCameraOff((v) => !v);
+        },
+      };
+    }),
+  };
+});
 vi.mock('@/hooks/useAudioLevel', () => ({ useAudioLevel: () => ({ level: 0, speaking: false }) }));
 
 const presence = { remotePresent: false, remoteLeftAt: null as number | null };
@@ -45,7 +68,7 @@ vi.mock('@/hooks/useCallPresence', () => ({ useCallPresence: () => presence }));
 vi.mock('@/hooks/useParticipantHeartbeat', () => ({ useParticipantHeartbeat: () => ({}) }));
 vi.mock('@/hooks/useRemoteAbsence', () => ({ useRemoteAbsence: () => 0 }));
 vi.mock('@/hooks/useSharedCallTimer', () => ({
-  useSharedCallTimer: (p: { timeLimit: number }) => ({ timeLeft: p.timeLimit, isPaused: true, loaded: true }),
+  useSharedCallTimer: (p: { timeLimit: number }) => ({ timeLeft: p.timeLimit, isPaused: true, started: false, loaded: true }),
 }));
 vi.mock('@/utils/session-validation', () => ({
   validateWebRTCSession: vi.fn().mockResolvedValue({}),
@@ -140,7 +163,6 @@ describe('VideoCallRoom — uma sala para o SOS e a consulta', () => {
     const hidden = screen.getByTestId('self-tile-video');
     expect(hidden).toBe(before);
     expect(hidden.className).toContain('opacity-0');
-    webrtcState.toggleVideo.mockReturnValueOnce(false);
     fireEvent.click(screen.getByRole('button', { name: 'Ativar câmera' }));
     expect(screen.getByTestId('self-tile-video')).toBe(before);
     expect(screen.getByTestId('self-tile-video').className).toContain('opacity-100');

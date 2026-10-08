@@ -46,6 +46,10 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Na chamada → mutar / desligar câmera ⇒ aparece do outro lado
 - [ ] Na chamada → desligar Wi-Fi de um lado por 20 s ⇒ "Tentando reconectar" e volta sozinha
 - [ ] Na chamada → recarregar a página (F5) ⇒ volta à mesma sala, cronômetro continua
+- [ ] Na chamada → desligar câmera e microfone → F5 ⇒ voltam desligados de verdade (luz da câmera apagada; o outro lado não ouve nem vê)
+- [ ] Na chamada → desligar a câmera ⇒ a luz da câmera do aparelho apaga; religar ⇒ imagem volta dos dois lados
+- [ ] Paciente e psicólogo lado a lado ⇒ cronômetro igual nos dois; antes de o segundo entrar mostra "25:00 · aguardando"
+- [ ] Na chamada → redimensionar, maximizar, minimizar e voltar para a janela ⇒ continua na chamada
 - [ ] Psicólogo → Encerrar ⇒ Paciente A vê a avaliação obrigatória
 - [ ] Paciente A → SOS de novo no mesmo mês ⇒ tela "Você já usou o SOS deste mês" (sem busca), com CVV, respirar, plano de segurança e agendar consulta
 - [ ] Paciente B → SOS → fechar o app antes do aceite ⇒ pedido some do painel do psicólogo
