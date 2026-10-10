@@ -1,7 +1,7 @@
 # 09. Repasses aos psicólogos
 
 > **Status:** Pronto, com decisão pendente (SOS atendidos antes de 2026-10-04).
-> **Última verificação:** 2026-10-04 (só entram chamadas que conectaram; chave Pix sempre atual).
+> **Última verificação:** 2026-10-19 (varredura de funcionamento: cada item sabe se foi pago, pendente calculado a partir do livro, consulta interrompida sai do repasse enquanto não paga, confirmação numa operação só com E2E único, semana fechada no horário de Brasília). Antes: 2026-10-04 (só entram chamadas que conectaram; chave Pix sempre atual).
 > **Quem usa:** admin (paga) e psicólogo (acompanha).
 
 ## Resumo
@@ -24,12 +24,12 @@ O admin paga por PIX fora do app e registra no painel com o **código E2E do PIX
 
 ## Como funciona
 
-1. **Contagem** (`sync_psychologist_payments`): cada consulta ou SOS concluído, em que a chamada conectou (`webrtc_sessions.connected_at`), entra **uma única vez** num livro de itens (`payout_items`, chave única por origem), e o valor pendente é somado a partir dele. Rodar várias vezes não duplica.
+1. **Contagem** (`sync_psychologist_payments`): cada consulta ou SOS concluído, em que a chamada conectou (`webrtc_sessions.connected_at`), entra **uma única vez** num livro de itens (`payout_items`, chave única por origem). O valor pendente é **a soma dos itens ainda não pagos** (`recompute_psychologist_pending`), recalculada a cada sincronização e a cada ajuste. Rodar várias vezes não duplica. Entram as semanas fechadas até a última segunda-feira, 0h no horário de Brasília.
 2. **Quando roda**: toda segunda às 9h (rotina `weekly-payment-sync`, que chama a edge function `payment-sync`) e quando o admin toca em "Sincronizar".
 3. **Pagar**: o admin faz o PIX e, no painel, toca em "Confirmar". Informa o **E2E** (32 caracteres, obrigatório) e, se quiser, o comprovante (imagem ou PDF até 5 MB).
-4. **Confirmar** (`confirm-payment`): só confirma se o valor pendente ainda for o que o admin viu. Assim, dois cliques ou duas abas não pagam duas vezes, e atendimentos novos no meio do caminho não entram sem ser vistos. E2E já usado é recusado.
+4. **Confirmar** (`confirm-payment` → `confirm_psychologist_payout`, numa operação só no banco): só confirma se o valor pendente ainda for o que o admin viu. Marca cada item como pago (`paid_at`, `payment_log_id`), atualiza os totais e grava o registro com o E2E, tudo junto. Assim, dois cliques ou duas abas não pagam duas vezes, atendimentos novos no meio do caminho não entram sem ser vistos, e o repasse nunca fica pago sem o E2E registrado. E2E já usado é recusado (índice único).
 5. **Psicólogo** vê em "Repasses recebidos" o E2E para conferir no extrato e o comprovante (link temporário).
-6. **Consulta interrompida** (ficha 04): se o psicólogo marcar antes de entrar num repasse pago, ela sai da contagem. Depois de paga, só pelo suporte.
+6. **Consulta interrompida** (ficha 04): enquanto o item não foi pago, marcar "Consulta interrompida" tira a consulta do repasse (mesmo depois da sincronização semanal) e o pendente é recalculado. Depois de paga, só pelo suporte. Antes, bastava a consulta ter sido sincronizada para o app recusar.
 
 ## Regras
 
@@ -44,7 +44,7 @@ O admin paga por PIX fora do app e registra no painel com o **código E2E do PIX
 - **Telas e componentes**: `src/pages/PsychologistPayments.tsx`; em `src/components/payments/`: `PaymentsPanel`, `ConfirmPayoutDialog`, `PaymentDetailsModal`, `PayoutHistory`.
 - **Hooks**: `usePayments`.
 - **Edge functions**: `payment-sync` (admin ou rotina agendada), `confirm-payment`.
-- **Banco**: `payout_items`, `psychologist_payments`, `payment_logs`; bucket `payment-receipts`. Funções: `sync_psychologist_payments`, `appointment_call_connected`, `sos_call_connected`; gatilho `sync_payment_pix_key`. Migração: `20261004000247_cf325ceb-bcdc-471c-9aa3-6bdeea596c98.sql`.
+- **Banco**: `payout_items` (com `paid_at` e `payment_log_id`), `psychologist_payments`, `payment_logs` (E2E único); bucket `payment-receipts`. Funções: `sync_psychologist_payments`, `recompute_psychologist_pending`, `confirm_psychologist_payout`, `report_consultation_problem`, `appointment_call_connected`, `sos_call_connected`; gatilho `sync_payment_pix_key`. Migração mais recente: `20261019090000_repasses_regras.sql`.
 
 ## Como validar
 
@@ -63,8 +63,8 @@ O admin paga por PIX fora do app e registra no painel com o **código E2E do PIX
 
 ### Conferência no banco
 ```sql
--- Itens de um psicólogo
-select source_type, amount, occurred_at, counted_at, backfilled
+-- Itens de um psicólogo (paid_at vazio = ainda a pagar)
+select source_type, amount, occurred_at, counted_at, paid_at, backfilled
 from payout_items where psychologist_user_id = '<id>' order by occurred_at desc;
 
 -- Totais
@@ -77,6 +77,9 @@ where psychologist_id = '<id>' order by created_at desc;
 ```
 
 ## Pendências
+
+- **SOS curto**: o SOS entra no repasse se a chamada conectou, sem tempo mínimo (a consulta exige 5 minutos). Falta decidir se o SOS também precisa de um mínimo.
+- **Psicólogo excluído**: excluir a conta do psicólogo apaga também o histórico de repasses dele (`payment_logs` em cascata). Antes de excluir, exportar ou guardar os registros fiscais.
 
 - **SOS atendidos antes de 2026-10-04** (pendência 4): nunca foram pagos (a contagem antiga ignorava o SOS). Estão no livro com `backfilled = true` e **não** somam ao pendente. Falta decidir se serão pagos. A consulta do total está no doc de pendências.
 

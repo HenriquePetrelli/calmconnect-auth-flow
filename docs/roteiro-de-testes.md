@@ -194,6 +194,10 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Psicólogo → Pagamentos ⇒ vê "Repasses recebidos" com E2E e comprovante
 - [ ] Consulta/SOS em que o psicólogo ficou sozinho ⇒ não entra no repasse
 - [ ] Psicólogo → Perfil → Chave Pix → trocar ⇒ Admin vê a chave nova em Repasses
+- [ ] Consulta concluída já sincronizada (ainda não paga) → Psicólogo → Histórico → Consulta interrompida ⇒ aceita; sai do pendente e a consulta do mês volta ao paciente
+- [ ] Consulta já paga → Consulta interrompida ⇒ recusado: "já foi paga no repasse, fale com o suporte"
+- [ ] Admin confirma com valor desatualizado (outra aba sincronizou antes) ⇒ "O valor pendente mudou"; nada é pago
+- [ ] Admin → Confirmar → conferir no banco ⇒ itens do psicólogo com paid_at e o registro com o E2E
 
 ## 8. Empresas / B2B (ficha 10)
 

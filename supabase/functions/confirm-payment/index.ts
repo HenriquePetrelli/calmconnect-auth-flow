@@ -94,102 +94,29 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { data: duplicate } = await supabase
-      .from('payment_logs')
-      .select('id')
-      .eq('action', 'payment_confirmed')
-      .contains('details', { pix_e2e_id: e2e })
-      .limit(1);
-    if (duplicate && duplicate.length > 0) {
+    // Numa operação só no banco: confere o valor pendente (a soma dos itens
+    // ainda não pagos), marca os itens como pagos, atualiza os totais e grava
+    // o registro com o E2E (único). Antes eram passos separados: se o registro
+    // falhasse, o repasse ficava pago sem o E2E.
+    const { data: result, error: confirmError } = await supabase.rpc('confirm_psychologist_payout', {
+      p_psychologist_id: psychologist_id,
+      p_expected_amount: typeof expected_amount === 'number' ? expected_amount : null,
+      p_pix_e2e_id: e2e,
+      p_receipt_path: receipt_path ?? null,
+      p_admin_id: user.id,
+      p_admin_email: user.email ?? null,
+    });
+
+    if (confirmError) {
+      const code = (confirmError as { code?: string }).code;
+      const status = code === 'P0002' ? 404 : code === 'P0001' || code === '40001' || code === '23505' ? 409 : 500;
+      if (status === 500) console.error('Error confirming payment:', confirmError);
       return new Response(
-        JSON.stringify({ error: 'Esse código E2E já foi usado em outro repasse.' }),
-        { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: code === '23505' ? 'Esse código E2E já foi usado em outro repasse.' : confirmError.message }),
+        { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    // Get current payment record
-    const { data: payment, error: fetchError } = await supabase
-      .from('psychologist_payments')
-      .select('*')
-      .eq('psychologist_id', psychologist_id)
-      .single();
-
-    if (fetchError || !payment) {
-      return new Response(
-        JSON.stringify({ error: 'Payment record not found' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const pending = Number(payment.total_pending_amount ?? 0);
-    if (pending <= 0) {
-      return new Response(
-        JSON.stringify({ error: 'Não há valor pendente para este psicólogo.' }),
-        { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-    // The amount the admin saw (and transferred) must still be the pending
-    // amount — otherwise new consultations were added in between, or it was
-    // already confirmed in another tab.
-    if (typeof expected_amount !== 'number' || Math.abs(expected_amount - pending) > 0.009) {
-      return new Response(
-        JSON.stringify({ error: 'O valor pendente mudou desde que a tela foi aberta. Recarregue e confira antes de confirmar.' }),
-        { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Conditional on the pending amount being unchanged, so two concurrent
-    // confirmations can't both succeed.
-    const { data: updated, error: updateError } = await supabase
-      .from('psychologist_payments')
-      .update({
-        total_paid_amount: (payment.total_paid_amount ?? 0) + pending,
-        scheduled_paid_count: (payment.scheduled_paid_count ?? 0) + (payment.scheduled_pending_count ?? 0),
-        emergency_paid_count: (payment.emergency_paid_count ?? 0) + (payment.emergency_pending_count ?? 0),
-        scheduled_pending_count: 0,
-        emergency_pending_count: 0,
-        total_pending_amount: 0,
-        updated_at: new Date().toISOString()
-      })
-      .eq('psychologist_id', psychologist_id)
-      .eq('total_pending_amount', payment.total_pending_amount)
-      .select('id');
-
-    if (updateError) {
-      console.error('Error updating payment:', updateError);
-      return new Response(
-        JSON.stringify({ error: updateError.message }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-    if (!updated || updated.length === 0) {
-      return new Response(
-        JSON.stringify({ error: 'Este repasse foi alterado ao mesmo tempo por outra ação. Recarregue a tela.' }),
-        { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Log the payment confirmation
-    const { error: logError } = await supabase
-      .from('payment_logs')
-      .insert({
-        psychologist_id: psychologist_id,
-        admin_id: user.id,
-        action: 'payment_confirmed',
-        amount_paid: payment.total_pending_amount,
-        scheduled_count: payment.scheduled_pending_count,
-        emergency_count: payment.emergency_pending_count,
-        details: {
-          confirmed_at: new Date().toISOString(),
-          admin_email: user.email,
-          pix_e2e_id: e2e,
-          receipt_path: receipt_path ?? null,
-        }
-      });
-
-    if (logError) {
-      console.error('Error logging payment:', logError);
-    }
+    const payment = { total_pending_amount: (result as { amount_paid?: number } | null)?.amount_paid ?? 0 };
 
     console.log(`Payment confirmed for psychologist ${psychologist_id} by admin ${user.id}`);
     
