@@ -1,7 +1,7 @@
 # 15. Autocuidado: respiração, sons, comer com atenção e diário
 
 > **Status:** Pronto.
-> **Última verificação:** 2026-10-04 (varredura: respiração, sons, comer com atenção e diário; limite do diário no banco).
+> **Última verificação:** 2026-10-14 (varredura de funcionamento: tempo pelo relógio real com a tela bloqueada, sons param no tempo escolhido, terminar antes conta, registro único, diário sem duplicar e com rascunho). Antes: 2026-10-04.
 > **Quem usa:** paciente.
 
 ## Resumo
@@ -32,8 +32,11 @@ Tudo conta para as metas da semana, conquistas e Meu progresso (ficha 12).
 ### Respiração guiada
 1. Escolhe a técnica: 4-7-8, Equilibrada, Box Breathing, Tática, Profunda, de Emergência, Alternada e outras. Cada uma tem os tempos de inspirar, segurar, expirar e pausar que as próprias instruções prometem.
 2. Prática com animação e frases por fase.
-3. Na conclusão, registra a atividade "Respiração Guiada" e soma o tempo (`update_patient_activity_time`, até 240 min por sessão).
-4. A respiração de emergência também está dentro da fila do SOS ("Respirar"), sem sair dela.
+3. O tempo corre pelo **relógio de verdade** (horário de término): com a tela apagada ou o app em segundo plano, a sessão não atrasa; ao voltar, já mostra o tempo certo (antes uma sessão de 5 min podia durar muito mais).
+4. Durante a prática a **tela fica acesa** (Wake Lock, nos navegadores que permitem).
+5. **"Terminar agora"** (botão quadrado): encerra e conta os minutos feitos (a partir de 1).
+6. Na conclusão, registra a atividade "Respiração Guiada" e soma o tempo (`update_patient_activity_time`, até 240 min por sessão), **uma vez só** e só com 1 minuto ou mais.
+7. A respiração de emergência também está dentro da fila do SOS ("Respirar"), sem sair dela.
 
 ### Sons
 1. As faixas ficam no próprio app (`public/sounds/`):
@@ -41,7 +44,9 @@ Tudo conta para as metas da semana, conquistas e Meu progresso (ficha 12).
    - Focar: 528 Hz, pássaros, ruído marrom, clássica, harpa;
    - Meditar: aum, binaural, gregoriano, tibetano, cachoeira.
 2. O catálogo está em `src/data/soundsData.ts`.
-3. Ao terminar, a tela "Como você se sente?" registra a atividade e soma o tempo ouvido.
+3. O tempo da sessão corre também com a **tela bloqueada**: o som para na hora escolhida (antes o tempo congelava em segundo plano e o som de "Dormir" tocava a noite inteira).
+4. Ao terminar, a tela "Como você se sente?" registra a atividade e soma o tempo ouvido, **uma vez por sessão** (voltar ou recarregar a tela não soma de novo). Na playlist, conta o tempo de todas as faixas ouvidas.
+5. **Sair antes** com 1 minuto ou mais ouvido também leva a "Como você se sente?" e conta o tempo ouvido.
 
 ### Comer com atenção
 Exercício guiado de cerca de 3 min, em etapas (`src/lib/mindfulEating.ts`). Também aparece em Respiração → Outras práticas.
@@ -50,6 +55,8 @@ Exercício guiado de cerca de 3 min, em etapas (`src/lib/mindfulEating.ts`). Tam
 - Texto e humor do momento.
 - **Limite de 2 anotações por dia**, contado no horário de Brasília e conferido também no banco (gatilho `enforce_journal_daily_limit`, que também impede data retroativa). Ao atingir o limite, aparece um aviso só, e a janela continua aberta com o texto digitado.
 - Só o paciente lê. Nem o psicólogo nem o admin veem.
+- **Rascunho**: o texto de uma anotação nova fica guardado no aparelho; fechar a janela sem querer ou falhar o envio não perde nada. Sai ao salvar ou ao sair da conta.
+- **Sem duplicar**: a anotação nova leva um id gerado no aparelho; salvar de novo depois de uma resposta perdida não cria outra (nem gasta o limite do dia).
 
 ## Onde está no código
 
@@ -70,7 +77,7 @@ Exercício guiado de cerca de 3 min, em etapas (`src/lib/mindfulEating.ts`). Tam
 6. Logado como psicólogo, confirmar que não existe acesso ao diário do paciente.
 
 ### Testes automáticos
-`privateJournal` (limite do dia, aviso único, mensagem do servidor). Respiração e sons são cobertos indiretamente por `statisticsEngagementCards`, `usePatientEngagementMetrics` e `progressFeedAchievements`.
+`privateJournal` (limite do dia, aviso único, mensagem do servidor, mesmo id sem duplicar), `selfCareReliability` (respiração pelo relógio real com a tela apagada, "Terminar agora", registro único; sons sem somar de novo). Respiração e sons são cobertos indiretamente por `statisticsEngagementCards`, `usePatientEngagementMetrics` e `progressFeedAchievements`.
 
 ### Conferência no banco
 ```sql
@@ -87,5 +94,6 @@ Nenhuma conhecida.
 | Sintoma | Causa provável | O que olhar |
 |---|---|---|
 | Som não toca | Navegador bloqueia áudio sem toque do usuário, ou arquivo não carregou | Tocar no play de novo; aba Rede (`/sounds/...mp3`) |
-| Tempo não soma | Saiu antes da tela de conclusão ou do feedback | Esperado: só conta ao concluir |
+| Tempo não soma | Saiu com menos de 1 minuto | Esperado: conta a partir de 1 minuto (concluindo, terminando antes ou saindo do som) |
+| Tela apaga na respiração | Navegador sem Wake Lock (iPhone antigo) ou modo economia | Ajustar o bloqueio automático do celular |
 | "Limite diário de 2 anotações" | Regra do diário | Esperado |

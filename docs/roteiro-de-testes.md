@@ -260,6 +260,13 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Paciente → Comer com atenção → até o fim ⇒ tela de conclusão
 - [ ] Paciente → Diário → 2 anotações → 3ª no mesmo dia ⇒ recusa, texto fica na janela
 - [ ] Psicólogo ⇒ não tem acesso ao diário do paciente
+- [ ] Respiração de 5 min com o celular bloqueado ⇒ ao desbloquear depois de 5 min, já está concluída (não atrasa)
+- [ ] Respiração ⇒ a tela não apaga sozinha durante a prática
+- [ ] Respiração → "Terminar agora" depois de 2 min ⇒ conclusão com 2 minutos, que somam em Progresso
+- [ ] Sons → "Dormir" 15 min → bloquear o celular ⇒ o som para sozinho em 15 min
+- [ ] Sons → sair depois de 3 min ⇒ "Como você se sente?" e 3 min em Progresso
+- [ ] Sons → "Como você se sente?" → voltar e avançar ⇒ o tempo não soma de novo
+- [ ] Diário → escrever → fechar sem salvar → abrir de novo ⇒ o texto volta
 
 ## 14. Grupos de apoio (ficha 16)
 

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { RotateCcw, Home, Clock, CheckCircle } from "lucide-react";
@@ -21,23 +21,26 @@ const CompletionScreen = ({
   const { addActivity, updateActivityTime } = usePatientStatistics();
   const { checkAchievements } = useAchievements();
 
+  // Conta uma vez só (a tela pode montar de novo) e só a partir de 1 minuto
+  // feito: terminar antes registra os minutos que a pessoa praticou.
+  const recordedRef = useRef(false);
+  const minutes = Math.floor(duration);
   useEffect(() => {
+    if (recordedRef.current || minutes < 1) return;
+    recordedRef.current = true;
     addActivity("Respiração Guiada");
-    updateActivityTime("breathing", duration);
+    updateActivityTime("breathing", minutes);
     checkAchievements();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const formatDuration = () => {
-    if (duration < 1) {
-      const sec = Math.round(duration * 60);
-      return `${sec} ${sec === 1 ? "segundo" : "segundos"}`;
-    }
-    return `${duration} ${duration === 1 ? "minuto" : "minutos"}`;
+    if (minutes < 1) return "menos de 1 minuto";
+    return `${minutes} ${minutes === 1 ? "minuto" : "minutos"}`;
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/5 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-background flex items-center justify-center p-6">
       <Card className="w-full max-w-md mx-auto">
         <CardContent className="p-8 text-center space-y-6">
           <div className="flex justify-center">

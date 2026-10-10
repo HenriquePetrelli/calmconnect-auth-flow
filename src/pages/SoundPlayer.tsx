@@ -222,23 +222,76 @@ const SoundPlayer = () => {
     };
   }, [isPlaying, isScrubbing, duration, currentTime < duration]);
 
+  // Tela bloqueada ou app em segundo plano: o requestAnimationFrame para,
+  // mas o som continua. Antes o tempo da sessão congelava e o som de "Dormir"
+  // tocava a noite inteira; agora o tempo corre pelo relógio de verdade e a
+  // sessão termina na hora escolhida.
+  useEffect(() => {
+    if (!isPlaying || isScrubbing) return;
+    let lastWall = Date.now();
+    const onVisibility = () => {
+      lastWall = Date.now();
+      // Volta para a tela: o requestAnimationFrame recomeça do zero (sem contar o tempo de fundo duas vezes).
+      if (document.visibilityState === "visible") lastTickRef.current = null;
+    };
+    const interval = setInterval(() => {
+      const now = Date.now();
+      const delta = (now - lastWall) / 1000;
+      lastWall = now;
+      if (document.visibilityState === "hidden") setCurrentTime((prev) => Math.min(prev + delta, duration));
+    }, 1000);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [isPlaying, isScrubbing, duration]);
+
+  // Faixas já ouvidas inteiras na playlist (para contar o tempo certo).
+  const finishedTracksRef = useRef(0);
+  const sessionIdRef = useRef(`${Date.now()}-${Math.random().toString(36).slice(2)}`);
+
+  /** Sair antes: com 1 minuto ou mais ouvido, vai para "Como você se sente?" e conta o tempo. */
+  const leave = () => {
+    if (audioRef.current) audioRef.current.pause();
+    const listened = finishedTracksRef.current * duration + currentTime;
+    if (listened >= 60 && currentSound) {
+      navigate("/sounds/feedback", {
+        replace: true,
+        state: {
+          sound: currentSound,
+          duration: String(Math.floor(listened / 60)),
+          isPlaylist,
+          totalSounds: finishedTracksRef.current + 1,
+          sessionId: sessionIdRef.current,
+        },
+      });
+      return;
+    }
+    navigate("/sounds");
+  };
+
   // Fim de sessão / auto-advance de playlist.
   useEffect(() => {
     if (currentTime < duration) return;
     if (isPlaylist && playlist && currentSoundIndex < playlist.length - 1) {
+      finishedTracksRef.current += 1;
       setCurrentSoundIndex((prev) => prev + 1);
       setCurrentTime(0);
       if (audioRef.current) audioRef.current.currentTime = 0;
       return;
     }
     if (audioRef.current) audioRef.current.pause();
-    const totalPlayed = isPlaylist && playlist ? playlist.length : 1;
+    const totalPlayed = finishedTracksRef.current + 1;
     navigate("/sounds/feedback", {
+      replace: true,
       state: {
         sound: currentSound,
-        duration: selectedDuration,
+        // Playlist: o tempo de todas as faixas ouvidas (antes contava só uma).
+        duration: String(parseInt(selectedDuration) * totalPlayed),
         isPlaylist,
         totalSounds: totalPlayed,
+        sessionId: sessionIdRef.current,
       },
     });
   }, [currentTime, duration, navigate, currentSound, selectedDuration, isPlaylist, playlist, currentSoundIndex]);
@@ -388,8 +441,8 @@ const SoundPlayer = () => {
   const isLoading = isBuffering && !hasStarted;
 
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-br from-background to-secondary/5 overflow-hidden">
-      <PageHeader title={currentSound.name} onBack={() => navigate("/sounds")} />
+    <div className="h-screen flex flex-col bg-background overflow-hidden">
+      <PageHeader title={currentSound.name} onBack={leave} />
 
 
       {/* Main content */}
@@ -589,8 +642,8 @@ const SoundPlayer = () => {
             }`}
           >
             {/* Gradientes para legibilidade */}
-            <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-b from-black/60 to-transparent" />
-            <div className="absolute bottom-0 inset-x-0 h-40 bg-gradient-to-t from-black/70 to-transparent" />
+            <div className="absolute top-0 inset-x-0 h-24 bg-black/40" />
+            <div className="absolute bottom-0 inset-x-0 h-40 bg-black/50" />
 
             {/* Botão fechar */}
             <button

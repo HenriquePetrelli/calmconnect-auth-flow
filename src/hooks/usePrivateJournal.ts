@@ -53,10 +53,24 @@ export const usePrivateJournal = () => {
     }
   }, [toast]);
 
-  const createEntry = useCallback(async (texto: string, humor: number) => {
+  /**
+   * Cria a anotação. O id vem do aparelho (o mesmo em todas as tentativas):
+   * se a resposta se perder e a pessoa salvar de novo, não vira anotação em
+   * dobro (que ainda gastaria o limite de 2 por dia).
+   */
+  const createEntry = useCallback(async (texto: string, humor: number, id?: string) => {
     try {
       const { data: { user } } = await getSessionUser();
       if (!user) throw new Error('Usuário não autenticado');
+
+      if (id) {
+        const { data: already } = await supabase.from('private_journals').select('*').eq('id', id).maybeSingle();
+        if (already) {
+          setEntries(prev => (prev.some(e => e.id === already.id) ? prev : [already, ...prev]));
+          toast({ title: 'Anotação criada' });
+          return already;
+        }
+      }
 
       // Check daily limit (2 entries per day) — using the patient's local
       // (Brasília) calendar day, not UTC, so entries near local midnight
@@ -81,6 +95,7 @@ export const usePrivateJournal = () => {
       const { data, error } = await supabase
         .from('private_journals')
         .insert({
+          ...(id ? { id } : {}),
           user_id: user.id,
           texto,
           humor,

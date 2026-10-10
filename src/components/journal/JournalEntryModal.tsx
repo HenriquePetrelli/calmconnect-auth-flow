@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,7 +12,7 @@ import { cn } from '@/lib/utils';
 interface JournalEntryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (texto: string, humor: number) => Promise<void>;
+  onSave: (texto: string, humor: number, id?: string) => Promise<void>;
   editingEntry?: JournalEntry | null;
   loading?: boolean;
 }
@@ -26,21 +27,45 @@ const JournalEntryModal = ({
   const [texto, setTexto] = useState('');
   const [humor, setHumor] = useState<number>(DEFAULT_JOURNAL_MOOD);
   const { addActivity } = usePatientStatistics();
+  const { user } = useAuth();
+  // Rascunho da anotação nova no aparelho: fechar sem querer, recarregar ou
+  // falhar o envio não apaga o que foi escrito. Sai ao salvar ou ao sair da conta.
+  const draftKey = user ? `diario:rascunho:${user.id}` : null;
+  const entryIdRef = useRef<string | null>(null);
 
   useEffect(() => {
+    if (!isOpen) return;
     if (editingEntry) {
       setTexto(editingEntry.texto);
       setHumor(editingEntry.humor);
-    } else {
-      setTexto('');
-      setHumor(DEFAULT_JOURNAL_MOOD);
+      return;
     }
-  }, [editingEntry]);
+    let draft: { texto?: string; humor?: number; id?: string } | null = null;
+    try {
+      draft = draftKey ? JSON.parse(localStorage.getItem(draftKey) ?? 'null') : null;
+    } catch {
+      draft = null;
+    }
+    setTexto(draft?.texto ?? '');
+    setHumor(typeof draft?.humor === 'number' ? draft.humor : DEFAULT_JOURNAL_MOOD);
+    entryIdRef.current =
+      draft?.id ?? (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : null);
+  }, [editingEntry, isOpen, draftKey]);
+
+  useEffect(() => {
+    if (!isOpen || editingEntry || !draftKey) return;
+    try {
+      if (texto.trim()) localStorage.setItem(draftKey, JSON.stringify({ texto, humor, id: entryIdRef.current }));
+      else localStorage.removeItem(draftKey);
+    } catch {
+      /* sem armazenamento */
+    }
+  }, [texto, humor, isOpen, editingEntry, draftKey]);
 
   const handleSave = async () => {
     if (!texto.trim()) return;
     try {
-      await onSave(texto.trim(), humor);
+      await onSave(texto.trim(), humor, editingEntry ? undefined : entryIdRef.current ?? undefined);
     } catch {
       // onSave já mostra o erro (toast) — mantém a modal aberta com o texto
       // digitado pra não perder a anotação (ex.: limite diário atingido).

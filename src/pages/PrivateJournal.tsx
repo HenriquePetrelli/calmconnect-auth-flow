@@ -40,13 +40,13 @@ const PrivateJournal = () => {
     setIsModalOpen(true);
   };
 
-  const handleSaveEntry = async (texto: string, humor: number) => {
+  const handleSaveEntry = async (texto: string, humor: number, id?: string) => {
     setModalLoading(true);
     try {
       if (editingEntry) {
         await updateEntry(editingEntry.id, texto, humor);
       } else {
-        await createEntry(texto, humor);
+        await createEntry(texto, humor, id);
       }
     } finally {
       setModalLoading(false);

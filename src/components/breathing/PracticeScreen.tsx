@@ -11,6 +11,7 @@ import {
   Heart,
   Waves,
   Settings2,
+  Square,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import SoundAnimation, { type AnimationType } from "@/components/sounds/SoundAnimation";
@@ -61,39 +62,97 @@ const PracticeScreen = ({ technique, onBack, onComplete }: PracticeScreenProps) 
   // Static levels ref (no real audio, just keeps SoundAnimation alive)
   const levelsRef = useRef({ volume: 0.5, bass: 0.4, mid: 0.4, treble: 0.4 });
 
+  // Contagem da preparação (5 s, só com a tela aberta).
   useEffect(() => {
-    let interval: ReturnType<typeof setTimeout>;
-
-    if (currentPhase === "preparation" && preparationTime > 0) {
-      interval = setInterval(() => {
-        setPreparationTime((prev) => {
-          if (prev <= 1) {
-            setCurrentPhase("exercise");
-            setTimeRemaining(duration[0] * 60);
-            setIsPlaying(true);
-            setCyclePhase("inhale");
-            setCycleCount(0);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-
-    if (currentPhase === "exercise" && isPlaying && timeRemaining > 0) {
-      interval = setInterval(() => {
-        setTimeRemaining((prev) => {
-          if (prev <= 1) {
-            onComplete(duration[0]);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-
+    if (currentPhase !== "preparation" || preparationTime <= 0) return;
+    const interval = setInterval(() => {
+      setPreparationTime((prev) => {
+        if (prev <= 1) {
+          setCurrentPhase("exercise");
+          setTimeRemaining(duration[0] * 60);
+          setIsPlaying(true);
+          setCyclePhase("inhale");
+          setCycleCount(0);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
     return () => clearInterval(interval);
-  }, [currentPhase, preparationTime, timeRemaining, isPlaying, duration, onComplete]);
+  }, [currentPhase, preparationTime, duration]);
+
+  // Tempo da prática pelo relógio de verdade (horário de término), não por
+  // "um segundo a cada tique": com a tela apagada ou o app em segundo plano o
+  // navegador atrasa os tiques e a sessão de 5 min durava muito mais.
+  const endAtRef = useRef<number | null>(null);
+  const completedRef = useRef(false);
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
+
+  const finish = (minutes: number) => {
+    if (completedRef.current) return;
+    completedRef.current = true;
+    onCompleteRef.current(minutes);
+  };
+
+  useEffect(() => {
+    if (currentPhase !== "exercise") {
+      endAtRef.current = null;
+      return;
+    }
+    if (!isPlaying) {
+      endAtRef.current = null;
+      return;
+    }
+    if (endAtRef.current === null) endAtRef.current = Date.now() + timeRemaining * 1000;
+    const tick = () => {
+      if (endAtRef.current === null) return;
+      const left = Math.max(0, Math.ceil((endAtRef.current - Date.now()) / 1000));
+      setTimeRemaining(left);
+      if (left <= 0) finish(duration[0]);
+    };
+    tick();
+    const interval = setInterval(tick, 500);
+    document.addEventListener("visibilitychange", tick);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", tick);
+    };
+    // timeRemaining só serve para (re)começar depois de uma pausa.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPhase, isPlaying, duration]);
+
+  // Tela acesa durante a prática (o celular não apaga no meio da respiração).
+  useEffect(() => {
+    if (currentPhase !== "exercise" || !isPlaying) return;
+    const nav = navigator as Navigator & { wakeLock?: { request: (type: "screen") => Promise<{ release: () => Promise<void> }> } };
+    if (!nav.wakeLock) return;
+    let lock: { release: () => Promise<void> } | null = null;
+    let cancelled = false;
+    const acquire = () => {
+      if (document.visibilityState !== "visible") return;
+      nav.wakeLock!
+        .request("screen")
+        .then((l) => {
+          if (cancelled) void l.release();
+          else lock = l;
+        })
+        .catch(() => undefined);
+    };
+    acquire();
+    document.addEventListener("visibilitychange", acquire);
+    return () => {
+      cancelled = true;
+      document.removeEventListener("visibilitychange", acquire);
+      if (lock) void lock.release().catch(() => undefined);
+    };
+  }, [currentPhase, isPlaying]);
+
+  /** Terminar antes: conta os minutos feitos (a partir de 1). */
+  const finishNow = () => {
+    const done = duration[0] * 60 - timeRemaining;
+    finish(Math.floor(done / 60));
+  };
 
   const handlePatternSelect = (pattern: BreathingPattern, patternKey: string) => {
     setBreathingPattern(pattern);
@@ -109,6 +168,8 @@ const PracticeScreen = ({ technique, onBack, onComplete }: PracticeScreenProps) 
   const togglePlayPause = () => setIsPlaying((p) => !p);
 
   const handleReset = () => {
+    endAtRef.current = null;
+    completedRef.current = false;
     setIsPlaying(false);
     setCurrentPhase("setup");
     setTimeRemaining(duration[0] * 60);
@@ -140,7 +201,7 @@ const PracticeScreen = ({ technique, onBack, onComplete }: PracticeScreenProps) 
   if (currentPhase === "preparation") {
     const Icon = technique.icon;
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary via-secondary to-secondary-active flex items-center justify-center p-6">
+      <div className="min-h-screen bg-primary flex items-center justify-center p-6">
         <div className="text-center space-y-6">
           <div
             className={cn(
@@ -174,6 +235,7 @@ const PracticeScreen = ({ technique, onBack, onComplete }: PracticeScreenProps) 
         onBack={onBack}
         onTogglePlay={togglePlayPause}
         onReset={handleReset}
+        onFinishNow={finishNow}
         formatTime={formatTime}
         animationType={selectedAnimation}
         levelsRef={levelsRef}
@@ -324,6 +386,7 @@ interface ExerciseViewProps {
   onBack: () => void;
   onTogglePlay: () => void;
   onReset: () => void;
+  onFinishNow: () => void;
   formatTime: (s: number) => string;
   animationType: AnimationType;
   levelsRef: React.MutableRefObject<{ volume: number; bass: number; mid: number; treble: number }>;
@@ -341,6 +404,7 @@ const ExerciseView = ({
   onBack,
   onTogglePlay,
   onReset,
+  onFinishNow,
   formatTime,
   animationType,
   levelsRef,
@@ -396,15 +460,6 @@ const ExerciseView = ({
 
   return (
     <div className="h-screen flex flex-col overflow-hidden relative bg-background">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 opacity-60 dark:opacity-40"
-        style={{
-          backgroundImage:
-            'radial-gradient(60% 45% at 50% 0%, hsl(var(--secondary) / 0.18), transparent 70%), radial-gradient(50% 40% at 50% 100%, hsl(var(--primary) / 0.12), transparent 70%)',
-        }}
-      />
-
       <PageHeader title={pattern.name} onBack={onBack} />
 
       <div className="flex-1 min-h-0 flex flex-col items-center justify-between px-5 py-5 max-w-xl w-full mx-auto">
@@ -520,13 +575,22 @@ const ExerciseView = ({
             </Button>
             <Button
               size="icon"
-              className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-primary-hover text-primary-foreground shadow-xl shadow-primary/30 hover:shadow-primary/40 transition-shadow"
+              className="w-16 h-16 rounded-full bg-primary hover:bg-primary-hover text-primary-foreground shadow-lg transition-colors"
               onClick={onTogglePlay}
               aria-label={isPlaying ? "Pausar" : "Continuar"}
             >
               {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6 ml-0.5 fill-current" />}
             </Button>
-            <div className="w-11" />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onFinishNow}
+              className="w-11 h-11 rounded-full bg-muted/60 hover:bg-muted text-muted-foreground"
+              aria-label="Terminar agora"
+              title="Terminar agora (conta os minutos feitos)"
+            >
+              <Square className="w-4 h-4" />
+            </Button>
           </div>
         </div>
       </div>

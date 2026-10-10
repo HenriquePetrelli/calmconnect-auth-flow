@@ -30,10 +30,12 @@ const cleanupAuthState = () => {
       localStorage.removeItem(key);
     }
   });
-  // Plano de segurança e rascunhos de questionário guardados no aparelho
+  // Plano de segurança e rascunhos (questionário, diário) guardados no aparelho
   // (dado de saúde): não ficam para quem usar o aparelho depois.
   Object.keys(localStorage).forEach((key) => {
-    if (key.startsWith('plano:') || key.startsWith('questionarios:rascunho:')) localStorage.removeItem(key);
+    if (key.startsWith('plano:') || key.startsWith('questionarios:rascunho:') || key.startsWith('diario:rascunho:')) {
+      localStorage.removeItem(key);
+    }
   });
   Object.keys(sessionStorage || {}).forEach((key) => {
     // soliv:subscription: plano guardado para abrir mais rápido (SubscriptionContext).

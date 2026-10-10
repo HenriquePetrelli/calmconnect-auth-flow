@@ -10,16 +10,35 @@ import PatientBottomNav from "@/components/PatientBottomNav";
 const SoundFeedback = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { sound, duration, isPlaylist, totalSounds } = location.state || {};
+  const { sound, duration, isPlaylist, totalSounds, sessionId } = location.state || {};
   const { addActivity, updateActivityTime } = usePatientStatistics();
   const { checkAchievements } = useAchievements();
 
+  // Conta uma vez por sessão ouvida: voltar a esta tela (botão voltar,
+  // recarregar) não soma o tempo de novo.
   useEffect(() => {
-    if (sound) {
-      addActivity(`Sons Terapêuticos: ${sound.name}`);
-      updateActivityTime('sound', parseInt(duration) || 10);
-      checkAchievements();
+    if (!sound) return;
+    const minutes = parseInt(duration) || 0;
+    if (minutes < 1) return;
+    const key = 'sons:registrados';
+    let recorded: string[] = [];
+    try {
+      recorded = JSON.parse(sessionStorage.getItem(key) ?? '[]');
+    } catch {
+      recorded = [];
     }
+    if (sessionId && recorded.includes(sessionId)) return;
+    if (sessionId) {
+      try {
+        sessionStorage.setItem(key, JSON.stringify([...recorded.slice(-50), sessionId]));
+      } catch {
+        /* noop */
+      }
+    }
+    addActivity(`Sons Terapêuticos: ${sound.name}`);
+    updateActivityTime('sound', minutes);
+    checkAchievements();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleListenOther = () => {
@@ -31,7 +50,7 @@ const SoundFeedback = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/5 flex items-center justify-center p-6 pb-24 md:pb-6">
+    <div className="min-h-screen bg-background flex items-center justify-center p-6 pb-24 md:pb-6">
       <PatientBottomNav />
       <Card className="w-full max-w-md mx-auto">
         <CardContent className="p-8 text-center space-y-6">
