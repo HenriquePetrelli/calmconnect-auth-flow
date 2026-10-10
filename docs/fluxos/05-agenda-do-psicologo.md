@@ -45,7 +45,7 @@ O psicólogo define um **horário-padrão** semanal e o ajusta por data com **ex
 
 - **Telas e componentes**: `src/pages/PsychologistAvailability.tsx`; em `src/components/psychologist/`: `FirstTimeAvailabilityModal`, `WeeklyScheduleModal`, `VacationModal` e a grade de disponibilidade.
 - **Hooks**: `usePsychologistAvailability`, `usePsychologistAvailabilityOverrides`, `usePsychologistVacation`, `usePsychologistBookingRules`, `useAvailableTimeSlots`.
-- **Banco**: `psychologist_availability`, `psychologist_availability_overrides`, `psychologist_vacations`, `psychologist_booking_rules`. Funções `set_psychologist_availability`, `get_psychologist_busy_times`, `vacation_conflicts`, `set_psychologist_vacation`; gatilhos `prevent_appointment_overlap`, `guard_override_block`. Migração mais recente: `20261020090000_agenda_regras.sql`.
+- **Banco**: `psychologist_availability`, `psychologist_availability_overrides`, `psychologist_vacations`, `psychologist_booking_rules`. Funções `set_psychologist_availability`, `get_psychologist_busy_times`, `vacation_conflicts`, `set_psychologist_vacation`; gatilhos `prevent_appointment_overlap`, `guard_override_block`. Migração mais recente: `20261010212736_d7ec446a-db8d-492b-b7b7-93c3b85748c1.sql`.
 
 ## Como validar
 
