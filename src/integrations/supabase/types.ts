@@ -2617,6 +2617,10 @@ export type Database = {
         Args: { p_appointment_id: string; p_reason?: string }
         Returns: Json
       }
+      cancel_appointments_after_plan_loss: {
+        Args: { p_user_id: string }
+        Returns: number
+      }
       check_organization_code: { Args: { p_code: string }; Returns: Json }
       check_rate_limit: {
         Args: {
