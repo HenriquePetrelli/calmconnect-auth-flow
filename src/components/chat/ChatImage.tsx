@@ -1,32 +1,58 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ImageOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { chatImagePath } from '@/lib/chatImage';
 
-/** Imagem do chat: gera um link temporário (o bucket é privado). */
+/** Validade do link temporário e quando renovar (antes de vencer). */
+const VALIDADE_S = 60 * 60;
+const RENOVAR_MS = 50 * 60 * 1000;
+
+/**
+ * Imagem do chat: gera um link temporário (o bucket é privado).
+ * Com a conversa aberta por mais de uma hora, o link vencia e a foto não
+ * abria mais; agora ele é renovado antes de vencer e, se a foto falhar ao
+ * carregar, uma vez na hora.
+ */
 const ChatImage = ({ value, alt, className }: { value: string; alt: string; className?: string }) => {
   const [url, setUrl] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
+  const tentouDeNovoRef = useRef(false);
+  const montadoRef = useRef(true);
 
-  useEffect(() => {
-    let cancelled = false;
+  const assinar = useCallback(async () => {
     const path = chatImagePath(value);
     if (!path) {
       setFailed(true);
       return;
     }
-    supabase.storage
-      .from('documents')
-      .createSignedUrl(path, 60 * 60)
-      .then(({ data, error }) => {
-        if (cancelled) return;
-        if (error || !data?.signedUrl) setFailed(true);
-        else setUrl(data.signedUrl);
-      });
-    return () => {
-      cancelled = true;
-    };
+    const { data, error } = await supabase.storage.from('documents').createSignedUrl(path, VALIDADE_S);
+    if (!montadoRef.current) return;
+    if (error || !data?.signedUrl) setFailed(true);
+    else {
+      setFailed(false);
+      setUrl(data.signedUrl);
+    }
   }, [value]);
+
+  useEffect(() => {
+    montadoRef.current = true;
+    tentouDeNovoRef.current = false;
+    void assinar();
+    const timer = window.setInterval(() => void assinar(), RENOVAR_MS);
+    return () => {
+      montadoRef.current = false;
+      window.clearInterval(timer);
+    };
+  }, [assinar]);
+
+  const aoFalhar = () => {
+    if (tentouDeNovoRef.current) {
+      setFailed(true);
+      return;
+    }
+    tentouDeNovoRef.current = true;
+    void assinar();
+  };
 
   if (failed) {
     return (
@@ -40,7 +66,7 @@ const ChatImage = ({ value, alt, className }: { value: string; alt: string; clas
 
   return (
     <a href={url} target="_blank" rel="noopener noreferrer">
-      <img src={url} alt={alt} className={className} loading="lazy" />
+      <img src={url} alt={alt} className={className} loading="lazy" onError={aoFalhar} />
     </a>
   );
 };

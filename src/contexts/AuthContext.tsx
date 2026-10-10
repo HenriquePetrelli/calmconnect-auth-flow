@@ -30,10 +30,17 @@ const cleanupAuthState = () => {
       localStorage.removeItem(key);
     }
   });
-  // Plano de segurança e rascunhos (questionário, diário) guardados no aparelho
-  // (dado de saúde): não ficam para quem usar o aparelho depois.
+  // Plano de segurança, rascunhos (questionário, diário, chat) e mensagens do
+  // chat ainda não enviadas, guardados no aparelho (dado de saúde): não ficam
+  // para quem usar o aparelho depois.
   Object.keys(localStorage).forEach((key) => {
-    if (key.startsWith('plano:') || key.startsWith('questionarios:rascunho:') || key.startsWith('diario:rascunho:')) {
+    if (
+      key.startsWith('plano:') ||
+      key.startsWith('questionarios:rascunho:') ||
+      key.startsWith('diario:rascunho:') ||
+      key.startsWith('chat:pendentes:') ||
+      key.startsWith('chat:rascunho:')
+    ) {
       localStorage.removeItem(key);
     }
   });

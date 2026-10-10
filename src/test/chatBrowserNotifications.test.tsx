@@ -22,6 +22,7 @@ vi.mock('@/hooks/useConversas', () => ({
         outro_usuario: { full_name: 'Psicóloga Exemplo', user_type: 'psychologist' },
       },
     ],
+    carregado: true,
   }),
 }));
 
@@ -37,6 +38,9 @@ vi.mock('@/lib/browserNotifications', () => ({
 
 const baseHookReturn = {
   loading: false,
+  temAnteriores: false,
+  carregandoAnteriores: false,
+  carregarAnteriores: vi.fn(async () => {}),
   enviarTexto: vi.fn(() => true),
   enviarImagem: vi.fn(() => true),
   reenviar: vi.fn(),
@@ -86,8 +90,12 @@ describe('ChatInterface browser notifications', () => {
 
     expect(notifyNewMessage).toHaveBeenCalledTimes(1);
     expect(notifyNewMessage).toHaveBeenCalledWith(
-      expect.objectContaining({ title: 'Psicóloga Exemplo', body: 'Chegou uma nova mensagem' })
+      expect.objectContaining({ title: 'Nova mensagem no Soliv' })
     );
+    // Discreto, como o push: sem o texto nem o nome de quem mandou.
+    const aviso = vi.mocked(notifyNewMessage).mock.calls[0][0];
+    expect(JSON.stringify(aviso)).not.toContain('Chegou uma nova mensagem');
+    expect(JSON.stringify(aviso)).not.toContain('Psicóloga Exemplo');
   });
 
   it('does not notify for messages the current user sent themselves', () => {

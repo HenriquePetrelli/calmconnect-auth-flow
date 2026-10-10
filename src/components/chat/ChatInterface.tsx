@@ -26,7 +26,8 @@ import ChatImage from './ChatImage';
 import { useMensagens, type Mensagem } from '@/hooks/useMensagens';
 import { useAuth } from '@/contexts/AuthContext';
 import { useConversas } from '@/hooks/useConversas';
-import { ensureNotificationPermission, isTabInBackground, notifyNewMessage } from '@/lib/browserNotifications';
+import { isTabInBackground, notifyNewMessage } from '@/lib/browserNotifications';
+import { FotoInvalidaError, prepararFoto } from '@/lib/chatPhoto';
 import { cn } from '@/lib/utils';
 
 interface ChatInterfaceProps {
@@ -38,6 +39,24 @@ interface ChatInterfaceProps {
 const MAX_CARACTERES = 5000;
 /** Distância do fim (px) em que ainda se considera "lendo as últimas". */
 const PERTO_DO_FIM = 120;
+
+/** Rascunho por conversa: sair e voltar (ou recarregar) não perde o que foi escrito. */
+const chaveRascunho = (conversaId: string) => `chat:rascunho:${conversaId}`;
+const lerRascunho = (conversaId: string) => {
+  try {
+    return localStorage.getItem(chaveRascunho(conversaId)) ?? '';
+  } catch {
+    return '';
+  }
+};
+const salvarRascunho = (conversaId: string, texto: string) => {
+  try {
+    if (texto.trim()) localStorage.setItem(chaveRascunho(conversaId), texto);
+    else localStorage.removeItem(chaveRascunho(conversaId));
+  } catch {
+    /* armazenamento indisponível: segue só na memória */
+  }
+};
 
 const getInitials = (name?: string) => {
   if (!name) return '?';
@@ -60,8 +79,9 @@ const StatusEnvio = ({ mensagem }: { mensagem: Mensagem }) => {
 };
 
 export const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversaId, onVoltar }) => {
-  const [novaMensagem, setNovaMensagem] = useState('');
+  const [novaMensagem, setNovaMensagem] = useState(() => lerRascunho(conversaId));
   const [imagemSelecionada, setImagemSelecionada] = useState<File | null>(null);
+  const [preparandoFoto, setPreparandoFoto] = useState(false);
   const [novasAbaixo, setNovasAbaixo] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const listaRef = useRef<HTMLDivElement>(null);
@@ -69,10 +89,23 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversaId, onVolt
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const pertoDoFimRef = useRef(true);
   const totalAnteriorRef = useRef(0);
+  const ultimaIdRef = useRef<string | null>(null);
+  /** Altura antes de carregar as anteriores: a tela fica onde estava. */
+  const alturaAntesRef = useRef<{ altura: number; topo: number } | null>(null);
 
   const { user } = useAuth();
-  const { mensagens, loading, enviarTexto, enviarImagem, reenviar, descartar } = useMensagens(conversaId);
-  const { conversas } = useConversas();
+  const {
+    mensagens,
+    loading,
+    temAnteriores,
+    carregandoAnteriores,
+    carregarAnteriores,
+    enviarTexto,
+    enviarImagem,
+    reenviar,
+    descartar,
+  } = useMensagens(conversaId);
+  const { conversas, carregado: conversasCarregadas } = useConversas();
   const knownMessageIdsRef = useRef<Set<string> | null>(null);
 
   const conversaAtual = conversas.find((c) => c.id === conversaId);
@@ -94,26 +127,46 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversaId, onVolt
   // lendo o histórico, aparece o aviso "novas mensagens" em vez de pular.
   useLayoutEffect(() => {
     const anterior = totalAnteriorRef.current;
+    const ultimaAnterior = ultimaIdRef.current;
     totalAnteriorRef.current = mensagens.length;
+    ultimaIdRef.current = mensagens[mensagens.length - 1]?.id ?? null;
+
+    // Mensagens anteriores entraram no topo: mantém o que estava na tela.
+    const antes = alturaAntesRef.current;
+    if (antes && listaRef.current) {
+      alturaAntesRef.current = null;
+      listaRef.current.scrollTop = listaRef.current.scrollHeight - antes.altura + antes.topo;
+    }
+
     if (mensagens.length === 0) return;
     if (anterior === 0) {
       irParaOFim(false);
       return;
     }
-    if (mensagens.length <= anterior) return;
+    // Só conta como nova o que entrou depois da última que estava na tela.
+    if (mensagens.length <= anterior || ultimaIdRef.current === ultimaAnterior) return;
+    const posicao = mensagens.findIndex((m) => m.id === ultimaAnterior);
+    const novas = posicao >= 0 ? mensagens.length - 1 - posicao : mensagens.length - anterior;
     const ultima = mensagens[mensagens.length - 1];
     if (pertoDoFimRef.current || ultima.autor_id === user?.id) irParaOFim();
-    else setNovasAbaixo((n) => n + (mensagens.length - anterior));
+    else setNovasAbaixo((n) => n + novas);
   }, [mensagens, user?.id, irParaOFim]);
 
   useEffect(() => {
     totalAnteriorRef.current = 0;
+    ultimaIdRef.current = null;
     inputRef.current?.focus();
   }, [conversaId]);
 
   useEffect(() => {
-    void ensureNotificationPermission();
-  }, []);
+    salvarRascunho(conversaId, novaMensagem);
+  }, [conversaId, novaMensagem]);
+
+  const verAnteriores = () => {
+    const el = listaRef.current;
+    if (el) alturaAntesRef.current = { altura: el.scrollHeight, topo: el.scrollTop };
+    void carregarAnteriores();
+  };
 
   // Notifica no navegador quando chega mensagem nova do outro participante
   // e a aba não está em foco. Não dispara para o histórico já carregado.
@@ -122,16 +175,17 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversaId, onVolt
     if (known) {
       const novasDeOutro = mensagens.filter((m) => m.autor_id !== user?.id && !known.has(m.id));
       if (novasDeOutro.length > 0 && isTabInBackground()) {
-        const ultima = novasDeOutro[novasDeOutro.length - 1];
+        // Discreto, como o push: a tela bloqueada ou compartilhada não mostra
+        // o texto nem com quem a pessoa conversa.
         notifyNewMessage({
-          title: nomeOutro || 'Nova mensagem',
-          body: ultima.tipo === 'imagem' ? 'Enviou uma imagem' : ultima.conteudo || 'Nova mensagem',
+          title: 'Nova mensagem no Soliv',
+          body: 'Toque para abrir a conversa.',
           onClick: () => irParaOFim(),
         });
       }
     }
     knownMessageIdsRef.current = new Set(mensagens.map((m) => m.id));
-  }, [mensagens, user?.id, nomeOutro, irParaOFim]);
+  }, [mensagens, user?.id, irParaOFim]);
 
   // A caixa cresce com o texto (até ~5 linhas), como nos apps de mensagem.
   useLayoutEffect(() => {
@@ -164,20 +218,20 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversaId, onVolt
     }
   };
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target;
+    const file = input.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith('image/')) {
-      toast.error('Selecione apenas arquivos de imagem.');
-      e.target.value = '';
-      return;
+    // Foto grande de celular é reduzida antes de subir (antes era recusada acima de 5 MB).
+    setPreparandoFoto(true);
+    try {
+      setImagemSelecionada(await prepararFoto(file));
+    } catch (error) {
+      toast.error(error instanceof FotoInvalidaError ? error.message : 'Não foi possível usar esta foto.');
+      input.value = '';
+    } finally {
+      setPreparandoFoto(false);
     }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('O arquivo deve ter no máximo 5MB.');
-      e.target.value = '';
-      return;
-    }
-    setImagemSelecionada(file);
   };
 
   const getStatusInfo = (status: string) => {
@@ -204,6 +258,24 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversaId, onVolt
         return { icon: null, text: status, description: '' };
     }
   };
+
+  // Link de uma conversa que não existe mais (apagada após 3 meses) ou que não é da pessoa.
+  if (conversasCarregadas && !conversaAtual) {
+    return (
+      <div className="flex flex-col items-center justify-center rounded-2xl border border-border bg-card p-8 text-center">
+        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+          <MessageCircle className="h-6 w-6 text-primary" />
+        </div>
+        <h3 className="text-base font-semibold text-foreground">Conversa não encontrada</h3>
+        <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+          Ela pode ter sido apagada (as conversas ficam guardadas por 3 meses) ou não está mais na sua lista.
+        </p>
+        <Button variant="outline" className="mt-4" onClick={onVoltar}>
+          <ArrowLeft className="mr-2 h-4 w-4" /> Ver minhas conversas
+        </Button>
+      </div>
+    );
+  }
 
   const statusInfo = getStatusInfo(conversaAtual?.status || 'ativa');
   const podeEnviarMensagens = conversaAtual?.status === 'ativa';
@@ -241,6 +313,13 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversaId, onVolt
           aria-live="polite"
           aria-label="Mensagens da conversa"
         >
+          {temAnteriores && mensagens.length > 0 && (
+            <div className="flex justify-center">
+              <Button variant="outline" size="sm" className="h-8 rounded-full text-xs" onClick={verAnteriores} disabled={carregandoAnteriores}>
+                {carregandoAnteriores ? 'Carregando...' : 'Ver mensagens anteriores'}
+              </Button>
+            </div>
+          )}
           {loading && mensagens.length === 0 ? (
             <SkeletonChatMessages count={5} />
           ) : mensagens.length === 0 ? (
@@ -363,6 +442,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversaId, onVolt
             <Button
               variant="ghost"
               size="icon"
+              disabled={preparandoFoto}
               onClick={() => fileInputRef.current?.click()}
               className="h-10 w-10 shrink-0 text-muted-foreground hover:text-primary"
               aria-label="Anexar imagem"
@@ -382,7 +462,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversaId, onVolt
             />
             <Button
               onClick={handleEnviar}
-              disabled={!novaMensagem.trim() && !imagemSelecionada}
+              disabled={preparandoFoto || (!novaMensagem.trim() && !imagemSelecionada)}
               size="icon"
               className="h-10 w-10 shrink-0 rounded-full text-primary-foreground"
               aria-label="Enviar mensagem"

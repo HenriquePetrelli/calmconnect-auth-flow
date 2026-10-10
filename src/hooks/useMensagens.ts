@@ -26,11 +26,17 @@ type Pendente = Mensagem & { arquivo?: File | null };
 
 const chavePendentes = (conversaId: string) => `chat:pendentes:${conversaId}`;
 
-const lerPendentes = (conversaId: string): Pendente[] => {
+/** Mensagens carregadas por vez (as mais recentes; as anteriores sob pedido). */
+export const MENSAGENS_POR_PAGINA = 200;
+
+const lerPendentes = (conversaId: string, autorId: string): Pendente[] => {
   try {
     const salvo = JSON.parse(localStorage.getItem(chavePendentes(conversaId)) ?? '[]') as Pendente[];
     // Ao reabrir, nada está "enviando": vira "não enviada" e reenvia sozinho.
-    return salvo.map((p) => ({ ...p, envio: 'erro' as const, previa: null }));
+    // Só as da própria pessoa (outra conta no mesmo aparelho não envia nada).
+    return salvo
+      .filter((p) => p.autor_id === autorId)
+      .map((p) => ({ ...p, envio: 'erro' as const, previa: null }));
   } catch {
     return [];
   }
@@ -70,12 +76,16 @@ export const useMensagens = (conversaId?: string) => {
   const [confirmadas, setConfirmadas] = useState<Mensagem[]>([]);
   const [pendentes, setPendentes] = useState<Pendente[]>([]);
   const [loading, setLoading] = useState(false);
+  const [temAnteriores, setTemAnteriores] = useState(false);
+  const [carregandoAnteriores, setCarregandoAnteriores] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
   const pendentesRef = useRef<Pendente[]>([]);
   const emEnvioRef = useRef<Set<string>>(new Set());
   /** Envios um de cada vez, na ordem em que foram escritos (como nos apps de mensagem). */
   const filaRef = useRef<Promise<unknown>>(Promise.resolve());
+  /** Mais recente updated_at visto: a sincronização busca só o que mudou depois. */
+  const ultimaMudancaRef = useRef<string | null>(null);
 
   const atualizarPendentes = useCallback(
     (mudar: (atual: Pendente[]) => Pendente[]) => {
@@ -90,6 +100,10 @@ export const useMensagens = (conversaId?: string) => {
   );
 
   const juntarConfirmadas = useCallback((novas: Mensagem[]) => {
+    for (const m of novas) {
+      const marca = m.updated_at ?? m.created_at;
+      if (marca && (!ultimaMudancaRef.current || marca > ultimaMudancaRef.current)) ultimaMudancaRef.current = marca;
+    }
     setConfirmadas((atual) => {
       const porId = new Map(atual.map((m) => [m.id, m]));
       for (const m of novas) porId.set(m.id, { ...porId.get(m.id), ...m });
@@ -108,17 +122,60 @@ export const useMensagens = (conversaId?: string) => {
     if (error) console.error('Erro ao marcar mensagens como lidas:', error);
   }, [conversaId, user]);
 
+  /**
+   * Primeira carga: as mensagens mais recentes (antes vinha tudo, e passando
+   * de 1.000 as mais novas nem apareciam). Depois: só o que é novo ou mudou
+   * (lida) desde a última vez.
+   */
   const buscar = useCallback(async () => {
     if (!conversaId) return false;
+    const desde = ultimaMudancaRef.current;
+    if (desde) {
+      // Margem de 1 minuto: mudanças gravadas no mesmo instante não escapam.
+      const margem = new Date(new Date(desde).getTime() - 60_000).toISOString();
+      const { data, error } = await supabase
+        .from('mensagens')
+        .select('*')
+        .eq('conversa_id', conversaId)
+        .gt('updated_at', margem)
+        .order('created_at', { ascending: true });
+      if (error || !data) return false;
+      juntarConfirmadas(data as Mensagem[]);
+      return true;
+    }
     const { data, error } = await supabase
       .from('mensagens')
       .select('*')
       .eq('conversa_id', conversaId)
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: false })
+      .limit(MENSAGENS_POR_PAGINA);
     if (error || !data) return false;
-    juntarConfirmadas(data as Mensagem[]);
+    setTemAnteriores(data.length >= MENSAGENS_POR_PAGINA);
+    juntarConfirmadas((data as Mensagem[]).slice().reverse());
     return true;
   }, [conversaId, juntarConfirmadas]);
+
+  /** Mensagens mais antigas que as que estão na tela. */
+  const carregarAnteriores = useCallback(async () => {
+    if (!conversaId || carregandoAnteriores) return;
+    const maisAntiga = confirmadas[0];
+    if (!maisAntiga) return;
+    setCarregandoAnteriores(true);
+    const { data, error } = await supabase
+      .from('mensagens')
+      .select('*')
+      .eq('conversa_id', conversaId)
+      .lt('created_at', maisAntiga.created_at)
+      .order('created_at', { ascending: false })
+      .limit(MENSAGENS_POR_PAGINA);
+    setCarregandoAnteriores(false);
+    if (error || !data) {
+      toast({ title: 'Erro', description: 'Não foi possível carregar as mensagens anteriores.', variant: 'destructive' });
+      return;
+    }
+    setTemAnteriores(data.length >= MENSAGENS_POR_PAGINA);
+    juntarConfirmadas((data as Mensagem[]).slice().reverse());
+  }, [conversaId, carregandoAnteriores, confirmadas, juntarConfirmadas, toast]);
 
   /** Envia (ou reenvia) uma pendente. Seguro para chamar várias vezes. */
   const enviarAgora = useCallback(
@@ -255,9 +312,11 @@ export const useMensagens = (conversaId?: string) => {
 
   // Carrega a conversa e o que ficou pendente no aparelho.
   useEffect(() => {
-    if (!conversaId) return;
+    if (!conversaId || !user) return;
     setConfirmadas([]);
-    const salvas = lerPendentes(conversaId);
+    setTemAnteriores(false);
+    ultimaMudancaRef.current = null;
+    const salvas = lerPendentes(conversaId, user.id);
     pendentesRef.current = salvas;
     setPendentes(salvas);
     let cancelado = false;
@@ -277,7 +336,7 @@ export const useMensagens = (conversaId?: string) => {
       cancelado = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversaId]);
+  }, [conversaId, user?.id]);
 
   // Tempo real + recuperação do que se perdeu com o socket caído.
   useEffect(() => {
@@ -334,6 +393,9 @@ export const useMensagens = (conversaId?: string) => {
   return {
     mensagens,
     loading,
+    temAnteriores,
+    carregandoAnteriores,
+    carregarAnteriores,
     enviarTexto,
     enviarImagem,
     reenviar,

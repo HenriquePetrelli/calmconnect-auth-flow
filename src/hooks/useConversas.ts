@@ -39,6 +39,8 @@ export const useConversas = () => {
   const [conversas, setConversas] = useState<Conversa[]>([]);
   const [psicologosDisponiveis, setPsicologosDisponiveis] = useState<PsicologoDisponivel[]>([]);
   const [loading, setLoading] = useState(false);
+  /** A lista já veio do servidor ao menos uma vez (para dizer "conversa não encontrada"). */
+  const [carregado, setCarregado] = useState(false);
   const { user, userType } = useAuth();
   const { toast } = useToast();
 
@@ -81,6 +83,7 @@ export const useConversas = () => {
           nao_lidas: row.nao_lidas ?? 0,
         })),
       );
+      setCarregado(true);
     } catch (error) {
       console.error('Erro ao buscar conversas:', error);
       if (silencioso) return;
@@ -240,6 +243,7 @@ export const useConversas = () => {
     conversas,
     psicologosDisponiveis,
     loading,
+    carregado,
     criarConversa,
     excluirConversa,
     refetch: () => fetchConversas()

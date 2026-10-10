@@ -134,6 +134,14 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Lendo mensagens antigas → chega mensagem ⇒ a tela não pula; aparece "1 nova mensagem"
 - [ ] Abrir conversa → voltar do celular ⇒ volta para a lista; recarregar com a conversa aberta ⇒ continua nela
 - [ ] Enter envia; Shift+Enter quebra a linha
+- [ ] Escrever uma mensagem sem enviar → sair da conversa (ou recarregar) → voltar ⇒ o texto continua na caixa
+- [ ] Mandar foto grande do celular (8–12 MB) ⇒ é reduzida e enviada (antes: recusada acima de 5 MB)
+- [ ] Deixar a conversa aberta mais de 1 hora → abrir uma foto ⇒ continua abrindo
+- [ ] Conversa com mais de 200 mensagens → abrir ⇒ mostra as mais recentes; "Ver mensagens anteriores" traz as antigas sem pular a tela
+- [ ] Sair da conta com mensagem "Não enviada" → entrar com outra conta no mesmo aparelho ⇒ nada da conta anterior aparece nem é enviado
+- [ ] Abrir link de conversa apagada (ou de outra pessoa) ⇒ "Conversa não encontrada" com botão para a lista
+- [ ] Conversa aberta em aba de fundo → chega mensagem ⇒ aviso do navegador discreto (sem texto nem nome)
+- [ ] Paciente ocultou a conversa → nova consulta concluída ⇒ a conversa volta para a lista dele, ativa
 
 ## 5. Notificações e push (ficha 07)
 

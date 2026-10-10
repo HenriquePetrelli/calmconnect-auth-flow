@@ -79,6 +79,14 @@ class QueryBuilder implements PromiseLike<{ data: any; error: any; count?: numbe
     this.filters.push({ apply: (r) => r[col] <= value });
     return this;
   }
+  gt(col: string, value: any) {
+    this.filters.push({ apply: (r) => r[col] > value });
+    return this;
+  }
+  lt(col: string, value: any) {
+    this.filters.push({ apply: (r) => r[col] < value });
+    return this;
+  }
   or(expr: string) {
     const clauses = expr.split(',').map((c) => {
       const [col, op, value] = c.split('.');
