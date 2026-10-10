@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { CalendarPlus, Check, ClipboardList } from 'lucide-react';
 import { toast } from 'sonner';
@@ -9,6 +9,7 @@ import PageHeader from '@/components/PageHeader';
 import PatientBottomNav from '@/components/PatientBottomNav';
 import HomeCrisisAccess from '@/components/HomeCrisisAccess';
 import { useScreenings } from '@/hooks/useScreenings';
+import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import {
   ANSWER_OPTIONS,
@@ -23,15 +24,59 @@ import {
 } from '@/lib/screenings';
 import LifeRingIcon from '@/components/icons/LifeRingIcon';
 
+const newId = () =>
+  typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+    ? crypto.randomUUID()
+    : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = (Math.random() * 16) | 0;
+        return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+      });
+
+/** Rascunho guardado (respostas e id do envio), se for do mesmo questionário. */
+const readDraft = (key: string | null, total: number): { id: string; answers: (number | null)[] } => {
+  const empty = { id: newId(), answers: Array<number | null>(total).fill(null) };
+  if (!key) return empty;
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return empty;
+    const draft = JSON.parse(raw) as { id?: unknown; answers?: unknown };
+    const answers = Array.isArray(draft.answers) && draft.answers.length === total
+      ? draft.answers.map((a) => (typeof a === 'number' && a >= 0 && a <= 3 ? a : null))
+      : null;
+    if (!answers || typeof draft.id !== 'string') return empty;
+    return { id: draft.id, answers };
+  } catch {
+    return empty;
+  }
+};
+
 /** /questionarios/:instrument — responder o GAD-7 ou o PHQ-9 e ver o resultado. */
 const QuestionnaireForm = () => {
   const navigate = useNavigate();
   const { instrument: param } = useParams();
   const instrument: Instrument | null = param === 'gad7' || param === 'phq9' ? param : null;
+  const { user } = useAuth();
   const { history, save, setShared } = useScreenings();
-  const [answers, setAnswers] = useState<(number | null)[]>(() => Array(instrument ? INSTRUMENTS[instrument].questions.length : 0).fill(null));
+  const draftKey = user?.id && instrument ? `questionarios:rascunho:${user.id}:${instrument}` : null;
+  const total = instrument ? INSTRUMENTS[instrument].questions.length : 0;
+  // Rascunho no aparelho: sair da tela, recarregar ou cair a internet não
+  // apaga o que já foi respondido. O id do envio também fica, para que tentar
+  // de novo não crie outro resultado.
+  const initialDraft = useMemo(() => readDraft(draftKey, total), [draftKey, total]);
+  const [answers, setAnswers] = useState<(number | null)[]>(initialDraft.answers);
+  const [submissionId] = useState<string>(initialDraft.id);
   const [saving, setSaving] = useState(false);
+  const [saveFailed, setSaveFailed] = useState(false);
   const [result, setResult] = useState<Screening | null>(null);
+
+  useEffect(() => {
+    if (!draftKey || result) return;
+    try {
+      if (answers.some((a) => a !== null)) localStorage.setItem(draftKey, JSON.stringify({ id: submissionId, answers }));
+    } catch {
+      /* sem armazenamento: segue sem rascunho */
+    }
+  }, [draftKey, answers, submissionId, result]);
 
   if (!instrument) {
     return (
@@ -49,12 +94,21 @@ const QuestionnaireForm = () => {
   const submit = async () => {
     if (!complete) return;
     setSaving(true);
+    setSaveFailed(false);
     try {
-      setResult(await save(instrument, answers as number[]));
+      setResult(await save(instrument, answers as number[], submissionId));
+      if (draftKey) {
+        try {
+          localStorage.removeItem(draftKey);
+        } catch {
+          /* noop */
+        }
+      }
       window.scrollTo({ top: 0 });
     } catch (error) {
       console.error('Erro ao salvar questionário', error);
-      toast.error('Não foi possível salvar agora. Tente de novo.');
+      setSaveFailed(true);
+      toast.error('Não foi possível salvar agora. Suas respostas continuam aqui: tente de novo.');
     } finally {
       setSaving(false);
     }
@@ -120,7 +174,7 @@ const QuestionnaireForm = () => {
                     Mostrar aos meus psicólogos
                   </Label>
                   <p className="text-xs text-muted-foreground">
-                    Só os psicólogos com quem você tem consulta veem o resultado. Você pode desligar quando quiser.
+                    Só os psicólogos que atendem você veem. Fica valendo para os próximos resultados até você desligar.
                   </p>
                 </div>
                 <Switch
@@ -172,16 +226,32 @@ const QuestionnaireForm = () => {
                         );
                       })}
                     </div>
+                    {/* PHQ-9, pergunta 9: o apoio aparece na hora, sem depender do envio. */}
+                    {instrument === 'phq9' && qi === 8 && (answers[8] ?? 0) > 0 && (
+                      <div className="space-y-3 rounded-xl border border-destructive/40 bg-destructive/5 p-3" role="alert" data-testid="crisis-support">
+                        <p className="text-sm text-foreground">
+                          Obrigado por contar. Isso é importante e tem ajuda agora: o CVV atende 24 horas, de graça, pelo 188. No
+                          app, o SOS conecta você a um psicólogo.
+                        </p>
+                        <HomeCrisisAccess />
+                        <Button className="w-full min-h-11 gap-2" variant="destructive" onClick={() => navigate('/sos')}>
+                          <LifeRingIcon className="h-4 w-4" aria-hidden="true" />
+                          Abrir o SOS
+                        </Button>
+                      </div>
+                    )}
                   </li>
                 ))}
               </ol>
 
               <div className="sticky bottom-20 space-y-2 rounded-2xl border border-border bg-card/95 p-3 backdrop-blur-sm">
                 <p className="text-center text-xs text-muted-foreground" aria-live="polite">
-                  {answered} de {answers.length} respondidas
+                  {saveFailed
+                    ? 'Não foi possível salvar. Suas respostas continuam aqui.'
+                    : `${answered} de ${answers.length} respondidas`}
                 </p>
                 <Button className="w-full min-h-12" disabled={!complete || saving} onClick={submit}>
-                  {saving ? 'Salvando...' : 'Ver meu resultado'}
+                  {saving ? 'Salvando...' : saveFailed ? 'Tentar de novo' : 'Ver meu resultado'}
                 </Button>
               </div>
             </>

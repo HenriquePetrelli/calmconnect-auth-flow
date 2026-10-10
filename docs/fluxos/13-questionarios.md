@@ -1,7 +1,7 @@
 # 13. Questionários do mês (GAD-7 e PHQ-9)
 
 > **Status:** Pronto.
-> **Última verificação:** 2026-10-04 (pontuação recalculada em qualquer alteração).
+> **Última verificação:** 2026-10-13 (varredura de funcionamento: apoio de crise na hora, rascunho, envio sem duplicar, compartilhamento que segue valendo, quem vê, apagar resultados). Antes: 2026-10-04 (pontuação recalculada em qualquer alteração).
 > **Quem usa:** paciente (responde) e psicólogo com consulta com o paciente (vê, se o paciente compartilhar).
 
 ## Resumo
@@ -32,20 +32,24 @@ Dois questionários validados internacionalmente: **GAD-7** (ansiedade) e **PHQ-
    | Graves | 15+ | 20+ |
 
 5. A partir de "moderados", o app sugere uma consulta.
-6. **Pergunta 9 do PHQ-9** (pensamentos de se machucar) com qualquer resposta acima de zero: marca `self_harm_flag` e mostra apoio imediato (CVV 188 e SOS).
-7. **Compartilhar**: o paciente liga "mostrar aos meus psicólogos". O resultado aparece no histórico do paciente para psicólogos com quem ele tem consulta.
+6. **Pergunta 9 do PHQ-9** (pensamentos de se machucar) com qualquer resposta acima de zero: o apoio (CVV 188 e SOS) aparece **na hora, logo abaixo da pergunta**, antes de enviar e mesmo se o envio falhar (antes só aparecia depois de salvar; sem internet, a pessoa não via nada). Depois de enviado, o banco marca `self_harm_flag` e a tela do resultado repete o apoio.
+7. **Respostas guardadas no aparelho**: sair da tela, recarregar ou cair a internet não apaga o que já foi respondido. Se o envio falhar, o botão vira "Tentar de novo". O envio leva um id gerado no aparelho: tentar de novo nunca cria dois resultados.
+8. **Compartilhar**: o paciente liga "mostrar aos meus psicólogos", e a escolha **continua valendo para os próximos resultados** até ele desligar (antes cada resultado novo nascia escondido e o psicólogo continuava vendo só o antigo). Quem vê: psicólogos que **atendem** o paciente (consulta aceita, em andamento ou realizada). Pedido recusado, cancelado ou nunca aceito não dá acesso.
+9. **Apagar**: em Questionários, "Apagar meus resultados deste questionário" apaga todos os resultados daquele questionário, com confirmação.
 
 ## Regras
 
 - O app **não dá diagnóstico**: mostra a faixa e orienta procurar um profissional.
 - Por padrão, os resultados são só do paciente. O psicólogo só vê com o compartilhamento ligado.
+- Depois de enviado, só o "mostrar aos meus psicólogos" muda: respostas, tipo e data não podem ser alterados pelo app (a data é a do servidor).
+- No máximo 10 envios por hora por pessoa.
 
 ## Onde está no código
 
 - **Telas**: `src/pages/Questionnaires.tsx`, `QuestionnaireForm.tsx`, `src/components/progress/QuestionnairesCard.tsx`.
 - **Regras puras**: `src/lib/screenings.ts` (perguntas, faixas, orientação, quando refazer).
 - **Hook**: `useScreenings`.
-- **Banco**: `mental_health_screenings` (`answers`, `score`, `severity`, `self_harm_flag`, `shared_with_psychologist`). Gatilho `score_mental_health_screening`.
+- **Banco**: `mental_health_screenings` (`answers`, `score`, `severity`, `self_harm_flag`, `shared_with_psychologist`). Gatilhos `a_guard_screening_client_write` (data do servidor, só o compartilhar muda depois, compartilhamento herdado), `score_mental_health_screening`, `rate_limit_screenings`. Política do psicólogo: só com consulta aceita, em andamento ou realizada.
 - **Teste SQL**: `supabase/tests/habits_more_and_screenings.sql`.
 
 ## Como validar
@@ -57,7 +61,7 @@ Dois questionários validados internacionalmente: **GAD-7** (ansiedade) e **PHQ-
 4. Ligar o compartilhamento → o psicólogo com consulta com esse paciente vê o resultado no histórico do paciente.
 
 ### Testes automáticos
-`screenings`.
+`screenings` (faixas, um por mês, apoio na hora mesmo com falha no envio, rascunho e mesmo id ao tentar de novo).
 
 ### Conferência no banco
 ```sql
@@ -74,4 +78,5 @@ Nenhuma. A pontuação editável pela API foi corrigida em 2026-10-04 (migration
 | Sintoma | Causa provável | O que olhar |
 |---|---|---|
 | Questionário não aparece para responder | Respondido há menos de um mês | Data do último em `/questionarios` |
-| Psicólogo não vê o resultado | Compartilhamento desligado ou sem consulta com o paciente | `shared_with_psychologist`; consultas entre os dois |
+| Psicólogo não vê o resultado | Compartilhamento desligado, ou só pedido sem consulta aceita | `shared_with_psychologist`; consultas entre os dois com status agendada, confirmada, em andamento ou realizada |
+| Respostas voltaram marcadas | Rascunho guardado de uma vez anterior | Esperado; some depois de enviar |

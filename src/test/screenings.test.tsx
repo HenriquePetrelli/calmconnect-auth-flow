@@ -9,6 +9,8 @@ let history: Screening[] = [];
 vi.mock('@/hooks/useScreenings', () => ({
   useScreenings: () => ({ history, loading: false, error: false, save, setShared }),
 }));
+const authValue = { user: { id: 'patient-1' } };
+vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => authValue }));
 vi.mock('@/components/PageHeader', () => ({ default: ({ title }: { title: string }) => <h1>{title}</h1> }));
 vi.mock('@/components/PatientBottomNav', () => ({ default: () => <div /> }));
 
@@ -36,6 +38,7 @@ const answerAll = (optionLabel: string, lastLabel = optionLabel) => {
 beforeEach(() => {
   history = [];
   save.mockReset();
+  localStorage.clear();
 });
 
 describe('questionários: regras', () => {
@@ -78,7 +81,7 @@ describe('questionários: tela', () => {
     expect(submit).toBeDisabled();
     answerAll('Vários dias');
     fireEvent.click(submit);
-    await waitFor(() => expect(save).toHaveBeenCalledWith('gad7', [1, 1, 1, 1, 1, 1, 1]));
+    await waitFor(() => expect(save).toHaveBeenCalledWith('gad7', [1, 1, 1, 1, 1, 1, 1], expect.any(String)));
     expect(await screen.findByText('Leves')).toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
@@ -90,10 +93,41 @@ describe('questionários: tela', () => {
     renderForm('phq9');
     answerAll('Vários dias', 'Mais da metade dos dias');
     fireEvent.click(screen.getByRole('button', { name: 'Ver meu resultado' }));
-    const alert = await screen.findByRole('alert');
+    await screen.findByText('Você não está sozinho(a)');
+    const alert = screen.getByRole('alert');
     expect(alert).toHaveTextContent('Você não está sozinho(a)');
     expect(alert).toHaveTextContent('188');
     expect(screen.getByRole('button', { name: 'Abrir o SOS' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Agendar consulta' })).toBeInTheDocument();
+  });
+
+  it('pergunta 9 positiva: o apoio aparece na hora, antes de enviar e mesmo se o envio falhar', async () => {
+    save.mockRejectedValue(new TypeError('Failed to fetch'));
+    renderForm('phq9');
+    answerAll('Nenhuma vez', 'Vários dias');
+    const support = screen.getByTestId('crisis-support');
+    expect(support).toHaveTextContent('188');
+    fireEvent.click(screen.getByRole('button', { name: 'Ver meu resultado' }));
+    expect(await screen.findByRole('button', { name: 'Tentar de novo' })).toBeInTheDocument();
+    expect(screen.getByTestId('crisis-support')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Abrir o SOS' })).toBeInTheDocument();
+  });
+
+  it('as respostas ficam no aparelho: sair e voltar não perde nada, e tentar de novo usa o mesmo envio', async () => {
+    save.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+    const first = renderForm('gad7');
+    answerAll('Vários dias');
+    fireEvent.click(screen.getByRole('button', { name: 'Ver meu resultado' }));
+    await screen.findByRole('button', { name: 'Tentar de novo' });
+    const firstId = save.mock.calls[0][2];
+    first.unmount();
+
+    save.mockResolvedValue(screening({ id: 'n3', instrument: 'gad7', score: 7, severity: 'mild' }));
+    renderForm('gad7');
+    expect(screen.getByText('7 de 7 respondidas')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Ver meu resultado' }));
+    await screen.findByText('Leves');
+    expect(save.mock.calls[1][2]).toBe(firstId);
+    expect(localStorage.getItem('questionarios:rascunho:patient-1:gad7')).toBeNull();
   });
 });

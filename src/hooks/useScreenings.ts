@@ -45,19 +45,48 @@ export const useScreenings = () => {
     load();
   }, [load]);
 
-  /** Salva as respostas; a pontuação e a faixa vêm do banco. */
+  /**
+   * Salva as respostas; a pontuação e a faixa vêm do banco. O id vem do
+   * aparelho: se a resposta do servidor se perder e a pessoa tentar de novo,
+   * o banco recusa a cópia e o app usa o resultado que já tinha chegado.
+   */
   const save = useCallback(
-    async (instrument: Instrument, answers: number[]): Promise<Screening> => {
+    async (instrument: Instrument, answers: number[], id: string): Promise<Screening> => {
       if (!user?.id) throw new Error('Sem sessão');
       const { data, error: insertError } = await supabase
         .from('mental_health_screenings')
-        .insert({ user_id: user.id, instrument, answers })
+        .insert({ id, user_id: user.id, instrument, answers })
         .select('*')
         .single();
-      if (insertError) throw insertError;
-      const saved = normalize(data as Record<string, unknown>);
-      setHistory((prev) => [...prev, saved]);
+      let row = data as Record<string, unknown> | null;
+      if (insertError) {
+        if (insertError.code !== '23505') throw insertError;
+        const { data: existing, error: readError } = await supabase
+          .from('mental_health_screenings')
+          .select('*')
+          .eq('id', id)
+          .maybeSingle();
+        if (readError || !existing) throw insertError;
+        row = existing as Record<string, unknown>;
+      }
+      const saved = normalize(row as Record<string, unknown>);
+      setHistory((prev) => [...prev.filter((s) => s.id !== saved.id), saved]);
       return saved;
+    },
+    [user?.id],
+  );
+
+  /** Apaga todos os resultados de um questionário (dado de saúde: a pessoa decide). */
+  const removeAll = useCallback(
+    async (instrument: Instrument) => {
+      if (!user?.id) return;
+      const { error: deleteError } = await supabase
+        .from('mental_health_screenings')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('instrument', instrument);
+      if (deleteError) throw deleteError;
+      setHistory((prev) => prev.filter((s) => s.instrument !== instrument));
     },
     [user?.id],
   );
@@ -74,5 +103,5 @@ export const useScreenings = () => {
     }
   }, [load]);
 
-  return { history, loading, error, reload: load, save, setShared };
+  return { history, loading, error, reload: load, save, setShared, removeAll };
 };

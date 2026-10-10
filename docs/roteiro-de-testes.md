@@ -231,6 +231,12 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Questionários → PHQ-9 tudo 2 ⇒ 18, "Moderadamente graves", sugere consulta
 - [ ] PHQ-9 com pergunta 9 = 1 ⇒ apoio imediato com CVV e SOS
 - [ ] Ligar "mostrar aos meus psicólogos" ⇒ psicólogo com consulta vê o resultado
+- [ ] PHQ-9 → marcar a pergunta 9 acima de "Nenhuma vez" ⇒ o apoio (CVV e SOS) aparece na hora, antes de enviar
+- [ ] PHQ-9 sem internet → enviar ⇒ "Tentar de novo", respostas e apoio continuam na tela
+- [ ] Responder metade → sair da tela → voltar ⇒ as respostas continuam marcadas
+- [ ] Compartilhamento ligado → responder de novo no mês seguinte ⇒ o novo resultado também aparece para o psicólogo
+- [ ] Psicólogo que só recusou um pedido de consulta ⇒ não vê os resultados compartilhados
+- [ ] Questionários → Apagar meus resultados deste questionário ⇒ pede confirmação e apaga tudo
 
 ## 12. Plano de segurança (ficha 14)
 
