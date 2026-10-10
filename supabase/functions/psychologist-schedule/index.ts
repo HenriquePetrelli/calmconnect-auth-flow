@@ -561,6 +561,13 @@ serve(async (req) => {
       }
     }
 
+    if (typeof sessionSummary === 'string' && sessionSummary.length > 10000) {
+      throw new HttpError('O resumo da sessão pode ter até 10.000 caracteres.', 400);
+    }
+    if (typeof proposalNotes === 'string' && proposalNotes.length > 1000) {
+      throw new HttpError('A mensagem da proposta pode ter até 1.000 caracteres.', 400);
+    }
+
     const updateData: any = {};
     if (status) updateData.status = status;
     if (sessionSummary) updateData.session_summary = sessionSummary;
@@ -578,11 +585,15 @@ serve(async (req) => {
       updateData.proposal_notes = null;
     }
 
-    // Build update query with appropriate user filtering
+    // Build update query with appropriate user filtering. Só grava se a
+    // consulta ainda está como foi lida: se o paciente cancelou (ou o pedido
+    // expirou) enquanto o psicólogo respondia, aceitar não pode ressuscitar a
+    // consulta (a consulta do mês já tinha sido devolvida).
     let updateQuery = supabase
       .from('appointments')
       .update(updateData)
-      .eq('id', appointmentId);
+      .eq('id', appointmentId)
+      .eq('status', appointment.status);
 
     // Add user-specific filtering
     if (userType === 'psychologist') {
@@ -593,11 +604,14 @@ serve(async (req) => {
 
     const { data: updatedAppointment, error } = await updateQuery
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error('Error updating appointment:', error);
       throw error;
+    }
+    if (!updatedAppointment) {
+      throw new HttpError('Esta consulta mudou enquanto você respondia (por exemplo, foi cancelada). Atualize a tela.', 409);
     }
 
     // The appointment never happened — give the patient's monthly Premium

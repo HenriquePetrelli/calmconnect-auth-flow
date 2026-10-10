@@ -28,6 +28,8 @@ const isSameBrazilMonth = (a: Date, b: Date) => {
 
 type Block = { start_time: string; end_time: string };
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const timeToMinutes = (time: string): number => {
   const [h, m] = time.split(':').map(Number);
   return h * 60 + m;
@@ -267,7 +269,45 @@ serve(async (req) => {
         );
       }
       
-      const { psychologist_id, scheduled_at, duration, appointment_type, notes } = requestBody;
+      const { psychologist_id, scheduled_at, duration, appointment_type, notes, request_id } = requestBody as Record<string, unknown> & {
+        psychologist_id?: string;
+        scheduled_at?: string;
+        notes?: unknown;
+        request_id?: unknown;
+      };
+      void duration;
+
+      // Id do pedido gerado no aparelho: se a resposta se perdeu e o app
+      // tentar de novo, devolve o pedido já criado (antes a segunda tentativa
+      // dizia "limite mensal já utilizado" e a pessoa achava que não agendou).
+      const requestId = typeof request_id === 'string' && UUID_RE.test(request_id) ? request_id : null;
+      if (requestId) {
+        const { data: existing } = await supabase
+          .from('appointments')
+          .select(`
+            *,
+            psychologists!psychologist_id(
+              full_name,
+              specialization
+            )
+          `)
+          .eq('id', requestId)
+          .maybeSingle();
+        if (existing) {
+          if (existing.patient_id !== user.id) throw new Error('Pedido inválido.');
+          return new Response(
+            JSON.stringify({
+              success: true,
+              appointment: {
+                ...existing,
+                psychologist: Array.isArray(existing.psychologists) ? existing.psychologists[0] : existing.psychologists,
+              },
+              message: 'Consulta solicitada com sucesso! Aguardando confirmação do psicólogo.',
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+          );
+        }
+      }
 
       // Cap how many booking attempts one patient can make in a short
       // window — nothing legitimate needs more than a handful per hour,
@@ -283,6 +323,9 @@ serve(async (req) => {
 
       if (!psychologist_id || !scheduled_at) {
         throw new Error('Psychologist ID and scheduled time are required');
+      }
+      if (Number.isNaN(new Date(scheduled_at).getTime())) {
+        throw new Error('Horário inválido.');
       }
 
       // The GET action=psychologists listing only ever shows approved
@@ -315,16 +358,22 @@ serve(async (req) => {
       // the client-side gate (subscriptionTier === 'Premium') can be
       // bypassed by calling this endpoint directly, so it must never be the
       // only check. Mirrors the same-month reset used for the SOS quota.
-      let subscriberRow: { subscription_tier: string | null; appointments_used_this_month: boolean; appointments_last_used: string | null } | null = null;
+      let subscriberRow: { subscribed: boolean | null; subscription_tier: string | null; subscription_end: string | null; appointments_used_this_month: boolean; appointments_last_used: string | null } | null = null;
       if (finalAppointmentType === 'regular') {
         const { data: subRow } = await supabase
           .from('subscribers')
-          .select('subscription_tier, appointments_used_this_month, appointments_last_used')
+          .select('subscribed, subscription_tier, subscription_end, appointments_used_this_month, appointments_last_used')
           .eq('user_id', user.id)
           .maybeSingle();
         subscriberRow = subRow;
 
-        if (subscriberRow?.subscription_tier !== 'Premium') {
+        // Plano ativo de verdade: assinado e dentro da validade (o plano
+        // vencido só some quando a rotina diária roda).
+        const planActive =
+          subRow?.subscribed === true &&
+          String(subRow?.subscription_tier ?? '').toLowerCase() === 'premium' &&
+          (!subRow?.subscription_end || new Date(subRow.subscription_end).getTime() > Date.now());
+        if (!subscriberRow || !planActive) {
           throw new Error('O agendamento de consultas está disponível apenas para o plano Premium.');
         }
 
@@ -451,6 +500,7 @@ serve(async (req) => {
       const { data: appointment, error } = await supabase
         .from('appointments')
         .insert({
+          ...(requestId ? { id: requestId } : {}),
           patient_id: user.id,
           psychologist_id,
           scheduled_at,

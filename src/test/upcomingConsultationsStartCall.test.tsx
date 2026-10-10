@@ -17,6 +17,10 @@ vi.mock('@/hooks/usePsychologistSchedule', () => ({
   usePsychologistSchedule: vi.fn(),
 }));
 
+vi.mock('@/hooks/useAppointmentUpdates', () => ({
+  useAppointmentUpdates: vi.fn(),
+}));
+
 const now = new Date();
 const inProgressAppointment = {
   id: 'appt-1',

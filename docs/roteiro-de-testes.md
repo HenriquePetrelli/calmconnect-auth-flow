@@ -114,6 +114,14 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Psicólogo (celular) → barra inferior ⇒ Início, Consultas, Agenda, Chat e Perfil; no computador, menu lateral com Pagamentos e o status do SOS
 - [ ] Psicólogo online → abrir Agenda ou Chat → paciente pede SOS ⇒ aviso "pedido de SOS esperando" leva ao Início
 - [ ] Psicólogo → Chat ⇒ abre com a navegação do psicólogo (sem a barra e o SOS do paciente)
+- [ ] Paciente com Consultas aberta → psicólogo aceita (ou propõe outro horário) ⇒ a lista do paciente muda sozinha, sem recarregar
+- [ ] Psicólogo com Início/Consultas aberto → paciente pede consulta ⇒ o pedido aparece sozinho
+- [ ] Psicólogo abre um pedido → paciente cancela → psicólogo toca em Aceitar ⇒ "Esta consulta mudou enquanto você respondia"; a consulta continua cancelada
+- [ ] Agendar com a internet caindo no envio → tentar de novo ⇒ um pedido só, sem "limite do mês já usado"
+- [ ] Psicólogo propõe a um paciente um horário que outro paciente está pedindo ao mesmo tempo ⇒ só um dos dois consegue
+- [ ] Consulta com lembrete de 24 h já enviado → paciente aceita novo horário ⇒ recebe os lembretes do horário novo
+- [ ] Pedido sem resposta por 24 h ⇒ paciente avisado e psicólogo recebe "Pedido de consulta expirou"
+- [ ] Psicólogo → Histórico → resumo da sessão ⇒ aviso de que o paciente vê o resumo
 
 ## 4. Chat (ficha 06)
 

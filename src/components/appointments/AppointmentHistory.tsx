@@ -249,7 +249,7 @@ export const AppointmentHistory = () => {
   return (
     <>
       <Card className="border-l-4 border-l-muted-foreground/30">
-        <CardHeader className="bg-gradient-to-r from-muted/30 to-transparent">
+        <CardHeader>
           <div className="flex flex-col gap-4">
             <CardTitle className="flex items-center gap-3">
               <div className="w-10 h-10 bg-muted-foreground/10 rounded-full flex items-center justify-center flex-shrink-0">

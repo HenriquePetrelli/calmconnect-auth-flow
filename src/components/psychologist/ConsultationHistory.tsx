@@ -545,8 +545,12 @@ const ConsultationHistory = () => {
                       onChange={(e) => setSessionSummary(e.target.value)}
                       placeholder="Adicione um resumo da sessão..."
                       rows={6}
+                      maxLength={10000}
                       className="mt-1"
                     />
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      O paciente vê este resumo no histórico de consultas dele. Não escreva aqui anotações que devam ficar só com você.
+                    </p>
                   </div>
 
                   {canReportConsultationProblem({ status: selected.status, scheduled_at: selected.occurred_at }) && (

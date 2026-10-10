@@ -6,10 +6,12 @@ import { AppointmentDetailsModal } from './AppointmentDetailsModal';
 import { useAppointments, Appointment } from '@/hooks/useAppointments';
 import { SkeletonSectionCard } from '@/components/skeletons/Skeletons';
 import { isConsultationUpcoming } from '@/lib/consultationWindow';
+import { useAppointmentUpdates } from '@/hooks/useAppointmentUpdates';
 
 export const UpcomingAppointments: React.FC = () => {
   const { appointments, loading, fetchAppointments } = useAppointments();
   const [upcomingAppointments, setUpcomingAppointments] = useState<Appointment[]>([]);
+  useAppointmentUpdates(fetchAppointments);
 
   useEffect(() => {
     // Filter for upcoming appointments (including pending ones and in progress)
@@ -41,9 +43,9 @@ export const UpcomingAppointments: React.FC = () => {
   return (
     <>
       <Card className="border-l-4 border-l-primary">
-        <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">
+        <CardHeader>
           <CardTitle className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
+            <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
               <Calendar className="text-primary" size={18} />
             </div>
             <div>

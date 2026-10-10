@@ -1,7 +1,7 @@
 # 04. Consultas agendadas
 
 > **Status:** Pronto.
-> **Última verificação:** 2026-10-05 (varredura das regras para paciente e psicólogo: horários de outros pacientes aparecem ocupados, fuso de Brasília, dois pedidos simultâneos, horário proposto reservado, cancelar com novo horário proposto, calendário até o limite do psicólogo).
+> **Última verificação:** 2026-10-17 (segunda varredura: listas atualizam sozinhas, aceitar não ressuscita consulta cancelada, rotina de expiração não recusa o que acabou de ser aceito, pedido sem duplicar, horário proposto protegido no banco, lembretes do horário novo, plano vencido, psicólogo avisado do pedido expirado). Antes: 2026-10-05 (varredura das regras para paciente e psicólogo: horários de outros pacientes aparecem ocupados, fuso de Brasília, dois pedidos simultâneos, horário proposto reservado, cancelar com novo horário proposto, calendário até o limite do psicólogo).
 > **Quem usa:** paciente Premium (1 consulta por mês, incluindo o plano da empresa) e psicólogo aprovado.
 
 ## Resumo
@@ -22,17 +22,22 @@ O paciente escolhe psicólogo, dia e horário dentro da agenda real dele. O psic
 
 ### 1. Agendar
 1. O paciente escolhe o psicólogo numa lista com nome, especialidade, CRP e quantas consultas e SOS ele já concluiu no app e a nota real dos pacientes, com o número de avaliações (função `get_psychologists_public_stats`, que devolve só os totais de psicólogos aprovados). Sem avaliação, aparece "Sem avaliações ainda". Cidade, estado e endereço do psicólogo não aparecem. Depois vê só os horários livres: horário-padrão combinado com exceções do dia, sem férias, sem conflito com outras consultas, respeitando antecedência mínima, intervalo entre consultas e até quantos dias à frente (ficha 05).
-2. Confirma. A edge function `appointments` confere de novo, no servidor, a agenda, os conflitos e o plano Premium, e **reserva a cota do mês numa única operação** (dois pedidos ao mesmo tempo não passam os dois). Se a consulta não for criada, a reserva é desfeita. Também limita a 10 tentativas por hora. Toda consulta criada pelo app é do tipo `regular` (o servidor ignora outro tipo enviado) e a observação é cortada em 1.000 caracteres.
+2. Confirma. A edge function `appointments` confere de novo, no servidor, a agenda, os conflitos e o plano Premium (assinado e dentro da validade), e **reserva a cota do mês numa única operação** (dois pedidos ao mesmo tempo não passam os dois). Se a consulta não for criada, a reserva é desfeita. Também limita a 10 tentativas por hora. Toda consulta criada pelo app é do tipo `regular` (o servidor ignora outro tipo enviado) e a observação é cortada em 1.000 caracteres. Cada pedido leva um id gerado no aparelho: se a resposta se perde e a pessoa tenta de novo, o servidor devolve o pedido já criado (sem outro pedido e sem "limite do mês já usado").
 3. A consulta nasce como `pending` e o psicólogo é notificado (app e push).
 
 ### 2. Resposta do psicólogo (`psychologist-schedule`)
 - **Aceitar** → `scheduled`; o paciente é avisado. A cota do mês já foi reservada no pedido.
 - **Recusar** → `declined`; a cota volta.
 - **Propor outro horário** → `reschedule_proposed`. Só horários livres da agenda dele (mesma lista que o paciente vê). O horário proposto fica reservado até o paciente responder. O paciente aceita (o horário muda; o servidor confere de novo conflito e agenda, ex.: férias marcadas depois) ou recusa (a cota volta).
-- **Sem resposta**: o pedido expira em 24 h ou quando o horário chega (`auto-decline-appointments`, de hora em hora); a cota volta.
+- **Sem resposta**: o pedido expira em 24 h ou quando o horário chega (`auto-decline-appointments`, de hora em hora); a cota volta, o paciente é avisado e o psicólogo recebe "Pedido de consulta expirou". A rotina só recusa o que continua sem resposta no momento de gravar (um aceite feito no mesmo instante vale).
+- **Respostas ao mesmo tempo**: aceitar, recusar ou propor só grava se a consulta ainda está como o psicólogo viu. Se o paciente cancelou nesse meio-tempo, aparece "Esta consulta mudou enquanto você respondia" e a consulta continua cancelada.
+- **Horário proposto** fica protegido também pelo banco (`prevent_appointment_overlap`): um paciente pedindo e o psicólogo propondo o mesmo horário a outro paciente, ao mesmo tempo, não passam os dois.
 
 ### 3. Lembretes
-24 h e 1 h antes, no app e por push (`queue_appointment_reminders`, a cada 10 min).
+24 h e 1 h antes, no app e por push (`queue_appointment_reminders`, a cada 10 min). Se a consulta muda de horário (proposta aceita), os lembretes valem para o horário novo (`reset_appointment_reminders`).
+
+### 3a. Listas em dia
+As telas de consultas do paciente (Próximas) e do psicólogo (Início, Consultas, pedidos) se atualizam sozinhas quando chega um aviso de consulta (pedido, confirmação, proposta, cancelamento) e ao voltar para o app.
 
 ### 4. Atendimento
 1. A sala abre **10 min antes** e fica aberta até **15 min depois do fim previsto** (duração padrão de 50 min). Ao entrar, a consulta vira `in_progress`.
@@ -42,7 +47,7 @@ O paciente escolhe psicólogo, dia e horário dentro da agenda real dele. O psic
 ### 5. Conclusão
 - Só conta como concluída com pelo menos **5 minutos de chamada com os dois conectados** (`webrtc_sessions.media_seconds`, somado pelo banco a partir do aviso que cada lado manda a cada 20 s enquanto a mídia passa; o app não consegue alterar). Vale para o botão "Concluir" do psicólogo, para o "Encerrar" da sala e para a rotina. Salas criadas antes desta regra seguem a anterior (bastava conectar).
 - Quem sai da sala sem a outra pessoa ter entrado não encerra a consulta: ela continua "em andamento" até o fim da janela (a outra pessoa ainda pode entrar), e o app avisa isso.
-- Salvar o resumo da sessão no histórico não muda o status da consulta.
+- Salvar o resumo da sessão no histórico não muda o status da consulta. **O paciente vê o resumo** no histórico dele (a tela do psicólogo avisa). Até 10.000 caracteres; a mensagem de uma proposta, até 1.000.
 - A rotina `finalize-stale-appointments` (a cada 10 min) fecha o que ficou aberto 30 min após o fim previsto:
   - **5 min ou mais de chamada** → `completed`, e entra no repasse do psicólogo (ficha 09);
   - **conectou mas não chegou a 5 min** (caiu e ninguém conseguiu voltar) → `cancelled` como "Interrompida", a consulta do mês volta para o paciente, não entra no repasse e os dois são avisados;
@@ -80,10 +85,10 @@ Toda devolução da consulta do mês (cancelar, recusar, expirar, não realizada
 ## Onde está no código
 
 - **Telas e componentes**: `src/pages/Appointments.tsx`, `src/components/appointments/` (`AppointmentForm`, `PsychologistSelection`, `AppointmentHistory`, `CancelAppointmentDialog`, `ConsultationVideoCall`, `ReportConsultationProblemDialog`), `src/components/psychologist/ConsultationHistory.tsx`.
-- **Hooks**: `useAppointments`, `useAvailableTimeSlots`, `usePsychologistSchedule`, `useAppointmentVideoCall`, `usePendingCallFeedback`.
+- **Hooks**: `useAppointmentUpdates` (atualiza as listas), `useAppointments`, `useAvailableTimeSlots`, `usePsychologistSchedule`, `useAppointmentVideoCall`, `usePendingCallFeedback`.
 - **Regras puras**: `src/lib/appointmentCancellation.ts`, `appointmentRating.ts`, `consultationWindow.ts`, `consultationProblem.ts`, `bookingRules.ts`.
 - **Edge functions**: `appointments` (criar e listar), `psychologist-schedule` (aceitar, recusar, propor, concluir), `auto-decline-appointments`, `send-appointment-notification`, `notification-push`.
-- **Banco**: `appointments`, `appointment_reminders_sent`, `appointment_problem_reports`, `session_feedback`, `subscribers` (cota). Funções: `release_appointment_quota`, `appointment_call_connected` (conectou e 5 min de chamada), `report_call_media`, `cancel_appointment`, `get_or_create_appointment_webrtc_session`, `notify_consultation_waiting`, `report_consultation_problem`, `finalize_stale_appointments`, `queue_appointment_reminders`. Gatilhos `guard_appointment_client_update` e `track_call_connected` (em `webrtc_sessions`). Migração mais recente: `20261004000247_cf325ceb-bcdc-471c-9aa3-6bdeea596c98.sql`.
+- **Banco**: `appointments`, `appointment_reminders_sent`, `appointment_problem_reports`, `session_feedback`, `subscribers` (cota). Funções: `release_appointment_quota`, `appointment_call_connected` (conectou e 5 min de chamada), `report_call_media`, `cancel_appointment`, `get_or_create_appointment_webrtc_session`, `notify_consultation_waiting`, `report_consultation_problem`, `finalize_stale_appointments`, `queue_appointment_reminders`. Gatilhos `guard_appointment_client_update` e `track_call_connected` (em `webrtc_sessions`). Gatilho `reset_appointment_reminders`. Migração mais recente: `20261017090000_consultas_regras.sql`.
 
 ## Como validar
 
@@ -100,7 +105,7 @@ Toda devolução da consulta do mês (cancelar, recusar, expirar, não realizada
 10. **Histórico**: "Avaliar" em consulta concluída; "Relatar problema" (paciente) e "Consulta interrompida" (psicólogo).
 
 ### Testes automáticos
-`availableTimeSlots`, `bookingRules`, `consultationWindow`, `consultationProblem`, `consultasChatRules`, `appointmentFeedback`, `upcomingConsultationsStartCall`, `consultationCallRouteAccess`, `consultationVideoCallSession`, `webrtcSessionReuse.e2e`.
+`appointmentRules` (listas em dia, pedido sem duplicar), `availableTimeSlots`, `bookingRules`, `consultationWindow`, `consultationProblem`, `consultasChatRules`, `appointmentFeedback`, `upcomingConsultationsStartCall`, `consultationCallRouteAccess`, `consultationVideoCallSession`, `webrtcSessionReuse.e2e`.
 
 ### Conferência no banco
 ```sql

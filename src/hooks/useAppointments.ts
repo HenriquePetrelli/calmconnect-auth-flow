@@ -100,7 +100,9 @@ export const useAppointments = () => {
     scheduled_at: string, 
     duration = 60,
     type = 'regular',
-    notes?: string
+    notes?: string,
+    /** Id do pedido gerado no aparelho: tentar de novo não cria outro nem gasta a cota. */
+    requestId?: string,
   ) => {
     try {
       setLoading(true);
@@ -111,16 +113,13 @@ export const useAppointments = () => {
           duration,
           appointment_type: type,
           notes,
+          ...(requestId ? { request_id: requestId } : {}),
         },
       });
       
       if (error) throw error;
-      
-      toast({
-        title: 'Consulta solicitada',
-        description: data.message || 'Aguardando confirmação do psicólogo.',
-      });
-      
+
+      // O aviso de sucesso (com a data) fica com a tela de agendamento.
       await fetchAppointments();
       return data.appointment;
     } catch (error: any) {

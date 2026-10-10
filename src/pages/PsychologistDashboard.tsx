@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useAppointmentUpdates } from '@/hooks/useAppointmentUpdates';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -32,7 +33,7 @@ const PsychologistDashboard = () => {
   const [showFirstTimeModal, setShowFirstTimeModal] = useState(false);
   const [psychologistData, setPsychologistData] = useState<any>(null);
 
-  const { todayAppointments, upcomingAppointments, fetchPendingAppointments } = usePsychologistSchedule();
+  const { todayAppointments, upcomingAppointments, fetchPendingAppointments, fetchTodayAppointments, fetchUpcomingAppointments } = usePsychologistSchedule();
   const { isOnline, loading: presenceLoading, toggle: togglePresence } = usePsychologistPresence();
   const [pendingRequests, setPendingRequests] = useState(0);
   const { activeVacation, loading: loadingVacation } = usePsychologistVacation();
@@ -44,6 +45,13 @@ const PsychologistDashboard = () => {
     void fetchPendingAppointments().then((list) => setPendingRequests(list.length));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  useAppointmentUpdates(() =>
+    Promise.all([
+      fetchPendingAppointments().then((list) => setPendingRequests(list.length)),
+      fetchTodayAppointments(),
+      fetchUpcomingAppointments(),
+    ]),
+  );
 
   // Só depois que o cadastro básico (PIX) está completo: primeiro pede o
   // horário-padrão (uma vez, se ainda não configurado) e, com ele já

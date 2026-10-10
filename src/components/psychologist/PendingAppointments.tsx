@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useAppointmentUpdates } from '@/hooks/useAppointmentUpdates';
 import { SkeletonSectionCard } from '@/components/skeletons/Skeletons';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -46,6 +47,7 @@ const PendingAppointments = () => {
     loadPendingAppointments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  useAppointmentUpdates(loadPendingAppointments);
 
   const handleAccept = async (appointmentId: string) => {
     setProcessingAppointments(prev => new Set(prev).add(appointmentId));

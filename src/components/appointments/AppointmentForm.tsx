@@ -30,6 +30,11 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // O mesmo id em todas as tentativas deste pedido: se a resposta se perder
+  // e a pessoa tentar de novo, não cria outro pedido nem diz "limite usado".
+  const [requestId] = useState(() =>
+    typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : undefined,
+  );
   
   const { createAppointment } = useAppointments();
   const { toast } = useToast();
@@ -82,7 +87,8 @@ export const AppointmentForm: React.FC<AppointmentFormProps> = ({
         appointmentUTC.toISOString(),
         50, // duração padrão de 50 minutos
         'regular',
-        notes.trim() || undefined
+        notes.trim() || undefined,
+        requestId,
       );
 
       toast({

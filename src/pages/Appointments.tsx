@@ -69,11 +69,11 @@ const Appointments = () => {
     <div className="space-y-6">
 
         {/* Schedule New Appointment */}
-        <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
+        <Card className="border-border bg-card">
           <CardContent className="p-4">
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
               <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div className="flex-shrink-0 w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
+                <div className="flex-shrink-0 w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
                   <Calendar className="w-5 h-5 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">

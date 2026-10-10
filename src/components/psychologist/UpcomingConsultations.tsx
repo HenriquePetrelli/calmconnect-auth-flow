@@ -1,3 +1,4 @@
+import { useAppointmentUpdates } from '@/hooks/useAppointmentUpdates';
 import { useState } from 'react';
 import { SkeletonSectionCard } from '@/components/skeletons/Skeletons';
 import { useNavigate } from 'react-router-dom';
@@ -38,6 +39,7 @@ const UpcomingConsultations = () => {
     fetchTodayAppointments,
     fetchUpcomingAppointments,
   } = usePsychologistSchedule();
+  useAppointmentUpdates(() => Promise.all([fetchTodayAppointments(), fetchUpcomingAppointments()]));
   const [cancelTarget, setCancelTarget] = useState<(CancellableAppointment & { id: string }) | null>(null);
 
   const now = new Date();

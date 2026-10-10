@@ -53,12 +53,15 @@ serve(async (req) => {
     if (expiredAppointments && expiredAppointments.length > 0) {
       console.log(`Found ${expiredAppointments.length} expired pending appointments`);
 
-      // Atualizar status para declined
+      // Atualizar status para declined. Só o que continua sem resposta: se o
+      // psicólogo aceitou (ou o paciente respondeu) entre a busca e aqui, a
+      // consulta não é recusada nem a cota devolvida.
       const { data: updatedAppointments, error: updateError } = await supabase
         .from('appointments')
         .update({ status: 'declined' })
         .in('id', expiredAppointments.map(a => a.id))
-        .select();
+        .in('status', ['pending', 'reschedule_proposed'])
+        .select('id');
 
       if (updateError) {
         console.error('Error updating expired appointments:', updateError);
@@ -69,7 +72,9 @@ serve(async (req) => {
       // the patient's monthly Premium appointment slot (marked used at
       // booking time) must come back, same as an explicit decline.
       // Devolve a cota de cada pedido vencido (só se a cota marcada for a dele).
-      for (const expired of expiredAppointments.filter((a) => a.appointment_type === 'regular')) {
+      const declinedIds = new Set((updatedAppointments ?? []).map((a: { id: string }) => a.id));
+      const declined = expiredAppointments.filter((a) => declinedIds.has(a.id));
+      for (const expired of declined.filter((a) => a.appointment_type === 'regular')) {
         const { error: quotaError } = await supabase.rpc('release_appointment_quota', {
           p_appointment_id: expired.id,
         });
@@ -80,12 +85,29 @@ serve(async (req) => {
 
       console.log(`Updated ${updatedAppointments?.length || 0} appointments to declined`);
 
+      // O psicólogo também fica sabendo que o pedido venceu sem resposta
+      // (antes ele simplesmente sumia da lista dele).
+      if (declined.length > 0) {
+        const { error: psychNotifyError } = await supabase.from('notifications').insert(
+          declined.map((a) => ({
+            patient_id: a.psychologist_id,
+            appointment_id: a.id,
+            title: 'Pedido de consulta expirou',
+            message: `O pedido para ${new Date(a.scheduled_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', dateStyle: 'short', timeStyle: 'short' })} venceu sem resposta e o horário ficou livre.`,
+            status: 'unread',
+            push: false,
+            link: '/psicologo/consultas',
+          })),
+        );
+        if (psychNotifyError) console.error('Error notifying psychologists of expired requests:', psychNotifyError);
+      }
+
       // A manual decline already notifies the patient (in-app + email) via
       // send-appointment-notification. An appointment that just times out
       // unanswered deserves the exact same courtesy — otherwise the patient
       // only finds out by checking the app themselves.
       try {
-        const psychologistIds = [...new Set(expiredAppointments.map((a) => a.psychologist_id))];
+        const psychologistIds = [...new Set(declined.map((a) => a.psychologist_id))];
         const { data: psychologists } = await supabase
           .from('profiles')
           .select('user_id, full_name')
@@ -95,7 +117,7 @@ serve(async (req) => {
           (psychologists ?? []).map((p) => [p.user_id, p.full_name])
         );
 
-        for (const appointment of expiredAppointments) {
+        for (const appointment of declined) {
           try {
             await supabase.functions.invoke('send-appointment-notification', {
               body: {
