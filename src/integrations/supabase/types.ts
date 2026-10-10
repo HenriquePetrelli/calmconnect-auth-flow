@@ -1224,6 +1224,7 @@ export type Database = {
           created_at: string | null
           goal_id: string
           id: string
+          last_progress_date: string | null
           progress: number | null
           target: number
           updated_at: string | null
@@ -1236,6 +1237,7 @@ export type Database = {
           created_at?: string | null
           goal_id: string
           id?: string
+          last_progress_date?: string | null
           progress?: number | null
           target: number
           updated_at?: string | null
@@ -1248,6 +1250,7 @@ export type Database = {
           created_at?: string | null
           goal_id?: string
           id?: string
+          last_progress_date?: string | null
           progress?: number | null
           target?: number
           updated_at?: string | null
@@ -2722,6 +2725,7 @@ export type Database = {
         }
         Returns: Json
       }
+      ensure_week_goals: { Args: { p_local_date: string }; Returns: string }
       expire_cancelled_subscriptions: { Args: never; Returns: number }
       expire_organization_entitlements: { Args: never; Returns: number }
       finalize_stale_appointments: { Args: never; Returns: number }
@@ -2955,6 +2959,10 @@ export type Database = {
           updated_at: string
         }[]
       }
+      log_mood: {
+        Args: { p_local_date: string; p_value: number }
+        Returns: Json
+      }
       marcar_mensagens_como_lidas: {
         Args: { p_conversa_id: string }
         Returns: undefined
@@ -2990,6 +2998,7 @@ export type Database = {
       }
       pode_enviar_imagem_chat: { Args: { p_name: string }; Returns: boolean }
       pode_ver_imagem_chat: { Args: { p_name: string }; Returns: boolean }
+      progress_local_date: { Args: { p_local_date: string }; Returns: string }
       promote_to_admin: {
         Args: { target_user_email: string }
         Returns: boolean
@@ -3003,6 +3012,14 @@ export type Database = {
       purge_old_notifications: { Args: never; Returns: number }
       queue_appointment_reminders: { Args: never; Returns: number }
       queue_sos_followups: { Args: never; Returns: number }
+      record_goal_progress: {
+        Args: { p_category: string; p_local_date: string }
+        Returns: {
+          completed_now: boolean
+          goal_id: string
+          title: string
+        }[]
+      }
       refresh_subscriber_entitlement: {
         Args: { p_user_id: string }
         Returns: undefined
@@ -3061,6 +3078,10 @@ export type Database = {
       set_psychologist_availability: {
         Args: { p_blocks: Json }
         Returns: undefined
+      }
+      set_week_goals: {
+        Args: { p_goal_ids: string[]; p_local_date: string }
+        Returns: string
       }
       sos_call_connected: { Args: { p_request_id: string }; Returns: boolean }
       sos_request_other_psychologist: {
