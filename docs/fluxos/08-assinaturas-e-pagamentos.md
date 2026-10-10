@@ -1,7 +1,7 @@
 # 08. Assinaturas e pagamentos (Stripe)
 
 > **Status:** Pronto, com pendência externa (confirmar que o webhook do Stripe está cadastrado).
-> **Última verificação:** 2026-10-06 (varredura: cliente do Stripe nunca de outra conta pelo e-mail, prévia da troca de plano sem data manipulada, checkout sem duplicar). Antes: 2026-10-02 (revisão de ponta a ponta comparada com Calm, Headspace e Spotify). Em 2026-10-04, o gatilho de proteção de `subscribers` impede o paciente de gravar o próprio plano, e o `check-subscription` deixou de regravar o uso do mês (corrida que devolvia SOS ou consulta já usados).
+> **Última verificação:** 2026-10-18 (varredura de funcionamento: e-mail reaproveitado não toma a linha de outra conta, aviso de cobrança recusada e de fim do plano, consultas futuras canceladas no cancelamento imediato, sem checkout para quem já tem o plano pela empresa). Antes: 2026-10-06 (varredura: cliente do Stripe nunca de outra conta pelo e-mail, prévia da troca de plano sem data manipulada, checkout sem duplicar). Antes: 2026-10-02 (revisão de ponta a ponta comparada com Calm, Headspace e Spotify). Em 2026-10-04, o gatilho de proteção de `subscribers` impede o paciente de gravar o próprio plano, e o `check-subscription` deixou de regravar o uso do mês (corrida que devolvia SOS ou consulta já usados).
 > **Quem usa:** paciente.
 
 ## Resumo
@@ -24,14 +24,15 @@ O pagamento é pelo **Stripe Checkout**. O estado da assinatura fica em `subscri
 
 ## Como funciona
 
-1. **Assinar**: o app manda só o nome do plano (`plus` ou `premium`). O preço é resolvido no servidor (`create-checkout`, secrets `STRIPE_PRICE_PLUS` e `STRIPE_PRICE_PREMIUM`). Quem já assina não abre um segundo checkout.
+1. **Assinar**: o app manda só o nome do plano (`plus` ou `premium`). O preço é resolvido no servidor (`create-checkout`, secrets `STRIPE_PRICE_PLUS` e `STRIPE_PRICE_PREMIUM`). Quem já assina não abre um segundo checkout, e quem já tem esse plano (ou um maior) pela empresa também não ("Seu plano já vem da empresa").
 2. **Checkout** em português, com campo de cupom e na mesma aba. A tela de sucesso **espera a confirmação do servidor** antes de dizer "ativada".
 3. **Webhook** (`stripe-webhook`, assinatura conferida com `STRIPE_WEBHOOK_SECRET`): a cada evento, sincroniza o cliente inteiro direto do Stripe, então eventos fora de ordem não deixam estado errado.
 4. **Trocar de plano** (`manage-subscription`, na mesma assinatura):
    - **subir** cobra só a diferença proporcional na hora, com prévia do valor; se o cartão recusar, nada muda. A data da prévia só vale se for dos últimos 15 minutos (senão o servidor usa a hora atual), para ninguém mandar uma data no fim do período e pagar quase nada;
    - **descer** vale na renovação, sem cobrança agora, e pode ser desfeito.
-5. **Cancelar** (`cancel-subscription`): o plano continua até o fim do período pago (o ciclo mensal do Stripe: pago em 15/03, vale até 15/04) e não renova, com "Manter minha assinatura" para desfazer. Enquanto isso, Perfil e Planos mostram **"Plano cancelado - Plus disponível até 15/04/2026"**. No fim do período, o plano vira **Plano Grátis**: o Stripe avisa pelo webhook, e a rotina `expire-cancelled-subscriptions` (de hora em hora) encerra o plano mesmo se o aviso não chegar; com o app aberto, a tela troca sozinha na hora certa. A marca fica em `subscribers.cancel_at_period_end`, que "Manter minha assinatura" ou trocar de plano apagam na hora (migration `20261004011237_e99053e5-8384-4774-a0dc-dcb73255c4ab.sql`). **Em até 7 dias da primeira assinatura** (direito de arrependimento), acaba na hora e o valor é devolvido automaticamente.
-6. **Cartão recusado na renovação** (`past_due`): o plano continua enquanto o Stripe tenta de novo, e o app pede para atualizar o cartão (portal do Stripe, `customer-portal`).
+5. **Cancelar** (`cancel-subscription`): o plano continua até o fim do período pago (o ciclo mensal do Stripe: pago em 15/03, vale até 15/04) e não renova, com "Manter minha assinatura" para desfazer. Enquanto isso, Perfil e Planos mostram **"Plano cancelado - Plus disponível até 15/04/2026"**. No fim do período, o plano vira **Plano Grátis**: o Stripe avisa pelo webhook, e a rotina `expire-cancelled-subscriptions` (de hora em hora) encerra o plano mesmo se o aviso não chegar; com o app aberto, a tela troca sozinha na hora certa. A marca fica em `subscribers.cancel_at_period_end`, que "Manter minha assinatura" ou trocar de plano apagam na hora (migration `20261004011237_e99053e5-8384-4774-a0dc-dcb73255c4ab.sql`). **Em até 7 dias da primeira assinatura** (direito de arrependimento), acaba na hora e o valor é devolvido automaticamente. Nesse caso (e no de pagamento em atraso, que também acaba na hora), as **consultas futuras** pedidas com o plano são canceladas e o psicólogo é avisado (`cancel_appointments_after_plan_loss`); a tela avisa isso antes de confirmar. Se a pessoa ainda tem Premium pela empresa, as consultas ficam.
+6. **Cartão recusado na renovação** (`past_due`): o plano continua enquanto o Stripe tenta de novo, e o app pede para atualizar o cartão (portal do Stripe, `customer-portal`). A pessoa também recebe o aviso "Pagamento não aprovado" no sino e por push (webhook, um por dia).
+6a. **Fim do plano** (qualquer caminho: fim do período, arrependimento, Stripe desistiu de cobrar, saída da empresa): aviso "Seu plano terminou", com link para os planos (gatilho `notify_plan_ended`).
 7. **Ao abrir o app**, o plano aparece na hora a partir da última consulta da sessão, e o `check-subscription` confere com o Stripe em segundo plano.
 
 ## Regras
@@ -41,6 +42,7 @@ O pagamento é pelo **Stripe Checkout**. O estado da assinatura fica em `subscri
 - **SOS**: marcado como usado quando a chamada começa e devolvido se a chamada cair, o psicólogo sumir ou o atendimento terminar sem a chamada conectar.
 - **Consulta**: reservada no pedido (numa operação só, sem brecha para dois pedidos ao mesmo tempo) e devolvida se for recusada, expirada, cancelada com antecedência, interrompida ou não realizada. Só devolve a cota do mês em que a consulta foi pedida (`release_appointment_quota`).
 - O `check-subscription` atualiza o plano, mas **não regrava** o uso do mês numa linha existente: ele muda só pelo início do SOS, pelo agendamento e pelas devoluções. A virada do mês só zera o uso se ninguém usou no mês novo enquanto a checagem rodava.
+- **E-mail reaproveitado**: se uma conta troca de e-mail e outra se cadastra com o antigo, a linha da primeira passa para o e-mail atual dela antes de a nova ser criada (gatilho `a0_free_subscriber_email`). Antes, a criação da linha nova "pelo e-mail" tomava a linha da outra conta (cliente do Stripe, uso do mês e plano).
 - O cliente do Stripe é ligado ao `user_id`, não ao e-mail; trocar o e-mail não perde a assinatura. Pelo e-mail, só vale um cliente antigo sem `user_id` que nenhuma outra conta usa: quem se cadastra com o e-mail antigo de outra pessoa não herda a assinatura dela (vale também no webhook e no `check-subscription`).
 - Dois toques seguidos em "Assinar" abrem o mesmo checkout (chave de idempotência por pessoa, plano e minuto).
 - Excluir a conta cancela a assinatura no Stripe **antes** de apagar os dados (ficha 18).
@@ -50,7 +52,7 @@ O pagamento é pelo **Stripe Checkout**. O estado da assinatura fica em `subscri
 - **Telas e contexto**: `src/pages/SubscriptionPlans.tsx`, `SubscriptionSuccess.tsx`, `SubscriptionCancel.tsx`, `src/components/SubscriptionUpgradeModal.tsx`, `src/contexts/SubscriptionContext.tsx`.
 - **Dados dos planos**: `src/lib/plans.ts` (textos e preços); `supabase/functions/_shared/billing.ts` (regras, com testes); `_shared/stripe.ts`.
 - **Edge functions**: `create-checkout`, `check-subscription`, `manage-subscription`, `cancel-subscription`, `customer-portal`, `stripe-webhook`.
-- **Banco**: `subscribers`, `security_audit_log` (reembolso por arrependimento). Funções: `can_use_sos`, `refresh_subscriber_entitlement`.
+- **Banco**: `subscribers`, `security_audit_log` (reembolso por arrependimento). Funções: `can_use_sos`, `refresh_subscriber_entitlement`, `cancel_appointments_after_plan_loss`. Gatilhos `a0_free_subscriber_email`, `notify_plan_ended`. Migração mais recente: `20261018090000_assinaturas_regras.sql`.
 
 ## Como validar
 
@@ -65,7 +67,7 @@ Use o **modo de teste do Stripe** (cartão `4242 4242 4242 4242`, qualquer data 
 6. Cartão `4000 0000 0000 0341` (recusa na renovação) → aviso para atualizar o cartão.
 
 ### Testes automáticos
-`billing`, `subscriptionPlans`, `subscriptionSuccess`.
+`billing`, `subscriptionPlans` (inclui aviso de consultas canceladas e plano da empresa), `subscriptionSuccess`.
 
 ### Conferência no banco
 ```sql

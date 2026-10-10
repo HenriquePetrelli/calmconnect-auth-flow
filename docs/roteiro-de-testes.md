@@ -179,6 +179,11 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Paciente → Planos → Assinar (toque duplo rápido) ⇒ um checkout só; no Stripe, uma assinatura
 - [ ] Conta A com assinatura troca de e-mail → conta B se cadastra com o e-mail antigo ⇒ B fica sem plano (não herda o de A)
 - [ ] Psicólogo e admin → entrar ⇒ nenhum aviso de assinatura
+- [ ] Paciente Premium com consulta marcada → cancelar em até 7 dias ⇒ aviso de que a consulta também será cancelada; depois do cancelamento, o psicólogo recebe "Consulta cancelada"
+- [ ] Cartão 4000 0000 0000 0341 → renovação recusada ⇒ aviso "Pagamento não aprovado" no sino e por push, uma vez por dia
+- [ ] Plano termina (fim do período, arrependimento ou saída da empresa) ⇒ aviso "Seu plano terminou" com link para os planos
+- [ ] Paciente com Premium da empresa → tentar assinar Plus ou Premium pela API ⇒ "Seu plano já vem da empresa"; nenhum checkout
+- [ ] Conta A troca de e-mail → conta B se cadastra com o e-mail antigo → B abre o app ⇒ A continua com o plano e o cliente do Stripe dela; B ganha linha própria, sem plano
 
 ## 7. Repasses (ficha 09)
 

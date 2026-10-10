@@ -102,7 +102,20 @@ serve(async (req) => {
 
     // Só consulta: o app mostra, antes de confirmar, se haverá reembolso.
     if (body?.preview === true) {
+      // Consultas futuras que serão canceladas junto (só no cancelamento imediato).
+      let futureAppointments = 0;
+      if (mode === "immediate") {
+        const { count } = await supabaseClient
+          .from("appointments")
+          .select("id", { count: "exact", head: true })
+          .eq("patient_id", user.id)
+          .eq("appointment_type", "regular")
+          .in("status", ["pending", "scheduled", "confirmed", "reschedule_proposed"])
+          .gt("scheduled_at", new Date().toISOString());
+        futureAppointments = count ?? 0;
+      }
       return new Response(JSON.stringify({
+        future_appointments: futureAppointments,
         refund_eligible: withdrawal.eligible,
         refund_amount: withdrawal.amount,
         refund_deadline: withdrawal.deadline,
@@ -159,6 +172,19 @@ serve(async (req) => {
 
     logStep("Updated database with cancellation", { cancelledSubscriptions });
 
+    // Cancelou na hora (arrependimento com reembolso ou pagamento em atraso):
+    // consultas futuras pedidas com o plano são canceladas e o psicólogo é
+    // avisado (senão viravam consulta de graça, paga ao psicólogo no repasse).
+    // Se a pessoa ainda tem Premium pela empresa, nada muda.
+    let cancelledAppointments = 0;
+    if (mode === "immediate") {
+      const { data: count, error: apptError } = await supabaseClient.rpc("cancel_appointments_after_plan_loss", {
+        p_user_id: user.id,
+      });
+      if (apptError) logStep("Could not cancel future appointments", { message: apptError.message });
+      else cancelledAppointments = Number(count ?? 0);
+    }
+
     // Reembolso depois do cancelamento: se falhar, a cobrança já parou e o
     // suporte conclui a devolução pelo registro abaixo.
     let refundStatus: "none" | "refunded" | "failed" = "none";
@@ -211,6 +237,7 @@ serve(async (req) => {
       cancelled_subscriptions: cancelledSubscriptions,
       refund_status: refundStatus,
       refunded_amount: refundedAmount,
+      cancelled_appointments: cancelledAppointments,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

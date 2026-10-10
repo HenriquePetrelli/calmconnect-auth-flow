@@ -133,6 +133,26 @@ describe('planos e pagamento', () => {
     );
   });
 
+  it('cancelar dentro dos 7 dias avisa que a consulta agendada também é cancelada', async () => {
+    subscribedTo('Premium');
+    handlers['cancel-subscription'] = (body) =>
+      body?.preview
+        ? { data: { refund_eligible: true, refund_amount: 12000, mode: 'immediate', access_until: null, future_appointments: 1 }, error: null }
+        : { data: { success: true, mode: 'immediate', refund_status: 'refunded', cancelled_appointments: 1 }, error: null };
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar assinatura' }));
+    expect(await screen.findByTestId('cancel-appointments-warning')).toHaveTextContent('consulta agendada também será cancelada');
+  });
+
+  it('plano já coberto pela empresa não abre checkout', async () => {
+    handlers['create-checkout'] = () => ({ data: { error_code: 'covered_by_organization' }, error: null });
+    renderPage();
+    fireEvent.click(screen.getAllByRole('button', { name: 'Assinar Agora' })[0]);
+    await waitFor(() =>
+      expect(toastMock).toHaveBeenCalledWith(expect.objectContaining({ title: 'Seu plano já vem da empresa' })),
+    );
+  });
+
   it('cancelamento agendado pode ser desfeito', async () => {
     subscribedTo('Plus', { cancelAtPeriodEnd: true });
     handlers['manage-subscription'] = () => ({ data: { ok: true }, error: null });

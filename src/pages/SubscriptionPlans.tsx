@@ -61,7 +61,7 @@ const SubscriptionPlans = () => {
   const [changePreview, setChangePreview] = useState<ChangePreview | null>(null);
   // Prévia do cancelamento: no prazo de arrependimento (7 dias) acaba na hora
   // e devolve o valor; fora dele, o plano segue até o fim do período pago.
-  const [cancelPreview, setCancelPreview] = useState<{ mode: "immediate" | "period_end"; accessUntil: string | null } | null>(null);
+  const [cancelPreview, setCancelPreview] = useState<{ mode: "immediate" | "period_end"; accessUntil: string | null; futureAppointments: number } | null>(null);
   const [refundPreview, setRefundPreview] = useState<{ amount: number; deadline: string | null } | null>(null);
 
   useEffect(() => {
@@ -74,7 +74,13 @@ const SubscriptionPlans = () => {
       .then(({ data }) => {
         if (cancelled || !data) return;
         if (data.refund_eligible) setRefundPreview({ amount: data.refund_amount, deadline: data.refund_deadline });
-        if (data.mode) setCancelPreview({ mode: data.mode, accessUntil: data.access_until ?? null });
+        if (data.mode) {
+          setCancelPreview({
+            mode: data.mode,
+            accessUntil: data.access_until ?? null,
+            futureAppointments: Number(data.future_appointments ?? 0),
+          });
+        }
       })
       .catch(() => {});
     return () => {
@@ -112,6 +118,12 @@ const SubscriptionPlans = () => {
           description: "Erro ao criar sessão de pagamento",
           variant: "destructive",
         });
+        return;
+      }
+
+      if (data?.error_code === 'covered_by_organization') {
+        toast({ title: "Seu plano já vem da empresa", description: "Esse plano já está incluído no benefício da sua empresa. Não há o que pagar." });
+        await checkSubscription();
         return;
       }
 
@@ -529,6 +541,13 @@ const SubscriptionPlans = () => {
                   : "Seu plano continua até o fim do período já pago e não será renovado."}
             </DialogDescription>
           </DialogHeader>
+          {cancelPreview?.mode === "immediate" && cancelPreview.futureAppointments > 0 && (
+            <div role="alert" data-testid="cancel-appointments-warning" className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm">
+              {cancelPreview.futureAppointments === 1
+                ? "Sua consulta agendada também será cancelada, e o psicólogo será avisado."
+                : `Suas ${cancelPreview.futureAppointments} consultas agendadas também serão canceladas, e o psicólogo será avisado.`}
+            </div>
+          )}
           {refundPreview && (
             <div role="note" className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm">
               Você está no prazo de 7 dias da primeira assinatura (direito de arrependimento). Ao cancelar,

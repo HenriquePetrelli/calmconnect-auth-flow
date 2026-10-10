@@ -103,6 +103,41 @@ const syncCustomer = async (customerId: string, userIdHint?: string | null) => {
   log("Subscriber synced", { customerId, status: state.status, tier: state.tier, cancelAtPeriodEnd: state.cancelAtPeriodEnd });
 };
 
+/**
+ * Cobrança recusada: avisa no app e por push (antes só aparecia um aviso no
+ * Perfil, para quem abrisse o app). Um aviso por dia, mesmo com várias
+ * tentativas do Stripe.
+ */
+const notifyPaymentFailed = async (customerId: string) => {
+  const { data: row } = await supabase
+    .from("subscribers")
+    .select("user_id")
+    .eq("stripe_customer_id", customerId)
+    .not("user_id", "is", null)
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const userId = row?.user_id as string | undefined;
+  if (!userId) return;
+  const since = new Date(Date.now() - 20 * 60 * 60 * 1000).toISOString();
+  const { count } = await supabase
+    .from("notifications")
+    .select("id", { count: "exact", head: true })
+    .eq("patient_id", userId)
+    .eq("title", "Pagamento não aprovado")
+    .gte("created_at", since);
+  if ((count ?? 0) > 0) return;
+  const { error } = await supabase.from("notifications").insert({
+    patient_id: userId,
+    title: "Pagamento não aprovado",
+    message: "Não conseguimos cobrar a renovação do seu plano. Atualize o cartão para não perder o SOS e as consultas.",
+    status: "unread",
+    push: true,
+    link: "/profile",
+  });
+  if (error) log("Could not notify payment failure", { message: error.message });
+};
+
 Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
 
@@ -143,7 +178,10 @@ Deno.serve(async (req) => {
         const invoice = event.data.object as Stripe.Invoice;
         const customerId = customerIdOf(invoice.customer);
         if (customerId && invoice.subscription) await syncCustomer(customerId);
-        if (event.type === "invoice.payment_failed") log("Payment failed", { invoice: invoice.id, attempt: invoice.attempt_count });
+        if (event.type === "invoice.payment_failed" && customerId) {
+          log("Payment failed", { invoice: invoice.id, attempt: invoice.attempt_count });
+          await notifyPaymentFailed(customerId);
+        }
         break;
       }
       default:

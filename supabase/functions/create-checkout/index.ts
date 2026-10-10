@@ -44,6 +44,15 @@ serve(async (req) => {
       : null;
     if (!plan) throw new Error("Plano inválido");
 
+    // O plano da empresa já cobre este plano (ou um maior): não há o que pagar.
+    const { data: orgRows } = await supabaseClient.rpc("organization_entitlement", { p_user_id: user.id });
+    const orgTier = ((orgRows ?? [])[0] as { tier?: string } | undefined)?.tier ?? null;
+    const rank = (tier: string | null) => (tier === "Premium" ? 2 : tier === "Plus" ? 1 : 0);
+    if (orgTier && rank(orgTier) >= rank(plan)) {
+      logStep("Plan already covered by organization", { orgTier, plan });
+      return json({ error_code: "covered_by_organization" });
+    }
+
     const stripe = newStripe();
     let customerId = await findCustomerId(stripe, supabaseClient, user);
 
