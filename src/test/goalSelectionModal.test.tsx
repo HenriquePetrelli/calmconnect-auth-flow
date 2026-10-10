@@ -39,8 +39,8 @@ beforeEach(() => {
   currentGoals = [];
 });
 
-describe('GoalSelectionModal — sincroniza patient_weekly_goals ao salvar', () => {
-  it('cria uma linha de progresso pra cada meta nova selecionada', async () => {
+describe('GoalSelectionModal — escolha das metas pelo servidor', () => {
+  it('manda a escolha numa chamada só (o servidor cria as metas da semana)', async () => {
     const onGoalsAdded = vi.fn();
     render(<GoalSelectionModal open onOpenChange={() => {}} onGoalsAdded={onGoalsAdded} />);
 
@@ -51,30 +51,23 @@ describe('GoalSelectionModal — sincroniza patient_weekly_goals ao salvar', () 
     fireEvent.click(screen.getByRole('button', { name: /^salvar/i }));
 
     await waitFor(() => expect(updateSelectedGoalsMock).toHaveBeenCalledWith(['goal-breathing', 'goal-mood']));
-    await waitFor(() => {
-      expect(createGoalMock).toHaveBeenCalledWith('goal-breathing', 5, '2026-09-06', '2026-09-12');
-      expect(createGoalMock).toHaveBeenCalledWith('goal-mood', 7, '2026-09-06', '2026-09-12');
-    });
-    expect(deleteGoalMock).not.toHaveBeenCalled();
+    expect(updateSelectedGoalsMock).toHaveBeenCalledTimes(1);
+    expect(createGoalMock).not.toHaveBeenCalled();
     await waitFor(() => expect(onGoalsAdded).toHaveBeenCalled());
   });
 
-  it('não recria uma linha de progresso pra meta que já está sendo rastreada essa semana', async () => {
+  it('já vem com as metas escolhidas marcadas', async () => {
     currentSelectedGoals = ['goal-breathing'];
     currentGoals = [{ id: 'pwg-1', goal_id: 'goal-breathing' }];
 
     render(<GoalSelectionModal open onOpenChange={() => {}} onGoalsAdded={() => {}} />);
     await waitFor(() => expect(screen.getByText('Respiração Guiada')).toBeTruthy());
 
-    // Mantém a seleção como está e apenas confirma.
     fireEvent.click(screen.getByRole('button', { name: /^salvar/i }));
-
     await waitFor(() => expect(updateSelectedGoalsMock).toHaveBeenCalledWith(['goal-breathing']));
-    expect(createGoalMock).not.toHaveBeenCalled();
-    expect(deleteGoalMock).not.toHaveBeenCalled();
   });
 
-  it('remove a linha de progresso de uma meta desmarcada', async () => {
+  it('desmarcar tira a meta da escolha (o servidor para de acompanhar nesta semana)', async () => {
     currentSelectedGoals = ['goal-breathing', 'goal-mood'];
     currentGoals = [
       { id: 'pwg-1', goal_id: 'goal-breathing' },
@@ -84,12 +77,10 @@ describe('GoalSelectionModal — sincroniza patient_weekly_goals ao salvar', () 
     render(<GoalSelectionModal open onOpenChange={() => {}} onGoalsAdded={() => {}} />);
     await waitFor(() => expect(screen.getByText('Humor Diário')).toBeTruthy());
 
-    // Desmarca "Humor Diário", mantendo só "Respiração Guiada".
     fireEvent.click(screen.getByText('Humor Diário'));
     fireEvent.click(screen.getByRole('button', { name: /^salvar/i }));
 
     await waitFor(() => expect(updateSelectedGoalsMock).toHaveBeenCalledWith(['goal-breathing']));
-    await waitFor(() => expect(deleteGoalMock).toHaveBeenCalledWith('pwg-2'));
-    expect(createGoalMock).not.toHaveBeenCalled();
+    expect(deleteGoalMock).not.toHaveBeenCalled();
   });
 });

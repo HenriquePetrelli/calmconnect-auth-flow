@@ -40,6 +40,9 @@ describe('desafios de 7 dias', () => {
     expect(stepDoneToday(1, new Date(2026, 9, 7, 9).toISOString(), now)).toBe(true);
     expect(stepDoneToday(1, new Date(2026, 9, 6, 9).toISOString(), now)).toBe(false);
     expect(stepDoneToday(0, new Date(2026, 9, 7, 9).toISOString(), now)).toBe(false);
+    // Dia gravado pelo servidor no último passo vale mais que a hora da alteração.
+    expect(stepDoneToday(1, new Date(2026, 9, 6, 9).toISOString(), now, '2026-10-07')).toBe(true);
+    expect(stepDoneToday(1, new Date(2026, 9, 7, 9).toISOString(), now, '2026-10-06')).toBe(false);
     expect(daysLeftInWeek(new Date(2026, 9, 4))).toBe(7); // domingo
     expect(daysLeftInWeek(now)).toBe(4);
     expect(isChallenge({ type: 'challenge', category: 'x' })).toBe(true);

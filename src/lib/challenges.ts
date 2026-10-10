@@ -84,9 +84,22 @@ export const currentStep = (category: string, progress: number): { index: number
   return { index: progress, step: steps[progress] };
 };
 
-/** Já fez o passo hoje? (um passo por dia) */
-export const stepDoneToday = (progress: number, updatedAt: string, now: Date = new Date()) =>
-  progress > 0 && new Date(updatedAt).toDateString() === now.toDateString();
+const localDay = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+/**
+ * Já fez o passo hoje? (um passo por dia). Usa o dia gravado pelo servidor no
+ * último passo (`last_progress_date`); metas antigas, sem ele, pela hora da
+ * última alteração.
+ */
+export const stepDoneToday = (
+  progress: number,
+  updatedAt: string,
+  now: Date = new Date(),
+  lastProgressDate?: string | null,
+) =>
+  progress > 0 &&
+  (lastProgressDate ? lastProgressDate === localDay(now) : new Date(updatedAt).toDateString() === now.toDateString());
 
 /** Dias que faltam na semana (domingo a sábado), contando hoje. */
 export const daysLeftInWeek = (now: Date = new Date()) => 7 - now.getDay();

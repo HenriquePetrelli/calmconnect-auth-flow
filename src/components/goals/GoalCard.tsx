@@ -48,7 +48,7 @@ const ChallengeBody = ({ goal, onStepDone }: GoalCardProps) => {
   const category = goal.weekly_goals.category;
   const steps = CHALLENGES[category] ?? [];
   const current = currentStep(category, goal.progress);
-  const doneToday = stepDoneToday(goal.progress, goal.updated_at);
+  const doneToday = stepDoneToday(goal.progress, goal.updated_at, new Date(), goal.last_progress_date);
 
   return (
     <CardContent className="space-y-4">

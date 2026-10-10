@@ -286,6 +286,48 @@ const DEFAULT_RPC_HANDLERS: Record<string, RpcHandler> = {
   },
 };
 
+const fakeLocalDay = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+/** Mesma regra de record_goal_progress (um passo por dia em "todo dia"/desafio). */
+DEFAULT_RPC_HANDLERS.record_goal_progress = (db, params) => {
+  const day = params.p_local_date as string;
+  const updated = db
+    .rows('patient_weekly_goals')
+    .filter((g) => g.user_id === db.currentUserId || !db.currentUserId)
+    .filter((g) => g.weekly_goals?.category === params.p_category && !g.completed)
+    .filter((g) => {
+      if (!['daily', 'challenge'].includes(g.weekly_goals?.type)) return true;
+      const last = g.last_progress_date ?? (g.progress > 0 && g.updated_at ? fakeLocalDay(new Date(g.updated_at)) : null);
+      return last !== day;
+    });
+  for (const g of updated) {
+    g.progress = Math.min(g.progress + 1, g.target);
+    g.completed = g.progress >= g.target;
+    g.last_progress_date = day;
+  }
+  return { data: updated.map((g) => ({ goal_id: g.goal_id, title: g.weekly_goals?.title, completed_now: g.completed })), error: null };
+};
+
+/** Mesma regra de log_mood (troca o valor do dia, não soma outro). */
+DEFAULT_RPC_HANDLERS.log_mood = (db, params) => {
+  const uid = db.currentUserId ?? 'patient-1';
+  const day = params.p_local_date as string;
+  const logs = db.rows('patient_mood_logs');
+  const existing = logs.find((l) => l.patient_id === uid && l.logged_date === day);
+  const previous = existing?.mood_value ?? null;
+  if (existing) existing.mood_value = params.p_value;
+  else logs.push({ id: `log-${Math.random()}`, patient_id: uid, mood_value: params.p_value, logged_date: day });
+  const patient = db.rows('patients').find((p) => p.user_id === uid);
+  if (patient) {
+    patient.daily_mood_count = (patient.daily_mood_count ?? 0) + (previous == null ? 1 : 0);
+    patient.daily_mood_sum = (patient.daily_mood_sum ?? 0) + params.p_value - (previous ?? 0);
+    patient.last_mood_date = day;
+    patient.last_mood_value = params.p_value;
+  }
+  return { data: { first_today: previous == null, logged_date: day }, error: null };
+};
+
 export class FakeDB {
   tables: Record<string, Row[]> = {};
   currentUserId: string | null = null;

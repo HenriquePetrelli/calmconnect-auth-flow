@@ -13,7 +13,10 @@ import { useMoodLog } from '@/hooks/useMoodLog';
 import { getCurrentWeekRange } from '@/hooks/useWeeklyGoals';
 
 const PATIENT = mockUser.id;
-const today = () => new Date().toISOString().split('T')[0];
+const today = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
 
 beforeEach(() => {
   fakeDb.tables = {};
@@ -100,7 +103,7 @@ describe('useMoodLog', () => {
       created_at: new Date().toISOString(),
       // fakeSupabase não simula o embedding do PostgREST — semeia o objeto
       // já aninhado do jeito que `select('*, weekly_goals(*)')' devolveria.
-      weekly_goals: { id: 'goal-mood', category: 'mood', title: 'Humor Diário', target: 7 },
+      weekly_goals: { id: 'goal-mood', category: 'mood', title: 'Humor Diário', target: 7, type: 'daily' },
     });
 
     const { result } = renderHook(() => useMoodLog());
@@ -122,5 +125,12 @@ describe('useMoodLog', () => {
 
     const activities = fakeDb.rows('patient_statistics');
     expect(activities).toHaveLength(1);
+
+    // Mudar o humor no mesmo dia não conta de novo na meta nem no histórico.
+    await act(async () => {
+      await result.current.logMood(3);
+    });
+    expect(fakeDb.rows('patient_weekly_goals').find((g) => g.id === 'pwg-mood')?.progress).toBe(1);
+    expect(fakeDb.rows('patient_statistics')[0].recent_activities).toHaveLength(1);
   });
 });

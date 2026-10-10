@@ -213,7 +213,12 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 
 - [ ] Paciente → Home → registrar humor ⇒ aparece em Progresso
 - [ ] Abrir o app dois dias seguidos ⇒ sequência = 2
-- [ ] Progresso → Metas → "Respiração 3x" → fazer respiração ⇒ barra sobe 1
+- [ ] Progresso → Metas → "Respiração 5x" → fazer respiração ⇒ barra sobe 1
+- [ ] Humor diário → registrar duas vezes no mesmo dia ⇒ a meta sobe 1 só; a média conta o último valor
+- [ ] Às 22h → Meu progresso ⇒ as metas da semana continuam aparecendo
+- [ ] Domingo → escolher um desafio → fazer o passo → abrir na segunda ⇒ o passo continua feito
+- [ ] Semana nova (domingo) ⇒ as metas escolhidas voltam zeradas, sem escolher de novo
+- [ ] Escolher metas tocando duas vezes em Salvar ⇒ cada meta aparece uma vez só
 - [ ] Primeira respiração concluída ⇒ conquista "Primeiro Passo" com aviso
 - [ ] Progresso → Histórico completo ⇒ respiração, humor e hábitos do dia
 - [ ] Progresso → Metas da semana → escolher um desafio de 7 dias → "Fiz o passo de hoje" ⇒ avança 1 passo

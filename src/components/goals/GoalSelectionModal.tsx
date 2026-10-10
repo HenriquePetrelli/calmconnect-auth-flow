@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { motion } from 'framer-motion';
-import { useWeeklyGoals, WeeklyGoalTemplate, getCurrentWeekRange } from '@/hooks/useWeeklyGoals';
+import { useWeeklyGoals, WeeklyGoalTemplate } from '@/hooks/useWeeklyGoals';
 import { Flag, Loader2 } from 'lucide-react';
 import { daysLeftInWeek, isChallenge } from '@/lib/challenges';
 
@@ -22,7 +22,7 @@ export const GoalSelectionModal = ({
   const [tempSelectedGoals, setTempSelectedGoals] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [goalOptions, setGoalOptions] = useState<WeeklyGoalTemplate[]>([]);
-  const { selectedGoals, goals, fetchDefaultGoals, updateSelectedGoals, createGoal, deleteGoal } = useWeeklyGoals();
+  const { selectedGoals, fetchDefaultGoals, updateSelectedGoals } = useWeeklyGoals();
 
   useEffect(() => {
     if (open) {
@@ -50,27 +50,10 @@ export const GoalSelectionModal = ({
 
     setLoading(true);
     try {
+      // O servidor grava a escolha, cria as metas da semana que faltam e para
+      // de acompanhar as desmarcadas, numa operação só (antes eram várias
+      // chamadas do app, e um toque duplo criava metas em dobro).
       await updateSelectedGoals(tempSelectedGoals);
-
-      // `updateSelectedGoals` só grava a lista de IDs escolhidos — sem isto,
-      // nenhuma linha de progresso (patient_weekly_goals) chega a existir e
-      // a meta nunca sai de 0%. Cria as que faltam pra semana atual e para
-      // de rastrear as que foram desmarcadas.
-      const { weekStart, weekEnd } = getCurrentWeekRange();
-      const trackedGoalIds = new Set(goals.map((g) => g.goal_id));
-
-      await Promise.all([
-        ...tempSelectedGoals
-          .filter((goalId) => !trackedGoalIds.has(goalId))
-          .map((goalId) => {
-            const template = goalOptions.find((t) => t.id === goalId);
-            if (!template) return Promise.resolve();
-            return createGoal(goalId, template.target, weekStart, weekEnd);
-          }),
-        ...goals
-          .filter((g) => !tempSelectedGoals.includes(g.goal_id))
-          .map((g) => deleteGoal(g.id)),
-      ]);
 
       onGoalsAdded();
       onOpenChange(false);

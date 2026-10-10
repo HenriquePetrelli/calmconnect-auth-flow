@@ -86,9 +86,9 @@ const WeeklyGoalsSection = () => {
                     goal={goal}
                     onStepDone={(g) => {
                       // Um passo por dia: o card só mostra o botão se o de hoje não foi feito.
-                      if (stepDoneToday(g.progress, g.updated_at)) return;
+                      if (stepDoneToday(g.progress, g.updated_at, new Date(), g.last_progress_date)) return;
                       const step = currentStep(g.weekly_goals.category, g.progress);
-                      void updateGoalProgress(g.id, 1);
+                      void updateGoalProgress(g.id);
                       // Entra no histórico: "Desafio de 7 dias: Uma hora sem tela".
                       if (step) void addActivity(`Desafio de 7 dias: ${step.step.title}`);
                     }}

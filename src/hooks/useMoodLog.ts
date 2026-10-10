@@ -8,11 +8,9 @@ const toISODate = (date: Date): string =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 
 /**
- * Registra o check-in de humor do dia: atualiza o agregado histórico em
- * `patients` (usado pela tela inicial para saber se já respondeu hoje) e
- * grava/atualiza a entrada de `patient_mood_logs` do dia (histórico real,
- * usado para o gráfico de evolução do humor). Também conta como atividade
- * para as metas da semana da categoria "mood".
+ * Registra o check-in de humor do dia (`log_mood`): a entrada do dia em
+ * `patient_mood_logs` (gráfico) e o agregado em `patients` (tela inicial),
+ * juntos no servidor. Também conta para as metas da semana "humor".
  */
 export const useMoodLog = () => {
   const { user } = useAuth();
@@ -24,49 +22,18 @@ export const useMoodLog = () => {
     if (!user) return false;
     setSaving(true);
     try {
-      const today = toISODate(new Date());
-      const { data: patientData, error: fetchError } = await supabase
-        .from('patients')
-        .select('daily_mood_count, daily_mood_sum, last_mood_date, last_mood_value')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      // Numa operação só no servidor: grava o dia do gráfico e a média. Mudar
+      // o humor no mesmo dia troca o valor (não conta outro dia).
+      const { data, error } = await supabase.rpc('log_mood' as never, {
+        p_value: value,
+        p_local_date: toISODate(new Date()),
+      } as never);
+      if (error) throw error;
 
-      if (fetchError) throw fetchError;
-
-      const isNewDay = !patientData?.last_mood_date || patientData.last_mood_date !== today;
-      let newCount: number;
-      let newSum: number;
-      if (isNewDay) {
-        newCount = (patientData?.daily_mood_count || 0) + 1;
-        newSum = (patientData?.daily_mood_sum || 0) + value;
-      } else {
-        const previousValue = patientData?.last_mood_value || 0;
-        newCount = patientData?.daily_mood_count || 1;
-        newSum = (patientData?.daily_mood_sum || 0) - previousValue + value;
+      // Conta para a meta "humor" e entra no histórico só no primeiro do dia.
+      if ((data as { first_today?: boolean } | null)?.first_today !== false) {
+        await addActivity('Registro de Humor');
       }
-
-      const { error: updateError } = await supabase
-        .from('patients')
-        .update({
-          daily_mood_count: newCount,
-          daily_mood_sum: newSum,
-          last_mood_date: today,
-          last_mood_value: value,
-        })
-        .eq('user_id', user.id);
-
-      if (updateError) throw updateError;
-
-      const { error: logError } = await supabase
-        .from('patient_mood_logs')
-        .upsert(
-          { patient_id: user.id, mood_value: value, logged_date: today },
-          { onConflict: 'patient_id,logged_date' }
-        );
-
-      if (logError) throw logError;
-
-      await addActivity('Registro de Humor');
       return true;
     } catch (error: any) {
       console.error('Erro ao registrar humor:', error);

@@ -25,20 +25,45 @@ export interface PatientWeeklyGoal {
   week_end_date: string;
   created_at: string;
   updated_at: string;
+  /** Dia (do aparelho) do último passo contado: metas "todo dia" e desafios. */
+  last_progress_date?: string | null;
   weekly_goals: WeeklyGoalTemplate;
 }
 
-/** Domingo (início) e sábado (fim) da semana atual, como "YYYY-MM-DD". */
-export const getCurrentWeekRange = (): { weekStart: string; weekEnd: string } => {
-  const today = new Date();
-  const startOfWeek = new Date(today);
-  startOfWeek.setDate(today.getDate() - today.getDay());
-  const endOfWeek = new Date(startOfWeek);
-  endOfWeek.setDate(startOfWeek.getDate() + 6);
-  return {
-    weekStart: startOfWeek.toISOString().split('T')[0],
-    weekEnd: endOfWeek.toISOString().split('T')[0],
-  };
+const localDay = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+/** Hoje no aparelho, "YYYY-MM-DD". */
+export const todayLocal = (now: Date = new Date()) => localDay(now);
+
+/**
+ * Domingo (início) e sábado (fim) da semana atual, como "YYYY-MM-DD", no dia
+ * do aparelho. Antes a conta passava por UTC: no Brasil, depois das 21h a
+ * semana "pulava" um dia e as metas sumiam da tela até a meia-noite.
+ */
+export const getCurrentWeekRange = (now: Date = new Date()): { weekStart: string; weekEnd: string } => {
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
+  const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6);
+  return { weekStart: localDay(start), weekEnd: localDay(end) };
+};
+
+/**
+ * Conta a atividade nas metas da semana da categoria (respiração, sons,
+ * humor...). O servidor soma numa operação só, um passo por dia nas metas
+ * "todo dia" e nos desafios, e devolve as que acabaram de ser concluídas.
+ */
+export const recordGoalActivity = async (category: string): Promise<string[]> => {
+  const { data, error } = await supabase.rpc('record_goal_progress' as never, {
+    p_category: category,
+    p_local_date: todayLocal(),
+  } as never);
+  if (error) {
+    console.error('Error recording goal progress:', error);
+    return [];
+  }
+  const done = ((data ?? []) as { title: string; completed_now: boolean }[]).filter((r) => r.completed_now).map((r) => r.title);
+  done.forEach((title) => toast.success(`Meta da semana concluída: ${title}`));
+  return done;
 };
 
 export const useWeeklyGoals = () => {
@@ -66,19 +91,19 @@ export const useWeeklyGoals = () => {
     }
   }, [user]);
 
+  /** Escolhe as metas: o servidor grava a escolha e cria/tira as da semana. */
   const updateSelectedGoals = useCallback(async (goalIds: string[]) => {
     if (!user?.id) return;
 
     try {
-      const { error } = await supabase
-        .from('patients')
-        .update({ weekly_goals: goalIds })
-        .eq('user_id', user.id);
+      const { error } = await supabase.rpc('set_week_goals' as never, {
+        p_goal_ids: goalIds,
+        p_local_date: todayLocal(),
+      } as never);
 
       if (error) throw error;
 
       setSelectedGoals(goalIds);
-      await setShowWeeklyGoalModal(false);
       toast.success('Metas da semana atualizadas');
     } catch (error) {
       console.error('Error updating selected goals:', error);
@@ -94,14 +119,15 @@ export const useWeeklyGoals = () => {
     }
 
     try {
-      const { weekStart, weekEnd } = getCurrentWeekRange();
+      const { weekStart } = getCurrentWeekRange();
+      // As metas escolhidas continuam na semana nova sozinhas.
+      await supabase.rpc('ensure_week_goals' as never, { p_local_date: todayLocal() } as never);
 
       const { data, error } = await supabase
         .from('patient_weekly_goals')
         .select('*, weekly_goals(*)')
         .eq('user_id', user.id)
-        .gte('week_start_date', weekStart)
-        .lte('week_end_date', weekEnd)
+        .eq('week_start_date', weekStart)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -115,91 +141,18 @@ export const useWeeklyGoals = () => {
     }
   }, [user]);
 
-  const updateGoalProgress = useCallback(async (goalId: string, increment: number = 1) => {
-    try {
-      const goal = goals.find(g => g.id === goalId);
-      if (!goal) return;
-
-      const newProgress = Math.min(goal.progress + increment, goal.target);
-      const isCompleted = newProgress >= goal.target;
-
-      const { error } = await supabase
-        .from('patient_weekly_goals')
-        .update({ 
-          progress: newProgress,
-          completed: isCompleted 
-        })
-        .eq('id', goalId);
-
-      if (error) throw error;
-
-      if (isCompleted && !goal.completed) {
-        setNewlyCompleted({ ...goal, progress: newProgress, completed: true });
-        toast.success(`Meta da semana concluída: ${goal.weekly_goals.title}`);
-      }
-
-      await fetchGoals();
-    } catch (error) {
-      console.error('Error updating goal progress:', error);
-    }
+  /** Um passo numa meta (ex.: "Fiz o passo de hoje" do desafio). */
+  const updateGoalProgress = useCallback(async (goalId: string) => {
+    const goal = goals.find((g) => g.id === goalId);
+    if (!goal) return;
+    const done = await recordGoalActivity(goal.weekly_goals.category);
+    if (done.length > 0) setNewlyCompleted({ ...goal, progress: goal.target, completed: true });
+    await fetchGoals();
   }, [goals, fetchGoals]);
 
   const checkAndUpdateGoals = useCallback(async (category: string) => {
-    const today = new Date().toDateString();
-    const categoryGoals = goals.filter(
-      (g) =>
-        g.weekly_goals.category === category &&
-        !g.completed &&
-        // Metas "todos os dias" (humor, sons) contam uma vez por dia, mesmo
-        // que a atividade se repita no mesmo dia.
-        !(g.weekly_goals.type === 'daily' && g.progress > 0 && new Date(g.updated_at).toDateString() === today),
-    );
-    
-    for (const goal of categoryGoals) {
-      await updateGoalProgress(goal.id, 1);
-    }
-  }, [goals, updateGoalProgress]);
-
-  const createGoal = useCallback(async (goalId: string, target: number, weekStart: string, weekEnd: string) => {
-    if (!user?.id) return;
-
-    try {
-      const { error } = await supabase
-        .from('patient_weekly_goals')
-        .insert({
-          user_id: user.id,
-          goal_id: goalId,
-          target,
-          progress: 0,
-          completed: false,
-          week_start_date: weekStart,
-          week_end_date: weekEnd
-        });
-
-      if (error) throw error;
-
-      await fetchGoals();
-    } catch (error) {
-      console.error('Error creating goal:', error);
-      toast.error('Erro ao adicionar a meta');
-    }
-  }, [user, fetchGoals]);
-
-  /** Remove uma meta da semana que o paciente deixou de selecionar, parando de rastreá-la nesta semana. */
-  const deleteGoal = useCallback(async (patientWeeklyGoalId: string) => {
-    try {
-      const { error } = await supabase
-        .from('patient_weekly_goals')
-        .delete()
-        .eq('id', patientWeeklyGoalId);
-
-      if (error) throw error;
-
-      await fetchGoals();
-    } catch (error) {
-      console.error('Error deleting goal:', error);
-      toast.error('Erro ao remover a meta');
-    }
+    await recordGoalActivity(category);
+    await fetchGoals();
   }, [fetchGoals]);
 
   const fetchDefaultGoals = useCallback(async () => {
@@ -288,8 +241,6 @@ export const useWeeklyGoals = () => {
     fetchGoals,
     updateGoalProgress,
     checkAndUpdateGoals,
-    createGoal,
-    deleteGoal,
     fetchDefaultGoals,
     setShowWeeklyGoalModal,
     setShowGoalModal,

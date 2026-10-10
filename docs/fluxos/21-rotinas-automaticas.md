@@ -23,7 +23,7 @@
 | `purge-expired-care-records` | Todo dia, 3h30 | Apaga do arquivo legal o que passou de 5 anos | 18 |
 | `purge-old-notifications` | Todo dia, 4h50 | Apaga avisos lidos com mais de 90 dias, qualquer aviso com mais de 180 dias e registros de envio com mais de 30 dias | 07 |
 | `chat-photos-cleanup` | Todo dia, 4h40 | Chat: apaga do storage as fotos de conversas que já foram apagadas (função `chat-cleanup`) | 06 |
-| `reset-weekly-goals-monday` | Segunda, 4h | Reinicia as metas da semana | 12 |
+| `reset-weekly-goals-sunday` | Domingo, 3h05 (0h05 em Brasília) | Convida a revisar as metas da semana; não apaga nada (as escolhidas continuam). Semanas com mais de 6 meses saem do banco | 12 |
 | `weekly-payment-sync` | Segunda, 9h | Atualiza os valores de repasse | 09 |
 | `cleanup-quarterly-activities-weekly` | Domingo, 3h15 | Apaga atividades com mais de 3 meses do histórico | 12 |
 

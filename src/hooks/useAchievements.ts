@@ -65,13 +65,17 @@ export const useAchievements = () => {
       const achievement = achievements.find(a => a.title === title && !a.achieved);
       if (!achievement) return;
 
-      const { error } = await supabase
+      // Só a primeira vez vale: com o app aberto em dois lugares, a outra
+      // aba não comemora de novo (nem gera outro aviso).
+      const { data: changed, error } = await supabase
         .from('patient_achievements')
         .update({
           achieved: true,
           achieved_at: new Date().toISOString(),
         })
-        .eq('id', achievement.id);
+        .eq('id', achievement.id)
+        .eq('achieved', false)
+        .select('id');
 
       if (error) throw error;
 
@@ -85,7 +89,7 @@ export const useAchievements = () => {
       );
 
       // Comemora em qualquer tela
-      celebrateAchievement(achievement);
+      if (changed && changed.length > 0) celebrateAchievement(achievement);
     } catch (error) {
       console.error('Error unlocking achievement:', error);
     }
