@@ -277,6 +277,11 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Admin → Grupos de apoio → editar / excluir ⇒ todos veem a mudança
 - [ ] Paciente A → 6 depoimentos seguidos ⇒ o 6º é recusado
 - [ ] Paciente → Grupos → favoritar ⇒ grupo vai para o topo
+- [ ] Paciente B → tocar "Me ajudou" várias vezes bem rápido ⇒ sem erro e sem aviso a cada toque; ao recarregar, contador bate com o botão
+- [ ] Paciente sem Plus/Premium → escrever ou reagir ⇒ bloqueado (também no servidor)
+- [ ] Paciente A → escrever "penso em me matar" ⇒ quadro com "Ligar 188" e "Abrir o SOS"; publicar continua possível
+- [ ] Paciente A → salvar depoimento com a internet caindo e tentar de novo ⇒ aparece uma vez só
+- [ ] 3 pacientes → denunciar o mesmo depoimento ⇒ some para os outros; autor vê "Em análise"; admin descarta ⇒ volta
 
 ## 15. Suporte (ficha 17)
 

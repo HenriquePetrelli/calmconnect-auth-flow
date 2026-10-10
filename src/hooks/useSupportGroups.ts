@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { getSessionUser } from '@/lib/currentUser';
 import { useToast } from '@/hooks/use-toast';
@@ -29,6 +29,8 @@ export interface GroupTestimonial {
   autor_nome: string | null;
   is_mine: boolean;
   reported_by_me: boolean;
+  /** 3+ denúncias pendentes: só o autor vê, até a moderação revisar. */
+  under_review?: boolean;
   user_like?: {
     tipo: 'positivo' | 'negativo';
   } | null;
@@ -167,6 +169,7 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { subscribed, subscriptionTier } = useSubscription();
+  const reactionQueueRef = useRef(new Map<string, Promise<unknown>>());
 
   const fetchTestimonials = async (userFilter: boolean = filterByUser) => {
     if (!groupId) return;
@@ -208,7 +211,7 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
     sintoma_texto: string | null;
     humor: number;
     texto: string;
-  }) => {
+  }, id?: string) => {
     try {
       // Check subscription for premium features
       if (!subscribed || (subscriptionTier !== 'Plus' && subscriptionTier !== 'Premium')) {
@@ -223,15 +226,18 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
       const user = (await getSessionUser()).data.user;
       if (!user) throw new Error('Usuário não autenticado');
 
+      // id do aparelho: salvar de novo depois de uma resposta perdida não
+      // publica o mesmo depoimento duas vezes.
       const { error } = await supabase
         .from('group_testimonials')
         .insert({
+          ...(id ? { id } : {}),
           group_id: groupId,
           user_id: user.id,
           ...testimonial
         });
 
-      if (error) throw error;
+      if (error && error.code !== '23505') throw error;
 
       toast({ title: "Depoimento adicionado" });
 
@@ -365,15 +371,14 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
             }
 
             // Otherwise user is setting a reaction
-            let newLike: { tipo: 'positivo' | 'negativo' } | null = { tipo } as { tipo: 'positivo' | 'negativo' };
+            const newLike: { tipo: 'positivo' | 'negativo' } | null = { tipo } as { tipo: 'positivo' | 'negativo' };
             let newPositives = testimonial.likes_positivos;
             let newNegatives = testimonial.likes_negativos;
 
             if (currentLike === tipo) {
-              // Same type clicked -> toggle off
-              newLike = null;
-              if (tipo === 'positivo') newPositives = Math.max(0, newPositives - 1);
-              else newNegatives = Math.max(0, newNegatives - 1);
+              // Mesma reação de novo: nada muda (para tirar, a tela manda 'none',
+              // igual ao que o servidor faz).
+              return testimonial;
             } else if (currentLike) {
               // Switch reaction
               if (currentLike === 'positivo') {
@@ -399,53 +404,32 @@ export const useGroupTestimonials = (groupId: string, filterByUser: boolean = fa
         });
       });
 
-      // Check if user already liked this testimonial
-      const { data: existingLike } = await supabase
-        .from('group_testimonial_likes')
-        .select('*')
-        .eq('testimonial_id', testimonialId)
-        .eq('user_id', user.user.id)
-        .maybeSingle();
-
-      // If user is clearing reaction
-      if (tipo === 'none') {
-        if (existingLike) {
-          const { error } = await supabase
-            .from('group_testimonial_likes')
-            .delete()
-            .eq('id', existingLike.id);
-          if (error) throw error;
-          toast({ title: 'Reação removida', description: 'Sua avaliação foi removida' });
-        }
-        return true;
-      }
-
-      // From here on, tipo is 'positivo' | 'negativo'
-      const targetTipo: 'positivo' | 'negativo' = tipo === 'positivo' ? 'positivo' : 'negativo';
-
-      if (existingLike) {
-        if (existingLike.tipo === targetTipo) {
-          // No change needed
-          return true;
-        }
-        // Switch reaction
-        const { error } = await supabase
-          .from('group_testimonial_likes')
-          .update({ tipo: targetTipo })
-          .eq('id', existingLike.id);
+      // Uma operação só no servidor (pôr, trocar ou tirar), na ordem dos
+      // toques: dois toques rápidos não se atropelam mais.
+      const previous = reactionQueueRef.current.get(testimonialId) ?? Promise.resolve();
+      const run = previous.catch(() => undefined).then(async () => {
+        const { data, error } = await supabase.rpc('react_to_testimonial' as never, {
+          p_testimonial_id: testimonialId,
+          p_tipo: tipo,
+        } as never);
         if (error) throw error;
-        toast({ title: 'Reação alterada', description: `Sua avaliação foi alterada para ${targetTipo === 'positivo' ? 'curtir' : 'não curtir'}` });
-      } else {
-        // Create new like
-        const { error } = await supabase
-          .from('group_testimonial_likes')
-          .insert({
-            testimonial_id: testimonialId,
-            user_id: user.user.id,
-            tipo: targetTipo,
-          });
-        if (error) throw error;
-        toast({ title: 'Reação adicionada', description: `Você ${targetTipo === 'positivo' ? 'curtiu' : 'não curtiu'} este depoimento` });
+        return data as unknown as { likes_positivos: number; likes_negativos: number } | null;
+      });
+      reactionQueueRef.current.set(testimonialId, run);
+      const totals = await run;
+      if (reactionQueueRef.current.get(testimonialId) === run) {
+        reactionQueueRef.current.delete(testimonialId);
+        // Último toque da fila: os totais do servidor valem (outras pessoas
+        // podem ter reagido ao mesmo tempo).
+        if (totals) {
+          setTestimonials((prev) =>
+            prev.map((t) =>
+              t.id === testimonialId
+                ? { ...t, likes_positivos: totals.likes_positivos, likes_negativos: totals.likes_negativos }
+                : t,
+            ),
+          );
+        }
       }
 
       return true;

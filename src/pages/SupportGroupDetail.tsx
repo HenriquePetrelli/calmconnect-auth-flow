@@ -155,6 +155,12 @@ const TestimonialCard = ({ testimonial, symptomName, onLike, onEdit, onDelete, o
             </Badge>
           </div>
         )}
+
+        {isOwnTestimonial && testimonial.under_review && (
+          <p className="pt-2 text-xs text-muted-foreground" data-testid="under-review">
+            Em análise: recebeu denúncias e só você vê este depoimento até a moderação revisar.
+          </p>
+        )}
       </CardHeader>
       
       <CardContent className="pt-0 space-y-4">

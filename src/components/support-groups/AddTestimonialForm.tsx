@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
+import { mentionsCrisis } from '@/lib/crisisLanguage';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -25,6 +27,12 @@ const AddTestimonialForm = ({ groupId, groupName, onSuccess, onCancel }: AddTest
   const [mood, setMood] = useState<number>(DEFAULT_JOURNAL_MOOD);
   const [text, setText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
+  // O mesmo id em todas as tentativas deste depoimento (sem publicar em dobro).
+  const [submissionId] = useState(() =>
+    typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : undefined,
+  );
+  const showCrisisSupport = mentionsCrisis(text);
 
   const { addTestimonial } = useGroupTestimonials(groupId);
   const { symptoms, symptomId } = useGroupSymptoms(groupName);
@@ -60,7 +68,7 @@ const AddTestimonialForm = ({ groupId, groupName, onSuccess, onCancel }: AddTest
       sintoma_texto: sintomaTexto,
       humor: mood,
       texto: text.trim()
-    });
+    }, submissionId);
 
     if (success) {
       addActivity(`Grupo de Apoio: ${groupName}`);
@@ -149,6 +157,23 @@ const AddTestimonialForm = ({ groupId, groupName, onSuccess, onCancel }: AddTest
         <div className="text-xs text-muted-foreground">
           {text.length}/500 caracteres
         </div>
+        {/* Escreveu sobre se ferir ou não querer viver: ajuda na hora (não bloqueia). */}
+        {showCrisisSupport && (
+          <div className="space-y-3 rounded-xl border border-destructive/40 bg-destructive/5 p-3" role="alert" data-testid="crisis-support">
+            <p className="text-sm text-foreground">
+              Parece que você está passando por um momento muito difícil. Você não precisa enfrentar isso sozinho(a): o CVV
+              atende 24 horas, de graça, pelo 188. No app, o SOS conecta você a um psicólogo agora.
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <Button asChild variant="outline" className="min-h-11">
+                <a href="tel:188">Ligar 188</a>
+              </Button>
+              <Button type="button" variant="destructive" className="min-h-11" onClick={() => navigate('/sos')}>
+                Abrir o SOS
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Action Buttons */}
