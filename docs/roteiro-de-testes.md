@@ -139,6 +139,13 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 
 - [ ] Paciente → Perfil → Notificações push → ativar ⇒ navegador pede permissão
 - [ ] App fechado → mensagem de outra conta ⇒ push em até 1 min; tocar abre a própria conversa
+- [ ] Push de mensagem na tela bloqueada ⇒ "Você tem uma nova mensagem" (sem o nome de quem mandou)
+- [ ] App aberto em outra tela → chega um aviso ⇒ aparece na tela com "Abrir"
+- [ ] App aberto no navegador → tocar no push ⇒ abre na mesma aba (não abre outra)
+- [ ] Notificações → abrir um aviso não lido ⇒ o número do sino baixa na hora
+- [ ] Notificações no celular → cada aviso tem o botão de excluir visível
+- [ ] Notificações → Excluir todas ⇒ pede confirmação antes de apagar
+- [ ] Psicólogo com push ativo → paciente pede SOS → tocar no push ⇒ abre a fila do SOS
 - [ ] Paciente → Sair → nova mensagem ⇒ **não** chega push nesse aparelho
 - [ ] Paciente → Notificações ⇒ lista com não lidas; tocar leva à tela certa
 

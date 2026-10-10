@@ -36,6 +36,10 @@ const PsychologistLayoutOutlet = () => (
   </PsychologistLayout>
 );
 
+// Push (toque no aviso, aviso com o app aberto, renovar o token): fora do
+// pacote inicial, carregado logo depois.
+const PushBridge = lazy(() => import("./components/PushBridge"));
+
 // Lazy load all pages for better performance
 const Index = lazy(() => import("./pages/Index"));
 const SignupType = lazy(() => import("./pages/SignupType"));
@@ -431,6 +435,9 @@ const App = () => {
                   </Routes>
                   </Suspense>
                   <PendingFeedbackGate />
+                  <Suspense fallback={null}>
+                    <PushBridge />
+                  </Suspense>
                   <LegalAcceptanceGate />
                 </BackgroundWrapper>
 

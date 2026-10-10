@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { firebaseServiceAccount, getAccessToken, sendToTokens } from '../_shared/fcm.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,76 +12,13 @@ interface NotificationPayload {
   data?: Record<string, string>;
   /** Explicit token list — the only targeting mode supported today. */
   tokens?: string[];
+  /** Tela aberta ao tocar (também aceito em data.url). */
+  url?: string;
+  /** SOS: prioridade alta e validade curta. */
+  urgent?: boolean;
+  ttl_seconds?: number;
+  tag?: string;
 }
-
-interface ServiceAccount {
-  client_email: string;
-  private_key: string;
-  project_id: string;
-}
-
-const base64url = (bytes: Uint8Array): string =>
-  btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-
-const pemToArrayBuffer = (pem: string): ArrayBuffer => {
-  const b64 = pem
-    .replace(/-----BEGIN PRIVATE KEY-----/, '')
-    .replace(/-----END PRIVATE KEY-----/, '')
-    .replace(/\s/g, '');
-  const binary = atob(b64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return bytes.buffer;
-};
-
-/**
- * FCM's legacy `fcm.googleapis.com/fcm/send` HTTP API (server key + a
- * bare `key=` header) was shut down by Google in June 2024. The only way
- * to send today is the HTTP v1 API, which is authenticated with a
- * short-lived OAuth2 access token obtained via a signed JWT — this
- * exchanges a Firebase service account for that token, entirely with the
- * Web Crypto API already built into Deno (no extra dependency).
- */
-const getAccessToken = async (serviceAccount: ServiceAccount): Promise<string> => {
-  const header = { alg: 'RS256', typ: 'JWT' };
-  const now = Math.floor(Date.now() / 1000);
-  const claims = {
-    iss: serviceAccount.client_email,
-    scope: 'https://www.googleapis.com/auth/firebase.messaging',
-    aud: 'https://oauth2.googleapis.com/token',
-    iat: now,
-    exp: now + 3600,
-  };
-
-  const encoder = new TextEncoder();
-  const unsigned = `${base64url(encoder.encode(JSON.stringify(header)))}.${base64url(encoder.encode(JSON.stringify(claims)))}`;
-
-  const key = await crypto.subtle.importKey(
-    'pkcs8',
-    pemToArrayBuffer(serviceAccount.private_key),
-    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
-    false,
-    ['sign']
-  );
-  const signature = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', key, encoder.encode(unsigned));
-  const jwt = `${unsigned}.${base64url(new Uint8Array(signature))}`;
-
-  const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-      assertion: jwt,
-    }),
-  });
-
-  if (!tokenResponse.ok) {
-    throw new Error(`Failed to obtain FCM access token: ${await tokenResponse.text()}`);
-  }
-
-  const { access_token } = await tokenResponse.json();
-  return access_token;
-};
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -169,12 +107,8 @@ Deno.serve(async (req) => {
     // Requires three secrets from a Firebase service account JSON
     // (Project Settings → Service Accounts → Generate new private key):
     // FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY, FIREBASE_PROJECT_ID.
-    const serviceAccount: ServiceAccount = {
-      client_email: Deno.env.get('FIREBASE_CLIENT_EMAIL') ?? '',
-      private_key: (Deno.env.get('FIREBASE_PRIVATE_KEY') ?? '').replace(/\\n/g, '\n'),
-      project_id: Deno.env.get('FIREBASE_PROJECT_ID') ?? '',
-    };
-    if (!serviceAccount.client_email || !serviceAccount.private_key || !serviceAccount.project_id) {
+    const serviceAccount = firebaseServiceAccount();
+    if (!serviceAccount) {
       return new Response(
         JSON.stringify({ error: 'Firebase configuration not found' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -182,45 +116,20 @@ Deno.serve(async (req) => {
     }
 
     const accessToken = await getAccessToken(serviceAccount);
-
-    // The v1 API takes one token per request — send them in parallel and
-    // report per-token success so a handful of stale tokens (uninstalled
-    // app, revoked permission) don't look like a total failure.
-    const results = await Promise.all(
-      payload.tokens.map(async (token) => {
-        const response = await fetch(
-          `https://fcm.googleapis.com/v1/projects/${serviceAccount.project_id}/messages:send`,
-          {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              message: {
-                token,
-                notification: { title: payload.title, body: payload.body },
-                data: payload.data ?? {},
-                // Tocar na notificação (web) abre a tela certa.
-                ...(/^\/(?!\/)/.test(payload.data?.url ?? '')
-                  ? { webpush: { fcm_options: { link: payload.data.url } } }
-                  : {}),
-              },
-            }),
-          }
-        );
-        const body = await response.json();
-        return { token, ok: response.ok, body };
-      })
-    );
-
+    const results = await sendToTokens(serviceAccount, accessToken, payload.tokens, {
+      title: payload.title,
+      body: payload.body,
+      url: payload.url ?? payload.data?.url,
+      data: payload.data,
+      urgent: Boolean(payload.urgent),
+      ttlSeconds: payload.ttl_seconds,
+      tag: payload.tag,
+    });
     const successCount = results.filter((r) => r.ok).length;
 
-    // Tokens FCM reports as unregistered/invalid will never succeed again
-    // — deactivate them so future sends stop wasting a call on them.
-    const deadTokens = results
-      .filter((r) => !r.ok && (r.body?.error?.status === 'NOT_FOUND' || r.body?.error?.status === 'INVALID_ARGUMENT'))
-      .map((r) => r.token);
+    // Aparelhos que o Firebase diz que não existem mais (app desinstalado,
+    // permissão revogada): desativados para não gastar envio com eles.
+    const deadTokens = results.filter((r) => r.dead).map((r) => r.token);
     if (deadTokens.length > 0) {
       await supabase.from('fcm_tokens').update({ is_active: false }).in('token', deadTokens);
     }
@@ -230,11 +139,17 @@ Deno.serve(async (req) => {
       title: payload.title,
       body: payload.body,
       recipient_count: successCount,
-      fcm_response: { results },
+      // Sem os tokens dos aparelhos: só o resultado de cada envio.
+      fcm_response: { results: results.map((r) => ({ ok: r.ok, dead: r.dead, error: r.error ?? null })) },
     });
 
     return new Response(
-      JSON.stringify({ message: 'Notifications processed', sent: successCount, total: payload.tokens.length }),
+      JSON.stringify({
+        message: 'Notifications processed',
+        sent: successCount,
+        total: payload.tokens.length,
+        transient: results.some((r) => r.transient) && successCount === 0,
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {

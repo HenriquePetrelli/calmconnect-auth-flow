@@ -37,6 +37,7 @@ Quase tudo o que o paciente registra é **dado pessoal sensível referente à sa
 | CPF, CRP, documentos de identidade | `psychologists`, `psychologist_registrations`, bucket `psychologist-documents` (privado) | psicólogo | verificação profissional | reprovados: apagados após 3 dias (`psychologist-cleanup`); aprovados: até excluir a conta |
 | Chave PIX, repasses, comprovantes | `psychologist_payments`, `payment_logs`, bucket `payment-receipts` (privado) | psicólogo | pagamento do psicólogo | **5 anos** (obrigação fiscal) |
 | Tokens de push | `fcm_tokens` | todos | notificações | desativado no logout; apagado ao excluir a conta |
+| Avisos do app (sino) e registro de envio | `notifications`, `notification_logs` | todos | avisar de consultas, mensagens, SOS e conquistas; o push na tela bloqueada usa texto discreto (sem nome do psicólogo nem menção ao SOS) | lidos: 90 dias; qualquer aviso: 180 dias; registro de envio: 30 dias (sem o token do aparelho) |
 | Logs de segurança e auditoria | `security_audit_log`, `admin_audit_log`, `rate_limits` | todos | segurança, prestação de contas | registros de acesso: **mínimo de 6 meses** (Marco Civil, art. 15); demais: **[DECIDIR com o advogado]** |
 
 ## Compartilhamento (operadores)

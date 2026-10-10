@@ -1,14 +1,22 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
-import { getToken, onMessage } from 'firebase/messaging';
+import { getToken } from 'firebase/messaging';
 import { getFirebaseMessaging, firebaseServiceWorkerUrl, isFirebaseConfigured, FIREBASE_VAPID_KEY } from '@/lib/firebase';
 import { deactivateStoredPushToken, getStoredPushToken, saveActivePushToken } from '@/lib/pushToken';
 import { useToast } from '@/hooks/use-toast';
 
 type PermissionState = 'default' | 'granted' | 'denied' | 'unsupported';
 
-const isNative = () => Capacitor.isNativePlatform();
+export const isNative = () => Capacitor.isNativePlatform();
+
+/** Pede o token deste navegador ao Firebase (o service worker já registrado é reaproveitado). */
+export const getWebPushToken = async (): Promise<string | null> => {
+  const registration = await navigator.serviceWorker.register(firebaseServiceWorkerUrl());
+  const messaging = getFirebaseMessaging();
+  if (!messaging) return null;
+  return (await getToken(messaging, { vapidKey: FIREBASE_VAPID_KEY, serviceWorkerRegistration: registration })) || null;
+};
 
 const initialPermission = (): PermissionState => {
   // Inside the Android/iOS app the WebView can't do web push at all; the
@@ -18,7 +26,7 @@ const initialPermission = (): PermissionState => {
 };
 
 /** Registers with FCM through the native plugin and resolves with the token. */
-const registerNative = () =>
+export const registerNative = () =>
   new Promise<string>((resolve, reject) => {
     const handles: Promise<{ remove: () => Promise<void> }>[] = [];
     const cleanup = () => handles.forEach((h) => h.then((x) => x.remove()).catch(() => {}));
@@ -88,10 +96,7 @@ export const usePushNotifications = () => {
         setPermission(result as PermissionState);
         if (result !== 'granted') return;
 
-        const registration = await navigator.serviceWorker.register(firebaseServiceWorkerUrl());
-        const messaging = getFirebaseMessaging();
-        if (!messaging) return;
-        token = await getToken(messaging, { vapidKey: FIREBASE_VAPID_KEY, serviceWorkerRegistration: registration });
+        token = await getWebPushToken();
         if (!token) return;
         await saveActivePushToken(token, { platform: 'web', userAgent: navigator.userAgent });
       }
@@ -120,37 +125,6 @@ export const usePushNotifications = () => {
     } finally {
       setLoading(false);
     }
-  }, [toast]);
-
-  // Foreground messages don't show a system notification — surface them as
-  // a toast while the app is open.
-  useEffect(() => {
-    if (isNative()) {
-      const handle = PushNotifications.addListener('pushNotificationReceived', (notification) => {
-        if (notification.title) toast({ title: notification.title, description: notification.body });
-      });
-      // Tapping an SOS push opens the psychologist dashboard, where the queue is;
-      // a habit reminder opens that habit.
-      const tapHandle = PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
-        const data = action.notification.data;
-        if (data?.type === 'sos') window.location.assign('/psychologist-dashboard');
-        else if (data?.type === 'habit_reminder' && typeof data.url === 'string' && data.url.startsWith('/habitos')) {
-          window.location.assign(data.url);
-        }
-      });
-      return () => {
-        handle.then((h) => h.remove()).catch(() => {});
-        tapHandle.then((h) => h.remove()).catch(() => {});
-      };
-    }
-
-    const messaging = getFirebaseMessaging();
-    if (!messaging) return;
-    const unsubscribe = onMessage(messaging, (payload) => {
-      const { title, body } = payload.notification || {};
-      if (title) toast({ title, description: body });
-    });
-    return () => unsubscribe();
   }, [toast]);
 
   return {

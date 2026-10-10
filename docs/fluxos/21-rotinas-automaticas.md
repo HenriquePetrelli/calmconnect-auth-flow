@@ -9,7 +9,7 @@
 | Rotina | Quando | O que faz | Ficha |
 |---|---|---|---|
 | `finalize-stale-emergency-sessions` | A cada minuto | Expira SOS sem aceite (10 min), encerra por tempo esgotado e por abandono (10 min sem sinal) | 02 |
-| `notification-push` | A cada minuto | Envia os pushes pendentes | 07 |
+| `notification-push` | A cada minuto | Envia os pushes pendentes e tenta de novo os que falharam (até 3 vezes) | 07 |
 | `prune-stale-psychologist-presence` | A cada 2 min | Tira do "online" o psicólogo sem sinal recente | 02 |
 | `appointment-reminders` | A cada 10 min | Lembretes de consulta (24 h e 1 h) | 04 |
 | `expire-cancelled-subscriptions` | De hora em hora (minuto 7) | Plano do Stripe cancelado cujo período pago acabou vira plano grátis, mesmo sem o aviso do Stripe | 08 |
@@ -21,6 +21,7 @@
 | `expire-organization-entitlements` | Todo dia, 3h05 | Tira o acesso de contratos de empresa vencidos | 10 |
 | `expire-old-conversas` | Todo dia, 3h30 | Chat: somente leitura com 1 mês, apaga com 3 meses | 06 |
 | `purge-expired-care-records` | Todo dia, 3h30 | Apaga do arquivo legal o que passou de 5 anos | 18 |
+| `purge-old-notifications` | Todo dia, 4h50 | Apaga avisos lidos com mais de 90 dias, qualquer aviso com mais de 180 dias e registros de envio com mais de 30 dias | 07 |
 | `chat-photos-cleanup` | Todo dia, 4h40 | Chat: apaga do storage as fotos de conversas que já foram apagadas (função `chat-cleanup`) | 06 |
 | `reset-weekly-goals-monday` | Segunda, 4h | Reinicia as metas da semana | 12 |
 | `weekly-payment-sync` | Segunda, 9h | Atualiza os valores de repasse | 09 |

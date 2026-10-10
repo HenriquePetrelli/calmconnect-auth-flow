@@ -1,7 +1,17 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import {
   CheckCheck,
   CalendarCheck,
@@ -19,14 +29,15 @@ import {
   UserCheck,
   Sparkles,
   BellOff,
+  Loader2,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useNotifications } from '@/hooks/useNotifications';
+import { useNotifications, type Notification } from '@/hooks/useNotifications';
 import { useAuth } from '@/contexts/AuthContext';
 import PageTitle from '@/components/PageTitle';
 import { NotificationsBodySkeleton } from '@/components/skeletons/PageSkeletons';
 
-import { format } from 'date-fns';
+import { differenceInCalendarDays, format, formatDistanceToNowStrict } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 
@@ -40,8 +51,23 @@ const Notifications = () => {
     markAsRead,
     markAllAsRead,
     deleteNotification,
-    deleteAllNotifications
+    deleteAllNotifications,
+    hasMore,
+    loadingMore,
+    loadMore,
   } = useNotifications();
+
+  /** "agora", "há 5 min", "ontem às 14:00", "12 de out. às 09:30". */
+  const formatWhen = (iso: string) => {
+    const date = new Date(iso);
+    const days = differenceInCalendarDays(new Date(), date);
+    if (days === 0) {
+      if (Date.now() - date.getTime() < 60_000) return 'agora';
+      return `há ${formatDistanceToNowStrict(date, { locale: ptBR })}`;
+    }
+    if (days === 1) return `ontem às ${format(date, 'HH:mm')}`;
+    return format(date, "d 'de' MMM 'às' HH:mm", { locale: ptBR });
+  };
 
   const getNotificationIcon = (title: string, message: string = '') => {
     const text = `${title} ${message}`.toLowerCase();
@@ -63,11 +89,9 @@ const Notifications = () => {
     return <Info className="h-5 w-5 text-muted-foreground" />;
   };
 
-  const handleNotificationClick = async (notification: any) => {
-    if (notification.status === 'unread') {
-      await markAsRead(notification.id);
-      toast.success('Notificação marcada como lida');
-    }
+  const handleNotificationClick = (notification: Notification) => {
+    // Abrir já marca como lida (sem aviso na tela: o ponto some na hora).
+    if (notification.status === 'unread') void markAsRead(notification.id);
 
     // Notificações novas trazem o destino (link) gravado pelo servidor.
     // Só caminhos do próprio app: "//site.com" também começa com "/".
@@ -100,13 +124,15 @@ const Notifications = () => {
 
   const handleDeleteNotification = async (notificationId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    await deleteNotification(notificationId);
-    toast.success('Notificação excluída');
+    const ok = await deleteNotification(notificationId);
+    if (ok) toast.success('Notificação excluída');
+    else toast.error('Não foi possível excluir. Tente de novo.');
   };
 
   const handleDeleteAllNotifications = async () => {
-    await deleteAllNotifications();
-    toast.success('Todas as notificações foram excluídas');
+    const ok = await deleteAllNotifications();
+    if (ok) toast.success('Todas as notificações foram excluídas');
+    else toast.error('Não foi possível excluir. Tente de novo.');
   };
 
   // Paciente, psicólogo e admin veem esta tela dentro do layout deles
@@ -143,22 +169,41 @@ const Notifications = () => {
                   variant="outline"
                   size="sm"
                   onClick={markAllAsRead}
-                  className="hover-scale"
                 >
                   <CheckCheck className="h-4 w-4 mr-2" />
                   Marcar todas
                 </Button>
               )}
               {notifications.length > 0 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleDeleteAllNotifications}
-                  className="hover-scale text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Excluir todas
-                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Excluir todas
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Excluir todas as notificações?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Elas saem da sua lista e não podem ser recuperadas.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleDeleteAllNotifications}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        Excluir todas
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               )}
               
             </div>
@@ -184,75 +229,81 @@ const Notifications = () => {
             </div>
           ) : (
             <div className="space-y-3">
-              {notifications.map((notification, index) => (
+              {notifications.map((notification) => (
                 <Card
                   key={notification.id}
-                  className={`group cursor-pointer transition-all duration-200 hover-lift border-border/50 ${
-                    notification.status === 'unread' 
-                      ? 'bg-primary/5 border-primary/20 shadow-primary/10' 
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`${notification.status === 'unread' ? 'Não lida: ' : ''}${notification.title}`}
+                  data-testid="notification-item"
+                  className={`group cursor-pointer rounded-2xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                    notification.status === 'unread'
+                      ? 'bg-primary/5 border-primary/20'
                       : 'bg-card hover:bg-accent/50'
                   }`}
                   onClick={() => handleNotificationClick(notification)}
+                  onKeyDown={(e) => {
+                    if (e.target !== e.currentTarget) return;
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleNotificationClick(notification);
+                    }
+                  }}
                 >
                   <CardContent className="p-4">
-                    <div className="flex gap-4">
-                      {/* Icon */}
-                      <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
-                        notification.status === 'unread'
-                          ? 'bg-primary/10'
-                          : 'bg-muted/50'
-                      }`}>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                         {getNotificationIcon(notification.title, notification.message)}
                       </div>
 
-                      {/* Content */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-3 mb-3">
-                          <div className="flex-1">
-                            <h4 className={`font-semibold text-base leading-tight mb-1 ${
-                              notification.status === 'unread' 
-                                ? 'text-foreground' 
-                                : 'text-foreground/80'
-                            }`}>
-                              {notification.title}
-                            </h4>
-                            <p className="text-sm text-muted-foreground leading-relaxed">
-                              {notification.message}
-                            </p>
-                          </div>
+                        <div className="flex items-start justify-between gap-3">
+                          <h4
+                            className={`text-base leading-tight ${
+                              notification.status === 'unread' ? 'font-semibold text-foreground' : 'font-medium text-foreground/80'
+                            }`}
+                          >
+                            {notification.title}
+                          </h4>
                           {notification.status === 'unread' && (
-                            <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0 mt-1" />
+                            <span className="w-2 h-2 bg-primary rounded-full flex-shrink-0 mt-1.5" aria-hidden="true" />
                           )}
                         </div>
-                        
-                        <div className="flex items-center justify-between pt-2 border-t border-border/30">
-                          <p className="text-xs text-muted-foreground/80 font-medium">
-                            {format(new Date(notification.created_at), 'PPp', { locale: ptBR })}
-                          </p>
-                          
-                          {/* Actions */}
-                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 w-7 p-0 hover:bg-destructive/10 hover:text-destructive"
-                              onClick={(e) => handleDeleteNotification(notification.id, e)}
-                              title="Excluir notificação"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
+                        <p className="mt-1 text-sm text-muted-foreground leading-relaxed">{notification.message}</p>
+
+                        <div className="mt-2 flex items-center justify-between">
+                          <time
+                            dateTime={notification.created_at}
+                            title={format(new Date(notification.created_at), 'PPp', { locale: ptBR })}
+                            className="text-xs text-muted-foreground"
+                          >
+                            {formatWhen(notification.created_at)}
+                          </time>
+                          {/* No celular sempre visível (não existe "passar o mouse"). */}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
+                            onClick={(e) => handleDeleteNotification(notification.id, e)}
+                            aria-label="Excluir notificação"
+                            title="Excluir notificação"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
                     </div>
                   </CardContent>
-                  
-                  {/* Separator - only show if not last item */}
-                  {index < notifications.length - 1 && (
-                    <Separator className="opacity-30" />
-                  )}
                 </Card>
               ))}
+              {hasMore && (
+                <div className="flex justify-center pt-2">
+                  <Button variant="outline" onClick={() => void loadMore()} disabled={loadingMore}>
+                    {loadingMore && <Loader2 className="h-4 w-4 mr-2 animate-spin" aria-hidden="true" />}
+                    Ver mais antigas
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </main>

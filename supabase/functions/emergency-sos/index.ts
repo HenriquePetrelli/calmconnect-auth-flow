@@ -256,6 +256,12 @@ serve(async (req) => {
                 body: 'Um paciente precisa de atendimento imediato.',
                 tokens: tokens.map((t) => t.token),
                 data: { type: 'sos', emergency_request_id: emergencyRequest.id },
+                // Tocar abre a fila do SOS; entrega imediata e, se não chegar em
+                // 10 min (o pedido já expirou), o Firebase descarta.
+                url: '/psychologist-dashboard',
+                urgent: true,
+                ttl_seconds: 600,
+                tag: `sos-${emergencyRequest.id}`,
               },
             });
           }
