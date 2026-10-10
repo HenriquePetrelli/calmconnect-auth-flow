@@ -1396,6 +1396,8 @@ export type Database = {
           backfilled: boolean
           counted_at: string
           occurred_at: string
+          paid_at: string | null
+          payment_log_id: string | null
           psychologist_user_id: string
           source_id: string
           source_type: string
@@ -1405,6 +1407,8 @@ export type Database = {
           backfilled?: boolean
           counted_at?: string
           occurred_at: string
+          paid_at?: string | null
+          payment_log_id?: string | null
           psychologist_user_id: string
           source_id: string
           source_type: string
@@ -1414,6 +1418,8 @@ export type Database = {
           backfilled?: boolean
           counted_at?: string
           occurred_at?: string
+          paid_at?: string | null
+          payment_log_id?: string | null
           psychologist_user_id?: string
           source_id?: string
           source_type?: string
@@ -2663,6 +2669,17 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: boolean
       }
+      confirm_psychologist_payout: {
+        Args: {
+          p_admin_email: string
+          p_admin_id: string
+          p_expected_amount: number
+          p_pix_e2e_id: string
+          p_psychologist_id: string
+          p_receipt_path: string
+        }
+        Returns: Json
+      }
       count_available_psychologists: { Args: never; Returns: number }
       create_psychologist_profile:
         | {
@@ -3026,6 +3043,10 @@ export type Database = {
       react_to_testimonial: {
         Args: { p_testimonial_id: string; p_tipo: string }
         Returns: Json
+      }
+      recompute_psychologist_pending: {
+        Args: { p_psychologist_user_id: string }
+        Returns: undefined
       }
       record_goal_progress: {
         Args: { p_category: string; p_local_date: string }
