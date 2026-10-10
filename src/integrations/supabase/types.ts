@@ -884,7 +884,10 @@ export type Database = {
           message: string
           patient_id: string
           push: boolean
+          push_attempts: number
+          push_claimed_at: string | null
           push_sent_at: string | null
+          push_text: string | null
           status: string | null
           title: string
           updated_at: string | null
@@ -897,7 +900,10 @@ export type Database = {
           message: string
           patient_id: string
           push?: boolean
+          push_attempts?: number
+          push_claimed_at?: string | null
           push_sent_at?: string | null
+          push_text?: string | null
           status?: string | null
           title: string
           updated_at?: string | null
@@ -910,7 +916,10 @@ export type Database = {
           message?: string
           patient_id?: string
           push?: boolean
+          push_attempts?: number
+          push_claimed_at?: string | null
           push_sent_at?: string | null
+          push_text?: string | null
           status?: string | null
           title?: string
           updated_at?: string | null
@@ -2724,6 +2733,10 @@ export type Database = {
           timed_out_count: number
         }[]
       }
+      finish_pushes: {
+        Args: { p_failed: string[]; p_sent: string[] }
+        Returns: undefined
+      }
       format_br_datetime: { Args: { p_at: string }; Returns: string }
       gerenciar_expiracao_conversas: { Args: never; Returns: undefined }
       get_admin_audit_log: {
@@ -2987,6 +3000,7 @@ export type Database = {
         Returns: boolean
       }
       purge_expired_care_records: { Args: never; Returns: Json }
+      purge_old_notifications: { Args: never; Returns: number }
       queue_appointment_reminders: { Args: never; Returns: number }
       queue_sos_followups: { Args: never; Returns: number }
       refresh_subscriber_entitlement: {
