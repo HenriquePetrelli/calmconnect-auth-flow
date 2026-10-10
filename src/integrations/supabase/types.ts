@@ -2729,6 +2729,7 @@ export type Database = {
         }
         Returns: Json
       }
+      current_user_has_paid_plan: { Args: never; Returns: boolean }
       ensure_week_goals: { Args: { p_local_date: string }; Returns: string }
       expire_cancelled_subscriptions: { Args: never; Returns: number }
       expire_organization_entitlements: { Args: never; Returns: number }
@@ -2821,6 +2822,7 @@ export type Database = {
           sintoma_id: string
           sintoma_texto: string
           texto: string
+          under_review: boolean
           user_like: string
         }[]
       }
@@ -2912,6 +2914,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      has_paid_plan: { Args: { p_user_id: string }; Returns: boolean }
       increment_emergency_accepted: {
         Args: { p_psychologist_id: string }
         Returns: undefined
@@ -3016,6 +3019,10 @@ export type Database = {
       purge_old_notifications: { Args: never; Returns: number }
       queue_appointment_reminders: { Args: never; Returns: number }
       queue_sos_followups: { Args: never; Returns: number }
+      react_to_testimonial: {
+        Args: { p_testimonial_id: string; p_tipo: string }
+        Returns: Json
+      }
       record_goal_progress: {
         Args: { p_category: string; p_local_date: string }
         Returns: {
@@ -3097,6 +3104,10 @@ export type Database = {
       }
       sync_consultation_counts: { Args: never; Returns: undefined }
       sync_psychologist_payments: { Args: never; Returns: undefined }
+      testimonial_like_totals: {
+        Args: { p_testimonial_id: string }
+        Returns: Json
+      }
       update_patient_activity_time: {
         Args: {
           p_activity_type: string
