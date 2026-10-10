@@ -17,6 +17,7 @@ vi.mock('@/hooks/usePsychologistAvailability', () => ({
 }));
 
 const setVacationMock = vi.fn().mockResolvedValue(true);
+const checkConflictsMock = vi.fn().mockResolvedValue([]);
 vi.mock('@/hooks/usePsychologistVacation', () => ({
   usePsychologistVacation: () => ({
     activeVacation: null,
@@ -24,6 +25,7 @@ vi.mock('@/hooks/usePsychologistVacation', () => ({
     loading: false,
     saving: false,
     setVacation: setVacationMock,
+    checkConflicts: checkConflictsMock,
     cancelVacation: vi.fn().mockResolvedValue(true),
   }),
   toISODate: () => '2026-01-01',
@@ -110,7 +112,7 @@ describe('PsychologistAvailability page', () => {
     fireEvent.click(screen.getByRole('button', { name: /agendar férias/i }));
 
     // Chamado de forma síncrona no clique; sem waitFor (o foco do Radix não assenta no jsdom).
-    expect(setVacationMock).toHaveBeenCalledWith('2026-02-01', '2026-02-10');
+    expect(setVacationMock).toHaveBeenCalledWith('2026-02-01', '2026-02-10', false);
   });
 
   it('recusa férias com início depois do fim', () => {

@@ -122,6 +122,10 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Consulta com lembrete de 24 h já enviado → paciente aceita novo horário ⇒ recebe os lembretes do horário novo
 - [ ] Pedido sem resposta por 24 h ⇒ paciente avisado e psicólogo recebe "Pedido de consulta expirou"
 - [ ] Psicólogo → Histórico → resumo da sessão ⇒ aviso de que o paciente vê o resumo
+- [ ] Psicólogo com consulta marcada → Agenda → Férias cobrindo o dia ⇒ o modal lista a consulta antes de confirmar; com "Cancelar essas consultas" marcado, o paciente é avisado e a consulta do mês volta
+- [ ] Férias desmarcando "Cancelar essas consultas" ⇒ as consultas continuam marcadas, com aviso ao psicólogo
+- [ ] Psicólogo → Agenda semanal → bloquear o horário de uma consulta marcada (inclusive pela API) ⇒ recusado: "Esse horário tem consulta marcada"
+- [ ] Visitante sem login → ler férias/horários dos psicólogos pela API ⇒ nada retorna
 
 ## 4. Chat (ficha 06)
 

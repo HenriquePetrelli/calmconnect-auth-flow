@@ -27,6 +27,22 @@ const daysFromToday = (offset: number): Date => {
 beforeEach(() => {
   fakeDb.tables = {};
   fakeDb.writes = [];
+  // Mesma regra da função do banco: o novo período substitui o ativo/futuro.
+  fakeDb.rpcHandlers = {
+    set_psychologist_vacation: (db, params) => {
+      const today = isoOf(new Date());
+      db.tables.psychologist_vacations = db
+        .rows('psychologist_vacations')
+        .filter((v) => !(v.psychologist_id === PSYCHOLOGIST && v.end_date >= today));
+      db.rows('psychologist_vacations').push({
+        id: 'vac-new',
+        psychologist_id: PSYCHOLOGIST,
+        start_date: params.p_start,
+        end_date: params.p_end,
+      });
+      return { data: { cancelled: params.p_cancel_appointments ? 1 : 0 }, error: null };
+    },
+  };
 });
 
 describe('usePsychologistVacation', () => {

@@ -12,6 +12,14 @@ export interface VacationPeriod {
   end_date: string;
 }
 
+/** Consulta marcada que cai num período de férias. */
+export interface VacationConflict {
+  id: string;
+  starts_at: string;
+  status: string;
+  patient_name: string | null;
+}
+
 export const toISODate = (date: Date): string =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 
@@ -61,8 +69,24 @@ export const usePsychologistVacation = () => {
   const activeVacation = vacations.find((v) => v.start_date <= today && today <= v.end_date) ?? null;
   const upcomingVacation = vacations.find((v) => v.start_date > today) ?? null;
 
-  /** Agenda um novo período de férias, substituindo qualquer férias ativa/futura ainda não encerrada. */
-  const setVacation = async (startDate: string, endDate: string): Promise<boolean> => {
+  /** Consultas marcadas que caem no período (para o psicólogo decidir antes de confirmar). */
+  const checkConflicts = useCallback(async (startDate: string, endDate: string): Promise<VacationConflict[]> => {
+    if (!user || !startDate || !endDate || startDate > endDate) return [];
+    const { data, error } = await supabase.rpc('vacation_conflicts' as never, { p_start: startDate, p_end: endDate } as never);
+    if (error) {
+      console.error('Erro ao conferir consultas do período:', error);
+      return [];
+    }
+    return (data as unknown as VacationConflict[] | null) ?? [];
+  }, [user]);
+
+  /**
+   * Agenda um novo período de férias, substituindo qualquer férias ativa/futura
+   * ainda não encerrada, numa operação só no servidor. Com
+   * `cancelAppointments`, as consultas do período são canceladas e os
+   * pacientes avisados (a consulta do mês volta para eles).
+   */
+  const setVacation = async (startDate: string, endDate: string, cancelAppointments = false): Promise<boolean> => {
     if (!user) return false;
     if (!startDate || !endDate || startDate > endDate) {
       toast({
@@ -74,17 +98,21 @@ export const usePsychologistVacation = () => {
     }
     setSaving(true);
     try {
-      const staleIds = vacations.filter((v) => v.end_date >= today).map((v) => v.id);
-      if (staleIds.length > 0) {
-        const { error: deleteError } = await supabase.from('psychologist_vacations').delete().in('id', staleIds);
-        if (deleteError) throw deleteError;
-      }
-      const { error } = await supabase
-        .from('psychologist_vacations')
-        .insert({ psychologist_id: user.id, start_date: startDate, end_date: endDate });
+      const { data, error } = await supabase.rpc('set_psychologist_vacation' as never, {
+        p_start: startDate,
+        p_end: endDate,
+        p_cancel_appointments: cancelAppointments,
+      } as never);
       if (error) throw error;
 
-      toast({ title: 'Férias agendadas', description: 'Sua agenda ficará indisponível nesse período.' });
+      const cancelled = Number((data as { cancelled?: number } | null)?.cancelled ?? 0);
+      toast({
+        title: 'Férias agendadas',
+        description:
+          cancelled > 0
+            ? `Sua agenda ficará indisponível nesse período. ${cancelled === 1 ? '1 consulta foi cancelada' : `${cancelled} consultas foram canceladas`} e os pacientes foram avisados.`
+            : 'Sua agenda ficará indisponível nesse período.',
+      });
       await fetchVacations();
       return true;
     } catch (error: any) {
@@ -134,6 +162,7 @@ export const usePsychologistVacation = () => {
     loading,
     saving,
     setVacation,
+    checkConflicts,
     cancelVacation,
     refetch: fetchVacations,
   };

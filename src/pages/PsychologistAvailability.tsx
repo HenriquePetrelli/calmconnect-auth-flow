@@ -41,6 +41,7 @@ const PsychologistAvailability = () => {
     loading: loadingVacation,
     saving: savingVacation,
     setVacation,
+    checkConflicts,
     cancelVacation,
   } = usePsychologistVacation();
   const [vacationOpen, setVacationOpen] = useState(false);
@@ -278,6 +279,7 @@ const PsychologistAvailability = () => {
           upcomingVacation={upcomingVacation}
           saving={savingVacation}
           setVacation={setVacation}
+          checkConflicts={checkConflicts}
           cancelVacation={cancelVacation}
         />
 
