@@ -80,7 +80,7 @@ select conversa_id, count(*), max(created_at) from mensagens group by conversa_i
 
 ## Pendências
 
-Nenhuma. Segunda varredura em 2026-10-16: migration `20261016090000_chat_regras.sql` e edge function `chat-cleanup`. Varredura de 2026-10-08: migration `20261008015556_736dc23d-283d-4928-a2d0-db56fdb76789.sql` e edge function `chat-cleanup`. "Excluir conversa" passou a ocultar só para quem excluiu em 2026-10-04 (migration `20261003232116_d6f3adac-0952-4317-8e77-a3a5ec8ff312.sql`).
+Nenhuma. Segunda varredura em 2026-10-16: migration `20261010015151_ad2f291b-0f72-45af-97c3-5bcc6415e4f7.sql` e edge function `chat-cleanup`. Varredura de 2026-10-08: migration `20261008015556_736dc23d-283d-4928-a2d0-db56fdb76789.sql` e edge function `chat-cleanup`. "Excluir conversa" passou a ocultar só para quem excluiu em 2026-10-04 (migration `20261003232116_d6f3adac-0952-4317-8e77-a3a5ec8ff312.sql`).
 
 ## Problemas comuns
 
