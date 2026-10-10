@@ -283,8 +283,12 @@ const [formData, setFormData] = useState({
       // Registro com Supabase Auth
       const redirectUrl = `${window.location.origin}/`;
       
+      // Os dados do paciente vão junto com o cadastro e o banco cria tudo numa
+      // operação só (antes era uma segunda chamada depois do login, que falhava
+      // com a confirmação de e-mail ligada e deixava a conta pela metade).
+      // O banco tira CPF, telefone e endereço dos dados do login depois de copiar.
       const { data, error } = await supabase.auth.signUp({
-        email: formData.email,
+        email: formData.email.trim().toLowerCase(),
         password: formData.password,
         options: {
           emailRedirectTo: redirectUrl,
@@ -293,12 +297,23 @@ const [formData, setFormData] = useState({
             full_name: formData.name,
             ...signupAcceptanceMetadata(userType),
             ...(isPatient && normalizeInviteCode(companyCode) ? { organization_code: normalizeInviteCode(companyCode) } : {}),
+            ...(isPatient
+              ? {
+                  cpf: formData.cpf.replace(/\D/g, ''),
+                  state: formData.state,
+                  city: formData.city,
+                  phone: formData.phone.replace(/\D/g, ''),
+                  sintomas: formData.sintomas,
+                }
+              : {}),
           }
         }
       });
 
       if (error) {
-        if (error.message.includes("User already registered")) {
+        if (/database error saving new user/i.test(error.message)) {
+          toast.error("Não foi possível criar a conta. Se este CPF já tem cadastro, entre com o e-mail dele ou recupere a senha.");
+        } else if (error.message.includes("User already registered")) {
           toast.error("Este email já está cadastrado. Tente fazer login.");
         } else if (error.message.includes("Password should be at least")) {
           toast.error(PASSWORD_HINT);
@@ -316,31 +331,9 @@ const [formData, setFormData] = useState({
         return;
       }
 
-      // Save additional data to specific table
-      if (isPatient) {
-        // Save to patients table
-        const { error: patientError } = await supabase
-          .from('patients')
-          .insert({
-            user_id: data.user.id,
-            full_name: formData.name,
-            email: formData.email,
-            cpf: formData.cpf.replace(/\D/g, ''),
-            state: formData.state,
-            city: formData.city,
-            phone: formData.phone.replace(/\D/g, ''),
-            sintomas_selecionados: formData.sintomas
-          });
-
-        if (patientError) {
-          console.error('Error saving patient data:', patientError);
-          toast.error("Erro ao salvar dados adicionais. Tente novamente.");
-          return;
-        }
-
-        // O perfil (profiles) é criado pelo banco junto com a conta
-        // (gatilho handle_new_user); a gravação extra aqui sempre falhava.
-      } else {
+      // O perfil e os dados do paciente são criados pelo banco junto com a
+      // conta (gatilho handle_new_user).
+      if (!isPatient) {
         // For psychologists, create a registration record
         try {
           const { error: registrationError } = await supabase
@@ -374,7 +367,10 @@ const { error: profileError } = await supabase
         }
       }
 
-      if (isPatient) {
+      if (isPatient && !data.session) {
+        // Confirmação de e-mail ligada: a conta está criada, falta confirmar.
+        toast.success("Conta criada! Enviamos um link para o seu e-mail: confirme e depois entre com sua senha.", { duration: 8000 });
+      } else if (isPatient) {
         toast.success(`Bem-vindo, ${formData.name}!`);
       } else {
         toast.success(`Cadastro enviado para análise, Dr.(a) ${formData.name}. Você receberá um email quando for aprovado.`);

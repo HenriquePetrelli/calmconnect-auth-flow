@@ -16,6 +16,7 @@ const renderLogin = () =>
         <Route path="/" element={<LoginForm onForgotPassword={() => {}} onSignUp={() => {}} />} />
         <Route path="/admin-dashboard" element={<p>Painel admin</p>} />
         <Route path="/home" element={<p>Home do paciente</p>} />
+        <Route path="/psicologo/concluir-cadastro" element={<p>Concluir cadastro</p>} />
       </Routes>
     </MemoryRouter>,
   );
@@ -61,5 +62,23 @@ describe('login', () => {
     login('orfa@x.com');
     await waitFor(() => expect(toastMock.error).toHaveBeenCalled());
     expect(fakeDb.currentUserId).toBeNull();
+  });
+
+  it('e-mail com espaço e maiúscula entra normalmente', async () => {
+    fakeDb.loginUsers['ana@x.com'] = { id: 'p1' };
+    fakeDb.rpcHandlers.is_super_admin = () => ({ data: false, error: null });
+    fakeDb.seed('profiles', [{ user_id: 'p1', user_type: 'patient', full_name: 'Ana' }]);
+    renderLogin();
+    login('  Ana@X.com ');
+    expect(await screen.findByText('Home do paciente')).toBeInTheDocument();
+  });
+
+  it('psicólogo que confirmou o e-mail e ainda não enviou o documento vai concluir o cadastro', async () => {
+    fakeDb.loginUsers['psi@x.com'] = { id: 's1' };
+    fakeDb.rpcHandlers.is_super_admin = () => ({ data: false, error: null });
+    fakeDb.seed('profiles', [{ user_id: 's1', user_type: 'psychologist', full_name: 'Psi' }]);
+    renderLogin();
+    login('psi@x.com');
+    expect(await screen.findByText('Concluir cadastro')).toBeInTheDocument();
   });
 });

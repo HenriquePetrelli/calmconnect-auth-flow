@@ -1,7 +1,7 @@
 # 01. Cadastro, login, senha e perfis
 
 > **Status:** Pronto, com pendência externa (SMTP e modelos de e-mail; ajustes de senha no painel do Supabase).
-> **Última verificação:** 2026-10-04.
+> **Última verificação:** 2026-10-21 (varredura de funcionamento: cadastros funcionam com a confirmação de e-mail ligada, cadastro do paciente numa operação só, bloqueio vale para quem já está logado, login sem confiar em dados editáveis, e-mail sem espaços). Antes: 2026-10-04.
 > **Quem usa:** todos.
 
 ## Resumo
@@ -25,18 +25,22 @@ Existem três perfis: **paciente**, **psicólogo** e **admin**. O paciente se ca
 ### Cadastro do paciente
 1. Escolhe "Sou paciente" e preenche nome, e-mail, senha, sintomas ("O que você tem sentido?") e, se tiver, o **código da empresa**.
 2. Marca "Tenho 18 anos ou mais", aceita Termos e Política e dá o consentimento para dados de saúde.
-3. O Supabase cria o login. Um gatilho no banco cria o perfil (`profiles`, `patients`) e grava os aceites em `legal_acceptances`, com versão e data.
+3. O Supabase cria o login. **Numa operação só**, um gatilho no banco (`handle_new_user`) cria o perfil (`profiles`) e a linha do paciente (`patients`, com CPF, cidade, telefone e sintomas enviados no cadastro) e grava os aceites em `legal_acceptances`, com versão e data. Se o CPF já tem cadastro, nada é criado (nem o login) e a tela orienta a entrar ou recuperar a senha. Depois de copiados, CPF, telefone e endereço saem dos dados do login (que vão dentro do token).
+   - Com **"Confirmar e-mail"** ligado no Supabase, a tela diz "Conta criada! Enviamos um link para o seu e-mail" e a pessoa entra depois de confirmar. Antes, a segunda gravação falhava sem sessão e a conta ficava sem os dados do paciente.
 4. Se houver código de empresa válido, o paciente já entra no plano da empresa (ficha 10).
 
 ### Cadastro do psicólogo
 1. Preenche dados profissionais (CRP, CPF, especialidade, cidade, área de atendimento) e envia o documento (PDF, JPG ou PNG).
 2. O documento vai para o storage. A função `create_psychologist_profile` cria o cadastro como **pendente**.
+   - Com **"Confirmar e-mail"** ligado, não há sessão logo após criar a conta: ela fica criada (antes era apagada e nenhum psicólogo conseguia se cadastrar) e a tela pede para confirmar o e-mail. No primeiro acesso, o login leva a `/psicologo/concluir-cadastro` ("Falta pouco"), onde o psicólogo envia o documento; o cadastro vai para análise com os dados guardados no cadastro. CPF e endereço saem dos dados do login depois disso.
 3. O admin recebe notificação e analisa em **Painel → Psicólogos** (ficha 19).
 4. Se aprovado, o psicólogo passa a entrar no painel. Se recusado, recebe o motivo por e-mail e o cadastro é apagado depois de alguns dias pela rotina `psychologist-cleanup-daily`.
 
 ### Login
 1. E-mail e senha. O app descobre o tipo de conta **no banco** (admin, psicólogo aprovado ou paciente) e leva à área certa: `/admin-dashboard`, `/psychologist-dashboard` ou `/home`. Tudo o que o login precisa (admin, tipo de conta, nome, bloqueio, situação do cadastro do psicólogo) vem numa consulta só, `get_login_state` (migration `20261004131952_4fcada17-7812-48f8-b314-6ff7269b9832.sql`), compartilhada entre a tela de login e o controle de acesso (`src/lib/loginState.ts`).
 2. Conta bloqueada pelo admin vê o motivo e até quando vale o bloqueio.
+   - O bloqueio vale também **para quem já está com o app aberto**: o app confere ao abrir, ao voltar para ele e a cada 5 minutos (`AccountStatusWatcher`), mostra o motivo e sai da conta. O servidor também suspende o login da conta pelo mesmo período (`ban_duration` nas funções `admin-block-patient` e `admin-block-psychologist`); nesse tempo, o login mostra "Sua conta está bloqueada no momento". Desbloquear tira a suspensão na hora. Antes, só a tela de login conferia e quem estava logado continuava usando o app.
+   - E-mail com espaço ou maiúscula (colado, teclado do celular) entra normalmente.
 3. Psicólogo em análise vê "Seu cadastro ainda está sendo analisado"; recusado vê o aviso de recusa.
 
 ### Recuperar senha
@@ -50,7 +54,7 @@ Desativa o push daquele aparelho e encerra a sessão em todos os aparelhos. Se o
 ## Regras
 
 - **Senha nova** (cadastro, troca e recuperação): mínimo de 8 caracteres, com letras e números (`src/lib/password.ts`). Quem já tem conta com senha de 6 caracteres continua entrando.
-- **O tipo de conta vem só do banco**, nunca de dados que o próprio usuário edita (`user_metadata`). No cadastro, o banco só aceita paciente ou psicólogo (quem tenta criar a conta como admin vira paciente).
+- **O tipo de conta vem só do banco**, nunca de dados que o próprio usuário edita (`user_metadata`). Isso vale também para a tela de login e o painel do psicólogo, que antes ainda olhavam `is_super_admin` e `account_status` nos metadados. No cadastro, o banco só aceita paciente ou psicólogo (quem tenta criar a conta como admin vira paciente).
 - **A inscrição do psicólogo nasce sempre pendente**, mesmo que o app envie outro status; só o admin aprova.
 - **Rotas protegidas**: `RouteGuard` deixa cada tipo de conta ver só as suas telas e manda para o login quem não está logado.
 - **Psicólogo não aprovado** não acessa o painel nem a fila do SOS. A fila é bloqueada também no banco (ficha 20).
@@ -59,11 +63,12 @@ Desativa o push daquele aparelho e encerra a sessão em todos os aparelhos. Se o
 
 ## Onde está no código
 
-- **Telas**: `src/pages/Index.tsx`, `SignupType.tsx`, `PatientSignUp.tsx`, `PsychologistSignUpPublic.tsx`, `ResetPassword.tsx`, `AccountSettings.tsx`, `Profile.tsx`, `PsychologistProfile.tsx`.
-- **Componentes**: `src/components/LoginForm.tsx`, `SignUpForm.tsx`, `RouteGuard.tsx`, `legal/LegalAcceptanceGate.tsx`.
+- **Telas**: `src/pages/Index.tsx`, `SignupType.tsx`, `PatientSignUp.tsx`, `PsychologistSignUpPublic.tsx`, `PsychologistCompleteSignup.tsx`, `ResetPassword.tsx`, `AccountSettings.tsx`, `Profile.tsx`, `PsychologistProfile.tsx`.
+- **Componentes**: `src/components/LoginForm.tsx`, `SignUpForm.tsx`, `RouteGuard.tsx`, `AccountStatusWatcher.tsx`, `legal/LegalAcceptanceGate.tsx`.
 - **Sessão e tipo de conta**: `src/contexts/AuthContext.tsx` (`getUserType`, `signOut`).
 - **Cadastro do psicólogo**: `src/services/psychologist.service.ts`.
 - **Banco**: `profiles`, `patients`, `psychologists`, `psychologist_registrations`, `legal_acceptances`, `admin_users`. Funções: `is_super_admin`, `get_psychologist_rejection_status`, `create_psychologist_profile`, `psychologist_can_attend`.
+- **Migração mais recente**: `20261021090000_contas_regras.sql` (`handle_new_user` cria o paciente; `patients.user_id` único).
 - **Gatilhos de proteção**: `a_guard_psychologist_client_write`, `a_guard_patient_client_write`, `a_guard_registration_client_insert`, `prevent_user_type_change`.
 
 ## Como validar
@@ -79,7 +84,7 @@ Desativa o push daquele aparelho e encerra a sessão em todos os aparelhos. Se o
 8. **Rotas**: logado como paciente, abrir `/admin-dashboard` → é redirecionado.
 
 ### Testes automáticos
-`loginForm`, `signOut`, `resetPassword`, `password`, `legal`, `sintomas`, `psychologistOfflineOnSignOut`, `adminNav`. Rodar com `npx vitest run src/test/loginForm.test.tsx` (e os demais).
+`loginForm`, `accountStatusWatcher`, `psychologistSignupUpload`, `signOut`, `resetPassword`, `password`, `legal`, `sintomas`, `psychologistOfflineOnSignOut`, `adminNav`. Rodar com `npx vitest run src/test/loginForm.test.tsx` (e os demais).
 
 ### Conferência no banco
 ```sql

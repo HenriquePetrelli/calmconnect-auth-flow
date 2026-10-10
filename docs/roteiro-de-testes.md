@@ -35,6 +35,12 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Abrir qualquer tela pela primeira vez ⇒ esqueleto de carregamento com o formato da própria tela
 - [ ] Psicólogo → Perfil → editar especialização e biografia → salvar ⇒ paciente vê os dados novos ao agendar
 - [ ] Qualquer → abrir endereço inexistente (`/xyz`) ⇒ "Não encontramos esta página"; "Voltar para o início" leva à Home, ao painel ou ao login
+- [ ] Com "Confirmar e-mail" ligado → cadastro de paciente ⇒ "Conta criada! Enviamos um link..."; depois de confirmar e entrar, CPF, cidade e sintomas estão no perfil
+- [ ] Cadastro de paciente com CPF já usado ⇒ nenhuma conta é criada; aviso para entrar ou recuperar a senha
+- [ ] Com "Confirmar e-mail" ligado → cadastro de psicólogo → confirmar → entrar ⇒ tela "Falta pouco" pede o documento do CRP; ao enviar, vai para análise
+- [ ] Admin bloqueia um paciente que está com o app aberto ⇒ em até 5 minutos (ou ao voltar para o app) vê o motivo e sai da conta; não consegue entrar de novo até o fim do bloqueio
+- [ ] Admin desbloqueia ⇒ a pessoa entra normalmente
+- [ ] Login com e-mail com espaço ou maiúscula ⇒ entra normalmente
 
 ## 2. SOS (fichas 02 e 03)
 

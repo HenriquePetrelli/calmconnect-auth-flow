@@ -39,12 +39,14 @@ const PsychologistLayoutOutlet = () => (
 // Push (toque no aviso, aviso com o app aberto, renovar o token): fora do
 // pacote inicial, carregado logo depois.
 const PushBridge = lazy(() => import("./components/PushBridge"));
+const AccountStatusWatcher = lazy(() => import("./components/AccountStatusWatcher"));
 
 // Lazy load all pages for better performance
 const Index = lazy(() => import("./pages/Index"));
 const SignupType = lazy(() => import("./pages/SignupType"));
 const PatientSignUp = lazy(() => import("./pages/PatientSignUp"));
 const PsychologistSignUpPublic = lazy(() => import("./pages/PsychologistSignUpPublic"));
+const PsychologistCompleteSignup = lazy(() => import("./pages/PsychologistCompleteSignup"));
 const Home = lazy(() => import("./pages/Home"));
 const SoundsLibrary = lazy(() => import("./pages/SoundsLibrary"));
 const SoundCategory = lazy(() => import("./pages/SoundCategory"));
@@ -136,6 +138,11 @@ const App = () => {
                   <Route path="/patient-signup" element={
                     <RouteGuard allowedUserTypes={['public']}>
                       <PatientSignUp />
+                    </RouteGuard>
+                  } />
+                  <Route path="/psicologo/concluir-cadastro" element={
+                    <RouteGuard allowedUserTypes={['public']}>
+                      <PsychologistCompleteSignup />
                     </RouteGuard>
                   } />
                   <Route path="/psychologist-signup" element={
@@ -437,6 +444,7 @@ const App = () => {
                   <PendingFeedbackGate />
                   <Suspense fallback={null}>
                     <PushBridge />
+                    <AccountStatusWatcher />
                   </Suspense>
                   <LegalAcceptanceGate />
                 </BackgroundWrapper>

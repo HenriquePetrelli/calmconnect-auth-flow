@@ -86,6 +86,8 @@ const PsychologistSignUpPublic = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  // Confirmação de e-mail ligada: falta confirmar e entrar para enviar o documento.
+  const [needsEmailConfirmation, setNeedsEmailConfirmation] = useState(false);
   const [documentFile, setDocumentFile] = useState<File | null>(null);
   // Erro do arquivo (inválido ou envio recusado): o campo fica vermelho.
   const [documentError, setDocumentError] = useState<string | null>(null);
@@ -147,8 +149,13 @@ const PsychologistSignUpPublic = () => {
 
       if (result.success) {
         setDocumentError(null);
+        setNeedsEmailConfirmation(Boolean(result.needsEmailConfirmation));
         setIsSuccess(true);
-        toast.success("Cadastro enviado! Verifique seu email para confirmar a conta.");
+        toast.success(
+          result.needsEmailConfirmation
+            ? "Conta criada! Confirme o seu e-mail e entre para concluir o cadastro."
+            : "Cadastro enviado para análise!",
+        );
       } else {
         if (result.documentError) setDocumentError(result.error || "Não foi possível enviar o documento.");
         toast.error(result.error || "Erro ao criar conta. Tente novamente.");
@@ -188,9 +195,11 @@ const PsychologistSignUpPublic = () => {
           
           <Card>
             <CardHeader className="text-center">
-              <CardTitle className="text-success">Cadastro Realizado!</CardTitle>
+              <CardTitle className="text-success">{needsEmailConfirmation ? 'Conta criada!' : 'Cadastro Realizado!'}</CardTitle>
               <CardDescription>
-                Seu cadastro foi enviado para análise. Você receberá um email quando for aprovado.
+                {needsEmailConfirmation
+                  ? 'Enviamos um link para o seu e-mail. Confirme, entre com sua senha e envie o documento do CRP para concluir o cadastro.'
+                  : 'Seu cadastro foi enviado para análise. Você receberá um email quando for aprovado.'}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

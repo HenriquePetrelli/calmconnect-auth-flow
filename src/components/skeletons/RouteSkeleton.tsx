@@ -90,7 +90,7 @@ const screen = (title: string, body: ReactNode, maxWidth?: string) => (
  */
 const ROUTES: { match: RegExp; render: (pathname: string) => ReactNode }[] = [
   // Públicas: só o fundo (a tela de entrada aparece em seguida).
-  { match: /^\/($|signup-type|patient-signup|psychologist-signup|reset-password|termos|privacidade)/, render: () => <PublicPageSkeleton /> },
+  { match: /^\/($|signup-type|patient-signup|psychologist-signup|psicologo\/concluir-cadastro|reset-password|termos|privacidade)/, render: () => <PublicPageSkeleton /> },
 
   // Paciente, telas com a barra do app (sem cabeçalho roxo).
   { match: /^\/home\/?$/, render: () => <HomeSkeleton /> },

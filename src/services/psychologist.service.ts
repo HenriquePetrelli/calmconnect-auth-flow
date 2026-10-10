@@ -23,7 +23,7 @@ export class PsychologistService {
   static async signUpPsychologist(
     formData: PsychologistFormData,
     documentFile?: File
-  ): Promise<{ success: boolean; error?: string; documentError?: boolean }> {
+  ): Promise<{ success: boolean; error?: string; documentError?: boolean; needsEmailConfirmation?: boolean }> {
     let userId: string | null = null;
     
     try {
@@ -56,6 +56,14 @@ export class PsychologistService {
             cpf: formData.cpf,
             crp: formData.crp,
             specialty: formData.specialty,
+            // O resto do formulário também, para concluir o cadastro no
+            // primeiro acesso se o e-mail precisar ser confirmado antes
+            // (sai dos dados do login quando o cadastro é concluído).
+            bio: formData.bio,
+            state: formData.state,
+            city: formData.city,
+            address: formData.address || null,
+            area_atendimento: formData.areaAtendimento,
             // Aceite de idade, Termos e Política marcado na tela de cadastro.
             ...signupAcceptanceMetadata('psychologist'),
           },
@@ -69,13 +77,87 @@ export class PsychologistService {
 
       userId = authData.user.id;
 
-      // O envio do documento e o perfil precisam da pessoa logada. Se o
-      // Supabase exigir confirmação de e-mail antes do primeiro acesso, não
-      // há sessão aqui (ver docs/pendencias-antes-do-lancamento.md).
+      // O envio do documento e o perfil precisam da pessoa logada. Com a
+      // confirmação de e-mail ligada no Supabase não há sessão aqui: a conta
+      // fica criada e o cadastro termina no primeiro acesso, depois de
+      // confirmar o e-mail (o login leva à tela de enviar o documento).
+      // Antes a conta era apagada e ninguém conseguia se cadastrar.
       if (!authData.session) {
-        throw new Error('Não foi possível concluir o cadastro agora. Tente de novo em alguns minutos.');
+        return { success: true, needsEmailConfirmation: true };
       }
 
+      await this.submitRegistration(userId, formData, documentFile);
+
+      // O psicólogo só usa o app depois da aprovação: sai da sessão criada no
+      // cadastro (o login avisa "em análise" enquanto não for aprovado).
+      await supabase.auth.signOut({ scope: 'local' });
+      return { success: true };
+    } catch (error) {
+      console.error('Erro no cadastro:', error);
+
+      // Rollback: Remover usuário criado se algo falhou
+      if (userId) {
+        await this.cleanupFailedSignup(userId);
+      }
+
+      if (error instanceof DocumentUploadError) {
+        return { success: false, error: error.message, documentError: true };
+      }
+      return {
+        success: false,
+        error: this.getUserFriendlyError(error),
+      };
+    }
+  }
+
+  /**
+   * Conclui o cadastro de quem confirmou o e-mail e entrou pela primeira vez:
+   * envia o documento e cria o cadastro (pendente) com os dados guardados no
+   * cadastro. A conta não é apagada se algo falhar: dá para tentar de novo.
+   */
+  static async completePendingRegistration(
+    documentFile: File,
+  ): Promise<{ success: boolean; error?: string; documentError?: boolean }> {
+    const documentValidation = this.validateFile(documentFile);
+    if (!documentValidation.valid) {
+      return { success: false, error: documentValidation.error, documentError: true };
+    }
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: 'Entre na sua conta para concluir o cadastro.' };
+    const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
+    const text = (key: string) => (typeof meta[key] === 'string' ? (meta[key] as string) : '');
+    const formData: PsychologistFormData = {
+      email: user.email ?? '',
+      password: '',
+      fullName: text('full_name'),
+      cpf: text('cpf'),
+      crp: text('crp'),
+      specialty: text('specialty'),
+      areaAtendimento: Array.isArray(meta.area_atendimento) ? (meta.area_atendimento as string[]) : [],
+      bio: text('bio'),
+      state: text('state'),
+      city: text('city'),
+      address: text('address') || undefined,
+    };
+    if (!formData.fullName || !formData.crp || !formData.cpf) {
+      return { success: false, error: 'Os dados do cadastro não foram encontrados. Fale com o suporte.' };
+    }
+    try {
+      await this.submitRegistration(user.id, formData, documentFile);
+      await supabase.auth.signOut({ scope: 'local' });
+      return { success: true };
+    } catch (error) {
+      console.error('Erro ao concluir cadastro:', error);
+      if (error instanceof DocumentUploadError) {
+        return { success: false, error: error.message, documentError: true };
+      }
+      return { success: false, error: this.getUserFriendlyError(error) };
+    }
+  }
+
+  /** Envia o documento e cria o cadastro pendente; tira os dados pessoais do login. */
+  private static async submitRegistration(userId: string, formData: PsychologistFormData, documentFile: File) {
+    {
       // 4. Enviar o documento para a pasta da pessoa.
       const uploadResult = await this.uploadDocument(documentFile, userId);
       if (!uploadResult.success) {
@@ -111,25 +193,10 @@ export class PsychologistService {
         throw new Error(result?.error || 'Falha ao criar perfil de psicólogo');
       }
 
-      // O psicólogo só usa o app depois da aprovação: sai da sessão criada no
-      // cadastro (o login avisa "em análise" enquanto não for aprovado).
-      await supabase.auth.signOut({ scope: 'local' });
-      return { success: true };
-    } catch (error) {
-      console.error('Erro no cadastro:', error);
-
-      // Rollback: Remover usuário criado se algo falhou
-      if (userId) {
-        await this.cleanupFailedSignup(userId);
-      }
-
-      if (error instanceof DocumentUploadError) {
-        return { success: false, error: error.message, documentError: true };
-      }
-      return {
-        success: false,
-        error: this.getUserFriendlyError(error),
-      };
+      // Dados pessoais não ficam nos dados do login (vão dentro do token).
+      await supabase.auth
+        .updateUser({ data: { cpf: null, bio: null, address: null, state: null, city: null, area_atendimento: null } })
+        .catch(() => undefined);
     }
   }
 

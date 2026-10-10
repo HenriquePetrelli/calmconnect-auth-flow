@@ -96,12 +96,6 @@ const PsychologistDashboard = () => {
         return;
       }
 
-      // Check if user is super admin - if so, redirect to admin area
-      if (user.user_metadata?.is_super_admin === true) {
-        navigate('/admin-dashboard');
-        return;
-      }
-
       // Check if psychologist is approved
       if (profile.user_type === 'psychologist') {
         const { data: registrationData } = await supabase
@@ -110,12 +104,10 @@ const PsychologistDashboard = () => {
           .eq('user_id', user.id)
           .single();
 
+        // Aprovação só pelo banco (user_metadata é editável pelo próprio usuário).
         if (!registrationData || registrationData.status !== 'approved') {
-          // Check user metadata for approval status
-          if (user.user_metadata?.account_status !== 'approved') {
-            navigate('/?error=not_approved');
-            return;
-          }
+          navigate('/?error=not_approved');
+          return;
         }
       }
 

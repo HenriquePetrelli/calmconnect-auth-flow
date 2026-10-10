@@ -19,7 +19,8 @@ export const ROUTE_PERMISSIONS = {
     '/',
     '/signup-type',
     '/patient-signup',
-    '/psychologist-signup'
+    '/psychologist-signup',
+    '/psicologo/concluir-cadastro'
   ],
   patient: [
     '/home',

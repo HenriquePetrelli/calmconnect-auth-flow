@@ -98,6 +98,21 @@ Deno.serve(async (req: Request): Promise<Response> => {
       .eq("id", patient_id)
       .maybeSingle();
 
+    // O bloqueio vale também para quem já está logado: a conta fica suspensa
+    // no login do Supabase pelo mesmo período (sem renovar a sessão nem entrar
+    // de novo). Antes só a tela de login conferia o bloqueio e quem estava com
+    // o app aberto continuava usando.
+    if (updated?.user_id) {
+      const ban =
+        action === "block"
+          ? updates.blocked_until
+            ? `${Math.max(1, Math.ceil((new Date(updates.blocked_until).getTime() - Date.now()) / 3_600_000))}h`
+            : "876000h"
+          : "none";
+      const { error: banError } = await supabase.auth.admin.updateUserById(updated.user_id, { ban_duration: ban });
+      if (banError) console.error("Could not update auth ban:", banError.message);
+    }
+
     await supabase.from("admin_audit_log").insert({
       admin_id: user.id,
       action: action === "block" ? "block_patient" : "unblock_patient",

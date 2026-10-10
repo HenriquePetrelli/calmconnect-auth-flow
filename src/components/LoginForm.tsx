@@ -39,14 +39,18 @@ const LoginForm = ({ onForgotPassword, onSignUp }: LoginFormProps) => {
         return;
       }
 
-      // Autenticação com Supabase
+      // Autenticação com Supabase (e-mail sem espaços e em minúsculas: colado
+      // ou com o teclado do celular pondo maiúscula, o login falhava).
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: email.trim().toLowerCase(),
         password,
       });
 
       if (error) {
-        if (error.message.includes("Invalid login credentials")) {
+        if (/banned/i.test(error.message)) {
+          // Conta bloqueada pelo admin (o bloqueio também vale no login do Supabase).
+          toast.error("Sua conta está bloqueada no momento. Se achar que é um engano, fale com o suporte.");
+        } else if (error.message.includes("Invalid login credentials")) {
           toast.error("Email ou senha incorretos");
         } else if (error.message.includes("Email not confirmed")) {
           toast.error("Confirme seu email antes de fazer login");
@@ -67,7 +71,8 @@ const LoginForm = ({ onForgotPassword, onSignUp }: LoginFormProps) => {
       const state = await fetchLoginState(data.user.id);
 
       // Admin não tem linha em `profiles` (fica em admin_users): resolve antes.
-      if (state.is_admin || data.user.user_metadata?.is_super_admin === true) {
+      // Só pelo banco: user_metadata é editável pelo próprio usuário.
+      if (state.is_admin) {
         navigate('/admin-dashboard');
         setEmail("");
         setPassword("");
@@ -97,12 +102,17 @@ const LoginForm = ({ onForgotPassword, onSignUp }: LoginFormProps) => {
           return;
         }
 
-        if (data.user.user_metadata?.account_status !== 'approved') {
+        const approved =
+          state.registration?.status === 'approved' ||
+          (state.psychologist?.approved === true && state.psychologist.approval_status === 'approved');
+        if (!approved) {
           const registrationData = state.registration;
 
           if (!registrationData) {
-            toast.error("Cadastro não encontrado. Entre em contato com o suporte.");
-            await supabase.auth.signOut();
+            // Confirmou o e-mail e entrou pela primeira vez: falta enviar o
+            // documento do CRP para o cadastro ir para análise.
+            navigate('/psicologo/concluir-cadastro');
+            setPassword("");
             return;
           }
 
@@ -140,8 +150,6 @@ const LoginForm = ({ onForgotPassword, onSignUp }: LoginFormProps) => {
         navigate('/psychologist-dashboard');
       } else if (profile.user_type === 'patient') {
         navigate('/home');
-      } else if (data.user.user_metadata?.is_super_admin) {
-        navigate('/admin-dashboard');
       } else {
         navigate('/home');
       }
