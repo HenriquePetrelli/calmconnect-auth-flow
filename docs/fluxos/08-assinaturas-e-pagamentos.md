@@ -52,7 +52,7 @@ O pagamento é pelo **Stripe Checkout**. O estado da assinatura fica em `subscri
 - **Telas e contexto**: `src/pages/SubscriptionPlans.tsx`, `SubscriptionSuccess.tsx`, `SubscriptionCancel.tsx`, `src/components/SubscriptionUpgradeModal.tsx`, `src/contexts/SubscriptionContext.tsx`.
 - **Dados dos planos**: `src/lib/plans.ts` (textos e preços); `supabase/functions/_shared/billing.ts` (regras, com testes); `_shared/stripe.ts`.
 - **Edge functions**: `create-checkout`, `check-subscription`, `manage-subscription`, `cancel-subscription`, `customer-portal`, `stripe-webhook`.
-- **Banco**: `subscribers`, `security_audit_log` (reembolso por arrependimento). Funções: `can_use_sos`, `refresh_subscriber_entitlement`, `cancel_appointments_after_plan_loss`. Gatilhos `a0_free_subscriber_email`, `notify_plan_ended`. Migração mais recente: `20261018090000_assinaturas_regras.sql`.
+- **Banco**: `subscribers`, `security_audit_log` (reembolso por arrependimento). Funções: `can_use_sos`, `refresh_subscriber_entitlement`, `cancel_appointments_after_plan_loss`. Gatilhos `a0_free_subscriber_email`, `notify_plan_ended`. Migração mais recente: `20261010210022_fe0b5f60-e3cd-48fd-b4b8-e79fe39f638d.sql`.
 
 ## Como validar
 
