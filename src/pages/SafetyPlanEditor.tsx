@@ -11,7 +11,8 @@ import PageHeader from '@/components/PageHeader';
 import PatientBottomNav from '@/components/PatientBottomNav';
 import HomeCrisisAccess from '@/components/HomeCrisisAccess';
 import { useToast } from '@/hooks/use-toast';
-import { useSafetyPlan, type EmergencyContact } from '@/hooks/useSafetyPlan';
+import { SAFETY_PLAN_CACHE_PREFIX, useSafetyPlan, type EmergencyContact, type SafetyPlanDraft } from '@/hooks/useSafetyPlan';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   MAX_PLAN_TITLE_LENGTH,
   MAX_SAFETY_PLANS,
@@ -123,7 +124,9 @@ const SafetyPlanEditor = () => {
   const isNew = planId === null;
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const { initial, planCount, notFound, loading, saving, save } = useSafetyPlan(planId);
+  const draftKey = user ? `${SAFETY_PLAN_CACHE_PREFIX}${user.id}:rascunho:${planId ?? 'novo'}` : null;
   const [title, setTitle] = useState('');
   const [draftPlan, setDraftPlan] = useState<SafetyPlanLists>(emptySafetyPlan());
   const [contacts, setContacts] = useState<EmergencyContact[]>([]);
@@ -136,13 +139,31 @@ const SafetyPlanEditor = () => {
   // Fill the editor from the database once, when the plan first loads. After
   // that the draft belongs to the patient and nothing overwrites it.
   const draftInitialized = useRef(false);
+  const [draftReady, setDraftReady] = useState(false);
   useEffect(() => {
     if (loading || draftInitialized.current) return;
     draftInitialized.current = true;
+    setDraftReady(true);
+    // Alterações não salvas de uma visita anterior (saiu da tela, recarregou,
+    // acabou a bateria): voltam para a tela.
+    let restored: SafetyPlanDraft | null = null;
+    try {
+      const raw = draftKey ? localStorage.getItem(draftKey) : null;
+      restored = raw ? (JSON.parse(raw) as SafetyPlanDraft) : null;
+    } catch {
+      restored = null;
+    }
+    if (restored && JSON.stringify(restored) !== JSON.stringify(initial)) {
+      setTitle(restored.title ?? '');
+      setDraftPlan({ ...emptySafetyPlan(), ...restored.lists });
+      setContacts(restored.contacts ?? []);
+      toast({ title: 'Recuperamos o que você não tinha salvado', description: 'Confira e toque em "Salvar plano".' });
+      return;
+    }
     setTitle(initial.title);
     setDraftPlan(initial.lists);
     setContacts(initial.contacts);
-  }, [initial, loading]);
+  }, [initial, loading, draftKey, toast]);
 
   const titlePlaceholder = isNew ? defaultPlanTitle(planCount) : initial.title || defaultPlanTitle(0);
   const limitReached = isNew && planCount >= MAX_SAFETY_PLANS;
@@ -152,6 +173,28 @@ const SafetyPlanEditor = () => {
       JSON.stringify({ title: initial.title, lists: initial.lists, contacts: initial.contacts }),
     [title, draftPlan, contacts, initial]
   );
+  // Rascunho no aparelho enquanto houver alteração não salva.
+  useEffect(() => {
+    if (!draftKey || !draftReady) return;
+    try {
+      if (dirty) localStorage.setItem(draftKey, JSON.stringify({ title, lists: draftPlan, contacts }));
+      else localStorage.removeItem(draftKey);
+    } catch {
+      /* sem armazenamento */
+    }
+  }, [draftKey, draftReady, dirty, title, draftPlan, contacts]);
+
+  // Fechar ou recarregar a aba com alteração não salva: o navegador pergunta.
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [dirty]);
+
   const filled = countFilledSections(draftPlan, contacts.length);
   // Open the first part that is still empty, so filling in feels step by step.
   const firstEmpty = SAFETY_PLAN_SECTIONS.find((s) => draftPlan[s.key].length === 0)?.key
@@ -163,6 +206,13 @@ const SafetyPlanEditor = () => {
     const finalTitle = (title.trim() || titlePlaceholder).slice(0, MAX_PLAN_TITLE_LENGTH);
     const id = await save({ title: finalTitle, lists: draftPlan, contacts });
     if (id) {
+      if (draftKey) {
+        try {
+          localStorage.removeItem(draftKey);
+        } catch {
+          /* noop */
+        }
+      }
       toast({ title: 'Plano salvo' });
       navigate('/safety-plan');
     }

@@ -123,6 +123,8 @@ class QueryBuilder implements PromiseLike<{ data: any; error: any; count?: numbe
       this.db.failNextWith = null;
       return { data: null, error };
     }
+    // Sem internet: toda leitura falha enquanto estiver ligado.
+    if (this.db.offlineError) return { data: null, error: this.db.offlineError };
     if (this.db.failSelectWith && this.mode === 'select') {
       const error = this.db.failSelectWith;
       this.db.failSelectWith = null;
@@ -335,6 +337,8 @@ export class FakeDB {
   channels: FakeChannel[] = [];
   failNextWith: any = null;
   failSelectWith: any = null;
+  /** Sem internet: todas as consultas falham com este erro. */
+  offlineError: any = null;
   authListeners: ((event: string, session: unknown) => void)[] = [];
   /** Contas para signInWithPassword, por e-mail. */
   loginUsers: Record<string, { id: string; user_metadata?: Row }> = {};

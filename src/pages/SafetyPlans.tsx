@@ -18,11 +18,12 @@ import PatientBottomNav from '@/components/PatientBottomNav';
 import HomeCrisisAccess from '@/components/HomeCrisisAccess';
 import { useSafetyPlans, type SafetyPlanSummary } from '@/hooks/useSafetyPlan';
 import { MAX_SAFETY_PLANS } from '@/lib/safetyPlan';
+import OfflinePlanNotice from '@/components/safety/OfflinePlanNotice';
 
 /** The patient's safety plans: titles only, each with edit and delete. */
 const SafetyPlans = () => {
   const navigate = useNavigate();
-  const { plans, loading, deletingId, deletePlan } = useSafetyPlans();
+  const { plans, loading, offline, deletingId, deletePlan } = useSafetyPlans();
   const [toDelete, setToDelete] = useState<SafetyPlanSummary | null>(null);
   const limitReached = plans.length >= MAX_SAFETY_PLANS;
 
@@ -38,6 +39,8 @@ const SafetyPlans = () => {
             Roteiros seus para os momentos difíceis. Se você pedir ajuda pelo SOS, o psicólogo que atender pode
             consultá-los durante o atendimento, e esse acesso fica registrado.
           </p>
+
+          {offline && <OfflinePlanNotice />}
 
           <div className="space-y-2">
             <Button className="w-full min-h-12" onClick={() => navigate('/safety-plan/novo')} disabled={loading || limitReached}>

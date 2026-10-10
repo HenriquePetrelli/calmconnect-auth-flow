@@ -244,6 +244,12 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Criar segundo plano ⇒ os dois na lista
 - [ ] SOS em andamento → Psicólogo → painel do paciente → Plano de segurança ⇒ vê o plano
 - [ ] SOS encerrado → Psicólogo tenta abrir o plano ⇒ não consegue
+- [ ] Abrir um plano → desligar a internet → abrir de novo ⇒ mostra o plano com "Sem internet"; "Ligar" funciona
+- [ ] SOS sem internet e sem nunca ter aberto o plano ⇒ "Sem internet para abrir o seu plano agora" e CVV
+- [ ] Editor → escrever → sair sem salvar → voltar ⇒ o que foi escrito volta
+- [ ] Editor com alteração → fechar a aba ⇒ o navegador pergunta antes de sair
+- [ ] Mesmo plano em dois aparelhos → salvar num, depois no outro ⇒ "O plano mudou em outro aparelho", nada apagado
+- [ ] Sair da conta ⇒ o plano deixa de abrir sem internet naquele aparelho
 
 ## 13. Autocuidado (ficha 15)
 

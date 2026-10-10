@@ -30,6 +30,11 @@ const cleanupAuthState = () => {
       localStorage.removeItem(key);
     }
   });
+  // Plano de segurança e rascunhos de questionário guardados no aparelho
+  // (dado de saúde): não ficam para quem usar o aparelho depois.
+  Object.keys(localStorage).forEach((key) => {
+    if (key.startsWith('plano:') || key.startsWith('questionarios:rascunho:')) localStorage.removeItem(key);
+  });
   Object.keys(sessionStorage || {}).forEach((key) => {
     // soliv:subscription: plano guardado para abrir mais rápido (SubscriptionContext).
     if (key.startsWith('supabase.auth.') || key.includes('sb-') || key.startsWith('soliv:subscription:')) {

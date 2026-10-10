@@ -5,6 +5,38 @@ import { useToast } from '@/hooks/use-toast';
 import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 import { emptySafetyPlan, type SafetyPlanLists } from '@/lib/safetyPlan';
 
+/**
+ * O plano é para a hora da crise, quando a internet pode faltar: a última
+ * versão aberta fica guardada no aparelho e é mostrada se o servidor não
+ * responder. Sai do aparelho ao sair da conta (AuthContext).
+ */
+export const SAFETY_PLAN_CACHE_PREFIX = 'plano:';
+const listKey = (userId: string) => `${SAFETY_PLAN_CACHE_PREFIX}${userId}:lista`;
+const planKey = (userId: string, planId: string) => `${SAFETY_PLAN_CACHE_PREFIX}${userId}:${planId}`;
+
+const readCache = <T,>(key: string): T | null => {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : null;
+  } catch {
+    return null;
+  }
+};
+const writeCache = (key: string, value: unknown) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    /* sem armazenamento: segue só online */
+  }
+};
+const dropCache = (key: string) => {
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    /* noop */
+  }
+};
+
 export interface EmergencyContact {
   name: string;
   relationship: string | null;
@@ -25,6 +57,10 @@ export const useSafetyPlans = () => {
   const [plans, setPlans] = useState<SafetyPlanSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  /** Mostrando a cópia guardada no aparelho (sem internet). */
+  const [offline, setOffline] = useState(false);
+  /** Não carregou e não há cópia no aparelho. */
+  const [failed, setFailed] = useState(false);
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -37,8 +73,18 @@ export const useSafetyPlans = () => {
         .order('created_at', { ascending: true });
       if (error) throw error;
       setPlans(data ?? []);
+      setOffline(false);
+      setFailed(false);
+      writeCache(listKey(user.id), data ?? []);
     } catch (error) {
       console.error('Erro ao carregar planos de segurança:', error);
+      const cached = readCache<SafetyPlanSummary[]>(listKey(user.id));
+      if (cached) {
+        setPlans(cached);
+        setOffline(true);
+        return;
+      }
+      setFailed(true);
       toast({
         title: 'Não foi possível carregar seus planos',
         description: 'Verifique sua conexão e tente de novo.',
@@ -59,7 +105,12 @@ export const useSafetyPlans = () => {
     try {
       const { error } = await supabase.from('safety_plans').delete().eq('id', planId);
       if (error) throw error;
-      setPlans((prev) => prev.filter((p) => p.id !== planId));
+      setPlans((prev) => {
+        const next = prev.filter((p) => p.id !== planId);
+        if (user) writeCache(listKey(user.id), next);
+        return next;
+      });
+      if (user) dropCache(planKey(user.id, planId));
       toast({ title: 'Plano excluído' });
       return true;
     } catch (error) {
@@ -75,7 +126,7 @@ export const useSafetyPlans = () => {
     }
   };
 
-  return { plans, loading, deletingId, deletePlan, reload: load };
+  return { plans, loading, offline, failed, deletingId, deletePlan, reload: load };
 };
 
 export interface SafetyPlanDraft {
@@ -83,6 +134,13 @@ export interface SafetyPlanDraft {
   lists: SafetyPlanLists;
   contacts: EmergencyContact[];
 }
+
+interface CachedPlan extends SafetyPlanDraft {
+  updated_at: string | null;
+}
+
+/** Erro de "alterado em outro aparelho" (o banco recusou para não sobrescrever). */
+export const isPlanConflict = (error: unknown) => (error as { code?: string } | null)?.code === '40001';
 
 /**
  * One safety plan being created (`planId` null) or edited. Everything —
@@ -98,6 +156,22 @@ export const useSafetyPlan = (planId: string | null) => {
   const [notFound, setNotFound] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  /** Versão aberta (updated_at): o banco recusa salvar por cima de uma mais nova. */
+  const [version, setVersion] = useState<string | null>(null);
+  const [offline, setOffline] = useState(false);
+  /**
+   * Plano novo: id gerado no aparelho, o mesmo em todas as tentativas (até
+   * recarregando a página), para uma resposta perdida não virar plano em dobro.
+   */
+  const [newId] = useState<string | null>(() => {
+    if (planId || !user || typeof crypto === 'undefined' || typeof crypto.randomUUID !== 'function') return null;
+    const key = `${SAFETY_PLAN_CACHE_PREFIX}${user.id}:novo-id`;
+    const saved = readCache<string>(key);
+    if (saved) return saved;
+    const id = crypto.randomUUID();
+    writeCache(key, id);
+    return id;
+  });
 
   useEffect(() => {
     if (!user) return;
@@ -115,7 +189,7 @@ export const useSafetyPlan = (planId: string | null) => {
           const [{ data: plan, error: planError }, { data: contacts, error: contactsError }] = await Promise.all([
             supabase
               .from('safety_plans')
-              .select('title, warning_signs, coping_strategies, distractions, safe_environment, reasons_to_live')
+              .select('title, warning_signs, coping_strategies, distractions, safe_environment, reasons_to_live, updated_at')
               .eq('id', planId)
               .maybeSingle(),
             supabase
@@ -132,8 +206,8 @@ export const useSafetyPlan = (planId: string | null) => {
             setNotFound(true);
             return;
           }
-          const { title, ...lists } = plan;
-          setInitial({
+          const { title, updated_at, ...lists } = plan;
+          const loaded: SafetyPlanDraft = {
             title,
             lists: { ...emptySafetyPlan(), ...lists },
             contacts: (contacts ?? []).map(({ name, relationship, phone, is_primary }) => ({
@@ -142,10 +216,22 @@ export const useSafetyPlan = (planId: string | null) => {
               phone,
               is_primary,
             })),
-          });
+          };
+          setInitial(loaded);
+          setVersion(updated_at ?? null);
+          setOffline(false);
+          writeCache(planKey(user.id, planId), { ...loaded, updated_at: updated_at ?? null } satisfies CachedPlan);
         }
       } catch (error) {
         console.error('Erro ao carregar plano de segurança:', error);
+        // Sem internet: a última versão guardada no aparelho.
+        const cached = planId ? readCache<CachedPlan>(planKey(user.id, planId)) : null;
+        if (cached && !cancelled) {
+          setInitial({ title: cached.title, lists: { ...emptySafetyPlan(), ...cached.lists }, contacts: cached.contacts ?? [] });
+          setVersion(cached.updated_at);
+          setOffline(true);
+          return;
+        }
         if (!cancelled) {
           toast({
             title: 'Não foi possível carregar o plano',
@@ -175,15 +261,24 @@ export const useSafetyPlan = (planId: string | null) => {
         p_safe_environment: draft.lists.safe_environment,
         p_reasons_to_live: draft.lists.reasons_to_live,
         p_contacts: draft.contacts.map((c) => ({ ...c })),
-      });
+        p_new_id: planId ? null : newId,
+        p_expected_updated_at: planId ? version : null,
+      } as never);
       if (error) throw error;
       setInitial(draft);
-      return data;
+      if (user && !planId) dropCache(`${SAFETY_PLAN_CACHE_PREFIX}${user.id}:novo-id`);
+      if (user && data) {
+        // A cópia do aparelho fica com o que acabou de ser salvo.
+        writeCache(planKey(user.id, data as string), { ...draft, updated_at: new Date().toISOString() } satisfies CachedPlan);
+      }
+      return data as string;
     } catch (error) {
       console.error('Erro ao salvar plano de segurança:', error);
       toast({
-        title: 'Não foi possível salvar',
-        description: getFriendlyErrorMessage(error, 'Tente de novo em instantes.'),
+        title: isPlanConflict(error) ? 'O plano mudou em outro aparelho' : 'Não foi possível salvar',
+        description: isPlanConflict(error)
+          ? 'Para não apagar o que foi salvo lá, nada foi gravado. Abra o plano de novo e refaça a alteração.'
+          : getFriendlyErrorMessage(error, 'Suas alterações continuam na tela. Tente de novo em instantes.'),
         variant: 'destructive',
       });
       return null;
@@ -192,5 +287,5 @@ export const useSafetyPlan = (planId: string | null) => {
     }
   };
 
-  return { initial, planCount, notFound, loading, saving, save };
+  return { initial, planCount, notFound, loading, saving, offline, save };
 };

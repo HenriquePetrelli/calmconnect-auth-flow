@@ -5,12 +5,13 @@ import { Button } from '@/components/ui/button';
 import { useSafetyPlan, useSafetyPlans } from '@/hooks/useSafetyPlan';
 import { SAFETY_PLAN_SECTIONS, type SafetyPlanListKey } from '@/lib/safetyPlan';
 import { cn } from '@/lib/utils';
+import OfflinePlanNotice from '@/components/safety/OfflinePlanNotice';
 
 /** Na crise, o que mais ajuda primeiro: motivos, o que fazer sozinho, distrações. */
 const CRISIS_ORDER: SafetyPlanListKey[] = ['reasons_to_live', 'coping_strategies', 'distractions', 'safe_environment'];
 
 const PlanContent = ({ planId }: { planId: string }) => {
-  const { initial, loading } = useSafetyPlan(planId);
+  const { initial, loading, offline } = useSafetyPlan(planId);
 
   if (loading) return <div className="h-40 animate-pulse rounded-xl bg-muted" aria-label="Carregando plano" />;
 
@@ -22,6 +23,7 @@ const PlanContent = ({ planId }: { planId: string }) => {
 
   return (
     <div className="space-y-4">
+      {offline && <OfflinePlanNotice />}
       {initial.contacts.length > 0 && (
         <section className="space-y-2">
           <h3 className="text-sm font-semibold text-foreground">Pessoas para quem ligar</h3>
@@ -66,13 +68,22 @@ const PlanContent = ({ planId }: { planId: string }) => {
 };
 
 const PlanPicker = () => {
-  const { plans, loading } = useSafetyPlans();
+  const { plans, loading, failed } = useSafetyPlans();
   // O mais recente primeiro: costuma ser o que a pessoa mais usa.
   const ordered = useMemo(() => [...plans].sort((a, b) => b.updated_at.localeCompare(a.updated_at)), [plans]);
   const [selected, setSelected] = useState<string | null>(null);
   const planId = selected ?? ordered[0]?.id ?? null;
 
   if (loading) return <div className="h-40 animate-pulse rounded-xl bg-muted" aria-label="Carregando plano" />;
+
+  if (!planId && failed) {
+    // Sem internet e sem cópia no aparelho: não dizer "você não tem plano".
+    return (
+      <p className="text-sm text-muted-foreground">
+        Sem internet para abrir o seu plano agora. Se precisar, ligue para o CVV (188), de graça, a qualquer hora.
+      </p>
+    );
+  }
 
   if (!planId) {
     return (

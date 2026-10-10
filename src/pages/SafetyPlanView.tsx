@@ -5,6 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import PageHeader from '@/components/PageHeader';
 import PatientBottomNav from '@/components/PatientBottomNav';
 import HomeCrisisAccess from '@/components/HomeCrisisAccess';
+import OfflinePlanNotice from '@/components/safety/OfflinePlanNotice';
 import { useSafetyPlan } from '@/hooks/useSafetyPlan';
 import { SAFETY_PLAN_SECTIONS, TOTAL_PLAN_PARTS, countFilledSections, telHref } from '@/lib/safetyPlan';
 
@@ -16,7 +17,7 @@ import { SAFETY_PLAN_SECTIONS, TOTAL_PLAN_PARTS, countFilledSections, telHref } 
 const SafetyPlanView = () => {
   const navigate = useNavigate();
   const { planId = '' } = useParams();
-  const { initial: plan, loading, notFound } = useSafetyPlan(planId);
+  const { initial: plan, loading, notFound, offline } = useSafetyPlan(planId);
 
   const reasons = plan.lists.reasons_to_live;
   const steps = SAFETY_PLAN_SECTIONS.filter((s) => s.key !== 'reasons_to_live' && plan.lists[s.key].length > 0);
@@ -60,6 +61,7 @@ const SafetyPlanView = () => {
             </div>
           ) : (
             <>
+              {offline && <OfflinePlanNotice />}
               {reasons.length > 0 && (
                 <section className="rounded-2xl bg-primary/10 p-5" aria-labelledby="reasons">
                   <h2 id="reasons" className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-primary">
