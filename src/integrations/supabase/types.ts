@@ -3118,6 +3118,14 @@ export type Database = {
         Args: { p_blocks: Json }
         Returns: undefined
       }
+      set_psychologist_vacation: {
+        Args: {
+          p_cancel_appointments?: boolean
+          p_end: string
+          p_start: string
+        }
+        Returns: Json
+      }
       set_week_goals: {
         Args: { p_goal_ids: string[]; p_local_date: string }
         Returns: string
@@ -3150,6 +3158,15 @@ export type Database = {
         Returns: undefined
       }
       update_patient_streak: { Args: { p_patient_id: string }; Returns: Json }
+      vacation_conflicts: {
+        Args: { p_end: string; p_start: string }
+        Returns: {
+          id: string
+          patient_name: string
+          starts_at: string
+          status: string
+        }[]
+      }
       validate_cpf: { Args: { cpf_input: string }; Returns: boolean }
       validate_crp: { Args: { crp_input: string }; Returns: boolean }
       validate_route_access: {
