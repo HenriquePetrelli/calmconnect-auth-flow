@@ -545,11 +545,12 @@ const QuitDetail = ({
 const HabitDetail = () => {
   const navigate = useNavigate();
   const { habitId } = useParams();
-  const { habits, eventsByHabit, loading, logIntake, deleteEvent, updateEventDetails, logCraving, registerRelapse, archiveHabit } = useHabits();
+  const { habits, eventsByHabit, loading, logIntake, deleteEvent, updateEventDetails, logCraving, registerRelapse, archiveHabit, deleteHabit } = useHabits();
   const log = useHabitLogger(logIntake, deleteEvent);
   const [cravingOpen, setCravingOpen] = useState(false);
   const [relapseOpen, setRelapseOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const habit = habits.find((h) => h.id === habitId);
   const events = habit ? eventsByHabit.get(habit.id) ?? [] : [];
@@ -654,10 +655,22 @@ const HabitDetail = () => {
                 <AlertDialogContent>
                   <AlertDialogHeader>
                     <AlertDialogTitle>Tirar “{habitTitle(habit)}” da lista?</AlertDialogTitle>
-                    <AlertDialogDescription>Os lembretes param. O histórico fica guardado e sai junto se você excluir a conta.</AlertDialogDescription>
+                    <AlertDialogDescription>
+                      Os lembretes param e o histórico fica guardado. Se preferir, apague o hábito com todo o histórico.
+                    </AlertDialogDescription>
                   </AlertDialogHeader>
-                  <AlertDialogFooter>
+                  <AlertDialogFooter className="gap-2 sm:gap-0">
                     <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <Button
+                      variant="outline"
+                      className="text-destructive hover:text-destructive"
+                      onClick={() => {
+                        setArchiveOpen(false);
+                        setDeleteOpen(true);
+                      }}
+                    >
+                      Apagar com o histórico
+                    </Button>
                     <AlertDialogAction
                       className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                       onClick={async () => {
@@ -671,6 +684,33 @@ const HabitDetail = () => {
                       }}
                     >
                       Tirar da lista
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Apagar “{habitTitle(habit)}” e todo o histórico?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Todos os registros deste hábito{isQuitHabit(habit.kind) ? ', o recorde e as recaídas' : ''} são apagados de vez. Não dá para desfazer.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      onClick={async () => {
+                        try {
+                          await deleteHabit(habit.id);
+                          toast.success('Hábito e histórico apagados');
+                          navigate('/habitos', { replace: true });
+                        } catch {
+                          toast.error('Não foi possível apagar agora.');
+                        }
+                      }}
+                    >
+                      Apagar de vez
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>

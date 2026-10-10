@@ -198,6 +198,16 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Cafeína acima de 400 mg ⇒ anel vermelho e aviso
 - [ ] Criar um hábito de cada tipo (sono, movimento, refeições, telas, algo que me faz bem) ⇒ cada um registra
 - [ ] Hábito → Editar → mudar meta ⇒ salva; Excluir ⇒ some da lista
+- [ ] Água sem internet → tocar 2 copos ⇒ "Sem internet agora", o anel avança; religar ⇒ os 2 copos chegam uma vez cada
+- [ ] Água sem internet → tocar copo → recarregar a página ⇒ o copo continua lá e é enviado quando a internet volta
+- [ ] Água → tocar copo e "Desfazer" na hora ⇒ o copo não volta depois
+- [ ] Abrir o endereço /habitos/novo/water com Água já na lista ⇒ "Esse hábito já está na sua lista"
+- [ ] Hábito → Tirar da minha lista → Apagar com o histórico ⇒ pede confirmação e apaga tudo
+- [ ] Parar de fumar → Recaída tocando duas vezes rápido ⇒ conta uma recaída só
+- [ ] Sono anotado de manhã ⇒ não chega "Como você dormiu?" no horário do lembrete
+- [ ] Lembrete do remédio na tela bloqueada ⇒ "Hora do remédio (08:00)", sem o nome do remédio
+- [ ] Lembrete de "Parar de fumar" na tela bloqueada ⇒ "3 dias seguidos", sem dizer do que
+- [ ] App aberto de um dia para o outro ⇒ depois da meia-noite a água volta a zero sem recarregar
 
 ## 10. Meu progresso (ficha 12)
 

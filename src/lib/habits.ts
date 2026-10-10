@@ -79,6 +79,8 @@ export interface HabitEvent {
   local_date: string;
   occurred_at: string;
   details: Record<string, unknown>;
+  /** Registrado no aparelho e ainda não confirmado pelo servidor (sem internet). */
+  pending?: boolean;
 }
 
 export const MAX_ACTIVE_HABITS = 10;

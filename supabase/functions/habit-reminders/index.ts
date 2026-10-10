@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { isTrustedCaller } from "../_shared/guards.ts";
+import { firebaseServiceAccount, getAccessToken, sendToTokens } from "../_shared/fcm.ts";
 
 // Lembretes de "Meus hábitos", chamados pelo pg_cron a cada 15 minutos.
 //
@@ -7,10 +8,12 @@ import { isTrustedCaller } from "../_shared/guards.ts";
 // janela e do intervalo escolhidos, enquanto a meta do dia não foi batida; e
 // uma mensagem por dia para quem está parando de fumar/beber e para os outros
 // hábitos do dia; no remédio, um lembrete em cada horário de dose ainda não
-// marcada. A função marca
-// cada lembrete como enviado na mesma operação, então chamadas repetidas (ou
-// de fora) não disparam lembretes a mais — por isso esta função não exige o
-// CRON_SECRET, mas o aceita se estiver configurado.
+// marcada. A função marca cada lembrete como enviado na mesma operação, então
+// chamadas repetidas não disparam lembretes a mais. Se o Firebase falhar, o
+// lembrete é devolvido (release_habit_reminders) e sai na rodada seguinte.
+//
+// O texto aparece na tela bloqueada: não diz o nome do remédio nem do que a
+// pessoa está largando (é dado de saúde; alguém pode ver o celular).
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -52,7 +55,7 @@ export const buildMessage = (r: DueReminder): { title: string; body: string } =>
     case "water": {
       const missing = Math.max(0, goal - total);
       return {
-        title: "Hora de beber água 💧",
+        title: "Hora de beber água",
         body: total === 0
           ? `Comece o dia com um copo. A meta de hoje é ${formatMl(goal)}.`
           : `Você já bebeu ${formatMl(total)}. Faltam ${formatMl(missing)} para a meta.`,
@@ -68,7 +71,7 @@ export const buildMessage = (r: DueReminder): { title: string; body: string } =>
     case "caffeine": {
       const cutoff = typeof r.settings?.cutoff_time === "string" ? r.settings.cutoff_time : null;
       return {
-        title: "Último café do dia? ☕",
+        title: "Último café do dia?",
         body: cutoff
           ? `Depois das ${cutoff}, a cafeína pode atrapalhar o sono. Hoje: ${Math.round(total)} mg de ${Math.round(goal)} mg.`
           : `Hoje: ${Math.round(total)} mg de ${Math.round(goal)} mg.`,
@@ -78,7 +81,7 @@ export const buildMessage = (r: DueReminder): { title: string; body: string } =>
       const meal = MEAL_LABELS[r.due_slot ?? ""];
       if (meal) {
         return {
-          title: `Hora do ${meal} 🍽️`,
+          title: `Hora do ${meal}`,
           body: "Já comeu? Marque em Meus hábitos. Ficar muitas horas sem comer pode aumentar a ansiedade.",
         };
       }
@@ -91,12 +94,12 @@ export const buildMessage = (r: DueReminder): { title: string; body: string } =>
     }
     case "medication":
       return {
-        title: `Hora do remédio${r.due_slot ? ` (${r.due_slot})` : ""} 💊`,
-        body: `${r.title ?? "Seu remédio"}: marque em Meus hábitos quando tomar.`,
+        title: `Hora do remédio${r.due_slot ? ` (${r.due_slot})` : ""}`,
+        body: "Marque em Meus hábitos quando tomar.",
       };
     case "screen_time":
       return {
-        title: "Hora de desacelerar 🌙",
+        title: "Hora de desacelerar",
         body: "Que tal deixar o celular de lado na próxima hora? O sono agradece.",
       };
     case "joy":
@@ -108,9 +111,8 @@ export const buildMessage = (r: DueReminder): { title: string; body: string } =>
     case "quit_alcohol":
     case "quit_custom": {
       const days = daysSince(r.quit_started_at);
-      const what = r.kind === "quit_smoking" ? "sem fumar" : r.kind === "quit_alcohol" ? "sem álcool" : `sem ${(r.title ?? "").toLowerCase()}`;
       return {
-        title: days === 0 ? "Hoje é o primeiro dia 💪" : `${plural(days, "dia", "dias")} ${what}`,
+        title: days === 0 ? "Hoje é o primeiro dia" : `${plural(days, "dia", "dias")} seguidos`,
         body: days === 0
           ? "Um dia de cada vez. Se a vontade vier, registre em Meus hábitos e respire junto com o app."
           : "Você está indo muito bem. Um dia de cada vez.",
@@ -156,27 +158,54 @@ Deno.serve(async (req: Request): Promise<Response> => {
       tokensByUser.set(t.user_id, list);
     }
 
+    // Um acesso ao Google para a rodada inteira (antes era um por lembrete).
+    const serviceAccount = firebaseServiceAccount();
+    if (!serviceAccount) {
+      console.error("habit-reminders: Firebase não configurado");
+      await supabase.rpc("release_habit_reminders", { p_habit_ids: reminders.map((r) => r.habit_id) });
+      return json({ due: reminders.length, sent: 0, retry: reminders.length });
+    }
+    let accessToken: string;
+    try {
+      accessToken = await getAccessToken(serviceAccount);
+    } catch (err) {
+      console.error("habit-reminders: sem acesso ao Firebase", err);
+      await supabase.rpc("release_habit_reminders", { p_habit_ids: reminders.map((r) => r.habit_id) });
+      return json({ due: reminders.length, sent: 0, retry: reminders.length });
+    }
+
     let sent = 0;
+    const retry: string[] = [];
+    const deadTokens = new Set<string>();
     await Promise.all(
       reminders.map(async (reminder) => {
         const userTokens = tokensByUser.get(reminder.user_id);
         if (!userTokens?.length) return;
         const message = buildMessage(reminder);
-        // Reaproveita o envio pelo FCM (HTTP v1) da função firebase-notifications.
-        const { error: sendError } = await supabase.functions.invoke("firebase-notifications", {
-          headers: { Authorization: `Bearer ${serviceKey}` },
-          body: {
-            ...message,
-            tokens: userTokens,
-            data: { type: "habit_reminder", habit_id: reminder.habit_id, url: `/habitos/${reminder.habit_id}` },
-          },
+        const url = `/habitos/${reminder.habit_id}`;
+        const results = await sendToTokens(serviceAccount, accessToken, userTokens, {
+          ...message,
+          url,
+          data: { type: "habit_reminder", habit_id: reminder.habit_id },
+          // Lembrete velho não serve: depois de 2 h o Firebase descarta.
+          ttlSeconds: 2 * 3600,
+          // O lembrete novo do mesmo hábito substitui o anterior no aparelho.
+          tag: `habit-${reminder.habit_id}`,
         });
-        if (sendError) console.error("habit-reminders: falha ao enviar", reminder.habit_id, sendError);
-        else sent += 1;
+        results.filter((r) => r.dead).forEach((r) => deadTokens.add(r.token));
+        if (results.some((r) => r.ok)) sent += 1;
+        else if (results.some((r) => r.transient)) retry.push(reminder.habit_id);
       }),
     );
+    if (deadTokens.size > 0) {
+      await supabase.from("fcm_tokens").update({ is_active: false }).in("token", [...deadTokens]);
+    }
+    if (retry.length > 0) {
+      const { error: releaseError } = await supabase.rpc("release_habit_reminders", { p_habit_ids: retry });
+      if (releaseError) console.error("habit-reminders: não foi possível devolver", releaseError);
+    }
 
-    return json({ due: reminders.length, sent });
+    return json({ due: reminders.length, sent, retry: retry.length });
   } catch (error) {
     console.error("habit-reminders error:", error);
     return json({ error: "Falha ao processar lembretes" }, 500);

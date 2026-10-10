@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { HabitCatalogSkeleton, HabitFormSkeleton } from '@/components/skeletons/PageSkeletons';
 import PageHeader from '@/components/PageHeader';
@@ -31,6 +32,10 @@ const HabitSetup = () => {
   const editing = habitId ? habits.find((h) => h.id === habitId) : undefined;
   const kind = (editing?.kind ?? (ALL_KINDS.includes(kindParam as HabitKind) ? kindParam : undefined)) as HabitKind | undefined;
   const activeKinds = new Set(habits.map((h) => h.kind));
+  // Pelo endereço (/habitos/novo/agua) dava para abrir o formulário de um
+  // hábito que já está na lista, ou passar do limite.
+  const existingSameKind = !editing && kind && !allowsMultiple(kind) ? habits.find((h) => h.kind === kind) : undefined;
+  const overLimit = !editing && kind && habits.length >= MAX_ACTIVE_HABITS;
 
   const handleSubmit = async (draft: HabitDraft) => {
     setSaving(true);
@@ -46,7 +51,11 @@ const HabitSetup = () => {
       }
     } catch (error) {
       console.error('Erro ao salvar hábito', error);
-      toast.error('Não foi possível salvar agora. Tente de novo.');
+      const err = error as { code?: string; message?: string };
+      // Regras do banco com mensagem própria (limite de 10, hábito repetido).
+      if (err?.code === '23505') toast.error('Esse hábito já está na sua lista.');
+      else if (err?.code === '23514' && err.message?.includes('10 hábitos')) toast.error(err.message);
+      else toast.error('Não foi possível salvar agora. Tente de novo.');
     } finally {
       setSaving(false);
     }
@@ -93,6 +102,18 @@ const HabitSetup = () => {
             kind || habitId ? <HabitFormSkeleton /> : <HabitCatalogSkeleton />
           ) : habitId && !editing ? (
             <p className="text-foreground">Este hábito não está mais na sua lista.</p>
+          ) : existingSameKind ? (
+            <div className="space-y-3">
+              <p className="text-foreground">Esse hábito já está na sua lista.</p>
+              <Button onClick={() => navigate(`/habitos/${existingSameKind.id}`, { replace: true })}>Abrir o hábito</Button>
+            </div>
+          ) : overLimit ? (
+            <div className="space-y-3">
+              <p className="text-foreground">
+                Você já tem {MAX_ACTIVE_HABITS} hábitos na lista. Tire um da lista para adicionar outro.
+              </p>
+              <Button onClick={() => navigate('/habitos', { replace: true })}>Ver meus hábitos</Button>
+            </div>
           ) : kind ? (
             <HabitForm key={editing?.id ?? kind} kind={kind} habit={editing} saving={saving} onSubmit={handleSubmit} />
           ) : (

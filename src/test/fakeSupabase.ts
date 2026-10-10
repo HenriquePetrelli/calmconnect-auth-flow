@@ -131,6 +131,11 @@ class QueryBuilder implements PromiseLike<{ data: any; error: any; count?: numbe
 
     switch (this.mode) {
       case 'insert': {
+        // Como o banco: o mesmo id duas vezes é recusado.
+        const ids = new Set(this.db.rows(this.table).map((r) => r.id).filter(Boolean));
+        if (this.inserted.some((r) => r.id && ids.has(r.id))) {
+          return { data: null, error: { code: '23505', message: 'duplicate key value violates unique constraint' } };
+        }
         if (this.returning) {
           this.inserted = this.inserted.map((row) => ({ id: row.id ?? `fake-${Math.random().toString(36).slice(2)}`, ...row }));
         }
