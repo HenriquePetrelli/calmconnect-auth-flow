@@ -3019,6 +3019,10 @@ export type Database = {
         Args: { p_appointment_id: string }
         Returns: boolean
       }
+      release_habit_reminders: {
+        Args: { p_habit_ids: string[] }
+        Returns: undefined
+      }
       remove_organization_member_by_email: {
         Args: { p_email: string; p_org: string }
         Returns: Json
