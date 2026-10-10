@@ -2650,6 +2650,10 @@ export type Database = {
           user_id: string
         }[]
       }
+      clean_safety_plan_items: {
+        Args: { p_items: string[] }
+        Returns: string[]
+      }
       cleanup_quarterly_activities: { Args: never; Returns: undefined }
       cleanup_rejected_psychologist: {
         Args: { p_user_id: string }
@@ -3062,11 +3066,14 @@ export type Database = {
         Args: { p_org: string }
         Returns: string
       }
+      safety_plan_items_ok: { Args: { p_items: string[] }; Returns: boolean }
       save_safety_plan: {
         Args: {
           p_contacts?: Json
           p_coping_strategies: string[]
           p_distractions: string[]
+          p_expected_updated_at?: string
+          p_new_id?: string
           p_plan_id: string
           p_reasons_to_live: string[]
           p_safe_environment: string[]
