@@ -1,7 +1,7 @@
 # 20. Segurança: proteções que valem para o app inteiro
 
 > **Status:** Pronto, com pendência externa (ajustes de senha no painel do Supabase e senha do admin).
-> **Última verificação:** 2026-10-04 (varredura de segurança completa; migrações `20261003210511_…` e `20261004220000_storage_upload_limits.sql`).
+> **Última verificação:** 2026-10-27 (varredura: RLS em todas as tabelas, funções abertas a visitantes conferem o acesso, todas as edge functions exigem login, segredo ou assinatura; corrigidos documento do psicólogo aprovado, `cleanup-user` e presença na chamada).
 > **Quem usa:** todos (proteção invisível).
 
 ## Princípio
@@ -38,12 +38,15 @@
 | Alterar a própria pontuação de questionário | Gatilho recalcula em qualquer alteração | Ficha 13 |
 | Burlar o limite do diário | Gatilho `enforce_journal_daily_limit` | Ficha 15 |
 | Webhook falso do Stripe | Assinatura conferida com `STRIPE_WEBHOOK_SECRET` | Ficha 08 |
-| TURN usado por estranhos (custo) | `ice-servers` só entrega TURN a usuário logado | Chamada sem login → resposta sem TURN |
+| TURN usado por estranhos (custo) | `ice-servers` só entrega TURN a quem está numa sala de chamada das últimas 24 h | Conta sem sala recente → resposta com `"turn": false` |
 | Ler documentos de todos os psicólogos editando os próprios metadados | Removidas as regras antigas `admin_document_access` e `admin_upload_documents` (confiavam em `is_super_admin` dentro de `user_metadata`, que o usuário edita); admin só pela tabela `admin_users` | `select count(*) from pg_policy where polname in ('admin_document_access','admin_upload_documents')` = 0 |
 | Consultar plano e SOS de outra pessoa | `can_use_sos` só para o servidor; `validate_route_access`, `prune_stale_psychologist_presence`, `can_access_document` e `can_upload_document` fechadas para o app | `has_function_privilege('authenticated','public.can_use_sos(uuid)','execute')` = `false` |
 | Criar conta já como admin | `handle_new_user` só aceita paciente ou psicólogo vindo do cadastro | Cadastro com `user_type: "admin"` nos metadados → perfil de paciente |
 | Psicólogo se aprovar pela inscrição | Gatilho `a_guard_registration_client_insert`: inscrição feita pelo app nasce sempre "pendente" | Inserir em `psychologist_registrations` com `status: 'approved'` → fica `pending` |
 | Forjar chamada conectada, trocar participante ou o cronômetro da sala | Gatilho `a_guard_webrtc_client_update`: só o paciente grava a resposta (o que marca a conexão), só o psicólogo mexe no cronômetro (e não aumenta), ninguém troca o outro participante, o SOS da sala ou quem encerrou; o app não cria salas | Ficha 03 |
+| Forjar "sem áudio/vídeo" ou o último sinal na chamada (devolver o SOS, tirar do repasse) | Gatilho `a_guard_participant_presence`: pelo app só quem está na sala grava presença, o papel vem da sala, o último sinal é a hora do servidor e o estado da mídia só muda por `report_call_media` | Ficha 03 |
+| Trocar o documento do CRP depois de aprovado | `guard_psychologist_client_write` trava `document_url` e `documents` após a aprovação; no armazenamento, o dono só sobrescreve ou apaga os próprios arquivos antes da aprovação (`my_psychologist_documents_locked`) | Psicólogo aprovado → update em `document_url` pela API → valor não muda |
+| Apagar a conta pulando a exclusão normal | `cleanup-user` (desfaz cadastro que falhou) só vale para conta criada há menos de 24 h, sem aprovação, sem consultas e que não é admin | Conta antiga chama `cleanup-user` → 403 "use Perfil > Excluir conta" |
 
 ## Conferência rápida no banco (tudo deve dar `true`)
 
@@ -61,6 +64,9 @@ select
   not has_function_privilege('authenticated', 'public.can_use_sos(uuid)', 'execute') as cota_sos_so_servidor,
   exists(select 1 from pg_trigger where tgname = 'a_guard_registration_client_insert') as inscricao_protegida,
   exists(select 1 from pg_trigger where tgname = 'a_guard_webrtc_client_update') as sala_video_protegida,
+  exists(select 1 from pg_trigger where tgname = 'a_guard_participant_presence') as presenca_protegida,
+  pg_get_functiondef('public.guard_psychologist_client_write'::regproc) like '%document_url := OLD.document_url%' as documento_aprovado_travado,
+  not exists(select 1 from pg_policies where schemaname = 'storage' and policyname in ('psychologist_own_documents', 'Admin and owner access to psychologist documents')) as arquivos_sem_regras_antigas,
   (select bool_and(file_size_limit = 10485760 and allowed_mime_types is not null) from storage.buckets
      where id in ('documents', 'psychologist-documents', 'payment-receipts')) as uploads_limitados;
 ```

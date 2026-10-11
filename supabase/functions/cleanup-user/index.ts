@@ -49,6 +49,27 @@ Deno.serve(async (req) => {
       throw new Error('You can only clean up your own account');
     }
 
+    // Só conta recém-criada e ainda incompleta: antes qualquer conta (psicólogo
+    // aprovado com consultas, admin) se apagava por aqui, pulando a exclusão
+    // de conta normal (delete-own-account), que cancela consultas e cuida do
+    // repasse e dos dados.
+    const createdAt = user.created_at ? new Date(user.created_at).getTime() : 0;
+    const recent = Date.now() - createdAt < 24 * 60 * 60 * 1000;
+    const [{ data: approved }, { data: admin }, { count: appointments }] = await Promise.all([
+      supabaseAdmin.from('psychologists').select('id').eq('user_id', userId).eq('approved', true).maybeSingle(),
+      supabaseAdmin.from('admin_users').select('user_id').eq('user_id', userId).maybeSingle(),
+      supabaseAdmin
+        .from('appointments')
+        .select('id', { count: 'exact', head: true })
+        .or(`patient_id.eq.${userId},psychologist_id.eq.${userId}`),
+    ]);
+    if (!recent || approved || admin || (appointments ?? 0) > 0) {
+      return new Response(
+        JSON.stringify({ error: 'Para excluir sua conta, use Perfil > Excluir conta.' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
     console.log('Starting cleanup for user:', userId);
 
     // 1. Remove documents from storage

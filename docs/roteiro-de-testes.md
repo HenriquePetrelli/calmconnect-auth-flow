@@ -381,6 +381,8 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Paciente → Chat → enviar arquivo `.html` ou foto de 20 MB ⇒ recusado
 - [ ] Ações repetidas em sequência (SOS, agendar, curtir) ⇒ "Muitas ações em pouco tempo"
 - [ ] Supabase → SQL Editor → conferência rápida da ficha 20 ⇒ tudo `true`
+- [ ] Psicólogo aprovado → pela API, trocar `document_url` ou sobrescrever/apagar o arquivo do documento ⇒ nada muda (o admin continua vendo o documento aprovado)
+- [ ] Conta antiga (ou com consultas) → chamar `cleanup-user` ⇒ 403 "Para excluir sua conta, use Perfil > Excluir conta."
 - [ ] SOS em andamento → paciente dá F5 ⇒ os dois voltam a se ver em poucos segundos; idem com o psicólogo
 - [ ] SOS em andamento → paciente troca do Wi-Fi para o 4G ⇒ "Tentando reconectar" e volta sozinho
 - [ ] SOS com a rede de um lado bloqueando vídeo (ou sem TURN numa rede corporativa) ⇒ depois de 45 s, "A chamada não está conectando"; paciente "Chamar outro psicólogo" ⇒ volta para a fila e o SOS do mês não é gasto
