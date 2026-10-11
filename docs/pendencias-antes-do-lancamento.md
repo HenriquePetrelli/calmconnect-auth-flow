@@ -2,6 +2,8 @@
 
 O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mova-o para "Resolvidas" com a data e o que foi feito.
 
+> **Passo a passo das configurações externas** (pendências 1, 2, 3, 5 e 6 e o webhook do Stripe): `docs/guia-configuracoes-externas.md`.
+
 ## Críticas
 
 ### 1. Senha do admin exposta no repositório
@@ -62,8 +64,8 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 - **O que fazer:**
   1. Tamanho mínimo de senha: 8 (o app já exige 8 com letras e números nas contas novas; o servidor ainda aceita 6 de quem chamar a API direto).
   2. Ativar "Leaked password protection" (recusa senhas que já vazaram na internet).
-  3. "Confirm email": **não ligar ainda.** O cadastro do psicólogo precisa estar logado logo depois de criar a conta (para enviar o documento e criar o perfil); com "Confirm email" ligado não há login nesse momento e o cadastro falha. Antes de ligar, mudar o cadastro do psicólogo para enviar o documento por uma edge function (pedir ao Claude). Ligar também depende do domínio (pendência 2), porque o e-mail de confirmação precisa chegar.
-  4. Ativar a verificação em duas etapas (MFA) para as contas de admin.
+  3. "Confirm email": ligar depois do domínio (pendência 2), para o e-mail de confirmação chegar. O app já está pronto (desde 2026-10-21 o paciente é criado pelo banco e o psicólogo conclui o cadastro no primeiro acesso).
+  4. Verificação em duas etapas (MFA) para admin: só protege se o app pedir o código no login, o que ainda não faz (pedir ao Claude).
 - **Registrado em:** 2026-10-04.
 
 ### 7. Renomear o repositório para `soliv`
