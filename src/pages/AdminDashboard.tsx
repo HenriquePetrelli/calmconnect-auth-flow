@@ -1,3 +1,4 @@
+import RoutinesHealthCard from '@/components/admin/RoutinesHealthCard';
 import React, { useState, useEffect } from 'react';
 import { SkeletonStatsGrid } from '@/components/skeletons/Skeletons';
 import { AdminDashboardBodySkeleton } from '@/components/skeletons/PageSkeletons';
@@ -288,6 +289,8 @@ const AdminDashboard = () => {
               )}
             </ContentTransition>
 
+
+            <RoutinesHealthCard />
 
             {/* Resumo e Ações */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">

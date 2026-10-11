@@ -396,3 +396,5 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Supabase → SQL Editor → conferência da ficha 21 ⇒ todas as rotinas com execução recente sem erro
 - [ ] Pedido de consulta sem resposta por 24 h ⇒ expira e a consulta do mês volta
 - [ ] SOS concluído ⇒ ~24 h depois chega "Como você está hoje?"
+- [ ] Admin → Visão geral → cartão "Rotinas automáticas" ⇒ "Todas as N rotinas estão ativas"; se alguma falhou nas últimas 24 h, aparece o nome e o erro
+- [ ] Supabase → SQL → select count(*) from cron.job_run_details where end_time < now() - interval '15 days' ⇒ 0 depois da rotina purge-cron-history rodar

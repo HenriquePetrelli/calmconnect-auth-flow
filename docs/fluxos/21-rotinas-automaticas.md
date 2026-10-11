@@ -1,7 +1,7 @@
 # 21. Rotinas automáticas (pg_cron)
 
 > **Status:** Pronto.
-> **Última verificação:** 2026-10-08 (nova rotina `chat-photos-cleanup`; antes, 2026-10-04: rotinas que chamam edge functions passaram a mandar o segredo `x-cron-secret`).
+> **Última verificação:** 2026-10-23 (varredura: as 18 rotinas conferidas; nova rotina `purge-cron-history` e cartão de saúde das rotinas no painel do admin). Antes: 2026-10-08 (nova rotina `chat-photos-cleanup`; antes, 2026-10-04: rotinas que chamam edge functions passaram a mandar o segredo `x-cron-secret`).
 > **Quem usa:** ninguém diretamente; rodam sozinhas no banco.
 
 ## Lista
@@ -26,6 +26,7 @@
 | `reset-weekly-goals-sunday` | Domingo, 3h05 (0h05 em Brasília) | Convida a revisar as metas da semana; não apaga nada (as escolhidas continuam). Semanas com mais de 6 meses saem do banco | 12 |
 | `weekly-payment-sync` | Segunda, 9h | Atualiza os valores de repasse | 09 |
 | `cleanup-quarterly-activities-weekly` | Domingo, 3h15 | Apaga atividades com mais de 3 meses do histórico | 12 |
+| `purge-cron-history` | Todo dia, 5h20 | Apaga o histórico de execuções das rotinas (`cron.job_run_details`) com mais de 14 dias; antes crescia para sempre (milhares de linhas por dia) | 21 |
 
 Os horários estão em UTC, que é como o pg_cron agenda: 3h UTC é meia-noite em Brasília. A tabela `cron.job` é a fonte da verdade, porque horários podem ter sido ajustados direto no banco.
 
@@ -34,6 +35,10 @@ Os horários estão em UTC, que é como o pg_cron agenda: 3h UTC é meia-noite e
 - Algumas rodam **SQL direto** (ex.: `select public.finalize_stale_appointments()`).
 - Outras chamam uma **edge function** por `net.http_post`. Essas mandam o cabeçalho `x-cron-secret`, lido na hora de `internal_secrets`. A função só aceita a chamada com esse segredo (ou com a service role), então ninguém de fora consegue disparar.
 - Todas são **idempotentes**: rodar duas vezes não manda aviso duplicado nem conta em dobro.
+
+## Saúde das rotinas no painel
+
+Admin → **Visão geral** → cartão **Rotinas automáticas** (`get_routines_health`, só admin): diz se todas estão ativas e sem falha nas últimas 24 h; se não, mostra o nome da rotina, quantas falhas e o último erro. Rotinas que chamam edge function aparecem com sucesso quando o pedido sai; a resposta da função fica nos logs dela (abaixo).
 
 ## Como validar
 
