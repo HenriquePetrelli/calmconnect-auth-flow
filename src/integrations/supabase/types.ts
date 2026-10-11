@@ -2919,6 +2919,18 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_routines_health: {
+        Args: never
+        Returns: {
+          active: boolean
+          failures_24h: number
+          jobname: string
+          last_error: string
+          last_start: string
+          last_status: string
+          schedule: string
+        }[]
+      }
       get_sos_metrics: { Args: { p_days?: number }; Returns: Json }
       get_sos_patient_context: { Args: { p_request_id: string }; Returns: Json }
       get_sos_safety_plan: { Args: { p_request_id: string }; Returns: Json }
@@ -3036,6 +3048,7 @@ export type Database = {
         Args: { p_user_id?: string }
         Returns: boolean
       }
+      purge_cron_history: { Args: never; Returns: number }
       purge_expired_care_records: { Args: never; Returns: Json }
       purge_old_notifications: { Args: never; Returns: number }
       queue_appointment_reminders: { Args: never; Returns: number }
