@@ -358,11 +358,11 @@ serve(async (req) => {
       // the client-side gate (subscriptionTier === 'Premium') can be
       // bypassed by calling this endpoint directly, so it must never be the
       // only check. Mirrors the same-month reset used for the SOS quota.
-      let subscriberRow: { subscribed: boolean | null; subscription_tier: string | null; subscription_end: string | null; appointments_used_this_month: boolean; appointments_last_used: string | null } | null = null;
+      let subscriberRow: { subscribed: boolean | null; subscription_tier: string | null; subscription_end: string | null; cancel_at_period_end: boolean | null; appointments_used_this_month: boolean; appointments_last_used: string | null } | null = null;
       if (finalAppointmentType === 'regular') {
         const { data: subRow } = await supabase
           .from('subscribers')
-          .select('subscribed, subscription_tier, subscription_end, appointments_used_this_month, appointments_last_used')
+          .select('subscribed, subscription_tier, subscription_end, cancel_at_period_end, appointments_used_this_month, appointments_last_used')
           .eq('user_id', user.id)
           .maybeSingle();
         subscriberRow = subRow;
@@ -375,6 +375,14 @@ serve(async (req) => {
           (!subRow?.subscription_end || new Date(subRow.subscription_end).getTime() > Date.now());
         if (!subscriberRow || !planActive) {
           throw new Error('O agendamento de consultas está disponível apenas para o plano Premium.');
+        }
+
+        // Plano que não vai renovar: a consulta depois do fim seria cancelada
+        // quando o plano terminar, então nem é marcada.
+        if (subRow?.cancel_at_period_end && subRow.subscription_end &&
+            new Date(scheduled_at).getTime() >= new Date(subRow.subscription_end).getTime()) {
+          const endLabel = new Date(subRow.subscription_end).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+          throw new Error(`Seu plano termina em ${endLabel}. Agende até essa data ou renove o plano.`);
         }
 
         const lastUsed = subscriberRow.appointments_last_used ? new Date(subscriberRow.appointments_last_used) : null;
@@ -562,7 +570,7 @@ serve(async (req) => {
     // limited), not server malfunctions.
     const isConflict = /ocupado/i.test(msg);
     const isRateLimited = /muitas (tentativas|solicitações)/i.test(msg);
-    const isValidation = /obrigat|inválid|intervalo|entre 07h|10 minutos|required|dispon|limite mensal|anteced|agenda|plano premium|passou/i.test(msg);
+    const isValidation = /obrigat|inválid|intervalo|entre 07h|10 minutos|required|dispon|limite mensal|anteced|agenda|plano premium|plano termina|passou/i.test(msg);
     const status = isConflict ? 409 : isRateLimited ? 429 : isValidation ? 400 : 500;
     return new Response(
       JSON.stringify({ error: msg }),

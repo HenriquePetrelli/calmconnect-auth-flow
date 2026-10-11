@@ -541,11 +541,15 @@ const SubscriptionPlans = () => {
                   : "Seu plano continua até o fim do período já pago e não será renovado."}
             </DialogDescription>
           </DialogHeader>
-          {cancelPreview?.mode === "immediate" && cancelPreview.futureAppointments > 0 && (
+          {cancelPreview && cancelPreview.futureAppointments > 0 && (
             <div role="alert" data-testid="cancel-appointments-warning" className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm">
-              {cancelPreview.futureAppointments === 1
-                ? "Sua consulta agendada também será cancelada, e o psicólogo será avisado."
-                : `Suas ${cancelPreview.futureAppointments} consultas agendadas também serão canceladas, e o psicólogo será avisado.`}
+              {cancelPreview.mode === "immediate"
+                ? cancelPreview.futureAppointments === 1
+                  ? "Sua consulta agendada também será cancelada, e o psicólogo será avisado."
+                  : `Suas ${cancelPreview.futureAppointments} consultas agendadas também serão canceladas, e o psicólogo será avisado.`
+                : cancelPreview.futureAppointments === 1
+                  ? "Sua consulta marcada para depois do fim do plano será cancelada quando ele terminar, e o psicólogo será avisado."
+                  : `Suas ${cancelPreview.futureAppointments} consultas marcadas para depois do fim do plano serão canceladas quando ele terminar, e o psicólogo será avisado.`}
             </div>
           )}
           {refundPreview && (

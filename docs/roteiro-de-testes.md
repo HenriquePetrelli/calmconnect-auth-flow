@@ -137,6 +137,9 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Férias desmarcando "Cancelar essas consultas" ⇒ as consultas continuam marcadas, com aviso ao psicólogo
 - [ ] Psicólogo → Agenda semanal → bloquear o horário de uma consulta marcada (inclusive pela API) ⇒ recusado: "Esse horário tem consulta marcada"
 - [ ] Visitante sem login → ler férias/horários dos psicólogos pela API ⇒ nada retorna
+- [ ] Psicólogo → Histórico → abrir consulta concluída → escrever resumo e anotação privada → Salvar ⇒ o paciente vê o resumo no histórico dele, mas não a anotação
+- [ ] Psicólogo → consulta seguinte com o mesmo paciente → Contexto do paciente ⇒ mostra o resumo e a anotação privada ("só você vê") das sessões anteriores
+- [ ] Paciente Premium com cancelamento agendado (plano até DD/MM) → agendar consulta depois dessa data ⇒ "Seu plano termina em DD/MM. Agende até essa data ou renove o plano."
 
 ## 4. Chat (ficha 06)
 
@@ -199,6 +202,9 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Plano termina (fim do período, arrependimento ou saída da empresa) ⇒ aviso "Seu plano terminou" com link para os planos
 - [ ] Paciente com Premium da empresa → tentar assinar Plus ou Premium pela API ⇒ "Seu plano já vem da empresa"; nenhum checkout
 - [ ] Conta A troca de e-mail → conta B se cadastra com o e-mail antigo → B abre o app ⇒ A continua com o plano e o cliente do Stripe dela; B ganha linha própria, sem plano
+- [ ] Premium com consulta marcada depois do fim do período → Cancelar assinatura ⇒ a tela avisa que a consulta será cancelada quando o plano terminar
+- [ ] Mesmo caso, 3 dias antes do fim ⇒ aviso "Consulta depois do fim do plano" (uma vez)
+- [ ] Mesmo caso, quando o plano termina ⇒ consulta cancelada; paciente recebe "Consultas canceladas" e o psicólogo "Consulta cancelada: o plano do paciente terminou"
 
 ## 7. Repasses (ficha 09)
 
@@ -213,6 +219,8 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Consulta já paga → Consulta interrompida ⇒ recusado: "já foi paga no repasse, fale com o suporte"
 - [ ] Admin confirma com valor desatualizado (outra aba sincronizou antes) ⇒ "O valor pendente mudou"; nada é pago
 - [ ] Admin → Confirmar → conferir no banco ⇒ itens do psicólogo com paid_at e o registro com o E2E
+- [ ] SOS concluído com menos de 5 min de chamada (os dois conectados) → Sincronizar ⇒ não entra no repasse; com 5 min ou mais, entra (R$ 50)
+- [ ] Admin → excluir psicólogo com repasses ⇒ some do painel; `archived_psychologist_payouts` tem uma linha com nome, CPF e os pagamentos
 
 ## 8. Empresas / B2B (ficha 10)
 

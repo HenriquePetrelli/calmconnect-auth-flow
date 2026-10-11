@@ -1,7 +1,7 @@
 # 08. Assinaturas e pagamentos (Stripe)
 
 > **Status:** Pronto, com pendência externa (confirmar que o webhook do Stripe está cadastrado).
-> **Última verificação:** 2026-10-18 (varredura de funcionamento: e-mail reaproveitado não toma a linha de outra conta, aviso de cobrança recusada e de fim do plano, consultas futuras canceladas no cancelamento imediato, sem checkout para quem já tem o plano pela empresa). Antes: 2026-10-06 (varredura: cliente do Stripe nunca de outra conta pelo e-mail, prévia da troca de plano sem data manipulada, checkout sem duplicar). Antes: 2026-10-02 (revisão de ponta a ponta comparada com Calm, Headspace e Spotify). Em 2026-10-04, o gatilho de proteção de `subscribers` impede o paciente de gravar o próprio plano, e o `check-subscription` deixou de regravar o uso do mês (corrida que devolvia SOS ou consulta já usados).
+> **Última verificação:** 2026-10-28 (decisão de produto: consulta marcada para depois do fim do plano é cancelada quando o plano termina, com aviso 3 dias antes). Antes: 2026-10-18 (varredura de funcionamento: e-mail reaproveitado não toma a linha de outra conta, aviso de cobrança recusada e de fim do plano, consultas futuras canceladas no cancelamento imediato, sem checkout para quem já tem o plano pela empresa). Antes: 2026-10-06 (varredura: cliente do Stripe nunca de outra conta pelo e-mail, prévia da troca de plano sem data manipulada, checkout sem duplicar). Antes: 2026-10-02 (revisão de ponta a ponta comparada com Calm, Headspace e Spotify). Em 2026-10-04, o gatilho de proteção de `subscribers` impede o paciente de gravar o próprio plano, e o `check-subscription` deixou de regravar o uso do mês (corrida que devolvia SOS ou consulta já usados).
 > **Quem usa:** paciente.
 
 ## Resumo
@@ -32,7 +32,8 @@ O pagamento é pelo **Stripe Checkout**. O estado da assinatura fica em `subscri
    - **descer** vale na renovação, sem cobrança agora, e pode ser desfeito.
 5. **Cancelar** (`cancel-subscription`): o plano continua até o fim do período pago (o ciclo mensal do Stripe: pago em 15/03, vale até 15/04) e não renova, com "Manter minha assinatura" para desfazer. Enquanto isso, Perfil e Planos mostram **"Plano cancelado - Plus disponível até 15/04/2026"**. No fim do período, o plano vira **Plano Grátis**: o Stripe avisa pelo webhook, e a rotina `expire-cancelled-subscriptions` (de hora em hora) encerra o plano mesmo se o aviso não chegar; com o app aberto, a tela troca sozinha na hora certa. A marca fica em `subscribers.cancel_at_period_end`, que "Manter minha assinatura" ou trocar de plano apagam na hora (migration `20261004011237_e99053e5-8384-4774-a0dc-dcb73255c4ab.sql`). **Em até 7 dias da primeira assinatura** (direito de arrependimento), acaba na hora e o valor é devolvido automaticamente. Nesse caso (e no de pagamento em atraso, que também acaba na hora), as **consultas futuras** pedidas com o plano são canceladas e o psicólogo é avisado (`cancel_appointments_after_plan_loss`); a tela avisa isso antes de confirmar. Se a pessoa ainda tem Premium pela empresa, as consultas ficam.
 6. **Cartão recusado na renovação** (`past_due`): o plano continua enquanto o Stripe tenta de novo, e o app pede para atualizar o cartão (portal do Stripe, `customer-portal`). A pessoa também recebe o aviso "Pagamento não aprovado" no sino e por push (webhook, um por dia).
-6a. **Fim do plano** (qualquer caminho: fim do período, arrependimento, Stripe desistiu de cobrar, saída da empresa): aviso "Seu plano terminou", com link para os planos (gatilho `notify_plan_ended`).
+6a. **Fim do plano** (qualquer caminho: fim do período, arrependimento, Stripe desistiu de cobrar, saída da empresa): aviso "Seu plano terminou", com link para os planos (gatilho `notify_plan_ended`). Quando o Premium acaba, as **consultas futuras são canceladas** e o psicólogo é avisado (gatilho `cancel_appointments_on_plan_end`); se a pessoa ainda tem Premium pela empresa, ficam.
+6b. **Aviso antes do fim**: plano que não vai renovar e consulta marcada para depois do fim → 3 dias antes chega "Consulta depois do fim do plano" ("será cancelada se o plano não for renovado"), uma vez por consulta (rotina `warn-appointments-before-plan-end`, todo dia às 9h12). Ao cancelar, a tela já avisa quantas consultas serão canceladas no fim do período. Com o plano marcado para não renovar, não dá para agendar depois do fim.
 7. **Ao abrir o app**, o plano aparece na hora a partir da última consulta da sessão, e o `check-subscription` confere com o Stripe em segundo plano.
 
 ## Regras
@@ -79,7 +80,6 @@ No Stripe: Developers → Webhooks → o endpoint `.../functions/v1/stripe-webho
 
 ## Pendências
 
-- **Decisão** (pendência 15): cancelar ou manter a consulta marcada para depois do fim do plano.
 - **Confirmar o webhook do Stripe**: endpoint cadastrado no painel do Stripe e `STRIPE_WEBHOOK_SECRET` nos secrets. Sem ele, cancelamentos e trocas feitos fora do app só aparecem quando o paciente abre o app.
 
 ## Problemas comuns

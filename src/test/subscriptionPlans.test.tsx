@@ -144,6 +144,19 @@ describe('planos e pagamento', () => {
     expect(await screen.findByTestId('cancel-appointments-warning')).toHaveTextContent('consulta agendada também será cancelada');
   });
 
+  it('cancelar no fim do período avisa que a consulta marcada depois do fim será cancelada', async () => {
+    subscribedTo('Premium');
+    handlers['cancel-subscription'] = () => ({
+      data: { refund_eligible: false, mode: 'period_end', access_until: '2026-10-20T12:00:00.000Z', future_appointments: 1 },
+      error: null,
+    });
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar assinatura' }));
+    expect(await screen.findByTestId('cancel-appointments-warning')).toHaveTextContent(
+      'consulta marcada para depois do fim do plano será cancelada quando ele terminar',
+    );
+  });
+
   it('plano já coberto pela empresa não abre checkout', async () => {
     handlers['create-checkout'] = () => ({ data: { error_code: 'covered_by_organization' }, error: null });
     renderPage();

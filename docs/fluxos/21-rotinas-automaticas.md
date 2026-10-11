@@ -1,7 +1,7 @@
 # 21. Rotinas automáticas (pg_cron)
 
 > **Status:** Pronto.
-> **Última verificação:** 2026-10-23 (varredura: as 18 rotinas conferidas; nova rotina `purge-cron-history` e cartão de saúde das rotinas no painel do admin). Antes: 2026-10-08 (nova rotina `chat-photos-cleanup`; antes, 2026-10-04: rotinas que chamam edge functions passaram a mandar o segredo `x-cron-secret`).
+> **Última verificação:** 2026-10-28 (duas rotinas novas: `warn-appointments-before-plan-end` e `purge-archived-payouts`). Antes: 2026-10-23 (varredura: as 18 rotinas da época conferidas; nova rotina `purge-cron-history` e cartão de saúde das rotinas no painel do admin). Antes: 2026-10-08 (nova rotina `chat-photos-cleanup`; antes, 2026-10-04: rotinas que chamam edge functions passaram a mandar o segredo `x-cron-secret`).
 > **Quem usa:** ninguém diretamente; rodam sozinhas no banco.
 
 ## Lista
@@ -27,6 +27,8 @@
 | `weekly-payment-sync` | Segunda, 9h | Atualiza os valores de repasse | 09 |
 | `cleanup-quarterly-activities-weekly` | Domingo, 3h15 | Apaga atividades com mais de 3 meses do histórico | 12 |
 | `purge-cron-history` | Todo dia, 5h20 | Apaga o histórico de execuções das rotinas (`cron.job_run_details`) com mais de 14 dias; antes crescia para sempre (milhares de linhas por dia) | 21 |
+| `warn-appointments-before-plan-end` | Todo dia, 12h12 (9h12 em Brasília) | Avisa, 3 dias antes, quem tem plano que não vai renovar e consulta marcada para depois do fim (uma vez por consulta) | 08 |
+| `purge-archived-payouts` | Todo dia, 5h25 | Apaga do arquivo os repasses de psicólogos excluídos que passaram de 5 anos | 09 |
 
 Os horários estão em UTC, que é como o pg_cron agenda: 3h UTC é meia-noite em Brasília. A tabela `cron.job` é a fonte da verdade, porque horários podem ter sido ajustados direto no banco.
 

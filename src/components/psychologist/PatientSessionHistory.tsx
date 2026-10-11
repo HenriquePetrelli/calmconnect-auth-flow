@@ -50,6 +50,11 @@ export const PatientSessionHistory = ({ patientId }: { patientId: string | null 
                 ) : (
                   <p className="text-sm italic text-muted-foreground">Sem resumo registrado para esta sessão.</p>
                 )}
+                {session.private_note && (
+                  <p className="whitespace-pre-wrap border-t pt-1 text-xs text-muted-foreground">
+                    <strong>Anotação privada (só você vê):</strong> {session.private_note}
+                  </p>
+                )}
                 {session.notes && (
                   <p className="border-t pt-1 text-xs text-muted-foreground">
                     <strong>Observações do agendamento:</strong> {session.notes}

@@ -61,12 +61,23 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
     const userId: string | null = psych.user_id;
 
-    // 1. Dependências ligadas ao registro do psicólogo
+    // 1. Repasses: arquivados por 5 anos (registro fiscal) antes de apagar.
+    //    Sem o arquivo, nada é apagado. Os comprovantes ficam no bucket
+    //    payment-receipts, na pasta com o id antigo do psicólogo.
+    const { error: archiveError } = await supabase.rpc("archive_psychologist_payouts", {
+      p_psychologist_id: psych.id,
+    });
+    if (archiveError) {
+      console.error("Erro ao arquivar repasses:", archiveError);
+      return json({ error: "Não foi possível arquivar os repasses. Nada foi excluído." }, 500);
+    }
+
+    // 2. Dependências ligadas ao registro do psicólogo
     await supabase.from("payment_logs").delete().eq("psychologist_id", psych.id);
     await supabase.from("psychologist_payments").delete().eq("psychologist_id", psych.id);
 
     if (userId) {
-      // 2. Dependências ligadas ao user_id
+      // 3. Dependências ligadas ao user_id
       await supabase.from("psychologist_presence").delete().eq("psychologist_id", userId);
       await supabase.from("psychologist_availability").delete().eq("psychologist_id", userId);
       await supabase.from("psychologist_availability_overrides").delete().eq("psychologist_id", userId);
@@ -82,12 +93,12 @@ Deno.serve(async (req: Request): Promise<Response> => {
       await supabase.from("session_feedback").delete().eq("user_id", userId);
       await supabase.from("psychologist_registrations").delete().eq("user_id", userId);
 
-      // 3. Arquivos
+      // 4. Arquivos
       await removeBucketFolder("documents", userId);
       await removeBucketFolder("psychologist-documents", userId);
     }
 
-    // 4. Registro principal
+    // 5. Registro principal
     const { error: deleteError } = await supabase
       .from("psychologists")
       .delete()

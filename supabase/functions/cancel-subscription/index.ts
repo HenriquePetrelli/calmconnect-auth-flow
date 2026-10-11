@@ -102,16 +102,19 @@ serve(async (req) => {
 
     // Só consulta: o app mostra, antes de confirmar, se haverá reembolso.
     if (body?.preview === true) {
-      // Consultas futuras que serão canceladas junto (só no cancelamento imediato).
+      // Consultas futuras que serão canceladas: no cancelamento imediato, todas;
+      // no fim do período, as marcadas para depois do fim do plano (o banco as
+      // cancela quando o plano termina, com aviso 3 dias antes).
       let futureAppointments = 0;
-      if (mode === "immediate") {
+      const cancelFrom = mode === "immediate" ? new Date().toISOString() : accessUntil;
+      if (cancelFrom) {
         const { count } = await supabaseClient
           .from("appointments")
           .select("id", { count: "exact", head: true })
           .eq("patient_id", user.id)
           .eq("appointment_type", "regular")
           .in("status", ["pending", "scheduled", "confirmed", "reschedule_proposed"])
-          .gt("scheduled_at", new Date().toISOString());
+          .gte("scheduled_at", cancelFrom);
         futureAppointments = count ?? 0;
       }
       return new Response(JSON.stringify({

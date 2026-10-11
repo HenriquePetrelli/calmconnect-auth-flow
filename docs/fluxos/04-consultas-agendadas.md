@@ -1,7 +1,7 @@
 # 04. Consultas agendadas
 
 > **Status:** Pronto.
-> **Última verificação:** 2026-10-17 (segunda varredura: listas atualizam sozinhas, aceitar não ressuscita consulta cancelada, rotina de expiração não recusa o que acabou de ser aceito, pedido sem duplicar, horário proposto protegido no banco, lembretes do horário novo, plano vencido, psicólogo avisado do pedido expirado). Antes: 2026-10-05 (varredura das regras para paciente e psicólogo: horários de outros pacientes aparecem ocupados, fuso de Brasília, dois pedidos simultâneos, horário proposto reservado, cancelar com novo horário proposto, calendário até o limite do psicólogo).
+> **Última verificação:** 2026-10-28 (decisões de produto: anotação privada do psicólogo separada do resumo; consulta depois do fim de um plano que não renova não é marcada e, se já estava, é cancelada quando o plano termina). Antes: 2026-10-17 (segunda varredura: listas atualizam sozinhas, aceitar não ressuscita consulta cancelada, rotina de expiração não recusa o que acabou de ser aceito, pedido sem duplicar, horário proposto protegido no banco, lembretes do horário novo, plano vencido, psicólogo avisado do pedido expirado). Antes: 2026-10-05 (varredura das regras para paciente e psicólogo: horários de outros pacientes aparecem ocupados, fuso de Brasília, dois pedidos simultâneos, horário proposto reservado, cancelar com novo horário proposto, calendário até o limite do psicólogo).
 > **Quem usa:** paciente Premium (1 consulta por mês, incluindo o plano da empresa) e psicólogo aprovado.
 
 ## Resumo
@@ -47,7 +47,7 @@ As telas de consultas do paciente (Próximas) e do psicólogo (Início, Consulta
 ### 5. Conclusão
 - Só conta como concluída com pelo menos **5 minutos de chamada com os dois conectados** (`webrtc_sessions.media_seconds`, somado pelo banco a partir do aviso que cada lado manda a cada 20 s enquanto a mídia passa; o app não consegue alterar). Vale para o botão "Concluir" do psicólogo, para o "Encerrar" da sala e para a rotina. Salas criadas antes desta regra seguem a anterior (bastava conectar).
 - Quem sai da sala sem a outra pessoa ter entrado não encerra a consulta: ela continua "em andamento" até o fim da janela (a outra pessoa ainda pode entrar), e o app avisa isso.
-- Salvar o resumo da sessão no histórico não muda o status da consulta. **O paciente vê o resumo** no histórico dele (a tela do psicólogo avisa). Até 10.000 caracteres; a mensagem de uma proposta, até 1.000.
+- Salvar o resumo da sessão no histórico não muda o status da consulta. **O paciente vê o resumo** no histórico dele (a tela do psicólogo avisa). Ao lado fica a **anotação privada**, que só o psicólogo da consulta lê (tabela `appointment_private_notes`, decisão de 2026-10-28); ela também aparece no histórico do paciente na tela do psicólogo durante a consulta seguinte. Até 10.000 caracteres; a mensagem de uma proposta, até 1.000.
 - A rotina `finalize-stale-appointments` (a cada 10 min) fecha o que ficou aberto 30 min após o fim previsto:
   - **5 min ou mais de chamada** → `completed`, e entra no repasse do psicólogo (ficha 09);
   - **conectou mas não chegou a 5 min** (caiu e ninguém conseguiu voltar) → `cancelled` como "Interrompida", a consulta do mês volta para o paciente, não entra no repasse e os dois são avisados;
@@ -76,6 +76,8 @@ Toda devolução da consulta do mês (cancelar, recusar, expirar, não realizada
 - **Psicólogo**: no histórico, **Consulta interrompida**. Cancela a consulta, devolve a consulta do mês ao paciente, avisa o paciente e tira do repasse. É recusado se a consulta já entrou num repasse pago.
 
 ## Regras
+
+- **Plano que não vai renovar**: a consulta precisa ser marcada antes do fim do plano ("Seu plano termina em DD/MM. Agende até essa data ou renove o plano."). As que já estavam marcadas para depois são canceladas quando o plano termina (ficha 08).
 
 - Status: `pending`, `scheduled`/`confirmed`, `reschedule_proposed`, `in_progress`, `completed`, `declined`, `cancelled`, `no_show`.
 - O paciente **não** altera a consulta direto: tudo passa por funções do banco ou pela edge function, com transições permitidas definidas (`PSYCHOLOGIST_TRANSITIONS` em `psychologist-schedule`).
@@ -128,7 +130,6 @@ select * from appointment_problem_reports order by created_at desc limit 20;
 
 ## Pendências
 
-- **Decisão** (pendência 11): o resumo da sessão continua visível para o paciente ou passa a ser só do psicólogo.
 - O push dos lembretes depende do Firebase (pendência 3).
 
 ## Problemas comuns

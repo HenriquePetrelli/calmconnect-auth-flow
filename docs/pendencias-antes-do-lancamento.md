@@ -46,13 +46,6 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 - **O que fazer:** confirmar que as variáveis estão configuradas com os valores do projeto no Firebase e testar num celular: ativar as notificações no perfil, fechar o app e mandar uma mensagem no chat a partir de outra conta.
 - **Registrado em:** 2026-10-04.
 
-### 4. Decidir sobre SOS atendidos antes da correção do repasse
-
-- **Situação:** até 2026-10-04 o repasse nunca contava os atendimentos de SOS (contava pela tabela de consultas, onde o SOS não aparece), então nenhum psicólogo recebeu por SOS. A correção passa a contar os SOS concluídos daqui para frente; os anteriores foram registrados em `payout_items` (`source_type = 'sos'`, `backfilled = true`) sem somar ao valor a pagar.
-- **O que fazer:** decidir se paga os atendimentos antigos. Para ver quanto é por psicólogo:
-  `select p.full_name, count(*), sum(i.amount) from payout_items i join psychologists p on p.user_id = i.psychologist_user_id where i.source_type = 'sos' and i.backfilled group by p.full_name;`
-- **Registrado em:** 2026-10-04.
-
 ### 5. Configurar o TURN das chamadas de vídeo
 
 - **Onde:** secrets das edge functions (função `ice-servers`).
@@ -84,45 +77,6 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 - **Opcional:** trocar o nome do projeto no painel da Lovable e o e-mail da conta admin (`admin@calmconnect.com`) junto com a pendência 1.
 - **Registrado em:** 2026-10-04.
 
-## Decisões de produto
-
-Regras que hoje funcionam de um jeito escolhido nas varreduras de outubro de 2026 e precisam da sua confirmação. Para mudar qualquer uma, é só pedir ao Claude.
-
-### 11. Resumo da sessão visível para o paciente
-
-- **Hoje:** o resumo que o psicólogo escreve no histórico da consulta aparece para o paciente (no histórico dele). Desde 2026-10-17 a tela do psicólogo avisa isso ao escrever.
-- **Decidir:** manter visível ou passar a ser só do psicólogo (anotação privada).
-- **Ficha:** 04 (Consultas agendadas).
-- **Registrado em:** 2026-10-17.
-
-### 12. Quantas denúncias tiram um depoimento do ar
-
-- **Hoje:** com **3** denúncias pendentes de pessoas diferentes, o depoimento sai da lista dos outros até o admin revisar (nada é apagado; o autor vê "em análise").
-- **Decidir:** manter 3, mudar o número ou voltar à moderação só manual.
-- **Ficha:** 16 (Grupos de apoio).
-- **Registrado em:** 2026-10-15.
-
-### 13. Tempo mínimo de chamada para o SOS entrar no repasse
-
-- **Hoje:** o SOS entra no repasse se a chamada conectou os dois lados, sem tempo mínimo. A consulta agendada exige 5 minutos de chamada.
-- **Decidir:** manter assim ou exigir um mínimo também no SOS (ex.: 2 ou 5 minutos).
-- **Ficha:** 09 (Repasses).
-- **Registrado em:** 2026-10-19.
-
-### 14. Histórico de repasses de psicólogo excluído
-
-- **Hoje:** excluir a conta de um psicólogo apaga junto o histórico de repasses dele (`payment_logs`, `psychologist_payments`), que são registros fiscais. A exclusão de psicólogo só acontece pelo suporte.
-- **Decidir:** como guardar esses registros (ex.: arquivar sem ligação com a conta, como já é feito com os atendimentos do paciente, por 5 anos) antes de excluir.
-- **Ficha:** 09 (Repasses).
-- **Registrado em:** 2026-10-19.
-
-### 15. Consulta marcada para depois do fim do plano
-
-- **Hoje:** se o plano termina no fim do período pago, a consulta que a pessoa já tinha marcado para depois dessa data continua valendo. Só no cancelamento imediato (arrependimento em 7 dias ou pagamento em atraso) as consultas futuras são canceladas junto.
-- **Decidir:** manter ou cancelar também essas consultas quando o plano termina.
-- **Ficha:** 08 (Assinaturas e pagamentos).
-- **Registrado em:** 2026-10-18.
-
 ## Melhorias sugeridas
 
 ### 8. SOS por mensagem de texto
@@ -141,6 +95,15 @@ Regras que hoje funcionam de um jeito escolhido nas varreduras de outubro de 202
 - **Registrado em:** 2026-10-04.
 
 ## Resolvidas
+
+### Decisões de produto (registradas de 2026-10-04 a 2026-10-19, decididas em 2026-10-28)
+
+- **4. SOS de antes da correção do repasse:** não serão pagos; o app ainda não estava em produção. Os registros foram apagados do livro.
+- **11. Resumo da sessão:** dois campos. O resumo continua visível ao paciente; a **anotação privada** fica só com o psicólogo (ficha 04).
+- **12. Denúncias nos grupos:** mantidas as 3 denúncias pendentes de pessoas diferentes (ficha 16).
+- **13. SOS curto:** o SOS só entra no repasse com 5 minutos de chamada com os dois conectados, como a consulta (ficha 09).
+- **14. Repasses de psicólogo excluído:** arquivados por 5 anos sem ligação com a conta, só para o admin; depois uma rotina apaga (ficha 09).
+- **15. Consulta depois do fim do plano:** cancelada quando o plano termina, com aviso ao paciente 3 dias antes; com o plano marcado para não renovar, não dá para agendar depois do fim (fichas 04 e 08).
 
 ### Avaliação da consulta agendada (registrada em 2026-10-04, resolvida em 2026-10-04)
 

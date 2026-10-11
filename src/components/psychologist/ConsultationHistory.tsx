@@ -33,6 +33,8 @@ import { getSessionUser } from '@/lib/currentUser';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import LifeRingIcon from '@/components/icons/LifeRingIcon';
+import { loadPrivateNote, savePrivateNote, PRIVATE_NOTE_MAX } from '@/lib/privateNotes';
+import { useToast } from '@/hooks/use-toast';
 
 type ConsultationKind = 'scheduled' | 'emergency';
 
@@ -63,8 +65,30 @@ const ConsultationHistory = () => {
   const [typeFilter, setTypeFilter] = useState<'all' | ConsultationKind>('all');
   const [selected, setSelected] = useState<ConsultationRow | null>(null);
   const [sessionSummary, setSessionSummary] = useState('');
+  const [privateNote, setPrivateNote] = useState('');
+  const [privateNoteLoaded, setPrivateNoteLoaded] = useState(false);
   const [savingSummary, setSavingSummary] = useState(false);
   const [interruptTarget, setInterruptTarget] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  // Anotação privada da consulta aberta (só o psicólogo lê).
+  useEffect(() => {
+    setPrivateNote('');
+    setPrivateNoteLoaded(false);
+    if (!selected || selected.kind !== 'scheduled') return;
+    let cancelled = false;
+    loadPrivateNote(selected.id)
+      .then((note) => {
+        if (!cancelled) setPrivateNote(note);
+      })
+      .catch((error) => console.error('Error loading private note:', error))
+      .finally(() => {
+        if (!cancelled) setPrivateNoteLoaded(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selected]);
 
   useEffect(() => {
     loadHistory();
@@ -244,6 +268,16 @@ const ConsultationHistory = () => {
       // Só o resumo: concluir a consulta é outra ação (e exige que a chamada
       // tenha acontecido). Antes salvar o resumo também tentava concluir.
       await updateAppointment(selected.id, { sessionSummary });
+      // Só grava a anotação se ela chegou a carregar (senão apagaria a que existe).
+      if (privateNoteLoaded) {
+        try {
+          await savePrivateNote(selected.id, privateNote);
+        } catch (error) {
+          console.error('Error saving private note:', error);
+          toast({ title: 'Erro', description: 'O resumo foi salvo, mas a anotação privada não. Tente de novo.', variant: 'destructive' });
+          return;
+        }
+      }
 
       setRows((prev) =>
         prev.map((row) => (row.id === selected.id ? { ...row, session_summary: sessionSummary } : row))
@@ -549,7 +583,26 @@ const ConsultationHistory = () => {
                       className="mt-1"
                     />
                     <p className="mt-1 text-xs text-muted-foreground">
-                      O paciente vê este resumo no histórico de consultas dele. Não escreva aqui anotações que devam ficar só com você.
+                      O paciente vê este resumo no histórico de consultas dele.
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="private-note" className="font-medium">
+                      Anotação privada
+                    </Label>
+                    <Textarea
+                      id="private-note"
+                      value={privateNote}
+                      onChange={(e) => setPrivateNote(e.target.value)}
+                      placeholder={privateNoteLoaded ? 'Anotações que ficam só com você...' : 'Carregando...'}
+                      disabled={!privateNoteLoaded}
+                      rows={4}
+                      maxLength={PRIVATE_NOTE_MAX}
+                      className="mt-1"
+                    />
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Só você vê. O paciente não tem acesso a esta anotação.
                     </p>
                   </div>
 
@@ -581,7 +634,7 @@ const ConsultationHistory = () => {
                       ) : (
                         <FileText className="mr-2 h-4 w-4" />
                       )}
-                      Salvar Resumo
+                      Salvar
                     </Button>
                   </div>
                 </>
