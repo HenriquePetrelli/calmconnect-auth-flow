@@ -72,12 +72,25 @@ Deno.serve(async (req: Request): Promise<Response> => {
       return json({ error: "Não foi possível arquivar os repasses. Nada foi excluído." }, 500);
     }
 
-    // 2. Dependências ligadas ao registro do psicólogo
+    // 2. Consultas: as futuras são canceladas (paciente avisado, consulta do
+    //    mês devolvida) e todas guardam o nome do psicólogo. Elas ficam no
+    //    histórico do paciente; antes eram apagadas junto com o psicólogo.
+    if (userId) {
+      const { error: detachError } = await supabase.rpc("detach_psychologist_from_appointments", {
+        p_user_id: userId,
+      });
+      if (detachError) {
+        console.error("Erro ao separar as consultas:", detachError);
+        return json({ error: "Não foi possível preservar as consultas dos pacientes. Nada foi excluído." }, 500);
+      }
+    }
+
+    // 3. Dependências ligadas ao registro do psicólogo
     await supabase.from("payment_logs").delete().eq("psychologist_id", psych.id);
     await supabase.from("psychologist_payments").delete().eq("psychologist_id", psych.id);
 
     if (userId) {
-      // 3. Dependências ligadas ao user_id
+      // 4. Dependências ligadas ao user_id
       await supabase.from("psychologist_presence").delete().eq("psychologist_id", userId);
       await supabase.from("psychologist_availability").delete().eq("psychologist_id", userId);
       await supabase.from("psychologist_availability_overrides").delete().eq("psychologist_id", userId);
@@ -85,7 +98,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
       await supabase.from("webrtc_sessions").delete().eq("psychologist_id", userId);
       await supabase.from("mensagens").delete().eq("autor_id", userId);
       await supabase.from("conversas").delete().eq("psicologo_id", userId);
-      await supabase.from("appointments").delete().eq("psychologist_id", userId);
       await supabase.from("emergency_requests").update({ accepted_by: null }).eq("accepted_by", userId);
       await supabase.from("suporte_psicologo").delete().eq("psicologo_id", userId);
       await supabase.from("fcm_tokens").delete().eq("user_id", userId);
@@ -93,12 +105,12 @@ Deno.serve(async (req: Request): Promise<Response> => {
       await supabase.from("session_feedback").delete().eq("user_id", userId);
       await supabase.from("psychologist_registrations").delete().eq("user_id", userId);
 
-      // 4. Arquivos
+      // 5. Arquivos
       await removeBucketFolder("documents", userId);
       await removeBucketFolder("psychologist-documents", userId);
     }
 
-    // 5. Registro principal
+    // 6. Registro principal
     const { error: deleteError } = await supabase
       .from("psychologists")
       .delete()

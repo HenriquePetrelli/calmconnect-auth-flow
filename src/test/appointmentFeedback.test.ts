@@ -24,7 +24,7 @@ beforeEach(() => {
 describe('avaliação da consulta agendada', () => {
   it('pede a avaliação de consulta concluída e ainda não avaliada (sem bloquear)', async () => {
     fakeDb.seed('appointments', [
-      { id: 'a1', patient_id: 'pat', status: 'completed', video_room_id: 's1', scheduled_at: recent },
+      { id: 'a1', patient_id: 'pat', psychologist_id: 'psy', status: 'completed', video_room_id: 's1', scheduled_at: recent },
     ]);
     const { result } = renderHook(() => usePendingCallFeedback());
     await waitFor(() => expect(result.current.pending).toMatchObject({ kind: 'appointment', sessionId: 's1', requestId: 'a1' }));
@@ -32,8 +32,8 @@ describe('avaliação da consulta agendada', () => {
 
   it('não pede de novo depois de avaliada ou pulada', async () => {
     fakeDb.seed('appointments', [
-      { id: 'a1', patient_id: 'pat', status: 'completed', video_room_id: 's1', scheduled_at: recent },
-      { id: 'a2', patient_id: 'pat', status: 'completed', video_room_id: 's2', scheduled_at: recent },
+      { id: 'a1', patient_id: 'pat', psychologist_id: 'psy', status: 'completed', video_room_id: 's1', scheduled_at: recent },
+      { id: 'a2', patient_id: 'pat', psychologist_id: 'psy', status: 'completed', video_room_id: 's2', scheduled_at: recent },
     ]);
     fakeDb.seed('session_feedback', [{ session_id: 's1', user_id: 'pat', rating: 5 }]);
     dismissAppointmentFeedback('s2');
@@ -47,10 +47,19 @@ describe('avaliação da consulta agendada', () => {
       { id: 'e1', patient_id: 'pat', video_room_id: 'se', ended_at: recent, started_at: recent },
     ]);
     fakeDb.seed('appointments', [
-      { id: 'a1', patient_id: 'pat', status: 'completed', video_room_id: 's1', scheduled_at: recent },
+      { id: 'a1', patient_id: 'pat', psychologist_id: 'psy', status: 'completed', video_room_id: 's1', scheduled_at: recent },
     ]);
     const { result } = renderHook(() => usePendingCallFeedback());
     await waitFor(() => expect(result.current.pending).toMatchObject({ kind: 'emergency', sessionId: 'se' }));
+  });
+
+  it('consulta de psicólogo excluído não pede avaliação', async () => {
+    fakeDb.seed('appointments', [
+      { id: 'a1', patient_id: 'pat', psychologist_id: null, psychologist_name: 'Dra. Ana', status: 'completed', video_room_id: 's1', scheduled_at: recent },
+    ]);
+    const { result } = renderHook(() => usePendingCallFeedback());
+    await new Promise((r) => setTimeout(r, 20));
+    expect(result.current.pending).toBeNull();
   });
 
   it('psicólogo não recebe o convite de avaliar consulta agendada', async () => {
@@ -70,5 +79,7 @@ describe('avaliação da consulta agendada', () => {
     expect(canRateAppointment({ status: 'completed', scheduled_at: daysAgo(40), video_room_id: 's' }, now)).toBe(false);
     expect(canRateAppointment({ status: 'completed', scheduled_at: daysAgo(1), video_room_id: null }, now)).toBe(false);
     expect(canRateAppointment({ status: 'cancelled', scheduled_at: daysAgo(1), video_room_id: 's' }, now)).toBe(false);
+    // Psicólogo excluído: a consulta fica no histórico, sem avaliação.
+    expect(canRateAppointment({ status: 'completed', scheduled_at: daysAgo(1), video_room_id: 's', psychologist_id: null }, now)).toBe(false);
   });
 });

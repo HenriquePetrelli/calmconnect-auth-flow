@@ -99,6 +99,8 @@ export const usePendingCallFeedback = () => {
         .eq('patient_id', user.id)
         .eq('status', 'completed')
         .not('video_room_id', 'is', null)
+        // Psicólogo excluído: não há a quem avaliar.
+        .not('psychologist_id', 'is', null)
         .gte('scheduled_at', since)
         .order('scheduled_at', { ascending: false })
         .limit(10);

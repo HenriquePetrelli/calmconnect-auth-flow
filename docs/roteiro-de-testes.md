@@ -221,6 +221,7 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Admin → Confirmar → conferir no banco ⇒ itens do psicólogo com paid_at e o registro com o E2E
 - [ ] SOS concluído com menos de 5 min de chamada (os dois conectados) → Sincronizar ⇒ não entra no repasse; com 5 min ou mais, entra (R$ 50)
 - [ ] Admin → excluir psicólogo com repasses ⇒ some do painel; `archived_psychologist_payouts` tem uma linha com nome, CPF e os pagamentos
+- [ ] Admin → excluir psicólogo com consulta passada e consulta futura de um paciente ⇒ o paciente continua vendo a passada no histórico (com o nome e o resumo); a futura aparece cancelada, ele recebe "Consulta cancelada: o psicólogo não atende mais pelo Soliv" e a consulta do mês volta
 
 ## 8. Empresas / B2B (ficha 10)
 

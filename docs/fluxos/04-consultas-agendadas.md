@@ -1,7 +1,7 @@
 # 04. Consultas agendadas
 
 > **Status:** Pronto.
-> **Última verificação:** 2026-10-28 (decisões de produto: anotação privada do psicólogo separada do resumo; consulta depois do fim de um plano que não renova não é marcada e, se já estava, é cancelada quando o plano termina). Antes: 2026-10-17 (segunda varredura: listas atualizam sozinhas, aceitar não ressuscita consulta cancelada, rotina de expiração não recusa o que acabou de ser aceito, pedido sem duplicar, horário proposto protegido no banco, lembretes do horário novo, plano vencido, psicólogo avisado do pedido expirado). Antes: 2026-10-05 (varredura das regras para paciente e psicólogo: horários de outros pacientes aparecem ocupados, fuso de Brasília, dois pedidos simultâneos, horário proposto reservado, cancelar com novo horário proposto, calendário até o limite do psicólogo).
+> **Última verificação:** 2026-10-29 (psicólogo excluído: consultas ficam no histórico do paciente com o nome guardado; as ativas são canceladas com aviso e devolução). Antes: 2026-10-28 (decisões de produto: anotação privada do psicólogo separada do resumo; consulta depois do fim de um plano que não renova não é marcada e, se já estava, é cancelada quando o plano termina). Antes: 2026-10-17 (segunda varredura: listas atualizam sozinhas, aceitar não ressuscita consulta cancelada, rotina de expiração não recusa o que acabou de ser aceito, pedido sem duplicar, horário proposto protegido no banco, lembretes do horário novo, plano vencido, psicólogo avisado do pedido expirado). Antes: 2026-10-05 (varredura das regras para paciente e psicólogo: horários de outros pacientes aparecem ocupados, fuso de Brasília, dois pedidos simultâneos, horário proposto reservado, cancelar com novo horário proposto, calendário até o limite do psicólogo).
 > **Quem usa:** paciente Premium (1 consulta por mês, incluindo o plano da empresa) e psicólogo aprovado.
 
 ## Resumo
@@ -76,6 +76,8 @@ Toda devolução da consulta do mês (cancelar, recusar, expirar, não realizada
 - **Psicólogo**: no histórico, **Consulta interrompida**. Cancela a consulta, devolve a consulta do mês ao paciente, avisa o paciente e tira do repasse. É recusado se a consulta já entrou num repasse pago.
 
 ## Regras
+
+- **Psicólogo excluído**: as consultas ficam no histórico do paciente com o nome do psicólogo (`psychologist_name`), sem avaliação pendente; as ativas são canceladas com aviso e a consulta do mês volta (ficha 19).
 
 - **Plano que não vai renovar**: a consulta precisa ser marcada antes do fim do plano ("Seu plano termina em DD/MM. Agende até essa data ou renove o plano."). As que já estavam marcadas para depois são canceladas quando o plano termina (ficha 08).
 

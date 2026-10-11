@@ -164,10 +164,16 @@ export const useAppointments = () => {
       if (appointmentsError) throw appointmentsError;
 
       // Mesmo formato da edge function (psychologist no singular).
-      return (appointmentsData || []).map((appointment) => ({
-        ...appointment,
-        psychologist: Array.isArray(appointment.psychologists) ? appointment.psychologists[0] : appointment.psychologists,
-      }));
+      return (appointmentsData || []).map((appointment) => {
+        const savedName = (appointment as { psychologist_name?: string | null }).psychologist_name;
+        return {
+          ...appointment,
+          // Psicólogo excluído: a consulta fica no histórico com o nome guardado.
+          psychologist:
+            (Array.isArray(appointment.psychologists) ? appointment.psychologists[0] : appointment.psychologists) ??
+            (savedName ? { full_name: savedName, specialization: null } : null),
+        };
+      });
     } catch (error: any) {
       console.error('Error fetching appointment history:', error);
       toast({

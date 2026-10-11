@@ -1,7 +1,7 @@
 # 19. Painel do admin
 
 > **Status:** Pronto, com pendência crítica (senha do admin exposta numa migração antiga).
-> **Última verificação:** 2026-10-24 (varredura: Auditoria passou a registrar aprovar e recusar psicólogo, confirmar repasse, moderação dos grupos e mudanças em empresas; cartão de saúde das rotinas na Visão geral). Antes: 2026-10-02 (painel redesenhado); proteções do banco reforçadas em 2026-10-04.
+> **Última verificação:** 2026-10-29 (excluir psicólogo não apaga mais o histórico de consultas dos pacientes). Antes: 2026-10-24 (varredura: Auditoria passou a registrar aprovar e recusar psicólogo, confirmar repasse, moderação dos grupos e mudanças em empresas; cartão de saúde das rotinas na Visão geral). Antes: 2026-10-02 (painel redesenhado); proteções do banco reforçadas em 2026-10-04.
 > **Quem usa:** admin (conta criada à mão; ver `docs/creating-an-admin-account.md`).
 
 ## Resumo
@@ -30,6 +30,12 @@ Painel único em `/admin-dashboard`, com a seção na URL (`?secao=...`), para r
   4. o psicólogo recebe e-mail;
   5. cadastros recusados são apagados depois de alguns dias pela rotina `psychologist-cleanup-daily`.
 - **Bloquear, editar e excluir** usam edge functions próprias (`admin-block-*`, `admin-update-*`, `admin-delete-*`). Cada uma confere se quem chama é admin e grava em `admin_audit_log`: quem, quando, em quem e detalhes.
+- **Excluir psicólogo** (`admin-delete-psychologist`), nesta ordem; se um passo falhar, nada é excluído:
+  1. arquiva os repasses por 5 anos (ficha 09);
+  2. cancela as consultas ainda ativas (futuras ou não fechadas), avisa cada paciente ("o psicólogo não atende mais pelo Soliv") e devolve a consulta do mês (`detach_psychologist_from_appointments`);
+  3. as consultas ficam no histórico do paciente com o nome do psicólogo guardado (`appointments.psychologist_name`, sem ligação com a conta); antes eram apagadas junto, com o resumo e a avaliação;
+  4. as anotações privadas do psicólogo saem com ele;
+  5. apaga o resto da conta (agenda, presença, chat, documentos, login).
 - **Privacidade**: o admin nunca vê o conteúdo do chat, o diário, os hábitos ou o plano de segurança.
 
 ## Regras

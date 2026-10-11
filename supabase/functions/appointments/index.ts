@@ -108,6 +108,15 @@ const isWithinPsychologistAvailability = async (
   return ranges.some((r) => timeToMinutes(r.start_time) <= startMin && endMin <= timeToMinutes(r.end_time));
 };
 
+// Psicólogo da consulta para a tela. Se ele foi excluído, a consulta fica no
+// histórico do paciente com o nome guardado (psychologist_name).
+// deno-lint-ignore no-explicit-any
+const psychologistOf = (appointment: any) => {
+  const joined = Array.isArray(appointment.psychologists) ? appointment.psychologists[0] : appointment.psychologists;
+  if (joined) return joined;
+  return appointment.psychologist_name ? { full_name: appointment.psychologist_name, specialization: null } : null;
+};
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -191,11 +200,7 @@ serve(async (req) => {
         // Transform data to ensure psychologist is properly structured
         const transformedAppointments = appointments?.map(appointment => ({
           ...appointment,
-          psychologist: appointment.psychologists 
-            ? (Array.isArray(appointment.psychologists) 
-                ? appointment.psychologists[0] 
-                : appointment.psychologists)
-            : null
+          psychologist: psychologistOf(appointment)
         })) || [];
 
         return new Response(
@@ -231,11 +236,7 @@ serve(async (req) => {
       // Transform data to ensure psychologist is properly structured
       const transformedAppointments = appointments?.map(appointment => ({
         ...appointment,
-        psychologist: appointment.psychologists 
-          ? (Array.isArray(appointment.psychologists) 
-              ? appointment.psychologists[0] 
-              : appointment.psychologists)
-          : null
+        psychologist: psychologistOf(appointment)
       })) || [];
 
       return new Response(
@@ -538,11 +539,7 @@ serve(async (req) => {
       // Transform appointment to ensure psychologist is properly structured
       const transformedAppointment = {
         ...appointment,
-        psychologist: appointment.psychologists 
-          ? (Array.isArray(appointment.psychologists) 
-              ? appointment.psychologists[0] 
-              : appointment.psychologists)
-          : null
+        psychologist: psychologistOf(appointment)
       };
 
       // TODO: Send confirmation email/SMS
