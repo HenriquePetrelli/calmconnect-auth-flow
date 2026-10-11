@@ -334,6 +334,8 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Paciente → Configurações → Excluir conta → senha errada ⇒ recusa
 - [ ] Paciente (assinatura de teste) → Excluir conta → senha certa + EXCLUIR ⇒ sai; assinatura cancelada no Stripe
 - [ ] Psicólogo → Excluir conta ⇒ orientado a falar com o suporte
+- [ ] Paciente com conversa no chat → Baixar meus dados ⇒ o arquivo traz conversas, mensagens dos dois lados, aceites dos termos, benefício da empresa e pedidos de suporte
+- [ ] Paciente → Excluir conta → conferir no banco ⇒ nada sobra em notification_logs, participant_presence e appointment_problem_reports com o id dele
 
 ## 17. Painel do admin (ficha 19)
 
@@ -365,6 +367,8 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Computador → rolar qualquer tela (paciente, psicólogo, admin) ⇒ cabeçalho com "soliv" e o sino fica fixo no topo
 - [ ] Janela com rolagem (ex.: Agenda semanal) → rolar ⇒ título e X de fechar fixos em cima; botão de confirmar fixo embaixo
 - [ ] Admin no computador ⇒ menu lateral fixo; cada seção com título e descrição no topo, sem título repetido
+- [ ] Admin → aprovar/recusar psicólogo, confirmar repasse, editar/excluir depoimento, alterar empresa ⇒ cada ação aparece em Auditoria, com os detalhes (ex.: vagas 5 → 10, valor e E2E)
+- [ ] Admin aprova psicólogo com o envio de e-mail falhando ⇒ aprovação vale e aparece como concluída (sem erro para o admin)
 
 ## 18. Segurança (ficha 20)
 

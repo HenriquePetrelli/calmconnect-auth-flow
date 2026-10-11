@@ -1,7 +1,7 @@
 # 19. Painel do admin
 
 > **Status:** Pronto, com pendência crítica (senha do admin exposta numa migração antiga).
-> **Última verificação:** 2026-10-02 (painel redesenhado). As proteções do banco foram reforçadas em 2026-10-04.
+> **Última verificação:** 2026-10-24 (varredura: Auditoria passou a registrar aprovar e recusar psicólogo, confirmar repasse, moderação dos grupos e mudanças em empresas; cartão de saúde das rotinas na Visão geral). Antes: 2026-10-02 (painel redesenhado); proteções do banco reforçadas em 2026-10-04.
 > **Quem usa:** admin (conta criada à mão; ver `docs/creating-an-admin-account.md`).
 
 ## Resumo
@@ -17,7 +17,7 @@ Painel único em `/admin-dashboard`, com a seção na URL (`?secao=...`), para r
 | Atendimento | SOS | Métricas: aceite, resolução, avaliação média, total |
 | Atendimento | Chat | Métricas e metadados das conversas; arquivar (sem ver o conteúdo) |
 | Moderação | Grupos de apoio | Depoimentos, curtidas e denúncias; editar e excluir |
-| Moderação | Auditoria | Histórico das ações dos admins |
+| Moderação | Auditoria | Histórico das ações dos admins: bloquear, editar e excluir contas; aprovar e recusar psicólogo; confirmar repasse (valor e E2E); editar e excluir depoimento, revisar denúncia; cadastrar e alterar empresa e vínculos (com o que mudou: de → para). As ações no banco são registradas pelo gatilho `audit_admin_change` |
 | Financeiro | Repasses | Sincronizar e confirmar pagamentos (ficha 09) |
 | Conta | Meu perfil | E-mail, troca de senha (com a senha atual), tema, notificações no aparelho e sair |
 

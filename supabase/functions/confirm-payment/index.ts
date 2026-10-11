@@ -118,6 +118,17 @@ Deno.serve(async (req) => {
     }
     const payment = { total_pending_amount: (result as { amount_paid?: number } | null)?.amount_paid ?? 0 };
 
+    // Registro na Auditoria do painel.
+    const { data: psy } = await supabase.from('psychologists').select('user_id, full_name').eq('id', psychologist_id).maybeSingle();
+    await supabase.from('admin_audit_log').insert({
+      admin_id: user.id,
+      action: 'confirm_payout',
+      target_type: 'psychologist',
+      target_id: psy?.user_id ?? null,
+      target_name: psy?.full_name ?? null,
+      details: { amount: payment.total_pending_amount, pix_e2e_id: e2e },
+    });
+
     console.log(`Payment confirmed for psychologist ${psychologist_id} by admin ${user.id}`);
     
     return new Response(

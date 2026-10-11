@@ -1,7 +1,7 @@
 # 18. Privacidade e LGPD: termos, aceite, exportar e excluir dados
 
 > **Status:** Pronto. Os documentos jurídicos estão em versão para revisão.
-> **Última verificação:** 2026-09-28. Hábitos e questionários entraram na exportação e na exclusão em 2026-10-03.
+> **Última verificação:** 2026-10-24 (varredura: o chat, os aceites dos termos, o benefício da empresa, os problemas relatados, reações, denúncias e pedidos de suporte entraram em "Baixar meus dados"; registros de envio de push, presença em chamada e problemas relatados passaram a sair na exclusão). Antes: 2026-09-28; hábitos e questionários entraram em 2026-10-03.
 > **Quem usa:** todos. Exportar e excluir conta são do paciente.
 
 ## Resumo
@@ -26,7 +26,9 @@ Mapa completo do que é guardado: `docs/lgpd/registro-de-tratamento.md`. Regras 
 ### Exportar ("Baixar meus dados")
 O app busca, **com a sessão do próprio paciente**, os dados dele. A RLS garante que só sai o que é dele. Entra no arquivo:
 
-- perfil, humor, diário;
+- perfil, humor, diário, progresso;
+- **chat**: as conversas e as mensagens dos dois lados (desde 2026-10-24);
+- aceites dos termos, benefício da empresa, problemas relatados em consultas, reações e denúncias nos grupos, pedidos de suporte (desde 2026-10-24);
 - plano de segurança e contatos;
 - metas, conquistas, hábitos, questionários;
 - depoimentos, consultas, SOS, avaliações, notificações;

@@ -107,6 +107,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const userId = user.id;
     const deletions: [string, string][] = [
       ["notifications", "patient_id"],
+      // Sem ligação automática com o login: ficavam no banco depois da exclusão.
+      ["notification_logs", "user_id"],
+      ["participant_presence", "user_id"],
+      ["appointment_problem_reports", "reported_by"],
       ["patient_weekly_goals", "user_id"],
       ["patient_achievements", "user_id"],
       ["patient_progress", "patient_id"],

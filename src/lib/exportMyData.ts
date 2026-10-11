@@ -26,6 +26,15 @@ const SOURCES: { table: string; column: string; label: string }[] = [
   { table: 'notifications', column: 'patient_id', label: 'notificacoes' },
   { table: 'subscribers', column: 'user_id', label: 'assinatura' },
   { table: 'user_preferences', column: 'user_id', label: 'preferencias' },
+  // Antes ficavam de fora do arquivo:
+  { table: 'patient_progress', column: 'patient_id', label: 'progresso' },
+  { table: 'legal_acceptances', column: 'user_id', label: 'aceites_dos_termos' },
+  { table: 'organization_members', column: 'user_id', label: 'beneficio_da_empresa' },
+  { table: 'appointment_problem_reports', column: 'reported_by', label: 'problemas_relatados' },
+  { table: 'group_testimonial_likes', column: 'user_id', label: 'reacoes_em_depoimentos' },
+  { table: 'group_testimonial_reports', column: 'reporter_id', label: 'denuncias_feitas' },
+  { table: 'support_tickets', column: 'user_id', label: 'pedidos_de_suporte' },
+  { table: 'conversas', column: 'paciente_id', label: 'conversas' },
 ];
 
 export async function collectMyData(userId: string, email: string | null) {
@@ -42,6 +51,21 @@ export async function collectMyData(userId: string, email: string | null) {
       else data[label] = rows ?? [];
     })
   );
+
+  // Mensagens das conversas do paciente (as dele e as do psicólogo, que ele
+  // já vê no app). Antes o chat ficava de fora do arquivo.
+  const conversas = (data.conversas as { id: string }[] | undefined) ?? [];
+  if (conversas.length > 0) {
+    const { data: mensagens, error } = await supabase
+      .from('mensagens')
+      .select('*')
+      .in('conversa_id', conversas.map((c) => c.id))
+      .order('created_at', { ascending: true });
+    if (error) unavailable.push('mensagens');
+    else data.mensagens = mensagens ?? [];
+  } else {
+    data.mensagens = [];
+  }
 
   return {
     gerado_em: new Date().toISOString(),

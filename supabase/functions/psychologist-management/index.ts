@@ -366,14 +366,29 @@ const handler = async (req: Request): Promise<Response> => {
       });
       
       if (approvalError) throw approvalError;
-      
-      // Enviar email de aprovação
-      await resend.emails.send({
-        from: 'Soliv <onboarding@resend.dev>',
-        to: [psychologist.email],
-        subject: 'Cadastro aprovado - Soliv',
-        html: generateApprovalEmail(psychologist.full_name),
+
+      // Registro na Auditoria do painel (antes aprovar e recusar não apareciam).
+      await supabase.from('admin_audit_log').insert({
+        admin_id: user.id,
+        action: 'approve_psychologist',
+        target_type: 'psychologist',
+        target_id: psychologist.user_id ?? null,
+        target_name: psychologist.full_name ?? null,
+        details: {},
       });
+
+      // Enviar email de aprovação. A aprovação já valeu: falha no e-mail não
+      // vira erro para o admin (antes ele via "erro" e tentava de novo).
+      try {
+        await resend.emails.send({
+          from: 'Soliv <onboarding@resend.dev>',
+          to: [psychologist.email],
+          subject: 'Cadastro aprovado - Soliv',
+          html: generateApprovalEmail(psychologist.full_name),
+        });
+      } catch (emailError) {
+        console.error('Falha ao enviar e-mail de aprovação:', emailError);
+      }
       
       console.log('Psicólogo aprovado com sucesso:', psychologist_id);
       
@@ -412,14 +427,27 @@ const handler = async (req: Request): Promise<Response> => {
       });
       
       if (rejectionError) throw rejectionError;
-      
-      // Enviar email de rejeição
-      await resend.emails.send({
-        from: 'Soliv <onboarding@resend.dev>',
-        to: [psychologist.email],
-        subject: 'Cadastro não aprovado - Soliv',
-        html: generateRejectionEmail(psychologist.full_name, rejection_reason),
+
+      await supabase.from('admin_audit_log').insert({
+        admin_id: user.id,
+        action: 'reject_psychologist',
+        target_type: 'psychologist',
+        target_id: psychologist.user_id ?? null,
+        target_name: psychologist.full_name ?? null,
+        details: rejection_reason ? { reason: String(rejection_reason).slice(0, 1000) } : {},
       });
+
+      // Enviar email de rejeição (a recusa já valeu; falha no e-mail não vira erro).
+      try {
+        await resend.emails.send({
+          from: 'Soliv <onboarding@resend.dev>',
+          to: [psychologist.email],
+          subject: 'Cadastro não aprovado - Soliv',
+          html: generateRejectionEmail(psychologist.full_name, rejection_reason),
+        });
+      } catch (emailError) {
+        console.error('Falha ao enviar e-mail de recusa:', emailError);
+      }
       
       console.log('Psicólogo rejeitado:', psychologist_id);
       
