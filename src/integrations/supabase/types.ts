@@ -183,7 +183,8 @@ export type Database = {
           patient_id: string
           proposal_notes: string | null
           proposed_scheduled_at: string | null
-          psychologist_id: string
+          psychologist_id: string | null
+          psychologist_name: string | null
           scheduled_at: string
           session_summary: string | null
           status: string
@@ -202,7 +203,8 @@ export type Database = {
           patient_id: string
           proposal_notes?: string | null
           proposed_scheduled_at?: string | null
-          psychologist_id: string
+          psychologist_id?: string | null
+          psychologist_name?: string | null
           scheduled_at: string
           session_summary?: string | null
           status?: string
@@ -221,7 +223,8 @@ export type Database = {
           patient_id?: string
           proposal_notes?: string | null
           proposed_scheduled_at?: string | null
-          psychologist_id?: string
+          psychologist_id?: string | null
+          psychologist_name?: string | null
           scheduled_at?: string
           session_summary?: string | null
           status?: string
@@ -2834,6 +2837,10 @@ export type Database = {
         Returns: Json
       }
       current_user_has_paid_plan: { Args: never; Returns: boolean }
+      detach_psychologist_from_appointments: {
+        Args: { p_user_id: string }
+        Returns: number
+      }
       ensure_week_goals: { Args: { p_local_date: string }; Returns: string }
       expire_cancelled_subscriptions: { Args: never; Returns: number }
       expire_organization_entitlements: { Args: never; Returns: number }
