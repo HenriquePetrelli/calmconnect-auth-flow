@@ -74,6 +74,38 @@ export type Database = {
         }
         Relationships: []
       }
+      appointment_private_notes: {
+        Row: {
+          appointment_id: string
+          created_at: string
+          note: string
+          psychologist_id: string
+          updated_at: string
+        }
+        Insert: {
+          appointment_id: string
+          created_at?: string
+          note?: string
+          psychologist_id: string
+          updated_at?: string
+        }
+        Update: {
+          appointment_id?: string
+          created_at?: string
+          note?: string
+          psychologist_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_private_notes_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: true
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointment_problem_reports: {
         Row: {
           appointment_id: string
@@ -205,6 +237,54 @@ export type Database = {
             referencedColumns: ["user_id"]
           },
         ]
+      }
+      archived_psychologist_payouts: {
+        Row: {
+          archived_at: string
+          cpf: string | null
+          crp: string | null
+          email: string | null
+          former_psychologist_id: string
+          full_name: string | null
+          id: string
+          payment_logs: Json
+          payment_summary: Json | null
+          payout_items: Json
+          pix_key: string | null
+          pix_type: string | null
+          purge_after: string
+        }
+        Insert: {
+          archived_at?: string
+          cpf?: string | null
+          crp?: string | null
+          email?: string | null
+          former_psychologist_id: string
+          full_name?: string | null
+          id?: string
+          payment_logs?: Json
+          payment_summary?: Json | null
+          payout_items?: Json
+          pix_key?: string | null
+          pix_type?: string | null
+          purge_after?: string
+        }
+        Update: {
+          archived_at?: string
+          cpf?: string | null
+          crp?: string | null
+          email?: string | null
+          former_psychologist_id?: string
+          full_name?: string | null
+          id?: string
+          payment_logs?: Json
+          payment_summary?: Json | null
+          payout_items?: Json
+          pix_key?: string | null
+          pix_type?: string | null
+          purge_after?: string
+        }
+        Relationships: []
       }
       brazilian_cities: {
         Row: {
@@ -2593,6 +2673,10 @@ export type Database = {
         Args: { p_patient_id: string }
         Returns: number
       }
+      archive_psychologist_payouts: {
+        Args: { p_psychologist_id: string }
+        Returns: string
+      }
       assert_caller_is: { Args: { p_user_id: string }; Returns: undefined }
       calculate_psychologist_average_rating: {
         Args: { psychologist_user_id: string }
@@ -2623,10 +2707,9 @@ export type Database = {
         Args: { p_appointment_id: string; p_reason?: string }
         Returns: Json
       }
-      cancel_appointments_after_plan_loss: {
-        Args: { p_user_id: string }
-        Returns: number
-      }
+      cancel_appointments_after_plan_loss:
+        | { Args: { p_user_id: string }; Returns: number }
+        | { Args: { p_reason: string; p_user_id: string }; Returns: number }
       check_organization_code: { Args: { p_code: string }; Returns: Json }
       check_rate_limit: {
         Args: {
@@ -3053,6 +3136,7 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: boolean
       }
+      purge_archived_psychologist_payouts: { Args: never; Returns: number }
       purge_cron_history: { Args: never; Returns: number }
       purge_expired_care_records: { Args: never; Returns: Json }
       purge_old_notifications: { Args: never; Returns: number }
@@ -3149,6 +3233,7 @@ export type Database = {
         Returns: string
       }
       sos_call_connected: { Args: { p_request_id: string }; Returns: boolean }
+      sos_call_payable: { Args: { p_request_id: string }; Returns: boolean }
       sos_request_other_psychologist: {
         Args: { p_request_id: string }
         Returns: Json
@@ -3195,6 +3280,7 @@ export type Database = {
         Args: { crp_input: string; exclude_id?: string }
         Returns: boolean
       }
+      warn_appointments_before_plan_end: { Args: never; Returns: number }
     }
     Enums: {
       like_type: "positivo" | "negativo"
