@@ -240,6 +240,15 @@ serve(async (req) => {
               .not('current_emergency_id', 'is', null)
           : { data: [] as { psychologist_id: string }[] };
         const busyIds = new Set((busy ?? []).map((p) => p.psychologist_id));
+        // Em consulta agendada agora: não chama (não pode aceitar até terminar).
+        const { data: inConsultation } = eligibleIds.length > 0
+          ? await supabase
+              .from('appointments')
+              .select('psychologist_id')
+              .in('psychologist_id', eligibleIds)
+              .eq('status', 'in_progress')
+          : { data: [] as { psychologist_id: string }[] };
+        for (const row of inConsultation ?? []) busyIds.add(row.psychologist_id);
         const targetIds = eligibleIds.filter((id) => !busyIds.has(id));
 
         if (targetIds.length > 0) {

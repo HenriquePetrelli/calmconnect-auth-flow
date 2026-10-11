@@ -77,6 +77,9 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Psicólogo em análise ou bloqueado ⇒ não vê a fila do SOS
 - [ ] Paciente → SOS aceito → cancelar antes de a chamada conectar ⇒ SOS do mês volta
 - [ ] Paciente → Chamar outro psicólogo ⇒ o psicólogo que sumiu vê "Atendimento encaminhado" ao voltar para a sala
+- [ ] Psicólogo online em consulta agendada (em andamento) → paciente pede SOS ⇒ paciente não conta esse psicólogo como disponível e ele não recebe push
+- [ ] Psicólogo em consulta → aceitar SOS (outra aba) ⇒ "Você está em uma consulta agora. Termine a consulta antes de aceitar um SOS."
+- [ ] Paciente com plano já vencido (antes da rotina diária) → SOS ⇒ não consegue pedir; convite para assinar
 
 ## 3. Consultas agendadas (fichas 04 e 05)
 

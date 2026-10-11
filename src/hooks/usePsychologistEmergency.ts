@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { getSessionUser } from '@/lib/currentUser';
 import { useToast } from '@/hooks/use-toast';
-import { getFriendlyErrorMessage } from '@/utils/errorMessage';
+import { getFunctionErrorMessage } from '@/utils/errorMessage';
 import { findPsychologistOngoingCall } from '@/lib/emergencyCallGuard';
 import { notifySosQueueChanged, subscribeSosQueue } from '@/lib/sosQueueChannel';
 
@@ -95,7 +95,9 @@ export const usePsychologistEmergency = () => {
             errorMessage = 'Esta solicitação foi cancelada pelo paciente';
             break;
           case 'REQUEST_NOT_AVAILABLE':
-            errorMessage = 'Esta solicitação já foi aceita por outro psicólogo';
+            // Regra do banco com o motivo certo (expirou, outro SOS em andamento,
+            // em consulta agora); antes sempre dizia "aceita por outro psicólogo".
+            errorMessage = data.error || 'Esta solicitação não está mais disponível';
             break;
           case 'REQUEST_ALREADY_TAKEN':
             errorMessage = 'Outro psicólogo já aceitou esta solicitação';
@@ -155,7 +157,8 @@ export const usePsychologistEmergency = () => {
       console.error('❌ Error accepting emergency request:', error);
       toast({
         title: 'Erro',
-        description: getFriendlyErrorMessage(error, 'Erro ao aceitar solicitação'),
+        // A função responde 409 com o motivo no corpo (ex.: "Você está em uma consulta agora").
+        description: await getFunctionErrorMessage(error, 'Erro ao aceitar solicitação'),
         variant: 'destructive',
       });
       throw error;

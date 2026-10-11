@@ -1,7 +1,7 @@
 # 02. SOS: atendimento de emergência
 
 > **Status:** Pronto, com pendência externa (TURN para redes restritivas; push depende do Firebase).
-> **Última verificação:** 2026-10-06 (varredura das regras: um SOS aberto por paciente e por psicólogo, fila só para psicólogo habilitado, aceite só nos 10 min, cota devolvida em todo fim sem conexão, aviso de "Atendimento encaminhado" ao vivo).
+> **Última verificação:** 2026-10-25 (varredura das regras: plano vencido sem SOS, psicólogo em consulta agendada não aceita SOS, não conta como disponível e não recebe push, aceite recusado mostra o motivo certo).
 > **Quem usa:** paciente com plano (Plus, Premium ou empresa) e psicólogo aprovado.
 
 ## Resumo
@@ -19,16 +19,16 @@ O paciente aperta SOS, entra numa fila e o primeiro psicólogo online que aceita
 ## Como funciona
 
 ### 1. Pedido
-1. O paciente toca em SOS. A edge function `emergency-sos` confere o login, o plano e a cota do mês (`can_use_sos`), aplica um limite de 5 tentativas em 10 minutos e cria o pedido em `emergency_requests` com status `pending`.
+1. O paciente toca em SOS. A edge function `emergency-sos` confere o login, o plano (com a data de fim: plano vencido não pede SOS, mesmo antes de a rotina diária atualizar a assinatura) e a cota do mês (`can_use_sos`), aplica um limite de 5 tentativas em 10 minutos e cria o pedido em `emergency_requests` com status `pending`.
 2. Sem SOS disponível (cota do mês usada, sem plano ou conta bloqueada), a tela não fica "buscando": mostra o motivo e as ajudas do momento (CVV em destaque, respirar, plano de segurança, SAMU) e, conforme o caso, "Agendar uma consulta" (Premium) ou "Ver planos" (`SosUnavailable`).
 3. Se já existe um pedido aberto do paciente, ele volta para esse pedido em vez de criar outro. O banco garante isso mesmo com dois toques ao mesmo tempo ou duas abas (`guard_sos_concurrency`). Só conta de paciente pede SOS.
-3. Os psicólogos online veem o pedido na lista na hora (tempo real e canal `sos-queue`, com consulta a cada 10 s). Todos os psicólogos aprovados, não bloqueados e que não estão em outro SOS recebem um **push**, mesmo com o app fechado.
+3. Os psicólogos online veem o pedido na lista na hora (tempo real e canal `sos-queue`, com consulta a cada 10 s). Todos os psicólogos aprovados, não bloqueados, que não estão em outro SOS nem numa consulta agendada em andamento recebem um **push**, mesmo com o app fechado.
 4. Na fila, o paciente vê quantos psicólogos estão online, o tempo de espera (até 10 min), **Meu plano** (plano de segurança), **Respirar** e as ligações para o CVV 188 e o SAMU 192 (uma vez só, sem repetir). Sem ninguém online, o pedido continua na fila (todos os psicólogos recebem push e podem ficar online). As ligações para o CVV e o SAMU têm sempre o mesmo visual.
 5. A fila confere o pedido a cada 5 s e quando a internet ou a tela voltam. Assim o aceite chega mesmo se o tempo real cair.
 
 ### 2. Aceite
-1. O psicólogo toca em aceitar. O aceite é atômico: só um consegue, e os outros recebem "já foi aceito".
-2. O banco só deixa aceitar quem é **psicólogo aprovado e não bloqueado** (`psychologist_can_attend`), que **não esteja em outro SOS** e com o pedido ainda dentro dos 10 min de espera (`guard_sos_concurrency`, também para dois aceites ao mesmo tempo).
+1. O psicólogo toca em aceitar. O aceite é atômico: só um consegue, e os outros recebem "já foi aceito". Quando o banco recusa por outro motivo (pedido expirou, já está em outro SOS, está em consulta), a tela mostra esse motivo.
+2. O banco só deixa aceitar quem é **psicólogo aprovado e não bloqueado** (`psychologist_can_attend`), que **não esteja em outro SOS nem numa consulta agendada em andamento** (`psychologist_in_consultation`: consulta `in_progress` entre 10 min antes do horário e 15 min depois do fim) e com o pedido ainda dentro dos 10 min de espera (`guard_sos_concurrency`, também para dois aceites ao mesmo tempo).
 3. Os dois vão para a sala. A cota do SOS do mês é marcada como usada **quando a chamada começa** (`mark_sos_used_on_start`), não no pedido.
 
 ### 3. Atendimento
@@ -67,6 +67,8 @@ Vídeo, reconexão automática, cronômetro compartilhado e painel de contexto d
 | Limite de pedidos | 5 a cada 10 min por paciente |
 | Quem vê a fila | Só psicólogo aprovado, não bloqueado e online (vale também para a lista da edge function, com nome e sintomas) |
 | SOS ao mesmo tempo | Um aberto por paciente e um por psicólogo |
+| Psicólogo em consulta agendada | Não aceita SOS, não conta em "profissionais disponíveis" e não recebe o push |
+| Plano vencido | Sem SOS (confere `subscription_end`, não só o "assinante") |
 | Sair da fila antes do aceite | Cancela o pedido (ao fechar a aba, via `emergency-cleanup`, só com o login do próprio paciente) |
 | Sala de SOS encerrado | Não reabre |
 
