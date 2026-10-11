@@ -80,6 +80,8 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Psicólogo online em consulta agendada (em andamento) → paciente pede SOS ⇒ paciente não conta esse psicólogo como disponível e ele não recebe push
 - [ ] Psicólogo em consulta → aceitar SOS (outra aba) ⇒ "Você está em uma consulta agora. Termine a consulta antes de aceitar um SOS."
 - [ ] Paciente com plano já vencido (antes da rotina diária) → SOS ⇒ não consegue pedir; convite para assinar
+- [ ] Na chamada → aba Rede → resposta de `ice-servers` ⇒ `"turn": true` (com TURN configurado); fora de chamada, uma conta sem sala recente recebe `"turn": false`
+- [ ] Paciente → SOS conectado normalmente → "Chamar outro psicólogo" antes de 90 s ⇒ "O psicólogo ainda está conectado" (o SOS do mês não volta)
 
 ## 3. Consultas agendadas (fichas 04 e 05)
 

@@ -11,8 +11,8 @@
 //   TURN_CREDENTIAL.
 // Sem configuração, devolve só STUN (como antes).
 //
-// TURN só para usuário logado: a chave anônima do app é pública e passaria
-// pelo verify_jwt, e o tráfego do TURN é pago.
+// TURN só para quem está numa sala de chamada das últimas 24 h: a chave
+// anônima do app é pública e passaria pelo verify_jwt, e o tráfego do TURN é pago.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.52.1";
 
@@ -55,19 +55,33 @@ const staticTurn = (): IceServer[] | null => {
   return [{ urls, username, credential }];
 };
 
-const isLoggedIn = async (req: Request): Promise<boolean> => {
+// TURN só para quem está numa sala de chamada recente (SOS ou consulta):
+// antes qualquer conta logada gerava credenciais do TURN, que é pago.
+const inRecentCall = async (req: Request): Promise<boolean> => {
   const token = (req.headers.get("Authorization") ?? "").replace("Bearer ", "");
   if (!token) return false;
   const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
   const { data, error } = await supabase.auth.getUser(token);
-  return !error && Boolean(data.user);
+  if (error || !data.user) return false;
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { data: rooms, error: roomsError } = await supabase
+    .from("webrtc_sessions")
+    .select("id")
+    .or(`patient_id.eq.${data.user.id},psychologist_id.eq.${data.user.id}`)
+    .gte("created_at", since)
+    .limit(1);
+  if (roomsError) {
+    console.error("ice-servers: falha ao conferir a sala", roomsError);
+    return false;
+  }
+  return (rooms ?? []).length > 0;
 };
 
 Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   let turn: IceServer[] | null = null;
-  if (await isLoggedIn(req)) {
+  if (await inRecentCall(req)) {
     try {
       turn = (await cloudflareTurn()) ?? staticTurn();
     } catch (error) {

@@ -1,7 +1,7 @@
 # 03. Chamada de vídeo (SOS e consulta)
 
 > **Status:** Pronto, com pendência externa (TURN).
-> **Última verificação:** 2026-10-08 (câmera e microfone mantidos ao recarregar, câmera desligada solta o aparelho, cronômetro único do banco, redimensionar a janela não derruba a chamada).
+> **Última verificação:** 2026-10-26 (presença na sala só pelas regras do banco: o app não forja mais "sem áudio/vídeo" nem o último sinal; TURN só para quem está numa sala de chamada).
 > **Quem usa:** paciente e psicólogo, no SOS (ficha 02) e na consulta agendada (ficha 04).
 
 ## Resumo
@@ -27,7 +27,7 @@ A chamada é de navegador para navegador (WebRTC). O Supabase só faz a "apresen
 4. **Conexão**: o psicólogo cria a oferta e o paciente responde (a resposta leva a marca da oferta respondida, `forOffer`; resposta para uma oferta antiga é ignorada). Os candidatos de rede de cada lado são somados no banco numa operação só (`append_webrtc_ice_candidates`), sem um lado apagar os do outro. A sinalização chega pelo realtime e, como garantia, cada lado relê a sala a cada 3 s enquanto não está conectado (6 s quando está): evento ou gravação perdida se corrige sozinha.
 5. **Prova de que a chamada aconteceu**: quando áudio/vídeo passa de verdade, cada lado avisa o banco (`report_call_media`). `webrtc_sessions.connected_at` só é preenchido quando **os dois** confirmam; antes bastava o paciente responder à oferta, mesmo sem a mídia nunca chegar. É o que decide se o SOS conta, se a consulta pode ser concluída e se entra no repasse. Enquanto a mídia passa, cada lado repete o aviso a cada 20 s e o banco soma o tempo com os dois conectados (`media_seconds`): a consulta agendada só conta a partir de 5 min.
 6. **Canal de controle** (dentro da chamada): estado de câmera e microfone, nome e o aviso "encerrei a chamada", que chega na hora.
-7. **Presença**: cada lado avisa "estou na sala" em tempo real (`useCallPresence`) e grava um batimento a cada 15 s em `participant_presence`, junto com se a mídia está passando (`media_connected`). O servidor usa isso para saber se a sala foi abandonada ou se a chamada não está conectando.
+7. **Presença**: cada lado avisa "estou na sala" em tempo real (`useCallPresence`) e grava um batimento a cada 15 s em `participant_presence`, junto com se a mídia está passando (`media_connected`). O servidor usa isso para saber se a sala foi abandonada ou se a chamada não está conectando. Pelo app (gatilho `guard_participant_presence`): só quem está na sala grava, o papel (paciente ou psicólogo) vem da sala, o último sinal é a hora do servidor e o estado da mídia só muda por `report_call_media`. Ninguém apaga a própria presença.
 8. **Qualidade (como o Meet)**: voz com prioridade sobre o vídeo, teto de 1,5 Mbps no vídeo e, se a rede piorar (atraso alto ou perda de pacotes por alguns segundos), o vídeo reduz a resolução para o áudio continuar limpo; volta ao normal quando a rede melhora.
 
 ## Quedas e fluxos alternativos
@@ -54,7 +54,7 @@ O **cronômetro** é um só para os dois lados e vem do banco (`call_clock`): é
 - **Tela**: `src/components/calls/VideoCallRoom.tsx` (a sala única), `src/components/calls/CallParts.tsx` (quadro do participante, microfone ao lado do nome, botões), `src/hooks/useAudioLevel.ts` (indicador de fala). Páginas: `src/pages/EmergencyCall.tsx` (SOS: resolve o pedido e quem é quem pela própria sala) e `src/pages/ConsultationCall.tsx` (consulta: abre a sala com "Tentar de novo" se falhar).
 - **Apoio**: `useCallPresence`, `useParticipantHeartbeat`, `useSharedCallTimer`, `useRemoteAbsence`; em `src/lib`: `callBanner`, `reconnect`, `callSignals`, `callLock`, `callTermination`, `iceServers`, `remoteAbsence`, `consultationWindow`.
 - **Painéis**: `src/components/calls/RemoteAbsentPanel.tsx`; contexto: `src/components/sos/PatientContextPanel.tsx` (SOS) e `src/components/psychologist/PatientSessionHistory.tsx` (consulta).
-- **Edge function**: `ice-servers` (TURN só para usuário logado).
+- **Edge function**: `ice-servers` (TURN só para quem está numa sala de chamada criada nas últimas 24 h; os outros recebem só STUN).
 - **Banco**: `webrtc_sessions` (`patient_media_at`, `psychologist_media_at`, `connected_at`, `renegotiate_requested_at`), `participant_presence` (`media_connected`, `media_changed_at`). Funções `report_call_media` (também atualiza o tempo restante), `call_clock` (o cronômetro dos dois lados), `append_webrtc_ice_candidates`. Gatilhos `prevent_reopen_finished_call` e `a_guard_webrtc_client_update` (pelo app: só o paciente grava a resposta, ninguém mexe no cronômetro (só o banco), ninguém troca o outro participante, o SOS ligado à sala ou quem encerrou). As salas são criadas só pelo servidor.
 
 ## Como validar
