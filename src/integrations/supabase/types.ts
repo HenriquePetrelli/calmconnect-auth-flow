@@ -3007,6 +3007,7 @@ export type Database = {
         Args: { p_conversa_id: string }
         Returns: undefined
       }
+      my_psychologist_documents_locked: { Args: never; Returns: boolean }
       normalize_invite_code: { Args: { p_code: string }; Returns: string }
       notify_consultation_waiting: {
         Args: { p_appointment_id: string }
