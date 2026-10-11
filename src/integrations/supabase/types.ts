@@ -3048,6 +3048,10 @@ export type Database = {
         Args: { p_user_id?: string }
         Returns: boolean
       }
+      psychologist_in_consultation: {
+        Args: { p_user_id: string }
+        Returns: boolean
+      }
       purge_cron_history: { Args: never; Returns: number }
       purge_expired_care_records: { Args: never; Returns: Json }
       purge_old_notifications: { Args: never; Returns: number }
