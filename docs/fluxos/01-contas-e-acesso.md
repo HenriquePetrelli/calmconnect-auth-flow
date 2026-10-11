@@ -68,7 +68,7 @@ Desativa o push daquele aparelho e encerra a sessão em todos os aparelhos. Se o
 - **Sessão e tipo de conta**: `src/contexts/AuthContext.tsx` (`getUserType`, `signOut`).
 - **Cadastro do psicólogo**: `src/services/psychologist.service.ts`.
 - **Banco**: `profiles`, `patients`, `psychologists`, `psychologist_registrations`, `legal_acceptances`, `admin_users`. Funções: `is_super_admin`, `get_psychologist_rejection_status`, `create_psychologist_profile`, `psychologist_can_attend`.
-- **Migração mais recente**: `20261021090000_contas_regras.sql` (`handle_new_user` cria o paciente; `patients.user_id` único).
+- **Migração mais recente**: `20261011121731_6aa454a1-eb1c-4103-a55e-921be29efc4c.sql` (`handle_new_user` cria o paciente; `patients.user_id` único).
 - **Gatilhos de proteção**: `a_guard_psychologist_client_write`, `a_guard_patient_client_write`, `a_guard_registration_client_insert`, `prevent_user_type_change`.
 
 ## Como validar
