@@ -1,7 +1,7 @@
 # 10. Empresas (B2B)
 
 > **Status:** Pronto.
-> **Última verificação:** 2026-10-06 (varredura: desligado pela empresa não volta sozinho com o código; domínio de e-mail não comprovado, ver Pendências). Antes: 2026-10-02 (comparado com Calm Business, Headspace for Work e Zenklub; 36 checagens SQL). Em 2026-10-04 ganhou limite contra tentativa e erro de códigos.
+> **Última verificação:** 2026-10-22 (varredura de funcionamento: domínio de e-mail comprovado pela confirmação do e-mail; código usado no cadastro vale ao confirmar). Antes: 2026-10-06 (varredura: desligado pela empresa não volta sozinho com o código; domínio de e-mail não comprovado, ver Pendências). Antes: 2026-10-02 (comparado com Calm Business, Headspace for Work e Zenklub; 36 checagens SQL). Em 2026-10-04 ganhou limite contra tentativa e erro de códigos.
 > **Quem usa:** admin (cadastra), gestor do RH (portal) e colaborador (usa o benefício).
 
 ## Resumo
@@ -22,7 +22,7 @@ A empresa contrata vagas de um plano (Plus ou Premium). O colaborador entra com 
 1. **Admin cadastra** a empresa e define gestores. O código de convite é gerado (8 caracteres).
 2. **Colaborador usa o código** no cadastro ou em Planos → "Usar o código da empresa" (`join_organization`). O app confere:
    - se o código existe e o contrato está ativo e vigente;
-   - se o e-mail é do domínio permitido (quando configurado);
+   - se o e-mail é do domínio permitido (quando configurado) **e está confirmado** (`email_not_confirmed`); quem usou o código no cadastro entra na empresa sozinho assim que confirma o e-mail (gatilho `on_auth_user_email_confirmed_organization`), e até lá não ocupa vaga;
    - se há vaga;
    - se a pessoa não tem benefício de outra empresa.
 3. **Acesso**: um gatilho em `subscribers` aplica o plano da empresa, valendo o maior entre Stripe e empresa. SOS, consultas e cotas funcionam como num plano pago.
@@ -72,7 +72,7 @@ select subscription_tier, entitlement_source, organization_id from subscribers w
 
 ## Pendências
 
-- **Domínio de e-mail não comprovado**: a confirmação de e-mail está desligada no Supabase, então quem se cadastra com `qualquer@empresa.com` (sem ser dono do e-mail) passa na regra de domínio. Para comprovar, é preciso enviar um código ou link ao e-mail da empresa, o que depende de SMTP/domínio próprio (o e-mail padrão do Supabase só chega a quem é da equipe). Mitigação atual: vagas limitadas, o RH vê quantas estão ocupadas, desliga e gera novo código.
+- **Domínio de e-mail**: desde 2026-10-22 o banco exige e-mail confirmado para empresas com domínio. Isso só passa a valer de fato quando "Confirmar e-mail" for ligado no Supabase (com a confirmação desligada, o e-mail já nasce confirmado), o que depende de SMTP/domínio próprio (ficha 01). Até lá, a mitigação continua: vagas limitadas, o RH vê quantas estão ocupadas, desliga e gera novo código.
 - Cobrança da empresa é processo comercial fora do app.
 
 ## Problemas comuns

@@ -10,7 +10,8 @@ export type JoinErrorCode =
   | 'not_patient'
   | 'not_authenticated'
   | 'too_many_attempts'
-  | 'removed_by_company';
+  | 'removed_by_company'
+  | 'email_not_confirmed';
 
 export interface JoinResult {
   ok: boolean;
@@ -37,6 +38,8 @@ export const joinErrorMessage = (result: Pick<JoinResult, 'error' | 'domain'>): 
       return 'Muitas tentativas de código. Aguarde 15 minutos e tente de novo.';
     case 'removed_by_company':
       return 'Seu acesso ao benefício desta empresa foi encerrado pelo RH. Se foi engano, fale com o RH.';
+    case 'email_not_confirmed':
+      return 'Confirme o seu e-mail (link enviado no cadastro) para usar o benefício da empresa.';
     case 'not_patient':
       return 'O benefício da empresa é para contas de paciente.';
     default:

@@ -27,16 +27,18 @@ BEGIN
   RAISE NOTICE 'ok: %', p_msg;
 END $$;
 
-INSERT INTO auth.users (id, email) VALUES
-  ('a0000000-0000-0000-0000-00000000000a', 'ana@empresa.com.br'),
-  ('b0000000-0000-0000-0000-00000000000b', 'bruno@gmail.com'),
-  ('c0000000-0000-0000-0000-00000000000c', 'rh@empresa.com.br'),
-  ('d0000000-0000-0000-0000-00000000000d', 'psi@teste.local');
+-- E-mails confirmados: empresa com domínio só aceita e-mail confirmado.
+INSERT INTO auth.users (id, email, email_confirmed_at) VALUES
+  ('a0000000-0000-0000-0000-00000000000a', 'ana@empresa.com.br', now()),
+  ('b0000000-0000-0000-0000-00000000000b', 'bruno@gmail.com', now()),
+  ('c0000000-0000-0000-0000-00000000000c', 'rh@empresa.com.br', now()),
+  ('d0000000-0000-0000-0000-00000000000d', 'psi@teste.local', now());
 INSERT INTO public.profiles (user_id, user_type, full_name) VALUES
   ('a0000000-0000-0000-0000-00000000000a', 'patient', 'Ana'),
   ('b0000000-0000-0000-0000-00000000000b', 'patient', 'Bruno'),
   ('c0000000-0000-0000-0000-00000000000c', 'patient', 'RH'),
-  ('d0000000-0000-0000-0000-00000000000d', 'psychologist', 'Psi');
+  ('d0000000-0000-0000-0000-00000000000d', 'psychologist', 'Psi')
+  ON CONFLICT (user_id) DO UPDATE SET user_type = EXCLUDED.user_type, full_name = EXCLUDED.full_name;
 
 INSERT INTO public.organizations (id, name, plan_tier, seats, invite_code, allowed_email_domain)
 VALUES ('e0000000-0000-0000-0000-00000000000e', 'Empresa X', 'Premium', 1, 'EMPX2026', 'empresa.com.br');
@@ -149,9 +151,9 @@ SELECT pg_temp.check((SELECT count(*) FROM public.organization_entitlement('a000
 -- 9. Código no cadastro
 RESET role;
 UPDATE public.organizations SET seats = 10 WHERE id = 'e0000000-0000-0000-0000-00000000000e';
-INSERT INTO public.profiles (user_id, user_type, full_name) VALUES ('f0000000-0000-0000-0000-00000000000f', 'patient', 'Nova');
-INSERT INTO auth.users (id, email, raw_user_meta_data) VALUES
-  ('f0000000-0000-0000-0000-00000000000f', 'nova@x.com',
+-- O perfil é criado pelo banco junto com o login (handle_new_user).
+INSERT INTO auth.users (id, email, email_confirmed_at, raw_user_meta_data) VALUES
+  ('f0000000-0000-0000-0000-00000000000f', 'nova@x.com', now(),
    json_build_object('organization_code', (SELECT invite_code FROM public.organizations WHERE id = 'e0000000-0000-0000-0000-00000000000e'))::jsonb);
 SELECT pg_temp.check(
   (SELECT subscribed FROM public.subscribers WHERE user_id = 'f0000000-0000-0000-0000-00000000000f'),
@@ -160,11 +162,29 @@ SELECT pg_temp.check(
 INSERT INTO auth.users (id, email, raw_user_meta_data) VALUES ('f1000000-0000-0000-0000-00000000000f', 'x@x.com', '{"organization_code":"ERRADO"}');
 SELECT pg_temp.check(true, 'código errado no cadastro não impede o cadastro');
 
+-- 9b. Empresa com domínio: e-mail não confirmado não ocupa vaga; ao confirmar, entra
+SELECT pg_temp.as_service();
+UPDATE public.organizations SET allowed_email_domain = 'empresa.com.br' WHERE id = 'e0000000-0000-0000-0000-00000000000e';
+INSERT INTO auth.users (id, email, email_confirmed_at, raw_user_meta_data) VALUES
+  ('f2000000-0000-0000-0000-00000000000f', 'falso@empresa.com.br', NULL,
+   json_build_object('organization_code', (SELECT invite_code FROM public.organizations WHERE id = 'e0000000-0000-0000-0000-00000000000e'))::jsonb);
+SELECT pg_temp.check(
+  NOT EXISTS (SELECT 1 FROM public.organization_members WHERE user_id = 'f2000000-0000-0000-0000-00000000000f'),
+  'e-mail não confirmado não ocupa vaga de empresa com domínio'
+);
+UPDATE auth.users SET email_confirmed_at = now() WHERE id = 'f2000000-0000-0000-0000-00000000000f';
+SELECT pg_temp.check(
+  EXISTS (SELECT 1 FROM public.organization_members WHERE user_id = 'f2000000-0000-0000-0000-00000000000f' AND status = 'active'),
+  'ao confirmar o e-mail, entra na empresa com o código do cadastro'
+);
+DELETE FROM public.organization_members WHERE user_id = 'f2000000-0000-0000-0000-00000000000f';
+UPDATE public.organizations SET allowed_email_domain = NULL WHERE id = 'e0000000-0000-0000-0000-00000000000e';
+
 -- 10. Com 5+ colaboradores o RH vê os números agregados
 SELECT pg_temp.as_service();
 DO $$ BEGIN
   FOR i IN 1..5 LOOP
-    INSERT INTO auth.users (id, email) VALUES (('90000000-0000-0000-0000-00000000000' || i)::uuid, 'c' || i || '@empresa.com.br');
+    INSERT INTO auth.users (id, email, email_confirmed_at) VALUES (('90000000-0000-0000-0000-00000000000' || i)::uuid, 'c' || i || '@empresa.com.br', now());
     INSERT INTO public.organization_members (organization_id, user_id) VALUES ('e0000000-0000-0000-0000-00000000000e', ('90000000-0000-0000-0000-00000000000' || i)::uuid);
   END LOOP;
 END $$;

@@ -222,6 +222,8 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] 21 códigos errados seguidos ⇒ "Muitas tentativas de código"
 - [ ] Paciente já cadastrado → Perfil → Benefício da empresa → digitar código ⇒ vira Premium
 - [ ] Paciente → Benefício da empresa → Sair do benefício ⇒ perde o plano da empresa na hora e libera a vaga
+- [ ] Com "Confirmar e-mail" ligado → cadastro com e-mail @empresa e o código ⇒ a vaga só é ocupada depois de confirmar o e-mail; ao confirmar, entra Premium sozinho
+- [ ] Paciente com e-mail não confirmado → Benefício da empresa → código de empresa com domínio ⇒ "Confirme o seu e-mail para usar o benefício da empresa"
 
 ## 9. Meus hábitos (ficha 11)
 
