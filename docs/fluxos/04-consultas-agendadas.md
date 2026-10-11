@@ -128,7 +128,8 @@ select * from appointment_problem_reports order by created_at desc limit 20;
 
 ## Pendências
 
-Nenhuma no fluxo. O push dos lembretes depende do Firebase (pendência 3).
+- **Decisão** (pendência 11): o resumo da sessão continua visível para o paciente ou passa a ser só do psicólogo.
+- O push dos lembretes depende do Firebase (pendência 3).
 
 ## Problemas comuns
 

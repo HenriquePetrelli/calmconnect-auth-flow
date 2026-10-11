@@ -79,6 +79,7 @@ No Stripe: Developers → Webhooks → o endpoint `.../functions/v1/stripe-webho
 
 ## Pendências
 
+- **Decisão** (pendência 15): cancelar ou manter a consulta marcada para depois do fim do plano.
 - **Confirmar o webhook do Stripe**: endpoint cadastrado no painel do Stripe e `STRIPE_WEBHOOK_SECRET` nos secrets. Sem ele, cancelamentos e trocas feitos fora do app só aparecem quando o paciente abre o app.
 
 ## Problemas comuns

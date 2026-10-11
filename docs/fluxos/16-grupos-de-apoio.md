@@ -62,7 +62,9 @@ from group_testimonials order by criado_em desc limit 20;
 
 ## Pendências
 
-Nenhuma. Varredura de funcionamento em 2026-10-15: migration `20261010013733_b8944b57-23f5-4d9b-ac96-bff32ef1962d.sql`. As duas pendências de privacidade foram corrigidas em 2026-10-04 (migration `20261003232116_d6f3adac-0952-4317-8e77-a3a5ec8ff312.sql`), junto com a troca de reação, que falhava em silêncio.
+- **Decisão** (pendência 12): quantas denúncias tiram um depoimento do ar (hoje 3).
+
+Varredura de funcionamento em 2026-10-15: migration `20261010013733_b8944b57-23f5-4d9b-ac96-bff32ef1962d.sql`. As duas pendências de privacidade foram corrigidas em 2026-10-04 (migration `20261003232116_d6f3adac-0952-4317-8e77-a3a5ec8ff312.sql`), junto com a troca de reação, que falhava em silêncio.
 
 ## Problemas comuns
 

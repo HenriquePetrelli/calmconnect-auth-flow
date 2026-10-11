@@ -78,8 +78,8 @@ where psychologist_id = '<id>' order by created_at desc;
 
 ## Pendências
 
-- **SOS curto**: o SOS entra no repasse se a chamada conectou, sem tempo mínimo (a consulta exige 5 minutos). Falta decidir se o SOS também precisa de um mínimo.
-- **Psicólogo excluído**: excluir a conta do psicólogo apaga também o histórico de repasses dele (`payment_logs` em cascata). Antes de excluir, exportar ou guardar os registros fiscais.
+- **SOS curto** (pendência 13): o SOS entra no repasse se a chamada conectou, sem tempo mínimo (a consulta exige 5 minutos). Falta decidir se o SOS também precisa de um mínimo.
+- **Psicólogo excluído** (pendência 14): excluir a conta do psicólogo apaga também o histórico de repasses dele (`payment_logs` em cascata). Antes de excluir, exportar ou guardar os registros fiscais.
 
 - **SOS atendidos antes de 2026-10-04** (pendência 4): nunca foram pagos (a contagem antiga ignorava o SOS). Estão no livro com `backfilled = true` e **não** somam ao pendente. Falta decidir se serão pagos. A consulta do total está no doc de pendências.
 
