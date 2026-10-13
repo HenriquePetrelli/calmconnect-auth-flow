@@ -56,13 +56,14 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 ### 7. Renomear o repositório para `soliv`
 
 - **Situação:** o código já usa Soliv em todo lugar (app, Android, pacote, telas e e-mails). Falta o nome do repositório no GitHub (`calmconnect-auth-flow`).
-- **Cuidado:** renomear com a Lovable conectada quebra a sincronização ([FAQ da Lovable](https://lovable.dev/faq/github/github-rename-delete)).
-- **O que fazer, nesta ordem:**
-  1. Lovable → desconectar o GitHub do projeto.
-  2. GitHub → Settings → General → Repository name → `soliv`.
-  3. Lovable → conectar o GitHub de novo e escolher o repositório renomeado. Se ela só oferecer criar um repositório novo, não siga e peça ajuda ao Claude.
+- **Como fazer (confirmado na [documentação da Lovable](https://docs.lovable.dev/integrations/github)):** renomear **direto no GitHub, sem desconectar**. A Lovable detecta a renomeação e atualiza o vínculo sozinha; a sincronização continua.
+- **Por que não desconectar:** ao reconectar, a Lovable **sempre cria um repositório novo** com a versão atual do projeto — ela não permite escolher nem importar um repositório existente. Desconectar deixaria o `calmconnect-auth-flow` (renomeado) solto no GitHub, fora do vínculo, e o histórico ficaria para trás.
+- **O que fazer:**
+  1. GitHub → Settings → General → Repository name → `soliv`.
+  2. Conferir em Lovable (Workspace settings → Git) que o nome novo aparece e que os commits continuam saindo.
+  3. Só há risco se o repositório for **transferido de conta/organização** ou **excluído**: na transferência, a sincronização continua apenas se o workspace tiver conexão com o novo dono; na exclusão, o vínculo quebra (dá para restaurar o repositório no GitHub para retomar).
 - **Opcional:** trocar o nome do projeto no painel da Lovable e o e-mail da conta admin (`admin@calmconnect.com`) junto com a pendência 1.
-- **Registrado em:** 2026-10-04.
+- **Registrado em:** 2026-10-04. **Corrigido em 2026-10-13:** o procedimento antigo (desconectar antes de renomear) perderia o vínculo; a documentação atual da Lovable diz que renomear não quebra a sincronização.
 
 ### 16. Revisão jurídica dos documentos
 
