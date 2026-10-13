@@ -34,6 +34,8 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 
 ### 5. Configurar o TURN das chamadas de vídeo
 
+- **Adiado para perto do lançamento (2026-10-13):** a Cloudflare pede cartão para liberar o TURN, mesmo dentro dos 1.000 GB grátis por mês (depois, US$ 0,05 por GB). Sem TURN o app funciona; a diferença aparece com usuários reais em 4G e redes de empresa. Ao configurar, ligar o aviso de cobrança em Manage Account → Billing → Notifications.
+
 - **Onde:** secrets das edge functions (função `ice-servers`).
 - **Por quê:** sem TURN, a chamada de vídeo (SOS e consulta) não conecta quando um dos lados está em rede que bloqueia conexão direta: muitas redes 4G/5G (NAT da operadora) e redes corporativas. Estimativa comum: 10% a 20% das chamadas. O app já está pronto; falta a conta.
 - **O que fazer:** uma das opções:
