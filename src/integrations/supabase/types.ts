@@ -518,6 +518,7 @@ export type Database = {
           started_at: string | null
           status: string
           time_limit_seconds: number
+          triage: string[]
           updated_at: string
           video_room_id: string | null
         }
@@ -540,6 +541,7 @@ export type Database = {
           started_at?: string | null
           status?: string
           time_limit_seconds?: number
+          triage?: string[]
           updated_at?: string
           video_room_id?: string | null
         }
@@ -562,6 +564,7 @@ export type Database = {
           started_at?: string | null
           status?: string
           time_limit_seconds?: number
+          triage?: string[]
           updated_at?: string
           video_room_id?: string | null
         }
