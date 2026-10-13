@@ -2,7 +2,7 @@
 
 O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mova-o para "Resolvidas" com a data e o que foi feito.
 
-> **Passo a passo das configurações externas** (pendências 2, 5 e 6 e o webhook do Stripe; a 1 e a 3 já foram resolvidas): `docs/guia-configuracoes-externas.md`.
+> **Passo a passo das configurações externas** (pendências 2, 5 e 6; a 1, a 3 e o webhook do Stripe já foram resolvidos): `docs/guia-configuracoes-externas.md`.
 
 ## Críticas
 
@@ -82,6 +82,11 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 - **Registrado em:** 2026-10-04.
 
 ## Resolvidas
+
+### Webhook do Stripe no modo de teste (resolvido em 2026-10-13)
+
+- Destino "soliv" na área restrita do Stripe apontando para `stripe-webhook`, com os 8 eventos que o app trata, e `STRIPE_WEBHOOK_SECRET` nos secrets. Teste com `stripe trigger customer.subscription.updated`: `invoice.paid`, `customer.subscription.created` e `customer.subscription.updated` entregues com 200.
+- No lançamento: repetir no modo real com as chaves de produção (ficha 08).
 
 ### 3. Firebase para o push (registrada em 2026-10-04, resolvida em 2026-10-13)
 

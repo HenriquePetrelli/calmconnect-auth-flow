@@ -80,7 +80,7 @@ No Stripe: Developers → Webhooks → o endpoint `.../functions/v1/stripe-webho
 
 ## Pendências
 
-- **Confirmar o webhook do Stripe**: endpoint cadastrado no painel do Stripe e `STRIPE_WEBHOOK_SECRET` nos secrets. Sem ele, cancelamentos e trocas feitos fora do app só aparecem quando o paciente abre o app.
+- **Webhook do Stripe no modo real**: no modo de teste (área restrita "New business") está configurado e testado desde 2026-10-13 (8 eventos, resposta 200). No lançamento, ao trocar para as chaves de produção, criar o mesmo destino no modo real e trocar `STRIPE_WEBHOOK_SECRET` (e `STRIPE_SECRET_KEY`, `STRIPE_PRICE_PLUS`, `STRIPE_PRICE_PREMIUM`).
 
 ## Problemas comuns
 
