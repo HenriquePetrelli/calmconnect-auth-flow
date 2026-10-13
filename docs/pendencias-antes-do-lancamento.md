@@ -2,7 +2,7 @@
 
 O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mova-o para "Resolvidas" com a data e o que foi feito.
 
-> **Passo a passo das configurações externas** (pendências 2, 3, 5 e 6 e o webhook do Stripe; a 1 já foi resolvida): `docs/guia-configuracoes-externas.md`.
+> **Passo a passo das configurações externas** (pendências 2, 5 e 6 e o webhook do Stripe; a 1 e a 3 já foram resolvidas): `docs/guia-configuracoes-externas.md`.
 
 ## Críticas
 
@@ -31,13 +31,6 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 - **Registrado em:** 2026-10-05.
 
 ## Importantes
-
-### 3. Conferir a configuração do Firebase para o push no celular
-
-- **Onde:** variáveis `VITE_FIREBASE_*` do app (API key, auth domain, project ID, storage bucket, messaging sender ID, app ID e VAPID key) e a conta de serviço do Firebase nos secrets das edge functions.
-- **Por quê:** sem elas, nenhum push chega com o app fechado (lembretes de consulta e de hábitos, mensagens do chat, mudanças na consulta). As notificações dentro do app continuam funcionando.
-- **O que fazer:** confirmar que as variáveis estão configuradas com os valores do projeto no Firebase e testar num celular: ativar as notificações no perfil, fechar o app e mandar uma mensagem no chat a partir de outra conta.
-- **Registrado em:** 2026-10-04.
 
 ### 5. Configurar o TURN das chamadas de vídeo
 
@@ -87,6 +80,12 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 - **Registrado em:** 2026-10-04.
 
 ## Resolvidas
+
+### 3. Firebase para o push (registrada em 2026-10-04, resolvida em 2026-10-13)
+
+- App Web criado no projeto Firebase `app-soliv` (o mesmo do app Android) e configuração no `.env` (6 valores e a chave do certificado push da Web). A conta de serviço (`FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`) foi cadastrada nos secrets das edge functions.
+- Teste: aviso de teste criado pelo banco para a conta paciente01 chegou como push.
+- Limites do push pelo navegador (não são defeitos do app): no Android, a economia de bateria pode atrasar ou bloquear o push com o Chrome fechado (liberar em Configurações → Apps → Chrome → Bateria → "Sem restrições"); no iPhone, só funciona com o site adicionado à Tela de Início pelo Safari (iOS 16.4+); no computador, só com o Chrome aberto ou rodando em segundo plano. O app Android instalado recebe sempre.
 
 ### 1. Senha do admin exposta no repositório (registrada em 2026-10-03, resolvida em 2026-10-13)
 
