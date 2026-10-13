@@ -502,6 +502,7 @@ export type Database = {
         Row: {
           accepted_at: string | null
           accepted_by: string | null
+          channel: string
           created_at: string
           crisis_resolved: boolean | null
           duration: number | null
@@ -525,6 +526,7 @@ export type Database = {
         Insert: {
           accepted_at?: string | null
           accepted_by?: string | null
+          channel?: string
           created_at?: string
           crisis_resolved?: boolean | null
           duration?: number | null
@@ -548,6 +550,7 @@ export type Database = {
         Update: {
           accepted_at?: string | null
           accepted_by?: string | null
+          channel?: string
           created_at?: string
           crisis_resolved?: boolean | null
           duration?: number | null
@@ -2199,6 +2202,71 @@ export type Database = {
           },
         ]
       }
+      sos_chat_state: {
+        Row: {
+          away_nudged_at: string | null
+          first_reply_at: string | null
+          last_patient_message_at: string | null
+          last_psychologist_message_at: string | null
+          patient_id: string
+          patient_messages: number
+          patient_nudged_for: string | null
+          patient_read_at: string | null
+          patient_seen_at: string | null
+          psychologist_id: string | null
+          psychologist_read_at: string | null
+          psychologist_replies: number
+          psychologist_seen_at: string | null
+          request_id: string
+          updated_at: string
+          wait_nudged_for: string | null
+        }
+        Insert: {
+          away_nudged_at?: string | null
+          first_reply_at?: string | null
+          last_patient_message_at?: string | null
+          last_psychologist_message_at?: string | null
+          patient_id: string
+          patient_messages?: number
+          patient_nudged_for?: string | null
+          patient_read_at?: string | null
+          patient_seen_at?: string | null
+          psychologist_id?: string | null
+          psychologist_read_at?: string | null
+          psychologist_replies?: number
+          psychologist_seen_at?: string | null
+          request_id: string
+          updated_at?: string
+          wait_nudged_for?: string | null
+        }
+        Update: {
+          away_nudged_at?: string | null
+          first_reply_at?: string | null
+          last_patient_message_at?: string | null
+          last_psychologist_message_at?: string | null
+          patient_id?: string
+          patient_messages?: number
+          patient_nudged_for?: string | null
+          patient_read_at?: string | null
+          patient_seen_at?: string | null
+          psychologist_id?: string | null
+          psychologist_read_at?: string | null
+          psychologist_replies?: number
+          psychologist_seen_at?: string | null
+          request_id?: string
+          updated_at?: string
+          wait_nudged_for?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sos_chat_state_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: true
+            referencedRelation: "emergency_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sos_followups_sent: {
         Row: {
           request_id: string
@@ -2217,6 +2285,44 @@ export type Database = {
             foreignKeyName: "sos_followups_sent_request_id_fkey"
             columns: ["request_id"]
             isOneToOne: true
+            referencedRelation: "emergency_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sos_messages: {
+        Row: {
+          body: string
+          client_id: string
+          created_at: string
+          id: string
+          request_id: string
+          sender_id: string | null
+          sender_type: string
+        }
+        Insert: {
+          body: string
+          client_id: string
+          created_at?: string
+          id?: string
+          request_id: string
+          sender_id?: string | null
+          sender_type: string
+        }
+        Update: {
+          body?: string
+          client_id?: string
+          created_at?: string
+          id?: string
+          request_id?: string
+          sender_id?: string | null
+          sender_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sos_messages_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
             referencedRelation: "emergency_requests"
             referencedColumns: ["id"]
           },
@@ -3184,6 +3290,7 @@ export type Database = {
       }
       internal_cron_secret: { Args: never; Returns: string }
       is_organization_manager: { Args: { p_org: string }; Returns: boolean }
+      is_sos_participant: { Args: { p_request_id: string }; Returns: boolean }
       is_super_admin: { Args: { user_id_param?: string }; Returns: boolean }
       join_organization: { Args: { p_code: string }; Returns: Json }
       join_organization_for_user: {
@@ -3275,6 +3382,7 @@ export type Database = {
       purge_cron_history: { Args: never; Returns: number }
       purge_expired_care_records: { Args: never; Returns: Json }
       purge_old_notifications: { Args: never; Returns: number }
+      purge_old_sos_messages: { Args: never; Returns: number }
       queue_appointment_reminders: { Args: never; Returns: number }
       queue_sos_followups: { Args: never; Returns: number }
       react_to_testimonial: {
@@ -3364,6 +3472,24 @@ export type Database = {
         }
         Returns: string
       }
+      send_sos_message: {
+        Args: { p_body: string; p_client_id: string; p_request_id: string }
+        Returns: {
+          body: string
+          client_id: string
+          created_at: string
+          id: string
+          request_id: string
+          sender_id: string | null
+          sender_type: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "sos_messages"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       set_psychologist_availability: {
         Args: { p_blocks: Json }
         Returns: undefined
@@ -3382,9 +3508,18 @@ export type Database = {
       }
       sos_call_connected: { Args: { p_request_id: string }; Returns: boolean }
       sos_call_payable: { Args: { p_request_id: string }; Returns: boolean }
+      sos_chat_heartbeat: {
+        Args: { p_read?: boolean; p_request_id: string }
+        Returns: Json
+      }
       sos_request_other_psychologist: {
         Args: { p_request_id: string }
         Returns: Json
+      }
+      sos_text_nudges: { Args: never; Returns: number }
+      sos_text_psychologist_unresponsive: {
+        Args: { p_request_id: string }
+        Returns: boolean
       }
       sync_consultation_counts: { Args: never; Returns: undefined }
       sync_psychologist_payments: { Args: never; Returns: undefined }
