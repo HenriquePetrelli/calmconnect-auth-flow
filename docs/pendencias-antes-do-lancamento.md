@@ -66,17 +66,16 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 - Apps como Crisis Text Line e o chat do CVV atendem por texto: muita gente em crise não consegue falar (está em casa com outras pessoas, no trabalho, sem voz). Hoje o SOS do Soliv é só por vídeo (dá para desligar a câmera, mas não para falar sem voz).
 - **Registrado em:** 2026-10-04.
 
-### 9. Triagem rápida de risco no SOS
-
-- Antes de entrar na fila, 1 ou 2 perguntas (ex.: "Você está pensando em se machucar agora?"). Se sim: mostrar CVV 188 e SAMU 192 em destaque e marcar o pedido como prioritário para o psicólogo. É o que fazem serviços como o 988 e o Wysa.
-- **Registrado em:** 2026-10-04.
-
 ### 10. Plano pós-crise para o paciente
 
 - Ao fim do SOS, o psicólogo registra notas só para ele. Serviços de crise costumam deixar com a pessoa um resumo curto e combinados ("o que fazer nas próximas 24h", "procure atendimento se..."), que poderiam virar parte do plano de segurança.
 - **Registrado em:** 2026-10-04.
 
 ## Resolvidas
+
+### 9. Triagem rápida no SOS (sugerida em 2026-10-04, feita em 2026-10-31)
+
+- Opções para tocar na tela de confirmação, todas opcionais (ficha 02). Risco de suicídio ou perigo: números de emergência na hora e pedido na frente da fila do psicólogo. O pedido continua indo para todos os psicólogos online.
 
 ### 7. Repositório renomeado para `soliv` (registrada em 2026-10-04, resolvida em 2026-10-13)
 

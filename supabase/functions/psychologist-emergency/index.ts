@@ -1,6 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.52.1";
+import { isPriorityTriage } from '../_shared/sosTriage.ts';
 
 const getCorsHeaders = (origin: string | null) => {
   // Check if origin is from Lovable domains or localhost
@@ -167,6 +168,14 @@ serve(async (req) => {
         
         console.log(`✅ Enhanced emergency ${request.id} with patient name: ${patientProfile?.full_name || 'Paciente'}`);
       }
+
+      // Risco marcado na triagem (suicídio, perigo) vai para a frente da fila;
+      // dentro de cada grupo, o pedido mais antigo primeiro.
+      enhancedRequests.sort((a, b) => {
+        const pa = isPriorityTriage(a.triage) ? 0 : 1;
+        const pb = isPriorityTriage(b.triage) ? 0 : 1;
+        return pa - pb || new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      });
 
       console.log(`📤 Returning ${enhancedRequests.length} emergency requests to psychologist`);
 

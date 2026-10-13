@@ -32,7 +32,7 @@ export const useEmergencySOS = () => {
   const { toast } = useToast();
 
   /** `onDenied`: a tela mostra a recusa do jeito dela (sem o aviso flutuante). */
-  const createEmergencyRequest = async (options?: { onDenied?: (denial: SosDenial) => void }) => {
+  const createEmergencyRequest = async (options?: { onDenied?: (denial: SosDenial) => void; triage?: string[] }) => {
     if (loading) return; // Prevent multiple simultaneous requests
     
     try {
@@ -67,7 +67,8 @@ export const useEmergencySOS = () => {
 
       const { data, error } = await supabase.functions.invoke('emergency-sos', {
         method: 'POST',
-        body: { patient_id: user.id },
+        // Triagem opcional (o que o paciente marcou na tela de confirmação).
+        body: { patient_id: user.id, triage: options?.triage ?? [] },
       });
 
       console.log('🆘 Emergency SOS raw response:', { data, error });

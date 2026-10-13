@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.52.1";
+import { isPriorityTriage, sanitizeTriage } from "../_shared/sosTriage.ts";
 
 const getCorsHeaders = (origin: string | null) => {
   // Check if origin is from Lovable domains or localhost
@@ -166,11 +167,17 @@ serve(async (req) => {
       // Create emergency request
       console.log('🆘 Creating emergency request for patient:', user.id);
       
+      // Triagem opcional (o que o paciente marcou na confirmação). Só as
+      // opções conhecidas; corpo ausente ou inválido = sem triagem.
+      const requestBody = await req.json().catch(() => null) as { triage?: unknown } | null;
+      const triage = sanitizeTriage(requestBody?.triage);
+
       const { data: emergencyRequest, error: insertError } = await supabase
         .from('emergency_requests')
         .insert({
           patient_id: user.id,
-          status: 'pending'
+          status: 'pending',
+          ...(triage.length > 0 ? { triage } : {}),
         })
         .select()
         .single();
@@ -261,7 +268,9 @@ serve(async (req) => {
           if (tokens && tokens.length > 0) {
             await supabase.functions.invoke('firebase-notifications', {
               body: {
-                title: 'Nova solicitação de emergência',
+                // Texto discreto (tela bloqueada): diz só que é prioritário,
+                // nunca o que o paciente marcou.
+                title: isPriorityTriage(triage) ? 'Pedido de emergência prioritário' : 'Nova solicitação de emergência',
                 body: 'Um paciente precisa de atendimento imediato.',
                 tokens: tokens.map((t) => t.token),
                 data: { type: 'sos', emergency_request_id: emergencyRequest.id },

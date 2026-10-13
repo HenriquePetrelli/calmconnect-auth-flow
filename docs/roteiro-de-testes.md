@@ -45,6 +45,11 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 ## 2. SOS (fichas 02 e 03)
 
 - [ ] Paciente → botão de SOS (celular e computador) ⇒ abre a confirmação "Precisa de ajuda agora?"; "Agora não" fecha sem pedir SOS
+- [ ] Confirmação do SOS → tocar "Sim, chamar um psicólogo" sem marcar nada ⇒ o pedido entra na fila normalmente
+- [ ] Confirmação → marcar "Pensamentos de suicídio ou de me machucar" ⇒ aparecem SAMU 192 e CVV 188 na hora; ao pedir, continuam em destaque na espera
+- [ ] Confirmação → marcar "Estou em perigo ou sofri violência" ⇒ aparecem Polícia 190 e Ligue 180
+- [ ] Psicólogo → fila com dois pedidos, um com suicídio marcado ⇒ esse aparece primeiro, com "PRIORITÁRIO" e as opções marcadas; o outro mostra o que foi marcado ou "não marcou nada"
+- [ ] Psicólogo → aceitar → Contexto do paciente ⇒ "O que está sentindo agora" no topo
 - [ ] Paciente A → SOS (sem psicólogo online) ⇒ "Nenhum psicólogo online agora" e o pedido continua na fila
 - [ ] Psicólogo → Início → ficar Online ⇒ Paciente A vê "1 profissional disponível"
 - [ ] Paciente A → SOS → pedir ajuda ⇒ pedido aparece no painel do psicólogo em até 10 s

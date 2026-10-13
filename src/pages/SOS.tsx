@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import PageHeader from "@/components/PageHeader";
 import { useNavigate, useLocation } from "react-router-dom";
 import CancelConfirmationModal from "@/components/sos/CancelConfirmationModal";
+import { hasDangerRisk, hasSelfHarmRisk, takeSosTriage, type SosTriageKey } from "@/lib/sosTriage";
 import SupportiveMessages from "@/components/sos/SupportiveMessages";
 import { supabase } from "@/integrations/supabase/client";
 import { getSessionUser } from '@/lib/currentUser';
@@ -40,6 +41,8 @@ const SOS = () => {
   // SOS recusado (cota do mês, sem plano, conta bloqueada): tela própria, sem busca.
   const [denial, setDenial] = useState<SosDenial | null>(null);
   const { cancelRequest, createEmergencyRequest } = useEmergencySOS();
+  // Triagem marcada na confirmação: mantém os números certos em destaque na espera.
+  const [triage, setTriage] = useState<SosTriageKey[]>([]);
 
   
   // Get requestId from navigation state (passed from SOSButton)
@@ -164,7 +167,10 @@ const SOS = () => {
         try {
           console.log('🆘 No existing request found, creating one from SOS page...');
           let denied = false;
+          const chosenTriage = takeSosTriage();
+          setTriage(chosenTriage);
           const newId = await createEmergencyRequest({
+            triage: chosenTriage,
             onDenied: (info) => {
               denied = true;
               setDenial(info);
@@ -421,6 +427,41 @@ const SOS = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Marcou risco na triagem: os números certos ficam no topo da espera. */}
+        {!expired && (hasSelfHarmRisk(triage) || hasDangerRisk(triage)) && (
+          <Card className="border-destructive/30">
+            <CardContent className="space-y-3 p-4">
+              <p className="text-sm text-foreground">
+                {hasDangerRisk(triage)
+                  ? 'Se alguém está colocando você em perigo, chame a polícia. Mulheres também podem ligar para o 180.'
+                  : 'Se você corre perigo agora, ligue. Seu pedido continua na fila.'}
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {hasSelfHarmRisk(triage) && (
+                  <>
+                    <Button asChild className="min-h-11">
+                      <a href="tel:192"><Phone className="h-4 w-4" /> SAMU 192</a>
+                    </Button>
+                    <Button asChild className="min-h-11">
+                      <a href="tel:188"><Phone className="h-4 w-4" /> CVV 188</a>
+                    </Button>
+                  </>
+                )}
+                {hasDangerRisk(triage) && (
+                  <>
+                    <Button asChild className="min-h-11">
+                      <a href="tel:190"><Phone className="h-4 w-4" /> Polícia 190</a>
+                    </Button>
+                    <Button asChild className="min-h-11">
+                      <a href="tel:180"><Phone className="h-4 w-4" /> Ligue 180</a>
+                    </Button>
+                  </>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Enquanto espera, sem sair da tela (sair cancela o pedido). */}
         {!expired && (

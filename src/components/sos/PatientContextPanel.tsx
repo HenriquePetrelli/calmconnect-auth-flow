@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { useSosPatientContext } from '@/hooks/useSosPatientContext';
 import SafetyPlanSection from '@/components/sos/SafetyPlanSection';
 import { describeEndReason, formatDateTime, formatDuration, sosStatusLabel } from '@/lib/sosHistory';
+import { triageLabel } from '@/lib/sosTriage';
 
 interface PatientContextPanelProps {
   requestId: string | null;
@@ -29,6 +30,27 @@ export const PatientContextPanel: React.FC<PatientContextPanelProps> = ({ reques
 
       {!loading && (error || !context) && (
         <p className="text-xs text-muted-foreground">Não foi possível carregar o contexto deste paciente agora.</p>
+      )}
+
+      {context && (
+        <section className="space-y-2">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">O que está sentindo agora</h3>
+          {context.triage && context.triage.length > 0 ? (
+            <div className="flex flex-wrap gap-1.5">
+              {context.triage.map((key) => (
+                <Badge
+                  key={key}
+                  variant="outline"
+                  className={key === 'suicidio' || key === 'perigo' ? 'border-destructive/40 text-xs text-destructive' : 'text-xs font-normal'}
+                >
+                  {triageLabel(key)}
+                </Badge>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground">Não marcou nada na triagem.</p>
+          )}
+        </section>
       )}
 
       {patient && (

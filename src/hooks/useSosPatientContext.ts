@@ -27,6 +27,8 @@ export interface SosPastRequest {
 }
 
 export interface SosPatientContext {
+  /** Triagem que o paciente marcou neste pedido (chaves de src/lib/sosTriage.ts). */
+  triage?: string[] | null;
   patient: SosPatientSummary | null;
   progress: SosProgressPoint[];
   sos_total: number;

@@ -14,6 +14,8 @@ interface EmergencyRequest {
   created_at: string;
   accepted_by: string | null;
   accepted_at: string | null;
+  /** Triagem opcional do paciente (chaves de src/lib/sosTriage.ts). */
+  triage?: string[] | null;
   patient: {
     full_name: string;
   };

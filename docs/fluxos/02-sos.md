@@ -1,7 +1,7 @@
 # 02. SOS: atendimento de emergência
 
 > **Status:** Pronto, com pendência externa (TURN para redes restritivas; push depende do Firebase).
-> **Última verificação:** 2026-10-25 (varredura das regras: plano vencido sem SOS, psicólogo em consulta agendada não aceita SOS, não conta como disponível e não recebe push, aceite recusado mostra o motivo certo).
+> **Última verificação:** 2026-10-31 (triagem rápida opcional na confirmação do SOS). Antes: 2026-10-25 (varredura das regras: plano vencido sem SOS, psicólogo em consulta agendada não aceita SOS, não conta como disponível e não recebe push, aceite recusado mostra o motivo certo).
 > **Quem usa:** paciente com plano (Plus, Premium ou empresa) e psicólogo aprovado.
 
 ## Resumo
@@ -19,6 +19,7 @@ O paciente aperta SOS, entra numa fila e o primeiro psicólogo online que aceita
 ## Como funciona
 
 ### 1. Pedido
+0. **Triagem rápida (opcional).** Na tela "Precisa de ajuda agora?", o paciente pode tocar no que está sentindo: pensamentos de suicídio ou de me machucar; crise de pânico; crise de ansiedade; tristeza muito forte ou desesperança; passei por algo difícil agora; estou em perigo ou sofri violência; outra coisa. O botão "Sim, chamar um psicólogo" funciona sem marcar nada. Marcar **suicídio** mostra na hora SAMU 192 e CVV 188; marcar **perigo ou violência** mostra Polícia 190 e Ligue 180. Esses números continuam em destaque na fila de espera. A triagem fica no pedido (`emergency_requests.triage`, só as 7 opções, não muda depois) e **não filtra psicólogos**: o pedido vai para todos, como antes.
 1. O paciente toca em SOS. A edge function `emergency-sos` confere o login, o plano (com a data de fim: plano vencido não pede SOS, mesmo antes de a rotina diária atualizar a assinatura) e a cota do mês (`can_use_sos`), aplica um limite de 5 tentativas em 10 minutos e cria o pedido em `emergency_requests` com status `pending`.
 2. Sem SOS disponível (cota do mês usada, sem plano ou conta bloqueada), a tela não fica "buscando": mostra o motivo e as ajudas do momento (CVV em destaque, respirar, plano de segurança, SAMU) e, conforme o caso, "Agendar uma consulta" (Premium) ou "Ver planos" (`SosUnavailable`).
 3. Se já existe um pedido aberto do paciente, ele volta para esse pedido em vez de criar outro. O banco garante isso mesmo com dois toques ao mesmo tempo ou duas abas (`guard_sos_concurrency`). Só conta de paciente pede SOS.
@@ -27,6 +28,7 @@ O paciente aperta SOS, entra numa fila e o primeiro psicólogo online que aceita
 5. A fila confere o pedido a cada 5 s e quando a internet ou a tela voltam. Assim o aceite chega mesmo se o tempo real cair.
 
 ### 2. Aceite
+0. Na fila, cada pedido mostra o que o paciente marcou. Pedidos com suicídio ou perigo aparecem **primeiro**, com a etiqueta "Prioritário". O push na tela bloqueada só diz "Pedido de emergência prioritário", nunca o que foi marcado. No painel de contexto da chamada, a triagem aparece no topo.
 1. O psicólogo toca em aceitar. O aceite é atômico: só um consegue, e os outros recebem "já foi aceito". Quando o banco recusa por outro motivo (pedido expirou, já está em outro SOS, está em consulta), a tela mostra esse motivo.
 2. O banco só deixa aceitar quem é **psicólogo aprovado e não bloqueado** (`psychologist_can_attend`), que **não esteja em outro SOS nem numa consulta agendada em andamento** (`psychologist_in_consultation`: consulta `in_progress` entre 10 min antes do horário e 15 min depois do fim) e com o pedido ainda dentro dos 10 min de espera (`guard_sos_concurrency`, também para dois aceites ao mesmo tempo).
 3. Os dois vão para a sala. A cota do SOS do mês é marcada como usada **quando a chamada começa** (`mark_sos_used_on_start`), não no pedido.

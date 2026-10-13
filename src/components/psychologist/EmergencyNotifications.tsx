@@ -11,6 +11,7 @@ import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { isPriorityTriage, triageLabel } from '@/lib/sosTriage';
 
 const EmergencyNotifications = () => {
   const { emergencyRequests, loading, acceptEmergencyRequest, declineEmergencyRequest } = usePsychologistEmergency();
@@ -112,7 +113,13 @@ const EmergencyNotifications = () => {
     );
   }
 
-  const pendingRequests = emergencyRequests.filter(req => req.status === 'pending');
+  // Risco marcado na triagem (suicídio, perigo) primeiro; depois o mais antigo.
+  const pendingRequests = emergencyRequests
+    .filter(req => req.status === 'pending')
+    .sort((a, b) =>
+      (isPriorityTriage(a.triage) ? 0 : 1) - (isPriorityTriage(b.triage) ? 0 : 1) ||
+      new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    );
 
   if (pendingRequests.length === 0) {
     return (
@@ -175,18 +182,28 @@ const EmergencyNotifications = () => {
                   </div>
                 </div>
               </div>
-              <Badge variant="destructive" className="animate-pulse">
-                URGENTE
+              <Badge variant="destructive" className={isPriorityTriage(request.triage) ? 'animate-pulse' : undefined}>
+                {isPriorityTriage(request.triage) ? 'PRIORITÁRIO' : 'URGENTE'}
               </Badge>
             </div>
 
             <div className="bg-card/50 rounded-lg p-4 mb-4">
-              <p className="text-sm text-foreground">
-                <strong>Paciente solicitou atendimento de emergência.</strong>
-              </p>
-              <p className="text-sm text-muted-foreground mt-1">
-                O paciente precisa de suporte psicológico imediato. Aceite a solicitação para iniciar uma sessão de emergência.
-              </p>
+              <p className="text-sm font-medium text-foreground">O que o paciente está sentindo</p>
+              {request.triage && request.triage.length > 0 ? (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {request.triage.map((key) => (
+                    <Badge
+                      key={key}
+                      variant="outline"
+                      className={key === 'suicidio' || key === 'perigo' ? 'border-destructive/40 text-destructive' : 'font-normal'}
+                    >
+                      {triageLabel(key)}
+                    </Badge>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-1 text-sm text-muted-foreground">O paciente não marcou nada na triagem.</p>
+              )}
             </div>
 
             <div className="flex gap-3">
