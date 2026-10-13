@@ -306,6 +306,13 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Editor com alteração → fechar a aba ⇒ o navegador pergunta antes de sair
 - [ ] Mesmo plano em dois aparelhos → salvar num, depois no outro ⇒ "O plano mudou em outro aparelho", nada apagado
 - [ ] Sair da conta ⇒ o plano deixa de abrir sem internet naquele aparelho
+- [ ] Psicólogo na chamada (SOS ou consulta) → "Plano pós-crise" (escudo) → 2 itens → Salvar ⇒ "Plano salvo"; o paciente ainda não vê nada
+- [ ] Paciente na chamada ⇒ não tem o botão "Plano pós-crise"
+- [ ] Encerrar o atendimento ⇒ paciente recebe "Seu psicólogo deixou um plano para você" (push neutro) → Planos de segurança ⇒ "Recomendados para você" com "Recomendado por [nome]"
+- [ ] "Editar antes de salvar" → mudar o título → salvar ⇒ o plano entra na lista com o selo e "editado por você"
+- [ ] Outra recomendação → "Agora não" ⇒ some da tela
+- [ ] Paciente com 10 planos → "Salvar nos meus planos" ⇒ pede qual plano substituir
+- [ ] Psicólogo → histórico → detalhe do atendimento ⇒ vê o plano que recomendou; até 2 h depois ainda edita; depois que o paciente decidiu, não edita
 
 ## 13. Autocuidado (ficha 15)
 

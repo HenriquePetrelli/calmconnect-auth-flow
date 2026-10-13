@@ -1964,6 +1964,77 @@ export type Database = {
         }
         Relationships: []
       }
+      safety_plan_suggestions: {
+        Row: {
+          coping_strategies: string[]
+          created_at: string
+          decided_at: string | null
+          delivered_at: string | null
+          distractions: string[]
+          id: string
+          patient_id: string
+          psychologist_id: string | null
+          psychologist_name: string
+          reasons_to_live: string[]
+          safe_environment: string[]
+          saved_plan_id: string | null
+          source_id: string
+          source_type: string
+          status: string
+          title: string
+          updated_at: string
+          warning_signs: string[]
+        }
+        Insert: {
+          coping_strategies?: string[]
+          created_at?: string
+          decided_at?: string | null
+          delivered_at?: string | null
+          distractions?: string[]
+          id?: string
+          patient_id: string
+          psychologist_id?: string | null
+          psychologist_name: string
+          reasons_to_live?: string[]
+          safe_environment?: string[]
+          saved_plan_id?: string | null
+          source_id: string
+          source_type: string
+          status?: string
+          title: string
+          updated_at?: string
+          warning_signs?: string[]
+        }
+        Update: {
+          coping_strategies?: string[]
+          created_at?: string
+          decided_at?: string | null
+          delivered_at?: string | null
+          distractions?: string[]
+          id?: string
+          patient_id?: string
+          psychologist_id?: string | null
+          psychologist_name?: string
+          reasons_to_live?: string[]
+          safe_environment?: string[]
+          saved_plan_id?: string | null
+          source_id?: string
+          source_type?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          warning_signs?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "safety_plan_suggestions_saved_plan_id_fkey"
+            columns: ["saved_plan_id"]
+            isOneToOne: false
+            referencedRelation: "safety_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       safety_plans: {
         Row: {
           coping_strategies: string[]
@@ -1971,8 +2042,11 @@ export type Database = {
           distractions: string[]
           id: string
           patient_id: string
+          patient_edited_at: string | null
           reasons_to_live: string[]
+          recommended_by: string | null
           safe_environment: string[]
+          source_suggestion_id: string | null
           title: string
           updated_at: string
           warning_signs: string[]
@@ -1983,8 +2057,11 @@ export type Database = {
           distractions?: string[]
           id?: string
           patient_id: string
+          patient_edited_at?: string | null
           reasons_to_live?: string[]
+          recommended_by?: string | null
           safe_environment?: string[]
+          source_suggestion_id?: string | null
           title?: string
           updated_at?: string
           warning_signs?: string[]
@@ -1995,8 +2072,11 @@ export type Database = {
           distractions?: string[]
           id?: string
           patient_id?: string
+          patient_edited_at?: string | null
           reasons_to_live?: string[]
+          recommended_by?: string | null
           safe_environment?: string[]
+          source_suggestion_id?: string | null
           title?: string
           updated_at?: string
           warning_signs?: string[]
@@ -2601,6 +2681,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_safety_plan_suggestion: {
+        Args: {
+          p_coping_strategies?: string[]
+          p_distractions?: string[]
+          p_reasons_to_live?: string[]
+          p_replace_plan_id?: string
+          p_safe_environment?: string[]
+          p_suggestion_id: string
+          p_title?: string
+          p_warning_signs?: string[]
+        }
+        Returns: string
+      }
       abrir_conversa: { Args: { p_psicologo_id: string }; Returns: string }
       add_patient_activity: {
         Args: {
@@ -3208,6 +3301,38 @@ export type Database = {
       reset_weekly_goals: { Args: never; Returns: undefined }
       rotate_organization_invite_code: {
         Args: { p_org: string }
+        Returns: string
+      }
+      dismiss_safety_plan_suggestion: {
+        Args: { p_suggestion_id: string }
+        Returns: undefined
+      }
+      get_post_crisis_plan: {
+        Args: { p_source_id: string; p_source_type: string }
+        Returns: {
+          coping_strategies: string[]
+          delivered: boolean
+          distractions: string[]
+          editable: boolean
+          id: string
+          reasons_to_live: string[]
+          safe_environment: string[]
+          title: string
+          updated_at: string
+          warning_signs: string[]
+        }[]
+      }
+      save_post_crisis_plan: {
+        Args: {
+          p_coping_strategies: string[]
+          p_distractions: string[]
+          p_reasons_to_live: string[]
+          p_safe_environment: string[]
+          p_source_id: string
+          p_source_type: string
+          p_title: string
+          p_warning_signs: string[]
+        }
         Returns: string
       }
       safety_plan_items_ok: { Args: { p_items: string[] }; Returns: boolean }

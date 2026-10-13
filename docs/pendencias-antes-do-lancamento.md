@@ -66,12 +66,11 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 - Apps como Crisis Text Line e o chat do CVV atendem por texto: muita gente em crise não consegue falar (está em casa com outras pessoas, no trabalho, sem voz). Hoje o SOS do Soliv é só por vídeo (dá para desligar a câmera, mas não para falar sem voz).
 - **Registrado em:** 2026-10-04.
 
-### 10. Plano pós-crise para o paciente
-
-- Ao fim do SOS, o psicólogo registra notas só para ele. Serviços de crise costumam deixar com a pessoa um resumo curto e combinados ("o que fazer nas próximas 24h", "procure atendimento se..."), que poderiam virar parte do plano de segurança.
-- **Registrado em:** 2026-10-04.
-
 ## Resolvidas
+
+### 10. Plano pós-crise para o paciente (sugerida em 2026-10-04, feita em 2026-11-01)
+
+- Na chamada (SOS ou consulta), o psicólogo preenche um plano de segurança com o paciente pelo botão "Plano pós-crise". O paciente recebe ao fim do atendimento, em "Recomendados para você", e salva (pode editar antes) ou ignora. O plano salvo mantém o selo "Recomendado por [nome]" (ficha 14).
 
 ### 9. Triagem rápida no SOS (sugerida em 2026-10-04, feita em 2026-10-31)
 

@@ -13,6 +13,7 @@ import {
   PhoneOff,
   RefreshCw,
   Settings,
+  ShieldCheck,
   UserRound,
   WifiOff,
   X,
@@ -52,6 +53,7 @@ import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 import { SessionValidationError, validateWebRTCSession } from '@/utils/session-validation';
 import RemoteAbsentPanel from '@/components/calls/RemoteAbsentPanel';
 import { ControlButton, ParticipantTile, QualityBadge } from '@/components/calls/CallParts';
+import PostCrisisPlanDialog from '@/components/calls/PostCrisisPlanDialog';
 import { FeedbackModal } from '@/components/sos/FeedbackModal';
 import { VideoCallSettingsModal } from '@/components/sos/VideoCallSettingsModal';
 import PatientContextPanel from '@/components/sos/PatientContextPanel';
@@ -135,6 +137,7 @@ const VideoCallRoom = ({
 
   const [showSettings, setShowSettings] = useState(false);
   const [showContext, setShowContext] = useState(false);
+  const [showPlan, setShowPlan] = useState(false);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [showCrisisStep, setShowCrisisStep] = useState(false);
   const [crisisResolved, setCrisisResolved] = useState<'sim' | 'nao'>('sim');
@@ -664,6 +667,8 @@ const VideoCallRoom = ({
         : 'Conectando...';
 
   const canShowContext = userType === 'psychologist' && (isSos ? Boolean(requestId) : Boolean(appointment?.patientId));
+  // Plano pós-crise: só o psicólogo, no SOS e na consulta.
+  const planSourceId = userType === 'psychologist' ? (isSos ? requestId : appointment?.id ?? null) : null;
 
   return (
     <TooltipProvider delayDuration={300}>
@@ -890,6 +895,9 @@ const VideoCallRoom = ({
                 onClick={() => setShowContext((v) => !v)}
               />
             )}
+            {planSourceId && (
+              <ControlButton icon={ShieldCheck} label="Plano pós-crise" active={showPlan} onClick={() => setShowPlan(true)} />
+            )}
             <button
               type="button"
               onClick={() => setShowEndConfirm(true)}
@@ -902,6 +910,15 @@ const VideoCallRoom = ({
 
           <div className="hidden flex-1 md:block" />
         </footer>
+
+        {planSourceId && (
+          <PostCrisisPlanDialog
+            open={showPlan}
+            onOpenChange={setShowPlan}
+            sourceType={isSos ? 'sos' : 'appointment'}
+            sourceId={planSourceId}
+          />
+        )}
 
         <VideoCallSettingsModal
           isOpen={showSettings}
@@ -919,6 +936,19 @@ const VideoCallRoom = ({
                 A chamada termina para os dois. Se a sua conexão caiu, não é preciso encerrar: a chamada volta sozinha.
               </AlertDialogDescription>
             </AlertDialogHeader>
+            {planSourceId && (
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  setShowEndConfirm(false);
+                  setShowPlan(true);
+                }}
+              >
+                <ShieldCheck className="mr-2 h-4 w-4" aria-hidden="true" />
+                Deixar um plano pós-crise
+              </Button>
+            )}
             <AlertDialogFooter>
               <AlertDialogCancel>Continuar na chamada</AlertDialogCancel>
               <AlertDialogAction onClick={confirmEnd} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
@@ -972,6 +1002,12 @@ const VideoCallRoom = ({
                 rows={3}
               />
             </div>
+            {planSourceId && (
+              <Button variant="outline" className="w-full" onClick={() => setShowPlan(true)}>
+                <ShieldCheck className="mr-2 h-4 w-4" aria-hidden="true" />
+                Deixar um plano pós-crise
+              </Button>
+            )}
             <AlertDialogFooter>
               <AlertDialogAction onClick={() => confirmCrisisOutcome()} className="w-full sm:w-auto">
                 Finalizar atendimento

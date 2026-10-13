@@ -19,11 +19,13 @@ import HomeCrisisAccess from '@/components/HomeCrisisAccess';
 import { useSafetyPlans, type SafetyPlanSummary } from '@/hooks/useSafetyPlan';
 import { MAX_SAFETY_PLANS } from '@/lib/safetyPlan';
 import OfflinePlanNotice from '@/components/safety/OfflinePlanNotice';
+import RecommendedPlans from '@/components/safety/RecommendedPlans';
+import RecommendedBadge from '@/components/safety/RecommendedBadge';
 
 /** The patient's safety plans: titles only, each with edit and delete. */
 const SafetyPlans = () => {
   const navigate = useNavigate();
-  const { plans, loading, offline, deletingId, deletePlan } = useSafetyPlans();
+  const { plans, loading, offline, deletingId, deletePlan, reload } = useSafetyPlans();
   const [toDelete, setToDelete] = useState<SafetyPlanSummary | null>(null);
   const limitReached = plans.length >= MAX_SAFETY_PLANS;
 
@@ -41,6 +43,8 @@ const SafetyPlans = () => {
           </p>
 
           {offline && <OfflinePlanNotice />}
+
+          {!offline && <RecommendedPlans plans={plans} onSaved={reload} />}
 
           <div className="space-y-2">
             <Button className="w-full min-h-12" onClick={() => navigate('/safety-plan/novo')} disabled={loading || limitReached}>
@@ -82,7 +86,12 @@ const SafetyPlans = () => {
                     aria-label={`Ver ${plan.title}`}
                   >
                     <ShieldCheck className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
-                    <span className="min-w-0 flex-1 truncate font-medium text-foreground">{plan.title}</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-medium text-foreground">{plan.title}</span>
+                      {plan.recommended_by && (
+                        <RecommendedBadge name={plan.recommended_by} edited={Boolean(plan.patient_edited_at)} />
+                      )}
+                    </span>
                   </button>
                   <Button
                     variant="ghost"

@@ -34,6 +34,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import LifeRingIcon from '@/components/icons/LifeRingIcon';
 import { loadPrivateNote, savePrivateNote, PRIVATE_NOTE_MAX } from '@/lib/privateNotes';
+import PostCrisisPlanSummary from '@/components/psychologist/PostCrisisPlanSummary';
 import { useToast } from '@/hooks/use-toast';
 
 type ConsultationKind = 'scheduled' | 'emergency';
@@ -542,6 +543,13 @@ const ConsultationHistory = () => {
                   <p className="mt-1 rounded-md bg-muted p-3 text-sm">{selected.notes}</p>
                 </div>
               )}
+
+              <PostCrisisPlanSummary
+                key={selected.id}
+                sourceType={selected.kind === 'emergency' ? 'sos' : 'appointment'}
+                sourceId={selected.id}
+                occurredAt={selected.occurred_at}
+              />
 
               {selected.kind === 'emergency' ? (
                 <>

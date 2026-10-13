@@ -15,6 +15,7 @@ A chamada é de navegador para navegador (WebRTC). O Supabase só faz a "apresen
 - Tempo restante no canto superior esquerdo ("pausado" quando alguém está fora); qualidade da rede no direito só quando cai ("Conexão lenta"/"Conexão instável").
 - Barra de controles: microfone (Ctrl+D), câmera (Ctrl+E), dispositivos, contexto do paciente (só psicólogo) e encerrar.
 - **Contexto do paciente** (psicólogo): divide a tela — contexto à esquerda, vídeo à direita (no celular, vídeo em cima e contexto embaixo), com X para fechar. No SOS mostra a triagem do pedido; na consulta, questionários compartilhados e resumos das consultas anteriores.
+- **Plano pós-crise** (psicólogo, ícone de escudo, ao lado do contexto): abre o formulário do plano de segurança para deixar com o paciente. Também aparece em "Encerrar" e no desfecho do SOS. O paciente recebe ao fim do atendimento (ficha 14).
 - Não há mais painel de diagnóstico na chamada (`?debug=1` só liga os logs do navegador, para suporte).
 
 ## Como funciona

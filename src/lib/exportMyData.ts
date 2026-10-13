@@ -12,6 +12,7 @@ const SOURCES: { table: string; column: string; label: string }[] = [
   { table: 'private_journals', column: 'user_id', label: 'diario' },
   { table: 'safety_plans', column: 'patient_id', label: 'plano_de_seguranca' },
   { table: 'emergency_contacts', column: 'patient_id', label: 'contatos_de_emergencia' },
+  { table: 'safety_plan_suggestions', column: 'patient_id', label: 'planos_recomendados_por_psicologos' },
   { table: 'patient_weekly_goals', column: 'user_id', label: 'metas_da_semana' },
   { table: 'user_habits', column: 'user_id', label: 'habitos' },
   { table: 'habit_events', column: 'user_id', label: 'registros_de_habitos' },

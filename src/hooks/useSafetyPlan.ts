@@ -48,6 +48,10 @@ export interface SafetyPlanSummary {
   id: string;
   title: string;
   updated_at: string;
+  /** Nome do psicólogo que recomendou (plano pós-crise salvo pelo paciente). */
+  recommended_by?: string | null;
+  /** O paciente mudou o plano recomendado. */
+  patient_edited_at?: string | null;
 }
 
 /** The logged-in patient's safety plans (titles only), for the list screen. */
@@ -68,7 +72,7 @@ export const useSafetyPlans = () => {
     try {
       const { data, error } = await supabase
         .from('safety_plans')
-        .select('id, title, updated_at')
+        .select('id, title, updated_at, recommended_by, patient_edited_at')
         .eq('patient_id', user.id)
         .order('created_at', { ascending: true });
       if (error) throw error;
