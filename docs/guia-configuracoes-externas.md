@@ -110,20 +110,27 @@ Supabase → **Authentication → Providers → Email** (e **Policies**/**Settin
 
 **Por quê:** é o que entrega avisos com o app fechado: o SOS para o psicólogo, os lembretes de consulta e de hábitos, as mensagens do chat e as mudanças na consulta. Sem ele, os avisos só aparecem com o app aberto.
 
-O app já tem as 7 variáveis `VITE_FIREBASE_*` no `.env` do projeto, o lado do navegador. Falta conferir o lado do servidor, que é quem envia.
+O app Android já está ligado ao projeto Firebase **`app-soliv`** (`android/app/google-services.json`, pacote `br.com.soliv.app`). Faltam duas partes:
 
-1. [console.firebase.google.com](https://console.firebase.google.com) → abra o **mesmo projeto** cujo `projectId` está no `.env` (`VITE_FIREBASE_PROJECT_ID`).
-2. Engrenagem → **Project settings → Cloud Messaging**: confirme que a **Firebase Cloud Messaging API (V1)** está **Enabled**.
-3. **Project settings → Service accounts → Generate new private key**. Baixa um arquivo JSON. **Não mande no chat nem coloque no GitHub.**
-4. Do JSON, cadastre 3 secrets nas edge functions:
+**A. Push no navegador (site e celular pelo navegador).** As 7 variáveis `VITE_FIREBASE_*` do `.env` estão vazias; sem elas, o botão "Notificações push" nem aparece no perfil.
+1. [console.firebase.google.com](https://console.firebase.google.com) → projeto **app-soliv** → engrenagem → **Project settings → General**.
+2. Em **Your apps**: se já houver um app Web (`</>`), abra-o; se não, **Add app → Web (`</>`)**, nome "Soliv Web", sem Firebase Hosting → **Register app**.
+3. Copie os 6 valores do `firebaseConfig`: `apiKey`, `authDomain`, `projectId`, `storageBucket`, `messagingSenderId`, `appId`.
+4. **Project settings → Cloud Messaging → Web configuration → Web Push certificates → Generate key pair**. Copie a chave (é a `VITE_FIREBASE_VAPID_KEY`).
+5. Mande os 7 valores para o Claude. **Esses não são secretos**: todo app Web do Firebase os expõe no navegador. O Claude coloca no `.env` e a Lovable publica.
+
+**B. Envio pelo servidor (vale para o navegador e o Android).**
+1. **Project settings → Cloud Messaging**: confirme que a **Firebase Cloud Messaging API (V1)** está **Enabled**.
+2. **Project settings → Service accounts → Generate new private key**. Baixa um arquivo JSON. **Este é secreto: não mande no chat nem coloque no GitHub.**
+3. Do JSON, cadastre 3 secrets nas edge functions:
 
    | Secret | Campo do JSON |
    |---|---|
-   | `FIREBASE_PROJECT_ID` | `project_id` |
+   | `FIREBASE_PROJECT_ID` | `project_id` (deve ser `app-soliv`) |
    | `FIREBASE_CLIENT_EMAIL` | `client_email` |
    | `FIREBASE_PRIVATE_KEY` | `private_key` (o texto inteiro, de `-----BEGIN PRIVATE KEY-----` até `-----END PRIVATE KEY-----`, com os `\n`) |
 
-5. Apague o arquivo JSON do computador depois de cadastrar (ou guarde num cofre de senhas).
+4. Apague o arquivo JSON do computador depois de cadastrar (ou guarde num cofre de senhas).
 
 **Teste:**
 1. No celular (Chrome no Android, ou o app instalado), entre com uma conta de paciente → Perfil → ligar as notificações → aceitar a permissão.
