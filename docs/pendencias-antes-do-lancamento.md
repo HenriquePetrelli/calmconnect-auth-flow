@@ -53,18 +53,6 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
   3. "Confirm email": ligar depois do domínio (pendência 2), para o e-mail de confirmação chegar. O app já está pronto (desde 2026-10-21 o paciente é criado pelo banco e o psicólogo conclui o cadastro no primeiro acesso).
 - **Registrado em:** 2026-10-04.
 
-### 7. Renomear o repositório para `soliv`
-
-- **Situação:** o código já usa Soliv em todo lugar (app, Android, pacote, telas e e-mails). Falta o nome do repositório no GitHub (`calmconnect-auth-flow`).
-- **Como fazer (confirmado na [documentação da Lovable](https://docs.lovable.dev/integrations/github)):** renomear **direto no GitHub, sem desconectar**. A Lovable detecta a renomeação e atualiza o vínculo sozinha; a sincronização continua.
-- **Por que não desconectar:** ao reconectar, a Lovable **sempre cria um repositório novo** com a versão atual do projeto — ela não permite escolher nem importar um repositório existente. Desconectar deixaria o `calmconnect-auth-flow` (renomeado) solto no GitHub, fora do vínculo, e o histórico ficaria para trás.
-- **O que fazer:**
-  1. GitHub → Settings → General → Repository name → `soliv`.
-  2. Conferir em Lovable (Workspace settings → Git) que o nome novo aparece e que os commits continuam saindo.
-  3. Só há risco se o repositório for **transferido de conta/organização** ou **excluído**: na transferência, a sincronização continua apenas se o workspace tiver conexão com o novo dono; na exclusão, o vínculo quebra (dá para restaurar o repositório no GitHub para retomar).
-- **Opcional:** trocar o nome do projeto no painel da Lovable e o e-mail da conta admin (`admin@calmconnect.com`) junto com a pendência 1.
-- **Registrado em:** 2026-10-04. **Corrigido em 2026-10-13:** o procedimento antigo (desconectar antes de renomear) perderia o vínculo; a documentação atual da Lovable diz que renomear não quebra a sincronização.
-
 ### 16. Revisão jurídica dos documentos
 
 - **Situação:** política de privacidade, termos de uso (paciente e psicólogo) e registro de tratamento (`docs/lgpd/`) estão em versão para revisão. O registro ainda tem itens **[DECIDIR]** (prazo dos logs de segurança além dos 6 meses do Marco Civil) e **[CONFIRMAR]** (hospedagem do front-end pela Lovable, regiões e cláusulas da transferência internacional de dados).
@@ -89,6 +77,11 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 - **Registrado em:** 2026-10-04.
 
 ## Resolvidas
+
+### 7. Repositório renomeado para `soliv` (registrada em 2026-10-04, resolvida em 2026-10-13)
+
+- Renomeado direto no GitHub (`HenriquePetrelli/soliv`), sem desconectar a Lovable: a sincronização continuou. O endereço antigo (`calmconnect-auth-flow`) redireciona para o novo.
+- Não desconectar a Lovable do GitHub: ao reconectar, ela cria um repositório novo e não importa o existente.
 
 ### Webhook do Stripe no modo de teste (resolvido em 2026-10-13)
 
