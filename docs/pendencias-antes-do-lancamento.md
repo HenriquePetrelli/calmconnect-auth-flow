@@ -2,19 +2,9 @@
 
 O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mova-o para "Resolvidas" com a data e o que foi feito.
 
-> **Passo a passo das configurações externas** (pendências 1, 2, 3, 5 e 6 e o webhook do Stripe): `docs/guia-configuracoes-externas.md`.
+> **Passo a passo das configurações externas** (pendências 2, 3, 5 e 6 e o webhook do Stripe; a 1 já foi resolvida): `docs/guia-configuracoes-externas.md`.
 
 ## Críticas
-
-### 1. Senha do admin exposta no repositório
-
-- **Onde:** `supabase/migrations/20250729171947-8c6e37ba-06ef-4ba2-96e4-260ba4e8a0f3.sql` cria/atualiza a conta de admin com a senha em texto puro.
-- **Risco:** qualquer pessoa com acesso ao repositório (ou a um clone antigo dele) consegue entrar como admin, se a senha ainda for a mesma.
-- **O que fazer:**
-  1. Trocar a senha da conta de admin (e de qualquer outra conta que use a mesma senha).
-  2. Ativar a verificação em duas etapas da conta de admin, se disponível.
-  3. Opcional: limpar o histórico do Git (por exemplo, com `git filter-repo`) e forçar o push; avisar quem tem clones. Apagar só o arquivo não basta, porque a senha continua no histórico.
-- **Registrado em:** 2026-10-03.
 
 ### 2. Domínio do Soliv e envio de e-mails
 
@@ -98,6 +88,11 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 - **Registrado em:** 2026-10-04.
 
 ## Resolvidas
+
+### 1. Senha do admin exposta no repositório (registrada em 2026-10-03, resolvida em 2026-10-13)
+
+- A senha da conta de admin, que estava em texto puro na migração `20250729171947-8c6e37ba-06ef-4ba2-96e4-260ba4e8a0f3.sql`, foi trocada. A senha antiga continua no histórico do Git, mas não abre mais a conta.
+- Ficou opcional: verificação em duas etapas para o admin (o app ainda não pede o código no login; pedir ao Claude) e trocar o e-mail `admin@calmconnect.com` quando houver domínio.
 
 ### Decisões de produto (registradas de 2026-10-04 a 2026-10-19, decididas em 2026-10-28)
 
