@@ -54,7 +54,7 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 - **Onde:** Supabase → Authentication → Policies/Settings (não dá para configurar pelo código).
 - **O que fazer:**
   1. Tamanho mínimo de senha: 8 (o app já exige 8 com letras e números nas contas novas; o servidor ainda aceita 6 de quem chamar a API direto).
-  2. Ativar "Leaked password protection" (recusa senhas que já vazaram na internet).
+  2. Ativar "Prevent use of leaked passwords" (recusa senhas que já vazaram na internet). Só existe no plano Pro do Supabase.
   3. "Confirm email": ligar depois do domínio (pendência 2), para o e-mail de confirmação chegar. O app já está pronto (desde 2026-10-21 o paciente é criado pelo banco e o psicólogo conclui o cadastro no primeiro acesso).
 - **Registrado em:** 2026-10-04.
 

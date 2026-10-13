@@ -90,8 +90,10 @@ Supabase → **Authentication → Emails → Templates**. Para cada um dos 6 mod
 Supabase → **Authentication → Providers → Email** (e **Policies**/**Settings**, conforme a versão do painel):
 
 1. **Minimum password length:** `8`. O app já exige 8 com letras e números; o servidor ainda aceita 6 de quem chama a API direto.
-2. **Password requirements:** letras e números.
-3. **Leaked password protection:** ligar. Recusa senhas que já vazaram na internet.
+2. **Password requirements:** "Letters and digits" (letras e números), como o app já exige.
+3. **Prevent use of leaked passwords:** só existe no plano Pro do Supabase. No plano gratuito, fica desligado; ligar quando assinar o Pro.
+   - **Require current password when updating:** deixe **desligado**. O app já pede a senha atual nas próprias telas, e ligar isso quebraria a troca de senha e o "Esqueci minha senha".
+   - **Email OTP expiration:** `3600` (1 hora), o prazo escrito nos e-mails.
 4. **Confirm email:** ligar, **só depois do passo 2** (o e-mail de confirmação precisa chegar). O app já está pronto para isso:
    - o paciente é criado pelo banco no cadastro;
    - o psicólogo conclui o cadastro (envia o documento) no primeiro acesso, em `/psicologo/concluir-cadastro`;

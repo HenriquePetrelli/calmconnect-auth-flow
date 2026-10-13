@@ -13,6 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { getFriendlyErrorMessage } from '@/utils/errorMessage';
 import { passwordProblem } from '@/lib/password';
+import { mfaErrorMessage } from '@/lib/adminMfa';
 
 const AdminProfile = () => {
   const { toast } = useToast();
@@ -22,7 +23,8 @@ const AdminProfile = () => {
   const [formData, setFormData] = useState({
     currentPassword: '',
     newPassword: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    mfaCode: ''
   });
 
   const handleLogout = async () => {
@@ -51,6 +53,9 @@ const AdminProfile = () => {
         if (!formData.currentPassword) {
           throw new Error('Senha atual é obrigatória para alterar a senha');
         }
+        if (formData.mfaCode.replace(/\D/g, '').length !== 6) {
+          throw new Error('Digite o código de 6 dígitos do app autenticador');
+        }
       }
 
       // Only update if there are changes
@@ -75,6 +80,21 @@ const AdminProfile = () => {
       });
       if (reauthError) throw new Error('Senha atual incorreta');
 
+      // Entrar de novo com a senha volta a sessão ao nível sem o código
+      // (aal1), e o Supabase só troca a senha de quem tem verificação em duas
+      // etapas com o código confirmado (aal2). O código também protege a
+      // troca: senha atual sozinha não basta.
+      const { data: factors, error: factorsError } = await supabase.auth.mfa.listFactors();
+      if (factorsError) throw factorsError;
+      const factor = factors?.all?.find((f) => f.factor_type === 'totp' && f.status === 'verified');
+      if (factor) {
+        const { error: mfaError } = await supabase.auth.mfa.challengeAndVerify({
+          factorId: factor.id,
+          code: formData.mfaCode.replace(/\D/g, ''),
+        });
+        if (mfaError) throw new Error(mfaErrorMessage(mfaError));
+      }
+
       // Update password in Supabase Auth
       const { error } = await supabase.auth.updateUser({
         password: formData.newPassword
@@ -88,7 +108,8 @@ const AdminProfile = () => {
       setFormData({
         currentPassword: '',
         newPassword: '',
-        confirmPassword: ''
+        confirmPassword: '',
+        mfaCode: ''
       });
 
     } catch (error) {
@@ -128,7 +149,7 @@ const AdminProfile = () => {
         <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Senha</h2>
         <Card className="border-border/60">
           <CardContent className="p-4">
-            <p className="mb-4 text-xs text-muted-foreground">Para trocar, confirme a senha atual.</p>
+            <p className="mb-4 text-xs text-muted-foreground">Para trocar, confirme a senha atual e o código do app autenticador.</p>
             <form onSubmit={handleUpdateProfile} className="space-y-4">
               <div className="space-y-1.5">
                 <Label htmlFor="currentPassword">Senha atual</Label>
@@ -163,6 +184,19 @@ const AdminProfile = () => {
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData((prev) => ({ ...prev, confirmPassword: e.target.value }))}
                   placeholder="••••••••"
+                  disabled={isUpdating}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="mfaCode">Código do app autenticador</Label>
+                <Input
+                  id="mfaCode"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  value={formData.mfaCode}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, mfaCode: e.target.value.replace(/\D/g, '').slice(0, 6) }))}
+                  placeholder="000000"
                   disabled={isUpdating}
                 />
               </div>

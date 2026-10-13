@@ -30,6 +30,7 @@ Painel único em `/admin-dashboard`, com a seção na URL (`?secao=...`), para r
   4. sem o código, a conta não acessa nada do painel.
 
   A regra vale no servidor, não só na tela: `is_super_admin()` só reconhece o admin com o token de nível `aal2` (depois do código), e as edge functions de admin conferem o mesmo (`supabase/functions/_shared/adminMfa.ts`). Com a senha sozinha (`aal1`), `get_login_state` diz apenas que a conta é de admin, para o app levar à tela do código.
+  Trocar a senha (Meu perfil) pede a senha atual **e** o código do app: o Supabase só troca a senha de quem tem a verificação em duas etapas com o código confirmado.
   Perdeu o celular? Outra pessoa com acesso ao Supabase remove a verificação em **Authentication → Users → (o admin) → remover o fator MFA**. No próximo login, o admin cadastra o app de novo.
 - **Aprovação de psicólogo**:
   1. o admin recebe notificação de cadastro novo;
