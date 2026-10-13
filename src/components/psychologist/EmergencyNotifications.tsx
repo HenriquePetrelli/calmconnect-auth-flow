@@ -182,9 +182,17 @@ const EmergencyNotifications = () => {
                   </div>
                 </div>
               </div>
-              <Badge variant="destructive" className={isPriorityTriage(request.triage) ? 'animate-pulse' : undefined}>
-                {isPriorityTriage(request.triage) ? 'PRIORITÁRIO' : 'URGENTE'}
-              </Badge>
+              <div className="flex flex-col items-end gap-1">
+                <Badge variant="destructive" className={isPriorityTriage(request.triage) ? 'animate-pulse' : undefined}>
+                  {isPriorityTriage(request.triage) ? 'PRIORITÁRIO' : 'URGENTE'}
+                </Badge>
+                {request.channel === 'text' && (
+                  <Badge variant="outline" className="gap-1 font-normal">
+                    <MessageSquare className="h-3 w-3" aria-hidden="true" />
+                    Por mensagem
+                  </Badge>
+                )}
+              </div>
             </div>
 
             <div className="bg-card/50 rounded-lg p-4 mb-4">

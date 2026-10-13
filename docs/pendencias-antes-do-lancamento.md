@@ -61,12 +61,11 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 
 ## Melhorias sugeridas
 
-### 8. SOS por mensagem de texto
-
-- Apps como Crisis Text Line e o chat do CVV atendem por texto: muita gente em crise não consegue falar (está em casa com outras pessoas, no trabalho, sem voz). Hoje o SOS do Soliv é só por vídeo (dá para desligar a câmera, mas não para falar sem voz).
-- **Registrado em:** 2026-10-04.
-
 ## Resolvidas
+
+### 8. SOS por mensagem (sugerida em 2026-10-04, feita em 2026-11-02)
+
+- Na confirmação do SOS, "Por vídeo" (padrão) ou "Por mensagem". Conversa em tela cheia, 25 min a partir da 1ª resposta do psicólogo, "digitando…" e "visto". Psicólogo fora da conversa por 60 s ou sem responder por 2 min: o paciente pode chamar outro psicólogo (SOS devolvido) e o psicólogo recebe push urgente. Cota e repasse como no vídeo; mensagens guardadas por 3 meses (ficha 02).
 
 ### 10. Plano pós-crise para o paciente (sugerida em 2026-10-04, feita em 2026-11-01)
 

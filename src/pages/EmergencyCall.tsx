@@ -3,6 +3,7 @@ import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import VideoCallRoom from "@/components/calls/VideoCallRoom";
+import SosTextChatRoom from "@/components/calls/SosTextChatRoom";
 import { getSessionUser } from "@/lib/currentUser";
 import { useEmergencySession } from "@/hooks/useEmergencySession";
 import RouteSkeleton from "@/components/skeletons/RouteSkeleton";
@@ -75,6 +76,8 @@ const EmergencyCall = () => {
   // room mounts: the shared timer persists its first value right away, so
   // starting on a placeholder limit would stick for the whole call.
   const [timeLimit, setTimeLimit] = useState<number | null>(null);
+  // "video" ou "text" (SOS por mensagem): decide qual sala abre.
+  const [channel, setChannel] = useState<"video" | "text" | null>(null);
   useEffect(() => {
     if (!sessionId) return;
     let cancelled = false;
@@ -89,15 +92,20 @@ const EmergencyCall = () => {
         requestId = data?.emergency_request_id ?? null;
       }
       let limit: number | null = null;
+      let requestChannel: "video" | "text" = "video";
       if (requestId) {
         const { data } = await supabase
           .from("emergency_requests")
-          .select("time_limit_seconds")
+          .select("time_limit_seconds, channel")
           .eq("id", requestId)
           .maybeSingle();
         limit = data?.time_limit_seconds ?? null;
+        if (data?.channel === "text") requestChannel = "text";
       }
-      if (!cancelled) setTimeLimit(limit ?? DEFAULT_SOS_TIME_LIMIT);
+      if (!cancelled) {
+        setTimeLimit(limit ?? DEFAULT_SOS_TIME_LIMIT);
+        setChannel(requestChannel);
+      }
     })();
     return () => {
       cancelled = true;
@@ -127,9 +135,11 @@ const EmergencyCall = () => {
     sessionId,
     requestIdFromUrl,
     userType,
+    // Por mensagem, o atendimento começa na 1ª resposta do psicólogo (banco).
+    startOnJoin: channel === "video",
   });
 
-  if (loading || (sessionId && (timeLimit === null || roomUserType === null))) {
+  if (loading || (sessionId && (timeLimit === null || roomUserType === null || channel === null))) {
     return <RouteSkeleton />;
   }
 
@@ -146,6 +156,18 @@ const EmergencyCall = () => {
           </Button>
         </div>
       </div>
+    );
+  }
+
+  const resolvedRequestId = requestId ?? requestIdFromUrl;
+  if (channel === "text" && resolvedRequestId) {
+    return (
+      <SosTextChatRoom
+        requestId={resolvedRequestId}
+        sessionId={sessionId}
+        userType={userType}
+        onLeave={({ endInfo }) => endSession(endInfo)}
+      />
     );
   }
 

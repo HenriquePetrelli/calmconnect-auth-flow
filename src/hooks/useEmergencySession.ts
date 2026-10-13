@@ -14,6 +14,8 @@ interface UseEmergencySessionParams {
   sessionId?: string | null;
   requestIdFromUrl?: string | null;
   userType: 'patient' | 'psychologist';
+  /** Marca o início ao entrar na sala (vídeo). Por mensagem, o banco marca na 1ª resposta. */
+  startOnJoin?: boolean;
 }
 
 /**
@@ -31,6 +33,7 @@ export const useEmergencySession = ({
   sessionId,
   requestIdFromUrl,
   userType,
+  startOnJoin = true,
 }: UseEmergencySessionParams) => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -117,7 +120,7 @@ export const useEmergencySession = ({
 
   // 3. First join promotes the request to `in_progress` (and starts the timer).
   useEffect(() => {
-    if (!requestId || !sessionId || startedRef.current) return;
+    if (!requestId || !sessionId || !startOnJoin || startedRef.current) return;
     startedRef.current = true;
 
     (async () => {
@@ -170,7 +173,7 @@ export const useEmergencySession = ({
         setReady(true);
       }
     })();
-  }, [requestId, sessionId, userType, navigate, toast, homeRoute]);
+  }, [requestId, sessionId, userType, navigate, toast, homeRoute, startOnJoin]);
 
   // 4. Single termination entry point.
   const endSession = useCallback(

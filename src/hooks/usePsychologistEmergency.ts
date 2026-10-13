@@ -16,6 +16,8 @@ interface EmergencyRequest {
   accepted_at: string | null;
   /** Triagem opcional do paciente (chaves de src/lib/sosTriage.ts). */
   triage?: string[] | null;
+  /** 'text' = SOS por mensagem (o paciente não pode falar agora). */
+  channel?: string | null;
   patient: {
     full_name: string;
   };

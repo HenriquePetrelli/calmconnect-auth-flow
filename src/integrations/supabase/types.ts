@@ -502,6 +502,7 @@ export type Database = {
         Row: {
           accepted_at: string | null
           accepted_by: string | null
+          channel: string
           created_at: string
           crisis_resolved: boolean | null
           duration: number | null
@@ -525,6 +526,7 @@ export type Database = {
         Insert: {
           accepted_at?: string | null
           accepted_by?: string | null
+          channel?: string
           created_at?: string
           crisis_resolved?: boolean | null
           duration?: number | null
@@ -548,6 +550,7 @@ export type Database = {
         Update: {
           accepted_at?: string | null
           accepted_by?: string | null
+          channel?: string
           created_at?: string
           crisis_resolved?: boolean | null
           duration?: number | null
@@ -2222,6 +2225,93 @@ export type Database = {
           },
         ]
       }
+      sos_chat_state: {
+        Row: {
+          away_nudged_at: string | null
+          first_reply_at: string | null
+          last_patient_message_at: string | null
+          last_psychologist_message_at: string | null
+          patient_id: string
+          patient_messages: number
+          patient_nudged_for: string | null
+          patient_read_at: string | null
+          patient_seen_at: string | null
+          psychologist_id: string | null
+          psychologist_read_at: string | null
+          psychologist_replies: number
+          psychologist_seen_at: string | null
+          request_id: string
+          updated_at: string
+          wait_nudged_for: string | null
+        }
+        Insert: {
+          away_nudged_at?: string | null
+          first_reply_at?: string | null
+          last_patient_message_at?: string | null
+          last_psychologist_message_at?: string | null
+          patient_id: string
+          patient_messages?: number
+          patient_nudged_for?: string | null
+          patient_read_at?: string | null
+          patient_seen_at?: string | null
+          psychologist_id?: string | null
+          psychologist_read_at?: string | null
+          psychologist_replies?: number
+          psychologist_seen_at?: string | null
+          request_id: string
+          updated_at?: string
+          wait_nudged_for?: string | null
+        }
+        Update: {
+          away_nudged_at?: string | null
+          first_reply_at?: string | null
+          last_patient_message_at?: string | null
+          last_psychologist_message_at?: string | null
+          patient_id?: string
+          patient_messages?: number
+          patient_nudged_for?: string | null
+          patient_read_at?: string | null
+          patient_seen_at?: string | null
+          psychologist_id?: string | null
+          psychologist_read_at?: string | null
+          psychologist_replies?: number
+          psychologist_seen_at?: string | null
+          request_id?: string
+          updated_at?: string
+          wait_nudged_for?: string | null
+        }
+        Relationships: []
+      }
+      sos_messages: {
+        Row: {
+          body: string
+          client_id: string
+          created_at: string
+          id: string
+          request_id: string
+          sender_id: string | null
+          sender_type: string
+        }
+        Insert: {
+          body: string
+          client_id: string
+          created_at?: string
+          id?: string
+          request_id: string
+          sender_id?: string | null
+          sender_type: string
+        }
+        Update: {
+          body?: string
+          client_id?: string
+          created_at?: string
+          id?: string
+          request_id?: string
+          sender_id?: string | null
+          sender_type?: string
+        }
+        Relationships: []
+      }
       sos_trace_events: {
         Row: {
           actor_type: string
@@ -3350,6 +3440,22 @@ export type Database = {
           p_warning_signs: string[]
         }
         Returns: string
+      }
+      send_sos_message: {
+        Args: { p_body: string; p_client_id: string; p_request_id: string }
+        Returns: {
+          body: string
+          client_id: string
+          created_at: string
+          id: string
+          request_id: string
+          sender_id: string | null
+          sender_type: string
+        }
+      }
+      sos_chat_heartbeat: {
+        Args: { p_read?: boolean; p_request_id: string }
+        Returns: Json
       }
       set_psychologist_availability: {
         Args: { p_blocks: Json }

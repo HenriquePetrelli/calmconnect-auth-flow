@@ -68,6 +68,20 @@ export async function collectMyData(userId: string, email: string | null) {
     data.mensagens = [];
   }
 
+  // Conversas do SOS por mensagem (guardadas por 3 meses).
+  const pedidos = (data.pedidos_de_sos as { id: string }[] | undefined) ?? [];
+  if (pedidos.length > 0) {
+    const { data: sosMensagens, error } = await supabase
+      .from('sos_messages')
+      .select('request_id, sender_type, body, created_at')
+      .in('request_id', pedidos.map((p) => p.id))
+      .order('created_at', { ascending: true });
+    if (error) unavailable.push('mensagens_do_sos');
+    else data.mensagens_do_sos = sosMensagens ?? [];
+  } else {
+    data.mensagens_do_sos = [];
+  }
+
   return {
     gerado_em: new Date().toISOString(),
     titular: { id: userId, email },

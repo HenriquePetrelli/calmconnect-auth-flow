@@ -9,11 +9,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useEffect, useState } from "react";
-import { Phone, ShieldCheck, Video } from "lucide-react";
+import { MessageSquareText, Phone, ShieldCheck, Video } from "lucide-react";
 import LifeRingIcon from "@/components/icons/LifeRingIcon";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { SOS_TRIAGE_OPTIONS, hasDangerRisk, hasSelfHarmRisk, saveSosTriage, type SosTriageKey } from "@/lib/sosTriage";
+import { saveSosChannel, type SosChannel } from "@/lib/sosChannel";
 
 interface ConfirmationModalProps {
   open: boolean;
@@ -22,8 +23,10 @@ interface ConfirmationModalProps {
 }
 
 /** O que acontece depois de confirmar: a pessoa sabe o que esperar antes de chamar. */
-const STEPS = [
-  { icon: Video, text: "Um psicólogo disponível atende você por vídeo" },
+const stepsFor = (channel: SosChannel) => [
+  channel === "text"
+    ? { icon: MessageSquareText, text: "Um psicólogo disponível conversa com você por mensagem" }
+    : { icon: Video, text: "Um psicólogo disponível atende você por vídeo" },
   { icon: ShieldCheck, text: "Enquanto espera, dá para abrir seu plano de segurança e respirar" },
   { icon: Phone, text: "Seu SOS do mês só é usado se o atendimento começar" },
 ];
@@ -37,8 +40,13 @@ const STEPS = [
 const ConfirmationModal = ({ open, onOpenChange, onConfirm }: ConfirmationModalProps) => {
   // Triagem opcional: tocar marca/desmarca; o botão funciona sem marcar nada.
   const [triage, setTriage] = useState<SosTriageKey[]>([]);
+  // Vídeo é o padrão; mensagem para quem não consegue falar agora.
+  const [channel, setChannel] = useState<SosChannel>("video");
   useEffect(() => {
-    if (!open) setTriage([]);
+    if (!open) {
+      setTriage([]);
+      setChannel("video");
+    }
   }, [open]);
   const toggle = (key: SosTriageKey) =>
     setTriage((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
@@ -60,9 +68,41 @@ const ConfirmationModal = ({ open, onOpenChange, onConfirm }: ConfirmationModalP
               Precisa de ajuda agora?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-base text-muted-foreground">
-              Vamos chamar um psicólogo para conversar com você agora, por vídeo.
+              Vamos chamar um psicólogo para conversar com você agora.
             </AlertDialogDescription>
           </AlertDialogHeader>
+
+          <div role="radiogroup" aria-label="Como você prefere conversar?" className="grid grid-cols-2 gap-2">
+            {([
+              { value: "video", label: "Por vídeo", icon: Video },
+              { value: "text", label: "Por mensagem", icon: MessageSquareText },
+            ] as const).map(({ value, label, icon: Icon }) => {
+              const selected = channel === value;
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  onClick={() => setChannel(value)}
+                  className={cn(
+                    "flex min-h-12 items-center justify-center gap-2 rounded-xl border px-3 text-sm transition-colors",
+                    selected
+                      ? "border-primary bg-primary/10 font-semibold text-foreground"
+                      : "border-border bg-card text-muted-foreground hover:bg-muted",
+                  )}
+                >
+                  <Icon className="h-4 w-4" aria-hidden="true" />
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+          {channel === "text" && (
+            <p className="-mt-3 text-center text-xs text-muted-foreground">
+              Para quando você não consegue falar agora. O psicólogo responde por escrito.
+            </p>
+          )}
 
           <section className="space-y-3" aria-labelledby="sos-triage-title">
             <div className="text-center">
@@ -130,6 +170,7 @@ const ConfirmationModal = ({ open, onOpenChange, onConfirm }: ConfirmationModalP
             <AlertDialogAction
               onClick={() => {
                 saveSosTriage(triage);
+                saveSosChannel(channel);
                 onConfirm();
               }}
               className="h-12 w-full bg-sos-secondary text-base font-semibold text-white hover:bg-sos-secondary-hover"
@@ -142,7 +183,7 @@ const ConfirmationModal = ({ open, onOpenChange, onConfirm }: ConfirmationModalP
           </AlertDialogFooter>
 
           <ul className="space-y-3 rounded-2xl border border-border bg-card p-4">
-            {STEPS.map(({ icon: Icon, text }) => (
+            {stepsFor(channel).map(({ icon: Icon, text }) => (
               <li key={text} className="flex items-start gap-3 text-sm text-foreground">
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary" aria-hidden="true">
                   <Icon className="h-4 w-4" />

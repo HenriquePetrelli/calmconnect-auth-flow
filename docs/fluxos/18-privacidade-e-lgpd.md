@@ -1,7 +1,7 @@
 # 18. Privacidade e LGPD: termos, aceite, exportar e excluir dados
 
 > **Status:** Pronto. Os documentos jurídicos estão em versão para revisão.
-> **Última verificação:** 2026-10-24 (varredura: o chat, os aceites dos termos, o benefício da empresa, os problemas relatados, reações, denúncias e pedidos de suporte entraram em "Baixar meus dados"; registros de envio de push, presença em chamada e problemas relatados passaram a sair na exclusão). Antes: 2026-09-28; hábitos e questionários entraram em 2026-10-03.
+> **Última verificação:** 2026-11-02 (mensagens do SOS por mensagem e planos recomendados por psicólogos entram em "Baixar meus dados" e saem na exclusão). Antes: 2026-10-24 (varredura: o chat, os aceites dos termos, o benefício da empresa, os problemas relatados, reações, denúncias e pedidos de suporte entraram em "Baixar meus dados"; registros de envio de push, presença em chamada e problemas relatados passaram a sair na exclusão). Antes: 2026-09-28; hábitos e questionários entraram em 2026-10-03.
 > **Quem usa:** todos. Exportar e excluir conta são do paciente.
 
 ## Resumo

@@ -7,7 +7,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import PageHeader from "@/components/PageHeader";
 import { useNavigate, useLocation } from "react-router-dom";
 import CancelConfirmationModal from "@/components/sos/CancelConfirmationModal";
-import { hasDangerRisk, hasSelfHarmRisk, takeSosTriage, type SosTriageKey } from "@/lib/sosTriage";
+import { hasDangerRisk, hasSelfHarmRisk, saveSosTriage, takeSosTriage, type SosTriageKey } from "@/lib/sosTriage";
+import { sanitizeSosChannel, saveSosChannel, takeSosChannel, type SosChannel } from "@/lib/sosChannel";
 import SupportiveMessages from "@/components/sos/SupportiveMessages";
 import { supabase } from "@/integrations/supabase/client";
 import { getSessionUser } from '@/lib/currentUser';
@@ -43,6 +44,7 @@ const SOS = () => {
   const { cancelRequest, createEmergencyRequest } = useEmergencySOS();
   // Triagem marcada na confirmação: mantém os números certos em destaque na espera.
   const [triage, setTriage] = useState<SosTriageKey[]>([]);
+  const [channel, setChannel] = useState<SosChannel>('video');
 
   
   // Get requestId from navigation state (passed from SOSButton)
@@ -144,7 +146,7 @@ const SOS = () => {
         // Fetch the specific request we just created
         const { data: specificRequest } = await supabase
           .from('emergency_requests')
-          .select('id, status, room_url, video_room_id, created_at')
+          .select('id, status, room_url, video_room_id, created_at, channel')
           .eq('id', expectedRequestId)
           .eq('patient_id', currentUserId)
           .maybeSingle();
@@ -153,7 +155,7 @@ const SOS = () => {
         // Fallback: Get the most recent pending request
         const { data: latestRequest } = await supabase
           .from('emergency_requests')
-          .select('id, status, room_url, video_room_id, created_at')
+          .select('id, status, room_url, video_room_id, created_at, channel')
           .eq('patient_id', currentUserId)
           .eq('status', 'pending')
           .order('created_at', { ascending: false })
@@ -169,8 +171,11 @@ const SOS = () => {
           let denied = false;
           const chosenTriage = takeSosTriage();
           setTriage(chosenTriage);
+          const chosenChannel = takeSosChannel();
+          setChannel(chosenChannel);
           const newId = await createEmergencyRequest({
             triage: chosenTriage,
+            channel: chosenChannel,
             onDenied: (info) => {
               denied = true;
               setDenial(info);
@@ -183,7 +188,7 @@ const SOS = () => {
           if (newId) {
             const { data: created } = await supabase
               .from('emergency_requests')
-              .select('id, status, room_url, video_room_id, created_at')
+              .select('id, status, room_url, video_room_id, created_at, channel')
               .eq('id', newId)
               .maybeSingle();
             data = created;
@@ -199,6 +204,7 @@ const SOS = () => {
       if (data) {
         const id = (data as any).id as string;
         setRequestId(id);
+        setChannel(sanitizeSosChannel((data as { channel?: unknown }).channel));
         setCreatedAt((data as any).created_at ?? new Date().toISOString());
         // Wake up every psychologist dashboard immediately.
         notifySosQueueChanged({ requestId: id });
@@ -397,7 +403,16 @@ const SOS = () => {
                       Ligar para o CVV (188)
                     </a>
                   </Button>
-                  <Button variant="outline" onClick={() => window.location.reload()} className="min-h-12 w-full">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      // Tenta de novo do mesmo jeito que a pessoa escolheu.
+                      saveSosChannel(channel);
+                      saveSosTriage(triage);
+                      window.location.reload();
+                    }}
+                    className="min-h-12 w-full"
+                  >
                     Tentar de novo com um psicólogo
                   </Button>
                 </div>
@@ -415,8 +430,8 @@ const SOS = () => {
                   <h2 className="text-lg font-semibold text-foreground">Buscando um psicólogo</h2>
                   <p className="text-sm text-muted-foreground">
                     {someoneOnline
-                      ? `${availableProfessionals} ${availableProfessionals === 1 ? 'psicólogo online' : 'psicólogos online'} agora. Quando alguém aceitar, a chamada abre sozinha.`
-                      : 'Nenhum psicólogo online agora. Avisamos todos eles e seu pedido continua na fila: quando alguém aceitar, a chamada abre sozinha.'}
+                      ? `${availableProfessionals} ${availableProfessionals === 1 ? 'psicólogo online' : 'psicólogos online'} agora. Quando alguém aceitar, ${channel === 'text' ? 'a conversa' : 'a chamada'} abre sozinha.`
+                      : `Nenhum psicólogo online agora. Avisamos todos eles e seu pedido continua na fila: quando alguém aceitar, ${channel === 'text' ? 'a conversa' : 'a chamada'} abre sozinha.`}
                   </p>
                 </div>
                 <div className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">

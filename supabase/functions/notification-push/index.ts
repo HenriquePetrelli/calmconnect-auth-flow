@@ -94,7 +94,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
               data: { type: "notification", notification_id: notification.id },
               // Mensagens da mesma conversa substituem o aviso anterior no aparelho.
               tag: notification.link?.startsWith("/chat") ? notification.link : notification.id,
-              ttlSeconds: 6 * 3600,
+              // Avisos de um SOS em andamento ("Volte ao atendimento"): entrega
+              // imediata; depois de 10 min já não servem.
+              ...(notification.link?.startsWith("/emergency-call")
+                ? { urgent: true, ttlSeconds: 600 }
+                : { ttlSeconds: 6 * 3600 }),
             });
             results.filter((r) => r.dead).forEach((r) => deadTokens.add(r.token));
             const delivered = results.some((r) => r.ok);

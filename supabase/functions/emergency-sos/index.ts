@@ -169,14 +169,17 @@ serve(async (req) => {
       
       // Triagem opcional (o que o paciente marcou na confirmação). Só as
       // opções conhecidas; corpo ausente ou inválido = sem triagem.
-      const requestBody = await req.json().catch(() => null) as { triage?: unknown } | null;
+      const requestBody = await req.json().catch(() => null) as { triage?: unknown; channel?: unknown } | null;
       const triage = sanitizeTriage(requestBody?.triage);
+      // "Por vídeo" (padrão) ou "Por mensagem", escolhido na confirmação.
+      const channel = requestBody?.channel === 'text' ? 'text' : 'video';
 
       const { data: emergencyRequest, error: insertError } = await supabase
         .from('emergency_requests')
         .insert({
           patient_id: user.id,
           status: 'pending',
+          channel,
           ...(triage.length > 0 ? { triage } : {}),
         })
         .select()
@@ -271,7 +274,9 @@ serve(async (req) => {
                 // Texto discreto (tela bloqueada): diz só que é prioritário,
                 // nunca o que o paciente marcou.
                 title: isPriorityTriage(triage) ? 'Pedido de emergência prioritário' : 'Nova solicitação de emergência',
-                body: 'Um paciente precisa de atendimento imediato.',
+                body: channel === 'text'
+                  ? 'Um paciente precisa de atendimento imediato, por mensagem.'
+                  : 'Um paciente precisa de atendimento imediato.',
                 tokens: tokens.map((t) => t.token),
                 data: { type: 'sos', emergency_request_id: emergencyRequest.id },
                 // Tocar abre a fila do SOS; entrega imediata e, se não chegar em

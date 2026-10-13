@@ -1,7 +1,7 @@
 # 09. Repasses aos psicólogos
 
 > **Status:** Pronto, com decisão pendente (SOS atendidos antes de 2026-10-04).
-> **Última verificação:** 2026-10-28 (decisões de produto: SOS só com 5 minutos de chamada; repasses de psicólogo excluído arquivados por 5 anos; SOS antigos sem repasse apagados do livro). Antes: 2026-10-19 (varredura de funcionamento: cada item sabe se foi pago, pendente calculado a partir do livro, consulta interrompida sai do repasse enquanto não paga, confirmação numa operação só com E2E único, semana fechada no horário de Brasília). Antes: 2026-10-04 (só entram chamadas que conectaram; chave Pix sempre atual).
+> **Última verificação:** 2026-11-02 (SOS por mensagem: 5 min entre a 1ª resposta e o fim, com 3 respostas do psicólogo). Antes: 2026-10-28 (decisões de produto: SOS só com 5 minutos de chamada; repasses de psicólogo excluído arquivados por 5 anos; SOS antigos sem repasse apagados do livro). Antes: 2026-10-19 (varredura de funcionamento: cada item sabe se foi pago, pendente calculado a partir do livro, consulta interrompida sai do repasse enquanto não paga, confirmação numa operação só com E2E único, semana fechada no horário de Brasília). Antes: 2026-10-04 (só entram chamadas que conectaram; chave Pix sempre atual).
 > **Quem usa:** admin (paga) e psicólogo (acompanha).
 
 ## Resumo
@@ -37,7 +37,7 @@ O admin paga por PIX fora do app e registra no painel com o **código E2E do PIX
 - O CPF e a chave Pix do psicólogo não são visíveis para outros usuários (ficha 20).
 - SOS que o paciente redirecionou para outro psicólogo (`psychologist_unavailable`) **não** entra no repasse.
 - Psicólogo sozinho na sala não recebe: consulta ou SOS sem a chamada conectar os dois lados não entra, mesmo concluído.
-- **Tempo mínimo**: consulta e SOS só entram com **5 minutos** de chamada com os dois conectados (`appointment_call_connected` e `sos_call_payable`). Abaixo disso o SOS não é pago, mas a devolução do SOS do mês ao paciente segue a regra de sempre (só volta se a chamada nunca conectou ou terminou por falha).
+- **Tempo mínimo**: consulta e SOS só entram com **5 minutos** de chamada com os dois conectados (`appointment_call_connected` e `sos_call_payable`). **SOS por mensagem**: 5 minutos entre a primeira resposta do psicólogo e o fim, com pelo menos 3 respostas dele e uma mensagem do paciente. Abaixo disso o SOS não é pago, mas a devolução do SOS do mês ao paciente segue a regra de sempre (só volta se a chamada nunca conectou ou terminou por falha).
 - **Psicólogo excluído**: antes de apagar a conta, `admin-delete-psychologist` arquiva os repasses (resumo, histórico de pagamentos e itens) em `archived_psychologist_payouts`, com nome, CPF, CRP e Pix, sem ligação com a conta. Só o admin lê. Os comprovantes ficam no bucket `payment-receipts`, na pasta com o id antigo. A rotina `purge-archived-payouts` apaga depois de 5 anos. Se o arquivo falhar, nada é excluído.
 - A chave Pix do repasse pendente acompanha a do cadastro: trocou a chave, o painel do admin mostra a nova na hora (gatilho `sync_payment_pix_key`).
 

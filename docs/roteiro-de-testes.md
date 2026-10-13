@@ -87,6 +87,18 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 - [ ] Paciente com plano já vencido (antes da rotina diária) → SOS ⇒ não consegue pedir; convite para assinar
 - [ ] Na chamada → aba Rede → resposta de `ice-servers` ⇒ `"turn": true` (com TURN configurado); fora de chamada, uma conta sem sala recente recebe `"turn": false`
 - [ ] Paciente → SOS conectado normalmente → "Chamar outro psicólogo" antes de 90 s ⇒ "O psicólogo ainda está conectado" (o SOS do mês não volta)
+- [ ] Paciente → SOS → "Por mensagem" → Sim ⇒ fila diz "a conversa abre sozinha"; psicólogo vê "Por mensagem" no pedido
+- [ ] Psicólogo aceita ⇒ os dois entram numa conversa em tela cheia (sem câmera); psicólogo vê "O atendimento começa quando você enviar a primeira mensagem"
+- [ ] Paciente escreve antes da resposta ⇒ o SOS do mês ainda não é usado; psicólogo responde ⇒ começa o relógio de 25:00 e o SOS é usado
+- [ ] Um digita ⇒ o outro vê "digitando…"; mensagem lida ⇒ "Visto" na última enviada
+- [ ] Psicólogo troca de app por 1 min ⇒ paciente vê "O psicólogo pode ter se afastado" com "Chamar outro psicólogo" e CVV 188; psicólogo recebe push "Volte ao atendimento"
+- [ ] Paciente escreve e o psicólogo não responde por 2 min ⇒ push "O paciente está esperando sua resposta"; paciente pode chamar outro psicólogo (SOS devolvido)
+- [ ] Paciente tenta "Chamar outro psicólogo" pela API com o psicólogo na conversa ⇒ recusado
+- [ ] Internet cai no envio ⇒ "Não enviada. Tentar de novo" ⇒ chega uma vez só
+- [ ] Paciente sai da conversa e o psicólogo responde ⇒ depois de 1 min, push "Você tem uma nova mensagem"
+- [ ] Psicólogo → Encerrar ⇒ crise resolvida, observações e "Deixar um plano pós-crise"; paciente vê "O psicólogo encerrou a conversa" e a avaliação
+- [ ] Conversa de 6 min com 3 respostas do psicólogo ⇒ entra no repasse; de 3 min ⇒ não entra
+- [ ] Abrir o link de uma conversa já encerrada ⇒ "Esta conversa do SOS já foi finalizada" e volta ao início
 
 ## 3. Consultas agendadas (fichas 04 e 05)
 
