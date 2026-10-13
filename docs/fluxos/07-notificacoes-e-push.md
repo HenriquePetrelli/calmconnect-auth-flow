@@ -86,8 +86,7 @@ order by start_time desc limit 5;
 
 ## Pendências
 
-- **Conferir a configuração do Firebase** (pendência 3): variáveis `VITE_FIREBASE_*` do app e a conta de serviço nos secrets (`FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`). Sem isso, o botão de push some e tudo continua só no app. Passo a passo em `docs/push-notifications-setup.md`.
-- Ainda não foi testado num celular real com o app fechado.
+- Firebase configurado em 2026-10-13 (projeto `app-soliv`): push testado no celular pelo navegador. Com o Chrome fechado, a economia de bateria do Android pode segurar o push (liberar em Configurações → Apps → Chrome → Bateria → "Sem restrições"); no iPhone, só com o site na Tela de Início (Safari, iOS 16.4+). O app Android instalado recebe sempre.
 
 ## Problemas comuns
 

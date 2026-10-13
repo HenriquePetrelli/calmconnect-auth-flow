@@ -132,7 +132,6 @@ select * from appointment_problem_reports order by created_at desc limit 20;
 
 ## Pendências
 
-- O push dos lembretes depende do Firebase (pendência 3).
 
 ## Problemas comuns
 

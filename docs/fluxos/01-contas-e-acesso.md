@@ -102,8 +102,7 @@ where user_id = (select id from auth.users where email = 'pessoa@exemplo.com');
 
 ## Pendências
 
-- **No painel do Supabase** (Authentication), item 6 de `docs/pendencias-antes-do-lancamento.md`: senha mínima 8, "Leaked password protection", "Confirm email" ligado e verificação em duas etapas para admin. Enquanto isso não for feito, alguém que chame a API direto, sem passar pelo app, consegue criar conta com senha de 6 caracteres.
-- **Senha do admin exposta** numa migração antiga (pendência crítica 1). É preciso trocar a senha.
+- **No painel do Supabase** (Authentication), item 6 de `docs/pendencias-antes-do-lancamento.md`: senha mínima 8 e "Letters and digits"; "Confirm email" só depois do domínio; "Prevent use of leaked passwords" só no plano Pro. A verificação em duas etapas do admin já é obrigatória (ficha 19).
 - **E-mails de login** (pendência crítica 2): o Soliv ainda não tem domínio; sem ele não há SMTP próprio e o e-mail de redefinir senha só chega para a equipe do projeto, em inglês. Passo a passo em `docs/emails-de-autenticacao.md`.
 
 ## Problemas comuns

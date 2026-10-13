@@ -64,6 +64,12 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 - **Opcional:** trocar o nome do projeto no painel da Lovable e o e-mail da conta admin (`admin@calmconnect.com`) junto com a pendência 1.
 - **Registrado em:** 2026-10-04.
 
+### 16. Revisão jurídica dos documentos
+
+- **Situação:** política de privacidade, termos de uso (paciente e psicólogo) e registro de tratamento (`docs/lgpd/`) estão em versão para revisão. O registro ainda tem itens **[DECIDIR]** (prazo dos logs de segurança além dos 6 meses do Marco Civil) e **[CONFIRMAR]** (hospedagem do front-end pela Lovable, regiões e cláusulas da transferência internacional de dados).
+- **O que fazer:** revisão por um advogado de proteção de dados antes do lançamento; depois, pedir ao Claude para atualizar os textos e a versão dos documentos (o app pede o aceite de novo quando a versão muda).
+- **Registrado em:** 2026-10-13 (estava só na ficha 18).
+
 ## Melhorias sugeridas
 
 ### 8. SOS por mensagem de texto

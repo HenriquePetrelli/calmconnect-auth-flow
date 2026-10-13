@@ -121,7 +121,7 @@ from subscribers where user_id = '<id do paciente>';
 ## Pendências
 
 - **TURN não configurado** (pendência 5): sem ele, parte das chamadas não conecta em 4G e em redes de empresa. O app funciona, só sem o retransmissor.
-- **Push**: depende da configuração do Firebase (pendência 3). Sem ele, o psicólogo só vê o pedido com o painel aberto.
+- **Push pelo navegador**: configurado e testado (2026-10-13). Com o Chrome fechado, a economia de bateria do Android pode segurar o push; o app Android instalado recebe sempre (ficha 07).
 - **Sugestões de produto** (não são defeitos): SOS por texto, triagem de risco e plano pós-crise (pendências 8 a 10).
 
 ## Problemas comuns
