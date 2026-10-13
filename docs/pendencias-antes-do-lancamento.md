@@ -19,6 +19,7 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 ### 2. Domínio do Soliv e envio de e-mails
 
 - **Situação:** o Soliv ainda não tem domínio próprio. Sem ele, não dá para enviar e-mail com remetente do Soliv para os usuários.
+- **Em espera (2026-10-13):** `soliv.com.br` está registrado por uma pessoa física, sem site, e vence em **03/12/2026** (foi renovado em 12/2025). `soliv.com` e `soliv.app` também estão ocupados. Decisão: aguardar o vencimento antes de escolher outro domínio. Lembretes agendados para 26/11/2026 (uma semana antes) e 10/12/2026 (para ver se foi renovado ou entrou no processo de liberação do Registro.br).
 - **O que depende do domínio:**
 
   | E-mail | Onde é enviado | Remetente hoje | O que acontece sem domínio |
