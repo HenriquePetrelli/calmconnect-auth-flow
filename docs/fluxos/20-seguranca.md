@@ -1,7 +1,7 @@
 # 20. Segurança: proteções que valem para o app inteiro
 
 > **Status:** Pronto, com pendência externa (ajustes de senha no painel do Supabase e senha do admin).
-> **Última verificação:** 2026-10-27 (varredura: RLS em todas as tabelas, funções abertas a visitantes conferem o acesso, todas as edge functions exigem login, segredo ou assinatura; corrigidos documento do psicólogo aprovado, `cleanup-user` e presença na chamada).
+> **Última verificação:** 2026-10-30 (verificação em duas etapas obrigatória para o admin). Antes: 2026-10-27 (varredura: RLS em todas as tabelas, funções abertas a visitantes conferem o acesso, todas as edge functions exigem login, segredo ou assinatura; corrigidos documento do psicólogo aprovado, `cleanup-user` e presença na chamada).
 > **Quem usa:** todos (proteção invisível).
 
 ## Princípio
@@ -47,6 +47,7 @@
 | Forjar "sem áudio/vídeo" ou o último sinal na chamada (devolver o SOS, tirar do repasse) | Gatilho `a_guard_participant_presence`: pelo app só quem está na sala grava presença, o papel vem da sala, o último sinal é a hora do servidor e o estado da mídia só muda por `report_call_media` | Ficha 03 |
 | Trocar o documento do CRP depois de aprovado | `guard_psychologist_client_write` trava `document_url` e `documents` após a aprovação; no armazenamento, o dono só sobrescreve ou apaga os próprios arquivos antes da aprovação (`my_psychologist_documents_locked`) | Psicólogo aprovado → update em `document_url` pela API → valor não muda |
 | Apagar a conta pulando a exclusão normal | `cleanup-user` (desfaz cadastro que falhou) só vale para conta criada há menos de 24 h, sem aprovação, sem consultas e que não é admin | Conta antiga chama `cleanup-user` → 403 "use Perfil > Excluir conta" |
+| Senha do admin descoberta ou vazada | Verificação em duas etapas obrigatória: `is_super_admin()` só vale com o token `aal2` (depois do código do app autenticador), e as edge functions de admin conferem o mesmo (`_shared/adminMfa.ts`) | Admin entra só com a senha e chama `get_admin_metrics` pela API → "Access denied" |
 
 ## Conferência rápida no banco (tudo deve dar `true`)
 
@@ -65,6 +66,7 @@ select
   exists(select 1 from pg_trigger where tgname = 'a_guard_registration_client_insert') as inscricao_protegida,
   exists(select 1 from pg_trigger where tgname = 'a_guard_webrtc_client_update') as sala_video_protegida,
   exists(select 1 from pg_trigger where tgname = 'a_guard_participant_presence') as presenca_protegida,
+  pg_get_functiondef('public.is_super_admin(uuid)'::regprocedure) like '%aal2%' as admin_com_duas_etapas,
   pg_get_functiondef('public.guard_psychologist_client_write'::regproc) like '%document_url := OLD.document_url%' as documento_aprovado_travado,
   not exists(select 1 from pg_policies where schemaname = 'storage' and policyname in ('psychologist_own_documents', 'Admin and owner access to psychologist documents')) as arquivos_sem_regras_antigas,
   (select bool_and(file_size_limit = 10485760 and allowed_mime_types is not null) from storage.buckets
@@ -80,8 +82,7 @@ select
 
 ## Pendências
 
-- **Senha do admin exposta** numa migração antiga (pendência 1).
-- **Painel do Supabase** (pendência 6): senha mínima 8, "Leaked password protection", "Confirm email" e verificação em duas etapas para admin.
+- **Painel do Supabase** (pendência 6): senha mínima 8, "Leaked password protection", "Confirm email".
 - **Sem cabeçalhos de hospedagem** como `X-Frame-Options` (a Lovable não permite configurar). A proteção contra clickjacking é feita pelo próprio app (`frameGuard`), e cobre Chrome, Edge e Safari; no Firefox, que não informa o site de fora, o app abre normalmente.
 
 ## Como reagir a um incidente

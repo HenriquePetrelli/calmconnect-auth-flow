@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { adminMfaOk } from '../_shared/adminMfa.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -58,7 +59,8 @@ Deno.serve(async (req) => {
       user_id_param: user.id,
     });
 
-    if (adminError || !isAdmin) {
+    // Também exige a verificação em duas etapas (token aal2).
+    if (adminError || !isAdmin || !adminMfaOk(authHeader)) {
       return new Response(
         JSON.stringify({ error: 'Admin access required' }),
         {

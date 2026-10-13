@@ -1,7 +1,7 @@
 # 19. Painel do admin
 
-> **Status:** Pronto, com pendência crítica (senha do admin exposta numa migração antiga).
-> **Última verificação:** 2026-10-29 (excluir psicólogo não apaga mais o histórico de consultas dos pacientes). Antes: 2026-10-24 (varredura: Auditoria passou a registrar aprovar e recusar psicólogo, confirmar repasse, moderação dos grupos e mudanças em empresas; cartão de saúde das rotinas na Visão geral). Antes: 2026-10-02 (painel redesenhado); proteções do banco reforçadas em 2026-10-04.
+> **Status:** Pronto.
+> **Última verificação:** 2026-10-30 (verificação em duas etapas obrigatória para o admin). Antes: 2026-10-29 (excluir psicólogo não apaga mais o histórico de consultas dos pacientes). Antes: 2026-10-24 (varredura: Auditoria passou a registrar aprovar e recusar psicólogo, confirmar repasse, moderação dos grupos e mudanças em empresas; cartão de saúde das rotinas na Visão geral). Antes: 2026-10-02 (painel redesenhado); proteções do banco reforçadas em 2026-10-04.
 > **Quem usa:** admin (conta criada à mão; ver `docs/creating-an-admin-account.md`).
 
 ## Resumo
@@ -23,6 +23,14 @@ Painel único em `/admin-dashboard`, com a seção na URL (`?secao=...`), para r
 
 ## Como funciona
 
+- **Entrada com verificação em duas etapas** (obrigatória):
+  1. depois da senha, o admin vai para `/admin/verificacao`;
+  2. na primeira vez, cadastra um app autenticador (Google Authenticator, Microsoft Authenticator, Authy ou 1Password) lendo o QR code, ou digitando a chave, e confirma um código de 6 dígitos;
+  3. nas próximas, só digita o código;
+  4. sem o código, a conta não acessa nada do painel.
+
+  A regra vale no servidor, não só na tela: `is_super_admin()` só reconhece o admin com o token de nível `aal2` (depois do código), e as edge functions de admin conferem o mesmo (`supabase/functions/_shared/adminMfa.ts`). Com a senha sozinha (`aal1`), `get_login_state` diz apenas que a conta é de admin, para o app levar à tela do código.
+  Perdeu o celular? Outra pessoa com acesso ao Supabase remove a verificação em **Authentication → Users → (o admin) → remover o fator MFA**. No próximo login, o admin cadastra o app de novo.
 - **Aprovação de psicólogo**:
   1. o admin recebe notificação de cadastro novo;
   2. abre o documento por link temporário assinado;
@@ -73,8 +81,7 @@ select created_at, action, target_type, target_name from admin_audit_log order b
 
 ## Pendências
 
-- **Crítica — senha do admin exposta** (pendência 1): uma migração antiga contém a senha. Troque a senha, ative a verificação em duas etapas e, se quiser, limpe o histórico do Git.
-- **Verificação em duas etapas** para admin no painel do Supabase (pendência 6).
+- Nenhuma. A senha exposta foi trocada em 2026-10-13, e a verificação em duas etapas é obrigatória desde 2026-10-30.
 
 ## Problemas comuns
 

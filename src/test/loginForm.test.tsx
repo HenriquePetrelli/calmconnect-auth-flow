@@ -14,7 +14,7 @@ const renderLogin = () =>
     <MemoryRouter initialEntries={['/']}>
       <Routes>
         <Route path="/" element={<LoginForm onForgotPassword={() => {}} onSignUp={() => {}} />} />
-        <Route path="/admin-dashboard" element={<p>Painel admin</p>} />
+        <Route path="/admin/verificacao" element={<p>Painel admin</p>} />
         <Route path="/home" element={<p>Home do paciente</p>} />
         <Route path="/psicologo/concluir-cadastro" element={<p>Concluir cadastro</p>} />
       </Routes>
@@ -37,7 +37,7 @@ beforeEach(() => {
 });
 
 describe('login', () => {
-  it('admin (sem linha em profiles) entra direto no painel, sem toast de erro', async () => {
+  it('admin (sem linha em profiles) vai para o código de verificação, sem toast de erro', async () => {
     fakeDb.loginUsers['admin@soliv.com'] = { id: 'admin-1' };
     fakeDb.rpcHandlers.is_super_admin = (_db, params) => ({ data: params.user_id_param === 'admin-1', error: null });
     renderLogin();

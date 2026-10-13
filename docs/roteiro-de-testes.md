@@ -353,7 +353,9 @@ Se falhar, a ficha indicada em cada seção (`docs/fluxos/`) diz o que olhar.
 
 ## 17. Painel do admin (ficha 19)
 
-- [ ] Admin → Login ⇒ vai direto ao painel
+- [ ] Admin → Login (primeira vez) ⇒ tela "Ative a verificação em duas etapas" com QR code; ler no app autenticador e digitar o código ⇒ entra no painel
+- [ ] Admin → sair e entrar de novo ⇒ pede só o código de 6 dígitos; código errado ⇒ "Código inválido ou expirado" e não entra
+- [ ] Admin → depois da senha, sem digitar o código, abrir `/admin-dashboard` direto pelo endereço ⇒ volta para a tela do código
 - [ ] Admin → Visão geral ⇒ números carregam; "Psicólogos pendentes" leva à seção
 - [ ] Admin → Pessoas → Psicólogos → aprovar ⇒ psicólogo entra; aparece em Auditoria
 - [ ] Admin → Pessoas → Pacientes → bloquear 1 dia ⇒ paciente vê o motivo; Auditoria registra

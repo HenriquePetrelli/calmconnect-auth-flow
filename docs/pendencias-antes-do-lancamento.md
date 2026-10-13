@@ -56,7 +56,6 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
   1. Tamanho mínimo de senha: 8 (o app já exige 8 com letras e números nas contas novas; o servidor ainda aceita 6 de quem chamar a API direto).
   2. Ativar "Leaked password protection" (recusa senhas que já vazaram na internet).
   3. "Confirm email": ligar depois do domínio (pendência 2), para o e-mail de confirmação chegar. O app já está pronto (desde 2026-10-21 o paciente é criado pelo banco e o psicólogo conclui o cadastro no primeiro acesso).
-  4. Verificação em duas etapas (MFA) para admin: só protege se o app pedir o código no login, o que ainda não faz (pedir ao Claude).
 - **Registrado em:** 2026-10-04.
 
 ### 7. Renomear o repositório para `soliv`
@@ -92,7 +91,7 @@ O que precisa ser resolvido antes de o app ficar pronto. Ao resolver um item, mo
 ### 1. Senha do admin exposta no repositório (registrada em 2026-10-03, resolvida em 2026-10-13)
 
 - A senha da conta de admin, que estava em texto puro na migração `20250729171947-8c6e37ba-06ef-4ba2-96e4-260ba4e8a0f3.sql`, foi trocada. A senha antiga continua no histórico do Git, mas não abre mais a conta.
-- Ficou opcional: verificação em duas etapas para o admin (o app ainda não pede o código no login; pedir ao Claude) e trocar o e-mail `admin@calmconnect.com` quando houver domínio.
+- Em 2026-10-30, a verificação em duas etapas passou a ser obrigatória para o admin (app autenticador; ficha 19). Fica para depois: trocar o e-mail `admin@calmconnect.com` quando houver domínio.
 
 ### Decisões de produto (registradas de 2026-10-04 a 2026-10-19, decididas em 2026-10-28)
 

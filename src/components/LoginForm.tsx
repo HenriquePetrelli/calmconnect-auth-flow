@@ -73,7 +73,8 @@ const LoginForm = ({ onForgotPassword, onSignUp }: LoginFormProps) => {
       // Admin não tem linha em `profiles` (fica em admin_users): resolve antes.
       // Só pelo banco: user_metadata é editável pelo próprio usuário.
       if (state.is_admin) {
-        navigate('/admin-dashboard');
+        // Depois da senha, o código da verificação em duas etapas.
+        navigate('/admin/verificacao');
         setEmail("");
         setPassword("");
         return;

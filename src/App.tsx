@@ -10,6 +10,7 @@ import RouteGuard from "@/components/RouteGuard";
 import MainLayout from "@/components/MainLayout";
 import PsychologistLayout from "@/components/psychologist/layout/PsychologistLayout";
 import AdminLayout from "@/components/admin/AdminLayout";
+import AdminMfaGate from "@/components/admin/AdminMfaGate";
 import BackgroundWrapper from "@/components/BackgroundWrapper";
 import RouteSkeleton from "@/components/skeletons/RouteSkeleton";
 import PendingFeedbackGate from "@/components/sos/PendingFeedbackGate";
@@ -47,6 +48,7 @@ const SignupType = lazy(() => import("./pages/SignupType"));
 const PatientSignUp = lazy(() => import("./pages/PatientSignUp"));
 const PsychologistSignUpPublic = lazy(() => import("./pages/PsychologistSignUpPublic"));
 const PsychologistCompleteSignup = lazy(() => import("./pages/PsychologistCompleteSignup"));
+const AdminMfaVerification = lazy(() => import("./pages/AdminMfaVerification"));
 const Home = lazy(() => import("./pages/Home"));
 const SoundsLibrary = lazy(() => import("./pages/SoundsLibrary"));
 const SoundCategory = lazy(() => import("./pages/SoundCategory"));
@@ -424,16 +426,25 @@ const App = () => {
                   } />
 
                   {/* Rotas do Admin */}
+                  <Route path="/admin/verificacao" element={
+                    <RouteGuard allowedUserTypes={['admin']}>
+                      <AdminMfaVerification />
+                    </RouteGuard>
+                  } />
                   <Route path="/admin-dashboard" element={
                     <RouteGuard allowedUserTypes={['admin']}>
-                      <AdminDashboard />
+                      <AdminMfaGate>
+                        <AdminDashboard />
+                      </AdminMfaGate>
                     </RouteGuard>
                   } />
                   <Route path="/admin-notifications" element={
                     <RouteGuard allowedUserTypes={['admin']}>
-                      <AdminLayout active="notifications">
-                        <Notifications />
-                      </AdminLayout>
+                      <AdminMfaGate>
+                        <AdminLayout active="notifications">
+                          <Notifications />
+                        </AdminLayout>
+                      </AdminMfaGate>
                     </RouteGuard>
                   } />
 

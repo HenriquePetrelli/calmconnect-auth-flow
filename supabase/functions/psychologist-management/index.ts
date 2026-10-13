@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { Resend } from "https://esm.sh/resend@2.0.0";
+import { adminMfaOk } from "../_shared/adminMfa.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -253,7 +254,8 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Verificar permissões de admin para outras operações
-    const isAdmin = await checkSuperAdminPermission(user.id);
+    // Também exige a verificação em duas etapas (token aal2).
+    const isAdmin = (await checkSuperAdminPermission(user.id)) && adminMfaOk(authHeader);
     if (!isAdmin) {
       throw new Error('Acesso negado. Apenas administradores podem realizar esta operação.');
     }

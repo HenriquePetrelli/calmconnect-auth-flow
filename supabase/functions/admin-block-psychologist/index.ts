@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { adminMfaOk } from "../_shared/adminMfa.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -43,7 +44,8 @@ serve(async (req: Request): Promise<Response> => {
     const { data: isAdmin, error: adminError } = await supabase.rpc("is_super_admin", {
       user_id_param: user.id,
     });
-    if (adminError || isAdmin !== true) {
+    // Também exige a verificação em duas etapas (token aal2).
+    if (adminError || isAdmin !== true || !adminMfaOk(authHeader)) {
       return json({ error: "Acesso negado. Apenas administradores." }, 403);
     }
 

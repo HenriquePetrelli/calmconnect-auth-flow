@@ -13,7 +13,10 @@ export interface BlockInfo {
 }
 
 export interface LoginState {
+  /** Conta de admin (cadastro em admin_users), mesmo antes do código de verificação. */
   is_admin: boolean;
+  /** Admin que já passou pela verificação em duas etapas nesta sessão. */
+  admin_verified?: boolean;
   profile: { user_type: string | null; full_name: string | null } | null;
   patient: BlockInfo | null;
   psychologist: (BlockInfo & { approved: boolean | null; approval_status: string | null }) | null;

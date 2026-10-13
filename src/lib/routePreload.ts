@@ -65,6 +65,7 @@ const page = {
   PsychologistSupport: () => import("@/pages/PsychologistSupport"),
   PsychologistPayments: () => import("@/pages/PsychologistPayments"),
   AdminDashboard: () => import("@/pages/AdminDashboard"),
+  AdminMfaVerification: () => import("@/pages/AdminMfaVerification"),
 } satisfies Record<string, Loader>;
 
 /** Rota do App (mesma escrita do `path`) e o código da tela dela. */
@@ -127,6 +128,7 @@ export const ROUTE_LOADERS: [string, Loader][] = [
   ["/psicologo/suporte", page.PsychologistSupport],
   ["/psychologist-payments", page.PsychologistPayments],
   ["/psychologist-notifications", page.Notifications],
+  ["/admin/verificacao", page.AdminMfaVerification],
   ["/admin-dashboard", page.AdminDashboard],
   ["/admin-notifications", page.Notifications],
 ];

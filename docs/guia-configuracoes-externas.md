@@ -30,7 +30,7 @@ Passo a passo do que precisa ser feito **fora do código** (nos painéis da Supa
 
 **Teste:** sair e entrar de novo com a senha nova; a antiga deve dar "Email ou senha incorretos".
 
-> A verificação em duas etapas (MFA) do Supabase só protege de verdade se o app pedir o código no login. O app ainda não pede. Se quiser, peça ao Claude para implementar.
+> **Verificação em duas etapas:** desde 2026-10-30, depois da senha o painel pede um código de um app autenticador. No primeiro login, a tela mostra um QR code para cadastrar o app (Google Authenticator, Microsoft Authenticator, Authy ou 1Password). Confira em Supabase → **Authentication → Multi-Factor** (ou "Sign In / Providers → MFA") que **TOTP** está ligado; vem ligado por padrão. Se perder o celular, remova o fator em **Authentication → Users → (o admin)** e cadastre de novo no próximo login.
 
 ---
 

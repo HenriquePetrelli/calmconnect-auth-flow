@@ -76,6 +76,7 @@ export const ROUTE_PERMISSIONS = {
     '/psicologo/suporte' // suporte para psicólogos
   ],
   admin: [
+    '/admin/verificacao', // código da verificação em duas etapas
     '/admin-dashboard',
     '/admin-notifications' // sino de avisos do painel
   ]
