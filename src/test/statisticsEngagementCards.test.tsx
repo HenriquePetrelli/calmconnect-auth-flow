@@ -6,12 +6,13 @@ const navigateMock = vi.fn();
 vi.mock('react-router-dom', () => ({ useNavigate: () => navigateMock }));
 vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => ({ user: { id: 'patient-1' } }) }));
 
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: {
-    channel: () => ({ on: () => ({ subscribe: () => ({}) }) }),
-    removeChannel: () => {},
-  },
-}));
+// Banco falso completo: os cards reais da página (atividades, hábitos,
+// questionários) também consultam o banco. Antes o mock não tinha `from` e
+// cada render deixava erros soltos no log dos testes.
+vi.mock('@/integrations/supabase/client', async () => {
+  const { fakeSupabase } = await import('./fakeSupabase');
+  return { supabase: fakeSupabase };
+});
 
 const updateStreakMock = vi.fn().mockResolvedValue(undefined);
 vi.mock('@/hooks/usePatientStatistics', () => ({
@@ -26,6 +27,7 @@ vi.mock('@/hooks/usePatientStatistics', () => ({
     },
     loading: false,
     updateStreak: updateStreakMock,
+    refreshStatistics: vi.fn().mockResolvedValue(undefined),
   }),
 }));
 
