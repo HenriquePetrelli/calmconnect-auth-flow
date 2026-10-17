@@ -12,7 +12,12 @@ BEGIN
   RETURN 'ok - ' || label;
 END $$;
 CREATE FUNCTION pg_temp.local_hhmm(delta interval) RETURNS text LANGUAGE sql AS $$
-  SELECT to_char((now() AT TIME ZONE 'America/Sao_Paulo') + delta, 'HH24:MI')
+  -- Fica dentro do dia de hoje: perto da meia-noite, "há 40 min" cairia
+  -- ontem e "daqui a 3 h" amanhã, e o teste falhava sem defeito no app.
+  SELECT to_char(LEAST(GREATEST((now() AT TIME ZONE 'America/Sao_Paulo') + delta,
+                                date_trunc('day', now() AT TIME ZONE 'America/Sao_Paulo')),
+                       date_trunc('day', now() AT TIME ZONE 'America/Sao_Paulo') + interval '23 hours 59 minutes'),
+                 'HH24:MI')
 $$;
 
 -- Almoço há 40 min (devido), jantar daqui a 3 h (ainda não).

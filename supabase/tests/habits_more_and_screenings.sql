@@ -17,7 +17,12 @@ BEGIN
 END $$;
 
 CREATE FUNCTION pg_temp.local_hhmm(delta interval) RETURNS text LANGUAGE sql AS $$
-  SELECT to_char((now() AT TIME ZONE 'America/Sao_Paulo') + delta, 'HH24:MI')
+  -- Fica dentro do dia de hoje: perto da meia-noite, "há 40 min" cairia
+  -- ontem e "daqui a 3 h" amanhã, e o teste falhava sem defeito no app.
+  SELECT to_char(LEAST(GREATEST((now() AT TIME ZONE 'America/Sao_Paulo') + delta,
+                                date_trunc('day', now() AT TIME ZONE 'America/Sao_Paulo')),
+                       date_trunc('day', now() AT TIME ZONE 'America/Sao_Paulo') + interval '23 hours 59 minutes'),
+                 'HH24:MI')
 $$;
 
 -- 1. Novos tipos aceitos; remédio exige nome; vários remédios ao mesmo tempo.
@@ -95,8 +100,11 @@ VALUES ('00000000-0000-0000-0000-0000000000a1', 'gad7', '{0,0,0,0,0,0,0}', 21, '
 SELECT pg_temp.check((SELECT score = 0 AND severity = 'minimal' FROM public.mental_health_screenings WHERE answers = '{0,0,0,0,0,0,0}'), 'pontuação enviada pelo app é ignorada');
 
 -- 4. Permissões: psicólogo só vê o que foi compartilhado, e só se atende o paciente.
-INSERT INTO public.appointments (patient_id, psychologist_id, status)
-VALUES ('00000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-0000000000b1', 'completed');
+-- A consulta exige o psicólogo cadastrado.
+INSERT INTO public.psychologists (user_id, full_name, email, crp_number, approved, approval_status)
+VALUES ('00000000-0000-0000-0000-0000000000b1', 'Psi Teste', 'psi@x.com', '06/00001', true, 'approved');
+INSERT INTO public.appointments (patient_id, psychologist_id, status, scheduled_at)
+VALUES ('00000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-0000000000b1', 'completed', now() - interval '2 days');
 
 SET ROLE authenticated;
 SET request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000b1';

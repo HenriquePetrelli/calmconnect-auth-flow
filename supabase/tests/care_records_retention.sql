@@ -80,11 +80,13 @@ DO $$ BEGIN
   RAISE EXCEPTION 'FALHOU: gravou aceite em nome de outro';
 EXCEPTION WHEN insufficient_privilege THEN RAISE NOTICE 'ok: não grava aceite em nome de outro';
 END $$;
-DO $$ BEGIN
-  UPDATE public.legal_acceptances SET version = '9.9';
-  RAISE EXCEPTION 'FALHOU: alterou o histórico de aceites';
-EXCEPTION WHEN insufficient_privilege THEN RAISE NOTICE 'ok: histórico de aceites não se altera';
-END $$;
+-- Sem regra de alteração ou exclusão (RLS): o banco não dá erro, só não
+-- muda nenhuma linha.
+UPDATE public.legal_acceptances SET version = '9.9';
+DELETE FROM public.legal_acceptances;
+SELECT pg_temp.check(
+  (SELECT count(*) FROM public.legal_acceptances WHERE user_id = 'c0000000-0000-0000-0000-00000000000c' AND version = '1.0') = 1,
+  'histórico de aceites não se altera nem se apaga');
 
 RESET role;
 ROLLBACK;
